@@ -1,0 +1,93 @@
+{
+  "schema": "spd.warrior.illustrations/v1",
+  "generation_mode": "built-in image_gen",
+  "image_count": 5,
+  "aspect_ratio": "1:1",
+  "reference_paths_relative_to": "repository root",
+  "images": [
+    {
+      "file": "goo-retreat.png",
+      "title": "看懂那一下",
+      "floor": 5,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1057437,
+      "format": "PNG",
+      "prompt": "Use case: illustration-story.\nAsset type: early/mid-game commemorative art for this actual Shattered Pixel Dungeon Warrior victory.\nInput images: REFERENCE ONLY, not edit targets. 1: Warrior FACE ONLY, not armor. 2: LEATHER Warrior tier2 row y30. 3: small Hand Axe at (144,96,12,14), not a crossbow. 4: black Goo. 5: damp gray-green sewer stone/water architecture only; do not copy background creatures.\nScene: The actual floor-5 boss tactic. Goo swells to charge a heavy slam, and the Warrior steps away toward a stone doorway or the water's edge, maintaining a safe gap and luring it off water that would heal it. Goo is a glossy oily BLACK irregular slime mound with gray reflected highlights and restrained sickly-green charging specks, not a cheerful green slime and not a humanoid. Show retreating footwork before the attack, not being hit. Damp olive-gray sewer bricks, moss, barred drains, shallow gray-green water and restrained torchlight. Exactly one Goo and one Warrior; no other creatures or new loot. No lava or demon-hall skull towers.\nHero: The same strong adult orange-red-haired, red-bearded Warrior, exposed head and recognizable square face. This is his EARLY LEATHER kit: fitted reddish-brown leather jerkin, simple leather shoulder guards/bracers, dark russet undersleeves, plain trousers and leather boots, small red seal. Use warrior.png tier2 row y=30. NO steel breastplate, NO silver scale skirt, NO final blue-gray hero armor, NO gold pauldrons, NO helmet/crown, NO hourglass, NO Heroic Leap. Reference splash image is for his face ONLY; replace its metal armor with brown leather. He carries only a SMALL single-bladed iron Hand Axe on a short wood handle in one hand, with no cold glow; no crossbow is equipped.\nComposition: Over-the-shoulder view behind the leather-clad Warrior, short Hand Axe lowered but ready. The charging black Goo dominates the far side of the empty patch he has just vacated; a stone doorway remains beside him.\nStyle/format: ONE standalone square 1:1 illustration at native high resolution; high-detail 2.5D pixel-inspired fantasy art with deliberate pixel clusters, painterly materials and cinematic depth, consistent with the previous Warrior collection. No upscaling, text, captions, numbers, UI, arrows, watermark, split panels or collage. One identifiable Warrior. Preserve the equipment of this exact stage and the authentic enemy silhouettes.",
+      "refs": [
+        "core/src/main/assets/splashes/warrior.jpg",
+        "core/src/main/assets/sprites/warrior.png",
+        "core/src/main/assets/sprites/items.png",
+        "core/src/main/assets/sprites/goo.png",
+        "core/src/main/assets/splashes/sewers.jpg"
+      ]
+    },
+    {
+      "file": "dm300-pylon-run.png",
+      "title": "超载以后，目标在远处",
+      "floor": 15,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 863692,
+      "format": "PNG",
+      "prompt": "Use case: illustration-story.\nAsset type: early/mid-game commemorative art for this actual Shattered Pixel Dungeon Warrior victory.\nInput images: REFERENCE ONLY, not edit targets. 1: Warrior face only. 2: MID-GAME SCALE armor tier4 row y60, olive/brass gold scales over red cloth, not final blue-gray hero armor. 3: supercharged DM-300 second sprite row: gray domed mining machine, heavy low chassis/treads and red sensor. 4: active pylon frame at (10,0,10,20), metal base and slender pale-yellow/white energy core, not a natural crystal. 5: rough gray cavern, yellow ore veins, dark blue-green water and industrial motifs. Crossbow and hourglass follow the textual description below.\nScene: The actual floor-15 DM-300 fight. When the machine becomes invulnerable and supercharged, the Warrior stops attacking it and runs along DRY stone toward the active power pylon. He used Haste and the hourglass to cross between the southeast and northwest pylons without rockfall or electric damage. DM-300 is a squat gray riveted domed mining robot with a broad heavy tracked chassis, red slit-like sensor and overload sparks; not a humanoid mech, dragon or giant knight. Show only one active electrical pylon as the visible destination: industrial metal base with a slender luminous pale-yellow/white core and a short metal cap. Rough gray mine rock, ore seams, cables, metal plates, deep blue-green water channels that spark when electrified. The Warrior stays off the live patches. No red lava, purple crystal monument, hero wings or extra enemies.\nHero: The same adult orange-red-haired, red-bearded Warrior, now a Gladiator in MID-GAME SCALE armor: small overlapping BRASS/OLIVE-GOLD scales over RED inner cloth, as warrior.png tier4 row y=60. Subtle worn red seal and thorn glyph, dark boots, exposed head. Carry the wooden/brass/silver Chilling Crossbow with restrained cyan chill highlights. A SMALL brown wood-framed hourglass with clear glass and gold sand stays attached to his belt, never placed on the ground or floating separately. NO final blue-gray hero armor, no crown, no sword/shield, no wings, no Heroic Leap or teleporting the hero.\nComposition: Broad low-angle cavern view: the huge squat supercharged mining machine pursues behind the scale-armored Warrior, while the active slim power pylon glows across the arena. A clearly readable dry route winds between rock obstacles and live water channels.\nStyle/format: ONE standalone square 1:1 illustration at native high resolution; high-detail 2.5D pixel-inspired fantasy art with deliberate pixel clusters, painterly materials and cinematic depth, consistent with the previous Warrior collection. No upscaling, text, captions, numbers, UI, arrows, watermark, split panels or collage. One identifiable Warrior. Preserve the equipment of this exact stage and the authentic enemy silhouettes.",
+      "refs": [
+        "core/src/main/assets/splashes/warrior.jpg",
+        "core/src/main/assets/sprites/warrior.png",
+        "core/src/main/assets/sprites/dm300.png",
+        "core/src/main/assets/sprites/pylon.png",
+        "core/src/main/assets/environment/tiles_caves.png"
+      ]
+    },
+    {
+      "file": "scorpio-time-freeze.png",
+      "title": "蝎影中的停顿",
+      "floor": 23,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 977895,
+      "format": "PNG",
+      "prompt": "Use case: illustration-story.\nAsset type: commemorative illustration based on a real Shattered Pixel Dungeon Warrior victory.\nInput images: REFERENCE IMAGES ONLY, not edit targets. Image 1: Warrior identity. Image 2: GREEN Acidic Scorpio lower sprite row. Image 3: crossbow and hourglass motifs. Image 4: dark gothic architecture and material mood only; do not copy its creatures.\nScene/backdrop: The actual floor-23 trick: the lone Warrior safely outside a stone doorway faces one GREEN Acidic Scorpio inside. The small hourglass freezes time. An amber liquid-flame potion shatters above an already placed tiny blindweed beside the scorpion; glass, orange droplets and tiny herb particles are suspended in midair before time resumes. The acid scorpion is armored, segmented, low-slung, with pincers and an arched stinger. Dark brown and gray-brown stone, subdued gold architectural ornaments. The outside corridor remains unburned. No blast runestone, no melee contact, no invented magical attacks.\nSubject: The same adult male Warrior from the authentic splash reference: exposed orange-red hair, a full red-brown beard, strong square face; battered silver/blue-gray thorn-etched hero armor with restrained brass-gold shoulder accents, small red broken-seal emblem, heavy dark boots. His actual Chilling Crossbow has silver-gray bow arms, olive-brass and brown wood body, restrained cyan frost highlights. No sword, no hand shield, no helmet, no crown, no wings. The hourglass has a small brown wood frame, clear gray glass and golden sand.\nComposition: Low viewpoint from beside the acid scorpion inside the room. Its green pincers and raised stinger form the foreground; the red-bearded Warrior is framed by the doorway. Suspended amber potion fragments reveal the arrested instant.\nStyle: highly detailed, refined 2.5D pixel-inspired fantasy illustration with intentional handcrafted pixel clusters, painterly material depth, and dramatic but readable cinematic light. Reference-faithful silhouettes, believable adult anatomy. Create ONE original standalone square image, 1:1, the highest available native resolution, without post-generation upscaling. Fill a single canvas, no contact sheet or multiple panels. No text, interface, numbers, captions, border, signature or watermark. No invented allies, additional enemies or duplicate characters.",
+      "refs": [
+        "core/src/main/assets/splashes/warrior.jpg",
+        "core/src/main/assets/sprites/scorpio.png",
+        "core/src/main/assets/sprites/items.png",
+        "core/src/main/assets/splashes/halls.jpg"
+      ]
+    },
+    {
+      "file": "rusted-fist-duel.png",
+      "title": "碎铁如雨",
+      "floor": 25,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 877764,
+      "format": "PNG",
+      "prompt": "Use case: illustration-story.\nAsset type: commemorative illustration based on a real Shattered Pixel Dungeon Warrior victory.\nInput images: REFERENCE IMAGES ONLY, not edit targets. Image 1: Warrior identity. Image 2: Rusted Fist, the GRAY IRON fourth sprite row, not brown rock or the silver-white bright fifth row. Image 3: crossbow equipment. Image 4: distant Yog white giant eye with black pupil and pink fleshy appendages, not a humanoid. Image 5: true demon-hall stone, ornaments and window motifs.\nScene/backdrop: The actual floor-25 water duel: the Warrior has drawn the single huge gray-iron Rusted Fist away from Yog's protection and braces against it in ankle-deep crimson-orange liquid. This red reflective pool is the game's cool lava/water terrain: it does not burn his boots. His Chilling Crossbow is used in close combat. The ten-hit Fury combo stores deferred damage in the fist; represent that poetically with restrained pale fracture light under corroded metal and falling localized iron flakes, no numerical overlay. Gray-brown gothic stone and narrow multicolored windows. No atmospheric rainfall: 'Fury' is a combat combo, not weather. If Yog appears, keep it a distant white giant eye; no other creatures.\nSubject: The same adult male Warrior from the authentic splash reference: exposed orange-red hair, a full red-brown beard, strong square face; battered silver/blue-gray thorn-etched hero armor with restrained brass-gold shoulder accents, small red broken-seal emblem, heavy dark boots. His actual Chilling Crossbow has silver-gray bow arms, olive-brass and brown wood body, restrained cyan frost highlights. No sword, no hand shield, no helmet, no crown, no wings. The hourglass has a small brown wood frame, clear gray glass and golden sand.\nComposition: Tight energetic diagonal action composition: the Warrior's crossbow meets the gray-iron fist as corroded fragments fall locally like a shower, cyan chill glints across metal, and crimson liquid splashes at dark boots. One fist, one hero; no real rain.\nStyle: highly detailed, refined 2.5D pixel-inspired fantasy illustration with intentional handcrafted pixel clusters, painterly material depth, and dramatic but readable cinematic light. Reference-faithful silhouettes, believable adult anatomy. Create ONE original standalone square image, 1:1, the highest available native resolution, without post-generation upscaling. Fill a single canvas, no contact sheet or multiple panels. No text, interface, numbers, captions, border, signature or watermark. No invented allies, additional enemies or duplicate characters.\nEnvironment accuracy: the hall's isolated pillars can be made of stacked humanoid skulls as in the source; the crimson-orange pool is harmless cool lava. Rusted Fist is inorganic and sheds metal, never blood.\nThe enemy is a SINGLE disembodied floating clenched iron fist with a short wrist stump. Do not attach it to a giant person, armored knight, robot or golem body.",
+      "refs": [
+        "core/src/main/assets/splashes/warrior.jpg",
+        "core/src/main/assets/sprites/yog_fists.png",
+        "core/src/main/assets/sprites/items.png",
+        "core/src/main/assets/sprites/yog.png",
+        "core/src/main/assets/environment/tiles_halls.png"
+      ]
+    },
+    {
+      "file": "yendor-victory.png",
+      "title": "到此为止，也已足够",
+      "floor": 26,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 839640,
+      "format": "PNG",
+      "prompt": "Use case: illustration-story.\nAsset type: commemorative illustration based on a real Shattered Pixel Dungeon Warrior victory.\nInput images: REFERENCE IMAGES ONLY, not edit targets. Image 1: adult red-haired red-bearded Warrior identity. Image 2: exact Yendor Amulet design, golden circular rim/cross with cyan, pink, yellow and violet quadrants; preserve fourfold shape and colors. Image 3: exposed-head final hero armor. Image 4: actual crossbow and gear. Image 5: final demon-hall stone, candles and decorative motifs.\nScene/backdrop: The real normal-victory ending, floor 26. A lone battle-worn Warrior/Gladiator has obtained Yendor's Amulet after defeating Yog. He pauses at the end of the long narrow dark-brown stone walkway over a black abyss, inside the final candlelit chamber. Many small candles, weathered golden ornaments and distant narrow colored glass, quiet darkness beyond the walkway. The amulet is small enough to hold: a GOLDEN circular medallion divided by a gold cross into turquoise/cyan, pink, yellow and violet sections as in the authentic sprite. Hero wears his thorn-etched metal armor and still carries the Chilling Crossbow; no sword, no crown, no allies, no monsters, no throne, no outdoor sunrise, no ascent or homecoming scene. Exhaustion, relief, earned modest victory.\nSubject: The same adult male Warrior from the authentic splash reference: exposed orange-red hair, a full red-brown beard, strong square face; battered silver/blue-gray thorn-etched hero armor with restrained brass-gold shoulder accents, small red broken-seal emblem, heavy dark boots. His actual Chilling Crossbow has silver-gray bow arms, olive-brass and brown wood body, restrained cyan frost highlights. No sword, no hand shield, no helmet, no crown, no wings.\nComposition: Rear three-quarter wide view of the lone Warrior paused in the final chamber, head inclined toward the four-colored amulet in one hand, crossbow resting at his side. Long narrow stone walkway recedes into darkness over a black abyss. Many quiet candles, no outdoor epilogue.\nStyle: highly detailed, refined 2.5D pixel-inspired fantasy illustration with intentional handcrafted pixel clusters, painterly material depth, and dramatic but readable cinematic light. Reference-faithful silhouettes, believable adult anatomy. Create ONE original standalone square image, 1:1, the highest available native resolution, without post-generation upscaling. Fill a single canvas, no contact sheet or multiple panels. No text, interface, numbers, captions, border, signature or watermark. No invented allies, additional enemies or duplicate characters.\nKeep exactly one palm-sized Yendor amulet in the Warrior's hand; no additional giant medallion in the background and no enlarged hourglass placed on the floor. Emphasize the accurate four-color gold-cross amulet, the lone survivor, candles and abyss walkway.",
+      "refs": [
+        "core/src/main/assets/splashes/warrior.jpg",
+        "core/src/main/assets/sprites/amulet.png",
+        "core/src/main/assets/sprites/warrior.png",
+        "core/src/main/assets/sprites/items.png",
+        "core/src/main/assets/environment/custom_tiles/halls_special.png"
+      ]
+    }
+  ]
+}
