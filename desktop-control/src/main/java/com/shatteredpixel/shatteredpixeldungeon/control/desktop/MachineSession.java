@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.*;
 import java.io.*;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
@@ -43,6 +44,7 @@ public final class MachineSession implements AutoCloseable {
     private final long timeoutMillis;
     private final ExecutorService serial=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"SPD Audit and Protocol");t.setDaemon(true);return t;});
     private volatile boolean closed;
+    private volatile boolean fatalFailure;
     private boolean executionUncertain;
     private Pending pending;
     private Pending cancelling;
@@ -77,6 +79,8 @@ public final class MachineSession implements AutoCloseable {
         if(timeoutMillis<1)throw new IllegalArgumentException("A positive timeout is required");
         this.store=store;this.game=game;this.output=output;this.timeoutMillis=timeoutMillis;
     }
+    /** Lifecycle status only: ordinary rejected requests do not fail the process session. */
+    public boolean failed(){return fatalFailure;}
     /** Accept one complete NDJSON line; completion means its sole response has been handled. */
     public CompletableFuture<Void> accept(String raw){
         return accept(NdjsonReader.Frame.logical(raw));
@@ -100,6 +104,7 @@ public final class MachineSession implements AutoCloseable {
         }
     }
     private void process(NdjsonReader.Frame frame){
+        String processingStartedAt=Instant.now().toString();
         String raw=frame.text;
         ResponseStage responseStage=new ResponseStage();
         AuditStore.Attempt attempt=null;
@@ -112,7 +117,7 @@ public final class MachineSession implements AutoCloseable {
             Map<String,Object> envelope=JsonCodec.decode(raw);
             id=identity(envelope.get("id"),128);scope=identity(envelope.get("scope_id"),256);op=identity(envelope.get("op"),128);
             if(envelope.get("scope_id")==null&&"protocol.info".equals(op))scope=store.menuScope();
-            attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format);
+            attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format,frame.receivedAt,processingStartedAt);
             if(attempt.duplicate)throw new ProtocolException("DUPLICATE_REQUEST_ID","Request ID already appeared in this scope");
             // Consume identity before validating args, operation or state_version.
             ControlRequest request=ControlRequest.parse(raw);
@@ -143,12 +148,12 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("protocol_version",1,"cli_version","CLI.0.2.0","game_version","3.3.8",
+                    result=map("protocol_version",1,"cli_version","CLI.0.3.0","game_version","3.3.8",
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
                             "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit"));break;
                 case "state.get":result=publicStateResult(state);break;
-                case "actions.list":result=pending!=null||executionUncertain?publicStateResult(state):map("state_version",state.version,"actions",state.actions);break;
+                case "actions.list":result=pending!=null||cancelling!=null||executionUncertain?publicStateResult(state):map("state_version",state.version,"actions",state.actions);break;
                 case "request.get":
                     result=store.getRequest(scope,requiredIdentifier(request.args,"target_id"));
                     if(result==null)throw new ProtocolException("REQUEST_NOT_FOUND","Request not found");break;
@@ -172,7 +177,9 @@ public final class MachineSession implements AutoCloseable {
                         try{state=cancelled.get(timeoutMillis,TimeUnit.MILLISECONDS);}
                         catch(TimeoutException waiting){
                             cancelling=new Pending(attempt,state);cancelling.future=cancelled;
-                            Map<String,Object> response=success(id,scope,"in_progress",map("phase","cancelling","state_version",null,"actions",Collections.emptyList()));
+                            drainSaves();
+                            Map<String,Object> response=success(id,scope,"in_progress",withPersistence(attempt,
+                                    map("phase","cancelling","state_version",null,"actions",Collections.emptyList()),state.scopeId));
                             Map<String,Object>[] snapshots=auditSnapshots(scope,state,false);
                             store.respondPending(attempt,response,snapshots[0],snapshots[1]);responseStage.committed=true;
                             send(attempt,response,responseStage);cancelled.whenComplete((after,error)->scheduleSettlement());return;
@@ -195,7 +202,8 @@ public final class MachineSession implements AutoCloseable {
                         state=pending.execution.firstResponse.get(timeoutMillis,TimeUnit.MILLISECONDS);
                         if(!pending.future.isDone()&&"continuous_activity".equals(state.phase)){
                             pending.activity=state;
-                            Map<String,Object> response=success(id,scope,"in_progress",publicStateResult(state));
+                            drainSaves();
+                            Map<String,Object> response=success(id,scope,"in_progress",withPersistence(attempt,publicStateResult(state),state.scopeId));
                             store.respondPending(attempt,response,state.publicState,state.internalState);responseStage.committed=true;
                             send(attempt,response,responseStage);pending.execution.acknowledge();
                             pending.future.whenComplete((after,error)->scheduleSettlement());return;
@@ -203,7 +211,8 @@ public final class MachineSession implements AutoCloseable {
                         state=pending.future.get(timeoutMillis,TimeUnit.MILLISECONDS);
                     }
                     catch(TimeoutException waiting){
-                        Map<String,Object> response=success(id,scope,"in_progress",publicStateResult(state));
+                        drainSaves();
+                        Map<String,Object> response=success(id,scope,"in_progress",withPersistence(attempt,publicStateResult(state),state==null?scope:state.scopeId));
                         Map<String,Object>[] snapshots=auditSnapshots(scope,state,false);
                         store.respondPending(attempt,response,snapshots[0],snapshots[1]);responseStage.committed=true;
                         send(attempt,response,responseStage);
@@ -216,6 +225,10 @@ public final class MachineSession implements AutoCloseable {
                 }
                 default:throw new ProtocolException("UNKNOWN_OPERATION","Unknown operation");
             }
+            // Save callback receipts must be durable before the response that reports them.
+            drainSaves();
+            if("action.execute".equals(op))result=withPersistence(attempt,result,state==null?scope:state.scopeId);
+            else if("state.get".equals(op)||"actions.list".equals(op))result=withLastSave(result,scope);
             Map<String,Object> response=success(id,scope,status,result);
             Map<String,Object>[] snapshots=dispatchAttempted&&currentCertified?directSnapshots(state):auditSnapshots(scope,state,currentCertified);
             store.complete(attempt,status.toUpperCase(Locale.ROOT),response,snapshots[0],snapshots[1],null);responseStage.committed=true;
@@ -230,8 +243,11 @@ public final class MachineSession implements AutoCloseable {
                 fatal(error);return;
             }
             try{
-                if(attempt==null)attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format);
+                if(attempt==null)attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format,frame.receivedAt,processingStartedAt);
+                drainSaves();
                 Map<String,Object> response=failure(id,scope,dispatchAttempted&&!definitelyNotExecuted?"EXECUTION_UNKNOWN":code(error));
+                if(dispatchAttempted&&!definitelyNotExecuted&&!attempt.duplicate)
+                    response.put("result",withPersistence(attempt,Collections.emptyMap(),scope));
                 // Never substitute a pre-action snapshot for an unknown post-action state.
                 Map<String,Object>[] snapshots=dispatchAttempted?emptySnapshots():auditSnapshots(scope,state,currentCertified);
                 store.complete(attempt,dispatchAttempted&&!definitelyNotExecuted?"UNKNOWN":"REJECTED",response,snapshots[0],snapshots[1],error);responseStage.committed=true;
@@ -293,13 +309,18 @@ public final class MachineSession implements AutoCloseable {
         catch(Throwable error){
             Throwable actual=unwrap(error);boolean rejected=actual instanceof GameController.NotExecuted;
             if(!rejected)executionUncertain=true;
-            store.settle(completed.attempt,rejected?"REJECTED":"UNKNOWN",failure(completed.attempt.id,completed.attempt.scopeId,rejected?code(actual):"EXECUTION_UNKNOWN"),null,null,actual);
-            drainSaves();return true;
+            drainSaves();
+            Map<String,Object> response=failure(completed.attempt.id,completed.attempt.scopeId,rejected?code(actual):"EXECUTION_UNKNOWN");
+            if(!rejected)response.put("result",withPersistence(completed.attempt,Collections.emptyMap(),completed.attempt.scopeId));
+            store.settle(completed.attempt,rejected?"REJECTED":"UNKNOWN",response,null,null,actual);
+            return true;
         }
         if(after.scopeId.startsWith("run:"))store.ensureScope(after.scopeId,"run",after.scopeId.substring(4));
         String status=completed.execution!=null&&completed.execution.interrupted?"interrupted":"awaiting_input".equals(after.phase)?"awaiting_input":"completed";
-        store.settle(completed.attempt,status.toUpperCase(Locale.ROOT),success(completed.attempt.id,completed.attempt.scopeId,status,after.result()),after.publicState,after.internalState,null);
-        drainSaves();return true;
+        drainSaves();
+        store.settle(completed.attempt,status.toUpperCase(Locale.ROOT),success(completed.attempt.id,completed.attempt.scopeId,status,
+                withPersistence(completed.attempt,after.result(),after.scopeId)),after.publicState,after.internalState,null);
+        return true;
     }
     private void send(AuditStore.Attempt attempt,Map<String,Object> response,ResponseStage stage){
         String encoded=JsonCodec.encode(response);stage.written=true;output.println(encoded);output.flush();
@@ -308,12 +329,23 @@ public final class MachineSession implements AutoCloseable {
     }
     private void drainSaves(){
         GameController.SaveResult save;
-        while((save=game.pollSave())!=null)store.recordSave(save.runId==null?store.menuScope():"run:"+save.runId,save.slot,save.error==null,save.error);
+        while((save=game.pollSave())!=null)store.recordSave(save.receiptId,save.runId==null?store.menuScope():"run:"+save.runId,
+                save.slot,save.error==null,save.occurredAt,save.originScopeId,save.originRequestId,save.error);
         GameController.RunOutcome outcome;
         while((outcome=game.pollRunOutcome())!=null){
             store.ensureScope("run:"+outcome.runId,"run",outcome.runId);
             store.event("run:"+outcome.runId,"run.ended",outcome.data());
         }
+    }
+    @SuppressWarnings("unchecked") private Map<String,Object> withLastSave(Object result,String scope){
+        Map<String,Object> value=new LinkedHashMap<>((Map<String,Object>)result);
+        value.put("last_save",scope==null?null:store.latestSave(scope));return value;
+    }
+    @SuppressWarnings("unchecked") private Map<String,Object> withPersistence(AuditStore.Attempt attempt,Object result,String observedScope){
+        Map<String,Object> value=new LinkedHashMap<>((Map<String,Object>)result);
+        value.put("persistence",map("last_save",observedScope==null?null:store.latestSave(observedScope),
+                "saves_during_request",store.requestSaves(attempt.scopeId,attempt.id)));
+        return value;
     }
     /** EOF is a system lifecycle event, not an invented caller request or an unsolicited response. */
     private void endInput(String reason){
@@ -337,9 +369,8 @@ public final class MachineSession implements AutoCloseable {
                 settleReady();
             }
             if(pending==null&&!executionUncertain&&!game.exiting()&&!game.disposed()){
-                GameController.State current=game.observe().get(timeoutMillis,TimeUnit.MILLISECONDS);
-                store.event(scope,"shutdown.dispatch",map("source","system","action","app.quit","state_version",current.version));
-                game.execute(current.version,map("action","app.quit")).get(timeoutMillis,TimeUnit.MILLISECONDS);
+                quitAfterEof(scope);
+                drainSaves();
                 store.event(scope,"shutdown.completed",map("source","system"));
             }else store.event(scope,"shutdown.unsettled",map("source","system","execution_unknown",executionUncertain));
         }catch(Throwable error){
@@ -349,7 +380,25 @@ public final class MachineSession implements AutoCloseable {
             closed=true;if(!game.disposed())game.exitNow();
         }
     }
-    private void fatal(Throwable error){recordExceptionNow(unwrap(error));closed=true;game.exitNow();}
+    private void quitAfterEof(String scope)throws Exception{
+        for(int attempt=0;attempt<5;attempt++){
+            GameController.State current=game.observe().get(timeoutMillis,TimeUnit.MILLISECONDS);
+            store.event(scope,"shutdown.dispatch",map("source","system","action","app.quit","state_version",current.version,"attempt",attempt+1));
+            try{
+                game.execute(current.version,map("action","app.quit")).get(timeoutMillis,TimeUnit.MILLISECONDS);return;
+            }catch(Throwable failure){
+                Throwable actual=unwrap(failure);
+                // A known pre-dispatch rejection is safe to retry. Never replay an uncertain quit/save.
+                if(!(actual instanceof GameController.NotExecuted)||!"STALE_STATE".equals(((GameController.NotExecuted)actual).code)||attempt==4){
+                    if(actual instanceof Exception)throw (Exception)actual;
+                    if(actual instanceof Error)throw (Error)actual;
+                    throw new IllegalStateException(actual);
+                }
+                store.event(scope,"shutdown.retry",map("source","system","code","STALE_STATE","attempt",attempt+1));
+            }
+        }
+    }
+    private void fatal(Throwable error){fatalFailure=true;recordExceptionNow(unwrap(error));closed=true;game.exitNow();}
     private void recordExceptionNow(Throwable error){try{store.recordException(error);}catch(Throwable ignored){}}
     public void recordException(Throwable error){try{serial.execute(()->recordExceptionNow(unwrap(error)));}catch(RejectedExecutionException ignored){}}
     public void recordLog(String channel,String text){

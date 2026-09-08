@@ -1,6 +1,6 @@
 # spdctl 控制接口
 
-当前版本 `CLI.0.2.0`，协议 1，游戏 3.3.8。完整实施/未完成事项见 [实施记录](cli-implementation.md)。这是可运行的开发版本，不代表六职业通关验收已经完成。
+当前版本 `CLI.0.3.0`，协议 1，游戏 3.3.8。完整实施/未完成事项见 [实施记录](cli-implementation.md)。这是可运行的开发版本，不代表六职业通关验收已经完成。
 
 ## 启动
 
@@ -60,6 +60,8 @@ CLI 默认 profile 为 `~/Library/Application Support/Shattered Pixel Dungeon CL
 `in_progress` 不是失败，不得重发原 ID。用新 ID 查询原请求。当前支持原生休息及已经开始移动的连续路径取消；活动版本、目标原请求 ID 和审计顺序见 [持续取消](cli-runtime-cancellation.md)。每条请求只有一条线上响应，最终结果通过主动查询取得。
 
 `app.quit` 走可确认的保存/退出流程；先通过原有取消/返回控件收束窗口。stdin EOF 作为系统生命周期记录处理，不伪造调用方请求或主动输出额外响应。
+
+保存回执详见 [保存与会话记录](cli-save-receipts.md)。操作结果的 `persistence.saves_during_request` 列出本次请求中原生保存流程实际报告的结果；空列表不确认保存。`state.get`/`actions.list` 的 `last_save` 是最近一次保存尝试，也可能失败。回执不代表全部 UI 或任意内存状态可恢复。
 
 数据库事务不涵盖游戏存档文件。进程在执行意图与最终记录之间崩溃时会保留 UNKNOWN；不会重放旧动作补存档。公开历史只含当时真实公开的数据，内部快照、原始异常和工程日志隔离在内部库。
 

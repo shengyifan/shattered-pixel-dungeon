@@ -15,9 +15,11 @@ public final class NdjsonReader {
         public final byte[] bytes;
         public final String text;
         public final String format;
+        public final String receivedAt;
         public final ProtocolException error;
         private Frame(byte[] bytes,String text,String format,ProtocolException error){
             this.bytes=bytes;this.text=text;this.format=format;this.error=error;
+            this.receivedAt=java.time.Instant.now().toString();
         }
         public static Frame logical(String text){
             return new Frame(text.getBytes(StandardCharsets.UTF_8),text,"logical-text",null);

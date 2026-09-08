@@ -16,11 +16,12 @@ public final class SpdctlLauncher {
         PrintStream protocol=new PrintStream(new FileOutputStream(FileDescriptor.out),true,StandardCharsets.UTF_8);
         PrintStream diagnostics=new PrintStream(new FileOutputStream(FileDescriptor.err),true,StandardCharsets.UTF_8);
         if(args.length==1&&(args[0].equals("--help")||args[0].equals("--version"))){
-            protocol.println(args[0].equals("--version")?"CLI.0.2.0 (protocol 1, game 3.3.8)":"spdctl run --machine [--data-dir ABSOLUTE_PROFILE_DIRECTORY]");return;
+            protocol.println(args[0].equals("--version")?"CLI.0.3.0 (protocol 1, game 3.3.8)":"spdctl run --machine [--data-dir ABSOLUTE_PROFILE_DIRECTORY]");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
                 ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI")
                 :Paths.get(System.getenv("SPDCTL_PROFILE"));
+        int exitCode=0;
         try{
             boolean machine=false;
             if(args.length==0||!args[0].equals("run"))throw new IllegalArgumentException("Expected run --machine");
@@ -37,6 +38,11 @@ public final class SpdctlLauncher {
             System.setProperty("Implementation-Version","896");
             try(ProfileLock lock=new ProfileLock(profile);AuditStore store=new AuditStore(profile.resolve("audit"))){
                 store.recoverInterrupted();
+                store.beginSession(java.util.UUID.randomUUID().toString());
+                AtomicReference<MachineSession> ref=new AtomicReference<>();
+                java.util.concurrent.atomic.AtomicBoolean uncaughtRuntimeFailure=new java.util.concurrent.atomic.AtomicBoolean();
+                boolean loopReturned=false;
+                try {
                 importEmergencyReports(profile,store);
                 String errorFile=java.lang.management.ManagementFactory.getPlatformMXBean(
                         com.sun.management.HotSpotDiagnosticMXBean.class).getVMOption("ErrorFile").getValue();
@@ -45,7 +51,6 @@ public final class SpdctlLauncher {
                                 "java_version",System.getProperty("java.version"),"os_arch",System.getProperty("os.arch"),
                                 "error_file",errorFile,"profile",profile.toString(),
                                 "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"))));
-                AtomicReference<MachineSession> ref=new AtomicReference<>();
                 GameController game=new GameController(profile,store.menuScope(),error->{if(ref.get()!=null)ref.get().recordException(error);});
                 try(MachineSession session=new MachineSession(store,game,protocol)){
                     ref.set(session);
@@ -53,9 +58,18 @@ public final class SpdctlLauncher {
                     System.setOut(new PrintStream(new DiagnosticOutput(session,"stdout"),true,StandardCharsets.UTF_8));
                     System.setErr(new PrintStream(new DiagnosticOutput(session,"stderr"),true,StandardCharsets.UTF_8));
                     Thread reader=new Thread(()->session.read(System.in),"SPD Machine Input");reader.setDaemon(true);reader.start();
-                    try{DesktopLauncher.launch(new String[0],profile,(thread,error)->{session.recordException(error);game.exitNow();},true);}
+                    try{DesktopLauncher.launch(new String[0],profile,(thread,error)->{uncaughtRuntimeFailure.set(true);session.recordException(error);game.exitNow();},true);loopReturned=true;}
                     catch(Throwable error){session.recordException(error);throw error;}
                     finally{Game.observer=com.watabou.noosa.RuntimeObserver.NONE;}
+                }
+                } catch(Throwable failure) {
+                    try { store.recordException(failure); } catch(Throwable recordingFailure) { failure.addSuppressed(recordingFailure); }
+                    throw failure;
+                } finally {
+                    MachineSession session=ref.get();
+                    boolean failed=!loopReturned||session==null||session.failed()||uncaughtRuntimeFailure.get();
+                    store.endSession(failed?"FAILED":"CLOSED",uncaughtRuntimeFailure.get()?"uncaught_runtime_failure":loopReturned?"game_loop_returned":"launcher_failure");
+                    if(failed)exitCode=1;
                 }
             }
         }catch(Throwable failure){
@@ -66,6 +80,7 @@ public final class SpdctlLauncher {
             diagnostics.println("spdctl: STARTUP_FAILED (details recorded in the profile when possible)");
             System.exit(1);
         }
+        if(exitCode!=0)System.exit(exitCode);
     }
     private static void importEmergencyReports(Path profile,AuditStore store)throws IOException{
         Path emergency=profile.resolve("audit").resolve("emergency");

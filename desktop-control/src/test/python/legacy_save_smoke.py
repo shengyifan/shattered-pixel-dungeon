@@ -76,7 +76,7 @@ def save_json(path):
 def audit_schema(profile):
     for name in ("public", "internal"):
         with sqlite3.connect(f"file:{profile / 'audit' / (name + '.sqlite3')}?mode=ro", uri=True) as db:
-            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("3",)
+            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("4",)
             assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
 
 

@@ -1,0 +1,362 @@
+{
+  "schema": 1,
+  "validation_date": "2026-09-09",
+  "test_fixture": true,
+  "counts_as_win": false,
+  "total": 22,
+  "passed": 22,
+  "control_source": "public_ndjson_only",
+  "assertion_boundary": "final_action_response",
+  "source_batches": [
+    {
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "adopted_cases": 8,
+      "note": "Original UI matrix, excluding subsequently replaced blacksmith/companion/resurrection evidence."
+    },
+    {
+      "runtime_id": "runtime-2a04ee19328c475d9c1cb0e0f036e2ce",
+      "adopted_cases": 4,
+      "note": "Blacksmith uses actual Quest.complete; companion uses accepted quest marker."
+    },
+    {
+      "runtime_id": "runtime-c6207353f0f042969904af6b52783270",
+      "adopted_cases": 3,
+      "note": "Smith generated rewards, companion attack, and full resurrection plus LostInventory availability gate."
+    },
+    {
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "adopted_cases": 7,
+      "note": "Seven new successful variants; actual low-probability theft attempted once with no RNG override."
+    }
+  ],
+  "results": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "shop-trade",
+      "profile": "desktop-control/build/fixtures/p6-shop-trade-2c435592c8e34747841757253c911e1b",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "buy_cancel_checked": true,
+        "sell_cancel_checked": true,
+        "purchase_cost": 150,
+        "sale_value": 30,
+        "inventory_quantity_round_trip": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "shop-steal",
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-95f025072ee5414ba78917766148b3a2",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "buy_window_cancel_checked": true,
+        "actual_100_percent_steal": true,
+        "gold_unchanged": true,
+        "charge_before": 5,
+        "charge_after": 2
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "shop-steal-warning",
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-warning-fc8b7e0a7e7b45a686bc5dd704903964",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "risky_steal_warning_shown": true,
+        "native_confirmation_cancelled_without_cost": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "ghost-reward",
+      "profile": "desktop-control/build/fixtures/p6-ghost-reward-a427aeacc33640199cfe33a5d61c452f",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "reward_preview_cancel_checked": true,
+        "reward_received_in_final_response": true,
+        "quest_consumable_removed": false,
+        "quest_completion_checked": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "wandmaker-reward",
+      "profile": "desktop-control/build/fixtures/p6-wandmaker-reward-d744bc5be8944fbfa99ca0a3ac49c098",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "reward_preview_cancel_checked": true,
+        "reward_received_in_final_response": true,
+        "quest_consumable_removed": true,
+        "quest_completion_checked": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "blacksmith-cashout",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-cashout-7c3d81915c7e4229b5db63209e251402",
+      "runtime_id": "runtime-2a04ee19328c475d9c1cb0e0f036e2ce",
+      "ok": true,
+      "evidence": {
+        "confirmation_cancel_checked": true,
+        "reward_and_favor_verified": true,
+        "favor_before": 3000,
+        "favor_after": 0
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "blacksmith-pickaxe",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-pickaxe-99451a94d6c544148ec97b2f5006c48a",
+      "runtime_id": "runtime-2a04ee19328c475d9c1cb0e0f036e2ce",
+      "ok": true,
+      "evidence": {
+        "confirmation_cancel_checked": true,
+        "reward_and_favor_verified": true,
+        "favor_before": 2000,
+        "favor_after": 1750
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "blacksmith-reforge",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-reforge-a04259b67fb34516b7288425e8bece40",
+      "runtime_id": "runtime-2a04ee19328c475d9c1cb0e0f036e2ce",
+      "ok": true,
+      "evidence": {
+        "selector_cancel_checked": true,
+        "two_items_reforged_into_one": true,
+        "favor_cost": 500
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "companion",
+      "profile": "desktop-control/build/fixtures/p6-companion-45bd13e692cb4c1ea35d59311db9e112",
+      "runtime_id": "runtime-2a04ee19328c475d9c1cb0e0f036e2ce",
+      "ok": true,
+      "evidence": {
+        "outfit_selector_cancel_checked": true,
+        "weapon_and_armor_equipped": true,
+        "summon_consumed_full_charge": true,
+        "direct_cancel_checked": true,
+        "defend_target_assigned": true,
+        "follow_hero_command_checked": true,
+        "equipment_returned_to_inventory": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "alchemy-energy",
+      "profile": "desktop-control/build/fixtures/p6-alchemy-energy-d638570beb9f4c8785c7f8186f60ddfb",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "energize_cancel_checked": true,
+        "one_item_converted_to_energy": 6,
+        "exotic_potion_crafted": true,
+        "energy_spent": 4,
+        "same_scope": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "resurrect",
+      "profile": "desktop-control/build/fixtures/p6-resurrect-07e062b8a16b4f7d83829f40f99bbe56",
+      "runtime_id": "runtime-c6207353f0f042969904af6b52783270",
+      "ok": true,
+      "evidence": {
+        "death_from_original_poison_tick": true,
+        "mandatory_window_back_does_not_skip": true,
+        "item_selector_cancel_checked": true,
+        "missing_item_warning_cancelled": true,
+        "selected_items_preserved": true,
+        "ankh_consumed": true,
+        "same_scope_after_resurrection": true,
+        "kept_item_details_available": true,
+        "lost_gray_item_preserved_in_public_inventory": true,
+        "lost_gray_item_open_rejected": "ACTION_UNAVAILABLE",
+        "rejected_request_id_burned": true,
+        "rejection_did_not_change_observed_world": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "amulet-stay",
+      "profile": "desktop-control/build/fixtures/p6-amulet-stay-362a2bec65f84a9f9de12e253afbaf32",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "amulet_scene_choice_read": true,
+        "stay_returns_to_same_run": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "amulet-end",
+      "profile": "desktop-control/build/fixtures/p6-amulet-end-e9aac85de1f249c881127d98770d2688",
+      "runtime_id": "runtime-70a25f85898840c2b81ac4c308322fba",
+      "ok": true,
+      "evidence": {
+        "amulet_scene_choice_read": true,
+        "test_only_win_event_recorded": true,
+        "rankings_and_victory_window_shown": true,
+        "victory_close_button_used": true,
+        "counts_as_legitimate_win": false
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "shop-stack",
+      "profile": "desktop-control/build/fixtures/p6-shop-stack-9ed16fe4bf0e4229b460927e29cbd071",
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "ok": true,
+      "evidence": {
+        "sell_one_and_buyback": true,
+        "sell_all_and_buyback": true,
+        "stack_restored_each_time": true,
+        "sale_prices": [
+          30,
+          90
+        ],
+        "gold_round_trip": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "shop-steal-failure",
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-failure-266753ac54e244668b72000870ccb84c",
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "ok": true,
+      "evidence": {
+        "actual_failed_theft": true,
+        "attempts": 1,
+        "rng_overridden": false,
+        "displayed_success_percent": 2,
+        "shopkeeper_fled": true,
+        "no_item_acquired": true,
+        "no_gold_or_charge_spent_on_native_failure": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "blacksmith-harden",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-harden-58413aef8f3d44b594a361af01646a08",
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "ok": true,
+      "evidence": {
+        "service": "harden",
+        "item_selector_cancelled": true,
+        "favor_cost": 500,
+        "actual_item_effect_in_final_response": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "blacksmith-upgrade",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-upgrade-85207ccfaa8840a487fa7f74822715a9",
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "ok": true,
+      "evidence": {
+        "service": "upgrade",
+        "item_selector_cancelled": true,
+        "favor_cost": 1000,
+        "actual_item_effect_in_final_response": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "companion-resummon",
+      "profile": "desktop-control/build/fixtures/p6-companion-resummon-dc3785ebd94e462fa9f77859d0f42067",
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "ok": true,
+      "evidence": {
+        "setup_previous_summon_with_nearly_full_recharge": true,
+        "native_wait_completed_recharge": true,
+        "second_summon_branch_executed": true,
+        "full_charge_consumed": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "blessed-ankh",
+      "profile": "desktop-control/build/fixtures/p6-blessed-ankh-f84c67cfa74a4ecb9a863c298dc64c2b",
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "ok": true,
+      "evidence": {
+        "original_poison_death": true,
+        "automatic_blessed_resurrection": true,
+        "no_item_selection_window": true,
+        "ankh_consumed_inventory_preserved": true,
+        "same_scope": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "amulet-pickup",
+      "profile": "desktop-control/build/fixtures/p6-amulet-pickup-d1ce9681e970492cbc6b4854cc7559cc",
+      "runtime_id": "runtime-e81f17748d24403a9d2265cdd8a08c3b",
+      "ok": true,
+      "evidence": {
+        "ground_item_pickup_used": true,
+        "native_delayed_pickup_callback_completed": true,
+        "first_acquisition_story_shown": true,
+        "stay_retains_amulet_and_scope": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "blacksmith-smith",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-smith-66ed8446a8a8467ca9cb70926590b75f",
+      "runtime_id": "runtime-c6207353f0f042969904af6b52783270",
+      "ok": true,
+      "evidence": {
+        "smith_cost": 2000,
+        "purchase_confirmation_cancelled": true,
+        "mandatory_reward_window_back_blocked": true,
+        "reward_preview_cancelled": true,
+        "generated_reward_received": true,
+        "reward_list_cleared": true
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "case": "companion-attack",
+      "profile": "desktop-control/build/fixtures/p6-companion-attack-1fedd8575bb24de2a0f6206882dea631",
+      "runtime_id": "runtime-c6207353f0f042969904af6b52783270",
+      "ok": true,
+      "evidence": {
+        "visible_enemy_directed": true,
+        "target_assignment_in_final_response": true,
+        "fixed_public_waits": 8,
+        "actual_companion_damage_verified": true
+      }
+    }
+  ]
+}

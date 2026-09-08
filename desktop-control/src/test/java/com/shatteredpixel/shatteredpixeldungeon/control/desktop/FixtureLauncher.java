@@ -96,6 +96,8 @@ public final class FixtureLauncher {
                 heroClass = ABILITY_CLASSES.get(name); subclass = HeroSubClass.NONE;
             } else if (kind.equals("ui") && Arrays.asList("identify", "upgrade", "cancel-confirm", "alchemy", "travel").contains(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("lowfreq") && LowFrequencyFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("spell") && name.matches("[A-Za-z]+")) {
                 heroClass = HeroClass.CLERIC;
                 subclass = Arrays.asList("Smite", "LayOnHands", "AuraOfProtection", "WallOfLight").contains(name) ? HeroSubClass.PALADIN
@@ -194,6 +196,7 @@ public final class FixtureLauncher {
                             "tome_charge", Dungeon.hero.belongings.getItem(HolyTome.class) == null ? null : get(Dungeon.hero.belongings.getItem(HolyTome.class), "charge"),
                             "tome_partial", Dungeon.hero.belongings.getItem(HolyTome.class) == null ? null : get(Dungeon.hero.belongings.getItem(HolyTome.class), "partialCharge"),
                             "weapon_charge", Dungeon.hero.buff(MeleeWeapon.Charger.class) == null ? null : Dungeon.hero.buff(MeleeWeapon.Charger.class).charges + Dungeon.hero.buff(MeleeWeapon.Charger.class).partialCharge,
+                            "low_frequency", fixture.kind.equals("lowfreq") ? LowFrequencyFixtures.assertions() : null,
                             "effect_buffs", buffNames(Dungeon.hero), "target_buffs", fixtureTarget == null ? null : buffNames(fixtureTarget),
                             "trinity_form", Dungeon.hero.armorAbility instanceof Trinity && fixture.kind.equals("spell") ? get(Dungeon.hero.armorAbility, fixture.name.equals("BodyForm") ? "bodyForm" : fixture.name.equals("MindForm") ? "mindForm" : "spiritForm") != null : null);
                     Files.writeString(profile.resolve("fixture-assertions.jsonl"), JsonCodec.encode(checkpoint) + "\n",
@@ -219,6 +222,10 @@ public final class FixtureLauncher {
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;
         hero.subClass = fixture.subclass;
         Talent.initSubclassTalents(hero);
+        if (fixture.kind.equals("lowfreq")) {
+            LowFrequencyFixtures.prepare(fixture.name, hero);
+            return null;
+        }
         if (fixture.kind.equals("ui")) {
             prepareUi(fixture.name, hero);
             Item.updateQuickslot(); Dungeon.observe(); hero.checkVisibleMobs();

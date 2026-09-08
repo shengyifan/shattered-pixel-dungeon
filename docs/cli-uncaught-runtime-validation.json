@@ -1,0 +1,43 @@
+{
+  "verified": true,
+  "test_fixture": true,
+  "counts_as_win": false,
+  "runtime_id": "runtime-df6df5d12ea94424ae3df741780c5eb0",
+  "profile": "desktop-control/build/fixtures/uncaught-runtime-86a3986a4cbb4922aa8b8cd16f99cefe",
+  "session_status": "FAILED",
+  "end_reason": "uncaught_runtime_failure",
+  "process_exit_code": 1,
+  "target_wire_responses": 1,
+  "original_exception_internal_only": true,
+  "scope_id": "run:9aeefc58-a2c0-4eeb-85a4-fe6aa34c549a",
+  "request_id": "uncaught-e2e3c5b8526847b18a50e7b06662ee81",
+  "injected_stack": [
+    "thread=SHPD Actor Thread",
+    "UncaughtRuntimeAgent.fire(UncaughtRuntimeAgent.java:58)",
+    "com.shatteredpixel.shatteredpixeldungeon.actors.Actor.process(Actor.java:335)",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene$3.run(GameScene.java:879)"
+  ],
+  "source_evidence": "desktop-control/build/fixtures/uncaught-runtime-86a3986a4cbb4922aa8b8cd16f99cefe/uncaught-runtime-result.json",
+  "previous_validation": {
+    "verified": true,
+    "test_fixture": true,
+    "counts_as_win": false,
+    "runtime_id": "runtime-869736c14f4b462786c93bad76631ea1",
+    "profile": "desktop-control/build/fixtures/uncaught-runtime-5d295f5ece754f00912ac2eeb703a17e",
+    "session_status": "FAILED",
+    "end_reason": "uncaught_runtime_failure",
+    "process_exit_code": 0,
+    "target_wire_responses": 1,
+    "original_exception_internal_only": true,
+    "scope_id": "run:c59c4476-6202-408c-a74f-77fb0017020c",
+    "request_id": "uncaught-cc844edca06b4cc3bc375bf8e59227ad",
+    "injected_stack": [
+      "thread=SHPD Actor Thread",
+      "UncaughtRuntimeAgent.fire(UncaughtRuntimeAgent.java:58)",
+      "com.shatteredpixel.shatteredpixeldungeon.actors.Actor.process(Actor.java:335)",
+      "com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene$3.run(GameScene.java:879)"
+    ],
+    "source_evidence": "desktop-control/build/fixtures/uncaught-runtime-5d295f5ece754f00912ac2eeb703a17e/uncaught-runtime-result.json"
+  },
+  "exit_code_regression": "The earlier test recorded FAILED with exit 0; current fatal-session exit is 1 after session finalization and resource closure."
+}

@@ -135,10 +135,22 @@ public final class PlayerObservation {
         if (hero.belongings == null) return result;
         for (String slot : Arrays.asList("weapon", "armor", "artifact", "misc", "ring", "secondWep")) {
             Item item = (Item) SnapshotFields.read(hero.belongings, slot);
-            if (item != null) result.add(item(item, "equipment." + slot, true));
+            if (item != null) result.add(inventoryItem(hero, item, "equipment." + slot, true));
         }
         Set<Item> traversed = Collections.newSetFromMap(new IdentityHashMap<>());
-        bag(hero.belongings.backpack, "backpack", result, traversed);
+        bag(hero, hero.belongings.backpack, "backpack", result, traversed);
+        return result;
+    }
+
+    /** Same LostInventory gate as the visible InventorySlot, for a resolved current inventory item. */
+    public static boolean inventoryItemAvailable(Hero hero, Item item) {
+        return hero != null && hero.belongings != null && item != null
+                && (!hero.belongings.lostInventory() || item.keptThroughLostInventory());
+    }
+
+    private static Map<String,Object> inventoryItem(Hero hero, Item item, String locator, boolean equipped) {
+        Map<String,Object> result = item(item, locator, equipped);
+        result.put("available", inventoryItemAvailable(hero, item));
         return result;
     }
 
@@ -164,13 +176,13 @@ public final class PlayerObservation {
         return current;
     }
 
-    private static void bag(Bag bag, String path, List<Object> items, Set<Item> traversed) {
+    private static void bag(Hero hero, Bag bag, String path, List<Object> items, Set<Item> traversed) {
         if (bag == null || !traversed.add(bag)) return;
         for (int i = 0; i < bag.items.size(); i++) {
             Item item = bag.items.get(i);
             String locator = path + "." + i;
-            items.add(item(item, locator, false));
-            if (item instanceof Bag) bag((Bag) item, locator, items, traversed);
+            items.add(inventoryItem(hero, item, locator, false));
+            if (item instanceof Bag) bag(hero, (Bag) item, locator, items, traversed);
         }
     }
 

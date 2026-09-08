@@ -1,0 +1,240 @@
+{
+  "schema": 1,
+  "test_fixture": true,
+  "counts_as_win": false,
+  "source": {
+    "test_fixture": true,
+    "counts_as_win": false,
+    "profile": "desktop-control/build/fixtures/layout-a3a068fd4ed94063b7b09d61812887f2",
+    "runtime_id": "runtime-7edb48cb0a8742709ef58792d1351e33",
+    "measured_launcher": "source",
+    "mode_changes": [
+      {
+        "title": "interface mode",
+        "previous": 2,
+        "value": 0,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      },
+      {
+        "title": "interface mode",
+        "previous": 0,
+        "value": 1,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      },
+      {
+        "title": "interface mode",
+        "previous": 1,
+        "value": 2,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      }
+    ],
+    "inventory_checks": [
+      {
+        "interface_mode": 0,
+        "presentation": "WndBag",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      },
+      {
+        "interface_mode": 1,
+        "presentation": "WndBag",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      },
+      {
+        "interface_mode": 2,
+        "presentation": "InventoryPane",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      },
+      {
+        "interface_mode": 2,
+        "presentation": "InventoryPane",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      }
+    ],
+    "cli_version": "CLI.0.3.0",
+    "scope_id": "run:1c2be589-ffc6-42cb-aaea-aa7c92412dd3",
+    "original_interface_mode": 2,
+    "scale_changes": [
+      {
+        "title": "interface scale",
+        "previous": 3,
+        "value": 2,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      },
+      {
+        "title": "interface scale",
+        "previous": 2,
+        "value": 3,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      }
+    ],
+    "view": {
+      "accepted_zoom_values_from_public_range": [
+        1.0,
+        6.0
+      ],
+      "pan_units": "map_view",
+      "pan_deltas": [
+        [
+          8,
+          -6
+        ],
+        [
+          -8,
+          6
+        ]
+      ],
+      "hero_did_not_move": true,
+      "camera_value_not_exposed_by_current_public_observation": true
+    },
+    "use_item": {
+      "actual_food_use_via_current_controls": true,
+      "quantity_before": 1,
+      "quantity_after": 0
+    },
+    "no_separate_backpack_layout_setting": "Existing Interface Mode selects persistent pane versus bag window",
+    "unlabelled_settings_tabs_discovered_via_public_panels": true,
+    "ok": true,
+    "runtime_id_role": "measured_source_classpath"
+  },
+  "packaged": {
+    "test_fixture": true,
+    "counts_as_win": false,
+    "profile": "desktop-control/build/fixtures/layout-1c409475f57c4d5690d3844cecac886d",
+    "runtime_id": "runtime-c6cfea8d28904fb4bb1016e7d072b9c6",
+    "measured_launcher": "packaged",
+    "mode_changes": [
+      {
+        "title": "interface mode",
+        "previous": 2,
+        "value": 0,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      },
+      {
+        "title": "interface mode",
+        "previous": 0,
+        "value": 1,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      },
+      {
+        "title": "interface mode",
+        "previous": 1,
+        "value": 2,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      }
+    ],
+    "inventory_checks": [
+      {
+        "interface_mode": 0,
+        "presentation": "WndBag",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      },
+      {
+        "interface_mode": 1,
+        "presentation": "WndBag",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      },
+      {
+        "interface_mode": 2,
+        "presentation": "InventoryPane",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      },
+      {
+        "interface_mode": 2,
+        "presentation": "InventoryPane",
+        "current_controls_opened_item": true,
+        "throw_selector_cancelled": true,
+        "inventory_unchanged": true
+      }
+    ],
+    "launcher_path": "desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl",
+    "cli_version": "CLI.0.3.0",
+    "scope_id": "run:f60ab9cd-cf5c-42b9-a5ea-e7f1d1c801bf",
+    "original_interface_mode": 2,
+    "scale_changes": [
+      {
+        "title": "interface scale",
+        "previous": 3,
+        "value": 2,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      },
+      {
+        "title": "interface scale",
+        "previous": 2,
+        "value": 3,
+        "controls_rebuilt": true,
+        "old_version_rejected": true,
+        "retired_control_rejected_with_current_version": true,
+        "rejected_id_burned": true
+      }
+    ],
+    "view": {
+      "accepted_zoom_values_from_public_range": [
+        1.0,
+        6.0
+      ],
+      "pan_units": "map_view",
+      "pan_deltas": [
+        [
+          8,
+          -6
+        ],
+        [
+          -8,
+          6
+        ]
+      ],
+      "hero_did_not_move": true,
+      "camera_value_not_exposed_by_current_public_observation": true
+    },
+    "use_item": {
+      "actual_food_use_via_current_controls": true,
+      "quantity_before": 1,
+      "quantity_after": 0
+    },
+    "no_separate_backpack_layout_setting": "Existing Interface Mode selects persistent pane versus bag window",
+    "unlabelled_settings_tabs_discovered_via_public_panels": true,
+    "ok": true,
+    "runtime_id_role": "bootstrap_source_classpath"
+  }
+}

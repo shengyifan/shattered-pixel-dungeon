@@ -14,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ProtocolExcepti
 import com.watabou.noosa.Game;
 import com.watabou.noosa.RuntimeObserver;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -50,8 +51,15 @@ public final class GameController implements RuntimeObserver {
         }
     }
     public static final class SaveResult {
-        public final String runId; public final int slot; public final Throwable error;
-        SaveResult(String runId,int slot,Throwable error){this.runId=runId;this.slot=slot;this.error=error;}
+        public final String receiptId,runId,occurredAt,originScopeId,originRequestId;
+        public final int slot; public final Throwable error;
+        public SaveResult(String runId,int slot,Throwable error){
+            this(UUID.randomUUID().toString(),runId,slot,error,Instant.now().toString(),null,null);
+        }
+        public SaveResult(String receiptId,String runId,int slot,Throwable error,String occurredAt,String originScopeId,String originRequestId){
+            this.receiptId=receiptId;this.runId=runId;this.slot=slot;this.error=error;
+            this.occurredAt=occurredAt;this.originScopeId=originScopeId;this.originRequestId=originRequestId;
+        }
     }
     public static final class RunOutcome {
         public final String runId;
@@ -74,6 +82,7 @@ public final class GameController implements RuntimeObserver {
     private static final class Work {
         final String version; final Map<String,Object> args;
         final String requestId;
+        String originScopeId;
         final Execution execution=new Execution(new CompletableFuture<>(),new CompletableFuture<>());
         final CompletableFuture<State> result=execution.completion;
         String activityVersion;
@@ -104,7 +113,8 @@ public final class GameController implements RuntimeObserver {
     private volatile boolean disposed, exiting;
     private volatile String plannedRun;
     private volatile Map<String,Object> runOutcome;
-    private Work executing;
+    // Published before perform: native saves can complete synchronously or on the Interlevel worker.
+    private volatile Work executing;
     private CancelControl cancellationLease;
     private CompletableFuture<State> cancellationCompletion;
     private boolean failedExecutionHold;
@@ -141,7 +151,12 @@ public final class GameController implements RuntimeObserver {
 
     @Override public boolean exitRequested(){exiting=true;return false;}
     @Override public void onException(Throwable error){errors.accept(error);}
-    @Override public void onSave(String runId,int slot,Throwable error){saves.add(new SaveResult(runId,slot,error));}
+    @Override public void onSave(String runId,int slot,Throwable error){
+        Work owner=executing;
+        String requestId=owner==null?null:owner.requestId;
+        saves.add(new SaveResult(UUID.randomUUID().toString(),runId,slot,error,Instant.now().toString(),
+                requestId==null?null:owner.originScopeId,requestId));
+    }
     @Override public void onRunEnded(String runId,boolean won){
         if(runId==null)return;
         RunOutcome outcome=new RunOutcome(runId,won);runOutcome=Collections.unmodifiableMap(outcome.data());outcomes.add(outcome);
@@ -258,12 +273,14 @@ public final class GameController implements RuntimeObserver {
                 validateAction(work.args);
                 work.startedInRun=runActive();
                 work.startCell=Dungeon.hero==null?-1:Dungeon.hero.pos;
+                work.originScopeId=before.scopeId;
+                executing=work;executedFrame=frame;
                 enteredGame=true;
                 perform(work.args);
-                executing=work;executedFrame=frame;
             }catch(Throwable error){
                 reportAfterHandoff(error);
                 if(enteredGame && Dungeon.hero!=null&&Dungeon.hero.resting)failedExecutionHold=true;
+                if(executing==work)executing=null;
                 reject(work.result,!enteredGame && work.args!=null
                         ?new NotExecuted(error instanceof ProtocolException?((ProtocolException)error).code:"INVALID_ARGUMENT",error):error);
             }
@@ -366,7 +383,7 @@ public final class GameController implements RuntimeObserver {
             actions.add(map("action","game.save"));
             if(shortcut("inventory")!=null)actions.add(map("action","inventory.open","parameters",map("locator","current inventory locator")));
         }
-        actions.add(map("action","app.quit"));
+        if(canQuit())actions.add(map("action","app.quit"));
         boolean choice=Boolean.TRUE.equals(uiState.get("modal"))||uiState.containsKey("item_prompt")
                 ||(Game.scene() instanceof GameScene&&(GameScene.interfaceBlockingHero()||GameScene.isSelectingCell()));
         String phase=exiting?"closing":choice?"awaiting_input":Game.scene() instanceof GameScene
@@ -387,6 +404,14 @@ public final class GameController implements RuntimeObserver {
     private void requireHero(){
         if(!(Game.scene() instanceof GameScene)||Dungeon.hero==null||!Dungeon.hero.ready
                 ||GameScene.interfaceBlockingHero()||GameScene.isSelectingCell())throw new ProtocolException("ACTION_UNAVAILABLE","Action unavailable in this context");
+    }
+    /** The same existing native quit gate is used for discovery, validation and execution. */
+    private static boolean canQuit(){
+        return !(Game.scene() instanceof GameScene)
+                ||(!GameScene.interfaceBlockingHero()&&!GameScene.isSelectingCell());
+    }
+    private static void requireQuit(){
+        if(!canQuit())throw new ProtocolException("ACTION_UNAVAILABLE","Close the current choice first");
     }
     static boolean aliveAtBoundary(Hero hero){
         if(hero.HP>0)return true;
@@ -417,8 +442,7 @@ public final class GameController implements RuntimeObserver {
         if(!(name instanceof String))throw new ProtocolException("INVALID_ARGUMENT","action is required");
         String action=(String)name;
         if(action.equals("app.quit")){
-            if(Game.scene() instanceof GameScene && (GameScene.interfaceBlockingHero()||GameScene.isSelectingCell()))
-                throw new ProtocolException("ACTION_UNAVAILABLE","Close the current choice first");
+            requireQuit();
             return;
         }
         if(Arrays.asList("move.step","wait","rest","search","game.save","inventory.open").contains(action)){
@@ -428,11 +452,16 @@ public final class GameController implements RuntimeObserver {
                 throw new ProtocolException("ACTION_UNAVAILABLE","The corresponding user control is unavailable");
             if(action.equals("move.step") && !Arrays.asList("north","northeast","east","southeast","south","southwest","west","northwest").contains(args.get("direction")))
                 throw new ProtocolException("INVALID_ARGUMENT","Unknown direction");
-            if(action.equals("inventory.open") && (!(args.get("locator") instanceof String)||snapshotter.resolveItem((String)args.get("locator"))==null))
-                throw new ProtocolException("ACTION_UNAVAILABLE","Item is not in the current inventory");
+            if(action.equals("inventory.open"))requireAvailableInventoryItem(args.get("locator"));
             return;
         }
         ui.validate(action,args);
+    }
+    private com.shatteredpixel.shatteredpixeldungeon.items.Item requireAvailableInventoryItem(Object locator){
+        com.shatteredpixel.shatteredpixeldungeon.items.Item item=locator instanceof String?snapshotter.resolveItem((String)locator):null;
+        if(!PlayerObservation.inventoryItemAvailable(Dungeon.hero,item))
+            throw new ProtocolException("ACTION_UNAVAILABLE","Item is not available in the current inventory");
+        return item;
     }
     private void perform(Map<String,Object> args)throws Exception{
         if(plannedRun!=null){Dungeon.prepareRunIdentity(plannedRun);plannedRun=null;}
@@ -440,8 +469,8 @@ public final class GameController implements RuntimeObserver {
         if(!(name instanceof String))throw new ProtocolException("INVALID_ARGUMENT","action is required");
         String action=(String)name;
         if(action.equals("app.quit")){
+            requireQuit();
             if(Game.scene() instanceof GameScene){
-                if(GameScene.interfaceBlockingHero()||GameScene.isSelectingCell())throw new ProtocolException("ACTION_UNAVAILABLE","Close the current choice first");
                 Dungeon.saveAll();Badges.saveGlobal();Journal.saveGlobal();
             }
             exiting=true;return;
@@ -449,8 +478,7 @@ public final class GameController implements RuntimeObserver {
         if(action.equals("game.save")){requireHero();Dungeon.saveAll();return;}
         if(action.equals("inventory.open")){
             requireHero();
-            com.shatteredpixel.shatteredpixeldungeon.items.Item item=snapshotter.resolveItem(String.valueOf(args.get("locator")));
-            if(item==null)throw new ProtocolException("ACTION_UNAVAILABLE","Item is not in the current inventory");
+            com.shatteredpixel.shatteredpixeldungeon.items.Item item=requireAvailableInventoryItem(args.get("locator"));
             GameScene.show(new com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem(null,item));return;
         }
         if(action.equals("move.step")){

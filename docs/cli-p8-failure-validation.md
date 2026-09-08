@@ -2,6 +2,8 @@
 
 本记录区分三类证据：真实游戏引擎通过公开 CLI 的保存/恢复测试；真实子进程执行生产 AuditStore 后被 SIGKILL 的账本测试；仅在同一测试进程内模拟行为的单元测试。它们证明的范围不同。
 
+后续补充：下文“尚未证明”的真实引擎临界点现已另行执行 11 项精确 SIGKILL 并通过，见 [真实游戏进程强杀报告](cli-p8-engine-crash-validation.md)。本文保留原批次的证据层级，不将账本 fake-effect 测试追认成游戏回调测试。
+
 2026-09-09 的结果为 **3 个真实引擎保存场景通过、12 个账本子进程 SIGKILL 场景通过**。测试创建的每个 profile 均位于 `desktop-control/build/fixtures/`，标记 `test_fixture=true`、`counts_as_win=false`。没有读取用户个人存档，没有游戏截图、键鼠模拟或 Computer Use。
 
 逐例结果见 [cli-p8-failure-validation.json](cli-p8-failure-validation.json)。其中仅有测试结果、scope/状态判据及仓库相对路径；原始公开协议记录、内部诊断库、隔离存档均留在忽略的 build 目录。
