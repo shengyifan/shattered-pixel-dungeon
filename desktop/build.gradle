@@ -7,6 +7,9 @@ java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
 
 ext.appMainClass = "com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher"
 application.mainClass = appMainClass
+// Keep the dependency JAR distinct from the release fat JAR. Otherwise a prior release
+// can shadow freshly compiled core classes on another module's runtime classpath.
+tasks.named('jar') { archiveClassifier = 'thin' }
 processResources {
     from new File(project(':core').projectDir, "/src/main/assets")
     from new File(project(':desktop').projectDir,"/src/main/assets")

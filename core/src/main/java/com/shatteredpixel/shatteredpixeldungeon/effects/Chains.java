@@ -37,6 +37,9 @@ public class Chains extends Group {
 
 	private Callback callback;
 
+	@Override
+	public boolean hasPendingCallback() { return callback != null; }
+
 	private Image[] chains;
 	private int numChains;
 	private float distance;

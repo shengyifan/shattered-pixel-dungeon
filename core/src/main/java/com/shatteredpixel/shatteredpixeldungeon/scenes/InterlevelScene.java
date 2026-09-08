@@ -107,6 +107,18 @@ public class InterlevelScene extends PixelScene {
 	
 	private static Thread thread;
 	private static Exception error = null;
+
+	/** A story choice or error window can be read only after the loader has stopped. */
+	public boolean awaitingUserInput() {
+		Thread loader = thread;
+		if (loader != null && loader.isAlive()) return false;
+		if (phase != Phase.STATIC) return false;
+		if (btnContinue != null && btnContinue.active && !textFadingIn) return true;
+		for (com.watabou.noosa.Gizmo child : childrenSnapshot()) {
+			if (child instanceof com.shatteredpixel.shatteredpixeldungeon.ui.Window && child.isVisible()) return true;
+		}
+		return false;
+	}
 	private float waitingTime;
 
 	public static int lastRegion = -1;

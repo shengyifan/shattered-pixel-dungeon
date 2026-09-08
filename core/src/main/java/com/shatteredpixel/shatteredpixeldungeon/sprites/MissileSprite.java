@@ -52,6 +52,9 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 	private static final float SPEED	= 240f;
 	
 	private Callback callback;
+
+	@Override
+	public boolean hasPendingCallback() { return callback != null; }
 	
 	public void reset( int from, int to, Item item, Callback listener ) {
 		reset(Dungeon.level.solid[from] ? DungeonTilemap.raisedTileCenterToWorld(from) : DungeonTilemap.raisedTileCenterToWorld(from),

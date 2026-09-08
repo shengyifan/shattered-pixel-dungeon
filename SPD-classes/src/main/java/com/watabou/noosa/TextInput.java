@@ -175,6 +175,21 @@ public class TextInput extends Component {
 		return textField.getText();
 	}
 
+	public int maximumLength() { return textField.getMaxLength(); }
+	public boolean multiline() { return textField instanceof TextArea; }
+
+	/** Replaces editable text through the field's existing change-listener path. */
+	public void replaceText(String value) {
+		if (!exists || !isVisible() || !isActive()) {
+			throw new IllegalStateException("The text control is not available");
+		}
+		if (value == null || (maximumLength() > 0 && value.length() > maximumLength())
+				|| (!multiline() && (value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0))) {
+			throw new IllegalArgumentException("The text does not fit this control");
+		}
+		setText(value);
+	}
+
 	public void copyToClipboard(){
 		if (textField.getSelection().isEmpty()) {
 			textField.selectAll();

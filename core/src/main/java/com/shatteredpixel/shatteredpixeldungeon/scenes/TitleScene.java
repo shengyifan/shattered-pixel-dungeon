@@ -273,16 +273,7 @@ public class TitleScene extends PixelScene {
 			@Override
 			public boolean onSignal(PointerEvent event) {
 				if (event != null && event.type == PointerEvent.Type.UP && !btnPlay.active){
-					parent.add(new Tweener(parent, 0.5f) {
-						@Override
-						protected void updateValues(float progress) {
-							uiAlpha = progress;
-							updateFade();
-							if (progress >= 1){
-								btnFade.enable(true);
-							}
-						}
-					});
+					revealControls();
 				}
 				return false;
 			}
@@ -305,6 +296,18 @@ public class TitleScene extends PixelScene {
 	}
 
 	private float uiAlpha;
+
+	/** Restore the controls using the same fade as releasing the background. */
+	public void revealControls() {
+		if (btnPlay.active) return;
+		add(new Tweener(this, 0.5f) {
+			@Override protected void updateValues(float progress) {
+				uiAlpha = progress;
+				updateFade();
+				if (progress >= 1) btnFade.enable(true);
+			}
+		});
+	}
 
 	public void updateFade() {
 		float alpha = GameMath.gate(0f, uiAlpha, 1f);

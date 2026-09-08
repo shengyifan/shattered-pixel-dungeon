@@ -148,6 +148,16 @@ public class RadialMenu extends Window {
 
 	public void onSelect(int idx, boolean alt){}
 
+	public String[] optionLabels() { return texts.clone(); }
+
+	/** Selects the same option/alternate action as the menu's pointer selector. */
+	public void chooseOption(int index, boolean alternate) {
+		if (!exists || !isVisible() || !isActive()) throw new IllegalStateException("The menu is not available");
+		if (index < 0 || index >= slots) throw new IllegalArgumentException("Option is out of range");
+		hide();
+		onSelect(index, alternate);
+	}
+
 	@Override
 	public void destroy() {
 		super.destroy();

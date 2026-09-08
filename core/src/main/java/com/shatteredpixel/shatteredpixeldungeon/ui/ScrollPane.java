@@ -158,6 +158,20 @@ public class ScrollPane extends Component {
 		return content;
 	}
 
+	/** Activates an existing content entry through this pane's ordinary selection path. */
+	public final void selectContent(Component entry) {
+		if (!exists || !isVisible() || !isActive() || entry == null
+				|| !entry.exists || !entry.isVisible() || !entry.isActive()) {
+			throw new IllegalStateException("The list entry is not available");
+		}
+		com.watabou.noosa.Gizmo ancestor = entry;
+		while (ancestor != null && ancestor != content) ancestor = ancestor.parent;
+		if (ancestor != content) throw new IllegalArgumentException("The entry is not in this list");
+		scrollTo(content.camera.scroll.x, entry.centerY() - height / 2f);
+		// Content coordinates, not screen coordinates or manufactured input events.
+		onClick(entry.centerX(), entry.centerY());
+	}
+
 	public void onClick( float x, float y ) {
 	}
 

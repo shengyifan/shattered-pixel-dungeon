@@ -45,6 +45,9 @@ public class Gizmo {
 	
 	public void update() {
 	}
+
+	/** True while this visual still owns a continuation that can change game state. */
+	public boolean hasPendingCallback() { return false; }
 	
 	public void draw() {
 	}

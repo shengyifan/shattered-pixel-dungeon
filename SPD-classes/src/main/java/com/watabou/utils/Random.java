@@ -31,6 +31,17 @@ import java.util.List;
 
 public class Random {
 
+	/** Copies the existing generator stack without drawing numbers or changing algorithms. */
+	public static synchronized byte[] exportState() {
+		try {
+			java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+			try (java.io.ObjectOutputStream out = new java.io.ObjectOutputStream(bytes)) {
+				out.writeObject(generators);
+			}
+			return bytes.toByteArray();
+		} catch (java.io.IOException e) { throw new IllegalStateException("Cannot snapshot RNG", e); }
+	}
+
 	//we store a stack of random number generators, which may be seeded deliberately or randomly.
 	//top of the stack is what is currently being used to generate new numbers.
 	//the base generator is always created with no seed, and cannot be popped.

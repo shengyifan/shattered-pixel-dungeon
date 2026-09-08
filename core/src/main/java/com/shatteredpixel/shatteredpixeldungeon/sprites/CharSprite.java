@@ -132,6 +132,11 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		super();
 		listener = this;
 	}
+
+	@Override
+	public synchronized boolean hasPendingCallback() {
+		return animCallback != null || (jumpCallback != null && jumpTweener != null && jumpTweener.exists);
+	}
 	
 	@Override
 	public void play(Animation anim) {

@@ -68,6 +68,11 @@ public class Scene extends Group {
 		return Camera.main;
 	}
 	
+	/** Invokes this scene's normal back action without manufacturing an input event. */
+	public final void requestBack() {
+		onBackPressed();
+	}
+
 	protected void onBackPressed() {
 		Game.instance.finish();
 	}

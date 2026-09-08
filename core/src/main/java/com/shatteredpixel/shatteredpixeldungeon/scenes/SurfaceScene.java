@@ -50,6 +50,7 @@ import com.watabou.noosa.Group;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.NoosaScript;
 import com.watabou.noosa.PointerArea;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionArea;
 import com.watabou.noosa.TextureFilm;
 import com.watabou.noosa.Visual;
 import com.watabou.noosa.audio.Music;
@@ -233,8 +234,8 @@ public class SurfaceScene extends PixelScene {
 		window.add( a );
 		window.add( pet );
 		
-		window.add( new PointerArea( sky ) {
-			protected void onClick( PointerEvent event ) {
+		window.add( new ActionArea( sky, "Companion" ) {
+			protected void onActivate() {
 				pet.jump();
 			}
 		} );

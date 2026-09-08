@@ -185,6 +185,12 @@ public class Dungeon {
 	public static Hero hero;
 	public static Level level;
 
+	/** Persistent identity of a run, independent of slot, seed and process lifetime. */
+	public static String runId;
+	private static String nextRunId;
+	public static boolean runIdentityNeedsSave;
+	public static void prepareRunIdentity(String id) { nextRunId = id; }
+
 	public static QuickSlot quickslot = new QuickSlot();
 	
 	public static int depth;
@@ -231,6 +237,9 @@ public class Dungeon {
 	}
 	
 	public static void init() {
+		runId = nextRunId == null ? java.util.UUID.randomUUID().toString() : nextRunId;
+		nextRunId = null;
+		runIdentityNeedsSave = false;
 
 		initialVersion = version = Game.versionCode;
 		challenges = SPDSettings.challenges();
@@ -623,7 +632,18 @@ public class Dungeon {
 	
 	public static void saveGame( int save ) {
 		try {
+			saveGameChecked(save);
+		} catch (IOException e) {
+			GamesInProgress.setUnknown(save);
+			ShatteredPixelDungeon.reportException(e);
+		}
+	}
+
+	/** Same normal save operation, with a result that callers can reliably observe. */
+	public static void saveGameChecked( int save ) throws IOException {
+		try {
 			Bundle bundle = new Bundle();
+			bundle.put("run_uuid", runId);
 
 			bundle.put( INIT_VER, initialVersion );
 			bundle.put( VERSION, version = Game.versionCode );
@@ -692,7 +712,7 @@ public class Dungeon {
 			
 		} catch (IOException e) {
 			GamesInProgress.setUnknown( save );
-			ShatteredPixelDungeon.reportException(e);
+			throw e;
 		}
 	}
 	
@@ -708,8 +728,15 @@ public class Dungeon {
 			
 			Actor.fixTime();
 			updateLevelExplored();
-			saveGame( GamesInProgress.curSlot );
-			saveLevel( GamesInProgress.curSlot );
+			try {
+				saveGameChecked( GamesInProgress.curSlot );
+				saveLevel( GamesInProgress.curSlot );
+				runIdentityNeedsSave = false;
+				com.watabou.noosa.Game.observer.onSave(runId, GamesInProgress.curSlot, null);
+			} catch (IOException e) {
+				com.watabou.noosa.Game.observer.onSave(runId, GamesInProgress.curSlot, e);
+				throw e;
+			}
 
 			GamesInProgress.set( GamesInProgress.curSlot );
 
@@ -723,6 +750,8 @@ public class Dungeon {
 	public static void loadGame( int save, boolean fullLoad ) throws IOException {
 		
 		Bundle bundle = FileUtils.bundleFromFile( GamesInProgress.gameFile( save ) );
+		runIdentityNeedsSave = !bundle.contains("run_uuid");
+		runId = runIdentityNeedsSave ? java.util.UUID.randomUUID().toString() : bundle.getString("run_uuid");
 
 		initialVersion = bundle.getInt( INIT_VER );
 		version = bundle.getInt( VERSION );
@@ -874,6 +903,7 @@ public class Dungeon {
 			updateLevelExplored();
 			Statistics.gameWon = false;
 			Rankings.INSTANCE.submit( false, cause );
+			com.watabou.noosa.Game.observer.onRunEnded(runId, false);
 		}
 	}
 	
@@ -885,6 +915,7 @@ public class Dungeon {
 		hero.belongings.identify();
 
 		Rankings.INSTANCE.submit( true, cause );
+		com.watabou.noosa.Game.observer.onRunEnded(runId, true);
 	}
 
 	public static void updateLevelExplored(){

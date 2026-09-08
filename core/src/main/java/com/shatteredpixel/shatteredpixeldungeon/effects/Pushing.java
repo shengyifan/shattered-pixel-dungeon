@@ -99,6 +99,9 @@ public class Pushing extends Actor {
 
 	public class Effect extends Visual {
 
+		@Override
+		public boolean hasPendingCallback() { return true; }
+
 		private static final float DELAY = 0.15f;
 		
 		private PointF end;

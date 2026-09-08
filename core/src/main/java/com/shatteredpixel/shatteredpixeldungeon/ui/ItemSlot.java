@@ -217,6 +217,9 @@ public class ItemSlot extends Button {
 		}
 	}
 
+	/** The item already represented by this slot; no display getter is evaluated. */
+	public Item displayedItem() { return item; }
+
 	public void updateText(){
 
 		if (itemIcon != null){

@@ -55,6 +55,15 @@ public class ChangeButton extends Component {
 	protected void onClick() {
 		ChangesScene.showChangeInfo(new Image(icon), title, messages);
 	}
+
+	public String accessibleTitle() { return title; }
+
+	public void activate() {
+		if (!exists || !isVisible() || !isActive()) {
+			throw new IllegalStateException("The control is not available");
+		}
+		onClick();
+	}
 	
 	@Override
 	protected void layout() {

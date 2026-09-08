@@ -1,0 +1,22 @@
+plugins { id 'java-library' }
+java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+dependencies {
+    api project(':control-protocol')
+    implementation project(':core')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
+    testImplementation 'junit:junit:4.13.2'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.12.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+test {
+    useJUnitPlatform()
+    jvmArgs '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED'
+}
+
+tasks.register('generateUiCoverage', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.shatteredpixel.shatteredpixeldungeon.control.game.UiCoverageInventory'
+    args rootProject.projectDir.absolutePath
+}

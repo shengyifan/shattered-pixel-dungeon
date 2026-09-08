@@ -48,8 +48,28 @@ import java.util.Locale;
 public class DesktopLauncher {
 
 	public static void main (String[] args) {
+		java.nio.file.Path dataDirectory = null;
+		for (int i = 0; i < args.length; i++) {
+			if ("--data-dir".equals(args[i]) && i + 1 < args.length) dataDirectory = java.nio.file.Paths.get(args[++i]);
+		}
+		launch(args, dataDirectory, null);
+	}
 
-		if (!DesktopLaunchValidator.verifyValidJVMState(args)){
+	/** Reuses the ordinary desktop bootstrap with optional data and exception handling. */
+	public static void launch(String[] args, java.nio.file.Path dataDirectory,
+			Thread.UncaughtExceptionHandler exceptionHandler) {
+		launch(args,dataDirectory,exceptionHandler,false);
+	}
+
+	public static void launch(String[] args, java.nio.file.Path dataDirectory,
+			Thread.UncaughtExceptionHandler exceptionHandler, boolean profileAlreadyLocked) {
+
+		if (exceptionHandler != null && SharedLibraryLoader.os == Os.MacOsX
+				&& !"1".equals(System.getenv("JAVA_STARTED_ON_FIRST_THREAD_"
+				+ java.lang.management.ManagementFactory.getRuntimeMXBean().getName().split("@")[0]))) {
+			throw new IllegalStateException("FIRST_THREAD_REQUIRED");
+		}
+		if (exceptionHandler == null && !DesktopLaunchValidator.verifyValidJVMState(args)){
 			return;
 		}
 
@@ -70,7 +90,7 @@ public class DesktopLauncher {
 			title = DesktopLauncher.class.getPackage().getSpecificationTitle();
 		}
 		
-		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+		Thread.setDefaultUncaughtExceptionHandler(exceptionHandler != null ? exceptionHandler : new Thread.UncaughtExceptionHandler() {
 			@Override
 			public void uncaughtException(Thread thread, Throwable throwable) {
 				Game.reportException(throwable);
@@ -168,6 +188,13 @@ public class DesktopLauncher {
 			baseFileType = Files.FileType.Absolute;
 		}
 
+		if (dataDirectory != null) {
+			basePath = dataDirectory.toAbsolutePath().normalize().toString() + java.io.File.separator;
+			baseFileType = Files.FileType.Absolute;
+		}
+		java.nio.file.Path profilePath = baseFileType == Files.FileType.Absolute
+				? java.nio.file.Paths.get(basePath) : java.nio.file.Paths.get(System.getProperty("user.home"), basePath);
+		try (ProfileLock profileLock = profileAlreadyLocked ? null : new ProfileLock(profilePath)) {
 		config.setPreferencesConfig( basePath, baseFileType );
 		SPDSettings.set( new Lwjgl3Preferences( new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType) ));
 		FileUtils.setDefaultFileProperties( baseFileType, basePath );
@@ -190,5 +217,6 @@ public class DesktopLauncher {
 				"icons/icon_64.png", "icons/icon_128.png", "icons/icon_256.png");
 
 		new Lwjgl3Application(new ShatteredPixelDungeon(new DesktopPlatformSupport()), config);
+		} catch (java.io.IOException e) { throw new IllegalStateException("PROFILE_UNAVAILABLE", e); }
 	}
 }

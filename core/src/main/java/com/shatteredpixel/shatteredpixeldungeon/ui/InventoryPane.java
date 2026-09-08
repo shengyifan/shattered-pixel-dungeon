@@ -397,6 +397,15 @@ public class InventoryPane extends Component {
 		return selector;
 	}
 
+	/** The normal outside-click/back cancellation, including its inventory refresh. */
+	public void cancelSelection() {
+		if (selector == null) throw new IllegalStateException("No inventory selection is active");
+		GameScene.centerNextWndOnInvPane();
+		selector.onSelect(null);
+		selector = null;
+		updateInventory();
+	}
+
 	public boolean isSelecting(){
 		return selector != null;
 	}

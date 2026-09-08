@@ -43,6 +43,9 @@ public class Lightning extends Group {
 	
 	private Callback callback;
 
+	@Override
+	public boolean hasPendingCallback() { return callback != null; }
+
 	public Lightning(int from, int to, Callback callback){
 		this(Arrays.asList(new Arc(from, to)), callback);
 	}

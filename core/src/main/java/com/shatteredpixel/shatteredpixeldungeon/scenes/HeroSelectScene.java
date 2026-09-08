@@ -365,22 +365,7 @@ public class HeroSelectScene extends PixelScene {
 			@Override
 			public boolean onSignal(PointerEvent event) {
 				if (event != null && event.type == PointerEvent.Type.UP){
-					if (uiAlpha == 0 && landscape()){
-						parent.add(new Tweener(parent, 0.5f) {
-							@Override
-							protected void updateValues(float progress) {
-								uiAlpha = progress;
-								updateFade();
-							}
-
-							@Override
-							protected void onComplete() {
-								resetFade();
-							}
-						});
-					} else {
-						resetFade();
-					}
+					revealControls();
 				}
 				return false;
 			}
@@ -480,6 +465,21 @@ public class HeroSelectScene extends PixelScene {
 	}
 
 	private float uiAlpha;
+
+	/** Restore the controls through the same background-release interaction. */
+	public void revealControls() {
+		if (uiAlpha == 0 && landscape()) {
+			add(new Tweener(this, 0.5f) {
+				@Override protected void updateValues(float progress) {
+					uiAlpha = progress;
+					updateFade();
+				}
+				@Override protected void onComplete() { resetFade(); }
+			});
+		} else {
+			resetFade();
+		}
+	}
 
 	@Override
 	public void update() {
@@ -607,6 +607,11 @@ public class HeroSelectScene extends PixelScene {
 			} else {
 				setSelectedHero(cl);
 			}
+		}
+
+		@Override
+		protected String hoverText() {
+			return cl.title();
 		}
 
 		@Override

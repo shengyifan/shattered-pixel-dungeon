@@ -1,0 +1,371 @@
+package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
+
+import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditStore;
+import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditException;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.GameController;
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.*;
+import java.io.*;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
+import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
+
+/** Serial protocol processing and audit writes, with a separate logical lifetime for pending actions. */
+public final class MachineSession implements AutoCloseable {
+    /** Testing seam: no fake needs to initialize LibGDX or a game save. */
+    public interface GamePort {
+        GameController.State latest();
+        CompletableFuture<GameController.State> observe();
+        CompletableFuture<GameController.State> execute(String version, Map<String,Object> args);
+        default GameController.Execution start(String version,Map<String,Object> args,String requestId){
+            CompletableFuture<GameController.State> completion=execute(version,args);
+            return new GameController.Execution(completion,completion);
+        }
+        default CompletableFuture<GameController.State> prepareCancellation(String version,String target){
+            return CompletableFuture.failedFuture(new ProtocolException("CANCEL_UNAVAILABLE","Runtime does not support cancellation"));
+        }
+        default CompletableFuture<GameController.State> cancelPrepared(String version,String target){
+            return CompletableFuture.failedFuture(new ProtocolException("CANCEL_UNAVAILABLE","Runtime does not support cancellation"));
+        }
+        default void abortCancellation(String version){}
+        void prepareRun(String id);
+        GameController.SaveResult pollSave();
+        default GameController.RunOutcome pollRunOutcome(){return null;}
+        boolean exiting();
+        boolean disposed();
+        void exitNow();
+    }
+    private static final List<String> HISTORY=Arrays.asList("request.get","history.list","events.read");
+    private final AuditStore store;
+    private final GamePort game;
+    private final PrintStream output;
+    private final long timeoutMillis;
+    private final ExecutorService serial=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"SPD Audit and Protocol");t.setDaemon(true);return t;});
+    private volatile boolean closed;
+    private boolean executionUncertain;
+    private Pending pending;
+    private Pending cancelling;
+    private static final class Pending {
+        final AuditStore.Attempt attempt;
+        final GameController.State before;
+        CompletableFuture<GameController.State> future;
+        GameController.Execution execution;
+        GameController.State activity;
+        Pending(AuditStore.Attempt attempt,GameController.State before){this.attempt=attempt;this.before=before;}
+    }
+    private static final class ResponseStage { boolean committed,written; }
+
+    public MachineSession(AuditStore store,GameController game,PrintStream output){
+        this(store,new GamePort(){
+            public GameController.State latest(){return game.latest();}
+            public CompletableFuture<GameController.State> observe(){return game.observe();}
+            public CompletableFuture<GameController.State> execute(String v,Map<String,Object> a){return game.execute(v,a);}
+            public GameController.Execution start(String v,Map<String,Object> a,String id){return game.start(v,a,id);}
+            public CompletableFuture<GameController.State> prepareCancellation(String v,String target){return game.prepareCancellation(v,target);}
+            public CompletableFuture<GameController.State> cancelPrepared(String v,String target){return game.cancelPrepared(v,target);}
+            public void abortCancellation(String v){game.abortCancellation(v);}
+            public void prepareRun(String id){game.prepareRun(id);}
+            public GameController.SaveResult pollSave(){return game.pollSave();}
+            public GameController.RunOutcome pollRunOutcome(){return game.pollRunOutcome();}
+            public boolean exiting(){return game.exiting();}
+            public boolean disposed(){return game.disposed();}
+            public void exitNow(){game.exitNow();}
+        },output,30_000);
+    }
+    public MachineSession(AuditStore store,GamePort game,PrintStream output,long timeoutMillis){
+        if(timeoutMillis<1)throw new IllegalArgumentException("A positive timeout is required");
+        this.store=store;this.game=game;this.output=output;this.timeoutMillis=timeoutMillis;
+    }
+    /** Accept one complete NDJSON line; completion means its sole response has been handled. */
+    public CompletableFuture<Void> accept(String raw){
+        CompletableFuture<Void> done=new CompletableFuture<>();
+        if(closed){done.completeExceptionally(new ProtocolException("SESSION_CLOSED","Session is closed"));return done;}
+        try{serial.execute(()->{try{process(raw);done.complete(null);}catch(Throwable e){done.completeExceptionally(e);}});}
+        catch(RejectedExecutionException e){done.completeExceptionally(e);}
+        return done;
+    }
+    public void read(InputStream input){
+        try(BufferedReader reader=new BufferedReader(new InputStreamReader(input,StandardCharsets.UTF_8))){
+            String line;
+            while(!closed&&(line=reader.readLine())!=null){accept(line).get();if(game.exiting())return;}
+            if(!closed)serial.submit(()->endInput("stdin_eof")).get();
+        }catch(Throwable error){
+            try{serial.submit(()->{recordExceptionNow(unwrap(error));endInput("input_failure");}).get();}
+            catch(Throwable ignored){game.exitNow();}
+        }
+    }
+    private void process(String raw){
+        ResponseStage responseStage=new ResponseStage();
+        AuditStore.Attempt attempt=null;
+        String id=null,scope=null,op=null;
+        GameController.State state=game.latest();
+        boolean currentCertified=false,dispatchAttempted=false,cancelRequest=false;
+        String preparedLease=null;
+        try{
+            Map<String,Object> envelope=JsonCodec.decode(raw);
+            id=validText(envelope.get("id"));scope=validText(envelope.get("scope_id"));op=validText(envelope.get("op"));
+            if(scope==null&&"protocol.info".equals(op))scope=store.menuScope();
+            attempt=store.begin(scope,id,op,raw);
+            if(attempt.duplicate)throw new ProtocolException("DUPLICATE_REQUEST_ID","Request ID already appeared in this scope");
+            // Consume identity before validating args, operation or state_version.
+            ControlRequest request=ControlRequest.parse(raw);
+            if(scope==null)throw new ProtocolException("SCOPE_REQUIRED","scope_id is required");
+            if(!store.hasScope(scope))throw new ProtocolException("UNKNOWN_SCOPE","Unknown scope");
+            settleReady();
+            refreshActivity();
+            cancelRequest="action.execute".equals(op)&&"action.cancel".equals(request.args.get("action"));
+            boolean busy=pending!=null||cancelling!=null;
+            if("action.execute".equals(op)&&!cancelRequest&&(busy||executionUncertain))
+                throw new ProtocolException(executionUncertain?"EXECUTION_UNCERTAIN":"BUSY","No new action can be dispatched");
+            if(cancelRequest&&executionUncertain)throw new ProtocolException("EXECUTION_UNCERTAIN","Execution outcome is uncertain");
+            if(busy&&!executionUncertain&&cancelling==null&&pending!=null&&pending.activity!=null
+                    &&Arrays.asList("state.get","actions.list").contains(op)){
+                state=game.observe().get(timeoutMillis,TimeUnit.MILLISECONDS);currentCertified=true;
+                if("continuous_activity".equals(state.phase))pending.activity=state;
+                settleReady();
+            }
+            if(!busy&&!executionUncertain&&!"protocol.info".equals(op)){
+                // Historical data stays readable even when its run is not loaded.
+                if(!HISTORY.contains(op)||(state!=null&&scope.equals(state.scopeId))){
+                    state=game.observe().get(timeoutMillis,TimeUnit.MILLISECONDS);currentCertified=true;
+                }
+            }
+            if(state!=null&&state.scopeId.startsWith("run:"))store.ensureScope(state.scopeId,"run",state.scopeId.substring(4));
+            if(!"protocol.info".equals(op)&&!HISTORY.contains(op)&&(state==null||!scope.equals(state.scopeId)))
+                throw new ProtocolException("SCOPE_MISMATCH","Request scope is not active");
+            Object result;String status="completed";
+            switch(op){
+                case "protocol.info":
+                    result=map("protocol_version",1,"cli_version","CLI.0.1.0","game_version","3.3.8",
+                            "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
+                            "state_version",busy||executionUncertain||state==null?null:state.version,
+                            "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit"));break;
+                case "state.get":result=publicStateResult(state);break;
+                case "actions.list":result=pending!=null||executionUncertain?publicStateResult(state):map("state_version",state.version,"actions",state.actions);break;
+                case "request.get":
+                    result=store.getRequest(scope,requiredString(request.args,"target_id"));
+                    if(result==null)throw new ProtocolException("REQUEST_NOT_FOUND","Request not found");break;
+                case "history.list":result=store.history(scope,number(request.args,"after",0),limit(request.args));break;
+                case "events.read":result=store.events(scope,number(request.args,"after",0),limit(request.args));break;
+                case "action.execute":{
+                    if(request.stateVersion==null)throw new ProtocolException("STATE_VERSION_REQUIRED","state_version is required");
+                    if(cancelRequest){
+                        String target=requiredString(request.args,"target_id");
+                        if(pending==null||pending.activity==null||!target.equals(pending.attempt.id)||!scope.equals(pending.attempt.scopeId))
+                            throw new ProtocolException("ACTIVITY_NOT_ACTIVE","Target is not the active continuous request");
+                        if(!request.stateVersion.equals(pending.activity.version))throw new ProtocolException("STALE_ACTIVITY","Activity token has expired");
+                        if(cancelling!=null)throw new ProtocolException("CANCEL_IN_PROGRESS","Cancellation is already resolving");
+                        preparedLease=request.stateVersion;
+                        state=game.prepareCancellation(request.stateVersion,target).get(timeoutMillis,TimeUnit.MILLISECONDS);
+                        currentCertified=true;
+                        if(!scope.equals(state.scopeId)||!request.stateVersion.equals(state.version))throw new ProtocolException("STALE_ACTIVITY","Prepared boundary does not match the activity");
+                        store.markExecuting(attempt,request.stateVersion,state.publicState,state.internalState);
+                        dispatchAttempted=true;
+                        CompletableFuture<GameController.State> cancelled=game.cancelPrepared(request.stateVersion,target);
+                        try{state=cancelled.get(timeoutMillis,TimeUnit.MILLISECONDS);}
+                        catch(TimeoutException waiting){
+                            cancelling=new Pending(attempt,state);cancelling.future=cancelled;
+                            Map<String,Object> response=success(id,scope,"in_progress",map("phase","cancelling","state_version",null,"actions",Collections.emptyList()));
+                            Map<String,Object>[] snapshots=auditSnapshots(scope,state,false);
+                            store.respondPending(attempt,response,snapshots[0],snapshots[1]);responseStage.committed=true;
+                            send(attempt,response,responseStage);cancelled.whenComplete((after,error)->scheduleSettlement());return;
+                        }
+                        settleReady();
+                        result=state.result();break;
+                    }
+                    if(!request.stateVersion.equals(state.version))throw new ProtocolException("STALE_STATE","Observe before acting");
+                    requiredString(request.args,"action");String planned=null;
+                    if(scope.equals(store.menuScope())){
+                        planned=UUID.randomUUID().toString();store.ensureScope("run:"+planned,"planned",planned);store.linkTarget(attempt,"run:"+planned);
+                    }
+                    store.markExecuting(attempt,state.version,state.publicState,state.internalState);
+                    // A synchronous throw after entering runtime code can also mean a partial operation.
+                    dispatchAttempted=true;pending=new Pending(attempt,state);
+                    if(planned!=null)game.prepareRun(planned);
+                    pending.execution=game.start(request.stateVersion,request.args,id);
+                    pending.future=pending.execution.completion;
+                    try{
+                        state=pending.execution.firstResponse.get(timeoutMillis,TimeUnit.MILLISECONDS);
+                        if(!pending.future.isDone()&&"continuous_activity".equals(state.phase)){
+                            pending.activity=state;
+                            Map<String,Object> response=success(id,scope,"in_progress",publicStateResult(state));
+                            store.respondPending(attempt,response,state.publicState,state.internalState);responseStage.committed=true;
+                            send(attempt,response,responseStage);pending.execution.acknowledge();
+                            pending.future.whenComplete((after,error)->scheduleSettlement());return;
+                        }
+                        state=pending.future.get(timeoutMillis,TimeUnit.MILLISECONDS);
+                    }
+                    catch(TimeoutException waiting){
+                        Map<String,Object> response=success(id,scope,"in_progress",publicStateResult(state));
+                        Map<String,Object>[] snapshots=auditSnapshots(scope,state,false);
+                        store.respondPending(attempt,response,snapshots[0],snapshots[1]);responseStage.committed=true;
+                        send(attempt,response,responseStage);
+                        pending.execution.acknowledge();
+                        pending.future.whenComplete((after,error)->scheduleSettlement());return;
+                    }
+                    pending=null;currentCertified=true;
+                    if(state.scopeId.startsWith("run:"))store.ensureScope(state.scopeId,"run",state.scopeId.substring(4));
+                    status="awaiting_input".equals(state.phase)?"awaiting_input":"completed";result=state.result();break;
+                }
+                default:throw new ProtocolException("UNKNOWN_OPERATION","Unknown operation");
+            }
+            Map<String,Object> response=success(id,scope,status,result);
+            Map<String,Object>[] snapshots=dispatchAttempted&&currentCertified?directSnapshots(state):auditSnapshots(scope,state,currentCertified);
+            store.complete(attempt,status.toUpperCase(Locale.ROOT),response,snapshots[0],snapshots[1],null);responseStage.committed=true;
+            send(attempt,response,responseStage);if(game.exiting())game.exitNow();
+        }catch(Throwable thrown){
+            Throwable error=unwrap(thrown);
+            boolean definitelyNotExecuted=error instanceof GameController.NotExecuted;
+            if(dispatchAttempted){if(!definitelyNotExecuted)executionUncertain=true;if(!cancelRequest)pending=null;}
+            if(responseStage.committed||responseStage.written){fatal(error);return;}
+            if(error instanceof AuditException){
+                responseStage.written=true;output.println(JsonCodec.encode(failure(id,scope,"AUDIT_UNAVAILABLE")));output.flush();
+                fatal(error);return;
+            }
+            try{
+                if(attempt==null)attempt=store.begin(scope,id,op,raw);
+                Map<String,Object> response=failure(id,scope,dispatchAttempted&&!definitelyNotExecuted?"EXECUTION_UNKNOWN":code(error));
+                // Never substitute a pre-action snapshot for an unknown post-action state.
+                Map<String,Object>[] snapshots=dispatchAttempted?emptySnapshots():auditSnapshots(scope,state,currentCertified);
+                store.complete(attempt,dispatchAttempted&&!definitelyNotExecuted?"UNKNOWN":"REJECTED",response,snapshots[0],snapshots[1],error);responseStage.committed=true;
+                send(attempt,response,responseStage);
+            }catch(Throwable auditFailure){
+                if(!responseStage.written&&!responseStage.committed){responseStage.written=true;output.println(JsonCodec.encode(failure(id,scope,"AUDIT_UNAVAILABLE")));output.flush();}
+                fatal(auditFailure);
+            }
+        }finally{
+            if(preparedLease!=null)game.abortCancellation(preparedLease);
+            try{drainSaves();}catch(Throwable error){fatal(error);}
+        }
+    }
+    private Object publicStateResult(GameController.State state){
+        refreshActivity();
+        if(cancelling!=null)return map("phase","cancelling","state_version",null,"actions",Collections.emptyList(),"snapshot_status","last_stable");
+        if(pending!=null&&pending.activity!=null&&!executionUncertain){
+            Map<String,Object> result=new LinkedHashMap<>(pending.activity.result());
+            result.put("snapshot_status","last_interruptible_boundary");return result;
+        }
+        if(pending!=null||executionUncertain)return map("phase",executionUncertain?"execution_unknown":"resolving","state_version",null,
+                "actions",Collections.emptyList(),"snapshot_status","last_stable","last_stable_state",state==null?null:state.result());
+        return state==null?map("phase","starting","actions",Collections.emptyList()):state.result();
+    }
+    private void refreshActivity(){
+        if(pending==null||pending.execution==null)return;
+        CompletableFuture<GameController.State> first=pending.execution.firstResponse;
+        if(first.isDone()&&!first.isCompletedExceptionally()){
+            GameController.State boundary=first.getNow(null);
+            if(pending.activity==null&&boundary!=null&&"continuous_activity".equals(boundary.phase))pending.activity=boundary;
+        }
+        GameController.State latest=game.latest();
+        if(pending.activity!=null&&latest!=null&&"continuous_activity".equals(latest.phase)
+                &&latest.version.equals(pending.activity.version)&&latest.scopeId.equals(pending.activity.scopeId))pending.activity=latest;
+    }
+    @SuppressWarnings("unchecked") private Map<String,Object>[] emptySnapshots(){return new Map[]{null,null};}
+    @SuppressWarnings("unchecked") private Map<String,Object>[] directSnapshots(GameController.State state){return new Map[]{state.publicState,state.internalState};}
+    @SuppressWarnings("unchecked") private Map<String,Object>[] auditSnapshots(String requestedScope,GameController.State state,boolean currentCertified){
+        if(state==null)return emptySnapshots();
+        if(currentCertified&&Objects.equals(requestedScope,state.scopeId))return new Map[]{state.publicState,state.internalState};
+        Map<String,Object> context=map("requested_scope",requestedScope,"captured_scope",state.scopeId,"state_version",state.version,
+                "snapshot_status",Objects.equals(requestedScope,state.scopeId)?"last_stable":"scope_not_active");
+        Map<String,Object> publicSnapshot=map("audit_context",context);
+        if(Objects.equals(requestedScope,state.scopeId))publicSnapshot.put("last_stable_observation",state.publicState);
+        return new Map[]{publicSnapshot,map("audit_context",context,"last_stable_internal",state.internalState)};
+    }
+    private void scheduleSettlement(){
+        try{serial.execute(()->{try{settleReady();}catch(Throwable error){fatal(error);}});}
+        catch(RejectedExecutionException ignored){/* Existing intent is recovered as UNKNOWN after restart. */}
+    }
+    private void settleReady(){
+        if(pending!=null&&persistReady(pending))pending=null;
+        if(cancelling!=null&&persistReady(cancelling))cancelling=null;
+    }
+    private boolean persistReady(Pending completed){
+        if(completed.future==null||!completed.future.isDone())return false;
+        GameController.State after;
+        try{after=completed.future.join();}
+        catch(Throwable error){
+            Throwable actual=unwrap(error);boolean rejected=actual instanceof GameController.NotExecuted;
+            if(!rejected)executionUncertain=true;
+            store.settle(completed.attempt,rejected?"REJECTED":"UNKNOWN",failure(completed.attempt.id,completed.attempt.scopeId,rejected?code(actual):"EXECUTION_UNKNOWN"),null,null,actual);
+            drainSaves();return true;
+        }
+        if(after.scopeId.startsWith("run:"))store.ensureScope(after.scopeId,"run",after.scopeId.substring(4));
+        String status=completed.execution!=null&&completed.execution.interrupted?"interrupted":"awaiting_input".equals(after.phase)?"awaiting_input":"completed";
+        store.settle(completed.attempt,status.toUpperCase(Locale.ROOT),success(completed.attempt.id,completed.attempt.scopeId,status,after.result()),after.publicState,after.internalState,null);
+        drainSaves();return true;
+    }
+    private void send(AuditStore.Attempt attempt,Map<String,Object> response,ResponseStage stage){
+        String encoded=JsonCodec.encode(response);stage.written=true;output.println(encoded);output.flush();
+        boolean success=!output.checkError();store.markOutputAttempt(attempt,success);
+        if(!success)throw new IllegalStateException("OUTPUT_CLOSED");
+    }
+    private void drainSaves(){
+        GameController.SaveResult save;
+        while((save=game.pollSave())!=null)store.recordSave(save.runId==null?store.menuScope():"run:"+save.runId,save.slot,save.error==null,save.error);
+        GameController.RunOutcome outcome;
+        while((outcome=game.pollRunOutcome())!=null){
+            store.ensureScope("run:"+outcome.runId,"run",outcome.runId);
+            store.event("run:"+outcome.runId,"run.ended",outcome.data());
+        }
+    }
+    /** EOF is a system lifecycle event, not an invented caller request or an unsolicited response. */
+    private void endInput(String reason){
+        if(game.disposed()){drainSaves();closed=true;return;}
+        String scope=game.latest()==null?store.menuScope():game.latest().scopeId;
+        try{
+            store.event(scope,"shutdown.requested",map("reason",reason,"source","system"));
+            settleReady();refreshActivity();
+            if(pending!=null&&pending.activity!=null&&cancelling==null&&!executionUncertain){
+                String token=pending.activity.version,target=pending.attempt.id;
+                try{
+                    GameController.State before=game.prepareCancellation(token,target).get(timeoutMillis,TimeUnit.MILLISECONDS);
+                    store.event(scope,"shutdown.cancel_prepared",map("source","system","target_id",target,"state_version",token,"before",before.result()));
+                    store.recordLog("shutdown_private_before",JsonCodec.encode(before.internalState));
+                    game.cancelPrepared(token,target).get(timeoutMillis,TimeUnit.MILLISECONDS);
+                    settleReady();
+                }finally{game.abortCancellation(token);}
+            }
+            if(pending!=null&&pending.future!=null){
+                try{pending.future.get(timeoutMillis,TimeUnit.MILLISECONDS);}catch(Throwable error){recordExceptionNow(unwrap(error));}
+                settleReady();
+            }
+            if(pending==null&&!executionUncertain&&!game.exiting()&&!game.disposed()){
+                GameController.State current=game.observe().get(timeoutMillis,TimeUnit.MILLISECONDS);
+                store.event(scope,"shutdown.dispatch",map("source","system","action","app.quit","state_version",current.version));
+                game.execute(current.version,map("action","app.quit")).get(timeoutMillis,TimeUnit.MILLISECONDS);
+                store.event(scope,"shutdown.completed",map("source","system"));
+            }else store.event(scope,"shutdown.unsettled",map("source","system","execution_unknown",executionUncertain));
+        }catch(Throwable error){
+            recordExceptionNow(unwrap(error));try{store.event(scope,"shutdown.failed",map("source","system","code",code(error)));}catch(Throwable ignored){}
+        }finally{
+            try{drainSaves();}catch(Throwable error){recordExceptionNow(error);}
+            closed=true;if(!game.disposed())game.exitNow();
+        }
+    }
+    private void fatal(Throwable error){recordExceptionNow(unwrap(error));closed=true;game.exitNow();}
+    private void recordExceptionNow(Throwable error){try{store.recordException(error);}catch(Throwable ignored){}}
+    public void recordException(Throwable error){try{serial.execute(()->recordExceptionNow(unwrap(error)));}catch(RejectedExecutionException ignored){}}
+    public void recordLog(String channel,String text){
+        try{serial.execute(()->{try{store.recordLog(channel,text);}catch(Throwable error){fatal(error);}});}catch(RejectedExecutionException ignored){}
+    }
+    private static Map<String,Object> success(String id,String scope,String status,Object result){return map("id",id,"scope_id",scope,"ok",true,"status",status,"result",result);}
+    private static Map<String,Object> failure(String id,String scope,String code){return map("id",id,"scope_id",scope,"ok",false,"error",map("code",code));}
+    private static Throwable unwrap(Throwable e){while((e instanceof ExecutionException||e instanceof CompletionException)&&e.getCause()!=null)e=e.getCause();return e;}
+    private static String code(Throwable e){e=unwrap(e);return e instanceof GameController.NotExecuted?((GameController.NotExecuted)e).code:e instanceof ProtocolException?((ProtocolException)e).code:e instanceof IllegalArgumentException?"INVALID_ARGUMENT":e instanceof TimeoutException?"STATE_UNAVAILABLE":"ENGINE_ERROR";}
+    private static String validText(Object v){return v instanceof String&&!((String)v).isEmpty()?(String)v:null;}
+    private static String requiredString(Map<String,Object> args,String key){String s=validText(args.get(key));if(s==null)throw new ProtocolException("INVALID_ARGUMENT",key+" is required");return s;}
+    private static long number(Map<String,Object> args,String key,long fallback){
+        if(!args.containsKey(key))return fallback;Object value=args.get(key);
+        if(!(value instanceof Number))throw new ProtocolException("INVALID_ARGUMENT",key+" must be an integer");
+        try{long n=new BigDecimal(value.toString()).longValueExact();if(n<0)throw new ArithmeticException();return n;}
+        catch(ArithmeticException e){throw new ProtocolException("INVALID_ARGUMENT",key+" must be a nonnegative integer");}
+    }
+    private static int limit(Map<String,Object> args){long n=number(args,"limit",50);if(n<1||n>100)throw new ProtocolException("INVALID_ARGUMENT","limit must be between 1 and 100");return (int)n;}
+    @Override public void close(){
+        closed=true;
+        try{serial.submit(()->{try{settleReady();drainSaves();}catch(Throwable error){recordExceptionNow(error);}});}catch(RejectedExecutionException ignored){}
+        serial.shutdown();try{if(!serial.awaitTermination(35,TimeUnit.SECONDS))serial.shutdownNow();}
+        catch(InterruptedException e){Thread.currentThread().interrupt();serial.shutdownNow();}
+    }
+}

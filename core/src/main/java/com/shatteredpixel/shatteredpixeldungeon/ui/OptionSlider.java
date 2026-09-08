@@ -80,6 +80,21 @@ public abstract class OptionSlider extends Component {
 		return selectedVal;
 	}
 
+	public int minimumValue() { return minVal; }
+	public int maximumValue() { return maxVal; }
+
+	/** Selects a value and invokes the same commit callback as releasing the slider. */
+	public final void chooseValue(int value) {
+		if (!exists || !isVisible() || !isActive()) {
+			throw new IllegalStateException("The control is not available");
+		}
+		if (value < minVal || value > maxVal) {
+			throw new IllegalArgumentException("Slider value is out of range");
+		}
+		setSelectedValue(value);
+		onChange();
+	}
+
 	public void setSelectedValue(int val) {
 		this.selectedVal = val;
 		sliderNode.x = (int)(x + tickDist*(selectedVal-minVal)) + 0.5f;

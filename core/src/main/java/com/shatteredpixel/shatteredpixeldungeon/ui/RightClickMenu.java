@@ -145,6 +145,12 @@ public class RightClickMenu extends Component {
 
 	public void onSelect(int index){}
 
+	/** Same dismissal as moving the pointer outside this contextual menu. */
+	public void dismiss() {
+		destroy();
+		killAndErase();
+	}
+
 	@Override
 	protected void layout() {
 		super.layout();

@@ -62,6 +62,19 @@ public class CellSelector extends ScrollArea {
 	}
 	
 	private float mouseZoom;
+
+	/** View-only equivalents of the ordinary map zoom and drag controls. */
+	public void chooseViewZoom(int value) {
+		if (value < PixelScene.minZoom || value > PixelScene.maxZoom) {
+			throw new IllegalArgumentException("Zoom is out of range");
+		}
+		mouseZoom = zoom(value);
+	}
+
+	public void shiftView(float x, float y) {
+		if (!Float.isFinite(x) || !Float.isFinite(y)) throw new IllegalArgumentException("Invalid view offset");
+		camera.shift(new PointF(x, y));
+	}
 	
 	@Override
 	protected void onScroll( ScrollEvent event ) {
@@ -393,22 +406,47 @@ public class CellSelector extends ScrollArea {
 	private int lastCellMoved = 0;
 
 	private boolean moveFromActions(GameAction... actions){
+		Point direction = new Point();
+		for (GameAction action : actions) {
+			direction.offset(directionFromAction(action));
+		}
+		return semanticStep((int) GameMath.gate(-1, direction.x, +1),
+				(int) GameMath.gate(-1, direction.y, +1), false);
+	}
+
+	/**
+	 * One ordinary direction input, without generating a key event or holding a key.
+	 * The adjacent cell keeps the same interaction semantics as the keyboard: it can
+	 * attack, open, pick up, mine or enter a transition instead of moving the hero.
+	 * One input therefore does not promise one movement or exactly one game turn.
+	 */
+	public boolean semanticStep(int dx, int dy) {
+		if (dx < -1 || dx > 1 || dy < -1 || dy > 1 || (dx == 0 && dy == 0)) {
+			throw new IllegalArgumentException("Expected one of the eight adjacent directions");
+		}
+		if (Game.instance == null || !(Game.scene() instanceof GameScene) || GameScene.interfaceBlockingHero()) {
+			return false;
+		}
+		return semanticStep(dx, dy, true);
+	}
+
+	private boolean semanticStep(int dx, int dy, boolean freshPress) {
 		if (Dungeon.hero == null || !Dungeon.hero.ready){
 			return false;
+		}
+		if (freshPress) {
+			// Ordinary new direction presses reset these before the release dispatches.
+			Dungeon.hero.resting = false;
+			lastCellMoved = -1;
 		}
 
 		if (GameScene.cancelCellSelector()){
 			return false;
 		}
 
-		Point direction = new Point();
-		for (GameAction action : actions) {
-			direction.offset(directionFromAction(action));
-		}
 		int cell = Dungeon.hero.pos;
-		//clamp to adjacent values (-1 to +1)
-		cell += GameMath.gate(-1, direction.x, +1);
-		cell += GameMath.gate(-1, direction.y, +1) * Dungeon.level.width();
+		cell += dx;
+		cell += dy * Dungeon.level.width();
 
 		if (cell != Dungeon.hero.pos && cell != lastCellMoved){
 			lastCellMoved = cell;

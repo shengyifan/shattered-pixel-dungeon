@@ -48,6 +48,9 @@ public class MagicMissile extends Emitter {
 	private static final float SPEED	= 200f;
 	
 	private Callback callback;
+
+	@Override
+	public boolean hasPendingCallback() { return on && callback != null; }
 	
 	private PointF to;
 	

@@ -44,6 +44,16 @@ import java.io.StringWriter;
 
 public class Game implements ApplicationListener {
 
+	public static volatile RuntimeObserver observer = RuntimeObserver.NONE;
+	private static final java.util.concurrent.atomic.AtomicInteger queuedCallbacks = new java.util.concurrent.atomic.AtomicInteger();
+	public static boolean hasPendingCallbacks() { return queuedCallbacks.get() != 0; }
+	public static void postRunnable(Runnable callback) {
+		queuedCallbacks.incrementAndGet();
+		try {
+			Gdx.app.postRunnable(() -> { try { callback.run(); } finally { queuedCallbacks.decrementAndGet(); } });
+		} catch (RuntimeException error) { queuedCallbacks.decrementAndGet(); throw error; }
+	}
+
 	public static Game instance;
 	
 	// Size of the EGL surface view
@@ -168,6 +178,7 @@ public class Game implements ApplicationListener {
 		Gdx.gl.glDisable( Gdx.gl.GL_SCISSOR_TEST );
 		
 		step();
+		observer.afterFrame();
 	}
 	
 	@Override
@@ -185,7 +196,7 @@ public class Game implements ApplicationListener {
 	}
 	
 	public void finish(){
-		Gdx.app.exit();
+		if (observer.exitRequested()) Gdx.app.exit();
 		
 	}
 	
@@ -202,7 +213,7 @@ public class Game implements ApplicationListener {
 	
 	@Override
 	public void dispose() {
-		destroy();
+		try { destroy(); } finally { observer.onDispose(); }
 	}
 	
 	public static void resetScene() {
@@ -283,6 +294,7 @@ public class Game implements ApplicationListener {
 	}
 	
 	public static void reportException( Throwable tr ) {
+		observer.onException(tr);
 		if (instance != null && Gdx.app != null) {
 			instance.logException(tr);
 		} else {
@@ -304,7 +316,7 @@ public class Game implements ApplicationListener {
 	}
 	
 	public static void runOnRenderThread(Callback c){
-		Gdx.app.postRunnable(new Runnable() {
+		postRunnable(new Runnable() {
 			@Override
 			public void run() {
 				c.call();

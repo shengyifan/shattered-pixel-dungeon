@@ -40,6 +40,11 @@ public class Group extends Gizmo {
 		members = new ArrayList<>();
 		length = 0;
 	}
+
+	/** A detached view of the current child order; does not mutate the scene graph. */
+	public synchronized ArrayList<Gizmo> childrenSnapshot() {
+		return members == null ? new ArrayList<Gizmo>() : new ArrayList<>(members);
+	}
 	
 	@Override
 	public synchronized void destroy() {

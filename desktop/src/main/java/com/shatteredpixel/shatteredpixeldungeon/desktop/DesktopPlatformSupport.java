@@ -61,7 +61,7 @@ public class DesktopPlatformSupport extends PlatformSupport {
 
 	@Override
 	public void updateSystemUI() {
-		Gdx.app.postRunnable( new Runnable() {
+		com.watabou.noosa.Game.postRunnable( new Runnable() {
 			@Override
 			public void run () {
 				if (SPDSettings.fullscreen()){

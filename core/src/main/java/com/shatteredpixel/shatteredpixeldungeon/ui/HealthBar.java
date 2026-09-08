@@ -73,6 +73,16 @@ public class HealthBar extends Component {
 		level( value, 0f );
 	}
 
+	/** Widths of the bars already laid out for drawing, in display pixels. */
+	public int[] renderedPixelWidths() {
+		com.watabou.noosa.Gizmo owner = this;
+		while (owner != null && owner.camera == null) owner = owner.parent;
+		if (owner == null || Bg == null || Hp == null || Shld == null) return new int[0];
+		float zoom = owner.camera.zoom;
+		return new int[]{Math.round(Bg.width() * zoom), Math.round(Hp.width() * zoom),
+				Math.round(Shld.width() * zoom)};
+	}
+
 	public void level( float health, float shield ){
 		this.health = health;
 		this.shield = shield;

@@ -35,6 +35,7 @@ import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.PointerArea;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionArea;
 import com.watabou.noosa.ui.Component;
 import com.watabou.utils.RectF;
 
@@ -308,9 +309,9 @@ public class AboutScene extends PixelScene {
 				if (highlight != -1) this.link.hardlight(highlight);
 				add(this.link);
 
-				linkButton = new PointerArea(0, 0, 0, 0){
+				linkButton = new ActionArea(0, 0, 0, 0, linkText){
 					@Override
-					protected void onClick( PointerEvent event ) {
+					protected void onActivate() {
 						ShatteredPixelDungeon.platform.openURI( linkUrl );
 					}
 				};

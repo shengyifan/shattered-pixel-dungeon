@@ -818,6 +818,17 @@ public class GameScene extends PixelScene {
 	}
 
 	private static Thread actorThread;
+
+	/** Runs a short render-thread task only while the actor has handed off this same monitor. */
+	public static boolean atActorHandoff(Runnable action) {
+		Thread actor = actorThread;
+		if (actor == null || !actor.isAlive()) return false;
+		synchronized (actor) {
+			if (!Actor.isYielded()) return false;
+			action.run();
+			return true;
+		}
+	}
 	
 	//sometimes UI changes can be prompted by the actor thread.
 	// We queue any removed element destruction, rather than destroying them in the actor thread.
@@ -883,7 +894,10 @@ public class GameScene extends PixelScene {
 			} else if (notifyDelay <= 0f) {
 				notifyDelay += 1/60f;
 				synchronized (actorThread) {
-					actorThread.notify();
+					if (Actor.isYielded() && Game.observer.beforeActorResume()) {
+						Actor.markResuming();
+						actorThread.notify();
+					}
 				}
 			}
 		}
@@ -1547,6 +1561,10 @@ public class GameScene extends PixelScene {
 	public static void handleCell( int cell ) {
 		cellSelector.select( cell, PointerEvent.LEFT );
 	}
+
+	public static boolean moveStep(int dx, int dy) {
+		return cellSelector != null && cellSelector.semanticStep(dx, dy);
+	}
 	
 	public static void selectCell( CellSelector.Listener listener ) {
 		if (cellSelector.listener != null && cellSelector.listener != defaultCellListener){
@@ -1557,6 +1575,12 @@ public class GameScene extends PixelScene {
 		if (scene != null) {
 			scene.prompt(listener.prompt());
 		}
+	}
+
+	/** Whether a player action is waiting for a target instead of a normal map interaction. */
+	public static boolean isSelectingCell() {
+		return cellSelector != null && cellSelector.listener != null
+				&& cellSelector.listener != defaultCellListener;
 	}
 	
 	public static boolean cancelCellSelector() {

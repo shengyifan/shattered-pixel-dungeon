@@ -1,0 +1,135 @@
+plugins { id 'application' }
+java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+application {
+    mainClass = 'com.shatteredpixel.shatteredpixeldungeon.control.desktop.SpdctlLauncher'
+    applicationDefaultJvmArgs = ['-XstartOnFirstThread', '--enable-native-access=ALL-UNNAMED', '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED']
+}
+dependencies {
+    implementation project(':control-protocol')
+    implementation project(':game-control')
+    implementation project(':desktop')
+    implementation project(':core')
+    implementation 'org.xerial:sqlite-jdbc:3.53.4.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+def catalogDirectory = layout.buildDirectory.dir('generated/control-catalog')
+tasks.register('generateBuildCatalog') {
+    def modules = [project(':SPD-classes'), project(':core'), project(':desktop'), project(':control-protocol'), project(':game-control'), project(':desktop-control')]
+    dependsOn modules.collect { "${it.path}:compileJava" }
+    def compiled = modules.collect { it.layout.buildDirectory.dir('classes/java/main') }
+    inputs.files(compiled)
+    inputs.files(project(':core').fileTree('src/main/assets'), project(':desktop').fileTree('src/main/assets'))
+    outputs.dir(catalogDirectory)
+    doLast {
+        def entries = []
+        def digestFile = { File file ->
+            def digest = java.security.MessageDigest.getInstance('SHA-256')
+            file.withInputStream { input ->
+                byte[] bytes = new byte[65536]
+                int count
+                while ((count = input.read(bytes)) != -1) digest.update(bytes, 0, count)
+            }
+            digest.digest().encodeHex().toString()
+        }
+        compiled.each { directory ->
+            def base = directory.get().asFile
+            if (base.exists()) fileTree(base).matching { include '**/*.class' }.files.sort().each { file ->
+                entries.add([path: rootProject.relativePath(file), bytes: file.length(), sha256: digestFile(file)])
+            }
+        }
+        [project(':core').file('src/main/assets'), project(':desktop').file('src/main/assets')].each { base ->
+            fileTree(base).files.sort().each { file -> entries.add([path: rootProject.relativePath(file), bytes: file.length(), sha256: digestFile(file)]) }
+        }
+        def encoded = groovy.json.JsonOutput.toJson(entries)
+        def buildId = java.security.MessageDigest.getInstance('SHA-256').digest(encoded.getBytes('UTF-8')).encodeHex().toString()
+        def output = new File(catalogDirectory.get().asFile, 'control-build.json')
+        output.parentFile.mkdirs()
+        output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName,
+            cli_version: 'CLI.0.1.0', java_source: '11', build_java: System.getProperty('java.version'),
+            sqlite_jdbc: '3.53.4.0', entries: entries])
+    }
+}
+processResources {
+    dependsOn generateBuildCatalog
+    from catalogDirectory
+    from project(':core').file('src/main/assets')
+    from project(':desktop').file('src/main/assets')
+}
+tasks.named('run', JavaExec) {
+    standardInput = System.in
+    systemProperty 'Specification-Title', appName
+    systemProperty 'Implementation-Title', appPackageName
+    systemProperty 'Specification-Version', appVersionName
+    systemProperty 'Implementation-Version', appVersionCode
+}
+tasks.register('writeRuntimeClasspath') {
+    dependsOn classes
+    dependsOn configurations.runtimeClasspath
+    def output = layout.buildDirectory.file('runtime-classpath.txt')
+    inputs.files(sourceSets.main.runtimeClasspath)
+    outputs.file(output)
+    doLast {
+        // A running JVM must not read project JARs while another build replaces them.
+        def image = layout.buildDirectory.dir("runtime-images/${UUID.randomUUID()}").get().asFile
+        image.mkdirs()
+        def entries = []
+        sourceSets.main.runtimeClasspath.files.eachWithIndex { entry, index ->
+            if (entry.absolutePath.startsWith(rootProject.projectDir.absolutePath + File.separator)) {
+                def destination = new File(image, "${index}-${entry.name}")
+                if (entry.isDirectory()) copy { from entry; into destination }
+                else copy { from entry; into image; rename { "${index}-${entry.name}" } }
+                entries.add(destination.absolutePath)
+            } else entries.add(entry.absolutePath)
+        }
+        output.get().asFile.text = entries.join(File.pathSeparator)
+    }
+}
+tasks.register('writeTestRuntimeClasspath') {
+    dependsOn testClasses
+    dependsOn configurations.testRuntimeClasspath
+    def output = layout.buildDirectory.file('test-runtime-classpath.txt')
+    inputs.files(configurations.testRuntimeClasspath)
+    outputs.file(output)
+    doLast { output.get().asFile.text = sourceSets.test.runtimeClasspath.asPath }
+}
+tasks.named('test') {
+    jvmArgs '--enable-native-access=ALL-UNNAMED', '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED'
+}
+tasks.register('release', Jar) {
+    archiveBaseName = 'desktop-control'
+    archiveClassifier = 'all'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from { configurations.runtimeClasspath.findAll { it.name.endsWith('.jar') }.collect { zipTree(it) } }
+    exclude 'META-INF/*.SF', 'META-INF/*.RSA', 'META-INF/*.DSA'
+    manifest { attributes(
+        'Main-Class': application.mainClass.get(), 'Specification-Title': appName,
+        'Implementation-Title': appPackageName, 'Specification-Version': appVersionName,
+        'Implementation-Version': appVersionCode, 'Multi-Release': 'true') }
+}
+tasks.register('packageMacArm64', Exec) {
+    dependsOn release
+    def dest = layout.buildDirectory.dir('app-macos-arm64')
+    doFirst {
+        if (!System.getProperty('os.name').toLowerCase().contains('mac') || System.getProperty('os.arch') != 'aarch64')
+            throw new GradleException('Native Apple Silicon JDK required')
+        def staging = layout.buildDirectory.dir('package-input').get().asFile
+        delete staging
+        staging.mkdirs()
+        copy { from tasks.release.archiveFile; into staging }
+        def launcher = layout.buildDirectory.file('spdctl.properties').get().asFile
+        launcher.text = "main-jar=${tasks.release.archiveFileName.get()}\nmain-class=${application.mainClass.get()}\njava-options=-XstartOnFirstThread --enable-native-access=ALL-UNNAMED --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED\n"
+        delete dest
+        commandLine "${System.getProperty('java.home')}/bin/jpackage",
+            '--type', 'app-image', '--name', appName, '--app-version', appVersionName,
+            '--input', staging, '--main-jar', tasks.release.archiveFileName.get(),
+            '--main-class', 'com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher',
+            '--dest', dest.get().asFile, '--icon', project(':desktop').file('src/main/assets/icons/mac.icns'),
+            '--mac-package-identifier', appPackageName + '.apple',
+            '--add-modules', 'java.base,java.desktop,java.sql,java.logging,java.management,jdk.unsupported,jdk.crypto.cryptoki,jdk.management',
+            '--java-options', '-XstartOnFirstThread', '--java-options', '--enable-native-access=ALL-UNNAMED',
+            '--add-launcher', "spdctl=${launcher.absolutePath}"
+    }
+}

@@ -240,15 +240,27 @@ public abstract class Actor implements Bundlable {
 	}
 	
 	public static boolean keepActorThreadAlive = true;
+
+	private static volatile boolean yielded;
+	private static volatile Actor yieldedActor;
+	// Guarded by the actor thread's monitor. A wait must not resume from a spurious wakeup.
+	private static boolean resumeRequested;
+	/** True only after an actor act() has returned and the actor thread is waiting. */
+	public static boolean isYielded() { return yielded; }
+	public static boolean yieldedBy(Actor actor) { return yielded && yieldedActor == actor; }
+	/** Called by the render thread under the actor thread monitor before notify(). */
+	public static void markResuming() { resumeRequested = true; yielded = false; }
 	
 	public static void process() {
+		yielded = false;
 		
 		boolean doNext;
 		boolean interrupted = false;
 
-		do {
-			
-			current = null;
+			do {
+
+				Actor yieldedFrom = null;
+				current = null;
 			if (!interrupted && !Game.switchingScene()) {
 				float earliest = Float.MAX_VALUE;
 
@@ -269,7 +281,8 @@ public abstract class Actor implements Bundlable {
 			if  (current != null) {
 
 				now = current.time;
-				Actor acting = current;
+					Actor acting = current;
+					yieldedFrom = acting;
 
 				if (acting instanceof Char && ((Char) acting).sprite != null) {
 					// If it's character's turn to act, but its sprite
@@ -311,14 +324,19 @@ public abstract class Actor implements Bundlable {
 						interrupted = false;
 					}
 
-					//signals to the gamescene that actor processing is finished for now
+						//signals to the gamescene that actor processing is finished for now
+						resumeRequested = false;
+						yieldedActor = yieldedFrom;
+						yielded = true;
 					Thread.currentThread().notify();
 					
 					try {
-						Thread.currentThread().wait();
+							while (!resumeRequested && keepActorThreadAlive) Thread.currentThread().wait();
 					} catch (InterruptedException e) {
 						interrupted = true;
 					}
+						yielded = false;
+						yieldedActor = null;
 				}
 			}
 

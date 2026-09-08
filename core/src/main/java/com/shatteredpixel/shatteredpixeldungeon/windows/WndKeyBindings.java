@@ -44,6 +44,15 @@ import java.util.LinkedHashMap;
 
 public class WndKeyBindings extends Window {
 
+	public interface BindingRow {
+		void chooseBindingSlot(int slot);
+	}
+
+	public interface BindingInput {
+		boolean acceptsBindingKey(int code);
+		void chooseBindingKey(int code);
+	}
+
 	private static final int WIDTH = 135;
 
 	private static final int BTN_HEIGHT = 16;
@@ -224,7 +233,7 @@ public class WndKeyBindings extends Window {
 		//do nothing, avoids accidental back presses which would lose progress.
 	}
 
-	private class BindingItem extends Component {
+	private class BindingItem extends Component implements BindingRow {
 
 		private static final int HEIGHT = 13;
 
@@ -354,6 +363,13 @@ public class WndKeyBindings extends Window {
 			sep4.y = y;
 		}
 
+		@Override
+		public void chooseBindingSlot(int slot) {
+			if (!exists || !isVisible() || !isActive()) throw new IllegalStateException("The row is not available");
+			if (slot < 1 || slot > 3) throw new IllegalArgumentException("Binding slot is out of range");
+			onClick(x + width() * (slot + 1.5f) / 5f, centerY());
+		}
+
 		private boolean onClick( float x, float y ){
 			if (inside(x, y)){
 				//assigning third key
@@ -378,7 +394,7 @@ public class WndKeyBindings extends Window {
 
 	}
 
-	private class WndChangeBinding extends Window {
+	private class WndChangeBinding extends Window implements BindingInput {
 
 		private int curKeyCode;
 		private int otherBoundKey1;
@@ -432,7 +448,7 @@ public class WndKeyBindings extends Window {
 					if (action == GameAction.LEFT_CLICK && listItem.key2 == 0 && listItem.key3 == 0){
 						ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(WndChangeBinding.class, "cant_unbind")));
 					} else {
-						onSignal(new KeyEvent(0, true));
+						proposeKey(0);
 					}
 				}
 			};
@@ -515,19 +531,42 @@ public class WndKeyBindings extends Window {
 				return true;
 			}
 
-			if (event.pressed){
-				changedKey.text(Messages.get(this, "changed_bind", KeyBindings.getKeyName(event.code)));
+			if (event.pressed) proposeKey(event.code);
+			return true;
+		}
+
+		@Override
+		public boolean acceptsBindingKey(int code) {
+			try {
+				return code > 0 && (!controller || ControllerHandler.icControllerKey(code))
+						&& (controller || KeyEvent.isKeyboardKey(code)) && KeyBindings.getKeyName(code) != null;
+			} catch (IllegalArgumentException exception) {
+				return false;
+			}
+		}
+
+		@Override
+		public void chooseBindingKey(int code) {
+			if (!exists || !isVisible() || !isActive()) throw new IllegalStateException("The binding dialog is not available");
+			if (!acceptsBindingKey(code)) {
+				throw new IllegalArgumentException("The key does not belong to this binding input");
+			}
+			proposeKey(code);
+		}
+
+		private void proposeKey(int code) {
+				changedKey.text(Messages.get(this, "changed_bind", KeyBindings.getKeyName(code)));
 				changedKey.setPos((WIDTH - changedKey.width())/2, changedKey.top());
 
-				changedKeyCode = event.code;
+				changedKeyCode = code;
 				changedAction = null;
 
-				if (event.code != 0 && (event.code == curKeyCode || event.code == otherBoundKey1 || event.code == otherBoundKey2)){
+				if (code != 0 && (code == curKeyCode || code == otherBoundKey1 || code == otherBoundKey2)){
 					warnErr.text(Messages.get(this, "error"));
 					warnErr.hardlight(CharSprite.NEGATIVE);
 					btnConfirm.enable(false);
 
-				} else if (event.code != 0 && changedBindings.get(changedKeyCode) != null){
+				} else if (code != 0 && changedBindings.get(changedKeyCode) != null){
 					for (BindingItem i : listItems) {
 						if (i.gameAction == changedBindings.get(changedKeyCode)) {
 							changedAction = i;
@@ -542,9 +581,6 @@ public class WndKeyBindings extends Window {
 					warnErr.text(" ");
 					btnConfirm.enable(true);
 				}
-			}
-
-			return true;
 		}
 
 		@Override

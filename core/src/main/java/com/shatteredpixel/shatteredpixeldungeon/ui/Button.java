@@ -170,6 +170,27 @@ public class Button extends Component {
 	}
 	
 	protected void onPointerDown() {}
+
+	/** The same semantic callbacks used by the pointer and keyboard handlers. */
+	public final boolean activate(String gesture) {
+		if (!exists || !isVisible() || !isActive()) {
+			throw new IllegalStateException("The control is not available");
+		}
+		killTooltip();
+		switch (gesture) {
+			case "click": onClick(); return true;
+			case "right": onRightClick(); return true;
+			case "middle": onMiddleClick(); return true;
+			case "long": return onLongClick();
+			default: throw new IllegalArgumentException("Unsupported activation gesture");
+		}
+	}
+
+	/** Text that a player can obtain by hovering this control. */
+	public final String accessibleHoverText() {
+		return hoverText();
+	}
+
 	protected void onPointerUp() {}
 	protected void onClick() {} //left click, default key type
 	protected void onRightClick() {}

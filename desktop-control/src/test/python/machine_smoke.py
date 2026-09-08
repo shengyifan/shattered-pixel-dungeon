@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+"""Real GUI runtime, pipe-only smoke test. Uses a new, isolated profile each time."""
+import argparse
+import json
+import os
+from pathlib import Path
+import select
+import sqlite3
+import subprocess
+import time
+import uuid
+
+
+class Client:
+    def __init__(self, command, profile):
+        self.profile = profile
+        self.stderr = (profile / "native-stderr.log").open("ab")
+        self.process = subprocess.Popen(command + ["run", "--machine", "--data-dir", str(profile)],
+                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.stderr)
+        self.buffer = b""
+        self.scope = None
+        self.version = None
+        self.counter = 0
+        self.prefix = uuid.uuid4().hex[:12]
+
+    def request(self, op, args=None, request_id=None, scope=None, version=None):
+        self.counter += 1
+        req = {"id": request_id or f"{self.prefix}-{self.counter}", "op": op}
+        if scope is not None or self.scope is not None:
+            req["scope_id"] = scope or self.scope
+        if args is not None:
+            req["args"] = args
+        if op == "action.execute":
+            req["state_version"] = version or self.version
+        self.process.stdin.write((json.dumps(req, ensure_ascii=False) + "\n").encode())
+        self.process.stdin.flush()
+        deadline = time.monotonic() + 45
+        while b"\n" not in self.buffer:
+            if time.monotonic() > deadline:
+                raise TimeoutError(f"No response for {op}; profile={self.profile}")
+            ready, _, _ = select.select([self.process.stdout], [], [], 1)
+            if ready:
+                chunk = os.read(self.process.stdout.fileno(), 65536)
+                if not chunk:
+                    raise RuntimeError(f"Process ended {self.process.poll()}; profile={self.profile}")
+                self.buffer += chunk
+        line, self.buffer = self.buffer.split(b"\n", 1)
+        result = json.loads(line)
+        assert result.get("id") == req["id"], (req, result)
+        data = result.get("result", {})
+        if isinstance(data, dict) and result.get("ok") and op in {"protocol.info", "state.get", "actions.list", "action.execute"}:
+            self.scope = data.get("scope_id", self.scope)
+            self.version = data.get("state_version") or self.version
+        return result
+
+    def act(self, action, **args):
+        result = self.request("action.execute", {"action": action, **args})
+        assert result["ok"], result
+        if result.get("status") == "in_progress":
+            original_id, original_scope = result["id"], result["scope_id"]
+            deadline = time.monotonic() + 40
+            while time.monotonic() < deadline:
+                record = self.request("request.get", {"target_id": original_id}, scope=original_scope)
+                assert record["ok"], record
+                request = record["result"]
+                if request.get("status") not in {"EXECUTING", "RECEIVED"}:
+                    result = request["response"]
+                    assert result.get("ok"), result
+                    data = result.get("result", {})
+                    self.scope = data.get("scope_id", self.scope)
+                    self.version = data.get("state_version") or self.version
+                    return result
+                time.sleep(0.05)
+            raise TimeoutError(f"Action did not settle: {original_id}")
+        return result
+
+    def state(self):
+        result = self.request("state.get")
+        assert result["ok"], result
+        return result["result"]
+
+    def finish(self):
+        try:
+            if self.process.poll() is None:
+                for _ in range(5):
+                    self.state()
+                    response = self.request("action.execute", {"action": "app.quit"})
+                    if response.get("ok"):
+                        break
+                    if response.get("error", {}).get("code") != "STALE_STATE":
+                        raise AssertionError(response)
+                self.process.wait(timeout=20)
+        finally:
+            if self.process.poll() is None:
+                self.process.terminate()
+                self.process.wait(timeout=10)
+            self.stderr.close()
+
+
+def reach_game(client, resume=False):
+    """Navigate only controls that are explicitly described by the public protocol."""
+    for _ in range(25):
+        state = client.state()
+        if state["observation"].get("scene") == "game":
+            return state
+        candidates = [a for a in state["actions"] if a.get("action") == "ui.activate" and a.get("label")]
+        chosen = None
+        desired = ["继续", "continue", "进入地牢", "enter", "开始游戏", "play"]
+        desired += ["战士", "warrior", "new game", "新游戏", "开始", "start"] if resume else ["new game", "新游戏", "开始", "start", "战士", "warrior"]
+        for text in desired:
+            chosen = next((a for a in candidates if text in a["label"].lower()), None)
+            if chosen:
+                break
+        if not chosen:
+            raise AssertionError({"no_start_control": candidates, "scene": state["observation"].get("scene")})
+        response = client.request("action.execute", {"action": "ui.activate", "control": chosen["control"], "gesture": "click"})
+        if response.get("error", {}).get("code") == "STALE_STATE":
+            continue  # Get a fresh observation and choose again; never reuse the old request ID.
+        assert response.get("ok"), response
+    raise AssertionError("Game did not start within the expected menu flow")
+
+
+def finish_tutorial(client):
+    visits = {}
+    book = None
+    for _ in range(60):
+        state = client.state()
+        if any(a["action"] == "inventory.open" for a in state["actions"]):
+            return
+        observation = state["observation"]
+        book = next((e for e in observation["visible_entities"]
+                     if any(word in e.get("item", {}).get("name", "").lower()
+                            for word in ["tome of dungeon mastery", "guidebook", "指南", "地牢宝典"])), None)
+        if book:
+            break
+        # High grass can hide the guide in a legitimate fresh dungeon. Explore observed
+        # adjacent terrain instead of fixing the seed or reading a hidden location.
+        position = observation["hero"]["cell"]
+        width = observation["map"]["width"]
+        visits[position] = visits.get(position, 0) + 1
+        cells = {c["cell"]: c for c in observation["map"]["cells"]}
+        adjacent = [c for c in cells.values() if c["cell"] != position
+                    and max(abs(c["x"] - position % width), abs(c["y"] - position // width)) == 1
+                    and not any(word in c["name"].lower() for word in ["wall", "chasm", "exit", "entrance", "墙", "深渊", "楼梯"])
+                    and not c.get("environment")]
+        assert adjacent, "No publicly observed tutorial exploration step"
+        target = min(adjacent, key=lambda c: (visits.get(c["cell"], 0), c["cell"]))
+        result = client.request("action.execute", {"action": "cell.select", "cell": target["cell"], "mode": "act"})
+        if result.get("error", {}).get("code") == "STALE_STATE":
+            continue
+        assert result.get("ok"), result
+    assert book, "The tutorial guide must be selected from an actual public observation"
+    client.act("cell.select", cell=book["cell"], mode="act")
+    state = client.state()
+    journal = next(a for a in state["actions"] if a.get("action") == "ui.activate"
+                   and a.get("label", "").lower() in {"journal", "日志"})
+    client.act("ui.activate", control=journal["control"])
+    client.act("ui.back")
+    for _ in range(50):
+        state = client.state()
+        if any(a["action"] == "inventory.open" for a in state["actions"]):
+            return
+        time.sleep(0.05)
+    raise AssertionError("Tutorial UI did not become available")
+
+
+def ui_intent(client, choose):
+    """Re-plan a free UI choice after a legitimate concurrent presentation change."""
+    for _ in range(8):
+        state = client.state()
+        args = choose(state)
+        response = client.request("action.execute", args)
+        if response.get("error", {}).get("code") == "STALE_STATE":
+            continue
+        assert response.get("ok"), response
+        return state, response["result"]
+    raise AssertionError("UI choice never reached a stable current context")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--launcher")
+    parser.add_argument("--menu-only", action="store_true")
+    args = parser.parse_args()
+    root = Path(__file__).resolve().parents[4]
+    profile = root / "desktop-control" / "build" / "smoke" / str(uuid.uuid4())
+    profile.mkdir(parents=True)
+    if args.launcher:
+        command = [args.launcher]
+    else:
+        classpath = (root / "desktop-control" / "build" / "runtime-classpath.txt").read_text()
+        command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
+                   "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
+                   "com.shatteredpixel.shatteredpixeldungeon.control.desktop.SpdctlLauncher"]
+    client = Client(command, profile)
+    try:
+        hello = client.request("protocol.info", request_id="first")
+        assert hello["ok"], hello
+        menu_scope = hello["result"]["menu_scope_id"]
+        repeated = client.request("protocol.info", request_id="first", scope=menu_scope)
+        assert repeated["error"]["code"] == "DUPLICATE_REQUEST_ID", repeated
+        state = client.state()
+        print(json.dumps({"profile": str(profile), "phase": state["phase"], "ui": state["observation"].get("ui"), "actions": state["actions"]}, ensure_ascii=False), flush=True)
+        query_id = "query-once"
+        assert client.request("state.get", request_id=query_id)["ok"]
+        assert client.request("state.get", request_id=query_id)["error"]["code"] == "DUPLICATE_REQUEST_ID"
+        old = client.request("request.get", {"target_id": query_id})
+        assert old["ok"], old
+        if not args.menu_only:
+            state = reach_game(client)
+            finish_tutorial(client)
+            state = client.state()
+            assert state["observation"].get("scene") == "game", state
+            before, opened = ui_intent(client, lambda s: {"action": "inventory.open", "locator": next(
+                i["locator"] for i in s["observation"]["inventory"] if i["locator"].startswith("backpack."))})
+            before_items = [(i["locator"], i["name"], i["quantity"]) for i in before["observation"]["inventory"]]
+            assert opened["phase"] == "awaiting_input", opened
+            _, targeting = ui_intent(client, lambda s: {"action": "ui.activate", "control": next(
+                a["control"] for a in s["actions"] if a.get("action") == "ui.activate"
+                and a.get("label", "").lower() in {"throw", "投掷"})})
+            assert targeting["phase"] == "awaiting_input", targeting
+            assert any(a["action"] == "cell.cancel" for a in targeting["actions"]), targeting
+            ui_intent(client, lambda s: {"action": "cell.cancel"} if any(
+                a["action"] == "cell.cancel" for a in s["actions"]) else {"action": "ui.back"})
+            after = client.state()
+            assert before_items == [(i["locator"], i["name"], i["quantity"]) for i in after["observation"]["inventory"]]
+            before_version = client.version
+            first = client.request("action.execute", {"action": "wait"}, request_id="wait-once")
+            assert first["ok"], first
+            duplicate = client.request("action.execute", {"action": "wait"}, request_id="wait-once", version=before_version)
+            assert duplicate["error"]["code"] == "DUPLICATE_REQUEST_ID", duplicate
+            stale = client.request("action.execute", {"action": "wait"}, version=before_version)
+            assert stale["error"]["code"] == "STALE_STATE", stale
+            client.state()
+            run_scope = client.scope
+        client.finish()
+        if not args.menu_only:
+            client = Client(command, profile)
+            resumed_hello = client.request("protocol.info")
+            assert resumed_hello["result"]["menu_scope_id"] == menu_scope
+            archived = client.request("request.get", {"target_id": "wait-once"}, scope=run_scope)
+            assert archived["ok"], archived
+            restored = reach_game(client, resume=True)
+            assert client.scope == run_scope, (client.scope, run_scope)
+            assert client.version != before_version
+            duplicate = client.request("action.execute", {"action": "wait"}, request_id="wait-once", version=before_version)
+            assert duplicate["error"]["code"] == "DUPLICATE_REQUEST_ID", duplicate
+            assert restored["observation"]["hero"]["class"] == "warrior"
+            client.finish()
+        with sqlite3.connect(f"file:{profile / 'audit' / 'public.sqlite3'}?mode=ro", uri=True) as public:
+            assert public.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+            assert public.execute("SELECT COUNT(*) FROM exchanges WHERE duplicate=1").fetchone()[0] >= 2
+            assert public.execute("SELECT COUNT(*) FROM exchanges WHERE response_json IS NULL").fetchone()[0] == 0
+        with sqlite3.connect(f"file:{profile / 'audit' / 'internal.sqlite3'}?mode=ro", uri=True) as internal:
+            assert internal.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+            assert internal.execute("SELECT COUNT(*) FROM snapshots").fetchone()[0] > 0
+        print(json.dumps({"result": "passed", "profile": str(profile)}, ensure_ascii=False))
+    finally:
+        if client.process.poll() is None:
+            client.finish()
+
+
+if __name__ == "__main__":
+    main()
