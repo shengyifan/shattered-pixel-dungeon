@@ -46,7 +46,7 @@ tasks.register('generateBuildCatalog') {
         def output = new File(catalogDirectory.get().asFile, 'control-build.json')
         output.parentFile.mkdirs()
         output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName,
-            cli_version: 'CLI.0.1.0', java_source: '11', build_java: System.getProperty('java.version'),
+            cli_version: 'CLI.0.2.0', java_source: '11', build_java: System.getProperty('java.version'),
             sqlite_jdbc: '3.53.4.0', entries: entries])
     }
 }
@@ -120,7 +120,7 @@ tasks.register('packageMacArm64', Exec) {
         staging.mkdirs()
         copy { from tasks.release.archiveFile; into staging }
         def launcher = layout.buildDirectory.file('spdctl.properties').get().asFile
-        launcher.text = "main-jar=${tasks.release.archiveFileName.get()}\nmain-class=${application.mainClass.get()}\njava-options=-XstartOnFirstThread --enable-native-access=ALL-UNNAMED --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED\n"
+        launcher.text = "main-jar=${tasks.release.archiveFileName.get()}\nmain-class=${application.mainClass.get()}\njava-options=-XstartOnFirstThread --enable-native-access=ALL-UNNAMED --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -XX:ErrorFile=\${SPDCTL_PROFILE}/audit/emergency/hs_err_pid%p.log\n"
         delete dest
         commandLine "${System.getProperty('java.home')}/bin/jpackage",
             '--type', 'app-image', '--name', appName, '--app-version', appVersionName,
@@ -130,6 +130,13 @@ tasks.register('packageMacArm64', Exec) {
             '--mac-package-identifier', appPackageName + '.apple',
             '--add-modules', 'java.base,java.desktop,java.sql,java.logging,java.management,jdk.unsupported,jdk.crypto.cryptoki,jdk.management',
             '--java-options', '-XstartOnFirstThread', '--java-options', '--enable-native-access=ALL-UNNAMED',
-            '--add-launcher', "spdctl=${launcher.absolutePath}"
+            '--add-launcher', "spdctl-jvm=${launcher.absolutePath}"
+    }
+    doLast {
+        def bundle = new File(dest.get().asFile, appName + '.app')
+        def launcher = new File(bundle, 'Contents/MacOS/spdctl')
+        providers.exec { commandLine 'xcrun', 'clang', '-arch', 'arm64', '-mmacosx-version-min=12.0',
+                '-Os', '-Wall', '-Wextra', '-Werror', file('src/main/native/spdctl-bootstrap.c'), '-o', launcher }.result.get().assertNormalExitValue()
+        providers.exec { commandLine 'codesign', '--force', '--deep', '--sign', '-', bundle }.result.get().assertNormalExitValue()
     }
 }

@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.desktop.store;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values;
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.Identifiers;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -138,15 +139,16 @@ public final class AuditStore implements AutoCloseable {
                 publicProfile = UUID.randomUUID().toString();
                 for (String schema : schemas()) {
                     putMetadata(schema, "profile_id", publicProfile);
-                    putMetadata(schema, "schema_version", "2");
+                    putMetadata(schema, "schema_version", "3");
                 }
             } else if (publicProfile == null || !publicProfile.equals(privateProfile)) {
                 throw new SQLException("The public and internal audit database identities differ");
             }
             String version = metadata("main", "schema_version");
             if (!java.util.Objects.equals(version, metadata("internal", "schema_version"))) throw new SQLException("Paired audit schema mismatch");
-            if ("1".equals(version)) migrateVersionOne();
-            else if (!"2".equals(version)) throw new SQLException("Unsupported audit schema");
+            if ("1".equals(version)) { migrateVersionOne();version="2"; }
+            if ("2".equals(version)||"3".equals(version)) migrateWireBytes();
+            else throw new SQLException("Unsupported audit schema");
             menuScope = "menu:" + publicProfile;
             insertScope(menuScope, "menu", null);
             return null;
@@ -154,6 +156,14 @@ public final class AuditStore implements AutoCloseable {
     }
 
     /** Migration is part of the same attached transaction: an interrupted upgrade retains both old files. */
+    private void migrateWireBytes()throws SQLException{
+        for(String schema:schemas()){
+            addColumnIfMissing(schema,"exchanges","raw_bytes","BLOB");
+            addColumnIfMissing(schema,"exchanges","raw_format","TEXT NOT NULL DEFAULT 'legacy-text'");
+            try(PreparedStatement s=writer.prepareStatement("UPDATE "+schema+".metadata SET value='3' WHERE key='schema_version'")){s.executeUpdate();}
+        }
+    }
+
     private void migrateVersionOne() throws SQLException {
         for (String schema : schemas()) {
             addColumnIfMissing(schema, "snapshots", "content_id", "TEXT");
@@ -286,9 +296,13 @@ public final class AuditStore implements AutoCloseable {
 
     /** A parseable identity is consumed even when later request validation fails. */
     public synchronized Attempt begin(String scopeId, String id, String op, String rawRequest) {
+        return begin(scopeId,id,op,rawRequest,rawRequest==null?null:rawRequest.getBytes(StandardCharsets.UTF_8),"logical-text");
+    }
+
+    public synchronized Attempt begin(String scopeId,String id,String op,String rawRequest,byte[] wireBytes,String wireFormat){
         if (rawRequest == null) throw new IllegalArgumentException("The original request is required");
         return transaction(() -> {
-            boolean identifiable = scopeId != null && !scopeId.isEmpty() && id != null && !id.isEmpty();
+            boolean identifiable = Identifiers.valid(scopeId,256) && Identifiers.valid(id,128);
             boolean duplicate = identifiable && requestExists(scopeId, id);
             boolean registered = identifiable && !duplicate;
             String received = now();
@@ -302,6 +316,9 @@ public final class AuditStore implements AutoCloseable {
             }
             try (PreparedStatement s = writer.prepareStatement("INSERT INTO internal.exchanges(scope_id,id,raw_request,duplicate,registered,received_at,sequence) VALUES(?,?,?,?,?,?,?)")) {
                 setExchange(s, scopeId, id, rawRequest, duplicate, registered, received); s.setLong(7, sequence); s.executeUpdate();
+            }
+            for(String schema:schemas())try(PreparedStatement s=writer.prepareStatement("UPDATE "+schema+".exchanges SET raw_bytes=?,raw_format=? WHERE sequence=?")){
+                s.setBytes(1,wireBytes);s.setString(2,wireFormat);s.setLong(3,sequence);s.executeUpdate();
             }
             if (registered) {
                 for (String schema : schemas()) {

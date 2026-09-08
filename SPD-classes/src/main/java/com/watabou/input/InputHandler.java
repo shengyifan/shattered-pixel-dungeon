@@ -31,9 +31,24 @@ import com.watabou.utils.PointF;
 public class InputHandler extends InputAdapter {
 
 	private InputMultiplexer multiplexer;
+	private final java.util.concurrent.atomic.AtomicLong interactions = new java.util.concurrent.atomic.AtomicLong();
+
+	/** Counts real input attempts, even when a text editor consumes them before game bindings. */
+	public long interactionGeneration() { return interactions.get(); }
 
 	public InputHandler( Input input ){
 		multiplexer = new InputMultiplexer();
+		multiplexer.addProcessor(new InputAdapter() {
+			private boolean note() { interactions.incrementAndGet(); return false; }
+			@Override public boolean keyDown(int key) { return note(); }
+			@Override public boolean keyUp(int key) { return note(); }
+			@Override public boolean keyTyped(char character) { return note(); }
+			@Override public boolean touchDown(int x,int y,int pointer,int button) { return note(); }
+			@Override public boolean touchUp(int x,int y,int pointer,int button) { return note(); }
+			@Override public boolean touchCancelled(int x,int y,int pointer,int button) { return note(); }
+			@Override public boolean touchDragged(int x,int y,int pointer) { return note(); }
+			@Override public boolean scrolled(float x,float y) { return x != 0 || y != 0 ? note() : false; }
+		});
 		input.setInputProcessor(multiplexer);
 		addInputProcessor(this);
 		input.setCatchKey( Input.Keys.BACK, true);
@@ -41,7 +56,8 @@ public class InputHandler extends InputAdapter {
 	}
 
 	public void addInputProcessor(InputProcessor processor){
-		multiplexer.addProcessor(0, processor);
+		// The observer never consumes input; preserve the existing ordering after it.
+		multiplexer.addProcessor(1, processor);
 	}
 
 	public void removeInputProcessor(InputProcessor processor){

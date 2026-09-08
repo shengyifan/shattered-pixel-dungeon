@@ -37,9 +37,7 @@ public final class ControlRequest {
             throw new ProtocolException("INVALID_REQUEST", key + " must be a non-empty string of at most " + maximum + " characters");
         }
         String text = (String) value;
-        for (int i = 0; i < text.length(); i++) {
-            if (Character.isISOControl(text.charAt(i))) throw new ProtocolException("INVALID_REQUEST", key + " contains a control character");
-        }
+        if(!Identifiers.valid(text,maximum))throw new ProtocolException("INVALID_REQUEST",key+" is not a valid identifier");
         return text;
     }
 }

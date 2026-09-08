@@ -1,6 +1,6 @@
 # spdctl 控制接口
 
-当前版本 `CLI.0.1.0`，协议 1，游戏 3.3.8。完整实施/未完成事项见 [实施记录](cli-implementation.md)。这是可运行的开发版本，不代表六职业通关验收已经完成。
+当前版本 `CLI.0.2.0`，协议 1，游戏 3.3.8。完整实施/未完成事项见 [实施记录](cli-implementation.md)。这是可运行的开发版本，不代表六职业通关验收已经完成。
 
 ## 启动
 
@@ -23,7 +23,7 @@ CLI 默认 profile 为 `~/Library/Application Support/Shattered Pixel Dungeon CL
 
 ## 一次请求，一次响应
 
-每一行是一个完整 UTF-8 JSON。所有查询和操作必须有调用方生成的 ID，建议 UUID。同一 `scope_id` 下 ID 一经登记永久占用，重复返回 `DUPLICATE_REQUEST_ID`。重新读取/重新决策使用新 ID。
+每一行是一个完整 UTF-8 JSON。LF、CRLF 和 EOF 前无换行的最后一条输入保留原始字节；非法 UTF-8 返回 `INVALID_ENCODING`，不替换成其他字符后执行。ID 与 target_id 禁止控制字符和不成对的 Unicode 代理项。所有查询和操作必须有调用方生成的 ID，建议 UUID。同一 `scope_id` 下 ID 一经登记永久占用，重复返回 `DUPLICATE_REQUEST_ID`。重新读取/重新决策使用新 ID。
 
 先查询协议，获取菜单及当前作用域：
 
@@ -57,7 +57,7 @@ CLI 默认 profile 为 `~/Library/Application Support/Shattered Pixel Dungeon CL
 
 ## 持续行动与退出
 
-`in_progress` 不是失败，不得重发原 ID。用新 ID 查询原请求。当前支持原生休息的明确取消；活动版本、目标原请求 ID 和审计顺序见 [持续取消](cli-runtime-cancellation.md)。每条请求只有一条线上响应，最终结果通过主动查询取得。
+`in_progress` 不是失败，不得重发原 ID。用新 ID 查询原请求。当前支持原生休息及已经开始移动的连续路径取消；活动版本、目标原请求 ID 和审计顺序见 [持续取消](cli-runtime-cancellation.md)。每条请求只有一条线上响应，最终结果通过主动查询取得。
 
 `app.quit` 走可确认的保存/退出流程；先通过原有取消/返回控件收束窗口。stdin EOF 作为系统生命周期记录处理，不伪造调用方请求或主动输出额外响应。
 

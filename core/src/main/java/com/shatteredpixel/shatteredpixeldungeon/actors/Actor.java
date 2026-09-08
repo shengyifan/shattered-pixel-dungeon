@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.watabou.noosa.Game;
 import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
@@ -243,106 +244,122 @@ public abstract class Actor implements Bundlable {
 
 	private static volatile boolean yielded;
 	private static volatile Actor yieldedActor;
-	// Guarded by the actor thread's monitor. A wait must not resume from a spurious wakeup.
+	private static volatile Thread processingThread;
+	private static volatile CharSprite motionMonitor;
+	private static volatile Actor motionActor;
+	// The current handoff monitor guards these predicates.
 	private static boolean resumeRequested;
-	/** True only after an actor act() has returned and the actor thread is waiting. */
+	private static boolean motionHeld;
+
+	/** True only after act() returned and the scheduler is waiting on its own thread monitor. */
 	public static boolean isYielded() { return yielded; }
 	public static boolean yieldedBy(Actor actor) { return yielded && yieldedActor == actor; }
-	/** Called by the render thread under the actor thread monitor before notify(). */
+	public static boolean isMotionHandoff() { return motionMonitor != null; }
+	public static Actor motionHandoffActor() { return motionActor; }
+	/** Called under the waiting actor thread's monitor before notify(). */
 	public static void markResuming() { resumeRequested = true; yielded = false; }
-	
+
+	/** Check and use the actual wait monitor together; a previously published monitor may already be stale. */
+	public static boolean atHandoff(Thread actorThread, Runnable action) {
+		CharSprite motion = motionMonitor;
+		if (motion != null) {
+			synchronized (motion) {
+				if (processingThread != actorThread || motionMonitor != motion) return false;
+				action.run();
+				return true;
+			}
+		}
+		synchronized (actorThread) {
+			if (processingThread != actorThread || !yielded) return false;
+			action.run();
+			return true;
+		}
+	}
+
+	/** A short scheduling lease; it never stops a sprite animation or invokes its callback. */
+	public static void holdMotionHandoff(boolean hold) {
+		CharSprite motion = motionMonitor;
+		if (motion == null || !Thread.holdsLock(motion)) throw new IllegalStateException("No owned motion handoff");
+		boolean release = motionHeld && !hold;
+		motionHeld = hold;
+		if (release) motion.notifyAll();
+	}
+
+	private static void waitForMotion(Char ch) throws InterruptedException {
+		CharSprite sprite = ch.sprite;
+		if (sprite == null) return;
+		synchronized (sprite) {
+			if (!sprite.isMoving) return;
+			motionHeld = false;
+			motionActor = ch;
+			motionMonitor = sprite;
+			try {
+				while ((sprite.isMoving || motionHeld) && keepActorThreadAlive) sprite.wait();
+			} finally {
+				motionMonitor = null;
+				motionActor = null;
+				motionHeld = false;
+			}
+		}
+	}
+
 	public static void process() {
 		yielded = false;
-		
+		processingThread = Thread.currentThread();
 		boolean doNext;
 		boolean interrupted = false;
-
+		try {
 			do {
-
 				Actor yieldedFrom = null;
 				current = null;
-			if (!interrupted && !Game.switchingScene()) {
-				float earliest = Float.MAX_VALUE;
-
-				synchronized (Actor.class) {
-					for (Actor actor : all) {
-
-						//some actors will always go before others if time is equal.
-						if (actor.time < earliest ||
-								actor.time == earliest && (current == null || actor.actPriority > current.actPriority)) {
-							earliest = actor.time;
-							current = actor;
-						}
-
-					}
-				}
-			}
-
-			if  (current != null) {
-
-				now = current.time;
-					Actor acting = current;
-					yieldedFrom = acting;
-
-				if (acting instanceof Char && ((Char) acting).sprite != null) {
-					// If it's character's turn to act, but its sprite
-					// is moving, wait till the movement is over
-					try {
-						synchronized (((Char)acting).sprite) {
-							if (((Char)acting).sprite.isMoving) {
-								((Char) acting).sprite.wait();
+				if (!interrupted && !Game.switchingScene()) {
+					float earliest = Float.MAX_VALUE;
+					synchronized (Actor.class) {
+						for (Actor actor : all) {
+							if (actor.time < earliest || actor.time == earliest && (current == null || actor.actPriority > current.actPriority)) {
+								earliest = actor.time;
+								current = actor;
 							}
 						}
-					} catch (InterruptedException e) {
-						interrupted = true;
 					}
 				}
-				
-				interrupted = interrupted || Thread.interrupted();
-				
-				if (interrupted){
-					doNext = false;
-					current = null;
-				} else {
-					doNext = acting.act();
-					if (doNext && (Dungeon.hero == null || !Dungeon.hero.isAlive())) {
-						doNext = false;
-						current = null;
+				if (current != null) {
+					now = current.time;
+					Actor acting = current;
+					yieldedFrom = acting;
+					try { if (acting instanceof Char) waitForMotion((Char) acting); }
+					catch (InterruptedException e) { interrupted = true; }
+					interrupted = interrupted || Thread.interrupted() || !keepActorThreadAlive;
+					if (interrupted) { doNext = false; current = null; }
+					else {
+						doNext = acting.act();
+						if (doNext && (Dungeon.hero == null || !Dungeon.hero.isAlive())) { doNext = false; current = null; }
 					}
-				}
-			} else {
-				doNext = false;
-			}
-
-			if (!doNext){
-				synchronized (Thread.currentThread()) {
-					
-					interrupted = interrupted || Thread.interrupted();
-					
-					if (interrupted){
-						current = null;
-						interrupted = false;
-					}
-
-						//signals to the gamescene that actor processing is finished for now
+				} else doNext = false;
+				if (!doNext) {
+					synchronized (Thread.currentThread()) {
+						interrupted = interrupted || Thread.interrupted();
+						if (interrupted) { current = null; interrupted = false; }
 						resumeRequested = false;
 						yieldedActor = yieldedFrom;
 						yielded = true;
-					Thread.currentThread().notify();
-					
-					try {
-							while (!resumeRequested && keepActorThreadAlive) Thread.currentThread().wait();
-					} catch (InterruptedException e) {
-						interrupted = true;
-					}
+						Thread.currentThread().notify();
+						try { while (!resumeRequested && keepActorThreadAlive) Thread.currentThread().wait(); }
+						catch (InterruptedException e) { interrupted = true; }
 						yielded = false;
 						yieldedActor = null;
+					}
 				}
-			}
-
-		} while (keepActorThreadAlive);
+			} while (keepActorThreadAlive);
+		} finally {
+			yielded = false;
+			yieldedActor = null;
+			motionMonitor = null;
+			motionActor = null;
+			processingThread = null;
+		}
 	}
-	
+
 	public static void add( Actor actor ) {
 		add( actor, now );
 	}

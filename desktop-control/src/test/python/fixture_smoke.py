@@ -256,7 +256,14 @@ def subclass_test(client, profile, name):
         assert response_values["monk_energy"] < before["monk_energy"], {"action_response_preceded_monk_effect": response_values}
     elif name in {"PRIEST", "PALADIN"}:
         assert response_values["tome_charge"] < before["tome_charge"], {"action_response_preceded_spell_effect": response_values}
-    elif name not in {"BERSERKER", "FREERUNNER", "CHAMPION"}:
+    elif name == "CHAMPION":
+        old = next(i["name"] for i in state["observation"]["inventory"] if i["locator"] == "equipment.weapon")
+        new = next(i["name"] for i in result["observation"]["inventory"] if i["locator"] == "equipment.weapon")
+        assert old != new, {"action_response_preceded_weapon_swap": (old, new)}
+    elif name in {"BERSERKER", "FREERUNNER"}:
+        assert state["observation"]["hero"]["buffs"] != result["observation"]["hero"]["buffs"], {
+            "action_response_preceded_subclass_effect": name}
+    else:
         assert response_values["target_hp"] < before["target_hp"], {"action_response_preceded_attack_effect": name, "response": response_values}
     close_choices(client)
     after_state = client.state()
@@ -368,6 +375,12 @@ def spell_test(client, profile, name, empty=False):
         result = select_inventory_item(client, lambda label: norm(label) == "sword")
     elif name in {"BodyForm", "MindForm", "SpiritForm"}:
         item_hint = {"BodyForm": "blazing", "MindForm": "magic missile", "SpiritForm": "accuracy"}[name]
+        if name == "BodyForm":
+            options = client.state()
+            option = next(a for a in options["actions"] if a["action"] == "ui.activate" and item_hint in a.get("label", "").lower())
+            unchanged = act(client, "ui.activate", control=option["control"], gesture="long")
+            assert unchanged["observation"]["ui"] == options["observation"]["ui"], "Unimplemented native long press must not synthesize a click"
+            assert checkpoint(profile, unchanged["state_version"])["tome_charge"] == before["tome_charge"]
         result = click(client, lambda label: item_hint in label.lower())
         result = click(client, lambda label: label.lower().startswith("assign to"))
     elif has_action(result, "cell.cancel"):
@@ -386,6 +399,7 @@ def spell_test(client, profile, name, empty=False):
     if name == "Cleanse":
         assert not any("Poison" in b for b in after["effect_buffs"]), after
     return {"spell": name, "cast_and_resource_spend_verified": True, "target_cancel_checked": cancelled,
+            "unhandled_long_noop_checked": name == "BodyForm",
             "charge_before": before["tome_charge"] + before["tome_partial"], "charge_after": after["tome_charge"] + after["tome_partial"]}
 
 

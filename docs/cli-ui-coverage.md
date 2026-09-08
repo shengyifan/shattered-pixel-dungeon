@@ -20,7 +20,7 @@
 | 输入族 | 通过现有语义访问 | 关键边界 |
 |---|---|---|
 | Scene / Window / 嵌套 Window | 当前控件树中的 `ui.activate`、`ui.back` | 只操作最上层有效窗口；保留原生强制通知/取消门槛。 |
-| Button 及子类 | `ui.activate` 的 click/right/middle/long | 只列实际覆盖的回调；按当前 visible/active/父树/作用域检查。 |
+| Button 及子类 | `ui.activate` 的 click/right/middle/long | 只列实际覆盖的回调；按当前 visible/active/父树/作用域检查。未处理的长按不补 click、不当作执行异常。 |
 | ItemButton 复合控件 | 激活其现有子 ItemSlot | 子 ItemSlot 原回调转发到 ItemButton；不直接反射其物品。 |
 | RightClickMenu | 顶层 `context_menu` 下的真实按钮、`ui.back` | 它实际继承 Component，不能只查 Window。 |
 | RadialMenu | `ui.choose` 的当前 option 和 alternate | 从已创建菜单中获取现有文本，不靠指针位置或隐藏对象清单。 |
@@ -41,6 +41,8 @@
 | 区域过场故事 | 原 Continue / Hide-story 按钮 | coordinator 必须允许等待 Continue 的稳定输入点；不能一律屏蔽 InterlevelScene。 |
 | About 链接 / 结局宠物 | 现有 ActionArea 的 `ui.activate` | 只调用原已有动作。 |
 | 血条读取 | 已 layout 的 `health_bar` 像素宽度 | 不返回 Char 的真实 HP/HT；格子关联要求当下 FOV、位置范围和 sprite.visible。Boss 数字取已显示文字。 |
+
+完整观察与操作意图版本的区别、浮字导致过期的公开证据，以及长按无动作语义，见 [CLI UI 意图版本](cli-ui-intent-version.md)。
 
 按钮的按下/抬起表现回调目前用于声音、按压色彩和已有图标色彩恢复；点击、右击、中击、长按的游戏操作回调由语义入口调用。清单保留这些表现回调的方法体校验标识，后续向其中加入游戏逻辑时必须重新审查，不得延续“仅表现”的旧结论。
 
@@ -66,3 +68,5 @@
 - 所有交互形态测试顶层遮挡、旧控件 ID、旧 state_version、错误类型、滚动条目、选物取消确认、死亡复活和切层故事。
 - 测试夹具只能存在于 test source-set，允许内部布置可复现场景；之后操作必须走同一个 UiBridge 和实际原生窗口。夹具初始化与诊断信息不能出现在公开游戏操作协议。
 - 每个专项证据记录 fixture ID、构建版本、角色/能力、命令、公开前后观察、预期/实际结果；不得将只检查 enum 个数的测试命名成能力可用或通关测试。
+
+已经执行的真实引擎专项、逐例结果和明确未穷尽的范围，见 [P7 真实引擎专项验证](cli-p7-validation.md)。

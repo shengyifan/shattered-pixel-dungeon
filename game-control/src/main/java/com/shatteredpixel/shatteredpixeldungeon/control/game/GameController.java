@@ -77,6 +77,10 @@ public final class GameController implements RuntimeObserver {
         final Execution execution=new Execution(new CompletableFuture<>(),new CompletableFuture<>());
         final CompletableFuture<State> result=execution.completion;
         String activityVersion;
+        String activityKind;
+        int startCell=-1;
+        boolean startedInRun;
+        boolean movementObserved;
         Work(String version,Map<String,Object> args,String requestId){
             this.version=version;this.args=args;this.requestId=requestId;
             result.whenComplete((state,error)->{if(error==null)execution.firstResponse.complete(state);else execution.firstResponse.completeExceptionally(error);});
@@ -95,6 +99,7 @@ public final class GameController implements RuntimeObserver {
     private final ConcurrentLinkedQueue<RunOutcome> outcomes=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<CancelControl> cancellations=new ConcurrentLinkedQueue<>();
     private final Consumer<Throwable> errors;
+    private final ArrayList<Runnable> afterHandoff=new ArrayList<>();
     private volatile State latest;
     private volatile boolean disposed, exiting;
     private volatile String plannedRun;
@@ -164,48 +169,80 @@ public final class GameController implements RuntimeObserver {
         if(h.sprite!=null&&h.sprite.isMoving)return false;
         return GameScene.interfaceBlockingHero()||!aliveAtBoundary(h)||(h.ready&&h.curAction==null&&!h.resting);
     }
-    private boolean restHandoff(){
-        if(!(Game.scene() instanceof GameScene)||executing==null||executing.requestId==null)return false;
+    private boolean activityStillRunning(){
+        if(!(Game.scene() instanceof GameScene)||executing==null||executing.requestId==null||!executing.startedInRun)return false;
         Hero hero=Dungeon.hero;
-        return hero!=null&&hero.resting&&Actor.yieldedBy(hero)
-                &&(hero.sprite==null||!hero.sprite.isMoving)&&aliveAtBoundary(hero);
+        if(hero==null||!aliveAtBoundary(hero))return false;
+        if(hero.resting)return true;
+        if(hero.curAction==null||"move.step".equals(executing.args.get("action")))return false;
+        if(hero.pos!=executing.startCell)executing.movementObserved=true;
+        return executing.movementObserved;
+    }
+    private boolean continuousHandoff(){
+        if(!activityStillRunning())return false;
+        Hero hero=Dungeon.hero;
+        if(hero.resting)return Actor.yieldedBy(hero)&&(hero.sprite==null||!hero.sprite.isMoving);
+        if(hero.sprite!=null&&!hero.sprite.looping())return false;
+        return Actor.isMotionHandoff()||(Actor.yieldedBy(hero)&&(hero.sprite==null||!hero.sprite.isMoving));
     }
     @Override public boolean beforeActorResume(){
         if(failedExecutionHold||cancellationLease!=null)return false;
         if(executing!=null&&executing.activityVersion!=null&&!executing.execution.acknowledged())return false;
-        if(restHandoff()){
+        if(continuousHandoff()){
             if(executing.activityVersion==null)return false;
             for(CancelControl control:cancellations)if(control.kind.equals("prepare"))return false;
             Work query=queue.peek();if(query!=null&&query.args==null)return false;
         }
         return true;
     }
+    @Override public void beforeSceneUpdate(){
+        if(Game.scene() instanceof GameScene)GameScene.atActorHandoff(this::refreshMotionLease);
+    }
+    private void refreshMotionLease(){
+        if(!Actor.isMotionHandoff())return;
+        boolean hold=failedExecutionHold||cancellationLease!=null
+                ||(executing!=null&&executing.activityVersion!=null&&!executing.execution.acknowledged());
+        if(continuousHandoff()){
+            hold|=executing.activityVersion==null;
+            for(CancelControl control:cancellations)if(control.kind.equals("prepare"))hold=true;
+            Work query=queue.peek();if(query!=null&&query.args==null)hold=true;
+        }
+        Actor.holdMotionHandoff(hold);
+    }
     @Override public void afterFrame(){
         frame++;
-        if(Game.scene() instanceof GameScene)GameScene.atActorHandoff(this::atBoundary);
-        else atBoundary();
+        try{
+            if(Game.scene() instanceof GameScene)GameScene.atActorHandoff(()->{
+                try{atBoundary();}finally{refreshMotionLease();}
+            });
+            else atBoundary();
+        }finally{
+            ArrayList<Runnable> ready=new ArrayList<>(afterHandoff);afterHandoff.clear();
+            for(Runnable notification:ready)notification.run();
+        }
     }
     private void atBoundary(){
         try {
             processCancellation();
             if(Game.instance==null||Game.scene()==null||Game.switchingScene()||Game.hasPendingCallbacks()||hasPendingEffects(Game.scene()))return;
-            if(restHandoff()){
+            if(continuousHandoff()){
                 if(executing.activityVersion==null){
                     executing.activityVersion="activity:"+epoch+":"+(++activityGeneration);
+                    executing.activityKind=Dungeon.hero.resting?"rest":"travel";
                     State boundary=captureContinuous();
                     if(!auditReady(boundary.internalState))throw new ProtocolException("SNAPSHOT_INCOMPLETE","Continuous activity snapshot unavailable");
-                    executing.execution.firstResponse.complete(boundary);
+                    deliver(executing.execution.firstResponse,boundary);
                 }
                 if(cancellationLease!=null)return;
                 Work query=queue.peek();
-                if(query!=null&&query.args==null){queue.poll();query.result.complete(captureContinuous());}
+                if(query!=null&&query.args==null){queue.poll();deliver(query.result,captureContinuous());}
                 return;
             }
             if(!stable())return;
             if(runActive() && Dungeon.runIdentityNeedsSave) Dungeon.saveAll();
             if(executing!=null && frame>executedFrame){
-                State state=capture(true); Work done=executing;executing=null;done.result.complete(state);
-                if(cancellationCompletion!=null){cancellationCompletion.complete(state);cancellationCompletion=null;}
+                State state=capture(true); Work done=executing;executing=null;deliver(done.result,state);
+                if(cancellationCompletion!=null){deliver(cancellationCompletion,state);cancellationCompletion=null;}
             }
             if(executing!=null)return;
             Work work=queue.poll();
@@ -213,27 +250,29 @@ public final class GameController implements RuntimeObserver {
             boolean enteredGame=false;
             try {
                 State before=capture(false);
-                if(work.args==null){work.result.complete(before);return;}
+                if(work.args==null){deliver(work.result,before);return;}
                 if(!Objects.equals(work.version,before.version))
                     throw new ProtocolException("STALE_STATE","Observe the current state before acting");
                 if(!auditReady(before.internalState))
                     throw new ProtocolException("SNAPSHOT_INCOMPLETE","Required audit snapshot is unavailable");
                 validateAction(work.args);
+                work.startedInRun=runActive();
+                work.startCell=Dungeon.hero==null?-1:Dungeon.hero.pos;
                 enteredGame=true;
                 perform(work.args);
                 executing=work;executedFrame=frame;
             }catch(Throwable error){
-                errors.accept(error);
+                reportAfterHandoff(error);
                 if(enteredGame && Dungeon.hero!=null&&Dungeon.hero.resting)failedExecutionHold=true;
-                work.result.completeExceptionally(!enteredGame && work.args!=null
+                reject(work.result,!enteredGame && work.args!=null
                         ?new NotExecuted(error instanceof ProtocolException?((ProtocolException)error).code:"INVALID_ARGUMENT",error):error);
             }
         }catch(Throwable error){
-            errors.accept(error);
-            if(executing!=null){failedExecutionHold=true;executing.result.completeExceptionally(error);executing=null;}
-            if(cancellationCompletion!=null){cancellationCompletion.completeExceptionally(error);cancellationCompletion=null;}
+            reportAfterHandoff(error);
+            if(executing!=null){failedExecutionHold=true;reject(executing.result,error);executing=null;}
+            if(cancellationCompletion!=null){reject(cancellationCompletion,error);cancellationCompletion=null;}
             cancellationLease=null;
-            Work work=queue.poll();if(work!=null)work.result.completeExceptionally(error);
+            Work work=queue.poll();if(work!=null)reject(work.result,error);
         }
     }
     private void processCancellation(){
@@ -242,18 +281,18 @@ public final class GameController implements RuntimeObserver {
         if(control.kind.equals("abort")){
             cancellations.poll();
             if(cancellationLease!=null&&Objects.equals(control.version,cancellationLease.version))cancellationLease=null;
-            control.result.complete(null);return;
+            deliver(control.result,null);return;
         }
         if(executing==null||!Objects.equals(control.target,executing.requestId)
                 ||!Objects.equals(control.version,executing.activityVersion)||!(Game.scene() instanceof GameScene)){
             cancellations.poll();cancellationLease=null;
-            control.result.completeExceptionally(new NotExecuted("ACTIVITY_EXPIRED",null));return;
+            reject(control.result,new NotExecuted("ACTIVITY_EXPIRED",null));return;
         }
         if(Game.switchingScene()||Game.hasPendingCallbacks()||hasPendingEffects(Game.scene()))return;
-        if(!restHandoff()){
-            if(Dungeon.hero==null||!Dungeon.hero.resting){
+        if(!continuousHandoff()){
+            if(!activityStillRunning()){
                 cancellations.poll();cancellationLease=null;
-                control.result.completeExceptionally(new NotExecuted("ACTIVITY_EXPIRED",null));
+                reject(control.result,new NotExecuted("ACTIVITY_EXPIRED",null));
             }
             return;
         }
@@ -265,7 +304,7 @@ public final class GameController implements RuntimeObserver {
                 State before=captureContinuous();
                 if(!auditReady(before.internalState))throw new ProtocolException("SNAPSHOT_INCOMPLETE","Cancellation snapshot unavailable");
                 cancellationLease=control;
-                control.result.complete(before);
+                deliver(control.result,before);
             }else{
                 if(cancellationLease==null||!Objects.equals(cancellationLease.version,control.version)
                         ||!Objects.equals(cancellationLease.target,control.target))throw new ProtocolException("CANCEL_NOT_PREPARED","Cancellation has no valid preparation");
@@ -280,14 +319,17 @@ public final class GameController implements RuntimeObserver {
             cancellationLease=null;
             if(invoked){
                 failedExecutionHold=true;
-                if(executing!=null){executing.result.completeExceptionally(error);executing=null;}
-                control.result.completeExceptionally(error);
-            }else control.result.completeExceptionally(new NotExecuted(error instanceof ProtocolException?((ProtocolException)error).code:"CANCEL_UNAVAILABLE",error));
+                if(executing!=null){reject(executing.result,error);executing=null;}
+                reject(control.result,error);
+            }else reject(control.result,new NotExecuted(error instanceof ProtocolException?((ProtocolException)error).code:"CANCEL_UNAVAILABLE",error));
         }
     }
+    private <T> void deliver(CompletableFuture<T> future,T value){afterHandoff.add(()->future.complete(value));}
+    private void reject(CompletableFuture<?> future,Throwable error){afterHandoff.add(()->future.completeExceptionally(error));}
+    private void reportAfterHandoff(Throwable error){afterHandoff.add(()->errors.accept(error));}
     private State captureContinuous(){
         State ordinary=capture(false);
-        Map<String,Object> activity=map("kind","rest","target_id",executing.requestId,"state_version",executing.activityVersion);
+        Map<String,Object> activity=map("kind",executing.activityKind,"target_id",executing.requestId,"state_version",executing.activityVersion);
         Map<String,Object> pub=new LinkedHashMap<>(ordinary.publicState);pub.put("continuous_activity",activity);
         Map<String,Object> internal=new LinkedHashMap<>(ordinary.internalState);internal.put("continuous_activity",activity);
         List<Map<String,Object>> actions=Collections.singletonList(map("action","action.cancel","target_id",executing.requestId,"state_version",executing.activityVersion));
@@ -330,7 +372,10 @@ public final class GameController implements RuntimeObserver {
         String phase=exiting?"closing":choice?"awaiting_input":Game.scene() instanceof GameScene
                 ?(aliveAtBoundary(Dungeon.hero)?"player_ready":"ended")
                 :Game.scene() instanceof InterlevelScene?"awaiting_input":"menu_ready";
-        String nextSignature=scope+"|"+phase+"|"+ui.contextSignature()+"|"+JsonCodec.encode(pub);
+        Map<String,Object> decisionState=new LinkedHashMap<>(pub);
+        decisionState.remove("ui");
+        long inputGeneration=Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();
+        String nextSignature=scope+"|"+phase+"|"+ui.intentSignature()+"|"+inputGeneration+"|"+JsonCodec.encode(decisionState);
         if(forceNewVersion||!nextSignature.equals(signature)){revision++;signature=nextSignature;}
         String version=epoch+":"+revision;
         Map<String,Object> internal=new LinkedHashMap<>(captured.internalState);

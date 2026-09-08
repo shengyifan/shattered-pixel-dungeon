@@ -79,23 +79,28 @@ public final class MachineSession implements AutoCloseable {
     }
     /** Accept one complete NDJSON line; completion means its sole response has been handled. */
     public CompletableFuture<Void> accept(String raw){
+        return accept(NdjsonReader.Frame.logical(raw));
+    }
+    public CompletableFuture<Void> accept(NdjsonReader.Frame frame){
         CompletableFuture<Void> done=new CompletableFuture<>();
         if(closed){done.completeExceptionally(new ProtocolException("SESSION_CLOSED","Session is closed"));return done;}
-        try{serial.execute(()->{try{process(raw);done.complete(null);}catch(Throwable e){done.completeExceptionally(e);}});}
+        try{serial.execute(()->{try{process(frame);done.complete(null);}catch(Throwable e){done.completeExceptionally(e);}});}
         catch(RejectedExecutionException e){done.completeExceptionally(e);}
         return done;
     }
     public void read(InputStream input){
-        try(BufferedReader reader=new BufferedReader(new InputStreamReader(input,StandardCharsets.UTF_8))){
-            String line;
-            while(!closed&&(line=reader.readLine())!=null){accept(line).get();if(game.exiting())return;}
+        try(InputStream source=input){
+            NdjsonReader reader=new NdjsonReader(source);
+            NdjsonReader.Frame frame;
+            while(!closed&&(frame=reader.next())!=null){accept(frame).get();if(game.exiting())return;}
             if(!closed)serial.submit(()->endInput("stdin_eof")).get();
         }catch(Throwable error){
             try{serial.submit(()->{recordExceptionNow(unwrap(error));endInput("input_failure");}).get();}
             catch(Throwable ignored){game.exitNow();}
         }
     }
-    private void process(String raw){
+    private void process(NdjsonReader.Frame frame){
+        String raw=frame.text;
         ResponseStage responseStage=new ResponseStage();
         AuditStore.Attempt attempt=null;
         String id=null,scope=null,op=null;
@@ -103,10 +108,11 @@ public final class MachineSession implements AutoCloseable {
         boolean currentCertified=false,dispatchAttempted=false,cancelRequest=false;
         String preparedLease=null;
         try{
+            if(frame.error!=null)throw frame.error;
             Map<String,Object> envelope=JsonCodec.decode(raw);
-            id=validText(envelope.get("id"));scope=validText(envelope.get("scope_id"));op=validText(envelope.get("op"));
-            if(scope==null&&"protocol.info".equals(op))scope=store.menuScope();
-            attempt=store.begin(scope,id,op,raw);
+            id=identity(envelope.get("id"),128);scope=identity(envelope.get("scope_id"),256);op=identity(envelope.get("op"),128);
+            if(envelope.get("scope_id")==null&&"protocol.info".equals(op))scope=store.menuScope();
+            attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format);
             if(attempt.duplicate)throw new ProtocolException("DUPLICATE_REQUEST_ID","Request ID already appeared in this scope");
             // Consume identity before validating args, operation or state_version.
             ControlRequest request=ControlRequest.parse(raw);
@@ -137,21 +143,21 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("protocol_version",1,"cli_version","CLI.0.1.0","game_version","3.3.8",
+                    result=map("protocol_version",1,"cli_version","CLI.0.2.0","game_version","3.3.8",
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
                             "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit"));break;
                 case "state.get":result=publicStateResult(state);break;
                 case "actions.list":result=pending!=null||executionUncertain?publicStateResult(state):map("state_version",state.version,"actions",state.actions);break;
                 case "request.get":
-                    result=store.getRequest(scope,requiredString(request.args,"target_id"));
+                    result=store.getRequest(scope,requiredIdentifier(request.args,"target_id"));
                     if(result==null)throw new ProtocolException("REQUEST_NOT_FOUND","Request not found");break;
                 case "history.list":result=store.history(scope,number(request.args,"after",0),limit(request.args));break;
                 case "events.read":result=store.events(scope,number(request.args,"after",0),limit(request.args));break;
                 case "action.execute":{
                     if(request.stateVersion==null)throw new ProtocolException("STATE_VERSION_REQUIRED","state_version is required");
                     if(cancelRequest){
-                        String target=requiredString(request.args,"target_id");
+                        String target=requiredIdentifier(request.args,"target_id");
                         if(pending==null||pending.activity==null||!target.equals(pending.attempt.id)||!scope.equals(pending.attempt.scopeId))
                             throw new ProtocolException("ACTIVITY_NOT_ACTIVE","Target is not the active continuous request");
                         if(!request.stateVersion.equals(pending.activity.version))throw new ProtocolException("STALE_ACTIVITY","Activity token has expired");
@@ -224,7 +230,7 @@ public final class MachineSession implements AutoCloseable {
                 fatal(error);return;
             }
             try{
-                if(attempt==null)attempt=store.begin(scope,id,op,raw);
+                if(attempt==null)attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format);
                 Map<String,Object> response=failure(id,scope,dispatchAttempted&&!definitelyNotExecuted?"EXECUTION_UNKNOWN":code(error));
                 // Never substitute a pre-action snapshot for an unknown post-action state.
                 Map<String,Object>[] snapshots=dispatchAttempted?emptySnapshots():auditSnapshots(scope,state,currentCertified);
@@ -354,7 +360,9 @@ public final class MachineSession implements AutoCloseable {
     private static Throwable unwrap(Throwable e){while((e instanceof ExecutionException||e instanceof CompletionException)&&e.getCause()!=null)e=e.getCause();return e;}
     private static String code(Throwable e){e=unwrap(e);return e instanceof GameController.NotExecuted?((GameController.NotExecuted)e).code:e instanceof ProtocolException?((ProtocolException)e).code:e instanceof IllegalArgumentException?"INVALID_ARGUMENT":e instanceof TimeoutException?"STATE_UNAVAILABLE":"ENGINE_ERROR";}
     private static String validText(Object v){return v instanceof String&&!((String)v).isEmpty()?(String)v:null;}
+    private static String identity(Object v,int maximum){return v instanceof String&&Identifiers.valid((String)v,maximum)?(String)v:null;}
     private static String requiredString(Map<String,Object> args,String key){String s=validText(args.get(key));if(s==null)throw new ProtocolException("INVALID_ARGUMENT",key+" is required");return s;}
+    private static String requiredIdentifier(Map<String,Object> args,String key){String s=requiredString(args,key);if(!Identifiers.valid(s,128))throw new ProtocolException("INVALID_ARGUMENT",key+" must be a valid request ID");return s;}
     private static long number(Map<String,Object> args,String key,long fallback){
         if(!args.containsKey(key))return fallback;Object value=args.get(key);
         if(!(value instanceof Number))throw new ProtocolException("INVALID_ARGUMENT",key+" must be an integer");

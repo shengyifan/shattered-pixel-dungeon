@@ -77,11 +77,18 @@ public class FileUtils {
 	}
 
 	public static boolean cleanTempFiles( String dirName ){
+		return cleanTempFiles(dirName, file -> true);
+	}
+
+	/** Only inspect files owned by the caller; unrelated application data is untouched. */
+	public static boolean cleanTempFiles( String dirName, java.util.function.Predicate<FileHandle> owned ){
 		FileHandle dir = getFileHandle(dirName);
 		boolean foundTemp = false;
 		for (FileHandle file : dir.list()){
+			if (!owned.test(file)) continue;
 			if (file.isDirectory()){
-				foundTemp = cleanTempFiles(dirName + file.name()) || foundTemp;
+				String prefix = dirName.isEmpty() || dirName.endsWith("/") ? dirName : dirName + "/";
+				foundTemp = cleanTempFiles(prefix + file.name() + "/", owned) || foundTemp;
 			} else if (file.length() == 0) {
 				file.delete();
 			} else {

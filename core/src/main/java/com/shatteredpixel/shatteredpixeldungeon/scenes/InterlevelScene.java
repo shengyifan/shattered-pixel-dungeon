@@ -106,12 +106,14 @@ public class InterlevelScene extends PixelScene {
 	private IconButton btnHideStory;
 	
 	private static Thread thread;
+	// Retain the actual loader even when error presentation clears the shared resume slot.
+	private Thread loaderForScene;
 	private static Exception error = null;
 
 	/** A story choice or error window can be read only after the loader has stopped. */
 	public boolean awaitingUserInput() {
-		Thread loader = thread;
-		if (loader != null && loader.isAlive()) return false;
+		Thread loader = loaderForScene;
+		if (loader == null || loader.isAlive()) return false;
 		if (phase != Phase.STATIC) return false;
 		if (btnContinue != null && btnContinue.active && !textFadingIn) return true;
 		for (com.watabou.noosa.Gizmo child : childrenSnapshot()) {
@@ -426,6 +428,7 @@ public class InterlevelScene extends PixelScene {
 			thread = new Thread() {
 				@Override
 				public void run() {
+					boolean failed = false;
 					
 					try {
 
@@ -457,19 +460,21 @@ public class InterlevelScene extends PixelScene {
 						
 					} catch (Exception e) {
 						
+						failed = true;
 						error = e;
 						
 					}
 
-					synchronized (thread) {
-						if (phase == Phase.STATIC && error == null) {
+					synchronized (Thread.currentThread()) {
+						if (!failed && thread == Thread.currentThread() && phase == Phase.STATIC && error == null) {
 							afterLoading();
 						}
 					}
 				}
 			};
+			loaderForScene = thread;
 			thread.start();
-		}
+		} else loaderForScene = thread;
 		waitingTime = 0f;
 	}
 

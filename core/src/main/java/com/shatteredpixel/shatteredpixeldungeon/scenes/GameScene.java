@@ -823,11 +823,7 @@ public class GameScene extends PixelScene {
 	public static boolean atActorHandoff(Runnable action) {
 		Thread actor = actorThread;
 		if (actor == null || !actor.isAlive()) return false;
-		synchronized (actor) {
-			if (!Actor.isYielded()) return false;
-			action.run();
-			return true;
-		}
+		return Actor.atHandoff(actor, action);
 	}
 	
 	//sometimes UI changes can be prompted by the actor thread.
@@ -863,6 +859,7 @@ public class GameScene extends PixelScene {
 			return;
 		}
 
+		Game.observer.beforeSceneUpdate();
 		super.update();
 
 		if (notifyDelay > 0) notifyDelay -= Game.elapsed;

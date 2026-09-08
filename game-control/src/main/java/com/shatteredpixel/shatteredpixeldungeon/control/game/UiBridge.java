@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
@@ -91,7 +92,27 @@ public final class UiBridge {
 
     /** A process-local signature of public control state and live callback lifetimes. */
     public String contextSignature() {
+        return signature(describeUi());
+    }
+
+    /**
+     * Conservative intent signature. Floating combat/loot text remains in every observation,
+     * but its cosmetic appearance/expiry does not change which input can be performed.
+     * Keep all other data, including health bars and enabled flags, until independently audited.
+     * The coordinator must combine this with world state and real input generations, and must
+     * not also hash the unfiltered public UI into the same intent version.
+     */
+    public String intentSignature() {
         Map<String, Object> ui = describeUi();
+        List<Map<String, Object>> retained = new ArrayList<>();
+        for (Map<String, Object> node : nodes) {
+            if (!(controls.get(node.get("id")) instanceof FloatingText)) retained.add(node);
+        }
+        ui.put("controls", retained);
+        return signature(ui);
+    }
+
+    private String signature(Map<String, Object> ui) {
         return (scene == null ? "none" : id(scene)) + ":" + (scope == null ? "none" : id(scope))
                 + ":" + callbackId(cellSelector == null ? null : cellSelector.listener)
                 + ":" + callbackId(scope instanceof InventoryPane ? ((InventoryPane) scope).getSelector() : null)
@@ -214,9 +235,9 @@ public final class UiBridge {
                     if (!gestures(button).contains(gesture)) {
                         throw new IllegalArgumentException("Unsupported activation gesture for this control");
                     }
-                    if (!button.activate(gesture)) {
-                        throw new IllegalStateException("The control did not accept this activation");
-                    }
+                    // Native Button handling suppresses the subsequent click when a long
+                    // press is not handled. It is a completed no-op, not an execution failure.
+                    button.activate(gesture);
                 } else if (control instanceof ChangeButton && gesture.equals("click")) {
                     ((ChangeButton) control).activate();
                 } else if (control instanceof ActionArea && gesture.equals("click")) {

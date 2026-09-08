@@ -62,6 +62,20 @@ class UiBridgeTest {
         assertEquals(1, button.longClicks);
     }
 
+    @Test void unhandledNativeLongPressCompletesWithoutClickOrFailure() {
+        TestScene scene = new TestScene();
+        TestButton button = new TestButton() {
+            @Override protected boolean onLongClick() { longClicks++; return false; }
+        };
+        scene.add(button);
+        UiBridge bridge = new UiBridge(() -> scene);
+        String control = firstButtonId(bridge);
+        assertDoesNotThrow(() -> bridge.execute("ui.activate", Map.of("control", control, "gesture", "long")));
+        assertEquals(1, button.longClicks);
+        assertEquals(0, button.clicks);
+        assertEquals(0, button.rightClicks);
+    }
+
     @Test void rejectsDisabledHiddenDetachedAndReplacedControls() {
         TestScene scene = new TestScene();
         Group container = new Group();
@@ -100,6 +114,26 @@ class UiBridgeTest {
         replacement.label = button.label;
         scene.add(replacement);
         assertNotEquals(changed, bridge.contextSignature());
+        assertEquals(0, button.clicks + replacement.clicks);
+    }
+
+    @Test void intentSignatureRetainsRealControlAvailabilityAndIdentity() {
+        TestScene scene = new TestScene();
+        TestButton button = new TestButton();
+        scene.add(button);
+        UiBridge bridge = new UiBridge(() -> scene);
+        String before = bridge.intentSignature();
+        assertEquals(before, bridge.intentSignature());
+        button.active = false;
+        String disabled = bridge.intentSignature();
+        assertNotEquals(before, disabled);
+        button.active = true;
+        button.label = "A different real option";
+        String relabelled = bridge.intentSignature();
+        assertNotEquals(before, relabelled);
+        scene.erase(button);
+        TestButton replacement = new TestButton(); replacement.label = button.label; scene.add(replacement);
+        assertNotEquals(relabelled, bridge.intentSignature());
         assertEquals(0, button.clicks + replacement.clicks);
     }
 

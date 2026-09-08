@@ -21,6 +21,14 @@ public final class ProfileLock implements AutoCloseable {
         catch (RuntimeException | IOException error) { channel.close(); throw error; }
         if (acquired == null) { channel.close(); throw new IOException("PROFILE_IN_USE"); }
         lock = acquired;
+        // Legacy game cleanup removes empty files. Never leave the held inode empty.
+        try {
+            channel.write(java.nio.ByteBuffer.wrap("SPD profile instance lock\n".getBytes(java.nio.charset.StandardCharsets.UTF_8)), 0);
+            channel.force(true);
+        } catch (IOException | RuntimeException error) {
+            try { lock.release(); } finally { channel.close(); }
+            throw error;
+        }
     }
 
     @Override public void close() throws IOException {

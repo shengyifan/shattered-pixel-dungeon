@@ -47,6 +47,17 @@ public class MachineSessionTest {
         }
     }
 
+    @Test public void invalidTargetIdentifierCannotAliasARealQuestionMarkRequest() throws Exception {
+        try(Harness h=harness()){
+            h.send("?","state.get",map());
+            h.send("bad-lookup","request.get",map("target_id","\ud800"));
+            assertEquals("INVALID_ARGUMENT",error(h.last()));
+            assertEquals("COMPLETED",h.store.getRequest("run:a","?").get("status"));
+            h.send("bad-lookup","request.get",map("target_id","?"));
+            assertEquals("DUPLICATE_REQUEST_ID",error(h.last()));
+        }
+    }
+
     @Test public void runtimeAndRunPreparationOnlyHappenAfterDurableIntent() throws Exception {
         try (Harness h = harness()) {
             String menu = h.store.menuScope();

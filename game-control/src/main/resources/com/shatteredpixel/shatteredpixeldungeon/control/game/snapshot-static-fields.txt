@@ -303,8 +303,12 @@ com.shatteredpixel.shatteredpixeldungeon.actors.Actor#chars
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#current
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#ids
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#keepActorThreadAlive
+com.shatteredpixel.shatteredpixeldungeon.actors.Actor#motionActor
+com.shatteredpixel.shatteredpixeldungeon.actors.Actor#motionHeld
+com.shatteredpixel.shatteredpixeldungeon.actors.Actor#motionMonitor
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#nextID
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#now
+com.shatteredpixel.shatteredpixeldungeon.actors.Actor#processingThread
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#resumeRequested
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#yielded
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor#yieldedActor

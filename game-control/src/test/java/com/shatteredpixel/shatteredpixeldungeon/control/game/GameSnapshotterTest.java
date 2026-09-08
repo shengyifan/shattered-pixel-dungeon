@@ -16,6 +16,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
 import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineIntervention;
@@ -52,6 +54,10 @@ import com.watabou.noosa.Scene;
 import com.watabou.noosa.ui.Component;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -362,6 +368,40 @@ class GameSnapshotterTest {
             assertTrue(JsonCodec.encode(bridge.describeUi()).contains(expected));
             bridge.describeActions();
             assertNull(SnapshotFields.read(Holiday.class, "cached"));
+        }
+    }
+
+    @Test
+    void floatingTextChangesPresentationButNotIntentWhileRealControlChangesStillInvalidateIntent() throws Exception {
+        @SuppressWarnings("unchecked") Map<Object, SmartTexture> textures =
+                (Map<Object, SmartTexture>) SnapshotFields.read(TextureCache.class, "all");
+        SmartTexture previous = textures.get(Assets.Effects.TEXT_ICONS);
+        SmartTexture dimensionsOnly = allocateFixture(SmartTexture.class);
+        dimensionsOnly.width = 70; dimensionsOnly.height = 80;
+        textures.put(Assets.Effects.TEXT_ICONS, dimensionsOnly);
+        try {
+            Scene scene = new Scene();
+            IntentButtonFixture button = new IntentButtonFixture();
+            scene.add(button);
+            UiBridge bridge = new UiBridge(() -> scene);
+            String presentation = bridge.contextSignature();
+            String intent = bridge.intentSignature();
+            FloatingText damage = allocateFixture(FloatingText.class);
+            damage.exists = damage.alive = damage.active = damage.visible = true;
+            set(damage, Group.class, "members", new ArrayList<Gizmo>());
+            set(damage, RenderedTextBlock.class, "text", "4");
+            scene.add(damage);
+            assertTrue(JsonCodec.encode(bridge.describeUi()).contains("\"text\":\"4\""));
+            assertNotEquals(presentation, bridge.contextSignature());
+            assertEquals(intent, bridge.intentSignature());
+            scene.remove(damage);
+            assertEquals(presentation, bridge.contextSignature());
+            assertEquals(intent, bridge.intentSignature());
+            button.label = "A changed real choice";
+            assertNotEquals(intent, bridge.intentSignature());
+        } finally {
+            if (previous == null) textures.remove(Assets.Effects.TEXT_ICONS);
+            else textures.put(Assets.Effects.TEXT_ICONS, previous);
         }
     }
 
@@ -688,5 +728,12 @@ class GameSnapshotterTest {
         private Item selected;
         private int index;
         private Runnable callback;
+    }
+
+    private static final class IntentButtonFixture extends Button {
+        private String label = "Continue";
+        @Override protected void createChildren() { }
+        @Override protected String hoverText() { return label; }
+        @Override protected void onClick() { }
     }
 }

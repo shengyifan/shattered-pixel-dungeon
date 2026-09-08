@@ -16,9 +16,11 @@ public final class SpdctlLauncher {
         PrintStream protocol=new PrintStream(new FileOutputStream(FileDescriptor.out),true,StandardCharsets.UTF_8);
         PrintStream diagnostics=new PrintStream(new FileOutputStream(FileDescriptor.err),true,StandardCharsets.UTF_8);
         if(args.length==1&&(args[0].equals("--help")||args[0].equals("--version"))){
-            protocol.println(args[0].equals("--version")?"CLI.0.1.0 (protocol 1, game 3.3.8)":"spdctl run --machine [--data-dir ABSOLUTE_PROFILE_DIRECTORY]");return;
+            protocol.println(args[0].equals("--version")?"CLI.0.2.0 (protocol 1, game 3.3.8)":"spdctl run --machine [--data-dir ABSOLUTE_PROFILE_DIRECTORY]");return;
         }
-        Path profile=Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI");
+        Path profile=System.getenv("SPDCTL_PROFILE")==null
+                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI")
+                :Paths.get(System.getenv("SPDCTL_PROFILE"));
         try{
             boolean machine=false;
             if(args.length==0||!args[0].equals("run"))throw new IllegalArgumentException("Expected run --machine");
@@ -36,6 +38,13 @@ public final class SpdctlLauncher {
             try(ProfileLock lock=new ProfileLock(profile);AuditStore store=new AuditStore(profile.resolve("audit"))){
                 store.recoverInterrupted();
                 importEmergencyReports(profile,store);
+                String errorFile=java.lang.management.ManagementFactory.getPlatformMXBean(
+                        com.sun.management.HotSpotDiagnosticMXBean.class).getVMOption("ErrorFile").getValue();
+                store.recordLog("runtime.environment",com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec.encode(
+                        com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map(
+                                "java_version",System.getProperty("java.version"),"os_arch",System.getProperty("os.arch"),
+                                "error_file",errorFile,"profile",profile.toString(),
+                                "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"))));
                 AtomicReference<MachineSession> ref=new AtomicReference<>();
                 GameController game=new GameController(profile,store.menuScope(),error->{if(ref.get()!=null)ref.get().recordException(error);});
                 try(MachineSession session=new MachineSession(store,game,protocol)){

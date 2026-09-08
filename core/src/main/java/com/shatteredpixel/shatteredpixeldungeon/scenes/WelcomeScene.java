@@ -59,13 +59,19 @@ public class WelcomeScene extends PixelScene {
 	//used so that the game does not keep showing the window forever if cleaning fails
 	private static boolean triedCleaningTemp = false;
 
+	static boolean cleanGameTempFiles() {
+		return FileUtils.cleanTempFiles("", file -> file.isDirectory()
+				? file.name().matches("game[0-9]+")
+				: file.name().endsWith(".dat") || file.name().endsWith(".spdtmp"));
+	}
+
 	@Override
 	public void create() {
 		super.create();
 
 		final int previousVersion = SPDSettings.version();
 
-		if (!triedCleaningTemp && FileUtils.cleanTempFiles()){
+		if (!triedCleaningTemp && cleanGameTempFiles()){
 			add(new WndHardNotification(Icons.get(Icons.WARNING),
 					Messages.get(WndError.class, "title"),
 					Messages.get(this, "save_warning"),

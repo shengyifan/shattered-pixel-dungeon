@@ -4,6 +4,8 @@ package com.watabou.noosa;
 public interface RuntimeObserver {
     RuntimeObserver NONE = new RuntimeObserver() {};
     default void afterFrame() {}
+    /** Render-thread hook before scene animations update; never performs disk IO. */
+    default void beforeSceneUpdate() {}
     /** Render-thread scheduling gate; called under the waiting actor thread's monitor. Never perform IO here. */
     default boolean beforeActorResume() { return true; }
     default void onException(Throwable error) {}

@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.*;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MobSpawner;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.*;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.*;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.*;
@@ -93,7 +94,7 @@ public final class FixtureLauncher {
                 heroClass = Arrays.stream(HeroClass.values()).filter(c -> Arrays.asList(c.subClasses()).contains(subclass)).findFirst().orElseThrow();
             } else if (kind.equals("armor") && ABILITIES.containsKey(name)) {
                 heroClass = ABILITY_CLASSES.get(name); subclass = HeroSubClass.NONE;
-            } else if (kind.equals("ui") && Arrays.asList("identify", "upgrade", "cancel-confirm", "alchemy").contains(name)) {
+            } else if (kind.equals("ui") && Arrays.asList("identify", "upgrade", "cancel-confirm", "alchemy", "travel").contains(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("spell") && name.matches("[A-Za-z]+")) {
                 heroClass = HeroClass.CLERIC;
@@ -303,7 +304,28 @@ public final class FixtureLauncher {
         throw new IllegalStateException("No adjacent fixture target cell");
     }
     private static void prepareUi(String name, Hero hero) {
-        if (name.equals("identify")) {
+        if (name.equals("travel")) {
+            int width=Dungeon.level.width(), height=Dungeon.level.height(), row=height/2;
+            if(width-3<12)throw new IllegalStateException("Fixture level cannot fit a 12-step corridor");
+            for(Mob mob:new ArrayList<>(Dungeon.level.mobs)) {
+                for(Buff buff:mob.buffs())Actor.remove(buff);
+                Actor.remove(mob);
+                if(mob.sprite!=null)mob.sprite.killAndErase();
+            }
+            Dungeon.level.mobs.clear();
+            for(Actor actor:Actor.all())if(actor instanceof MobSpawner)Actor.remove(actor);
+            for(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob blob:Dungeon.level.blobs.values())Actor.remove(blob);
+            Dungeon.level.blobs.clear();
+            for(com.shatteredpixel.shatteredpixeldungeon.items.Heap heap:Dungeon.level.heaps.valueList())if(heap.sprite!=null)heap.sprite.killAndErase();
+            Dungeon.level.heaps.clear(); Dungeon.level.plants.clear(); Dungeon.level.traps.clear(); Dungeon.level.transitions.clear();
+            for(int y=row-1;y<=row+1;y++)for(int x=0;x<width;x++) {
+                int cell=y*width+x;
+                Level.set(cell,y==row && x>0 && x<width-1 ? Terrain.EMPTY : Terrain.WALL);
+                Dungeon.level.mapped[cell]=true;
+                GameScene.updateMap(cell);
+            }
+            hero.pos=row*width+1; hero.sprite.place(hero.pos); hero.curAction=hero.lastAction=null; hero.resting=false;
+        } else if (name.equals("identify")) {
             Sword sword = new Sword(); sword.level(2); sword.collect();
             new ScrollOfIdentify().identify(false).collect();
         } else if (name.equals("upgrade") || name.equals("cancel-confirm")) {
