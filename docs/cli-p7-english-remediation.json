@@ -8,8 +8,8 @@
   "baseline_runtime": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
   "baseline_status": "in_progress",
   "note": "These are narrow reruns of failed cases. The original complete 188-case baseline remains unchanged and is not claimed to pass.",
-  "supplemental_passed": 6,
-  "supplemental_total": 6,
+  "supplemental_passed": 11,
+  "supplemental_total": 11,
   "cases": [
     {
       "case": "subclass:WARDEN",
@@ -93,6 +93,81 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.0
+      }
+    },
+    {
+      "case": "weapon:Gauntlet",
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/weapon-Gauntlet-9213276640d3468f8ebb65d9570789f1",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Gauntlet",
+        "ability_label": "combo strike",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "armor:ShadowClone",
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/armor-ShadowClone-16445c2d71e148bdb3f36e2760aaece0",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "ShadowClone",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "ui:upgrade",
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/ui-upgrade-5441d8ab60204cca9b3f9ca67dec5a14",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "interaction": "upgrade",
+        "original_selector_and_confirmation": true,
+        "public_result_verified": true
+      }
+    },
+    {
+      "case": "ui:cancel-confirm",
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/ui-cancel-confirm-500945a3d19a4401824e983ec50f9dec",
+      "public_responses": 27,
+      "gui_postconditions_checked": 25,
+      "evidence": {
+        "interaction": "cancel-confirm",
+        "original_selector_and_confirmation": true,
+        "public_result_verified": true
+      }
+    },
+    {
+      "case": "armor:Trinity",
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/armor-Trinity-d2b3e49f7fd04b9aa7e74d8028615289",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "ability": "Trinity",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 85.2
       }
     }
   ]

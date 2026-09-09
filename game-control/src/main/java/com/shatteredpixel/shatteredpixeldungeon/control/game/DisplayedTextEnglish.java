@@ -112,6 +112,18 @@ public final class DisplayedTextEnglish {
                     &&(resolved=policyResource(displayed,"items.artifacts.cloakofshadows.ac_stealth"))!=null)return resolved;
             if(Boolean.TRUE.equals(context.get("sneak_weapon_menu"))
                     &&(resolved=policyResource(displayed,"items.weapon.melee.dagger.ability_name"))!=null)return resolved;
+            if(Boolean.TRUE.equals(context.get("combo_weapon_menu"))
+                    &&(resolved=policyResource(displayed,"items.weapon.melee.gloves.ability_name"))!=null)return resolved;
+            if(Boolean.TRUE.equals(context.get("shadow_clone_menu"))
+                    &&(resolved=policyResource(displayed,"actors.hero.abilities.rogue.shadowclone.name"))!=null)return resolved;
+        }
+        if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("button"))) {
+            if(Boolean.TRUE.equals(context.get("upgrade_preview"))
+                    &&(resolved=policyResource(displayed,"windows.wndupgrade.back"))!=null)return resolved;
+            if(Boolean.TRUE.equals(context.get("scroll_cancel"))) {
+                if((resolved=policyResource(displayed,"items.scrolls.inventoryscroll.yes"))!=null)return resolved;
+                if((resolved=policyResource(displayed,"items.scrolls.inventoryscroll.no"))!=null)return resolved;
+            }
         }
         if("heroselectscene".equals(scope)&&Boolean.TRUE.equals(context.get("hero_subclass_page"))
                 &&(resolved=policyResource(displayed,"windows.wndheroinfo.subclasses"))!=null)return resolved;
@@ -655,7 +667,9 @@ public final class DisplayedTextEnglish {
                         ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no")
                         ||key.equals("items.journal.guidebook.hint_status")||key.equals("windows.wndvictorycongrats.close")
                         ||key.equals("windows.wndheroinfo.subclasses")||key.equals("rankings$record.won")
-                        ||key.equals("items.artifacts.cloakofshadows.ac_stealth")||key.equals("items.weapon.melee.dagger.ability_name"))
+                        ||key.equals("items.artifacts.cloakofshadows.ac_stealth")||key.equals("items.weapon.melee.dagger.ability_name")
+                        ||key.equals("items.weapon.melee.gloves.ability_name")||key.equals("actors.hero.abilities.rogue.shadowclone.name")
+                        ||key.equals("windows.wndupgrade.back")||key.equals("items.scrolls.inventoryscroll.yes")||key.equals("items.scrolls.inventoryscroll.no"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
                     catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);

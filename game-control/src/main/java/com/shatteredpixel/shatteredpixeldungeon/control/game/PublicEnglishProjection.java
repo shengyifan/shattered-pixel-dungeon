@@ -125,6 +125,15 @@ public final class PublicEnglishProjection {
                         &&one(itemButtons,"DROP","放下")&&one(itemButtons,"THROW","扔出")&&one(itemButtons,"EQUIP","装备","UNEQUIP","取下");
                 properties.put("cloak_item_menu",originalItemMenu&&itemTitle(itemTexts,"暗影斗篷","cloak of shadows"));
                 properties.put("sneak_weapon_menu",originalItemMenu&&itemTitle(itemTexts,"匕首","长匕首","暗杀之刃","dagger","dirk","assassin's blade"));
+                properties.put("combo_weapon_menu",originalItemMenu&&itemTitle(itemTexts,"魔岩拳套","镶钉手套","双钗","stone gauntlet","studded gloves","sai"));
+                properties.put("shadow_clone_menu",originalItemMenu&&itemTitle(itemTexts,"英雄风衣","hero's garb")
+                        &&shadowCloneDescription(itemTexts));
+                properties.put("upgrade_preview",game&&modal&&one(texts,"升级一件物品","Upgrade an Item")
+                        &&upgradeDescription(texts)&&one(buttons,"升级","Upgrade")&&one(buttons,"返回","Back"));
+                properties.put("scroll_cancel",game&&modal&&one(texts,
+                        "你真的想终止这张卷轴的施放？这张卷轴之前未被鉴定，因此它仍会被消耗掉。",
+                        "Do you really want to cancel this scroll usage? The scroll wasn't previously identified, so it will be consumed anyway.")
+                        &&one(buttons,"是的，我确定","Yes, I'm positive")&&one(buttons,"不，我改变主意了","No, I changed my mind"));
                 properties.put("victory_congratulations",("RankingsScene".equals(currentScene)||"rankings".equals(currentScene))
                         &&modal&&one(texts,"Victory!","获胜！")&&one(buttons,"Support","赞助")&&one(buttons,"Close","关闭")
                         &&one(texts,"Congratulations on conquering the dungeon! You've unlocked some new features that are available when choosing a hero:",
@@ -205,6 +214,23 @@ public final class PublicEnglishProjection {
                 current=nodes.get(parent);
             }
             return false;
+        }
+        private static boolean upgradeDescription(Set<String> values) {
+            for(String text:values)if(text.matches(java.util.regex.Pattern.quote("升级这件物品会永久提升其如下属性：")+"(?:\\n你还剩有_[0-9]+个_升级用物品。)?")
+                    ||text.matches(java.util.regex.Pattern.quote("Upgrading an item permanently improves it:")+"(?:\\nYou have _[0-9]+_ upgrade items left\\.)?"))return true;
+            return false;
+        }
+        private static boolean shadowCloneDescription(Set<String> values) {
+            boolean armor=false,ability=false;
+            for(String text:values)for(String paragraph:text.split("\\n\\n",-1)) {
+                if(paragraph.equals("裹着这身与黑暗融为一体的斗篷时，盗贼能够施展一项特殊技能。")
+                        ||paragraph.equals("While wearing this dark garb, the Rogue can perform a special ability."))armor=true;
+                if(paragraph.matches(java.util.regex.Pattern.quote("盗贼召唤一个_暗影映像_，并能使唤其帮助自己战斗。")
+                        +" 现在使用该能力将消耗_[0-9]+(?:\\.[0-9]+)?_的充能。")
+                        ||paragraph.matches(java.util.regex.Pattern.quote("The Rogue summons a _Shadow Clone_, which can be directed to aid him in combat.")
+                        +" Using the ability right now will consume _[0-9]+(?:\\.[0-9]+)?_ charge\\."))ability=true;
+            }
+            return armor&&ability;
         }
         private static boolean bindingSlots(Object value) {
             if(!(value instanceof List)||((List<?>)value).size()!=3)return false;
