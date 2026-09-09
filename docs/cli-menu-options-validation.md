@@ -25,6 +25,8 @@
 
 两项均保持英文CLI、中文窗口化，新增证据保存在原JSON的`new_game_cases`，没有回写此前仅配置验证的结果。种子开局测试曾多加一次Back，按原游戏正确退到TitleScene，测试修正为直接使用当前已广告Start；这不是生产故障。Randomize确认和daily复玩/已有局拒绝仍待独立场景。
 
+`menu-options-random-confirm-006f82002fa348949291efe61724e8fe`随后补充通过原Randomize确认：勾选随机角色与挑战、原滑条选择2、点击原Confirm，得到原只读挑战结果窗，恰好2项已选且不可编辑；后置断言确认原挑战位图有2位、原随机角色为已解锁HUNTRESS，randomizedClass=true，再原Back返回选角。只测试一次真实随机结果，不筛种子或重抽到特定角色；结果追加到`randomize_confirmation`。daily复玩/已有局拒绝仍未验证。
+
 ```sh
 ./gradlew :desktop-control:writeTestRuntimeClasspath
 python3 desktop-control/src/test/python/menu_options_scenario_smoke.py

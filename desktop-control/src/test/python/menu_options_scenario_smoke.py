@@ -126,6 +126,29 @@ def daily_start(client,results):
     results.append({"case":"daily_game_creation","original_yes_created_run":True,"original_daily_flags_applied":True,"hero_level":1})
 
 
+def random_confirm(client,results):
+    prepared_menu(client)
+    state=choose(client,"Randomize")
+    for label in ("Randomize Hero","Randomize Challenges"):
+        check=next(n for n in nodes(state) if n.get("text")==label and "checked" in n)
+        if not check["checked"]:state=act(client,"ui.activate",control=check["id"])
+    slider=controls(state,"ui.value")[0]
+    act(client,"ui.value",control=slider["control"],value=2)
+    confirmed=choose(client,"Confirm")
+    checks=[n for n in nodes(confirmed) if "checked" in n]
+    assert sum(bool(n["checked"]) for n in checks)==2
+    assert all(not n["enabled"] for n in checks)
+    actual=menu_assertion(client,confirmed)
+    assert int(actual["challenges"]).bit_count()==2
+    assert actual["selected_class"] in {"WARRIOR","MAGE","ROGUE","HUNTRESS","DUELIST","CLERIC"}
+    assert actual["class_randomized"] is True
+    returned=act(client,"ui.back")
+    assert ui(returned)["scene"]=="HeroSelectScene"
+    results.append({"case":"randomize_confirm","exact_challenge_count":2,
+                    "original_read_only_result_window":True,"original_random_class_selected":True,
+                    "selected_class":actual["selected_class"]})
+
+
 def run_case(root,classpath,runtime_id,name):
     profile=root/"desktop-control/build/fixtures"/("menu-options-"+name+"-"+uuid.uuid4().hex)
     profile.mkdir(parents=True)
@@ -137,7 +160,7 @@ def run_case(root,classpath,runtime_id,name):
     try:
         hello=client.request("protocol.info");assert hello["ok"],hello
         result["build_id"]=hello["result"]["build_id"]
-        {"locked":locked,"unlocked":unlocked,"daily":daily_start}[name](client,result["cases"])
+        {"locked":locked,"unlocked":unlocked,"daily":daily_start,"random-confirm":random_confirm}[name](client,result["cases"])
         result["ok"]=True
     except Exception as error:
         result.update(ok=False,error=repr(error),traceback=traceback.format_exc())
@@ -163,9 +186,9 @@ def run_case(root,classpath,runtime_id,name):
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument("--cases",default="locked,unlocked,daily")
+    parser.add_argument("--cases",default="locked,unlocked,daily,random-confirm")
     names=parser.parse_args().cases.split(",")
-    assert all(name in {"locked","unlocked","daily"} for name in names)
+    assert all(name in {"locked","unlocked","daily","random-confirm"} for name in names)
     root=Path(__file__).resolve().parents[4]
     classpath,runtime_id=freeze_runtime(root,(root/"desktop-control/build/test-runtime-classpath.txt").read_text().strip())
     reports=[run_case(root,classpath,runtime_id,name) for name in names]

@@ -64,8 +64,6 @@
   ],
   "scope": "profile_progress_then_original_menu_callbacks",
   "not_verified": [
-    "randomize_confirm",
-    "randomize_saved_challenge_count",
     "daily_repeat_and_existing_daily_rejection"
   ],
   "new_game_cases": [
@@ -126,5 +124,25 @@
       "build_id": "81737d35e310c014f53c22182ddd8e69822281f7afba404aaa5fc533cf1003cb",
       "ok": true
     }
-  ]
+  ],
+  "randomize_confirmation": {
+    "test_fixture": true,
+    "counts_as_win": false,
+    "fixture": "menu:random-confirm",
+    "runtime_id": "runtime-e1b8a7f2859949678411fdc75126ed5d",
+    "profile": "desktop-control/build/fixtures/menu-options-random-confirm-006f82002fa348949291efe61724e8fe",
+    "cli_language": "en",
+    "gui_language": "zh",
+    "cases": [
+      {
+        "case": "randomize_confirm",
+        "exact_challenge_count": 2,
+        "original_read_only_result_window": true,
+        "original_random_class_selected": true,
+        "selected_class": "HUNTRESS"
+      }
+    ],
+    "build_id": "694d886aff2e24301bbbc7e4d5fc7f200506446d1b89a1443740e4e88adeeda3",
+    "ok": true
+  }
 }
