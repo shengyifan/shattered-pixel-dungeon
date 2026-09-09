@@ -104,6 +104,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("notes") && NoteScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("container") && ContainerScenarioFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("ending") && EndingScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("inspect") && InspectedItemFixtures.supports(name)) {
@@ -247,6 +249,7 @@ public final class FixtureLauncher {
                             "low_frequency", fixture.kind.equals("lowfreq") ? LowFrequencyFixtures.assertions() : null,
                             "transition_scenario", fixture.kind.equals("scenario") ? TransitionScenarioFixtures.assertions() : null,
                             "notes", fixture.kind.equals("notes") ? NoteScenarioFixtures.assertions() : null,
+                            "containers", fixture.kind.equals("container") ? ContainerScenarioFixtures.assertions() : null,
                             "ending", fixture.kind.equals("ending") ? EndingScenarioFixtures.assertions() : null,
                             "inspection", fixture.kind.equals("inspect") ? InspectedItemFixtures.assertions() : null,
                             "effect_buffs", buffNames(Dungeon.hero), "target_buffs", fixtureTarget == null ? null : buffNames(fixtureTarget),
@@ -279,6 +282,10 @@ public final class FixtureLauncher {
         Hero hero = Dungeon.hero;
         if (hero.heroClass != fixture.heroClass) throw new IllegalStateException("Start the fixture's required class through the public menu");
         if (fixture.kind.equals("class") || fixture.kind.equals("menu") || fixture.kind.equals("notes")) return null;
+        if (fixture.kind.equals("container")) {
+            ContainerScenarioFixtures.prepare(fixture.name, hero);
+            return null;
+        }
         if(fixture.kind.equals("ending")){EndingScenarioFixtures.prepare(fixture.name,hero);return null;}
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;
         hero.subClass = fixture.subclass;

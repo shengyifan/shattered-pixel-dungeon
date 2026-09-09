@@ -1,0 +1,191 @@
+{
+  "schema": 1,
+  "validation_date": "2026-09-09",
+  "phase": "ground_pile_and_ordinary_chest",
+  "test_fixture": true,
+  "counts_as_win": false,
+  "gui_language": "CHI_SMPL",
+  "window_mode": "windowed",
+  "cli_language": "en",
+  "total": 2,
+  "passed": 2,
+  "status": "passed",
+  "results": [
+    {
+      "case_id": "containers.heap_multi",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-heap-multi-5aef63b122d04bf183b1db6a3a8a9ba4",
+      "runtime_id": "runtime-239df882263f4fffbd32ae0b05afe465",
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "scope_id": "run:ada534b5-86df-47ac-a80a-4825eba52fb5",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "622be0b3-6f6a-49b4-9605-393746fc2041:7"
+      },
+      "evidence": {
+        "case_id": "containers.heap_multi",
+        "one_visible_top_item_for_three_private_stacks": true,
+        "original_top_to_bottom_pickups": [
+          {
+            "name": "throwing stone",
+            "quantity": 3
+          },
+          {
+            "name": "gold",
+            "quantity": 17
+          },
+          {
+            "name": "ration of food",
+            "quantity": 2
+          }
+        ],
+        "heap_removed_when_empty": true,
+        "native_turns": 4
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 18,
+      "public_trace_responses": 22,
+      "actual_window_classes_after_public_responses": [],
+      "source_result": "desktop-control/build/fixtures/containers-heap-multi-5aef63b122d04bf183b1db6a3a8a9ba4/containers-scenario-result.json"
+    },
+    {
+      "case_id": "containers.chest_hidden",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-chest-hidden-5b2de649e4fd476eb2cc3407232fbd41",
+      "runtime_id": "runtime-e275f17cd953443e9e483b9b63cf49d3",
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "scope_id": "run:c0bdc7f1-0a86-4825-a65d-bd02a826464a",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "c552945c-2169-41a4-a91f-4f1d06643e29:7"
+      },
+      "evidence": {
+        "case_id": "containers.chest_hidden",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": true,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "scale armor",
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": false
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 25,
+      "public_trace_responses": 35,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem"
+      ],
+      "source_result": "desktop-control/build/fixtures/containers-chest-hidden-5b2de649e4fd476eb2cc3407232fbd41/containers-scenario-result.json"
+    }
+  ],
+  "preparation": "Test-only quiet pocket on a generated first floor, original Item/Heap instances and hidden initial levels; ordinary Warrior statistics preserved. Ambient actors/spawners/hazards/heaps are removed before measurement. No world mutation outside original public actions after preparation.",
+  "private_assertion_boundary": "Completed public state_version only. Hidden names/classes/levels are used to verify nondisclosure and different actual payloads, never to select a cell, item, control or next action.",
+  "prior_failed_attempts": [
+    {
+      "case_id": "containers.heap_multi",
+      "profile": "desktop-control/build/fixtures/containers-heap-multi-a250899a153447ab9958c4f0b9be8d3b",
+      "classification": "runner_expected_order",
+      "reason": "All three stacks were picked up correctly; runner wrongly expected Gold to sink. Original dropsDownHeap is false for all three fixture items, so original Heap.drop order is ThrowingStone -> Gold -> Food. Corrected the expectation and reran the complete case.",
+      "source_result": "desktop-control/build/fixtures/containers-heap-multi-a250899a153447ab9958c4f0b9be8d3b/containers-scenario-result.json",
+      "preserved": true
+    }
+  ],
+  "heap_type_matrix": [
+    {
+      "type": "HEAP",
+      "status": "partial",
+      "case_refs": [
+        "containers.heap_multi"
+      ],
+      "original_behavior": "Only the top stack is displayed, each native pickup removes that stack; empty heap is destroyed."
+    },
+    {
+      "type": "CHEST",
+      "status": "partial",
+      "case_refs": [
+        "containers.chest_hidden"
+      ],
+      "original_behavior": "Direct operation converts to HEAP and spends one turn when adjacent; no confirmation window."
+    },
+    {
+      "type": "FOR_SALE",
+      "status": "pending",
+      "planned_case": "containers.for_sale",
+      "original_behavior": "Single positive-value item uses original WndTradeItem purchase window; Back can cancel. Other FOR_SALE arrangements use pickup."
+    },
+    {
+      "type": "LOCKED_CHEST",
+      "status": "pending",
+      "planned_case": "containers.locked_chest",
+      "original_behavior": "No matching GoldenKey: native refusal without opening. Correct current-depth key is consumed in onOperateComplete; then HEAP. No confirmation window."
+    },
+    {
+      "type": "CRYSTAL_CHEST",
+      "status": "pending",
+      "planned_case": "containers.crystal_chest",
+      "original_behavior": "Current-depth CrystalKey is consumed on operation. Before opening the original description already reveals artifact/wand/ring category, not exact content or level."
+    },
+    {
+      "type": "TOMB",
+      "status": "pending",
+      "planned_case": "containers.tomb",
+      "original_behavior": "Direct opening calls Wraith.spawnAround(hero.pos) in four cardinal directions, then HEAP."
+    },
+    {
+      "type": "SKELETON",
+      "status": "pending",
+      "planned_case": "containers.skeleton",
+      "original_behavior": "Direct opening with bone effects, then HEAP. setHauntedIfCursed is a distinct conditional behavior."
+    },
+    {
+      "type": "REMAINS",
+      "status": "pending",
+      "planned_case": "containers.remains",
+      "original_behavior": "Hero remains use the same native opening path and can be haunted if cursed. No confirmation window."
+    }
+  ],
+  "door_plan": [
+    {
+      "terrain": "LOCKED_DOOR",
+      "status": "pending",
+      "planned_case": "containers.iron_door",
+      "key": "same-depth IronKey"
+    },
+    {
+      "terrain": "CRYSTAL_DOOR",
+      "status": "pending",
+      "planned_case": "containers.crystal_door",
+      "key": "same-depth CrystalKey"
+    },
+    {
+      "terrain": "LOCKED_EXIT",
+      "status": "pending",
+      "key": "same-depth WornKey",
+      "note": "Needs a separate real exit/boss-floor fixture, not an invented generic doorway."
+    },
+    {
+      "terrain": "HERO_LKD_DR",
+      "status": "pending",
+      "key": "SkeletonKey artifact rules",
+      "note": "Artifact-created lock is a special interaction, not a normal universal key or confirmation window."
+    }
+  ],
+  "limits": [
+    "Only two named cases passed in this phase; pending implementations are not evidence.",
+    "The hidden-content contrast uses two same-looking boxes at different public cells in one isolated world, not a claim that every full-world pair is equivalent.",
+    "Opening reveals item names but does not identify equipment levels; levels +2/+4 remained private.",
+    "The quiet test arena is not a normal playthrough, generated-room or ambient-monster validation.",
+    "No screenshots, keyboard/mouse simulation, Computer Use or formal profiles were used."
+  ]
+}

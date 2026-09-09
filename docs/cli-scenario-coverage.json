@@ -58,15 +58,16 @@
     "window_records": 153,
     "status_counts": {
       "not_applicable": 3,
-      "pending": 109,
-      "partial": 58
+      "pending": 108,
+      "partial": 59
     },
     "fully_passed_records": 0,
-    "evidence_entries": 238,
+    "evidence_entries": 240,
     "planned_scenarios": 35,
     "callback_records_requiring_individual_mapping": 997,
     "scenario_family_member_status_counts": {
-      "pending": 143,
+      "pending": 141,
+      "partial": 2,
       "not_applicable": 3
     },
     "scenario_families": 11,
@@ -4772,6 +4773,69 @@
         "note_type_checked": true,
         "specific_item_binding_checked": true
       }
+    },
+    "containers.heap_multi": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/0",
+      "case": "containers.heap_multi",
+      "validation_status": "passed",
+      "runtime_id": "runtime-239df882263f4fffbd32ae0b05afe465",
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "profile": "desktop-control/build/fixtures/containers-heap-multi-5aef63b122d04bf183b1db6a3a8a9ba4",
+      "public_trace": "desktop-control/build/fixtures/containers-heap-multi-5aef63b122d04bf183b1db6a3a8a9ba4/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the first two declared quiet-pocket fixture paths; no whole-class/room/gameplay pass.",
+      "claim": {
+        "case_id": "containers.heap_multi",
+        "one_visible_top_item_for_three_private_stacks": true,
+        "original_top_to_bottom_pickups": [
+          {
+            "name": "throwing stone",
+            "quantity": 3
+          },
+          {
+            "name": "gold",
+            "quantity": 17
+          },
+          {
+            "name": "ration of food",
+            "quantity": 2
+          }
+        ],
+        "heap_removed_when_empty": true,
+        "native_turns": 4
+      }
+    },
+    "containers.chest_hidden": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/1",
+      "case": "containers.chest_hidden",
+      "validation_status": "passed",
+      "runtime_id": "runtime-e275f17cd953443e9e483b9b63cf49d3",
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "profile": "desktop-control/build/fixtures/containers-chest-hidden-5b2de649e4fd476eb2cc3407232fbd41",
+      "public_trace": "desktop-control/build/fixtures/containers-chest-hidden-5b2de649e4fd476eb2cc3407232fbd41/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the first two declared quiet-pocket fixture paths; no whole-class/room/gameplay pass.",
+      "claim": {
+        "case_id": "containers.chest_hidden",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": true,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "scale armor",
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": false
+      }
     }
   },
   "ui_records": [
@@ -5734,6 +5798,13 @@
             "notes.item_shortcut"
           ],
           "covered": "Five original Note workflows with ordinary Warrior state; no map/stat/item/note injection, no battle or world-discovery coverage inferred."
+        },
+        {
+          "case_refs": [
+            "containers.heap_multi",
+            "containers.chest_hidden"
+          ],
+          "covered": "Original three-stack pickup and closed ordinary-chest inspect/open/pickup in a prepared quiet pocket. No ambient gameplay or other Heap type behavior inferred."
         }
       ],
       "pending_scenarios": [
@@ -7141,8 +7212,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoItem.java",
       "catalog_line": 31,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "containers.chest_hidden"
+          ],
+          "covered": "Actual direct WndInfoItem constructed by closed CHEST examine, two different hidden payloads yield identical displayed text and no inspected_item subject. Back spends no turn. Other item/container descriptions remain pending."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.inspect",
         "growth.choices"
@@ -8058,7 +8136,7 @@
       "id": "knowledge.inspect",
       "group": "knowledge",
       "title": "地图、怪物、植物、陷阱、物品、Buff 和角色详情",
-      "status": "pending",
+      "status": "partial",
       "owner": "unassigned",
       "fixture_setup": "分别准备可见/仅记忆/未知地图、隐藏拟态、未鉴定物品与短时 Buff。",
       "public_steps": [
@@ -8078,6 +8156,14 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoMob.java#WndInfoMob",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoPlant.java#WndInfoPlant",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoTrap.java#WndInfoTrap"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "containers.chest_hidden"
+          ],
+          "covered": "Only closed ordinary chest inspection/back, including hidden-content comparison and null item subject."
+        }
       ]
     },
     {
@@ -14832,8 +14918,10 @@
           "id": "HEAP",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.heap_multi"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -14856,8 +14944,10 @@
           "id": "CHEST",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.chest_hidden"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -14926,8 +15016,10 @@
         }
       ],
       "case_refs": [
-        "p6.shop-trade",
-        "p6.shop-stack"
+        "containers.chest_hidden",
+        "containers.heap_multi",
+        "p6.shop-stack",
+        "p6.shop-trade"
       ],
       "coverage_rule": "Every member and branch needs its own accepted fixture assertion. A family-level partial case does not pass all members. No full Cartesian-product coverage is claimed."
     },
@@ -16946,6 +17038,14 @@
         "notes.item_shortcut"
       ],
       "note": "Five actual original CustomNote workflows including fresh-JVM restore. Partial branch mappings only; no whole-class pass."
+    },
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "containers.heap_multi",
+        "containers.chest_hidden"
+      ],
+      "note": "First container group only: HEAP and ordinary CHEST partial; remaining types/keys still pending."
     }
   ]
 }
