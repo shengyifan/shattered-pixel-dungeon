@@ -20,6 +20,7 @@ public final class PublicDialogSignatures {
         flags.put("steal_warning", false);
         flags.put("resurrection_warning", false);
         flags.put("reward_confirmation", false);
+        flags.put("support_prompt", false);
         if (publicUi == null || !Boolean.TRUE.equals(publicUi.get("modal"))
                 || !("GameScene".equals(publicUi.get("scene")) || "game".equals(publicUi.get("scene")))) return flags;
         Dialog dialog = Dialog.read(publicUi.get("controls"));
@@ -44,6 +45,7 @@ public final class PublicDialogSignatures {
         flags.put("reward_confirmation", inspected instanceof Map
                 && dialog.root.equals(((Map<?, ?>) inspected).get("control"))
                 && dialog.buttonPair("确定", "Confirm", "取消", "Cancel"));
+        flags.put("support_prompt", new DisplayedTextEnglish().matchesSupportPrompt(dialog.texts, dialog.buttons));
         return flags;
     }
 

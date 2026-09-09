@@ -58,9 +58,9 @@ class PublicDialogSignaturesTest {
 
     @Test void fullNativeResourceWarningsAreSeparateInBothLanguages() throws Exception {
         for (boolean chinese : new boolean[]{true, false}) {
-            assertEquals(map("steal_warning", true, "resurrection_warning", false, "reward_confirmation", false),
+            assertEquals(map("steal_warning", true, "resurrection_warning", false, "reward_confirmation", false, "support_prompt", false),
                     PublicDialogSignatures.identify(warning("steal", chinese)));
-            assertEquals(map("steal_warning", false, "resurrection_warning", true, "reward_confirmation", false),
+            assertEquals(map("steal_warning", false, "resurrection_warning", true, "reward_confirmation", false, "support_prompt", false),
                     PublicDialogSignatures.identify(warning("resurrect", chinese)));
         }
     }

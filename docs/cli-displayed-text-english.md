@@ -137,3 +137,7 @@ Hero Info专精标题和胜利排行过去时分别受完整公开页签说明�
 ## NPC已显示引号对白
 
 Mob.yell的公开说话者与引号正文分别按完整资源/模板翻译，并保留显示的标点、实际参数和尾空格；支持两个已经完整显示的招呼相连。没有可安全翻译的说话者、正文、尾文或裁剪片段均明确拒绝。6项边界回归和制杖匠告别/幽灵问候3项实际流程通过；完整22项低频成功索引见 `cli-p6-english-completion.md/json`，原14/8与确认5/6报告仍保留。
+
+## 首次支持提示
+
+WndSupportPrompt的标题、intro、Patreon说明、中文GUI追加的英文奖励提示及署名，按包内原资源完整组合匹配，并要求同一公开根窗口与原两按钮。只有真实Close按钮/其子文字可使用wndsupportprompt.close；无关文本、Patreon按钮、未知尾部或clipped节点不能借用。30项相关定向测试及原WornKey触发/Back保护/Close/开锁完整流程通过，未使用supportNagged跳过弹窗。

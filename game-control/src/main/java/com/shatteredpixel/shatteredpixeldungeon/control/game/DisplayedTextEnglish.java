@@ -140,6 +140,8 @@ public final class DisplayedTextEnglish {
                 if((resolved=policyResource(displayed,"windows.wndsadghost.confirm"))!=null)return resolved;
                 if((resolved=policyResource(displayed,"windows.wndsadghost.cancel"))!=null)return resolved;
             }
+            if(Boolean.TRUE.equals(context.get("support_prompt_close"))
+                    &&(resolved=policyResource(displayed,"windows.wndsupportprompt.close"))!=null)return resolved;
             if(Boolean.TRUE.equals(context.get("augmentation_window"))) {
                 String label=unique(dictionary.augmentationLabels.get(displayed));if(label!=null)return label;
             }
@@ -240,6 +242,33 @@ public final class DisplayedTextEnglish {
     private String policyResource(String displayed,String key) {
         ResourcePair resource=dictionary.policyResources.get(key);
         return resource!=null&&resource.chinese.equals(displayed)&&!containsNonLatinText(resource.english)?resource.english:null;
+    }
+
+    /** Original complete WndSupportPrompt composition, using only bundled text and public nodes. */
+    boolean matchesSupportPrompt(List<String> texts, List<String> buttons) {
+        if(texts.size()!=2||buttons.size()!=2)return false;
+        for(boolean chinese:new boolean[]{true,false}) {
+            String title=supportResource("windows.wndsupportprompt.title",chinese);
+            String intro=supportResource("windows.wndsupportprompt.intro",chinese);
+            String message=supportResource("scenes.supporterscene.patreon_msg",chinese);
+            String note=supportResource("scenes.supporterscene.patreon_english",chinese);
+            String link=supportResource("scenes.supporterscene.supporter_link",chinese);
+            String close=supportResource("windows.wndsupportprompt.close",chinese);
+            if(title==null||intro==null||message==null||note==null||link==null||close==null)continue;
+            if(!title.equals(texts.get(0))||!link.equals(buttons.get(0))||!close.equals(buttons.get(1)))continue;
+            String body=intro+"\n\n"+message;
+            // A Chinese GUI always displays the English-only rewards notice. Its
+            // English public presentation retains that sentence. A native English
+            // GUI omits it, as the original constructor specifies.
+            if((body+"\n"+note+"\n- Evan").equals(texts.get(1))
+                    ||!chinese&&(body+"\n- Evan").equals(texts.get(1)))return true;
+        }
+        return false;
+    }
+
+    private String supportResource(String key,boolean chinese) {
+        ResourcePair pair=dictionary.policyResources.get(key);
+        return pair==null?null:chinese?pair.chinese:pair.english;
     }
 
     private String bindingInputTemplate(String displayed) {
@@ -774,6 +803,9 @@ public final class DisplayedTextEnglish {
                         ||key.equals("actors.hero.abilities.rogue.deathmark$deathmarktracker.name")
                         ||key.equals("windows.wndresurrect.warn_yes")||key.equals("windows.wndresurrect.warn_no")
                         ||key.equals("windows.wndsadghost.confirm")||key.equals("windows.wndsadghost.cancel"))
+                    policies.put(key,new ResourcePair(source,target));
+                if(key.startsWith("windows.wndsupportprompt.")||key.equals("scenes.supporterscene.patreon_msg")
+                        ||key.equals("scenes.supporterscene.patreon_english")||key.equals("scenes.supporterscene.supporter_link"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
                     catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);

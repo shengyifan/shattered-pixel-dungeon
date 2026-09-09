@@ -58,16 +58,16 @@
     "window_records": 153,
     "status_counts": {
       "not_applicable": 3,
-      "pending": 104,
-      "partial": 63
+      "pending": 103,
+      "partial": 64
     },
     "fully_passed_records": 0,
-    "evidence_entries": 258,
+    "evidence_entries": 260,
     "planned_scenarios": 35,
     "callback_records_requiring_individual_mapping": 997,
     "scenario_family_member_status_counts": {
-      "pending": 131,
-      "partial": 12,
+      "pending": 129,
+      "partial": 14,
       "not_applicable": 3
     },
     "scenario_families": 11,
@@ -91,7 +91,18 @@
         "purchase_cost": 150,
         "sale_value": 30,
         "inventory_quantity_round_trip": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/0",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.shop-steal": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -110,7 +121,18 @@
         "gold_unchanged": true,
         "charge_before": 5,
         "charge_after": 2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/1",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.shop-steal-warning": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -126,7 +148,18 @@
       "claim": {
         "risky_steal_warning_shown": true,
         "native_confirmation_cancelled_without_cost": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/2",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.ghost-reward": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -144,7 +177,18 @@
         "reward_received_in_final_response": true,
         "quest_consumable_removed": false,
         "quest_completion_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/3",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.wandmaker-reward": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -162,7 +206,18 @@
         "reward_received_in_final_response": true,
         "quest_consumable_removed": true,
         "quest_completion_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/4",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.blacksmith-cashout": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -180,7 +235,18 @@
         "reward_and_favor_verified": true,
         "favor_before": 3000,
         "favor_after": 0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/5",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.blacksmith-pickaxe": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -198,7 +264,18 @@
         "reward_and_favor_verified": true,
         "favor_before": 2000,
         "favor_after": 1750
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/6",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.blacksmith-reforge": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -215,7 +292,18 @@
         "selector_cancel_checked": true,
         "two_items_reforged_into_one": true,
         "favor_cost": 500
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/7",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.companion": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -236,7 +324,18 @@
         "defend_target_assigned": true,
         "follow_hero_command_checked": true,
         "equipment_returned_to_inventory": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/8",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.alchemy-energy": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -255,7 +354,18 @@
         "exotic_potion_crafted": true,
         "energy_spent": 4,
         "same_scope": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/9",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.resurrect": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -281,7 +391,18 @@
         "lost_gray_item_open_rejected": "ACTION_UNAVAILABLE",
         "rejected_request_id_burned": true,
         "rejection_did_not_change_observed_world": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/10",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.amulet-stay": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -297,7 +418,18 @@
       "claim": {
         "amulet_scene_choice_read": true,
         "stay_returns_to_same_run": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/11",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.amulet-end": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -316,7 +448,18 @@
         "rankings_and_victory_window_shown": true,
         "victory_close_button_used": true,
         "counts_as_legitimate_win": false
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/12",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.shop-stack": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -338,7 +481,18 @@
           90
         ],
         "gold_round_trip": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/13",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.shop-steal-failure": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -359,7 +513,18 @@
         "shopkeeper_fled": true,
         "no_item_acquired": true,
         "no_gold_or_charge_spent_on_native_failure": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/14",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.blacksmith-harden": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -377,7 +542,18 @@
         "item_selector_cancelled": true,
         "favor_cost": 500,
         "actual_item_effect_in_final_response": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/15",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.blacksmith-upgrade": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -395,7 +571,18 @@
         "item_selector_cancelled": true,
         "favor_cost": 1000,
         "actual_item_effect_in_final_response": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/16",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.companion-resummon": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -413,7 +600,18 @@
         "native_wait_completed_recharge": true,
         "second_summon_branch_executed": true,
         "full_charge_consumed": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/19",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.blessed-ankh": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -432,7 +630,18 @@
         "no_item_selection_window": true,
         "ankh_consumed_inventory_preserved": true,
         "same_scope": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/20",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.amulet-pickup": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -450,7 +659,18 @@
         "native_delayed_pickup_callback_completed": true,
         "first_acquisition_story_shown": true,
         "stay_retains_amulet_and_scope": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/21",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.blacksmith-smith": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -470,7 +690,18 @@
         "reward_preview_cancelled": true,
         "generated_reward_received": true,
         "reward_list_cleared": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/17",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p6.companion-attack": {
       "report": "docs/cli-p6-low-frequency.json",
@@ -488,7 +719,18 @@
         "target_assignment_in_final_response": true,
         "fixed_public_waits": 8,
         "actual_companion_damage_verified": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p6-english-completion.json",
+          "json_pointer": "/results/18",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.class:WARRIOR": {
       "report": "docs/cli-p7-validation.json",
@@ -504,7 +746,18 @@
       "claim": {
         "initial_item": "worn shortsword",
         "opened_real_item_window": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/0",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.class:MAGE": {
       "report": "docs/cli-p7-validation.json",
@@ -520,7 +773,18 @@
       "claim": {
         "initial_item": "staff of magic missile",
         "opened_real_item_window": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/1",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.class:ROGUE": {
       "report": "docs/cli-p7-validation.json",
@@ -536,7 +800,18 @@
       "claim": {
         "initial_item": "cloak of shadows",
         "opened_real_item_window": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/2",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.class:HUNTRESS": {
       "report": "docs/cli-p7-validation.json",
@@ -552,7 +827,18 @@
       "claim": {
         "initial_item": "spirit bow",
         "opened_real_item_window": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/3",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.class:DUELIST": {
       "report": "docs/cli-p7-validation.json",
@@ -568,7 +854,18 @@
       "claim": {
         "initial_item": "rapier",
         "opened_real_item_window": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/4",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.class:CLERIC": {
       "report": "docs/cli-p7-validation.json",
@@ -584,7 +881,18 @@
       "claim": {
         "initial_item": "holy tome",
         "opened_real_item_window": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/5",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:BERSERKER": {
       "report": "docs/cli-p7-validation.json",
@@ -601,7 +909,18 @@
         "subclass": "BERSERKER",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/6",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:GLADIATOR": {
       "report": "docs/cli-p7-validation.json",
@@ -618,7 +937,18 @@
         "subclass": "GLADIATOR",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/7",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:BATTLEMAGE": {
       "report": "docs/cli-p7-validation.json",
@@ -635,7 +965,18 @@
         "subclass": "BATTLEMAGE",
         "active_indicator": false,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/8",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:WARLOCK": {
       "report": "docs/cli-p7-validation.json",
@@ -652,7 +993,18 @@
         "subclass": "WARLOCK",
         "active_indicator": false,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/9",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:ASSASSIN": {
       "report": "docs/cli-p7-validation.json",
@@ -669,7 +1021,18 @@
         "subclass": "ASSASSIN",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/10",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:FREERUNNER": {
       "report": "docs/cli-p7-validation.json",
@@ -686,7 +1049,18 @@
         "subclass": "FREERUNNER",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/11",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:SNIPER": {
       "report": "docs/cli-p7-validation.json",
@@ -703,7 +1077,18 @@
         "subclass": "SNIPER",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/12",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:WARDEN": {
       "report": "docs/cli-p7-validation.json",
@@ -720,7 +1105,18 @@
         "subclass": "WARDEN",
         "active_indicator": false,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/13",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:CHAMPION": {
       "report": "docs/cli-p7-validation.json",
@@ -737,7 +1133,18 @@
         "subclass": "CHAMPION",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/14",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:MONK": {
       "report": "docs/cli-p7-validation.json",
@@ -754,7 +1161,18 @@
         "subclass": "MONK",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/15",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:PRIEST": {
       "report": "docs/cli-p7-validation.json",
@@ -771,7 +1189,18 @@
         "subclass": "PRIEST",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/16",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.subclass:PALADIN": {
       "report": "docs/cli-p7-validation.json",
@@ -788,7 +1217,18 @@
         "subclass": "PALADIN",
         "active_indicator": true,
         "public_action_and_effect_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/17",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:HeroicLeap": {
       "report": "docs/cli-p7-validation.json",
@@ -808,7 +1248,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/18",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Shockwave": {
       "report": "docs/cli-p7-validation.json",
@@ -828,7 +1279,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/19",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Endure": {
       "report": "docs/cli-p7-validation.json",
@@ -848,7 +1310,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 70.59999
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/20",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:ElementalBlast": {
       "report": "docs/cli-p7-validation.json",
@@ -868,7 +1341,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/21",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:WildMagic": {
       "report": "docs/cli-p7-validation.json",
@@ -888,7 +1372,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 85.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/22",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:WarpBeacon": {
       "report": "docs/cli-p7-validation.json",
@@ -908,7 +1403,18 @@
         "paid_teleport_checked": true,
         "charge_before": 100.0,
         "charge_after": 79.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/23",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:SmokeBomb": {
       "report": "docs/cli-p7-validation.json",
@@ -928,7 +1434,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 70.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/24",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:DeathMark": {
       "report": "docs/cli-p7-validation.json",
@@ -948,7 +1465,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 85.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/25",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:ShadowClone": {
       "report": "docs/cli-p7-validation.json",
@@ -968,7 +1496,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/26",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:SpectralBlades": {
       "report": "docs/cli-p7-validation.json",
@@ -988,7 +1527,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 85.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/27",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:NaturesPower": {
       "report": "docs/cli-p7-validation.json",
@@ -1008,7 +1558,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/28",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:SpiritHawk": {
       "report": "docs/cli-p7-validation.json",
@@ -1028,7 +1589,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/29",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Challenge": {
       "report": "docs/cli-p7-validation.json",
@@ -1048,7 +1620,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/30",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:ElementalStrike": {
       "report": "docs/cli-p7-validation.json",
@@ -1068,7 +1651,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 85.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/31",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Feint": {
       "report": "docs/cli-p7-validation.json",
@@ -1088,7 +1682,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 70.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/32",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:AscendedForm": {
       "report": "docs/cli-p7-validation.json",
@@ -1108,7 +1713,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 70.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/33",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Trinity": {
       "report": "docs/cli-p7-validation.json",
@@ -1128,7 +1744,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 85.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/34",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:PowerOfMany": {
       "report": "docs/cli-p7-validation.json",
@@ -1148,7 +1775,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 79.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/35",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Ratmogrify": {
       "report": "docs/cli-p7-validation.json",
@@ -1168,7 +1806,18 @@
         "paid_teleport_checked": false,
         "charge_before": 100.0,
         "charge_after": 70.2
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/36",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:AuraOfProtection": {
       "report": "docs/cli-p7-validation.json",
@@ -1187,7 +1836,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/37",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:BeamingRay": {
       "report": "docs/cli-p7-validation.json",
@@ -1206,7 +1866,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 9.025641026
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/38",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:BlessSpell": {
       "report": "docs/cli-p7-validation.json",
@@ -1225,7 +1896,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 9.025641026
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/39",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:BodyForm": {
       "report": "docs/cli-p7-validation.json",
@@ -1245,7 +1927,18 @@
         "unhandled_long_noop_checked": true,
         "charge_before": 10.0,
         "charge_after": 8.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/40",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Cleanse": {
       "report": "docs/cli-p7-validation.json",
@@ -1264,7 +1957,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/41",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:DivineIntervention": {
       "report": "docs/cli-p7-validation.json",
@@ -1283,7 +1987,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 5.028571429
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/42",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:DivineSense": {
       "report": "docs/cli-p7-validation.json",
@@ -1302,7 +2017,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/43",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Flash": {
       "report": "docs/cli-p7-validation.json",
@@ -1321,7 +2047,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/44",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:GuidingLight": {
       "report": "docs/cli-p7-validation.json",
@@ -1340,7 +2077,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 9.025641026
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/45",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HallowedGround": {
       "report": "docs/cli-p7-validation.json",
@@ -1359,7 +2107,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/46",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyIntuition": {
       "report": "docs/cli-p7-validation.json",
@@ -1378,7 +2137,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/47",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyLance": {
       "report": "docs/cli-p7-validation.json",
@@ -1397,7 +2167,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 6.027777778
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/48",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyWard": {
       "report": "docs/cli-p7-validation.json",
@@ -1416,7 +2197,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 9.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/49",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyWeapon": {
       "report": "docs/cli-p7-validation.json",
@@ -1435,7 +2227,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/50",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Judgement": {
       "report": "docs/cli-p7-validation.json",
@@ -1454,7 +2257,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 7.027027028
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/51",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:LayOnHands": {
       "report": "docs/cli-p7-validation.json",
@@ -1473,7 +2287,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 9.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/52",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:LifeLinkSpell": {
       "report": "docs/cli-p7-validation.json",
@@ -1492,7 +2317,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/53",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:MindForm": {
       "report": "docs/cli-p7-validation.json",
@@ -1511,7 +2347,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 7.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/54",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:MnemonicPrayer": {
       "report": "docs/cli-p7-validation.json",
@@ -1530,7 +2377,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 9.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/55",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Radiance": {
       "report": "docs/cli-p7-validation.json",
@@ -1549,7 +2407,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/56",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:RecallInscription": {
       "report": "docs/cli-p7-validation.json",
@@ -1568,7 +2437,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 7.027027028
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/57",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:ShieldOfLight": {
       "report": "docs/cli-p7-validation.json",
@@ -1587,7 +2467,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 9.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/58",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Smite": {
       "report": "docs/cli-p7-validation.json",
@@ -1606,7 +2497,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/59",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:SpiritForm": {
       "report": "docs/cli-p7-validation.json",
@@ -1625,7 +2527,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 6.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/60",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Stasis": {
       "report": "docs/cli-p7-validation.json",
@@ -1644,7 +2557,18 @@
         "target_cancel_checked": false,
         "charge_before": 10.0,
         "charge_after": 8.02631579
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/61",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Sunray": {
       "report": "docs/cli-p7-validation.json",
@@ -1663,7 +2587,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 9.025641026
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/62",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:WallOfLight": {
       "report": "docs/cli-p7-validation.json",
@@ -1682,7 +2617,18 @@
         "target_cancel_checked": true,
         "charge_before": 10.0,
         "charge_after": 7.027027028
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/63",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Pickaxe": {
       "report": "docs/cli-p7-validation.json",
@@ -1703,7 +2649,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/64",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:AssassinsBlade": {
       "report": "docs/cli-p7-validation.json",
@@ -1724,7 +2681,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/65",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:BattleAxe": {
       "report": "docs/cli-p7-validation.json",
@@ -1745,7 +2713,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/66",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Crossbow": {
       "report": "docs/cli-p7-validation.json",
@@ -1766,7 +2745,18 @@
         "target_cancel_checked": false,
         "charge_before": 8.0,
         "charge_after": 7.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/67",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Cudgel": {
       "report": "docs/cli-p7-validation.json",
@@ -1787,7 +2777,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/68",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Dagger": {
       "report": "docs/cli-p7-validation.json",
@@ -1808,7 +2809,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/69",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Dirk": {
       "report": "docs/cli-p7-validation.json",
@@ -1829,7 +2841,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/70",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Flail": {
       "report": "docs/cli-p7-validation.json",
@@ -1850,7 +2873,18 @@
         "target_cancel_checked": false,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/71",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Gauntlet": {
       "report": "docs/cli-p7-validation.json",
@@ -1871,7 +2905,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/72",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Glaive": {
       "report": "docs/cli-p7-validation.json",
@@ -1892,7 +2937,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.0341883
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/73",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Gloves": {
       "report": "docs/cli-p7-validation.json",
@@ -1913,7 +2969,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/74",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Greataxe": {
       "report": "docs/cli-p7-validation.json",
@@ -1934,7 +3001,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/75",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Greatshield": {
       "report": "docs/cli-p7-validation.json",
@@ -1955,7 +3033,18 @@
         "target_cancel_checked": false,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/76",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Greatsword": {
       "report": "docs/cli-p7-validation.json",
@@ -1976,7 +3065,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/77",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:HandAxe": {
       "report": "docs/cli-p7-validation.json",
@@ -1997,7 +3097,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/78",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Katana": {
       "report": "docs/cli-p7-validation.json",
@@ -2018,7 +3129,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/79",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Longsword": {
       "report": "docs/cli-p7-validation.json",
@@ -2039,7 +3161,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/80",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Mace": {
       "report": "docs/cli-p7-validation.json",
@@ -2060,7 +3193,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/81",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Quarterstaff": {
       "report": "docs/cli-p7-validation.json",
@@ -2081,7 +3225,18 @@
         "target_cancel_checked": false,
         "charge_before": 8.0,
         "charge_after": 7.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/82",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Rapier": {
       "report": "docs/cli-p7-validation.json",
@@ -2102,7 +3257,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/83",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:RoundShield": {
       "report": "docs/cli-p7-validation.json",
@@ -2123,7 +3289,18 @@
         "target_cancel_checked": false,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/84",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:RunicBlade": {
       "report": "docs/cli-p7-validation.json",
@@ -2144,7 +3321,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/85",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Sai": {
       "report": "docs/cli-p7-validation.json",
@@ -2165,7 +3353,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/86",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Scimitar": {
       "report": "docs/cli-p7-validation.json",
@@ -2186,7 +3385,18 @@
         "target_cancel_checked": false,
         "charge_before": 8.0,
         "charge_after": 7.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/87",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Shortsword": {
       "report": "docs/cli-p7-validation.json",
@@ -2207,7 +3417,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/88",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Sickle": {
       "report": "docs/cli-p7-validation.json",
@@ -2228,7 +3449,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/89",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Spear": {
       "report": "docs/cli-p7-validation.json",
@@ -2249,7 +3481,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.0341883
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/90",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Sword": {
       "report": "docs/cli-p7-validation.json",
@@ -2270,7 +3513,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/91",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:WarHammer": {
       "report": "docs/cli-p7-validation.json",
@@ -2291,7 +3545,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/92",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:WarScythe": {
       "report": "docs/cli-p7-validation.json",
@@ -2312,7 +3577,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/93",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Whip": {
       "report": "docs/cli-p7-validation.json",
@@ -2333,7 +3609,18 @@
         "target_cancel_checked": false,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/94",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:WornShortsword": {
       "report": "docs/cli-p7-validation.json",
@@ -2354,7 +3641,18 @@
         "target_cancel_checked": true,
         "charge_before": 8.0,
         "charge_after": 7.017094
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/95",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Dash": {
       "report": "docs/cli-p7-validation.json",
@@ -2372,7 +3670,18 @@
         "actual_ability_and_energy_spend": true,
         "energy_before": 20.0,
         "energy_after": 17.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/96",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:DragonKick": {
       "report": "docs/cli-p7-validation.json",
@@ -2390,7 +3699,18 @@
         "actual_ability_and_energy_spend": true,
         "energy_before": 20.0,
         "energy_after": 16.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/97",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Flurry": {
       "report": "docs/cli-p7-validation.json",
@@ -2408,7 +3728,18 @@
         "actual_ability_and_energy_spend": true,
         "energy_before": 20.0,
         "energy_after": 19.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/98",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Focus": {
       "report": "docs/cli-p7-validation.json",
@@ -2426,7 +3757,18 @@
         "actual_ability_and_energy_spend": true,
         "energy_before": 20.0,
         "energy_after": 18.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/99",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Meditate": {
       "report": "docs/cli-p7-validation.json",
@@ -2444,7 +3786,18 @@
         "actual_ability_and_energy_spend": true,
         "energy_before": 20.0,
         "energy_after": 15.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/100",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.ui:identify": {
       "report": "docs/cli-p7-validation.json",
@@ -2461,7 +3814,18 @@
         "interaction": "identify",
         "original_selector_and_confirmation": true,
         "public_result_verified": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/101",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.ui:upgrade": {
       "report": "docs/cli-p7-validation.json",
@@ -2478,7 +3842,18 @@
         "interaction": "upgrade",
         "original_selector_and_confirmation": true,
         "public_result_verified": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/102",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.ui:cancel-confirm": {
       "report": "docs/cli-p7-validation.json",
@@ -2495,7 +3870,18 @@
         "interaction": "cancel-confirm",
         "original_selector_and_confirmation": true,
         "public_result_verified": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/103",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.ui:alchemy": {
       "report": "docs/cli-p7-validation.json",
@@ -2511,7 +3897,18 @@
       "claim": {
         "alchemy_crafted_from_three_seeds": true,
         "same_run_scope": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/104",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:HeroicLeap:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2531,7 +3928,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/105",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Shockwave:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2551,7 +3959,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/106",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Endure:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2571,7 +3990,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/107",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:ElementalBlast:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2591,7 +4021,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/108",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:WildMagic:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2611,7 +4052,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/109",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:WarpBeacon:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2631,7 +4083,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/110",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:SmokeBomb:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2651,7 +4114,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/111",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:DeathMark:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2671,7 +4145,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/112",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:ShadowClone:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2691,7 +4176,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/113",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:SpectralBlades:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2711,7 +4207,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/114",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:NaturesPower:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2731,7 +4238,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/115",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:SpiritHawk:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2751,7 +4269,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/116",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Challenge:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2771,7 +4300,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/117",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:ElementalStrike:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2791,7 +4331,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/118",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Feint:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2811,7 +4362,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/119",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:AscendedForm:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2831,7 +4393,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/120",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Trinity:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2851,7 +4424,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/121",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:PowerOfMany:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2871,7 +4455,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/122",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.armor:Ratmogrify:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2891,7 +4486,18 @@
         "paid_teleport_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/123",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:AuraOfProtection:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2908,7 +4514,18 @@
         "spell": "AuraOfProtection",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/124",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:BeamingRay:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2925,7 +4542,18 @@
         "spell": "BeamingRay",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/125",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:BlessSpell:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2942,7 +4570,18 @@
         "spell": "BlessSpell",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/126",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:BodyForm:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2959,7 +4598,18 @@
         "spell": "BodyForm",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/127",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Cleanse:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2976,7 +4626,18 @@
         "spell": "Cleanse",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/128",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:DivineIntervention:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -2993,7 +4654,18 @@
         "spell": "DivineIntervention",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/129",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:DivineSense:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3010,7 +4682,18 @@
         "spell": "DivineSense",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/130",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Flash:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3027,7 +4710,18 @@
         "spell": "Flash",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/131",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:GuidingLight:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3044,7 +4738,18 @@
         "spell": "GuidingLight",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/132",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HallowedGround:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3061,7 +4766,18 @@
         "spell": "HallowedGround",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/133",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyIntuition:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3078,7 +4794,18 @@
         "spell": "HolyIntuition",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/134",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyLance:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3095,7 +4822,18 @@
         "spell": "HolyLance",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/135",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyWard:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3112,7 +4850,18 @@
         "spell": "HolyWard",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/136",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:HolyWeapon:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3129,7 +4878,18 @@
         "spell": "HolyWeapon",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/137",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Judgement:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3146,7 +4906,18 @@
         "spell": "Judgement",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/138",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:LayOnHands:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3163,7 +4934,18 @@
         "spell": "LayOnHands",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/139",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:LifeLinkSpell:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3180,7 +4962,18 @@
         "spell": "LifeLinkSpell",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/140",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:MindForm:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3197,7 +4990,18 @@
         "spell": "MindForm",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/141",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:MnemonicPrayer:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3214,7 +5018,18 @@
         "spell": "MnemonicPrayer",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/142",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Radiance:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3231,7 +5046,18 @@
         "spell": "Radiance",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/143",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:RecallInscription:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3248,7 +5074,18 @@
         "spell": "RecallInscription",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/144",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:ShieldOfLight:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3265,7 +5102,18 @@
         "spell": "ShieldOfLight",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/145",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Smite:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3282,7 +5130,18 @@
         "spell": "Smite",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/146",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:SpiritForm:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3299,7 +5158,18 @@
         "spell": "SpiritForm",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/147",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Stasis:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3316,7 +5186,18 @@
         "spell": "Stasis",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/148",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:Sunray:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3333,7 +5214,18 @@
         "spell": "Sunray",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/149",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.spell:WallOfLight:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3350,7 +5242,18 @@
         "spell": "WallOfLight",
         "empty_resource_native_refusal_checked": true,
         "dimmed_control_checked": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/150",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Pickaxe:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3371,7 +5274,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/151",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:AssassinsBlade:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3392,7 +5306,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/152",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:BattleAxe:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3413,7 +5338,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/153",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Crossbow:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3434,7 +5370,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/154",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Cudgel:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3455,7 +5402,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/155",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Dagger:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3476,7 +5434,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/156",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Dirk:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3497,7 +5466,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/157",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Flail:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3518,7 +5498,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/158",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Gauntlet:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3539,7 +5530,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/159",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Glaive:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3560,7 +5562,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/160",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Gloves:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3581,7 +5594,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/161",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Greataxe:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3602,7 +5626,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/162",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Greatshield:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3623,7 +5658,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/163",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Greatsword:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3644,7 +5690,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/164",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:HandAxe:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3665,7 +5722,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/165",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Katana:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3686,7 +5754,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/166",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Longsword:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3707,7 +5786,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/167",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Mace:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3728,7 +5818,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/168",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Quarterstaff:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3749,7 +5850,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/169",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Rapier:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3770,7 +5882,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/170",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:RoundShield:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3791,7 +5914,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/171",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:RunicBlade:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3812,7 +5946,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/172",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Sai:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3833,7 +5978,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/173",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Scimitar:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3854,7 +6010,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/174",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Shortsword:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3875,7 +6042,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/175",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Sickle:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3896,7 +6074,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/176",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Spear:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3917,7 +6106,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/177",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Sword:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3938,7 +6138,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/178",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:WarHammer:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3959,7 +6170,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/179",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:WarScythe:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -3980,7 +6202,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/180",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:Whip:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -4001,7 +6234,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/181",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.weapon:WornShortsword:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -4022,7 +6266,18 @@
         "target_cancel_checked": false,
         "charge_before": 0.0,
         "charge_after": 0.0
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/182",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Dash:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -4038,7 +6293,18 @@
       "claim": {
         "monk_ability": "Dash",
         "insufficient_energy_disables_choice": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/183",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:DragonKick:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -4054,7 +6320,18 @@
       "claim": {
         "monk_ability": "DragonKick",
         "insufficient_energy_disables_choice": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/184",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Flurry:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -4070,7 +6347,18 @@
       "claim": {
         "monk_ability": "Flurry",
         "zero_energy_no_indicator": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/185",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Focus:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -4086,7 +6374,18 @@
       "claim": {
         "monk_ability": "Focus",
         "insufficient_energy_disables_choice": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/186",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "p7.monk:Meditate:empty": {
       "report": "docs/cli-p7-validation.json",
@@ -4102,7 +6401,18 @@
       "claim": {
         "monk_ability": "Meditate",
         "insufficient_energy_disables_choice": true
-      }
+      },
+      "additional_validations": [
+        {
+          "report": "docs/cli-p7-english-validation.json",
+          "json_pointer": "/results/187",
+          "status": "passed",
+          "cli_language": "en",
+          "gui_language": "CHI_SMPL",
+          "window_mode": "windowed",
+          "scope": "This exact existing branch only; evidence combines successful runs across recorded builds. Historical reports and failures remain unchanged."
+        }
+      ]
     },
     "layout.source": {
       "report": "docs/cli-layout-validation.json",
@@ -5368,6 +7678,58 @@
         "key_checks": [],
         "native_wraith_spawn_checked": true
       }
+    },
+    "containers.worn_exit": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/10",
+      "case": "containers.worn_exit",
+      "validation_status": "passed",
+      "runtime_id": "runtime-446622c9d01c4418870fbda60e8ad24d",
+      "build_id": "2f08667717dce2361612db55b1dc1b8dd0bab4b6b198a824626e21e758f421cf",
+      "profile": "desktop-control/build/fixtures/containers-worn-exit-c9d99a5d88a6403d8cd3f62ce09b68ee",
+      "public_trace": "desktop-control/build/fixtures/containers-worn-exit-c9d99a5d88a6403d8cd3f62ce09b68ee/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the named original boss-exit/support or artifact-created-door workflow. No boss defeat, next floor, cursed artifact, other lock substitution or full class coverage.",
+      "claim": {
+        "case_id": "containers.worn_exit",
+        "actual_generated_sewer_boss_exit": true,
+        "no_key_refusal_no_turn": true,
+        "original_worn_key_pickup_and_one_key_consumed": true,
+        "native_unlock_turns": 1,
+        "original_terrain_change": "LOCKED_EXIT -> UNLOCKED_EXIT",
+        "original_first_key_support_prompt_and_back_rejected": true,
+        "original_close_without_opening_external_link": true,
+        "no_synthetic_exit_or_defeated_boss_claim": true
+      }
+    },
+    "containers.skeleton_key_door": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/11",
+      "case": "containers.skeleton_key_door",
+      "validation_status": "passed",
+      "runtime_id": "runtime-446622c9d01c4418870fbda60e8ad24d",
+      "build_id": "2f08667717dce2361612db55b1dc1b8dd0bab4b6b198a824626e21e758f421cf",
+      "profile": "desktop-control/build/fixtures/containers-skeleton-key-door-30b1c3e6dd1f4a84a54a5f2a098e8b74",
+      "public_trace": "desktop-control/build/fixtures/containers-skeleton-key-door-30b1c3e6dd1f4a84a54a5f2a098e8b74/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the named original boss-exit/support or artifact-created-door workflow. No boss defeat, next floor, cursed artifact, other lock substitution or full class coverage.",
+      "claim": {
+        "case_id": "containers.skeleton_key_door",
+        "original_insert_creates_lock": true,
+        "lock_charge_cost": 2,
+        "cancel_target_changes_no_turn_charge_or_terrain": true,
+        "normal_click_refused_while_key_owned": true,
+        "original_insert_unlock_zero_charge": true,
+        "original_relock_and_equipped_drop": true,
+        "equipped_drop_turns": 2,
+        "original_force_open_after_drop": true,
+        "native_force_open_turns": 1,
+        "hero_locked_door_never_injected": true
+      }
     }
   },
   "ui_records": [
@@ -6383,6 +8745,13 @@
             "containers.tomb"
           ],
           "covered": "Original no-key refusals, visible Iron/Crystal key pickup, one-key unlock and crossing; separate real tomb opening/wraith spawning and loot pickup, including actual dodged floating feedback. Old tomb failure retained."
+        },
+        {
+          "case_refs": [
+            "containers.worn_exit",
+            "containers.skeleton_key_door"
+          ],
+          "covered": "Original actual boss exit unlock and separate SkeletonKey INSERT/cancel/drop/force-open chain in prepared source states. Ordinary Warrior statistics; no boss defeated."
         }
       ],
       "pending_scenarios": [
@@ -8339,8 +10708,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndSupportPrompt.java",
       "catalog_line": 35,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "containers.worn_exit"
+          ],
+          "covered": "First original WornKey pickup shows complete developer support body; Back cannot hide it, original Close closes without a turn and records supportNagged. External Patreon link was not activated."
+        }
+      ],
       "pending_scenarios": [
         "menus.news_support"
       ],
@@ -8494,6 +10870,12 @@
             "notes.item_shortcut"
           ],
           "covered": "Original item-detail journal icon creates and reopens the note, and item parent window is rebuilt after title changes/deletion. Other items remain separate cases."
+        },
+        {
+          "case_refs": [
+            "containers.skeleton_key_door"
+          ],
+          "covered": "Original equipped SkeletonKey INSERT target/cancel and original equipped DROP. Other artifacts/charges/curse targets remain separate."
         }
       ],
       "pending_scenarios": [
@@ -15809,8 +18191,10 @@
           "id": "LOCKED_EXIT:WornKey",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java",
           "line": 1204,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.worn_exit"
+          ],
           "required_variants": [
             "有正确钥匙",
             "无钥匙/错层",
@@ -15822,8 +18206,10 @@
           "id": "HERO_LKD_DR:SkeletonKey",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java",
           "line": 1204,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.skeleton_key_door"
+          ],
           "required_variants": [
             "有正确钥匙",
             "无钥匙/错层",
@@ -15866,7 +18252,9 @@
         "containers.crystal_chest",
         "containers.crystal_door",
         "containers.iron_door",
-        "containers.locked_chest"
+        "containers.locked_chest",
+        "containers.worn_exit",
+        "containers.skeleton_key_door"
       ],
       "coverage_rule": "Every member and branch needs its own accepted fixture assertion. A family-level partial case does not pass all members. No full Cartesian-product coverage is claimed."
     },
@@ -17752,6 +20140,226 @@
         "language.legacy_chinese_audit_presentation"
       ],
       "scope": "Historical public English presentation and raw audit immutability only; no new scene/window action is claimed."
+    },
+    {
+      "case_refs": [
+        "p6.shop-trade",
+        "p6.shop-steal",
+        "p6.shop-steal-warning",
+        "p6.ghost-reward",
+        "p6.wandmaker-reward",
+        "p6.blacksmith-cashout",
+        "p6.blacksmith-pickaxe",
+        "p6.blacksmith-reforge",
+        "p6.companion",
+        "p6.alchemy-energy",
+        "p6.resurrect",
+        "p6.amulet-stay",
+        "p6.amulet-end",
+        "p6.shop-stack",
+        "p6.shop-steal-failure",
+        "p6.blacksmith-harden",
+        "p6.blacksmith-upgrade",
+        "p6.blacksmith-smith",
+        "p6.companion-attack",
+        "p6.companion-resummon",
+        "p6.blessed-ankh",
+        "p6.amulet-pickup"
+      ],
+      "scope": "Latest English CLI / Chinese windowed engine evidence for the already mapped P6 branches only. This is not a single-build full matrix run and does not promote any entire scene/window class."
+    },
+    {
+      "case_refs": [
+        "p7.class:WARRIOR",
+        "p7.class:MAGE",
+        "p7.class:ROGUE",
+        "p7.class:HUNTRESS",
+        "p7.class:DUELIST",
+        "p7.class:CLERIC",
+        "p7.subclass:BERSERKER",
+        "p7.subclass:GLADIATOR",
+        "p7.subclass:BATTLEMAGE",
+        "p7.subclass:WARLOCK",
+        "p7.subclass:ASSASSIN",
+        "p7.subclass:FREERUNNER",
+        "p7.subclass:SNIPER",
+        "p7.subclass:WARDEN",
+        "p7.subclass:CHAMPION",
+        "p7.subclass:MONK",
+        "p7.subclass:PRIEST",
+        "p7.subclass:PALADIN",
+        "p7.armor:HeroicLeap",
+        "p7.armor:Shockwave",
+        "p7.armor:Endure",
+        "p7.armor:ElementalBlast",
+        "p7.armor:WildMagic",
+        "p7.armor:WarpBeacon",
+        "p7.armor:SmokeBomb",
+        "p7.armor:DeathMark",
+        "p7.armor:ShadowClone",
+        "p7.armor:SpectralBlades",
+        "p7.armor:NaturesPower",
+        "p7.armor:SpiritHawk",
+        "p7.armor:Challenge",
+        "p7.armor:ElementalStrike",
+        "p7.armor:Feint",
+        "p7.armor:AscendedForm",
+        "p7.armor:Trinity",
+        "p7.armor:PowerOfMany",
+        "p7.armor:Ratmogrify",
+        "p7.spell:AuraOfProtection",
+        "p7.spell:BeamingRay",
+        "p7.spell:BlessSpell",
+        "p7.spell:BodyForm",
+        "p7.spell:Cleanse",
+        "p7.spell:DivineIntervention",
+        "p7.spell:DivineSense",
+        "p7.spell:Flash",
+        "p7.spell:GuidingLight",
+        "p7.spell:HallowedGround",
+        "p7.spell:HolyIntuition",
+        "p7.spell:HolyLance",
+        "p7.spell:HolyWard",
+        "p7.spell:HolyWeapon",
+        "p7.spell:Judgement",
+        "p7.spell:LayOnHands",
+        "p7.spell:LifeLinkSpell",
+        "p7.spell:MindForm",
+        "p7.spell:MnemonicPrayer",
+        "p7.spell:Radiance",
+        "p7.spell:RecallInscription",
+        "p7.spell:ShieldOfLight",
+        "p7.spell:Smite",
+        "p7.spell:SpiritForm",
+        "p7.spell:Stasis",
+        "p7.spell:Sunray",
+        "p7.spell:WallOfLight",
+        "p7.weapon:Pickaxe",
+        "p7.weapon:AssassinsBlade",
+        "p7.weapon:BattleAxe",
+        "p7.weapon:Crossbow",
+        "p7.weapon:Cudgel",
+        "p7.weapon:Dagger",
+        "p7.weapon:Dirk",
+        "p7.weapon:Flail",
+        "p7.weapon:Gauntlet",
+        "p7.weapon:Glaive",
+        "p7.weapon:Gloves",
+        "p7.weapon:Greataxe",
+        "p7.weapon:Greatshield",
+        "p7.weapon:Greatsword",
+        "p7.weapon:HandAxe",
+        "p7.weapon:Katana",
+        "p7.weapon:Longsword",
+        "p7.weapon:Mace",
+        "p7.weapon:Quarterstaff",
+        "p7.weapon:Rapier",
+        "p7.weapon:RoundShield",
+        "p7.weapon:RunicBlade",
+        "p7.weapon:Sai",
+        "p7.weapon:Scimitar",
+        "p7.weapon:Shortsword",
+        "p7.weapon:Sickle",
+        "p7.weapon:Spear",
+        "p7.weapon:Sword",
+        "p7.weapon:WarHammer",
+        "p7.weapon:WarScythe",
+        "p7.weapon:Whip",
+        "p7.weapon:WornShortsword",
+        "p7.monk:Dash",
+        "p7.monk:DragonKick",
+        "p7.monk:Flurry",
+        "p7.monk:Focus",
+        "p7.monk:Meditate",
+        "p7.ui:identify",
+        "p7.ui:upgrade",
+        "p7.ui:cancel-confirm",
+        "p7.ui:alchemy",
+        "p7.armor:HeroicLeap:empty",
+        "p7.armor:Shockwave:empty",
+        "p7.armor:Endure:empty",
+        "p7.armor:ElementalBlast:empty",
+        "p7.armor:WildMagic:empty",
+        "p7.armor:WarpBeacon:empty",
+        "p7.armor:SmokeBomb:empty",
+        "p7.armor:DeathMark:empty",
+        "p7.armor:ShadowClone:empty",
+        "p7.armor:SpectralBlades:empty",
+        "p7.armor:NaturesPower:empty",
+        "p7.armor:SpiritHawk:empty",
+        "p7.armor:Challenge:empty",
+        "p7.armor:ElementalStrike:empty",
+        "p7.armor:Feint:empty",
+        "p7.armor:AscendedForm:empty",
+        "p7.armor:Trinity:empty",
+        "p7.armor:PowerOfMany:empty",
+        "p7.armor:Ratmogrify:empty",
+        "p7.spell:AuraOfProtection:empty",
+        "p7.spell:BeamingRay:empty",
+        "p7.spell:BlessSpell:empty",
+        "p7.spell:BodyForm:empty",
+        "p7.spell:Cleanse:empty",
+        "p7.spell:DivineIntervention:empty",
+        "p7.spell:DivineSense:empty",
+        "p7.spell:Flash:empty",
+        "p7.spell:GuidingLight:empty",
+        "p7.spell:HallowedGround:empty",
+        "p7.spell:HolyIntuition:empty",
+        "p7.spell:HolyLance:empty",
+        "p7.spell:HolyWard:empty",
+        "p7.spell:HolyWeapon:empty",
+        "p7.spell:Judgement:empty",
+        "p7.spell:LayOnHands:empty",
+        "p7.spell:LifeLinkSpell:empty",
+        "p7.spell:MindForm:empty",
+        "p7.spell:MnemonicPrayer:empty",
+        "p7.spell:Radiance:empty",
+        "p7.spell:RecallInscription:empty",
+        "p7.spell:ShieldOfLight:empty",
+        "p7.spell:Smite:empty",
+        "p7.spell:SpiritForm:empty",
+        "p7.spell:Stasis:empty",
+        "p7.spell:Sunray:empty",
+        "p7.spell:WallOfLight:empty",
+        "p7.weapon:Pickaxe:empty",
+        "p7.weapon:AssassinsBlade:empty",
+        "p7.weapon:BattleAxe:empty",
+        "p7.weapon:Crossbow:empty",
+        "p7.weapon:Cudgel:empty",
+        "p7.weapon:Dagger:empty",
+        "p7.weapon:Dirk:empty",
+        "p7.weapon:Flail:empty",
+        "p7.weapon:Gauntlet:empty",
+        "p7.weapon:Glaive:empty",
+        "p7.weapon:Gloves:empty",
+        "p7.weapon:Greataxe:empty",
+        "p7.weapon:Greatshield:empty",
+        "p7.weapon:Greatsword:empty",
+        "p7.weapon:HandAxe:empty",
+        "p7.weapon:Katana:empty",
+        "p7.weapon:Longsword:empty",
+        "p7.weapon:Mace:empty",
+        "p7.weapon:Quarterstaff:empty",
+        "p7.weapon:Rapier:empty",
+        "p7.weapon:RoundShield:empty",
+        "p7.weapon:RunicBlade:empty",
+        "p7.weapon:Sai:empty",
+        "p7.weapon:Scimitar:empty",
+        "p7.weapon:Shortsword:empty",
+        "p7.weapon:Sickle:empty",
+        "p7.weapon:Spear:empty",
+        "p7.weapon:Sword:empty",
+        "p7.weapon:WarHammer:empty",
+        "p7.weapon:WarScythe:empty",
+        "p7.weapon:Whip:empty",
+        "p7.weapon:WornShortsword:empty",
+        "p7.monk:Dash:empty",
+        "p7.monk:DragonKick:empty",
+        "p7.monk:Flurry:empty",
+        "p7.monk:Focus:empty",
+        "p7.monk:Meditate:empty"
+      ],
+      "scope": "Latest English CLI / Chinese windowed engine evidence for the already mapped P7 branches only. This is not a single-build full matrix run and does not promote any entire scene/window class."
     }
   ],
   "evidence_updates": [
@@ -17838,6 +20446,230 @@
         "containers.tomb"
       ],
       "note": "Ordinary Iron/Crystal key doors and complete tomb retry passed; original tomb translation failure retained. Still no whole class or all variants pass."
+    },
+    {
+      "date": "2026-09-09",
+      "updated_refs": [
+        "p6.shop-trade",
+        "p6.shop-steal",
+        "p6.shop-steal-warning",
+        "p6.ghost-reward",
+        "p6.wandmaker-reward",
+        "p6.blacksmith-cashout",
+        "p6.blacksmith-pickaxe",
+        "p6.blacksmith-reforge",
+        "p6.companion",
+        "p6.alchemy-energy",
+        "p6.resurrect",
+        "p6.amulet-stay",
+        "p6.amulet-end",
+        "p6.shop-stack",
+        "p6.shop-steal-failure",
+        "p6.blacksmith-harden",
+        "p6.blacksmith-upgrade",
+        "p6.blacksmith-smith",
+        "p6.companion-attack",
+        "p6.companion-resummon",
+        "p6.blessed-ankh",
+        "p6.amulet-pickup",
+        "p7.class:WARRIOR",
+        "p7.class:MAGE",
+        "p7.class:ROGUE",
+        "p7.class:HUNTRESS",
+        "p7.class:DUELIST",
+        "p7.class:CLERIC",
+        "p7.subclass:BERSERKER",
+        "p7.subclass:GLADIATOR",
+        "p7.subclass:BATTLEMAGE",
+        "p7.subclass:WARLOCK",
+        "p7.subclass:ASSASSIN",
+        "p7.subclass:FREERUNNER",
+        "p7.subclass:SNIPER",
+        "p7.subclass:WARDEN",
+        "p7.subclass:CHAMPION",
+        "p7.subclass:MONK",
+        "p7.subclass:PRIEST",
+        "p7.subclass:PALADIN",
+        "p7.armor:HeroicLeap",
+        "p7.armor:Shockwave",
+        "p7.armor:Endure",
+        "p7.armor:ElementalBlast",
+        "p7.armor:WildMagic",
+        "p7.armor:WarpBeacon",
+        "p7.armor:SmokeBomb",
+        "p7.armor:DeathMark",
+        "p7.armor:ShadowClone",
+        "p7.armor:SpectralBlades",
+        "p7.armor:NaturesPower",
+        "p7.armor:SpiritHawk",
+        "p7.armor:Challenge",
+        "p7.armor:ElementalStrike",
+        "p7.armor:Feint",
+        "p7.armor:AscendedForm",
+        "p7.armor:Trinity",
+        "p7.armor:PowerOfMany",
+        "p7.armor:Ratmogrify",
+        "p7.spell:AuraOfProtection",
+        "p7.spell:BeamingRay",
+        "p7.spell:BlessSpell",
+        "p7.spell:BodyForm",
+        "p7.spell:Cleanse",
+        "p7.spell:DivineIntervention",
+        "p7.spell:DivineSense",
+        "p7.spell:Flash",
+        "p7.spell:GuidingLight",
+        "p7.spell:HallowedGround",
+        "p7.spell:HolyIntuition",
+        "p7.spell:HolyLance",
+        "p7.spell:HolyWard",
+        "p7.spell:HolyWeapon",
+        "p7.spell:Judgement",
+        "p7.spell:LayOnHands",
+        "p7.spell:LifeLinkSpell",
+        "p7.spell:MindForm",
+        "p7.spell:MnemonicPrayer",
+        "p7.spell:Radiance",
+        "p7.spell:RecallInscription",
+        "p7.spell:ShieldOfLight",
+        "p7.spell:Smite",
+        "p7.spell:SpiritForm",
+        "p7.spell:Stasis",
+        "p7.spell:Sunray",
+        "p7.spell:WallOfLight",
+        "p7.weapon:Pickaxe",
+        "p7.weapon:AssassinsBlade",
+        "p7.weapon:BattleAxe",
+        "p7.weapon:Crossbow",
+        "p7.weapon:Cudgel",
+        "p7.weapon:Dagger",
+        "p7.weapon:Dirk",
+        "p7.weapon:Flail",
+        "p7.weapon:Gauntlet",
+        "p7.weapon:Glaive",
+        "p7.weapon:Gloves",
+        "p7.weapon:Greataxe",
+        "p7.weapon:Greatshield",
+        "p7.weapon:Greatsword",
+        "p7.weapon:HandAxe",
+        "p7.weapon:Katana",
+        "p7.weapon:Longsword",
+        "p7.weapon:Mace",
+        "p7.weapon:Quarterstaff",
+        "p7.weapon:Rapier",
+        "p7.weapon:RoundShield",
+        "p7.weapon:RunicBlade",
+        "p7.weapon:Sai",
+        "p7.weapon:Scimitar",
+        "p7.weapon:Shortsword",
+        "p7.weapon:Sickle",
+        "p7.weapon:Spear",
+        "p7.weapon:Sword",
+        "p7.weapon:WarHammer",
+        "p7.weapon:WarScythe",
+        "p7.weapon:Whip",
+        "p7.weapon:WornShortsword",
+        "p7.monk:Dash",
+        "p7.monk:DragonKick",
+        "p7.monk:Flurry",
+        "p7.monk:Focus",
+        "p7.monk:Meditate",
+        "p7.ui:identify",
+        "p7.ui:upgrade",
+        "p7.ui:cancel-confirm",
+        "p7.ui:alchemy",
+        "p7.armor:HeroicLeap:empty",
+        "p7.armor:Shockwave:empty",
+        "p7.armor:Endure:empty",
+        "p7.armor:ElementalBlast:empty",
+        "p7.armor:WildMagic:empty",
+        "p7.armor:WarpBeacon:empty",
+        "p7.armor:SmokeBomb:empty",
+        "p7.armor:DeathMark:empty",
+        "p7.armor:ShadowClone:empty",
+        "p7.armor:SpectralBlades:empty",
+        "p7.armor:NaturesPower:empty",
+        "p7.armor:SpiritHawk:empty",
+        "p7.armor:Challenge:empty",
+        "p7.armor:ElementalStrike:empty",
+        "p7.armor:Feint:empty",
+        "p7.armor:AscendedForm:empty",
+        "p7.armor:Trinity:empty",
+        "p7.armor:PowerOfMany:empty",
+        "p7.armor:Ratmogrify:empty",
+        "p7.spell:AuraOfProtection:empty",
+        "p7.spell:BeamingRay:empty",
+        "p7.spell:BlessSpell:empty",
+        "p7.spell:BodyForm:empty",
+        "p7.spell:Cleanse:empty",
+        "p7.spell:DivineIntervention:empty",
+        "p7.spell:DivineSense:empty",
+        "p7.spell:Flash:empty",
+        "p7.spell:GuidingLight:empty",
+        "p7.spell:HallowedGround:empty",
+        "p7.spell:HolyIntuition:empty",
+        "p7.spell:HolyLance:empty",
+        "p7.spell:HolyWard:empty",
+        "p7.spell:HolyWeapon:empty",
+        "p7.spell:Judgement:empty",
+        "p7.spell:LayOnHands:empty",
+        "p7.spell:LifeLinkSpell:empty",
+        "p7.spell:MindForm:empty",
+        "p7.spell:MnemonicPrayer:empty",
+        "p7.spell:Radiance:empty",
+        "p7.spell:RecallInscription:empty",
+        "p7.spell:ShieldOfLight:empty",
+        "p7.spell:Smite:empty",
+        "p7.spell:SpiritForm:empty",
+        "p7.spell:Stasis:empty",
+        "p7.spell:Sunray:empty",
+        "p7.spell:WallOfLight:empty",
+        "p7.weapon:Pickaxe:empty",
+        "p7.weapon:AssassinsBlade:empty",
+        "p7.weapon:BattleAxe:empty",
+        "p7.weapon:Crossbow:empty",
+        "p7.weapon:Cudgel:empty",
+        "p7.weapon:Dagger:empty",
+        "p7.weapon:Dirk:empty",
+        "p7.weapon:Flail:empty",
+        "p7.weapon:Gauntlet:empty",
+        "p7.weapon:Glaive:empty",
+        "p7.weapon:Gloves:empty",
+        "p7.weapon:Greataxe:empty",
+        "p7.weapon:Greatshield:empty",
+        "p7.weapon:Greatsword:empty",
+        "p7.weapon:HandAxe:empty",
+        "p7.weapon:Katana:empty",
+        "p7.weapon:Longsword:empty",
+        "p7.weapon:Mace:empty",
+        "p7.weapon:Quarterstaff:empty",
+        "p7.weapon:Rapier:empty",
+        "p7.weapon:RoundShield:empty",
+        "p7.weapon:RunicBlade:empty",
+        "p7.weapon:Sai:empty",
+        "p7.weapon:Scimitar:empty",
+        "p7.weapon:Shortsword:empty",
+        "p7.weapon:Sickle:empty",
+        "p7.weapon:Spear:empty",
+        "p7.weapon:Sword:empty",
+        "p7.weapon:WarHammer:empty",
+        "p7.weapon:WarScythe:empty",
+        "p7.weapon:Whip:empty",
+        "p7.weapon:WornShortsword:empty",
+        "p7.monk:Dash:empty",
+        "p7.monk:DragonKick:empty",
+        "p7.monk:Flurry:empty",
+        "p7.monk:Focus:empty",
+        "p7.monk:Meditate:empty"
+      ],
+      "note": "Added per-case latest P6 22/22 and P7 188/188 English CLI / Chinese windowed evidence pointers to existing branch records. Their original historical references and all partial class statuses remain intact; original failing runs remain in source reports."
+    },
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "containers.worn_exit",
+        "containers.skeleton_key_door"
+      ],
+      "note": "Actual SewerBoss original WornKey exit/support prompt and SkeletonKey-created lock workflow passed. First support translation failure remains preserved. Only WndSupportPrompt newly becomes partial; no whole class pass."
     }
   ]
 }

@@ -181,6 +181,18 @@ public final class PublicEnglishProjection {
             }
             Map<?,?> node=source.get("role") instanceof String?source:
                     source.get("control") instanceof String?currentNodes.get(source.get("control")):null;
+            properties.put("support_prompt_close",false);
+            if(Boolean.TRUE.equals(properties.get("support_prompt"))&&node!=null) {
+                Set<Object> visited=new HashSet<>();
+                for(Map<?,?> actual=currentNodes.get(node.get("id"));actual!=null;) {
+                    if("button".equals(actual.get("role"))) {
+                        properties.put("support_prompt_close","关闭".equals(actual.get("text"))||"Close".equals(actual.get("text")));
+                        break;
+                    }
+                    Object parent=actual.get("parent");if(parent==null||!visited.add(parent))break;
+                    actual=currentNodes.get(parent);
+                }
+            }
             if(node!=null) {
                 properties.put("role",node.get("role"));
                 properties.remove("presentation");

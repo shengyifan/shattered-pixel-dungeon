@@ -13,7 +13,7 @@ from low_frequency_smoke import act
 
 
 CASES = ("heap-multi", "chest-hidden", "locked-chest", "crystal-chest", "tomb", "skeleton", "remains",
-         "for-sale", "iron-door", "crystal-door")
+         "for-sale", "iron-door", "crystal-door", "worn-exit", "skeleton-key-door")
 TITLES = {"chest-hidden": "chest", "locked-chest": "locked chest", "crystal-chest": "crystal chest",
           "tomb": "tomb", "skeleton": "skeletal remains", "remains": "hero's remains"}
 KEYS = {"locked-chest": ("golden key", "GoldenKey"), "crystal-chest": ("crystal key", "CrystalKey"),
@@ -211,6 +211,112 @@ def door(client, profile, initial, name):
             "cancel_dialog": "not_applicable_original_flow_is_direct"}
 
 
+def worn_exit(client, profile, initial):
+    assert initial["observation"]["hero"]["depth"] == 5
+    assert assertions(profile, initial)["level_class"] == "SewerBossLevel"
+    exits = [tile for tile in initial["observation"]["map"]["cells"]
+             if tile["visibility"] == "visible" and tile["name"].casefold() == "locked depth exit"]
+    assert len(exits) == 1, exits
+    cell = exits[0]["cell"]
+    before = assertions(profile, initial)
+    refused = act(client, "cell.select", cell=cell)
+    after = assertions(profile, refused)
+    assert before["hero_clock"] == after["hero_clock"] and before["terrain"] == after["terrain"] and before["keys"] == after["keys"]
+    assert not refused["observation"]["ui"]["modal"]
+    key = next(entity for entity in refused["observation"]["visible_entities"]
+               if entity.get("item", {}).get("name", "").casefold() == "worn key")
+    picked = act(client, "cell.select", cell=key["cell"])
+    # The first original WornKey pickup includes the developer support prompt.
+    # Keep this real interaction in the test instead of preparing supportNagged=true.
+    assert picked["observation"]["ui"]["modal"]
+    shown = "\n".join(text for _, text in game_prose_values(picked))
+    assert "A Message From The Developer" in shown and "Hello, I hope you're enjoying Shattered Pixel Dungeon!" in shown
+    assert any(a.get("label") == "Go to Patreon Page" for a in picked["actions"])
+    assert any(a.get("label") == "Close" for a in picked["actions"])
+    assert not assertions(profile, picked)["support_nagged"]
+    before_close = clock(profile, picked)
+    backed = act(client, "ui.back")
+    assert backed["observation"]["ui"]["modal"] and clock(profile, backed) == before_close
+    picked = choose(client, lambda label: label == "Close")
+    assert not picked["observation"]["ui"]["modal"] and assertions(profile, picked)["support_nagged"]
+    assert clock(profile, picked) == before_close
+    before = assertions(profile, picked)
+    assert before["keys"].get("WornKey:5", 0) == 1 and before["terrain_names"][str(cell)] == "LOCKED_EXIT"
+    opened = act(client, "cell.select", cell=cell)
+    after = assertions(profile, opened)
+    assert after["keys"].get("WornKey:5", 0) == 0 and after["terrain_names"][str(cell)] == "UNLOCKED_EXIT"
+    assert after["hero_clock"] - before["hero_clock"] == 1
+    assert opened["observation"]["hero"]["depth"] == 5 and opened["scope_id"] == initial["scope_id"]
+    assert next(tile for tile in opened["observation"]["map"]["cells"] if tile["cell"] == cell)["name"].casefold() == "unlocked depth exit"
+    return {"case_id": "containers.worn_exit", "actual_generated_sewer_boss_exit": True,
+            "no_key_refusal_no_turn": True, "original_worn_key_pickup_and_one_key_consumed": True,
+            "native_unlock_turns": 1, "original_terrain_change": "LOCKED_EXIT -> UNLOCKED_EXIT",
+            "original_first_key_support_prompt_and_back_rejected": True, "original_close_without_opening_external_link": True,
+            "no_synthetic_exit_or_defeated_boss_claim": True}
+
+
+def skeleton_key_door(client, profile, initial):
+    doors = [tile for tile in initial["observation"]["map"]["cells"]
+             if tile["visibility"] == "visible" and tile["name"].casefold() == "closed door"]
+    assert len(doors) == 1, doors
+    cell = doors[0]["cell"]
+    original = assertions(profile, initial)
+    assert original["terrain_names"][str(cell)] == "DOOR" and original["skeleton_key"]["charge"] == 4
+
+    def insert(state):
+        key = next(item for item in state["observation"]["inventory"] if item["name"].casefold() == "skeleton key")
+        act(client, "inventory.open", locator=key["locator"])
+        aiming = choose(client, lambda label: label == "INSERT")
+        assert any(action["action"] == "cell.cancel" for action in aiming["actions"])
+        return aiming
+
+    def unchanged(before, after):
+        for field in ("terrain", "hero_clock", "skeleton_key", "keys"):
+            assert before[field] == after[field], {"unexpected_cancel_or_refusal_change": field}
+
+    def target(state, terrain, cost):
+        before = assertions(profile, state)
+        aiming = insert(state)
+        unchanged(before, assertions(profile, aiming))
+        result = act(client, "cell.select", cell=cell)
+        after = assertions(profile, result)
+        assert after["terrain_names"][str(cell)] == terrain
+        assert after["hero_clock"] - before["hero_clock"] == 1
+        assert before["skeleton_key"]["charge"] - after["skeleton_key"]["charge"] == cost
+        assert not result["observation"]["ui"]["modal"] and not any(a["action"] == "cell.cancel" for a in result["actions"])
+        return result
+
+    locked = target(initial, "HERO_LKD_DR", 2)
+    before = assertions(profile, locked)
+    refused = act(client, "cell.select", cell=cell)
+    unchanged(before, assertions(profile, refused))
+    aiming = insert(refused)
+    cancelled = act(client, "cell.cancel")
+    unchanged(before, assertions(profile, cancelled))
+    opened = target(cancelled, "DOOR", 0)
+    relocked = target(opened, "HERO_LKD_DR", 2)
+    key = next(item for item in relocked["observation"]["inventory"] if item["name"].casefold() == "skeleton key")
+    before = assertions(profile, relocked)
+    act(client, "inventory.open", locator=key["locator"])
+    dropped = choose(client, lambda label: label == "DROP")
+    after = assertions(profile, dropped)
+    assert after["hero_clock"] - before["hero_clock"] == 2, "Original equipped DROP includes unequip and drop turns"
+    assert not after["skeleton_key"]["equipped"] and not after["skeleton_key"]["in_belongings"]
+    assert any(entity.get("item", {}).get("name", "").casefold() == "skeleton key"
+               for entity in dropped["observation"]["visible_entities"])
+    assert after["terrain_names"][str(cell)] == "HERO_LKD_DR"
+    forced = act(client, "cell.select", cell=cell)
+    final = assertions(profile, forced)
+    assert final["terrain_names"][str(cell)] == "DOOR" and final["hero_clock"] - after["hero_clock"] == 1
+    assert final["keys"] == original["keys"] and final["skeleton_key"]["charge"] == 0
+    return {"case_id": "containers.skeleton_key_door", "original_insert_creates_lock": True,
+            "lock_charge_cost": 2, "cancel_target_changes_no_turn_charge_or_terrain": True,
+            "normal_click_refused_while_key_owned": True, "original_insert_unlock_zero_charge": True,
+            "original_relock_and_equipped_drop": True, "equipped_drop_turns": 2,
+            "original_force_open_after_drop": True, "native_force_open_turns": 1,
+            "hero_locked_door_never_injected": True}
+
+
 def run_one(root, classpath, runtime_id, name):
     profile = root / "desktop-control/build/fixtures" / ("containers-" + name + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
@@ -225,7 +331,7 @@ def run_one(root, classpath, runtime_id, name):
         initial, _ = start_or_continue(client)
         report["scope_id"] = initial["scope_id"]
         report["gui_environment"] = assert_gui_environment(profile, initial)
-        evidence = heap_multi(client, profile, initial) if name == "heap-multi" else for_sale(client, profile, initial) if name == "for-sale" else door(client, profile, initial, name) if name.endswith("-door") else container(client, profile, initial, name)
+        evidence = heap_multi(client, profile, initial) if name == "heap-multi" else for_sale(client, profile, initial) if name == "for-sale" else worn_exit(client, profile, initial) if name == "worn-exit" else skeleton_key_door(client, profile, initial) if name == "skeleton-key-door" else door(client, profile, initial, name) if name.endswith("-door") else container(client, profile, initial, name)
         report.update(evidence=evidence, cli_language="en")
         client.finish()
         assert client.process.poll() == 0

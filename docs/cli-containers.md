@@ -1,8 +1,8 @@
-# 地面物品与容器专项：前四组
+# 地面物品与容器专项：前五组
 
-2026-09-09，前四组十个具名场景通过：八种 Heap 各有一个明确范围内的路径，另有普通铁钥匙门和水晶钥匙门。结果见 [cli-containers-validation.json](cli-containers-validation.json)。共 284 个公开响应，221 次实际 GUI 后置检查；GUI 为简体中文、窗口化，CLI 游戏文案为英语。所有本组进程已退出。这不代表各类型的全部变体都已通过。
+2026-09-09，前五组十二个具名场景通过：八种 Heap 各有一个明确范围内的路径，另有普通铁钥匙门、水晶钥匙门、原 Boss 出口和神器造锁。结果见 [cli-containers-validation.json](cli-containers-validation.json)。共 347 个公开响应，279 次实际 GUI 后置检查；GUI 为简体中文、窗口化，CLI 游戏文案为英语。所有本组进程已退出。这不代表各类型的全部变体都已通过。
 
-这些是 test-only 的中间状态专项，不是正常游玩或通关证据。测试在真实生成的第 1 层准备一个安静区域，清理无关怪物、刷新器、地面物品与环境干扰，放置原 Item/Heap 实例。战士等级、力量和生命没有放大。准备结束后，只通过公开 CLI 的原 `cell.select`、examine、Back 和拾取流程改变世界。
+这些是 test-only 的中间状态专项，不是正常游玩或通关证据。测试在真实生成的第 1 层准备一个安静区域，清理无关怪物、刷新器、地面物品与环境干扰，放置原 Item/Heap 实例。战士等级、力量和生命没有放大。第五组的磨损钥匙使用原生成的第 5 层 SewerBossLevel，保留原出口房间、地形与 custom tiles；神器用例仅准备一个普通 DOOR 和已装备 +2、初始 4 充能的 SkeletonKey。准备结束后，只通过公开 CLI 的原操作改变世界，绝不在成功路径直接赋值 HERO_LKD_DR。
 
 | 场景 | 初态与公开操作 | 已验证结果 |
 |---|---|---|
@@ -16,6 +16,9 @@
 | `containers.iron_door` | 原 LOCKED_DOOR 与地面同层 IronKey。 | 无钥匙时拒绝不耗回合，地形和钥匙不变；拾取后原开锁恰消耗一把钥匙，随后实际穿过原门。没有确认窗口。 |
 | `containers.crystal_door` | 原 CRYSTAL_DOOR 与地面同层 CrystalKey。 | 无钥匙拒绝、原钥匙拾取、一把钥匙消耗、解除屏障及实际穿过均完成。没有确认窗口。 |
 | `containers.tomb` | 原 TOMB 藏未鉴定长剑，普通战士；不控制开墓后的 RNG。 | 原查看不泄漏内容；直接开墓真实生成幽灵。根据实际公开状态先移动到堆格、再同格拾取，物品正常获得且等级仍未知。本次原战斗浮字实际出现 `dodged` 与 `presentation=floating_text`。 |
+
+| `containers.worn_exit` | 原 SewerBossExitRoom 的 LOCKED_EXIT，原地面 WornKey；先无钥匙尝试，再拾取、处理首次支持提示和开锁。 | 无钥匙拒绝不花回合；原 WndSupportPrompt 的 Back 不能关闭，原 Close 关闭且不花回合。开锁恰耗一把当前层 WornKey 和 1 回合，地形变为 UNLOCKED_EXIT。没有击杀 Boss 或进入下一层的声明。 |
+| `containers.skeleton_key_door` | 已装备 SkeletonKey +2/4 充能，初态普通 DOOR。通过原 INSERT 造锁、直接 cell 拒绝、再次 INSERT 取消、开锁、重锁、DROP 和强开。 | 两次造锁各耗 2 充能/1 回合；取消和直接点击拒绝不改变地形、回合或充能；神器开自己的锁耗 0 充能/1 回合。原装备 DROP 耗 2 回合，丢弃后原 cell 强开耗 1 回合；无普通钥匙消耗。 |
 
 不同载荷的存在、真实等级与私有物品列表，只在公开动作完成后按同一 `state_version` 作后置断言。它们不提供要打开的箱子、目标 cell 或下一动作。该对照证明的是同一隔离世界中两个不同位置箱子的公开表象一致，不冒充所有世界状态的完整双世界证明。
 
@@ -39,7 +42,7 @@ Heap 的八种原生类型已经核对，并都有上表中的具体路径证据
 
 上述普通容器的成功开启在相邻时花 `Key.TIME_TO_UNLOCK`，当前为 1 个回合。无钥匙拒绝不等于一个待确认窗口。相关源码为 [Heap.java](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java)、[Hero.java](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java) 的 `handle`、`actPickUp`、`actOpenChest` 与 `onOperateComplete`，以及 [Key.java](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/keys/Key.java)。
 
-锁门也单独记录在 JSON 中：LOCKED_DOOR/当前层 IronKey 和 CRYSTAL_DOOR/当前层 CrystalKey 已有上表证据；LOCKED_EXIT/WornKey 需要另一个真实出口或 Boss 层初态，HERO_LKD_DR 属于 SkeletonKey 神器特例，后两项仍待测，不能混用对应关系。
+四种门的当前原关系均有具名证据：LOCKED_DOOR/当前层 IronKey、CRYSTAL_DOOR/当前层 CrystalKey、原 LOCKED_EXIT/当前层 WornKey，以及原 INSERT 产生的 HERO_LKD_DR/SkeletonKey 特例。错层钥匙、诅咒分心、神器代开其他锁等仍是独立待测分支。
 
 测试 source-set 为 [ContainerScenarioFixtures.java](../desktop-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/desktop/ContainerScenarioFixtures.java)，客户端为 [containers_scenario_smoke.py](../desktop-control/src/test/python/containers_scenario_smoke.py)。后置回合时钟使用 `Statistics.duration + Hero` 的原 Actor 时间，因此正常保存的 `Actor.fixTime` 不会造成假回合差异。私有数据不用于行动选择。
 
@@ -56,4 +59,8 @@ python3 desktop-control/src/test/python/containers_scenario_smoke.py --cases hea
 
 第四组使用 `--cases iron-door,crystal-door,tomb`，冻结运行时为 `runtime-8d0cacd690df4dffb70ac0d9ffca3101`，build ID 为 `f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22`。
 
-WornKey 出口、神器造锁/开锁、错层钥匙、SkeletonKey 替代钥匙与诅咒分心、haunted 骨骸、零价值或含多个物品的待售堆、背包容量等变体仍未被本组代替。没有使用截图、键鼠模拟、Computer Use 或正式 profile；本组结果不代表整个 Heap 类、全部房间或所有诅咒/背包边界都已通过。
+错层钥匙、SkeletonKey 替代钥匙与诅咒分心、haunted 骨骸、零价值或含多个物品的待售堆、背包容量等变体仍未被本组代替。没有使用截图、键鼠模拟、Computer Use 或正式 profile；本组结果不代表整个 Heap 类、全部房间或所有诅咒/背包边界都已通过。
+
+第五组使用 `--cases worn-exit,skeleton-key-door`，冻结运行时 `runtime-446622c9d01c4418870fbda60e8ad24d`，build ID `2f08667717dce2361612db55b1dc1b8dd0bab4b6b198a824626e21e758f421cf`；两项共 63 个响应、58 次同版本 GUI 检查。原先 `runtime-296f95cf4a51431aac19cc0362353a81` 中 SkeletonKey 已完整通过，WornKey 因首次支持提示的“关闭”翻译歧义失败，原报告与异常保留。
+
+支持提示修复只读取当前公开 DTO：原完整标题、原 intro + Patreon 正文 + 中文 GUI 才额外显示的英文奖励提示 + Evan 署名，以及两枚原按钮必须完整存在于同一窗口树。只有这棵树中实际 Close 按钮及其已渲染子文字能借用 `wndsupportprompt.close` 英语资源；没有调用原动作、读取 `supportNagged` 或隐藏 key 类型来识别。正文仍保留原中文 GUI 所显示的额外提示。6 个新增正反例与 24 个相关测试通过，实机通过原 Back 保护、原 Close 后才完成开锁，没有点击外部 Patreon 链接。

@@ -1,14 +1,14 @@
 {
   "schema": 1,
   "validation_date": "2026-09-09",
-  "phase": "first_four_container_groups",
+  "phase": "first_five_container_groups",
   "test_fixture": true,
   "counts_as_win": false,
   "gui_language": "CHI_SMPL",
   "window_mode": "windowed",
   "cli_language": "en",
-  "total": 10,
-  "passed": 10,
+  "total": 12,
+  "passed": 12,
   "status": "passed",
   "results": [
     {
@@ -418,9 +418,77 @@
         ],
         "method": "Read-only check of the original completed public responses, not a later game query or defenseVerb recomputation."
       }
+    },
+    {
+      "case_id": "containers.worn_exit",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-worn-exit-c9d99a5d88a6403d8cd3f62ce09b68ee",
+      "runtime_id": "runtime-446622c9d01c4418870fbda60e8ad24d",
+      "build_id": "2f08667717dce2361612db55b1dc1b8dd0bab4b6b198a824626e21e758f421cf",
+      "scope_id": "run:62e91f8d-ccf5-4bc8-af25-668f87f9a700",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "0db8f57f-7404-40c8-9545-2c8011559442:7"
+      },
+      "evidence": {
+        "case_id": "containers.worn_exit",
+        "actual_generated_sewer_boss_exit": true,
+        "no_key_refusal_no_turn": true,
+        "original_worn_key_pickup_and_one_key_consumed": true,
+        "native_unlock_turns": 1,
+        "original_terrain_change": "LOCKED_EXIT -> UNLOCKED_EXIT",
+        "original_first_key_support_prompt_and_back_rejected": true,
+        "original_close_without_opening_external_link": true,
+        "no_synthetic_exit_or_defeated_boss_claim": true
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 22,
+      "public_trace_responses": 25,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndSupportPrompt"
+      ],
+      "source_result": "desktop-control/build/fixtures/containers-worn-exit-c9d99a5d88a6403d8cd3f62ce09b68ee/containers-scenario-result.json"
+    },
+    {
+      "case_id": "containers.skeleton_key_door",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-skeleton-key-door-30b1c3e6dd1f4a84a54a5f2a098e8b74",
+      "runtime_id": "runtime-446622c9d01c4418870fbda60e8ad24d",
+      "build_id": "2f08667717dce2361612db55b1dc1b8dd0bab4b6b198a824626e21e758f421cf",
+      "scope_id": "run:68bd1f00-67c7-4420-bf5a-9be81f1cc8c1",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "ee66c0aa-b8ab-45d9-9a40-cc7740af68a3:7"
+      },
+      "evidence": {
+        "case_id": "containers.skeleton_key_door",
+        "original_insert_creates_lock": true,
+        "lock_charge_cost": 2,
+        "cancel_target_changes_no_turn_charge_or_terrain": true,
+        "normal_click_refused_while_key_owned": true,
+        "original_insert_unlock_zero_charge": true,
+        "original_relock_and_equipped_drop": true,
+        "equipped_drop_turns": 2,
+        "original_force_open_after_drop": true,
+        "native_force_open_turns": 1,
+        "hero_locked_door_never_injected": true
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 36,
+      "public_trace_responses": 38,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem"
+      ],
+      "source_result": "desktop-control/build/fixtures/containers-skeleton-key-door-30b1c3e6dd1f4a84a54a5f2a098e8b74/containers-scenario-result.json"
     }
   ],
-  "preparation": "Test-only quiet pocket on a generated first floor, original Item/Heap instances and hidden initial levels; ordinary Warrior statistics preserved. Ambient actors/spawners/hazards/heaps are removed before measurement. No world mutation outside original public actions after preparation.",
+  "preparation": "Test-only initial conditions preserve ordinary Warrior statistics: ten cases use a quiet first-floor pocket; SkeletonKey uses that pocket plus an equipped identified +2 artifact with four initial charges and a normal DOOR; WornKey uses the original generated SewerBossLevel exit/room/custom tiles with an adjacent original WornKey. Actors/hazards are cleared before measurement. No result is injected after public action measurement begins.",
   "private_assertion_boundary": "Completed public state_version only. Hidden names/classes/levels are used to verify nondisclosure and different actual payloads, never to select a cell, item, control or next action.",
   "prior_failed_attempts": [
     {
@@ -437,6 +505,14 @@
       "classification": "production_translation",
       "reason": "Original tomb opened and spawned four wraiths. A later same-cell loot pickup triggered original combat feedback 闪避, which had ambiguous English translation; request 0ed9f973ef26-23 was EXECUTION_UNKNOWN. Whole case failed, EOF exit 0.",
       "source_result": "desktop-control/build/fixtures/containers-tomb-e0786991c1bb4421bd43b496afc4b42a/containers-scenario-result.json",
+      "preserved": true
+    },
+    {
+      "case_id": "containers.worn_exit",
+      "profile": "desktop-control/build/fixtures/containers-worn-exit-0401cae1e3f44f809be6f7fe64b23a55",
+      "classification": "production_translation",
+      "reason": "The first original WornKey pickup displayed WndSupportPrompt. Its Close button 关闭 had ambiguous English translation; request bd7e0ac892a8-17 was EXECUTION_UNKNOWN and EOF exited 0. Added exact public full-dialog recognition, retained the original prompt, and reran pickup/Back/Close/unlock successfully.",
+      "source_result": "desktop-control/build/fixtures/containers-worn-exit-0401cae1e3f44f809be6f7fe64b23a55/containers-scenario-result.json",
       "preserved": true
     }
   ],
@@ -527,22 +603,28 @@
     },
     {
       "terrain": "LOCKED_EXIT",
-      "status": "pending",
+      "status": "partial",
       "key": "same-depth WornKey",
-      "note": "Needs a separate real exit/boss-floor fixture, not an invented generic doorway."
+      "note": "Actual generated SewerBossLevel exit, no-key refusal, original key pickup/support prompt and original unlock; no boss kill or next floor claimed.",
+      "case_refs": [
+        "containers.worn_exit"
+      ]
     },
     {
       "terrain": "HERO_LKD_DR",
-      "status": "pending",
+      "status": "partial",
       "key": "SkeletonKey artifact rules",
-      "note": "Artifact-created lock is a special interaction, not a normal universal key or confirmation window."
+      "note": "Original INSERT creates lock from normal DOOR, cancel, key unlock, relock, original DROP and force open. No HERO_LKD_DR injected; curse/other target variants pending.",
+      "case_refs": [
+        "containers.skeleton_key_door"
+      ]
     }
   ],
   "limits": [
-    "Ten declared complete cases passed. Each of eight Heap types has a bounded path, plus ordinary IronKey/CrystalKey doors; this is not full coverage of every type variant. WornKey exit and SkeletonKey artifact-created locks remain pending.",
+    "Twelve declared complete cases passed. Eight Heap types and four distinct door/key semantics each have bounded evidence, not all variants. Wrong-depth keys, cursed artifact distraction, artifact substitute locks, haunted bones and capacity cases remain separate.",
     "The hidden-content contrast uses two same-looking boxes at different public cells in one isolated world, not a claim that every full-world pair is equivalent.",
     "Opening reveals item names but does not identify equipment levels; levels +2/+4 remained private.",
-    "The quiet test arena is not a normal playthrough, generated-room or ambient-monster validation.",
+    "The quiet arena and cleared original boss-floor source are prepared fixtures, not normal playthrough, boss-kill, arbitrary generated-room or ambient-monster validation.",
     "No screenshots, keyboard/mouse simulation, Computer Use or formal profiles were used."
   ],
   "groups": [
@@ -582,6 +664,29 @@
         "containers.tomb"
       ],
       "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22"
+    },
+    {
+      "name": "original_boss_exit_and_artifact_created_door",
+      "case_refs": [
+        "containers.worn_exit",
+        "containers.skeleton_key_door"
+      ],
+      "build_id": "2f08667717dce2361612db55b1dc1b8dd0bab4b6b198a824626e21e758f421cf"
     }
-  ]
+  ],
+  "additional_successful_attempts": [
+    {
+      "case_id": "containers.skeleton_key_door",
+      "profile": "desktop-control/build/fixtures/containers-skeleton-key-door-508fdd77a45e495faf6e9355c8181531",
+      "source_result": "desktop-control/build/fixtures/containers-skeleton-key-door-508fdd77a45e495faf6e9355c8181531/containers-scenario-result.json",
+      "note": "First full SkeletonKey workflow passed; selected result additionally reruns the final test-source postcondition fields with the Worn prompt fix."
+    }
+  ],
+  "targeted_tests": {
+    "new_class": "SupportPromptEnglishTest",
+    "new_tests": 6,
+    "related_tests": 24,
+    "total_passed": 30,
+    "scope": "Pure public DTO recognition and projection; full original support body including Chinese-GUI notice, exact two buttons, current Close ownership, negative malformed/clipped/foreign/hidden-metadata cases."
+  }
 }
