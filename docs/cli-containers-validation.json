@@ -1,14 +1,14 @@
 {
   "schema": 1,
   "validation_date": "2026-09-09",
-  "phase": "ground_piles_chests_and_matching_keys",
+  "phase": "first_three_container_groups",
   "test_fixture": true,
   "counts_as_win": false,
   "gui_language": "CHI_SMPL",
   "window_mode": "windowed",
   "cli_language": "en",
-  "total": 4,
-  "passed": 4,
+  "total": 7,
+  "passed": 7,
   "status": "passed",
   "results": [
     {
@@ -189,6 +189,107 @@
         ],
         "method": "Read-only assertion on the already-recorded original response DTOs; no later game query."
       }
+    },
+    {
+      "case_id": "containers.skeleton",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-skeleton-ea2eb599e7024ecb9dbadaad74eb0af4",
+      "runtime_id": "runtime-454c705126004dda94ca8f904e44aa6f",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "scope_id": "run:750d96b1-2481-4ed9-bd66-e6c21a7ee9a4",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "ddf8f313-3556-4d09-a72e-3a8390b6fca9:7"
+      },
+      "evidence": {
+        "case_id": "containers.skeleton",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": false
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 21,
+      "source_result": "desktop-control/build/fixtures/containers-skeleton-ea2eb599e7024ecb9dbadaad74eb0af4/containers-scenario-result.json",
+      "public_trace_responses": 24,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem"
+      ]
+    },
+    {
+      "case_id": "containers.remains",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-remains-2a609412b2a04d54a96d3474d3d9d764",
+      "runtime_id": "runtime-454c705126004dda94ca8f904e44aa6f",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "scope_id": "run:0aec2179-e7a4-4428-bdbb-2a1fb2728a35",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "a4fb2413-4cf5-4860-93dd-9d3eccebd224:7"
+      },
+      "evidence": {
+        "case_id": "containers.remains",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": false
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 21,
+      "source_result": "desktop-control/build/fixtures/containers-remains-2a609412b2a04d54a96d3474d3d9d764/containers-scenario-result.json",
+      "public_trace_responses": 24,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem"
+      ]
+    },
+    {
+      "case_id": "containers.for_sale",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-for-sale-b09e2bb6422e49f38dcc4f119faa3f20",
+      "runtime_id": "runtime-c540ec459fc6478ba9025329e2dccf85",
+      "build_id": "d60337932a6b331cb8232497266a62c488a7d6a3b69fb11ce41e0b33119b3629",
+      "scope_id": "run:8f442f8e-87c6-4708-8292-97df2ef07b40",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "97f63396-ab93-45da-97f0-df113bcfdf3e:7"
+      },
+      "evidence": {
+        "case_id": "containers.for_sale",
+        "original_purchase_window": true,
+        "back_cancels_without_charge": true,
+        "price_from_public_button": 50,
+        "original_buy_and_inventory_gain": true
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 21,
+      "source_result": "desktop-control/build/fixtures/containers-for-sale-b09e2bb6422e49f38dcc4f119faa3f20/containers-scenario-result.json",
+      "public_trace_responses": 24,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndTradeItem"
+      ]
     }
   ],
   "preparation": "Test-only quiet pocket on a generated first floor, original Item/Heap instances and hidden initial levels; ordinary Warrior statistics preserved. Ambient actors/spawners/hazards/heaps are removed before measurement. No world mutation outside original public actions after preparation.",
@@ -200,6 +301,14 @@
       "classification": "runner_expected_order",
       "reason": "All three stacks were picked up correctly; runner wrongly expected Gold to sink. Original dropsDownHeap is false for all three fixture items, so original Heap.drop order is ThrowingStone -> Gold -> Food. Corrected the expectation and reran the complete case.",
       "source_result": "desktop-control/build/fixtures/containers-heap-multi-a250899a153447ab9958c4f0b9be8d3b/containers-scenario-result.json",
+      "preserved": true
+    },
+    {
+      "case_id": "containers.tomb",
+      "profile": "desktop-control/build/fixtures/containers-tomb-e0786991c1bb4421bd43b496afc4b42a",
+      "classification": "production_translation",
+      "reason": "Original tomb opened and spawned four wraiths. A later same-cell loot pickup triggered original combat feedback 闪避, which had ambiguous English translation; request 0ed9f973ef26-23 was EXECUTION_UNKNOWN. Whole case failed, EOF exit 0.",
+      "source_result": "desktop-control/build/fixtures/containers-tomb-e0786991c1bb4421bd43b496afc4b42a/containers-scenario-result.json",
       "preserved": true
     }
   ],
@@ -222,9 +331,11 @@
     },
     {
       "type": "FOR_SALE",
-      "status": "pending",
-      "planned_case": "containers.for_sale",
-      "original_behavior": "Single positive-value item uses original WndTradeItem purchase window; Back can cancel. Other FOR_SALE arrangements use pickup."
+      "status": "partial",
+      "original_behavior": "Single positive-value item uses original WndTradeItem purchase window; Back can cancel. Other FOR_SALE arrangements use pickup.",
+      "case_refs": [
+        "containers.for_sale"
+      ]
     },
     {
       "type": "LOCKED_CHEST",
@@ -246,19 +357,25 @@
       "type": "TOMB",
       "status": "pending",
       "planned_case": "containers.tomb",
-      "original_behavior": "Direct opening calls Wraith.spawnAround(hero.pos) in four cardinal directions, then HEAP."
+      "original_behavior": "Direct opening calls Wraith.spawnAround(hero.pos) in four cardinal directions, then HEAP.",
+      "latest_attempt": "failed_original_dodge_feedback_translation",
+      "complete_case_passed": false
     },
     {
       "type": "SKELETON",
-      "status": "pending",
-      "planned_case": "containers.skeleton",
-      "original_behavior": "Direct opening with bone effects, then HEAP. setHauntedIfCursed is a distinct conditional behavior."
+      "status": "partial",
+      "original_behavior": "Direct opening with bone effects, then HEAP. setHauntedIfCursed is a distinct conditional behavior.",
+      "case_refs": [
+        "containers.skeleton"
+      ]
     },
     {
       "type": "REMAINS",
-      "status": "pending",
-      "planned_case": "containers.remains",
-      "original_behavior": "Hero remains use the same native opening path and can be haunted if cursed. No confirmation window."
+      "status": "partial",
+      "original_behavior": "Hero remains use the same native opening path and can be haunted if cursed. No confirmation window.",
+      "case_refs": [
+        "containers.remains"
+      ]
     }
   ],
   "door_plan": [
@@ -288,7 +405,7 @@
     }
   ],
   "limits": [
-    "Only the four named cases in the first two groups passed; remaining Heap/door implementations are still pending.",
+    "Only the seven named complete cases in the first three groups passed; TOMB is failed/pending and doors remain pending.",
     "The hidden-content contrast uses two same-looking boxes at different public cells in one isolated world, not a claim that every full-world pair is equivalent.",
     "Opening reveals item names but does not identify equipment levels; levels +2/+4 remained private.",
     "The quiet test arena is not a normal playthrough, generated-room or ambient-monster validation.",
@@ -310,6 +427,18 @@
         "containers.crystal_chest"
       ],
       "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6"
+    },
+    {
+      "name": "nonhaunted_bones_and_original_sale",
+      "case_refs": [
+        "containers.skeleton",
+        "containers.remains",
+        "containers.for_sale"
+      ],
+      "build_ids": [
+        "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+        "d60337932a6b331cb8232497266a62c488a7d6a3b69fb11ce41e0b33119b3629"
+      ]
     }
   ]
 }

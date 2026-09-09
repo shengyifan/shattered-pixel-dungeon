@@ -58,16 +58,16 @@
     "window_records": 153,
     "status_counts": {
       "not_applicable": 3,
-      "pending": 108,
-      "partial": 59
+      "pending": 104,
+      "partial": 63
     },
     "fully_passed_records": 0,
-    "evidence_entries": 242,
+    "evidence_entries": 255,
     "planned_scenarios": 35,
     "callback_records_requiring_individual_mapping": 997,
     "scenario_family_member_status_counts": {
-      "pending": 137,
-      "partial": 6,
+      "pending": 134,
+      "partial": 9,
       "not_applicable": 3
     },
     "scenario_families": 11,
@@ -4905,6 +4905,397 @@
         ],
         "native_wraith_spawn_checked": false
       }
+    },
+    "hero_info.warrior": {
+      "report": "docs/cli-hero-info-validation.json",
+      "json_pointer": "/cases/0",
+      "case": "hero_info.warrior",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8eb9e2eaea6f462d8963d4ef04fa8d77",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/hero-info-warrior-30a0f450ebb1491c8a70cd707f59dec4",
+      "public_trace": "desktop-control/build/fixtures/hero-info-warrior-30a0f450ebb1491c8a70cd707f59dec4/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "four_original_tabs": [
+          "warrior",
+          "Talents",
+          "Subclasses",
+          "Armor Abilities"
+        ],
+        "original_back": true,
+        "game_created": false,
+        "gui_postconditions_checked": 21
+      }
+    },
+    "hero_info.mage": {
+      "report": "docs/cli-hero-info-validation.json",
+      "json_pointer": "/cases/1",
+      "case": "hero_info.mage",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8eb9e2eaea6f462d8963d4ef04fa8d77",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/hero-info-mage-5df85618f5164b3c85b05b3a080f4ba1",
+      "public_trace": "desktop-control/build/fixtures/hero-info-mage-5df85618f5164b3c85b05b3a080f4ba1/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "four_original_tabs": [
+          "mage",
+          "Talents",
+          "Subclasses",
+          "Armor Abilities"
+        ],
+        "original_back": true,
+        "game_created": false,
+        "gui_postconditions_checked": 21
+      }
+    },
+    "hero_info.rogue": {
+      "report": "docs/cli-hero-info-validation.json",
+      "json_pointer": "/cases/2",
+      "case": "hero_info.rogue",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8eb9e2eaea6f462d8963d4ef04fa8d77",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/hero-info-rogue-56daf03fa97c4438a8fd2008217181d7",
+      "public_trace": "desktop-control/build/fixtures/hero-info-rogue-56daf03fa97c4438a8fd2008217181d7/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "four_original_tabs": [
+          "rogue",
+          "Talents",
+          "Subclasses",
+          "Armor Abilities"
+        ],
+        "original_back": true,
+        "game_created": false,
+        "gui_postconditions_checked": 21
+      }
+    },
+    "hero_info.huntress": {
+      "report": "docs/cli-hero-info-validation.json",
+      "json_pointer": "/cases/3",
+      "case": "hero_info.huntress",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8eb9e2eaea6f462d8963d4ef04fa8d77",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/hero-info-huntress-a3033acba439441ca11cab4be51ac084",
+      "public_trace": "desktop-control/build/fixtures/hero-info-huntress-a3033acba439441ca11cab4be51ac084/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "four_original_tabs": [
+          "huntress",
+          "Talents",
+          "Subclasses",
+          "Armor Abilities"
+        ],
+        "original_back": true,
+        "game_created": false,
+        "gui_postconditions_checked": 21
+      }
+    },
+    "hero_info.duelist": {
+      "report": "docs/cli-hero-info-validation.json",
+      "json_pointer": "/cases/4",
+      "case": "hero_info.duelist",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8eb9e2eaea6f462d8963d4ef04fa8d77",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/hero-info-duelist-1d4455bad75845e8bcd9b5ab9f1e6740",
+      "public_trace": "desktop-control/build/fixtures/hero-info-duelist-1d4455bad75845e8bcd9b5ab9f1e6740/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "four_original_tabs": [
+          "duelist",
+          "Talents",
+          "Subclasses",
+          "Armor Abilities"
+        ],
+        "original_back": true,
+        "game_created": false,
+        "gui_postconditions_checked": 21
+      }
+    },
+    "hero_info.cleric": {
+      "report": "docs/cli-hero-info-validation.json",
+      "json_pointer": "/cases/5",
+      "case": "hero_info.cleric",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8eb9e2eaea6f462d8963d4ef04fa8d77",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/hero-info-cleric-291d013cda824416a25c678da166f40c",
+      "public_trace": "desktop-control/build/fixtures/hero-info-cleric-291d013cda824416a25c678da166f40c/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "four_original_tabs": [
+          "cleric",
+          "Talents",
+          "Subclasses",
+          "Armor Abilities"
+        ],
+        "original_back": true,
+        "game_created": false,
+        "gui_postconditions_checked": 21
+      }
+    },
+    "ending.permanent_death": {
+      "report": "docs/cli-ending-death-validation.json",
+      "json_pointer": "/passed/0",
+      "case": "ending.permanent_death",
+      "validation_status": "passed",
+      "runtime_id": "runtime-32d037654eb84dcd9a1626ca4d9d37fd",
+      "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
+      "profile": "desktop-control/build/fixtures/ending-death-ranking-7c10ace88830489ab937a807c707ddd5",
+      "public_trace": "desktop-control/build/fixtures/ending-death-ranking-7c10ace88830489ab937a807c707ddd5/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "verified": true,
+        "gui_language": "CHI_SMPL",
+        "cli_language": "en",
+        "fullscreen": false,
+        "old_scope_id": "run:2d450c89-beb3-4487-a418-690be67b1b05",
+        "original_poison_death": true,
+        "run_ended_event": {
+          "sequence": 5,
+          "scope_id": "run:2d450c89-beb3-4487-a418-690be67b1b05",
+          "kind": "run.ended",
+          "data": {
+            "scope_id": "run:2d450c89-beb3-4487-a418-690be67b1b05",
+            "result": "lost"
+          },
+          "created_at": "2026-09-09T04:16:30.331940Z",
+          "session_id": null
+        },
+        "gui_postconditions_checked": 24,
+        "case_id": "ending.permanent_death",
+        "original_death_menu": true,
+        "original_ranking_row_description": "Succumbed to Poison",
+        "ranking_detail_actual_window": [
+          "com.shatteredpixel.shatteredpixeldungeon.windows.WndRanking"
+        ],
+        "ranking_stats_loaded": true,
+        "original_detail_back_and_title_return": true
+      }
+    },
+    "ending.restart_after_death": {
+      "report": "docs/cli-ending-death-validation.json",
+      "json_pointer": "/passed/1",
+      "case": "ending.restart_after_death",
+      "validation_status": "passed",
+      "runtime_id": "runtime-dd4b1abc9e054d97bb508214b534fb46",
+      "build_id": "f55e5d93369bbf96cd8623f321cb99cdcd450ea75c9a33644ed50e6fb43c32c4",
+      "profile": "desktop-control/build/fixtures/ending-death-restart-44c0cbd4c48a4e1aa38ca2785afd288e",
+      "public_trace": "desktop-control/build/fixtures/ending-death-restart-44c0cbd4c48a4e1aa38ca2785afd288e/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "verified": true,
+        "gui_language": "CHI_SMPL",
+        "cli_language": "en",
+        "fullscreen": false,
+        "old_scope_id": "run:fed8535f-a33d-413a-84e4-26938981543b",
+        "original_poison_death": true,
+        "run_ended_event": {
+          "sequence": 5,
+          "scope_id": "run:fed8535f-a33d-413a-84e4-26938981543b",
+          "kind": "run.ended",
+          "data": {
+            "scope_id": "run:fed8535f-a33d-413a-84e4-26938981543b",
+            "result": "lost"
+          },
+          "created_at": "2026-09-09T04:26:57.705600Z",
+          "session_id": null
+        },
+        "gui_postconditions_checked": 23,
+        "case_id": "ending.restart_after_death",
+        "original_dead_menu_start_new_game": true,
+        "new_scope_id": "run:b333f0ba-7a6b-44e1-b3b9-badbeaa3c9f1",
+        "original_new_hero_healthy_without_fixture_reinjection": true,
+        "old_request_id_allowed_in_new_scope": true,
+        "old_death_response_and_event_unchanged": true,
+        "old_outcome_does_not_leak_into_new_run": true
+      }
+    },
+    "ending.amulet_pickup_surface": {
+      "report": "docs/cli-ending-amulet-validation.json",
+      "json_pointer": "/passed/0",
+      "case": "ending.amulet_pickup_surface",
+      "validation_status": "passed",
+      "runtime_id": "runtime-0c02dfe4c49742bb9a1705257a7dfd03",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/ending-amulet-surface-9f8242a95ca745d08607fd51c337dcc1",
+      "public_trace": "desktop-control/build/fixtures/ending-amulet-surface-9f8242a95ca745d08607fd51c337dcc1/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "verified": true,
+        "gui_language": "CHI_SMPL",
+        "cli_language": "en",
+        "fullscreen": false,
+        "old_scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+        "gui_postconditions_checked": 27,
+        "case_id": "ending.amulet_pickup_surface",
+        "source_scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+        "original_ground_pickup_and_acquisition_story": true,
+        "original_stay_keeps_amulet_and_scope": true,
+        "original_two_to_one_transition": true,
+        "actual_surface_scene": "com.shatteredpixel.shatteredpixeldungeon.scenes.SurfaceScene",
+        "original_surface_win_event": {
+          "sequence": 15,
+          "scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+          "kind": "run.ended",
+          "data": {
+            "scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+            "result": "won"
+          },
+          "created_at": "2026-09-09T05:14:21.470767Z",
+          "session_id": null
+        },
+        "victory_window": [
+          "com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats"
+        ],
+        "mandatory_victory_back_does_not_skip": true,
+        "original_victory_close": true,
+        "not_full_26_to_1_return": true,
+        "ascension_challenge_start_not_claimed": true
+      }
+    },
+    "ending.ascension_start": {
+      "report": "docs/cli-ending-amulet-validation.json",
+      "json_pointer": "/passed/1",
+      "case": "ending.ascension_start",
+      "validation_status": "passed",
+      "runtime_id": "runtime-cf3cfbc6c8334161930b35c4a092b008",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/ending-ascension-start-b54735400bc0402c81c26f76443a99d4",
+      "public_trace": "desktop-control/build/fixtures/ending-ascension-start-b54735400bc0402c81c26f76443a99d4/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the declared original fixture branch; no whole-class or full-playthrough pass.",
+      "claim": {
+        "verified": true,
+        "gui_language": "CHI_SMPL",
+        "cli_language": "en",
+        "fullscreen": false,
+        "old_scope_id": "run:51aeb6f7-fded-4d68-a1a7-280211be3d38",
+        "gui_postconditions_checked": 25,
+        "case_id": "ending.ascension_start",
+        "source_scope_id": "run:51aeb6f7-fded-4d68-a1a7-280211be3d38",
+        "actual_source_level": "HallsBossLevel",
+        "original_ground_pickup_and_stay": true,
+        "original_confirmation_window": [
+          "com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel$2$1"
+        ],
+        "cancel_does_not_attach_challenge": true,
+        "original_confirm_attaches_challenge": true,
+        "stable_destination_depth": 24,
+        "real_buff_and_drawn_feedback": true,
+        "no_ending_claimed": true,
+        "not_full_26_to_1_return": true
+      }
+    },
+    "containers.skeleton": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/4",
+      "case": "containers.skeleton",
+      "validation_status": "passed",
+      "runtime_id": "runtime-454c705126004dda94ca8f904e44aa6f",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/containers-skeleton-ea2eb599e7024ecb9dbadaad74eb0af4",
+      "public_trace": "desktop-control/build/fixtures/containers-skeleton-ea2eb599e7024ecb9dbadaad74eb0af4/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only declared nonhaunted bone or positive-price single-item sale branch; not all haunted/stack/value/capacity combinations.",
+      "claim": {
+        "case_id": "containers.skeleton",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": false
+      }
+    },
+    "containers.remains": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/5",
+      "case": "containers.remains",
+      "validation_status": "passed",
+      "runtime_id": "runtime-454c705126004dda94ca8f904e44aa6f",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/containers-remains-2a609412b2a04d54a96d3474d3d9d764",
+      "public_trace": "desktop-control/build/fixtures/containers-remains-2a609412b2a04d54a96d3474d3d9d764/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only declared nonhaunted bone or positive-price single-item sale branch; not all haunted/stack/value/capacity combinations.",
+      "claim": {
+        "case_id": "containers.remains",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": false
+      }
+    },
+    "containers.for_sale": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/6",
+      "case": "containers.for_sale",
+      "validation_status": "passed",
+      "runtime_id": "runtime-c540ec459fc6478ba9025329e2dccf85",
+      "build_id": "d60337932a6b331cb8232497266a62c488a7d6a3b69fb11ce41e0b33119b3629",
+      "profile": "desktop-control/build/fixtures/containers-for-sale-b09e2bb6422e49f38dcc4f119faa3f20",
+      "public_trace": "desktop-control/build/fixtures/containers-for-sale-b09e2bb6422e49f38dcc4f119faa3f20/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only declared nonhaunted bone or positive-price single-item sale branch; not all haunted/stack/value/capacity combinations.",
+      "claim": {
+        "case_id": "containers.for_sale",
+        "original_purchase_window": true,
+        "back_cancels_without_charge": true,
+        "price_from_public_button": 50,
+        "original_buy_and_inventory_gain": true
+      }
     }
   },
   "ui_records": [
@@ -5643,8 +6034,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/HallsBossLevel.java",
       "catalog_line": 347,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "ending.ascension_start"
+          ],
+          "covered": "Actual original Ascension warning after Amulet/Stay on HallsBossLevel: Cancel leaves challenge absent; Confirm attaches native challenge, enters depth24 and yields actual buff/feedback. Remaining return is not tested here."
+        }
+      ],
       "pending_scenarios": [
         "transition.other_warnings"
       ],
@@ -5795,6 +6193,13 @@
             "p6.amulet-end"
           ],
           "covered": "Original first ground pickup and reopened menu; Stay and direct End tested. Full ascending return to SurfaceScene is pending."
+        },
+        {
+          "case_refs": [
+            "ending.amulet_pickup_surface",
+            "ending.ascension_start"
+          ],
+          "covered": "Original ground Amulet pickup/acquisition story and Stay in two independent setups; later surface completion and Ascension-start are distinct cases."
         }
       ],
       "pending_scenarios": [
@@ -5881,6 +6286,23 @@
             "containers.crystal_chest"
           ],
           "covered": "Original no-key refusal, visible ground key pickup, exact one-key use in native open and normal loot collection; no invented confirmation dialog."
+        },
+        {
+          "case_refs": [
+            "ending.permanent_death",
+            "ending.restart_after_death",
+            "ending.amulet_pickup_surface",
+            "ending.ascension_start"
+          ],
+          "covered": "Original Poison death and dead menu, normal restart, low-floor ground Amulet pickup/surface ending, and independent 25-to-24 Ascension-start branch. Prepared fixture states only; no complete legitimate return or victory."
+        },
+        {
+          "case_refs": [
+            "containers.skeleton",
+            "containers.remains",
+            "containers.for_sale"
+          ],
+          "covered": "Three complete declared bone/sale workflows only. TOMB combat-text failure is preserved and not counted as passed."
         }
       ],
       "pending_scenarios": [
@@ -5933,6 +6355,23 @@
             "language.english_protocol_chinese_gui"
           ],
           "covered": "Real public Welcome -> original Back to Title -> HeroSelect -> Game, original item/throw/food actions, explicit save/quit and same-scope fresh JVM Continue. GUI language/window state is separately attested. Other branches remain pending."
+        },
+        {
+          "case_refs": [
+            "hero_info.warrior",
+            "hero_info.mage",
+            "hero_info.rogue",
+            "hero_info.huntress",
+            "hero_info.duelist",
+            "hero_info.cleric"
+          ],
+          "covered": "Original hero selection/info entry for six classes and return; only the four info tabs are covered, not other Game Options or starts."
+        },
+        {
+          "case_refs": [
+            "ending.restart_after_death"
+          ],
+          "covered": "Original dead-run Start New Game -> already advertised Start produces a healthy new hero/new scope. Does not claim the optional reselect-to-HeroInfo branch; that has separate Hero Info cases."
         }
       ],
       "pending_scenarios": [
@@ -6028,6 +6467,13 @@
             "transition.story_city"
           ],
           "covered": "Actual FALL and branch round-trip plus first Prison/Caves/City region story requiring original Continue, then stable target floor. Story is InterlevelScene RenderedTextBlock, not WndStory. Halls story remains pending and these five need English-contract reruns."
+        },
+        {
+          "case_refs": [
+            "ending.amulet_pickup_surface",
+            "ending.ascension_start"
+          ],
+          "covered": "Actual low-floor 2->1 and SURFACE transitions, plus separate 25->24 Ascension confirmation path. No single fixture traverses 26->1."
         }
       ],
       "pending_scenarios": [
@@ -6153,6 +6599,13 @@
             "menu.english.RankingsScene"
           ],
           "covered": "Original Rankings button enters RankingsScene; public controls/text read in English, then original Back returns with same menu scope. External links, purchases and unselected entries are not exercised."
+        },
+        {
+          "case_refs": [
+            "ending.permanent_death",
+            "ending.amulet_pickup_surface"
+          ],
+          "covered": "Poison death ranking row opens original detail; low-floor surface end reaches original victory overlay and ranking scene. Other rows/tabs/score paths remain pending."
         }
       ],
       "pending_scenarios": [
@@ -6210,8 +6663,15 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SurfaceScene.java",
       "catalog_line": 67,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "ending.amulet_pickup_surface"
+          ],
+          "covered": "Actual SewerLevel SURFACE after low-floor 2->1, original SurfaceScene and Dungeon.win event; not direct SurfaceScene construction and not a full dungeon return."
+        }
+      ],
       "pending_scenarios": [
         "ending.amulet_ascend"
       ],
@@ -6242,6 +6702,13 @@
             "menu.english.NewsScene"
           ],
           "covered": "Original title buttons open each of the six named scenes and original Back returns. No link/account/purchase operation is inferred from its advertisement."
+        },
+        {
+          "case_refs": [
+            "ending.permanent_death",
+            "ending.restart_after_death"
+          ],
+          "covered": "Original return to title after death detail and normal restart entry; not all title/menu branches."
         }
       ],
       "pending_scenarios": [
@@ -7137,6 +7604,13 @@
             "layout.packaged"
           ],
           "covered": "Original game menu and Settings; interface mode/scale changes and current-control rebuilding. Other tabs/controls pending."
+        },
+        {
+          "case_refs": [
+            "ending.permanent_death",
+            "ending.restart_after_death"
+          ],
+          "covered": "Actual dead-only menu: Rankings entry or already advertised Start New Game. English CLI and Chinese/windowed GUI; no automatic advancement through unsupported modal text."
         }
       ],
       "pending_scenarios": [
@@ -7216,8 +7690,20 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndHeroInfo.java",
       "catalog_line": 46,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "hero_info.warrior",
+            "hero_info.mage",
+            "hero_info.rogue",
+            "hero_info.huntress",
+            "hero_info.duelist",
+            "hero_info.cleric"
+          ],
+          "covered": "All six hero-info windows: original description, talents, subclasses and armor-ability tabs plus Back. No run is started. Reading these pages does not exercise talent spending, subclass choice or armor ability acquisition/activation."
+        }
+      ],
       "pending_scenarios": [
         "menu.options"
       ],
@@ -7302,6 +7788,13 @@
             "containers.crystal_chest"
           ],
           "covered": "Original closed locked/crystal chest examine, no turn and no item subject. Crystal preserves visible wand category; specific wand identity/levels stay hidden until opening (levels still unidentified afterward)."
+        },
+        {
+          "case_refs": [
+            "containers.skeleton",
+            "containers.remains"
+          ],
+          "covered": "Original nonhaunted Skeletal remains/Hero remains examine, no item subject/name leakage, then native opening/pickup. Haunted variants and all bones-generation history remain pending."
         }
       ],
       "pending_scenarios": [
@@ -7572,8 +8065,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndRanking.java",
       "catalog_line": 66,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "ending.permanent_death"
+          ],
+          "covered": "Actual Poison result row -> WndRanking with Stats loaded -> Back and title return. Other tabs and historical inventory detail branches remain pending."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.rankings",
         "ending.permanent_death"
@@ -7819,6 +8319,12 @@
             "p6.shop-steal-failure"
           ],
           "covered": "Buy/sell cancellation; sell one/all and buyback; 100% steal; low-chance cancel and one actual random failure. Insufficient gold, capacity and other modifiers pending."
+        },
+        {
+          "case_refs": [
+            "containers.for_sale"
+          ],
+          "covered": "Original single Food FOR_SALE window, Back no charge, reopen and Buy for publicly displayed 50g, one item gained and sale heap removed."
         }
       ],
       "pending_scenarios": [
@@ -7924,6 +8430,12 @@
             "p6.amulet-end"
           ],
           "covered": "Actual forced victory overlay: Back cannot skip; Close dismisses. Prepared fixture is not a playthrough win."
+        },
+        {
+          "case_refs": [
+            "ending.amulet_pickup_surface"
+          ],
+          "covered": "Original surface-win congratulations: Back cannot skip, original Close works, ranking remains. Prepared low-floor fixture, not formal victory."
         }
       ],
       "pending_scenarios": [
@@ -8018,7 +8530,7 @@
       "id": "menu.options",
       "group": "menus",
       "title": "选角种子、每日、挑战与随机化",
-      "status": "pending",
+      "status": "partial",
       "owner": "root",
       "fixture_setup": "独立已解锁对应选项的测试 profile；另保留锁定 profile。",
       "public_steps": [
@@ -8038,6 +8550,19 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndDailies.java#WndDailies",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndHeroInfo.java#WndHeroInfo",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndTextInput.java#WndTextInput"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "hero_info.warrior",
+            "hero_info.mage",
+            "hero_info.rogue",
+            "hero_info.huntress",
+            "hero_info.duelist",
+            "hero_info.cleric"
+          ],
+          "covered": "Hero Info four-tab inspection only; seed/daily/challenge/randomize controls remain separately mapped."
+        }
       ]
     },
     {
@@ -8756,7 +9281,7 @@
       "id": "ending.amulet_ascend",
       "group": "lifecycle",
       "title": "拾护符、原返程与真正 Surface 结算",
-      "status": "pending",
+      "status": "partial",
       "owner": "runtime_architecture",
       "fixture_setup": "在测试局准备合法护符附近和返程可走地图；保留 test_fixture=true。",
       "public_steps": [
@@ -8770,13 +9295,22 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/AmuletScene.java#AmuletScene",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SurfaceScene.java#SurfaceScene",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndVictoryCongrats.java#WndVictoryCongrats"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "ending.amulet_pickup_surface",
+            "ending.ascension_start"
+          ],
+          "covered": "Two independent fixtures cover original ground pickup/Stay, low-floor 2->1->SURFACE completion, and HallsBoss25->24 challenge start. This does NOT complete the originally planned single continuous full return."
+        }
       ]
     },
     {
       "id": "ending.permanent_death",
       "group": "lifecycle",
       "title": "原伤害永久死亡和死亡排名",
-      "status": "pending",
+      "status": "partial",
       "owner": "runtime_architecture",
       "fixture_setup": "1 HP + 原 Poison，无 Ankh 的独立测试局。",
       "public_steps": [
@@ -8790,13 +9324,21 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndRanking.java#WndRanking",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndRanking.java#WndRanking$StatsTab$anonymous2$anonymous1",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndScoreBreakdown.java#WndScoreBreakdown"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "ending.permanent_death"
+          ],
+          "covered": "Original no-Ankh Poison death, actual lost event, dead menu and ranking detail Stats. Broader death causes/record tabs remain pending."
+        }
       ]
     },
     {
       "id": "ending.restart_after_death",
       "group": "lifecycle",
       "title": "死亡后原菜单新开一局",
-      "status": "pending",
+      "status": "partial",
       "owner": "runtime_architecture",
       "fixture_setup": "沿用本专项死亡 fixture。",
       "public_steps": [
@@ -8805,7 +9347,15 @@
       "assertions": [
         "新 run scope；旧请求/旧 control 拒绝；旧事件保持历史，不污染当前状态。"
       ],
-      "ui_record_ids": []
+      "ui_record_ids": [],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "ending.restart_after_death"
+          ],
+          "covered": "Native dead menu New Game and advertised Start produce a new scope, healthy hero; old response/event unchanged and old result does not contaminate new run."
+        }
+      ]
     },
     {
       "id": "lifecycle.resurrection",
@@ -15015,8 +15565,10 @@
           "id": "FOR_SALE",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.for_sale"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -15081,8 +15633,10 @@
           "id": "SKELETON",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.skeleton"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -15093,8 +15647,10 @@
           "id": "REMAINS",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.remains"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -15105,8 +15661,11 @@
       "case_refs": [
         "containers.chest_hidden",
         "containers.crystal_chest",
+        "containers.for_sale",
         "containers.heap_multi",
         "containers.locked_chest",
+        "containers.remains",
+        "containers.skeleton",
         "p6.shop-stack",
         "p6.shop-trade"
       ],
@@ -17150,6 +17709,31 @@
         "containers.crystal_chest"
       ],
       "note": "Second container group: GoldenKey and CrystalKey no-key/success branches only; partial mappings."
+    },
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "hero_info.warrior",
+        "hero_info.mage",
+        "hero_info.rogue",
+        "hero_info.huntress",
+        "hero_info.duelist",
+        "hero_info.cleric",
+        "ending.permanent_death",
+        "ending.restart_after_death",
+        "ending.amulet_pickup_surface",
+        "ending.ascension_start"
+      ],
+      "note": "Six HeroInfo four-tab cases and four precise ending/death branches; all classes remain partial, independent Ascension and surface fixtures are not joined into a full return."
+    },
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "containers.skeleton",
+        "containers.remains",
+        "containers.for_sale"
+      ],
+      "note": "Complete nonhaunted SKELETON/REMAINS and single-item FOR_SALE workflows. TOMB failure is not promoted."
     }
   ]
 }
