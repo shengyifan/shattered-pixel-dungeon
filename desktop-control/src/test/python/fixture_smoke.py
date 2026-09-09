@@ -100,7 +100,25 @@ def act(client, action, **args):
     for _ in range(4):
         result = client.request("action.execute", {"action": action, **args})
         if result.get("ok"):
-            return result["result"]
+            if result.get("status") == "in_progress":
+                request_id, scope = result["id"], result["scope_id"]
+                deadline = time.monotonic() + 40
+                while time.monotonic() < deadline:
+                    record = client.request("request.get", {"target_id": request_id}, scope=scope)
+                    assert record.get("ok"), record
+                    if record["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
+                        result = record["result"]["response"]
+                        assert result.get("ok"), result
+                        break
+                    time.sleep(0.05)
+                else:
+                    raise TimeoutError("Fixture action did not reach its own terminal response")
+                if client.verify_gui and action != "app.quit":
+                    assert_gui_environment(client.profile, result["result"])
+                    client.gui_postconditions_checked += 1
+            data = result["result"]
+            client.scope, client.version, client.last_state = data["scope_id"], data["state_version"], data
+            return data
         if result.get("error", {}).get("code") != "STALE_STATE":
             raise AssertionError(result)
         refreshed = client.state()
@@ -612,10 +630,27 @@ def main():
     parser.add_argument("--cases", help="Comma-separated fixture IDs; default is all 6 classes, 12 subclasses and 19 armor abilities")
     parser.add_argument("--include-empty", action="store_true", help="Also test selected armor/spell/weapon cases with zero resource")
     parser.add_argument("--families", default="base", help="Comma-separated base,spell,weapon,monk,ui; spell/weapon/monk cases come from current source inventory")
+    parser.add_argument("--frozen-runtime", type=Path, help="Copy a previously frozen test runtime; never reload mutable repository build products")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
     classpath = (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip()
+    if args.frozen_runtime:
+        manifest = json.loads((args.frozen_runtime / "test-runtime.json").read_text())
+        copies = {entry["source"]: entry["frozen"] for entry in manifest["copies"]}
+        selected = []
+        for value in classpath.split(os.pathsep):
+            source = Path(value).resolve()
+            if source.is_relative_to(root) and source.exists():
+                assert str(source) in copies, {"not_in_frozen_runtime": str(source)}
+                frozen = Path(copies[str(source)])
+                assert frozen.exists(), frozen
+                selected.append(str(frozen))
+            elif source.exists():
+                selected.append(str(source))
+        classpath = os.pathsep.join(selected)
     classpath, runtime_id = freeze_runtime(root, classpath)
+    print(json.dumps({"started_runtime": runtime_id, "results": str(root / "desktop-control/build/fixtures" / runtime_id / "results.json"),
+                      "copied_from": str(args.frozen_runtime) if args.frozen_runtime else None}), flush=True)
     cases = []
     if args.cases:
         cases = args.cases.split(",")
