@@ -102,6 +102,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("scenario") && TransitionScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("notes") && NoteScenarioFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("spell") && name.matches("[A-Za-z]+")) {
                 heroClass = HeroClass.CLERIC;
                 subclass = Arrays.asList("Smite", "LayOnHands", "AuraOfProtection", "WallOfLight").contains(name) ? HeroSubClass.PALADIN
@@ -239,6 +241,7 @@ public final class FixtureLauncher {
                             "weapon_charge", Dungeon.hero.buff(MeleeWeapon.Charger.class) == null ? null : Dungeon.hero.buff(MeleeWeapon.Charger.class).charges + Dungeon.hero.buff(MeleeWeapon.Charger.class).partialCharge,
                             "low_frequency", fixture.kind.equals("lowfreq") ? LowFrequencyFixtures.assertions() : null,
                             "transition_scenario", fixture.kind.equals("scenario") ? TransitionScenarioFixtures.assertions() : null,
+                            "notes", fixture.kind.equals("notes") ? NoteScenarioFixtures.assertions() : null,
                             "effect_buffs", buffNames(Dungeon.hero), "target_buffs", fixtureTarget == null ? null : buffNames(fixtureTarget),
                             "trinity_form", Dungeon.hero.armorAbility instanceof Trinity && fixture.kind.equals("spell") ? get(Dungeon.hero.armorAbility, fixture.name.equals("BodyForm") ? "bodyForm" : fixture.name.equals("MindForm") ? "mindForm" : "spiritForm") != null : null);
                     Files.writeString(profile.resolve("fixture-assertions.jsonl"), JsonCodec.encode(checkpoint) + "\n",
@@ -268,7 +271,7 @@ public final class FixtureLauncher {
     private static Mob prepare(Fixture fixture) throws Exception {
         Hero hero = Dungeon.hero;
         if (hero.heroClass != fixture.heroClass) throw new IllegalStateException("Start the fixture's required class through the public menu");
-        if (fixture.kind.equals("class") || fixture.kind.equals("menu")) return null;
+        if (fixture.kind.equals("class") || fixture.kind.equals("menu") || fixture.kind.equals("notes")) return null;
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;
         hero.subClass = fixture.subclass;
         Talent.initSubclassTalents(hero);

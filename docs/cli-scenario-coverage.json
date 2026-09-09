@@ -58,11 +58,11 @@
     "window_records": 153,
     "status_counts": {
       "not_applicable": 3,
-      "pending": 119,
-      "partial": 48
+      "pending": 109,
+      "partial": 58
     },
     "fully_passed_records": 0,
-    "evidence_entries": 233,
+    "evidence_entries": 238,
     "planned_scenarios": 35,
     "callback_records_requiring_individual_mapping": 997,
     "scenario_family_member_status_counts": {
@@ -4512,6 +4512,266 @@
         "same_scope": true
       },
       "english_contract_verified": false
+    },
+    "notes.text": {
+      "report": "docs/cli-notes-scenarios-validation.json",
+      "json_pointer": "/results/0",
+      "case": "notes.text",
+      "validation_status": "passed",
+      "runtime_id": "runtime-f068e65ecdef42118f5ac5bdd0120a2b",
+      "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
+      "profile": "desktop-control/build/fixtures/notes-text-4967579b9e3b4d4ab5336347113b396d",
+      "public_trace": "desktop-control/build/fixtures/notes-text-4967579b9e3b4d4ab5336347113b396d/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the named normal-Warrior original note workflow and save/fresh-JVM restore. English test content; no whole-class pass.",
+      "claim": {
+        "floor": 1,
+        "title": "Test route note revised",
+        "body": "Check this route before descending.\nTest note text only.",
+        "public_item_appearance": null,
+        "cancelled_creation_without_record": true,
+        "title_cancel_and_confirm": true,
+        "multiline_body_cancel_and_confirm": true,
+        "delete_cancel_preserves_record": true,
+        "original_save_receipt": {
+          "last_save": {
+            "receipt_id": "4e47fd04-d208-41fb-9ffd-bbc2668fd536",
+            "scope_id": "run:c2fc9a9f-03bc-420e-8455-c8eea9ec0f70",
+            "slot": 1,
+            "success": true,
+            "occurred_at": "2026-09-09T04:14:44.572528Z",
+            "origin_scope_id": "run:c2fc9a9f-03bc-420e-8455-c8eea9ec0f70",
+            "origin_request_id": "5f4b93f0e085-87"
+          },
+          "saves_during_request": [
+            {
+              "receipt_id": "4e47fd04-d208-41fb-9ffd-bbc2668fd536",
+              "scope_id": "run:c2fc9a9f-03bc-420e-8455-c8eea9ec0f70",
+              "slot": 1,
+              "success": true,
+              "occurred_at": "2026-09-09T04:14:44.572528Z",
+              "origin_scope_id": "run:c2fc9a9f-03bc-420e-8455-c8eea9ec0f70",
+              "origin_request_id": "5f4b93f0e085-87"
+            }
+          ]
+        },
+        "same_scope_fresh_jvm_note_restored": true,
+        "restored_note_opened_from_original_entry": true,
+        "delete_confirm_removes_record": true,
+        "deletion_saved_normally": true,
+        "note_type_checked": true,
+        "specific_item_binding_checked": false
+      }
+    },
+    "notes.floor": {
+      "report": "docs/cli-notes-scenarios-validation.json",
+      "json_pointer": "/results/1",
+      "case": "notes.floor",
+      "validation_status": "passed",
+      "runtime_id": "runtime-904e160567dd4155b58030ac76273755",
+      "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
+      "profile": "desktop-control/build/fixtures/notes-floor-3c3da157a8a14847a3e0716d49380c60",
+      "public_trace": "desktop-control/build/fixtures/notes-floor-3c3da157a8a14847a3e0716d49380c60/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the named normal-Warrior original note workflow and save/fresh-JVM restore. English test content; no whole-class pass.",
+      "claim": {
+        "floor": 1,
+        "title": "Test route note revised",
+        "body": "Check this route before descending.\nTest note text only.",
+        "public_item_appearance": null,
+        "cancelled_creation_without_record": true,
+        "title_cancel_and_confirm": true,
+        "multiline_body_cancel_and_confirm": true,
+        "delete_cancel_preserves_record": true,
+        "original_save_receipt": {
+          "last_save": {
+            "receipt_id": "65c7a8c6-f21a-430b-b2a4-03e68f8da796",
+            "scope_id": "run:3ffb0007-0012-4c64-bd9f-e6edeedf33eb",
+            "slot": 1,
+            "success": true,
+            "occurred_at": "2026-09-09T04:18:06.172080Z",
+            "origin_scope_id": "run:3ffb0007-0012-4c64-bd9f-e6edeedf33eb",
+            "origin_request_id": "b73b1f9138a2-93"
+          },
+          "saves_during_request": [
+            {
+              "receipt_id": "65c7a8c6-f21a-430b-b2a4-03e68f8da796",
+              "scope_id": "run:3ffb0007-0012-4c64-bd9f-e6edeedf33eb",
+              "slot": 1,
+              "success": true,
+              "occurred_at": "2026-09-09T04:18:06.172080Z",
+              "origin_scope_id": "run:3ffb0007-0012-4c64-bd9f-e6edeedf33eb",
+              "origin_request_id": "b73b1f9138a2-93"
+            }
+          ]
+        },
+        "same_scope_fresh_jvm_note_restored": true,
+        "restored_note_opened_from_original_entry": true,
+        "delete_confirm_removes_record": true,
+        "deletion_saved_normally": true,
+        "note_type_checked": true,
+        "specific_item_binding_checked": false
+      }
+    },
+    "notes.inventory": {
+      "report": "docs/cli-notes-scenarios-validation.json",
+      "json_pointer": "/results/2",
+      "case": "notes.inventory",
+      "validation_status": "passed",
+      "runtime_id": "runtime-904e160567dd4155b58030ac76273755",
+      "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
+      "profile": "desktop-control/build/fixtures/notes-inventory-b4fe17ea6b5c40398b0b56dad7a5d8ef",
+      "public_trace": "desktop-control/build/fixtures/notes-inventory-b4fe17ea6b5c40398b0b56dad7a5d8ef/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the named normal-Warrior original note workflow and save/fresh-JVM restore. English test content; no whole-class pass.",
+      "claim": {
+        "floor": 1,
+        "title": "Test route note revised",
+        "body": "Check this route before descending.\nTest note text only.",
+        "public_item_appearance": null,
+        "cancelled_creation_without_record": true,
+        "title_cancel_and_confirm": true,
+        "multiline_body_cancel_and_confirm": true,
+        "delete_cancel_preserves_record": true,
+        "original_save_receipt": {
+          "last_save": {
+            "receipt_id": "df45b65a-2750-40d9-9fbf-b681062ce72d",
+            "scope_id": "run:5fbfc3c5-6729-4b04-85c6-e1477e6ceed5",
+            "slot": 1,
+            "success": true,
+            "occurred_at": "2026-09-09T04:18:55.604482Z",
+            "origin_scope_id": "run:5fbfc3c5-6729-4b04-85c6-e1477e6ceed5",
+            "origin_request_id": "1ff3d62e2872-95"
+          },
+          "saves_during_request": [
+            {
+              "receipt_id": "df45b65a-2750-40d9-9fbf-b681062ce72d",
+              "scope_id": "run:5fbfc3c5-6729-4b04-85c6-e1477e6ceed5",
+              "slot": 1,
+              "success": true,
+              "occurred_at": "2026-09-09T04:18:55.604482Z",
+              "origin_scope_id": "run:5fbfc3c5-6729-4b04-85c6-e1477e6ceed5",
+              "origin_request_id": "1ff3d62e2872-95"
+            }
+          ]
+        },
+        "same_scope_fresh_jvm_note_restored": true,
+        "restored_note_opened_from_original_entry": true,
+        "delete_confirm_removes_record": true,
+        "deletion_saved_normally": true,
+        "note_type_checked": true,
+        "specific_item_binding_checked": true
+      }
+    },
+    "notes.item_type": {
+      "report": "docs/cli-notes-scenarios-validation.json",
+      "json_pointer": "/results/3",
+      "case": "notes.item_type",
+      "validation_status": "passed",
+      "runtime_id": "runtime-904e160567dd4155b58030ac76273755",
+      "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
+      "profile": "desktop-control/build/fixtures/notes-item-type-2f7486876011443194d6482960a19a61",
+      "public_trace": "desktop-control/build/fixtures/notes-item-type-2f7486876011443194d6482960a19a61/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the named normal-Warrior original note workflow and save/fresh-JVM restore. English test content; no whole-class pass.",
+      "claim": {
+        "floor": 1,
+        "title": "Test route note revised",
+        "body": "Check this route before descending.\nTest note text only.",
+        "public_item_appearance": "Crimson Potion",
+        "cancelled_creation_without_record": true,
+        "title_cancel_and_confirm": true,
+        "multiline_body_cancel_and_confirm": true,
+        "delete_cancel_preserves_record": true,
+        "original_save_receipt": {
+          "last_save": {
+            "receipt_id": "c1fdda1b-d900-4006-8067-f14fde4cfda4",
+            "scope_id": "run:5b919c3e-391f-43c7-9c23-3f62be943e7e",
+            "slot": 1,
+            "success": true,
+            "occurred_at": "2026-09-09T04:19:41.051892Z",
+            "origin_scope_id": "run:5b919c3e-391f-43c7-9c23-3f62be943e7e",
+            "origin_request_id": "f61f1c49c6b9-91"
+          },
+          "saves_during_request": [
+            {
+              "receipt_id": "c1fdda1b-d900-4006-8067-f14fde4cfda4",
+              "scope_id": "run:5b919c3e-391f-43c7-9c23-3f62be943e7e",
+              "slot": 1,
+              "success": true,
+              "occurred_at": "2026-09-09T04:19:41.051892Z",
+              "origin_scope_id": "run:5b919c3e-391f-43c7-9c23-3f62be943e7e",
+              "origin_request_id": "f61f1c49c6b9-91"
+            }
+          ]
+        },
+        "same_scope_fresh_jvm_note_restored": true,
+        "restored_note_opened_from_original_entry": true,
+        "delete_confirm_removes_record": true,
+        "deletion_saved_normally": true,
+        "note_type_checked": true,
+        "specific_item_binding_checked": false
+      }
+    },
+    "notes.item_shortcut": {
+      "report": "docs/cli-notes-scenarios-validation.json",
+      "json_pointer": "/results/4",
+      "case": "notes.item_shortcut",
+      "validation_status": "passed",
+      "runtime_id": "runtime-904e160567dd4155b58030ac76273755",
+      "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
+      "profile": "desktop-control/build/fixtures/notes-item-shortcut-7de0bf75bea24c4cb96b3bb5b7ba484e",
+      "public_trace": "desktop-control/build/fixtures/notes-item-shortcut-7de0bf75bea24c4cb96b3bb5b7ba484e/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the named normal-Warrior original note workflow and save/fresh-JVM restore. English test content; no whole-class pass.",
+      "claim": {
+        "floor": 1,
+        "title": "Test route note revised",
+        "body": "Check this route before descending.\nTest note text only.",
+        "public_item_appearance": null,
+        "cancelled_creation_without_record": true,
+        "title_cancel_and_confirm": true,
+        "multiline_body_cancel_and_confirm": true,
+        "delete_cancel_preserves_record": true,
+        "original_save_receipt": {
+          "last_save": {
+            "receipt_id": "1d72f3ef-e917-4abc-8d4a-09e0a7b6ee85",
+            "scope_id": "run:ac5481f2-dd35-466d-ac3f-f8bfff0ede85",
+            "slot": 1,
+            "success": true,
+            "occurred_at": "2026-09-09T04:20:19.873692Z",
+            "origin_scope_id": "run:ac5481f2-dd35-466d-ac3f-f8bfff0ede85",
+            "origin_request_id": "82d8967be50e-82"
+          },
+          "saves_during_request": [
+            {
+              "receipt_id": "1d72f3ef-e917-4abc-8d4a-09e0a7b6ee85",
+              "scope_id": "run:ac5481f2-dd35-466d-ac3f-f8bfff0ede85",
+              "slot": 1,
+              "success": true,
+              "occurred_at": "2026-09-09T04:20:19.873692Z",
+              "origin_scope_id": "run:ac5481f2-dd35-466d-ac3f-f8bfff0ede85",
+              "origin_request_id": "82d8967be50e-82"
+            }
+          ]
+        },
+        "same_scope_fresh_jvm_note_restored": true,
+        "restored_note_opened_from_original_entry": true,
+        "delete_confirm_removes_record": true,
+        "deletion_saved_normally": true,
+        "note_type_checked": true,
+        "specific_item_binding_checked": true
+      }
     }
   },
   "ui_records": [
@@ -5464,6 +5724,16 @@
             "transition.story_city"
           ],
           "covered": "Before-trigger and after-settlement endpoints for the five named transitions only; no additional level, room or ending coverage inferred."
+        },
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type",
+            "notes.item_shortcut"
+          ],
+          "covered": "Five original Note workflows with ordinary Warrior state; no map/stat/item/note injection, no battle or world-discovery coverage inferred."
         }
       ],
       "pending_scenarios": [
@@ -5908,8 +6178,19 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 273,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type",
+            "notes.item_shortcut"
+          ],
+          "covered": "Original note display, title/body editing and Delete cancel/confirm; normal save and same-scope fresh JVM restore before deletion. English user content only."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -5922,8 +6203,19 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 287,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type",
+            "notes.item_shortcut"
+          ],
+          "covered": "Original Edit Title input Cancel preserves title, Confirm changes it; actual new title is visible and in same-version record."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -5936,8 +6228,19 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 318,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type",
+            "notes.item_shortcut"
+          ],
+          "covered": "Original Add Text and Edit Text multiline inputs each have Cancel/Confirm coverage with actual two-line English content. Clipboard/empty/max-length variants remain pending."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -5950,8 +6253,19 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 340,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type",
+            "notes.item_shortcut"
+          ],
+          "covered": "Original complete delete warning: Cancel preserves record; after save/fresh-JVM restore Confirm removes it and normal game.save reports success. No third JVM deletion restore claimed."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -5964,8 +6278,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 123,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.floor"
+          ],
+          "covered": "Original floor selector chooses current floor 1. Other floors and branches are not tested."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -5978,8 +6299,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 203,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.item_type"
+          ],
+          "covered": "Original unknown potion appearance Crimson Potion selected from visible controls. Hidden function not queried; other potions/scrolls/rings and duplicate gates remain pending."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -5992,8 +6320,18 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 82,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type"
+          ],
+          "covered": "Original four visible note categories selected; title creation cancelled and then completed. Note limit and other disabled variants remain pending."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -6006,8 +6344,18 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java",
       "catalog_line": 375,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type"
+          ],
+          "covered": "Original title input: typed English text, Cancel adds no record, Confirm creates the selected note type. Empty/max-length and Enter-submission variants remain pending."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.notes"
       ],
@@ -6020,8 +6368,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/ItemJournalButton.java",
       "catalog_line": 91,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.item_shortcut"
+          ],
+          "covered": "Original item-detail journal icon on Worn Shortsword enters specific-item title input, cancelled then confirmed; record/item ID association checked only afterward."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.catalog"
       ],
@@ -6183,6 +6538,12 @@
             "layout.packaged"
           ],
           "covered": "Explicit interface modes 0/1 show WndBag and open actual item / cancel throw. P6 full-layout InventoryPane selectors do not extend this evidence."
+        },
+        {
+          "case_refs": [
+            "notes.inventory"
+          ],
+          "covered": "Actual WndBag is opened by the Note inventory selector; select the visible equipped Worn Shortsword. This does not rely on InventoryPane inheritance."
         }
       ],
       "pending_scenarios": [
@@ -6868,8 +7229,18 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndJournal.java",
       "catalog_line": 88,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type"
+          ],
+          "covered": "Original in-game Journal Notes tab, Add Custom Note, saved note ui.select entry and deletion return. Actual WndJournal class is attested after public responses; this is distinct from JournalScene embedded tabs."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.catalog"
       ],
@@ -7364,6 +7735,12 @@
             "language.english_protocol_chinese_gui"
           ],
           "covered": "Original Worn Shortsword English description, Throwing Stone target cancellation with unchanged quantity, and native EAT with English drawn log; Chinese windowed GUI attested. Does not cover all item menus."
+        },
+        {
+          "case_refs": [
+            "notes.item_shortcut"
+          ],
+          "covered": "Original item-detail journal icon creates and reopens the note, and item parent window is rebuilt after title changes/deletion. Other items remain separate cases."
         }
       ],
       "pending_scenarios": [
@@ -7640,7 +8017,7 @@
       "id": "knowledge.notes",
       "group": "knowledge",
       "title": "自定义笔记的新增、编辑、删除及种类/深度/物品选择",
-      "status": "pending",
+      "status": "partial",
       "owner": "root",
       "fixture_setup": "独立带已探索楼层的测试局。",
       "public_steps": [
@@ -7659,7 +8036,23 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java#CustomNoteButton$WndItemtypeSelect",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java#CustomNoteButton$WndNoteTypeSelect",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/CustomNoteButton.java#CustomNoteButton$anonymous3"
-      ]
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "notes.text",
+            "notes.floor",
+            "notes.inventory",
+            "notes.item_type",
+            "notes.item_shortcut"
+          ],
+          "covered": "Five declared create/edit/cancel/delete/save/restore workflows; original game has depth association but no cell association. Chinese authored text, limits, duplicates, other types and third-JVM deletion restore remain pending."
+        }
+      ],
+      "map_cell_association": {
+        "status": "not_applicable",
+        "basis": "Notes.Record contains depth (branch 0 only), and CustomType has no cell variant. See cli-notes-scenarios-validation.json/not_applicable/0."
+      }
     },
     {
       "id": "knowledge.inspect",
@@ -16542,6 +16935,17 @@
         "transition.story_city"
       ],
       "note": "Added exact English protocol and menu/tab branches plus five historical Chinese transitions; no entire scene/window class is passed."
+    },
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "notes.text",
+        "notes.floor",
+        "notes.inventory",
+        "notes.item_type",
+        "notes.item_shortcut"
+      ],
+      "note": "Five actual original CustomNote workflows including fresh-JVM restore. Partial branch mappings only; no whole-class pass."
     }
   ]
 }
