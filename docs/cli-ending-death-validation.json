@@ -1,0 +1,88 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "gui_language": "CHI_SMPL",
+  "cli_language": "en",
+  "fullscreen": false,
+  "passed": [
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-32d037654eb84dcd9a1626ca4d9d37fd",
+      "profile": "desktop-control/build/fixtures/ending-death-ranking-7c10ace88830489ab937a807c707ddd5",
+      "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
+      "gui_language": "CHI_SMPL",
+      "cli_language": "en",
+      "fullscreen": false,
+      "old_scope_id": "run:2d450c89-beb3-4487-a418-690be67b1b05",
+      "original_poison_death": true,
+      "run_ended_event": {
+        "sequence": 5,
+        "scope_id": "run:2d450c89-beb3-4487-a418-690be67b1b05",
+        "kind": "run.ended",
+        "data": {
+          "scope_id": "run:2d450c89-beb3-4487-a418-690be67b1b05",
+          "result": "lost"
+        },
+        "created_at": "2026-09-09T04:16:30.331940Z",
+        "session_id": null
+      },
+      "gui_postconditions_checked": 24,
+      "case_id": "ending.permanent_death",
+      "original_death_menu": true,
+      "original_ranking_row_description": "Succumbed to Poison",
+      "ranking_detail_actual_window": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndRanking"
+      ],
+      "ranking_stats_loaded": true,
+      "original_detail_back_and_title_return": true
+    },
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-dd4b1abc9e054d97bb508214b534fb46",
+      "profile": "desktop-control/build/fixtures/ending-death-restart-44c0cbd4c48a4e1aa38ca2785afd288e",
+      "build_id": "f55e5d93369bbf96cd8623f321cb99cdcd450ea75c9a33644ed50e6fb43c32c4",
+      "gui_language": "CHI_SMPL",
+      "cli_language": "en",
+      "fullscreen": false,
+      "old_scope_id": "run:fed8535f-a33d-413a-84e4-26938981543b",
+      "original_poison_death": true,
+      "run_ended_event": {
+        "sequence": 5,
+        "scope_id": "run:fed8535f-a33d-413a-84e4-26938981543b",
+        "kind": "run.ended",
+        "data": {
+          "scope_id": "run:fed8535f-a33d-413a-84e4-26938981543b",
+          "result": "lost"
+        },
+        "created_at": "2026-09-09T04:26:57.705600Z",
+        "session_id": null
+      },
+      "gui_postconditions_checked": 23,
+      "case_id": "ending.restart_after_death",
+      "original_dead_menu_start_new_game": true,
+      "new_scope_id": "run:b333f0ba-7a6b-44e1-b3b9-badbeaa3c9f1",
+      "original_new_hero_healthy_without_fixture_reinjection": true,
+      "old_request_id_allowed_in_new_scope": true,
+      "old_death_response_and_event_unchanged": true,
+      "old_outcome_does_not_leak_into_new_run": true
+    }
+  ],
+  "gui_postconditions_checked": 47,
+  "pending_separate_cases": [
+    {
+      "context": "HeroSelectScene: reselect already selected Warrior to open Hero Info",
+      "profile": "desktop-control/build/fixtures/ending-death-restart-479b94aa0cce4ce885c4b3f003596786",
+      "status": "untranslated_visible_paragraph",
+      "resolved_by_this_group": false,
+      "reason": "The separate Hero Info paragraph about the broken seal was rejected; this is not a required input on the already-advertised Start route."
+    }
+  ],
+  "test_corrections": [
+    "Accept either original publicly advertised Menu control, then assert the actual dead-only WndGame contents.",
+    "Use an already advertised Start when the native dead-run menu has already selected the hero; never dismiss or conceal an open modal to bypass translation."
+  ]
+}
