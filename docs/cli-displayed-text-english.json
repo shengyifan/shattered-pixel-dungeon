@@ -1,0 +1,887 @@
+{
+  "schema": 1,
+  "category": "immutable_software_resource_cache",
+  "source": "bundled Chinese and English message resources, not live game state",
+  "resource_pairs": 4817,
+  "unique_chinese_strings": 4413,
+  "exact_unambiguous": 4358,
+  "exact_ambiguous": 55,
+  "compiled_template_pairs": 584,
+  "formatted_template_examples": {
+    "total": 584,
+    "exact_english_match": 578,
+    "safe_rejections": 6,
+    "note": "One deterministic visible-name/number argument vector per resource template; not all runtime parameter combinations."
+  },
+  "public_language_names": 23,
+  "unit_tests_passed": 20,
+  "ambiguous_resources": [
+    {
+      "displayed_chinese": "专精",
+      "candidates": [
+        {
+          "key": "windows.wndclass.mastery",
+          "english": "Mastery"
+        },
+        {
+          "key": "windows.wndheroinfo.subclasses",
+          "english": "subclasses"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "关闭",
+      "candidates": [
+        {
+          "key": "windows.wndsettings$displaytab.off",
+          "english": "Off"
+        },
+        {
+          "key": "windows.wndsettings$inputtab.off",
+          "english": "Off"
+        },
+        {
+          "key": "windows.wndsettings$uitab.off",
+          "english": "Off"
+        },
+        {
+          "key": "windows.wndsupportprompt.close",
+          "english": "Close"
+        },
+        {
+          "key": "windows.wndvictorycongrats.close",
+          "english": "Close"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "凝神",
+      "candidates": [
+        {
+          "key": "actors.buffs.monkenergy$monkability$focus$focusbuff.name",
+          "english": "focused"
+        },
+        {
+          "key": "actors.buffs.monkenergy$monkability$focus.name",
+          "english": "focus"
+        },
+        {
+          "key": "actors.mobs.monk$focus.name",
+          "english": "focused"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "删除",
+      "candidates": [
+        {
+          "key": "ui.customnotebutton$customnotewindow.delete",
+          "english": "Delete"
+        },
+        {
+          "key": "windows.wndgameinprogress.erase",
+          "english": "Erase"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "卷轴",
+      "candidates": [
+        {
+          "key": "items.scrolls.scroll$placeholder.name",
+          "english": "scroll"
+        },
+        {
+          "key": "journal.catalog.scrolls.title",
+          "english": "scrolls"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "开始",
+      "candidates": [
+        {
+          "key": "scenes.heroselectscene.start",
+          "english": "Start"
+        },
+        {
+          "key": "scenes.titlescene.play",
+          "english": "Play"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "愤怒",
+      "candidates": [
+        {
+          "key": "actors.buffs.berserk.angered",
+          "english": "angered"
+        },
+        {
+          "key": "actors.buffs.fury.name",
+          "english": "furious"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "招架",
+      "candidates": [
+        {
+          "key": "actors.buffs.combo$combomove.parry.name",
+          "english": "parry"
+        },
+        {
+          "key": "actors.mobs.monk.parried",
+          "english": "parried"
+        },
+        {
+          "key": "items.weapon.enchantments.blocking$blockbuff.name",
+          "english": "blocking"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "指南",
+      "candidates": [
+        {
+          "key": "items.journal.guidebook.hint_status",
+          "english": "Guidebook"
+        },
+        {
+          "key": "scenes.alchemyscene.guide",
+          "english": "Guide"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "攻击",
+      "candidates": [
+        {
+          "key": "scenes.gamescene.attack",
+          "english": "Attack"
+        },
+        {
+          "key": "windows.wndkeybindings.tag_attack",
+          "english": "Attack Enemy"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "暴雨",
+      "candidates": [
+        {
+          "key": "actors.blobs.stormcloud.name",
+          "english": "storm clouds"
+        },
+        {
+          "key": "actors.buffs.combo$combomove.fury.name",
+          "english": "fury"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "法杖",
+      "candidates": [
+        {
+          "key": "items.wands.wand$placeholder.name",
+          "english": "wand"
+        },
+        {
+          "key": "journal.catalog.wands.title",
+          "english": "wands"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "潜行",
+      "candidates": [
+        {
+          "key": "items.artifacts.cloakofshadows.ac_stealth",
+          "english": "STEALTH"
+        },
+        {
+          "key": "items.weapon.melee.assassinsblade.ability_name",
+          "english": "sneak"
+        },
+        {
+          "key": "items.weapon.melee.dagger.ability_name",
+          "english": "sneak"
+        },
+        {
+          "key": "items.weapon.melee.dirk.ability_name",
+          "english": "sneak"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "炸弹",
+      "candidates": [
+        {
+          "key": "items.bombs.bomb.name",
+          "english": "bomb"
+        },
+        {
+          "key": "journal.catalog.bombs.title",
+          "english": "bombs"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "狂暴",
+      "candidates": [
+        {
+          "key": "actors.buffs.berserk.action_name",
+          "english": "Berserk"
+        },
+        {
+          "key": "actors.buffs.berserk.berserk",
+          "english": "berserking"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "确定",
+      "candidates": [
+        {
+          "key": "items.weapon.missiles.missileweapon.break_upgraded_warn_yes",
+          "english": "Yes"
+        },
+        {
+          "key": "scenes.heroselectscene.randomize_confirm",
+          "english": "Confirm"
+        },
+        {
+          "key": "ui.customnotebutton$customnotewindow.confirm",
+          "english": "Confirm"
+        },
+        {
+          "key": "windows.wndkeybindings$wndchangebinding.confirm",
+          "english": "Confirm"
+        },
+        {
+          "key": "windows.wndkeybindings.confirm",
+          "english": "Confirm"
+        },
+        {
+          "key": "windows.wndsadghost.confirm",
+          "english": "Confirm"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "种子",
+      "candidates": [
+        {
+          "key": "journal.catalog.seeds.title",
+          "english": "seeds"
+        },
+        {
+          "key": "plants.plant$seed$placeholder.name",
+          "english": "seed"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "符石",
+      "candidates": [
+        {
+          "key": "items.stones.runestone$placeholder.name",
+          "english": "runestone"
+        },
+        {
+          "key": "journal.catalog.stones.title",
+          "english": "runestones"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "算了",
+      "candidates": [
+        {
+          "key": "items.stones.stoneofaugmentation$wndaugment.cancel",
+          "english": "Never mind"
+        },
+        {
+          "key": "items.weapon.missiles.missileweapon.break_upgraded_warn_no",
+          "english": "No"
+        },
+        {
+          "key": "scenes.heroselectscene.daily_no",
+          "english": "No"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "药剂",
+      "candidates": [
+        {
+          "key": "items.potions.potion$placeholder.name",
+          "english": "potion"
+        },
+        {
+          "key": "journal.catalog.potions.title",
+          "english": "potions"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "装备",
+      "candidates": [
+        {
+          "key": "items.equipableitem.ac_equip",
+          "english": "EQUIP"
+        },
+        {
+          "key": "windows.wndjournal$catalogtab.title_equipment",
+          "english": "Equipment"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "设置",
+      "candidates": [
+        {
+          "key": "items.artifacts.lloydsbeacon.ac_set",
+          "english": "SET"
+        },
+        {
+          "key": "items.spells.beaconofreturning.wnd_set",
+          "english": "Set"
+        },
+        {
+          "key": "scenes.heroselectscene.custom_seed_set",
+          "english": "Set"
+        },
+        {
+          "key": "scenes.titlescene.settings",
+          "english": "Settings"
+        },
+        {
+          "key": "windows.wndgame.settings",
+          "english": "Settings"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "返回",
+      "candidates": [
+        {
+          "key": "items.artifacts.lloydsbeacon.ac_return",
+          "english": "RETURN"
+        },
+        {
+          "key": "items.spells.beaconofreturning.wnd_return",
+          "english": "Return"
+        },
+        {
+          "key": "windows.wndkeybindings.back",
+          "english": "Back"
+        },
+        {
+          "key": "windows.wndupgrade.back",
+          "english": "Back"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "连击",
+      "candidates": [
+        {
+          "key": "actors.buffs.combo.action_name",
+          "english": "combo attack"
+        },
+        {
+          "key": "actors.buffs.combo.name",
+          "english": "combo"
+        },
+        {
+          "key": "items.weapon.melee.gauntlet.ability_name",
+          "english": "combo strike"
+        },
+        {
+          "key": "items.weapon.melee.gloves.ability_name",
+          "english": "combo strike"
+        },
+        {
+          "key": "items.weapon.melee.sai$combostriketracker.name",
+          "english": "combo strike"
+        },
+        {
+          "key": "items.weapon.melee.sai.ability_name",
+          "english": "combo strike"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "逸动",
+      "candidates": [
+        {
+          "key": "actors.buffs.momentum.action_name",
+          "english": "freerun"
+        },
+        {
+          "key": "actors.buffs.momentum.running",
+          "english": "freerunning"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "闪避",
+      "candidates": [
+        {
+          "key": "actors.char.def_verb",
+          "english": "dodged"
+        },
+        {
+          "key": "items.artifacts.driedrose$ghosthero.def_verb",
+          "english": "dodged"
+        },
+        {
+          "key": "items.stones.stoneofaugmentation$wndaugment.evasion",
+          "english": "Evasion"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "防御",
+      "candidates": [
+        {
+          "key": "items.stones.stoneofaugmentation$wndaugment.defense",
+          "english": "Defense"
+        },
+        {
+          "key": "windows.wndupgrade.blocking",
+          "english": "Blocking"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "饰物",
+      "candidates": [
+        {
+          "key": "items.trinkets.trinket$placeholder.name",
+          "english": "trinket"
+        },
+        {
+          "key": "journal.catalog.trinkets.title",
+          "english": "trinkets"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "无按键",
+      "candidates": [
+        {
+          "key": "windows.wndkeybindings$wndchangebinding.unbind",
+          "english": "Unbind Key"
+        },
+        {
+          "key": "windows.wndkeybindings.none",
+          "english": "None"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "备用口粮",
+      "candidates": [
+        {
+          "key": "actors.hero.talent.cached_rations.title",
+          "english": "cached rations"
+        },
+        {
+          "key": "items.food.supplyration.name",
+          "english": "supply ration"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "夺命印记",
+      "candidates": [
+        {
+          "key": "actors.hero.abilities.rogue.deathmark$deathmarktracker.name",
+          "english": "marked for death"
+        },
+        {
+          "key": "actors.hero.abilities.rogue.deathmark.name",
+          "english": "death mark"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "巨鼠头骨",
+      "candidates": [
+        {
+          "key": "items.quest.ratskull.name",
+          "english": "giant rat skull"
+        },
+        {
+          "key": "items.trinkets.ratskull.name",
+          "english": "rat skull"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "投掷武器",
+      "candidates": [
+        {
+          "key": "items.weapon.missiles.missileweapon$placeholder.name",
+          "english": "thrown weapon"
+        },
+        {
+          "key": "journal.catalog.thrown_weapons.title",
+          "english": "thrown weapons"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "星界投射",
+      "candidates": [
+        {
+          "key": "actors.hero.spells.stasis$stasisbuff.name",
+          "english": "ally in stasis"
+        },
+        {
+          "key": "actors.hero.spells.stasis.name",
+          "english": "stasis"
+        },
+        {
+          "key": "actors.hero.talent.stasis.title",
+          "english": "Stasis"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "暗影映像",
+      "candidates": [
+        {
+          "key": "actors.hero.abilities.rogue.shadowclone$shadowally.name",
+          "english": "shadow rogue"
+        },
+        {
+          "key": "actors.hero.abilities.rogue.shadowclone.name",
+          "english": "shadow clone"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "游戏新闻",
+      "candidates": [
+        {
+          "key": "scenes.newsscene.title",
+          "english": "Game News"
+        },
+        {
+          "key": "scenes.titlescene.news",
+          "english": "News"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "生命之泉",
+      "candidates": [
+        {
+          "key": "actors.blobs.waterofhealth.name",
+          "english": "water of health"
+        },
+        {
+          "key": "journal.notes$landmark.well_of_health",
+          "english": "well of health"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "神圣%s",
+      "candidates": [
+        {
+          "key": "actors.hero.spells.holyward.glyph_name",
+          "english": "%s of light"
+        },
+        {
+          "key": "actors.hero.spells.holyweapon.ench_name",
+          "english": "holy %s"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "血色羁绊",
+      "candidates": [
+        {
+          "key": "actors.hero.spells.lifelinkspell$lifelinkspellbuff.name",
+          "english": "life link protection"
+        },
+        {
+          "key": "actors.hero.spells.lifelinkspell.name",
+          "english": "life link"
+        },
+        {
+          "key": "actors.hero.talent.life_link.title",
+          "english": "life link"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "觉察之泉",
+      "candidates": [
+        {
+          "key": "actors.blobs.waterofawareness.name",
+          "english": "water of awareness"
+        },
+        {
+          "key": "journal.notes$landmark.well_of_awareness",
+          "english": "well of awareness"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "选择容器",
+      "candidates": [
+        {
+          "key": "ui.toolbar.container_select",
+          "english": "Select Container"
+        },
+        {
+          "key": "windows.wndkeybindings.inventory_selector",
+          "english": "Inventory Selector"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "魔法伤害",
+      "candidates": [
+        {
+          "key": "items.wands.damagewand.upgrade_stat_name_1",
+          "english": "Magic Damage"
+        },
+        {
+          "key": "windows.wndupgrade.zap_damage",
+          "english": "Zap Damage"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "死于：%s",
+      "candidates": [
+        {
+          "key": "actors.mobs.mob.rankings_desc",
+          "english": "Slain by: %s"
+        },
+        {
+          "key": "items.item.rankings_desc",
+          "english": "Killed by: %s"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "选择快捷栏",
+      "candidates": [
+        {
+          "key": "ui.toolbar.quickslot_select",
+          "english": "Select Quickslot"
+        },
+        {
+          "key": "windows.wndkeybindings.quickslot_selector",
+          "english": "Quickslot Selector"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "我将稍后决定",
+      "candidates": [
+        {
+          "key": "ui.talentspane.random_no",
+          "english": "I'll decide later."
+        },
+        {
+          "key": "windows.wndchoosesubclass.cancel",
+          "english": "I'll decide later"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "是的，我确定",
+      "candidates": [
+        {
+          "key": "items.potions.exotic.exoticpotion.yes",
+          "english": "Yes, I'm positive"
+        },
+        {
+          "key": "items.scrolls.exotic.scrollofenchantment.cancel_warn_yes",
+          "english": "Yes, I'm sure"
+        },
+        {
+          "key": "items.scrolls.inventoryscroll.yes",
+          "english": "Yes, I'm positive"
+        },
+        {
+          "key": "items.weapon.melee.magesstaff.yes",
+          "english": "Yes, I'm sure"
+        },
+        {
+          "key": "windows.wndresurrect.warn_yes",
+          "english": "Yes, I'm sure"
+        },
+        {
+          "key": "windows.wndtradeitem.steal_warn_yes",
+          "english": "Yes, I'm sure"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "灌注一件物品",
+      "candidates": [
+        {
+          "key": "items.spells.magicalinfusion.inv_title",
+          "english": "Infuse an item"
+        },
+        {
+          "key": "items.spells.summonelemental.imbue_prompt",
+          "english": "Imbue an item"
+        },
+        {
+          "key": "items.spells.targetedspell.inv_title",
+          "english": "Infuse an item"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "选择一个位置",
+      "candidates": [
+        {
+          "key": "actors.hero.spells.flash.prompt",
+          "english": "Choose a location"
+        },
+        {
+          "key": "actors.hero.spells.hallowedground.prompt",
+          "english": "Choose a location"
+        },
+        {
+          "key": "items.artifacts.sandalsofnature.prompt_target",
+          "english": "Select a location"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "选择一个目标",
+      "candidates": [
+        {
+          "key": "actors.hero.spells.clericspell.prompt",
+          "english": "Choose a target"
+        },
+        {
+          "key": "items.artifacts.skeletonkey.prompt",
+          "english": "Choose a target"
+        },
+        {
+          "key": "items.scrolls.exotic.scrollofsirenssong.prompt",
+          "english": "Choose a target"
+        },
+        {
+          "key": "items.spells.targetedspell.prompt",
+          "english": "Choose a target"
+        },
+        {
+          "key": "items.weapon.melee.meleeweapon.prompt",
+          "english": "Select a Target"
+        },
+        {
+          "key": "items.weapon.spiritbow.prompt",
+          "english": "Choose a target"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "不，我改主意了",
+      "candidates": [
+        {
+          "key": "items.artifacts.chaliceofblood.no",
+          "english": "No, I changed my mind"
+        },
+        {
+          "key": "items.scrolls.exotic.scrollofenchantment.cancel_warn_no",
+          "english": "No, I changed my mind"
+        },
+        {
+          "key": "items.weapon.melee.magesstaff.no",
+          "english": "No, I changed my mind"
+        },
+        {
+          "key": "levels.features.chasm.no",
+          "english": "No, I changed my mind"
+        },
+        {
+          "key": "windows.wndresurrect.warn_no",
+          "english": "No, let me reconsider"
+        },
+        {
+          "key": "windows.wndtradeitem.steal_warn_no",
+          "english": "No, I changed my mind"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "获得Yendor护符",
+      "candidates": [
+        {
+          "key": "badges$badge.victory.desc",
+          "english": "Obtain the Amulet of Yendor"
+        },
+        {
+          "key": "rankings$record.won",
+          "english": "Obtained the Amulet of Yendor"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "选择要释放魔法的位置",
+      "candidates": [
+        {
+          "key": "items.artifacts.lloydsbeacon.prompt",
+          "english": "Choose a location to zap."
+        },
+        {
+          "key": "items.wands.wand.prompt",
+          "english": "Choose a location to zap"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "你的斗篷变得更强大了！",
+      "candidates": [
+        {
+          "key": "items.artifacts.capeofthorns$thorns.levelup",
+          "english": "Your Cape grows stronger!"
+        },
+        {
+          "key": "items.artifacts.cloakofshadows$cloakstealth.levelup",
+          "english": "Your cloak grows stronger!"
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "你需要先鉴定那件护甲有无诅咒。",
+      "candidates": [
+        {
+          "key": "items.brokenseal.unknown_armor",
+          "english": "You must identify whether that armor is cursed or not first."
+        },
+        {
+          "key": "items.stylus.identify",
+          "english": "You must identify whether that armor is cursed first."
+        }
+      ]
+    },
+    {
+      "displayed_chinese": "决斗家用矛尖_刺退_在射程内但不与决斗家相邻的敌人，造成_%1$d~%2$d点伤害_，将敌人击退且必定命中。",
+      "candidates": [
+        {
+          "key": "items.weapon.melee.spear.ability_desc",
+          "english": "The Duelist can use the tip of a spear to _spike_ an enemy that is in range but not adjacent. This deals _%1$d-%2$d damage_, knocks the enemy back, and is guaranteed to hit."
+        },
+        {
+          "key": "items.weapon.melee.spear.typical_ability_desc",
+          "english": "The Duelist can use the tip of a spear to _spike_ an enemy that is in range but not adjacent. This typically deals _%1$d-%2$d damage_, knocks the enemy back, and is guaranteed to hit."
+        }
+      ]
+    }
+  ]
+}
