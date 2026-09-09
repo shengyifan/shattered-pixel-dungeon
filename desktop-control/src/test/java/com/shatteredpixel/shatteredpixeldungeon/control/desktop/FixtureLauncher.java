@@ -200,6 +200,7 @@ public final class FixtureLauncher {
                 }
                 if (!injected && Game.scene() instanceof GameScene && Dungeon.hero != null && Dungeon.hero.ready
                         && Actor.isYielded() && !GameScene.interfaceBlockingHero()) {
+                    if(fixture.kind.equals("scenario"))TransitionScenarioFixtures.diagnostics(profile);
                     fixtureTarget = prepare(fixture);
                     injected = true;
                     Map<String, Object> meta = map("test_fixture", true, "counts_as_win", false, "fixture", fixture.id,
@@ -210,6 +211,7 @@ public final class FixtureLauncher {
                 }
                 game.afterFrame();
                 GameController.State state = game.latest();
+                if(fixture.kind.equals("scenario"))TransitionScenarioFixtures.observed(state);
                 if (state != null && !state.version.equals(lastUiVersion)) {
                     UiSceneAssertions.record(profile, state);
                     if(fixture.kind.equals("menu"))Files.writeString(profile.resolve("menu-assertions.jsonl"),

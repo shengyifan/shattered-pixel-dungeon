@@ -101,7 +101,7 @@ def story(client,profile,initial,name):
 def run_one(root,classpath,runtime_id,name):
     profile=safe_profile(root,"scenario-"+name);metadata(profile,"scenario:"+name,runtime_id)
     command=launch_command(classpath,fixture=True);command[-1]="scenario:"+name
-    client=FixtureClient(command,profile)
+    client=FixtureClient(command,profile,verify_gui=True)
     try:
         hello=client.request("protocol.info");assert hello["ok"]
         initial=reach_game(client,"WARRIOR")
@@ -113,16 +113,28 @@ def run_one(root,classpath,runtime_id,name):
                 "profile":str(profile.relative_to(root)),"build_id":hello["result"]["build_id"],
                 "language":"CHI_SMPL","fullscreen":False,"cli_language":"en",
                 "gui_environment":gui_environment,**evidence}
+        result["gui_postconditions_checked"]=client.gui_postconditions_checked
+        result["source_stages"]=str((profile/"transition-source-stages.jsonl").relative_to(root))
         stop(client);write_json(profile/"transition-scenario-result.json",result);print(json.dumps(result,ensure_ascii=False),flush=True)
         return result
+    except Exception as error:
+        write_json(profile/"transition-scenario-failure.json",{"verified":False,"test_fixture":True,
+                   "counts_as_win":False,"scenario":name,"runtime_id":runtime_id,
+                   "profile":str(profile.relative_to(root)),"error":str(error)[:3000],
+                   "source_stages":str((profile/"transition-source-stages.jsonl").relative_to(root)),
+                   "thread_diagnostics":str((profile/"transition-source-threads.txt").relative_to(root))})
+        raise
     finally:
-        if client.process.poll() is None:stop(client,uncertain=True)
+        if client.process.poll() is None:
+            client.process.stdin.close()
+            try:client.process.wait(timeout=12)
+            except Exception:
+                client.process.terminate();client.process.wait(timeout=10)
         client.stderr.close();client.trace.close()
 
 
 def main():
-    # story-halls is an explicit pending fixture: source preparation has not yet passed.
-    parser=argparse.ArgumentParser();parser.add_argument("--cases",default="fall,branch,story-prison,story-caves,story-city");args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument("--cases",default="fall,branch,story-prison,story-caves,story-city,story-halls");args=parser.parse_args()
     root=Path(__file__).resolve().parents[4]
     classpath,runtime_id=freeze_runtime(root,(root/"desktop-control/build/test-runtime-classpath.txt").read_text())
     results=[run_one(root,classpath,runtime_id,name) for name in args.cases.split(",")]

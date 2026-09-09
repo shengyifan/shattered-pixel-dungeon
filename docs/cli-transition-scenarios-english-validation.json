@@ -1,0 +1,300 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "gui_language": "CHI_SMPL",
+  "cli_language": "en",
+  "fullscreen": false,
+  "passed": [
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-c734cad508874cf497192bc5300d05d4",
+      "profile": "desktop-control/build/fixtures/scenario-fall-3c3708e301684b6a9e43b20f84f10204",
+      "build_id": "2adcc5a0d82d2fd3ababa77fe660472c053dbc0dc2f409a46e0f79a8d7dad3b8",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "7f44bb6a-cb64-4e81-b1a0-b9190ddd2beb:5"
+      },
+      "case_id": "transition.fall",
+      "original_jump_cancel": true,
+      "original_jump_confirm": true,
+      "landing_finished_in_final_response": true,
+      "hp_before": 1000,
+      "hp_after": 505,
+      "depth_after": 2,
+      "bleeding_and_cripple_applied": true,
+      "same_scope": true,
+      "gui_postconditions_checked": 17,
+      "source_stages": "desktop-control/build/fixtures/scenario-fall-3c3708e301684b6a9e43b20f84f10204/transition-source-stages.jsonl"
+    },
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-c734cad508874cf497192bc5300d05d4",
+      "profile": "desktop-control/build/fixtures/scenario-branch-4c3fd05c352f4088aff6292b89fdf63b",
+      "build_id": "2adcc5a0d82d2fd3ababa77fe660472c053dbc0dc2f409a46e0f79a8d7dad3b8",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "1f4af330-fad5-41d5-b4ef-1e1c8c208987:5"
+      },
+      "case_id": "transition.branch_roundtrip",
+      "original_enter_cancel_and_confirm": true,
+      "original_mining_generation_completed": true,
+      "original_exit_warning_cancel_and_confirm": true,
+      "returned_original_caves_floor": true,
+      "same_scope": true,
+      "gui_postconditions_checked": 23,
+      "source_stages": "desktop-control/build/fixtures/scenario-branch-4c3fd05c352f4088aff6292b89fdf63b/transition-source-stages.jsonl"
+    },
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-c734cad508874cf497192bc5300d05d4",
+      "profile": "desktop-control/build/fixtures/scenario-story-prison-4cc671397c114ebd853922dc665396b5",
+      "build_id": "2adcc5a0d82d2fd3ababa77fe660472c053dbc0dc2f409a46e0f79a8d7dad3b8",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "0c91e7af-491a-4874-8dac-8bba2a4f4f5f:5"
+      },
+      "case_id": "transition.story_prison",
+      "story_actually_displayed": true,
+      "original_continue_used": true,
+      "next_stable_floor": 6,
+      "same_scope": true,
+      "gui_postconditions_checked": 14,
+      "source_stages": "desktop-control/build/fixtures/scenario-story-prison-4cc671397c114ebd853922dc665396b5/transition-source-stages.jsonl"
+    },
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-c734cad508874cf497192bc5300d05d4",
+      "profile": "desktop-control/build/fixtures/scenario-story-caves-7a43a25743884ad39b3c04250b695132",
+      "build_id": "2adcc5a0d82d2fd3ababa77fe660472c053dbc0dc2f409a46e0f79a8d7dad3b8",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "d6d98831-aa8a-43ba-94cd-7d0ca7c1daa2:5"
+      },
+      "case_id": "transition.story_caves",
+      "story_actually_displayed": true,
+      "original_continue_used": true,
+      "next_stable_floor": 11,
+      "same_scope": true,
+      "gui_postconditions_checked": 14,
+      "source_stages": "desktop-control/build/fixtures/scenario-story-caves-7a43a25743884ad39b3c04250b695132/transition-source-stages.jsonl"
+    },
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-c734cad508874cf497192bc5300d05d4",
+      "profile": "desktop-control/build/fixtures/scenario-story-city-94489a2fe18d462fbc8674bcd0c9e72d",
+      "build_id": "2adcc5a0d82d2fd3ababa77fe660472c053dbc0dc2f409a46e0f79a8d7dad3b8",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "648835b1-a68c-4d36-aaf8-9e3dbb6647e7:5"
+      },
+      "case_id": "transition.story_city",
+      "story_actually_displayed": true,
+      "original_continue_used": true,
+      "next_stable_floor": 16,
+      "same_scope": true,
+      "gui_postconditions_checked": 14,
+      "source_stages": "desktop-control/build/fixtures/scenario-story-city-94489a2fe18d462fbc8674bcd0c9e72d/transition-source-stages.jsonl"
+    },
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-573a91c4c788421ca1585125092f01bd",
+      "profile": "desktop-control/build/fixtures/scenario-story-halls-3c3db7eaf93d40c48734873e866a23dd",
+      "build_id": "2adcc5a0d82d2fd3ababa77fe660472c053dbc0dc2f409a46e0f79a8d7dad3b8",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "ee0d80df-dc54-4570-99a1-1104fe7c9925:5"
+      },
+      "case_id": "transition.story_halls",
+      "story_actually_displayed": true,
+      "original_continue_used": true,
+      "next_stable_floor": 21,
+      "same_scope": true,
+      "gui_postconditions_checked": 14,
+      "source_stages": "desktop-control/build/fixtures/scenario-story-halls-3c3db7eaf93d40c48734873e866a23dd/transition-source-stages.jsonl"
+    }
+  ],
+  "gui_postconditions_checked": 96,
+  "pending": [],
+  "historical_chinese_report": "docs/cli-transition-scenarios-validation.json",
+  "source_setup_diagnosis": {
+    "profile": "desktop-control/build/fixtures/scenario-story-halls-cd9f241b0767437d8afdea20c516ae57",
+    "stages": [
+      {
+        "scenario": "story-halls",
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "scene_rebuild_queued",
+        "occurred_at": "2026-09-09T03:38:44.348620Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "source_before_create",
+        "occurred_at": "2026-09-09T03:38:44.351220Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "depth": 20,
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "before_original_level_generation",
+        "occurred_at": "2026-09-09T03:38:44.351304Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "level_class": "CityBossLevel",
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "original_level_generated",
+        "occurred_at": "2026-09-09T03:38:44.353666Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "requested_position": 127,
+        "invalid_position": true,
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "before_original_switch_level",
+        "occurred_at": "2026-09-09T03:38:44.354017Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "requested_position": 127,
+        "actual_position": 667,
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "original_switch_level_returned",
+        "occurred_at": "2026-09-09T03:38:44.356045Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "error_class": "java.lang.IllegalStateException",
+        "message": "Prepared source position was rejected by the original level",
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "source_setup_failed",
+        "occurred_at": "2026-09-09T03:38:44.356125Z",
+        "thread": "SHPD Render Thread"
+      }
+    ],
+    "thread_dump": "desktop-control/build/fixtures/scenario-story-halls-cd9f241b0767437d8afdea20c516ae57/transition-source-threads.txt",
+    "classification": "test_source_physical_door_state_incomplete",
+    "production_changed": false,
+    "original_generation_completed": true,
+    "requested_position": 127,
+    "original_fallback_position": 667,
+    "fix": "Only match the original cleared CityBossLevel top/bottom door state in fixture preparation.",
+    "fixed_profile": "desktop-control/build/fixtures/scenario-story-halls-3c3db7eaf93d40c48734873e866a23dd",
+    "fixed_stages": [
+      {
+        "scenario": "story-halls",
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "scene_rebuild_queued",
+        "occurred_at": "2026-09-09T03:43:48.766385Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "source_before_create",
+        "occurred_at": "2026-09-09T03:43:48.768959Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "depth": 20,
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "before_original_level_generation",
+        "occurred_at": "2026-09-09T03:43:48.769037Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "level_class": "CityBossLevel",
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "original_level_generated",
+        "occurred_at": "2026-09-09T03:43:48.771165Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "requested_position": 127,
+        "invalid_position": false,
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "before_original_switch_level",
+        "occurred_at": "2026-09-09T03:43:48.771566Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "requested_position": 127,
+        "actual_position": 127,
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "original_switch_level_returned",
+        "occurred_at": "2026-09-09T03:43:48.773585Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "source_ready_before_scene_create",
+        "occurred_at": "2026-09-09T03:43:48.773644Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "source_scene_created",
+        "occurred_at": "2026-09-09T03:43:48.779754Z",
+        "thread": "SHPD Render Thread"
+      },
+      {
+        "state_version": "ee0d80df-dc54-4570-99a1-1104fe7c9925:5",
+        "scope_id": "run:61e81354-1c96-4239-a449-46b2a3e74746",
+        "test_fixture": true,
+        "internal_assertion_only": true,
+        "stage": "source_stable_observed",
+        "occurred_at": "2026-09-09T03:43:48.821013Z",
+        "thread": "SHPD Render Thread"
+      }
+    ]
+  }
+}
