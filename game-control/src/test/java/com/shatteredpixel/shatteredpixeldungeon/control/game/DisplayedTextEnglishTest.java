@@ -239,6 +239,26 @@ class DisplayedTextEnglishTest {
         assertTrue(t.translateVisibleInScene("游戏新闻",true,"other").partial);
     }
 
+    @Test void guidebookHintUsesOnlyThePublicGameSceneAndDoesNotBorrowItemIdentityOrHiddenTails() {
+        DisplayedTextEnglish t=DisplayedTextEnglish.fromResources(
+                Map.of("scenes.alchemyscene.guide","指南","items.journal.guidebook.hint_status","指南"),
+                Map.of("scenes.alchemyscene.guide","Guide","items.journal.guidebook.hint_status","Guidebook"));
+        for(String scene:java.util.Arrays.asList("GameScene","game")) {
+            assertEquals("Guidebook",t.translateInScene("指南",scene));
+            assertEquals("Guidebook",t.translateInContext("指南",Map.of("scene",scene,"role","text","hidden_item","guidebook")));
+            assertEquals("Guidebook",t.translateInContext("指南",Map.of("scene",scene,"role","entry","hidden_item",new Object())));
+        }
+        assertEquals("Guide",t.translateInScene("指南","AlchemyScene"));
+        assertEquals("Guide",t.translateInScene("指南","alchemy"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate("指南"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInScene("指南","other"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("指南",Map.of("hidden_scene","GameScene")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInScene("指南隐藏尾文","GameScene"));
+        assertEquals("Partially displayed text",t.translateVisibleInScene("指",true,"GameScene").text);
+        assertEquals("Guide",t.translateInScene("Guide","GameScene"),"Already-English display text is unchanged");
+        assertEquals("Guidebook",t.translateInScene("指南","GameScene"),"The intervening Alchemy translation is not a global latest mapping");
+    }
+
     @Test void ambiguityInsideOnePublicSceneStillFailsAndScopeCannotMatchOnlyAPrefix() {
         Map<String,String> zh=Map.of("scenes.titlescene.a","同文","scenes.titlescene.b","同文");
         Map<String,String> en=Map.of("scenes.titlescene.a","A meaning","scenes.titlescene.b","A different meaning");

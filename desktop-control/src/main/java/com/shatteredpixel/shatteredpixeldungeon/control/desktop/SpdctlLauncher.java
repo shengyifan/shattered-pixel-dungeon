@@ -16,7 +16,7 @@ public final class SpdctlLauncher {
         PrintStream protocol=new PrintStream(new FileOutputStream(FileDescriptor.out),true,StandardCharsets.UTF_8);
         PrintStream diagnostics=new PrintStream(new FileOutputStream(FileDescriptor.err),true,StandardCharsets.UTF_8);
         if(args.length==1&&(args[0].equals("--help")||args[0].equals("--version"))){
-            protocol.println(args[0].equals("--version")?"CLI.0.7.1 (protocol 1, game 3.3.8)":"spdctl run --machine [--data-dir ABSOLUTE_PROFILE_DIRECTORY]");return;
+            protocol.println(args[0].equals("--version")?"CLI.0.7.2 (protocol 1, game 3.3.8)":"spdctl run --machine [--data-dir ABSOLUTE_PROFILE_DIRECTORY]");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
                 ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI")

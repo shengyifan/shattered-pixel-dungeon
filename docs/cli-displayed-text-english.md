@@ -32,8 +32,12 @@
 | 开始 | `TitleScene` / `title` | Play |
 | 游戏新闻 | `TitleScene` / `title` | News |
 | 游戏新闻 | `NewsScene` | Game News |
+| 指南 | `GameScene` / `game` | Guidebook |
+| 指南 | `AlchemyScene` / `alchemy` | Guide |
 
 相同可见字符串和相同公开 scene 的结果，与隐藏对象种类及之前翻译过哪个场景无关。公开 scene 内部仍有多个不同候选时也拒绝；只匹配前缀不能补全未显示的尾文。
+
+“指南”的 GameScene 分支是一项窄的公开场景例外：只对完整同词查 `items.journal.guidebook.hint_status`。原资源表只有这项与独立 AlchemyScene 的 `scenes.alchemyscene.guide` 两个来源。该规则不检查是否持有指南、不读取物品对象，也不因后来进入过炼金场景而改变 GameScene 的译文；未知 scene、隐藏 scene 提示或多出来的尾文仍不提供此消歧。
 
 其他获准的上下文规则如下。布尔签名由协议层从现有公开字段构造；本类只消费它们并再次检查要求的 scene，不读取窗口类、存档对象或模型类型。
 
@@ -63,7 +67,7 @@
 | 格式模板 | 584 对全部成功解析，参数集合没有缺项 |
 | 实际带参模板样本 | 584 个，每模板使用一组确定性的可见名称/数值；578 个逐字匹配原英文 `String.format`，6 个安全拒绝 |
 | 公开语言名称 | 23 种全部测试，含中文以外脚本和 Latin 名称 |
-| 独立单测 | 36 项通过 |
+| 独立单测 | 37 项通过 |
 
 6 个带参拒绝来自三组真实资源碰撞：`神圣%s` 对应 `%s of light` / `holy %s`；`死于：%s` 对应 `Slain by: %s` / `Killed by: %s`；矛的实际能力说明和典型能力说明具有完全相同中文，英文却有无 `typically` 的差别。这些不能通过读取隐藏模型来区分。模板样本没有穷举所有真实参数组合，不能据此宣称整个游戏所有显示文本都已覆盖。
 

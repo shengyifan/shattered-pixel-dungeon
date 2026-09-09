@@ -70,6 +70,10 @@ public final class DisplayedTextEnglish {
         String word=CONSERVATIVE_WORDS.get(displayed);if(word!=null)return word;
         String normalized=dictionary.normalized.get(displayed);if(normalized!=null)return normalized;
         String scope=PUBLIC_SCENE_SCOPES.get(publicScene);
+        if("gamescene".equals(scope)&&"指南".equals(displayed)) {
+            String guidebook=policyResource(displayed,"items.journal.guidebook.hint_status");
+            if(guidebook!=null)return guidebook;
+        }
         if(scope!=null && displayed!=null && containsNonLatinText(displayed)) {
             Map<String,Set<String>> entries=dictionary.sceneEntries.get(scope);
             String english=entries==null?null:unique(entries.get(displayed));
@@ -404,7 +408,8 @@ public final class DisplayedTextEnglish {
                 if(source==null||target==null||!containsChinese(source))continue;
                 pairs++;entries.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
                 if(key.equals("windows.wndkeybindings.back")||key.equals("windows.wndsettings$displaytab.off")
-                        ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no"))
+                        ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no")
+                        ||key.equals("items.journal.guidebook.hint_status"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
                     catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
