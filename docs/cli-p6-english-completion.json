@@ -1,0 +1,519 @@
+{
+  "test_fixture": true,
+  "counts_as_legitimate_win": false,
+  "all_cases_have_passing_evidence": true,
+  "single_build_full_matrix_run": false,
+  "total": 22,
+  "passed": 22,
+  "failed_remaining": 0,
+  "passing_evidence_gui_postconditions_checked": 642,
+  "rounds": [
+    {
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "cli_version": "CLI.0.8.5",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "attempted": 22,
+      "passed": 14,
+      "selected_passing_cases": [
+        "shop-trade",
+        "shop-steal",
+        "blacksmith-cashout",
+        "blacksmith-pickaxe",
+        "blacksmith-reforge",
+        "alchemy-energy",
+        "amulet-stay",
+        "amulet-end",
+        "shop-stack",
+        "blacksmith-harden",
+        "blacksmith-upgrade",
+        "companion-resummon",
+        "blessed-ankh",
+        "amulet-pickup"
+      ]
+    },
+    {
+      "source_evidence": "docs/cli-p6-dialog-signatures-validation.json",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "cli_version": "CLI.0.8.7",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "attempted": 6,
+      "passed": 5,
+      "selected_passing_cases": [
+        "shop-steal-warning",
+        "ghost-reward",
+        "resurrect",
+        "shop-steal-failure",
+        "blacksmith-smith"
+      ]
+    },
+    {
+      "source_evidence": "desktop-control/build/fixtures/runtime-27f9bc4e4cdf45deb484fcf8576fdbcd/low-frequency-results.json",
+      "runtime_id": "runtime-27f9bc4e4cdf45deb484fcf8576fdbcd",
+      "cli_version": "CLI.0.8.8",
+      "build_id": "2abdfe4ce29beeff6da747d2a87ed4dbbecc2a9ee1d6c7630eebca0194c09586",
+      "attempted": 3,
+      "passed": 3,
+      "selected_passing_cases": [
+        "wandmaker-reward",
+        "companion",
+        "companion-attack"
+      ]
+    }
+  ],
+  "prior_failures_preserved": [
+    "docs/cli-p6-english-validation.json",
+    "docs/cli-p6-dialog-signatures-validation.json"
+  ],
+  "scope": "Three frozen builds: 14 original passing cases + 5 confirmation-remediation passing cases + 3 NPC-dialogue-remediation passing cases. Already passing cases were not rerun.",
+  "validation": {
+    "gui": "CHI_SMPL and fullscreen=false checked against the same state_version and scope_id of each non-quit public observation; pending actions use their own logical final response",
+    "public_game_prose": "English recursively checked on every response; raw audit data excluded",
+    "process_cleanup": "Every selected passing case completed through original cancellation/quit paths and exited zero; the latest three had no cleanup errors",
+    "gameplay_control": "Original CLI only after isolated trigger-before fixture preparation; no screenshots, keyboard, mouse, formal playthrough profiles or RNG overrides"
+  },
+  "results": [
+    {
+      "case": "shop-trade",
+      "profile": "desktop-control/build/fixtures/p6-shop-trade-c13bfb47ae374ea4a4918ac7c78427b4",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 38,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-shop-trade-c13bfb47ae374ea4a4918ac7c78427b4/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-trade-c13bfb47ae374ea4a4918ac7c78427b4/public-trace.jsonl",
+      "evidence": {
+        "buy_cancel_checked": true,
+        "sell_cancel_checked": true,
+        "purchase_cost": 150,
+        "sale_value": 30,
+        "inventory_quantity_round_trip": true
+      }
+    },
+    {
+      "case": "shop-steal",
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-164be9ba8ea04e389ff9b5d050cc1201",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 21,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-shop-steal-164be9ba8ea04e389ff9b5d050cc1201/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-164be9ba8ea04e389ff9b5d050cc1201/public-trace.jsonl",
+      "evidence": {
+        "buy_window_cancel_checked": true,
+        "actual_100_percent_steal": true,
+        "gold_unchanged": true,
+        "charge_before": 5,
+        "charge_after": 2
+      }
+    },
+    {
+      "case": "shop-steal-warning",
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-warning-c191c950ca9843559b42c99b07460ac8",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 23,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-dialog-signatures-validation.json",
+      "report": "desktop-control/build/fixtures/p6-shop-steal-warning-c191c950ca9843559b42c99b07460ac8/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-warning-c191c950ca9843559b42c99b07460ac8/public-trace.jsonl",
+      "evidence": {
+        "risky_steal_warning_shown": true,
+        "native_confirmation_cancelled_without_cost": true
+      }
+    },
+    {
+      "case": "ghost-reward",
+      "profile": "desktop-control/build/fixtures/p6-ghost-reward-13b5ef2ecfa84a1ea3d311c7a9ebd322",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-dialog-signatures-validation.json",
+      "report": "desktop-control/build/fixtures/p6-ghost-reward-13b5ef2ecfa84a1ea3d311c7a9ebd322/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-ghost-reward-13b5ef2ecfa84a1ea3d311c7a9ebd322/public-trace.jsonl",
+      "evidence": {
+        "reward_preview_cancel_checked": true,
+        "reward_received_in_final_response": true,
+        "quest_consumable_removed": false,
+        "quest_completion_checked": true
+      }
+    },
+    {
+      "case": "wandmaker-reward",
+      "profile": "desktop-control/build/fixtures/p6-wandmaker-reward-f22806c949ed4129b0e8078bd5ffffa1",
+      "runtime_id": "runtime-27f9bc4e4cdf45deb484fcf8576fdbcd",
+      "build_id": "2abdfe4ce29beeff6da747d2a87ed4dbbecc2a9ee1d6c7630eebca0194c09586",
+      "cli_version": "CLI.0.8.8",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "desktop-control/build/fixtures/runtime-27f9bc4e4cdf45deb484fcf8576fdbcd/low-frequency-results.json",
+      "report": "desktop-control/build/fixtures/p6-wandmaker-reward-f22806c949ed4129b0e8078bd5ffffa1/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-wandmaker-reward-f22806c949ed4129b0e8078bd5ffffa1/public-trace.jsonl",
+      "evidence": {
+        "reward_preview_cancel_checked": true,
+        "reward_received_in_final_response": true,
+        "quest_consumable_removed": true,
+        "quest_completion_checked": true
+      },
+      "complete_translated_dialogue_present": "Good luck in your quest, warrior!"
+    },
+    {
+      "case": "blacksmith-cashout",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-cashout-e5ff62b6cf5c4a898a9d4ca14c9c37b0",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 25,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-blacksmith-cashout-e5ff62b6cf5c4a898a9d4ca14c9c37b0/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-cashout-e5ff62b6cf5c4a898a9d4ca14c9c37b0/public-trace.jsonl",
+      "evidence": {
+        "confirmation_cancel_checked": true,
+        "reward_and_favor_verified": true,
+        "favor_before": 3000,
+        "favor_after": 0
+      }
+    },
+    {
+      "case": "blacksmith-pickaxe",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-pickaxe-16e24082b6394addb47ddcdc07200845",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 25,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-blacksmith-pickaxe-16e24082b6394addb47ddcdc07200845/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-pickaxe-16e24082b6394addb47ddcdc07200845/public-trace.jsonl",
+      "evidence": {
+        "confirmation_cancel_checked": true,
+        "reward_and_favor_verified": true,
+        "favor_before": 2000,
+        "favor_after": 1750
+      }
+    },
+    {
+      "case": "blacksmith-reforge",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-reforge-4aee96a485b24a87b2ebffc2dd478a10",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 33,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-blacksmith-reforge-4aee96a485b24a87b2ebffc2dd478a10/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-reforge-4aee96a485b24a87b2ebffc2dd478a10/public-trace.jsonl",
+      "evidence": {
+        "selector_cancel_checked": true,
+        "two_items_reforged_into_one": true,
+        "favor_cost": 500
+      }
+    },
+    {
+      "case": "companion",
+      "profile": "desktop-control/build/fixtures/p6-companion-034eee6b3358436ba991f4efb0e5c6da",
+      "runtime_id": "runtime-27f9bc4e4cdf45deb484fcf8576fdbcd",
+      "build_id": "2abdfe4ce29beeff6da747d2a87ed4dbbecc2a9ee1d6c7630eebca0194c09586",
+      "cli_version": "CLI.0.8.8",
+      "gui_postconditions_checked": 60,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "desktop-control/build/fixtures/runtime-27f9bc4e4cdf45deb484fcf8576fdbcd/low-frequency-results.json",
+      "report": "desktop-control/build/fixtures/p6-companion-034eee6b3358436ba991f4efb0e5c6da/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-companion-034eee6b3358436ba991f4efb0e5c6da/public-trace.jsonl",
+      "evidence": {
+        "outfit_selector_cancel_checked": true,
+        "weapon_and_armor_equipped": true,
+        "summon_consumed_full_charge": true,
+        "direct_cancel_checked": true,
+        "defend_target_assigned": true,
+        "follow_hero_command_checked": true,
+        "equipment_returned_to_inventory": true,
+        "equipment_handoff_verified_in_each_action_response": true
+      },
+      "complete_translated_dialogue_present": "Hello again warrior."
+    },
+    {
+      "case": "alchemy-energy",
+      "profile": "desktop-control/build/fixtures/p6-alchemy-energy-d82bdd3597d94c87a9d5ec0ac944eaa6",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 37,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-alchemy-energy-d82bdd3597d94c87a9d5ec0ac944eaa6/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-alchemy-energy-d82bdd3597d94c87a9d5ec0ac944eaa6/public-trace.jsonl",
+      "evidence": {
+        "energize_cancel_checked": true,
+        "one_item_converted_to_energy": 6,
+        "exotic_potion_crafted": true,
+        "energy_spent": 4,
+        "same_scope": true
+      }
+    },
+    {
+      "case": "resurrect",
+      "profile": "desktop-control/build/fixtures/p6-resurrect-612cb7534295464183c8080ec2904b6b",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 40,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-dialog-signatures-validation.json",
+      "report": "desktop-control/build/fixtures/p6-resurrect-612cb7534295464183c8080ec2904b6b/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-resurrect-612cb7534295464183c8080ec2904b6b/public-trace.jsonl",
+      "evidence": {
+        "death_from_original_poison_tick": true,
+        "mandatory_window_back_does_not_skip": true,
+        "item_selector_cancel_checked": true,
+        "missing_item_warning_cancelled": true,
+        "selected_items_preserved": true,
+        "ankh_consumed": true,
+        "same_scope_after_resurrection": true,
+        "kept_item_details_available": true,
+        "lost_gray_item_preserved_in_public_inventory": true,
+        "lost_gray_item_open_rejected": "ACTION_UNAVAILABLE",
+        "rejected_request_id_burned": true,
+        "rejection_did_not_change_observed_world": true
+      }
+    },
+    {
+      "case": "amulet-stay",
+      "profile": "desktop-control/build/fixtures/p6-amulet-stay-7e75aa25987040b69648af7d3ceb094d",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 19,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-amulet-stay-7e75aa25987040b69648af7d3ceb094d/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-amulet-stay-7e75aa25987040b69648af7d3ceb094d/public-trace.jsonl",
+      "evidence": {
+        "amulet_scene_choice_read": true,
+        "stay_returns_to_same_run": true
+      }
+    },
+    {
+      "case": "amulet-end",
+      "profile": "desktop-control/build/fixtures/p6-amulet-end-7f7dbb872fc8434bb31c9f86a45d5cfb",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 32,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-amulet-end-7f7dbb872fc8434bb31c9f86a45d5cfb/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-amulet-end-7f7dbb872fc8434bb31c9f86a45d5cfb/public-trace.jsonl",
+      "evidence": {
+        "amulet_scene_choice_read": true,
+        "test_only_win_event_recorded": true,
+        "rankings_and_victory_window_shown": true,
+        "victory_close_button_used": true,
+        "counts_as_legitimate_win": false
+      }
+    },
+    {
+      "case": "shop-stack",
+      "profile": "desktop-control/build/fixtures/p6-shop-stack-a1dbad5ac30d44a8b6a7c030c80370f8",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 44,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-shop-stack-a1dbad5ac30d44a8b6a7c030c80370f8/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-stack-a1dbad5ac30d44a8b6a7c030c80370f8/public-trace.jsonl",
+      "evidence": {
+        "sell_one_and_buyback": true,
+        "sell_all_and_buyback": true,
+        "stack_restored_each_time": true,
+        "sale_prices": [
+          30,
+          90
+        ],
+        "gold_round_trip": true
+      }
+    },
+    {
+      "case": "shop-steal-failure",
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-failure-733ae9883b7a4dd485d2d45ae9944b4f",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 20,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-dialog-signatures-validation.json",
+      "report": "desktop-control/build/fixtures/p6-shop-steal-failure-733ae9883b7a4dd485d2d45ae9944b4f/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-failure-733ae9883b7a4dd485d2d45ae9944b4f/public-trace.jsonl",
+      "evidence": {
+        "actual_failed_theft": true,
+        "attempts": 1,
+        "rng_overridden": false,
+        "displayed_success_percent": 2,
+        "shopkeeper_fled": true,
+        "no_item_acquired": true,
+        "no_gold_or_charge_spent_on_native_failure": true
+      }
+    },
+    {
+      "case": "blacksmith-harden",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-harden-7d682b07efbd461f8eb060bde2e93754",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-blacksmith-harden-7d682b07efbd461f8eb060bde2e93754/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-harden-7d682b07efbd461f8eb060bde2e93754/public-trace.jsonl",
+      "evidence": {
+        "service": "harden",
+        "item_selector_cancelled": true,
+        "favor_cost": 500,
+        "actual_item_effect_in_final_response": true
+      }
+    },
+    {
+      "case": "blacksmith-upgrade",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-upgrade-e1ba6ba4203d40209fc319ff7726cf5c",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-blacksmith-upgrade-e1ba6ba4203d40209fc319ff7726cf5c/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-upgrade-e1ba6ba4203d40209fc319ff7726cf5c/public-trace.jsonl",
+      "evidence": {
+        "service": "upgrade",
+        "item_selector_cancelled": true,
+        "favor_cost": 1000,
+        "actual_item_effect_in_final_response": true
+      }
+    },
+    {
+      "case": "blacksmith-smith",
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-smith-768187e094d54d8893527482f11f4d9b",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 33,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-dialog-signatures-validation.json",
+      "report": "desktop-control/build/fixtures/p6-blacksmith-smith-768187e094d54d8893527482f11f4d9b/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-smith-768187e094d54d8893527482f11f4d9b/public-trace.jsonl",
+      "evidence": {
+        "smith_cost": 2000,
+        "purchase_confirmation_cancelled": true,
+        "mandatory_reward_window_back_blocked": true,
+        "reward_preview_cancelled": true,
+        "generated_reward_received": true,
+        "reward_list_cleared": true
+      }
+    },
+    {
+      "case": "companion-attack",
+      "profile": "desktop-control/build/fixtures/p6-companion-attack-690c539fe0df44d0b32ab862c7f5643d",
+      "runtime_id": "runtime-27f9bc4e4cdf45deb484fcf8576fdbcd",
+      "build_id": "2abdfe4ce29beeff6da747d2a87ed4dbbecc2a9ee1d6c7630eebca0194c09586",
+      "cli_version": "CLI.0.8.8",
+      "gui_postconditions_checked": 42,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "desktop-control/build/fixtures/runtime-27f9bc4e4cdf45deb484fcf8576fdbcd/low-frequency-results.json",
+      "report": "desktop-control/build/fixtures/p6-companion-attack-690c539fe0df44d0b32ab862c7f5643d/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-companion-attack-690c539fe0df44d0b32ab862c7f5643d/public-trace.jsonl",
+      "evidence": {
+        "visible_enemy_directed": true,
+        "target_assignment_in_final_response": true,
+        "fixed_public_waits": 8,
+        "actual_companion_damage_verified": true
+      },
+      "complete_translated_dialogue_present": "Hello again warrior."
+    },
+    {
+      "case": "companion-resummon",
+      "profile": "desktop-control/build/fixtures/p6-companion-resummon-397562413ce346698ec8e73631e9fb63",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 20,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-companion-resummon-397562413ce346698ec8e73631e9fb63/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-companion-resummon-397562413ce346698ec8e73631e9fb63/public-trace.jsonl",
+      "evidence": {
+        "setup_previous_summon_with_nearly_full_recharge": true,
+        "native_wait_completed_recharge": true,
+        "second_summon_branch_executed": true,
+        "full_charge_consumed": true
+      }
+    },
+    {
+      "case": "blessed-ankh",
+      "profile": "desktop-control/build/fixtures/p6-blessed-ankh-1bd419a9bf734e87a29e49243491eb98",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 16,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-blessed-ankh-1bd419a9bf734e87a29e49243491eb98/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blessed-ankh-1bd419a9bf734e87a29e49243491eb98/public-trace.jsonl",
+      "evidence": {
+        "original_poison_death": true,
+        "automatic_blessed_resurrection": true,
+        "no_item_selection_window": true,
+        "ankh_consumed_inventory_preserved": true,
+        "same_scope": true
+      }
+    },
+    {
+      "case": "amulet-pickup",
+      "profile": "desktop-control/build/fixtures/p6-amulet-pickup-6ddfba217ae04e84a7923bd4ae2ecb80",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 18,
+      "exit_code": 0,
+      "ok": true,
+      "source_evidence": "docs/cli-p6-english-validation.json",
+      "report": "desktop-control/build/fixtures/p6-amulet-pickup-6ddfba217ae04e84a7923bd4ae2ecb80/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-amulet-pickup-6ddfba217ae04e84a7923bd4ae2ecb80/public-trace.jsonl",
+      "evidence": {
+        "ground_item_pickup_used": true,
+        "native_delayed_pickup_callback_completed": true,
+        "first_acquisition_story_shown": true,
+        "stay_retains_amulet_and_scope": true
+      }
+    }
+  ]
+}

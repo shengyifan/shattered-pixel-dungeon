@@ -133,3 +133,7 @@ Hero Info专精标题和胜利排行过去时分别受完整公开页签说明�
 仅对已存在FloatingText，且原纯visibleCueText返回的完整可见串与当前节点text完全一致时，UI增加presentation=floating_text。英文投影只凭该公开标记把完整“闪避”译为dodged、完整“夺命印记”反馈译为marked for death；菜单death mark与属性Evasion仍各用原窗口上下文。缺标记、普通文本、不可见或模态覆盖、截断与未知尾文均不能借用此规则。
 
 该逻辑不调用Hero.defenseVerb或任何buff getter，避免原格挡/随机分支的副作用。6项独立回归及实际墓碑战斗、DeathMark施放通过。P7的188项完整证据索引与原失败批次见 `cli-p7-english-validation.md/json`；容器10项分支见 `cli-containers.md/json`。
+
+## NPC已显示引号对白
+
+Mob.yell的公开说话者与引号正文分别按完整资源/模板翻译，并保留显示的标点、实际参数和尾空格；支持两个已经完整显示的招呼相连。没有可安全翻译的说话者、正文、尾文或裁剪片段均明确拒绝。6项边界回归和制杖匠告别/幽灵问候3项实际流程通过；完整22项低频成功索引见 `cli-p6-english-completion.md/json`，原14/8与确认5/6报告仍保留。

@@ -30,6 +30,7 @@ public final class DisplayedTextEnglish {
     private static final Map<String,String> PUBLIC_SCENE_SCOPES=publicSceneScopes();
     private static final Pattern CATALOG_HEADING=Pattern.compile("\\A_([^_\\r\\n]+)_ \\(([0-9]+)/([0-9]+)\\)(:?)\\z");
     private static final Pattern ABILITY_ROW=Pattern.compile("\\A_([^_\\r\\n]+) (\\([0-9]+(?:连击|内力)\\)):_ ([\\s\\S]+)\\z");
+    private static final Pattern QUOTED_SPEECH=Pattern.compile("\\A([^\\r\\n\\\":]+): \\\"([^\\\"]*)\\\"( *)\\z",Pattern.DOTALL);
     // Reviewed display vocabulary preserves the distinction available in the Chinese
     // text itself. It must not infer whether this word describes an ability or a buff.
     private static final Map<String,String> CONSERVATIVE_WORDS=Collections.singletonMap("凝神","Focus");
@@ -377,6 +378,8 @@ public final class DisplayedTextEnglish {
         context.spend();
         if (depth > MAX_DEPTH || context.unavailable.contains(text)) return null;
         if (context.translated.containsKey(text)) return context.translated.get(text);
+        String speech=quotedSpeech(text,context,depth+1);
+        if(speech!=null)return remember(text,speech,context);
         Set<String> exact=dictionary.exact.get(text);
         if (exact != null) return remember(text, exactTranslation(text,context.inspectedLevelKnown), context);
 
@@ -499,7 +502,9 @@ public final class DisplayedTextEnglish {
 
     /** Full resource/template candidates only, with no prefix or partial fallback. */
     private Set<String> completeResourceUnit(String text,Context context,int depth) {
-        Set<String> result=new TreeSet<>();Set<String> exact=dictionary.exact.get(text);
+        Set<String> result=new TreeSet<>();
+        String speech=quotedSpeech(text,context,depth+1);if(speech!=null){result.add(speech);return result;}
+        Set<String> exact=dictionary.exact.get(text);
         if(exact!=null) {
             String known=exactTranslation(text,context.inspectedLevelKnown);
             if(known!=null)result.add(known);else result.addAll(exact);
@@ -520,6 +525,16 @@ public final class DisplayedTextEnglish {
             if(valid){String translated=template.target.render(arguments);if(translated!=null)result.add(translated);}
         }
         return result;
+    }
+
+    /** Mob.yell's already displayed speaker: "speech" form, including its literal trailing spaces. */
+    private String quotedSpeech(String displayed,Context context,int depth) {
+        if(depth>MAX_DEPTH)return null;
+        Matcher match=QUOTED_SPEECH.matcher(displayed);if(!match.matches())return null;
+        String speaker=unique(completeResourceUnit(match.group(1),context,depth+1));
+        if(speaker==null)return null;
+        String words=translate(match.group(2),context,depth+1);
+        return words==null?null:speaker+": \""+words+"\""+match.group(3);
     }
 
     private boolean resourceStartsAt(String text,int offset) {
