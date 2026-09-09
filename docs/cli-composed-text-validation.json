@@ -1,0 +1,55 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "completion_assertions": "final_action_response",
+  "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+  "total": 2,
+  "passed": 2,
+  "results": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "subclass:WARDEN",
+      "profile": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/fixtures/subclass-WARDEN-51d191eb47574ad6b3111a561b91ccc8",
+      "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "50f3d190-927f-406d-92e1-f979700a3e4f:5"
+      },
+      "ok": true,
+      "evidence": {
+        "subclass": "WARDEN",
+        "active_indicator": false,
+        "public_action_and_effect_checked": true
+      },
+      "every_response_game_prose_checked": true,
+      "gui_postconditions_checked": 20
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "armor:Shockwave",
+      "profile": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/fixtures/armor-Shockwave-8a37616298c447bca9abfad8155d53e5",
+      "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+      "cli_language": "en",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "3680b4b5-be19-4e8b-ad33-6a034ee4eb26:5"
+      },
+      "ok": true,
+      "evidence": {
+        "ability": "Shockwave",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      },
+      "every_response_game_prose_checked": true,
+      "gui_postconditions_checked": 24
+    }
+  ]
+}

@@ -120,6 +120,9 @@ public final class PublicEnglishProjection {
                         &&modal&&one(texts,"Victory!","获胜！")&&one(buttons,"Support","赞助")&&one(buttons,"Close","关闭")
                         &&one(texts,"Congratulations on conquering the dungeon! You've unlocked some new features that are available when choosing a hero:",
                         "恭喜您征服了这座地牢！新的游戏选项已经解锁，你可以在选择英雄时查看并设置："));
+                properties.put("hero_subclass_page",("HeroSelectScene".equals(currentScene)||"hero_select".equals(currentScene))
+                        &&modal&&one(texts,"专精","subclasses","Subclasses")&&one(texts,
+                        "击杀第二个Boss后可以选择一种职业专精。","A subclass can be chosen after defeating the second boss."));
                 properties.put("save_details",start&&modal&&one(buttons,"Continue","继续")&&one(buttons,"Erase","删除")
                         &&one(texts,"Strength","力量")&&one(texts,"Health","生命")
                         &&one(texts,"Gold Collected","金币收集数")&&one(texts,"Maximum Depth","最高层数"));
@@ -153,6 +156,7 @@ public final class PublicEnglishProjection {
                 properties.put("role",node.get("role"));
                 properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);properties.put("button",false);
                 properties.remove("inspected_item_level_known");
+                properties.put("ranking_record",false);
                 Set<Object> visited=new HashSet<>();
                 for(Map<?,?> ancestor=node;ancestor!=null;) {
                     if(currentInspectedKnown!=null&&currentInspectedControl.equals(ancestor.get("id")))
@@ -160,6 +164,11 @@ public final class PublicEnglishProjection {
                     if(ancestor.containsKey("checked"))properties.put("checkbox",true);
                     if("slider".equals(ancestor.get("role")))properties.put("slider",true);
                     if("button".equals(ancestor.get("role")))properties.put("button",true);
+                    if(("RankingsScene".equals(currentScene)||"rankings".equals(currentScene))
+                            &&Boolean.FALSE.equals(properties.get("modal"))&&"button".equals(ancestor.get("role"))
+                            &&ancestor.get("text") instanceof String&&((String)ancestor.get("text")).matches(
+                            "(?:[1-9][0-9]*| )\\n(?:获得Yendor护符|Obtained the Amulet of Yendor)\\n[0-9]+"))
+                        properties.put("ranking_record",true);
                     if(bindingSlots(ancestor.get("binding_slots")))properties.put("key_binding",true);
                     if(!properties.containsKey("shortcut_action")&&ancestor.get("shortcut_action") instanceof String)
                         properties.put("shortcut_action",ancestor.get("shortcut_action"));

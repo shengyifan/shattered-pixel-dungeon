@@ -1,0 +1,94 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "gui_language": "CHI_SMPL",
+  "cli_language": "en",
+  "fullscreen": false,
+  "passed": [
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-0c02dfe4c49742bb9a1705257a7dfd03",
+      "profile": "desktop-control/build/fixtures/ending-amulet-surface-9f8242a95ca745d08607fd51c337dcc1",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "gui_language": "CHI_SMPL",
+      "cli_language": "en",
+      "fullscreen": false,
+      "old_scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+      "gui_postconditions_checked": 27,
+      "case_id": "ending.amulet_pickup_surface",
+      "source_scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+      "original_ground_pickup_and_acquisition_story": true,
+      "original_stay_keeps_amulet_and_scope": true,
+      "original_two_to_one_transition": true,
+      "actual_surface_scene": "com.shatteredpixel.shatteredpixeldungeon.scenes.SurfaceScene",
+      "original_surface_win_event": {
+        "sequence": 15,
+        "scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+        "kind": "run.ended",
+        "data": {
+          "scope_id": "run:e8e0e4f1-95c3-42cf-9aa4-2ba3a3d85dc5",
+          "result": "won"
+        },
+        "created_at": "2026-09-09T05:14:21.470767Z",
+        "session_id": null
+      },
+      "victory_window": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats"
+      ],
+      "mandatory_victory_back_does_not_skip": true,
+      "original_victory_close": true,
+      "not_full_26_to_1_return": true,
+      "ascension_challenge_start_not_claimed": true
+    },
+    {
+      "verified": true,
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-cf3cfbc6c8334161930b35c4a092b008",
+      "profile": "desktop-control/build/fixtures/ending-ascension-start-b54735400bc0402c81c26f76443a99d4",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "gui_language": "CHI_SMPL",
+      "cli_language": "en",
+      "fullscreen": false,
+      "old_scope_id": "run:51aeb6f7-fded-4d68-a1a7-280211be3d38",
+      "gui_postconditions_checked": 25,
+      "case_id": "ending.ascension_start",
+      "source_scope_id": "run:51aeb6f7-fded-4d68-a1a7-280211be3d38",
+      "actual_source_level": "HallsBossLevel",
+      "original_ground_pickup_and_stay": true,
+      "original_confirmation_window": [
+        "com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel$2$1"
+      ],
+      "cancel_does_not_attach_challenge": true,
+      "original_confirm_attaches_challenge": true,
+      "stable_destination_depth": 24,
+      "real_buff_and_drawn_feedback": true,
+      "no_ending_claimed": true,
+      "not_full_26_to_1_return": true
+    }
+  ],
+  "gui_postconditions_checked": 52,
+  "scope_limits": [
+    "Low-floor 2-to-1-to-surface end is independent of the 25-to-24 initial Ascension challenge.",
+    "Neither case is a full legitimate 26-to-1 return or formal victory."
+  ],
+  "prior_attempts": [
+    {
+      "profile": "desktop-control/build/fixtures/ending-amulet-surface-651a54d73a81425c927d8a4e5172971e",
+      "classification": "test_public_name_mismatch",
+      "detail": "Expected Level Entrance instead of the actual English resource Depth entrance; only the test locator changed."
+    },
+    {
+      "profile": "desktop-control/build/fixtures/ending-amulet-surface-d79b97c90e084dfa904bd7f45e4cf8de",
+      "classification": "production_prose_ambiguity",
+      "detail": "Original Surface won completed, but the actual following congratulations Close was ambiguous. Whole case remained failed."
+    },
+    {
+      "profile": "desktop-control/build/fixtures/ending-amulet-surface-5ca29f3b23d4448c8a929ea803a3beea",
+      "classification": "production_prose_ambiguity",
+      "detail": "Congratulations/mandatory Back/Close reached; the uncovered ranking row then had Obtain versus Obtained ambiguity. Whole case remained failed."
+    }
+  ]
+}

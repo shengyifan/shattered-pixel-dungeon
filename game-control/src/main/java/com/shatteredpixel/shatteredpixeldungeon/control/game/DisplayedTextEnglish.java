@@ -104,6 +104,15 @@ public final class DisplayedTextEnglish {
         String scope=PUBLIC_SCENE_SCOPES.get(scene);
         String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
         String resolved;
+        if("heroselectscene".equals(scope)&&Boolean.TRUE.equals(context.get("hero_subclass_page"))
+                &&(resolved=policyResource(displayed,"windows.wndheroinfo.subclasses"))!=null)return resolved;
+        if("rankingsscene".equals(scope)&&Boolean.TRUE.equals(context.get("ranking_record"))) {
+            if((resolved=policyResource(displayed,"rankings$record.won"))!=null)return resolved;
+            String[] lines=displayed.split("\n",-1);
+            if(lines.length==3&&lines[0].matches("(?:[1-9][0-9]*| )")&&lines[2].matches("[0-9]+")
+                    &&(resolved=policyResource(lines[1],"rankings$record.won"))!=null)
+                return lines[0]+"\n"+resolved+"\n"+lines[2];
+        }
         if(Boolean.TRUE.equals(context.get("cell_input"))&&Boolean.FALSE.equals(context.get("modal"))
                 &&context.get("cell_prompt") instanceof String
                 &&(resolved=matchingPublicCellPrompt(displayed,(String)context.get("cell_prompt")))!=null)return resolved;
@@ -292,6 +301,21 @@ public final class DisplayedTextEnglish {
             }
         }
         if(!candidates.isEmpty()) return remember(text,unique(candidates),context);
+        // Native descriptions append complete resource/template units with visible
+        // spaces. A unit may itself contain several sentences: splitting it at every
+        // Chinese full stop would discard that resource's exact matching boundary.
+        Set<String> concatenated=new TreeSet<>();
+        for(int i=1;i<text.length()-1;i++)if(text.charAt(i)==' '&&text.charAt(i-1)!=' ') {
+            int end=i+1;while(end<text.length()&&text.charAt(end)==' ')end++;
+            if(end==text.length())continue;
+            context.spend();
+            Set<String> left=completeResourceUnit(text.substring(0,i),context,depth+1);
+            if(left.isEmpty())continue;
+            String right=translate(text.substring(end),context,depth+1);
+            if(right!=null)for(String translated:left)concatenated.add(translated+text.substring(i,end)+right);
+            i=end-1;
+        }
+        if(!concatenated.isEmpty())return remember(text,unique(concatenated),context);
         String marker=text.length()>4&&text.startsWith("**")&&text.endsWith("**")?"**":
                 text.length()>2&&text.startsWith("_")&&text.endsWith("_")?"_":null;
         if(marker!=null) {
@@ -371,6 +395,31 @@ public final class DisplayedTextEnglish {
             memo.put(offset,result);return result;
         }
         memo.put(offset,null);return null;
+    }
+
+    /** Full resource/template candidates only, with no prefix or partial fallback. */
+    private Set<String> completeResourceUnit(String text,Context context,int depth) {
+        Set<String> result=new TreeSet<>();Set<String> exact=dictionary.exact.get(text);
+        if(exact!=null) {
+            String known=exactTranslation(text,context.inspectedLevelKnown);
+            if(known!=null)result.add(known);else result.addAll(exact);
+            return result;
+        }
+        for(Template template:dictionary.templates) {
+            if(context.inspectedLevelKnown!=null&&(template==dictionary.spearActual&&!context.inspectedLevelKnown
+                    ||template==dictionary.spearTypical&&context.inspectedLevelKnown))continue;
+            if(!text.contains(template.anchor))continue;
+            Matcher match=template.pattern.matcher(text);if(!match.matches())continue;
+            Map<Integer,String> arguments=new HashMap<>();boolean valid=true;
+            for(int i=0;i<template.source.arguments.size();i++) {
+                int slot=template.source.arguments.get(i).index;
+                String value=translate(match.group(i+1),context,depth+1);
+                if(value==null||arguments.containsKey(slot)&&!arguments.get(slot).equals(value)){valid=false;break;}
+                arguments.put(slot,value);
+            }
+            if(valid){String translated=template.target.render(arguments);if(translated!=null)result.add(translated);}
+        }
+        return result;
     }
 
     private boolean resourceStartsAt(String text,int offset) {
@@ -541,7 +590,8 @@ public final class DisplayedTextEnglish {
                 }
                 if(key.equals("windows.wndkeybindings.back")||key.equals("windows.wndsettings$displaytab.off")
                         ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no")
-                        ||key.equals("items.journal.guidebook.hint_status")||key.equals("windows.wndvictorycongrats.close"))
+                        ||key.equals("items.journal.guidebook.hint_status")||key.equals("windows.wndvictorycongrats.close")
+                        ||key.equals("windows.wndheroinfo.subclasses")||key.equals("rankings$record.won"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
                     catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);

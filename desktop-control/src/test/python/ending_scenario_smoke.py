@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original Poison death, menus and new-game callbacks; no terminal scene injection."""
+"""Original death/restart and Amulet/Ascension callbacks; no terminal scene injection."""
 import argparse
 import json
 from pathlib import Path
@@ -112,18 +112,117 @@ def restart_case(client,profile,initial,outcome):
             "old_outcome_does_not_leak_into_new_run":True}
 
 
+def entrance(client,expected_depth):
+    state=checked_state(client)
+    hero=state["observation"]["hero"]
+    assert hero["depth"]==expected_depth,hero
+    width=state["observation"]["map"]["width"]
+    choices=[cell for cell in state["observation"]["map"]["cells"] if cell["name"]=="Depth entrance"]
+    assert choices,state["observation"]["map"]
+    target=min(choices,key=lambda cell:max(abs(cell["cell"]%width-hero["cell"]%width),abs(cell["cell"]//width-hero["cell"]//width)))["cell"]
+    result=execute(client,"cell.select",cell=target,mode="act")["result"]
+    # If the native input only walked onto the stairs, the next original click activates them.
+    if result["observation"].get("scene")=="game" and result["observation"]["hero"]["depth"]==expected_depth and result["phase"]=="player_ready":
+        assert result["observation"]["hero"]["cell"]==target,result
+        result=execute(client,"cell.select",cell=target,mode="act")["result"]
+    return result
+
+
+def amulet_surface(client,profile,initial):
+    scope=initial["scope_id"]
+    assert initial["observation"]["hero"]["depth"]==2
+    assert not any(item["name"].lower()=="amulet of yendor" for item in initial["observation"]["inventory"])
+    heap=next(entity for entity in initial["observation"]["visible_entities"]
+              if entity.get("item",{}).get("name","").lower()=="amulet of yendor")
+    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act")["result"]
+    assert acquired["observation"]["ui"]["scene"]=="AmuletScene",acquired
+    ui_assertion(profile,acquired)
+    text=" ".join(str(node.get("text","")) for node in acquired["observation"]["ui"]["controls"])
+    assert "You finally hold it in your hands, the Amulet of Yendor!" in text,text
+    assert {"Let's call it a day","I'm not done yet"}<={action.get("label") for action in acquired["actions"]}
+    assert not [event for event in public_events(client,scope) if event["kind"]=="run.ended"]
+    stayed=activate(client,"I'm not done yet")["result"]
+    assert stayed["scope_id"]==scope and stayed["observation"]["scene"]=="game" and stayed["observation"]["hero"]["depth"]==2
+    assert any(item["name"].lower()=="amulet of yendor" for item in stayed["observation"]["inventory"])
+    first=entrance(client,2)
+    assert first["scope_id"]==scope and first["observation"]["scene"]=="game" and first["observation"]["hero"]["depth"]==1,first
+    assert not checkpoint(profile,first["state_version"])["ending"]["ascended"]
+    surface=entrance(client,1)
+    assert surface["observation"]["ui"]["scene"]=="SurfaceScene",surface
+    surface_proof=ui_assertion(profile,surface)
+    assert surface["run_outcome"]=={"scope_id":scope,"result":"won"}
+    private=checkpoint(profile,surface["state_version"])["ending"]
+    assert private["ascended"] and private["amulet_obtained"] and private["games_won"]==1,private
+    ended=[event for event in public_events(client,scope) if event["kind"]=="run.ended"]
+    assert len(ended)==1 and ended[0]["data"]["result"]=="won",ended
+    ranked=activate(client,"Game Over")["result"]
+    assert ranked["observation"]["ui"]["scene"]=="RankingsScene"
+    victory=ui_assertion(profile,ranked,"com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats")
+    blocked=execute(client,"ui.back")["result"]
+    ui_assertion(profile,blocked,"com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats")
+    closed=activate(client,"Close")["result"]
+    assert closed["observation"]["ui"]["scene"]=="RankingsScene" and not closed["observation"]["ui"]["modal"]
+    return {"case_id":"ending.amulet_pickup_surface","source_scope_id":scope,
+            "original_ground_pickup_and_acquisition_story":True,"original_stay_keeps_amulet_and_scope":True,
+            "original_two_to_one_transition":True,"actual_surface_scene":surface_proof["scene"],
+            "original_surface_win_event":ended[0],"victory_window":victory["window_classes"],
+            "mandatory_victory_back_does_not_skip":True,"original_victory_close":True,
+            "not_full_26_to_1_return":True,"ascension_challenge_start_not_claimed":True}
+
+
+def ascension_start(client,profile,initial):
+    scope=initial["scope_id"]
+    before=checkpoint(profile,initial["state_version"])["ending"]
+    assert initial["observation"]["hero"]["depth"]==25 and before["level_class"]=="HallsBossLevel"
+    assert not before["ascension_active"] and not before["amulet_obtained"]
+    heap=next(entity for entity in initial["observation"]["visible_entities"]
+              if entity.get("item",{}).get("name","").lower()=="amulet of yendor")
+    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act")["result"]
+    assert acquired["observation"]["ui"]["scene"]=="AmuletScene"
+    stayed=activate(client,"I'm not done yet")["result"]
+    assert stayed["scope_id"]==scope and stayed["observation"]["hero"]["depth"]==25
+    prompt=entrance(client,25)
+    assert prompt["phase"]=="awaiting_input" and {"Continue!","Stop for Now"}<={action.get("label") for action in prompt["actions"]}
+    shown=" ".join(str(node.get("text","")) for node in prompt["observation"]["ui"]["controls"])
+    assert "You begin to feel Yog-Dzewa's great and terrible power radiating from the amulet." in shown
+    prompt_proof=ui_assertion(profile,prompt)
+    assert any(name.startswith("com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel$") for name in prompt_proof["window_classes"])
+    cancelled=activate(client,"Stop for Now")["result"]
+    assert cancelled["observation"]["hero"]["depth"]==25 and not checkpoint(profile,cancelled["state_version"])["ending"]["ascension_active"]
+    entrance(client,25)
+    ascended=activate(client,"Continue!")["result"]
+    assert ascended["scope_id"]==scope and ascended["phase"]=="player_ready" and ascended["observation"]["hero"]["depth"]==24,ascended
+    after=checkpoint(profile,ascended["state_version"])["ending"]
+    assert after["level_class"]=="HallsLevel" and after["highest_ascent"]==24 and after["ascension_active"]
+    assert any(buff["name"].lower()=="amulet's curse" for buff in ascended["observation"]["hero"]["buffs"])
+    events=public_events(client,scope)
+    assert any("The amulet begins calling out to distant enemies." in entry["text"]
+               for event in events if event["kind"]=="game.log" for entry in event["data"]["entries"]),events
+    assert not [event for event in events if event["kind"]=="run.ended"]
+    return {"case_id":"ending.ascension_start","source_scope_id":scope,
+            "actual_source_level":"HallsBossLevel","original_ground_pickup_and_stay":True,
+            "original_confirmation_window":prompt_proof["window_classes"],"cancel_does_not_attach_challenge":True,
+            "original_confirm_attaches_challenge":True,"stable_destination_depth":24,
+            "real_buff_and_drawn_feedback":True,"no_ending_claimed":True,"not_full_26_to_1_return":True}
+
+
 def run_one(root,classpath,runtime_id,name):
     profile=safe_profile(root,"ending-"+name);metadata(profile,"ending:"+name,runtime_id)
     command=launch_command(classpath,fixture=True);command[-1]="ending:"+name
     client=FixtureClient(command,profile,verify_gui=True)
     try:
         hello=client.request("protocol.info");assert hello["ok"]
-        initial,dead,outcome,event=original_death(client,profile)
-        details=ranking_case(client,profile,dead) if name=="death-ranking" else restart_case(client,profile,initial,outcome)
+        if name in {"amulet-surface","ascension-start"}:
+            initial=reach_game(client,"WARRIOR")
+            details=amulet_surface(client,profile,initial) if name=="amulet-surface" else ascension_start(client,profile,initial)
+        else:
+            initial,dead,outcome,event=original_death(client,profile)
+            details=ranking_case(client,profile,dead) if name=="death-ranking" else restart_case(client,profile,initial,outcome)
+            details.update(original_poison_death=True,run_ended_event=event)
         result={"verified":True,"test_fixture":True,"counts_as_win":False,"runtime_id":runtime_id,
                 "profile":str(profile.relative_to(root)),"build_id":hello["result"]["build_id"],
                 "gui_language":"CHI_SMPL","cli_language":"en","fullscreen":False,
-                "old_scope_id":initial["scope_id"],"original_poison_death":True,"run_ended_event":event,
+                "old_scope_id":initial["scope_id"],
                 "gui_postconditions_checked":client.gui_postconditions_checked,**details}
         stop(client)
         write_json(profile/"ending-scenario-result.json",result)

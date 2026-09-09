@@ -105,3 +105,9 @@ Supporter 页的 intro、跨多行 Patreon 说明、以括号开头的英文回�
 默认加载仅使用 classloader 包内资源，不回退到 cwd、Gdx 文件接口或用户目录。独立 game-control 测试需要显式加入 `core/src/main/assets` 到测试 classpath，或使用 `fromClassLoader` 注入测试资源加载器；生产包使用已有资产目录。
 
 本类的独立验证没有替代 GUI 中文、CLI 英文的真实协议验收。UiBridge、公开事件、操作响应和审计的集成由协议投影层完成；正式实机覆盖以其单独报告为准。
+
+## 完整显示单元的拼接
+
+当原UI用空格拼接多条资源时，翻译先对完整资源或模板尝试边界，再完整翻译剩余已显示文字。多句模板保持整体，所有分解结果必须唯一，未知尾部和歧义都会拒绝；原数字与可见分隔符保留。7项正反例和WARDEN、Shockwave两项原生施放专项通过，结果保存在 `desktop-control/build/fixtures/runtime-96551553ca2a4d1fb60019fb00082495/results.json`。
+
+Hero Info专精标题和胜利排行过去时分别受完整公开页签说明、非模态排行按钮完整三行显示签名约束。4项边界测试覆盖缺失场景、窗口、父链、尾文和历史上下文；不读取隐藏职业或rec.win。六职业4页与原胜利窗口完整流程的证据分别见 `cli-hero-info-validation.json`、`cli-ending-amulet-validation.json`。
