@@ -39,6 +39,8 @@ def main():
     shutil.copytree(args.bundle, bundle, symlinks=True)
     profile = output / "中文 玩家目录 with spaces"
     profile.mkdir()
+    from test_ui import configure_test_ui
+    configure_test_ui(profile)
     cli = bundle / "Contents/MacOS/spdctl"
     checks = {}
     for executable in (cli, cli.with_name("spdctl-jvm"), cli.with_name("Shattered Pixel Dungeon"),

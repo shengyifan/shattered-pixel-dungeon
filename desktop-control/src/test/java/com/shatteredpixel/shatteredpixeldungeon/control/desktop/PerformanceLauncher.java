@@ -80,7 +80,7 @@ public final class PerformanceLauncher {
         void afterFrame(){
             try{
                 if(!menuPrepared&&Game.scene()!=null&&!Game.switchingScene()){
-                    SPDSettings.language(Languages.ENGLISH);Messages.setup(Languages.ENGLISH);SPDSettings.intro(false);menuPrepared=true;
+                    SPDSettings.language(Languages.CHI_SMPL);Messages.setup(Languages.CHI_SMPL);SPDSettings.fullscreen(false);SPDSettings.intro(false);menuPrepared=true;
                 }
                 if(!prepared&&Game.scene() instanceof GameScene)GameScene.atActorHandoff(()->{
                     if(ready()){

@@ -23,6 +23,7 @@ package com.watabou.noosa.particles;
 
 import com.watabou.glwrap.Blending;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Visual;
 import com.watabou.utils.PointF;
@@ -52,6 +53,18 @@ public class Emitter extends Group {
 	protected float time;
 	
 	protected Factory factory;
+
+	/** Optional renderer-only observer. Called after the existing children have been drawn. */
+	public interface DrawObserver {
+		void afterDraw(Emitter emitter);
+		default void resetObservation() {}
+	}
+	private DrawObserver drawObserver;
+	public void observeDraw(DrawObserver observer) {
+		drawObserver = observer;
+		if (observer != null) observer.resetObservation();
+	}
+	public boolean isEmitting(Factory expected) { return on && factory == expected; }
 	
 	public void pos( float x, float y ) {
 		pos( x, y, 0, 0 );
@@ -111,6 +124,14 @@ public class Emitter extends Group {
 	protected boolean isFrozen(){
 		return Game.timeTotal > 1 && freezeEmitters;
 	}
+
+	/** Pure read of the normal update gates; observing never resumes or emits particles. */
+	public boolean canProgress() {
+		for (Gizmo current = this; current != null; current = current.parent) {
+			if (!current.exists || !current.active) return false;
+		}
+		return !isFrozen();
+	}
 	
 	@Override
 	public void update() {
@@ -138,6 +159,7 @@ public class Emitter extends Group {
 
 	@Override
 	public void revive() {
+		drawObserver = null;
 		//ensure certain emitter variables default to true
 		started = false;
 		visible = true;
@@ -179,6 +201,7 @@ public class Emitter extends Group {
 		} else {
 			super.draw();
 		}
+		if (drawObserver != null) drawObserver.afterDraw(this);
 	}
 	
 	abstract public static class Factory {

@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
@@ -29,9 +30,13 @@ import com.watabou.noosa.Image;
 public class TargetedCell extends Image {
 
 	private float alpha;
+	private final int visualCell;
+	private final boolean redTarget;
 
 	public TargetedCell( int pos, int color ) {
 		super(Icons.get(Icons.TARGET));
+		visualCell = pos;
+		redTarget = (color & 0xFFFFFF) == 0xFF0000;
 		hardlight(color);
 
 		origin.set( width/2f );
@@ -39,6 +44,14 @@ public class TargetedCell extends Image {
 		point( DungeonTilemap.tileToWorld( pos ) );
 
 		alpha = 1f;
+	}
+
+	@Override
+	public void draw() {
+		super.draw();
+		if (redTarget && texture != null && buffer != null && Game.observer.observesVisualCues()) {
+			GameScene.observeTargetedCellDraw(this, visualCell);
+		}
 	}
 
 	@Override

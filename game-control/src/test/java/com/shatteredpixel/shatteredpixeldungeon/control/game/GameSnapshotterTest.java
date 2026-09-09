@@ -506,8 +506,29 @@ class GameSnapshotterTest {
         assertTrue(json.contains(Base64.getEncoder().encodeToString(new byte[]{0, 1, 2, 3})));
         assertFalse(json.contains("internal.sqlite"));
         assertFalse(json.contains("secret.txt"));
-        assertFalse(json.contains("game1/game.dat"));
-        assertEquals("captured_declared_scope", capture.get("status"));
+        assertTrue(json.contains("symbolic_game_file_not_captured"));
+        assertEquals("incomplete", capture.get("status"));
+    }
+
+    @Test
+    void capturesExistingRecoveryFilesWithoutLoadingSavingOrFollowingLinks(@TempDir Path profile)throws Exception{
+        java.nio.file.Files.createDirectories(profile.resolve("game1"));
+        byte[] game={31,-117,4,0,7},profileData={9,0,-1};
+        java.nio.file.Files.write(profile.resolve("game1/game.dat.spdtmp"),game);
+        java.nio.file.Files.write(profile.resolve("badges.dat.spdtmp"),profileData);
+        java.nio.file.Files.createDirectory(profile.resolve("game1/depth2.dat.spdtmp"));
+        java.nio.file.Files.writeString(profile.resolve("game1/depth2.dat.spdtmp/unrelated.txt"),"MUST_NOT_SCAN");
+        java.nio.file.Files.writeString(profile.resolve("unrelated.spdtmp"),"MUST_NOT_SCAN");
+        Map<String,Object> capture=new GameSnapshotter(profile).captureProfileFiles();
+        String json=JsonCodec.encode(capture);
+        assertEquals("captured_declared_scope",capture.get("status"));
+        assertTrue(json.contains("game.dat.spdtmp"));assertTrue(json.contains("badges.dat.spdtmp"));
+        assertTrue(json.contains(Base64.getEncoder().encodeToString(game)));
+        assertTrue(json.contains(Base64.getEncoder().encodeToString(profileData)));
+        assertTrue(json.contains("entry_kind"));assertTrue(json.contains("directory"));
+        assertFalse(json.contains("unrelated"));assertFalse(json.contains("MUST_NOT_SCAN"));
+        assertArrayEquals(game,java.nio.file.Files.readAllBytes(profile.resolve("game1/game.dat.spdtmp")));
+        assertFalse(java.nio.file.Files.exists(profile.resolve("game1/game.dat")),"Capture must not promote a temporary save");
     }
 
     @Test
@@ -521,6 +542,21 @@ class GameSnapshotterTest {
         assertEquals(0, initializedModels);
         // On the packaged runtime with --add-opens, the gate is verifiably available.
         if (Boolean.TRUE.equals(probe.initialized(Hero.class))) assertEquals(Boolean.FALSE, before);
+    }
+
+    @Test
+    void privateSpecialFloatingValuesPreserveTypeSignAndNanPayloadAcrossJson(){
+        Map<String,Object> capture=new InternalGraphSnapshotter().capture(map(
+                "float_negative_zero",-0.0f,"double_negative_zero",-0.0d,
+                "float_nan",Float.intBitsToFloat(0x7fc12345),
+                "double_nan",Double.longBitsToDouble(0x7ff8000000000123L),
+                "infinity",Double.POSITIVE_INFINITY));
+        Map<String,Object> restored=JsonCodec.decode(JsonCodec.encode(capture));
+        String json=JsonCodec.encode(restored);
+        for(String bits:Arrays.asList("80000000","8000000000000000","7fc12345","7ff8000000000123","7ff0000000000000"))
+            assertTrue(json.contains("\"$ieee754_bits\":\""+bits+"\""),bits);
+        assertTrue(json.contains("java.lang.Float"));assertTrue(json.contains("java.lang.Double"));
+        assertEquals(JsonCodec.encode(capture),json);
     }
 
     @Test

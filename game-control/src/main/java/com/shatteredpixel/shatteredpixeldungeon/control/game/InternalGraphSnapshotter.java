@@ -177,7 +177,15 @@ public final class InternalGraphSnapshotter {
                 || object instanceof Long) return object;
         if (object instanceof Float || object instanceof Double) {
             double number = ((Number) object).doubleValue();
-            return Double.isFinite(number) ? object : map("$number", object.toString());
+            if(Double.isFinite(number)&&!(number==0d&&Double.doubleToRawLongBits(number)<0))return object;
+            // JSON decimals discard signed zero and cannot express NaN payloads or infinity.
+            // Keep the original IEEE bits as well as a readable label in private diagnostics.
+            String bits=object instanceof Float
+                    ?Integer.toHexString(Float.floatToRawIntBits((Float)object))
+                    :Long.toHexString(Double.doubleToRawLongBits((Double)object));
+            int width=object instanceof Float?8:16;
+            while(bits.length()<width)bits="0"+bits;
+            return map("$number",object.toString(),"$type",object.getClass().getName(),"$ieee754_bits",bits);
         }
         if (object instanceof Character) return object.toString();
         if (object instanceof Class<?>) return map("$class", ((Class<?>) object).getName());

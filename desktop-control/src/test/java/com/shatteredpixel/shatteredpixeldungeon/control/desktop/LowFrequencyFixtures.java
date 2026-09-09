@@ -45,7 +45,7 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 /** Legal, isolated starting conditions only. All actual UI choices are made over public NDJSON. */
 final class LowFrequencyFixtures {
     static boolean supports(String name) {
-        return Arrays.asList("shop-trade", "shop-steal", "shop-steal-warning", "shop-stack", "shop-steal-failure",
+        return VisualCueFixtures.supports(name) || Arrays.asList("shop-trade", "shop-steal", "shop-steal-warning", "shop-stack", "shop-steal-failure",
                 "ghost-reward", "wandmaker-reward", "blacksmith-cashout", "blacksmith-pickaxe", "blacksmith-reforge",
                 "blacksmith-harden", "blacksmith-upgrade", "blacksmith-smith", "companion", "companion-attack",
                 "companion-resummon", "resurrect", "blessed-ankh", "alchemy-energy", "amulet-stay", "amulet-end", "amulet-pickup").contains(name);
@@ -53,6 +53,11 @@ final class LowFrequencyFixtures {
 
     static void prepare(String name, Hero hero) throws Exception {
         arena(hero);
+        if (VisualCueFixtures.supports(name)) {
+            VisualCueFixtures.prepare(name, hero);
+            Item.updateQuickslot(); Dungeon.observe(); hero.checkVisibleMobs();
+            return;
+        }
         switch (name) {
             case "shop-trade":
             case "shop-steal":

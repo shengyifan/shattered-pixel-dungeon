@@ -152,9 +152,9 @@ def finish_tutorial(client):
     assert book, "The tutorial guide must be selected from an actual public observation"
     client.act("cell.select", cell=book["cell"], mode="act")
     state = client.state()
-    journal = next(a for a in state["actions"] if a.get("action") == "ui.activate"
-                   and a.get("label", "").lower() in {"journal", "日志"})
-    client.act("ui.activate", control=journal["control"])
+    journal = next(c for c in state["observation"]["ui"]["controls"]
+                   if c.get("shortcut_action")=="journal" and c.get("enabled"))
+    client.act("ui.activate", control=journal["id"])
     client.act("ui.back")
     for _ in range(50):
         state = client.state()
@@ -185,6 +185,8 @@ def main():
     root = Path(__file__).resolve().parents[4]
     profile = root / "desktop-control" / "build" / "smoke" / str(uuid.uuid4())
     profile.mkdir(parents=True)
+    from test_ui import configure_test_ui
+    configure_test_ui(profile)
     if args.launcher:
         command = [args.launcher]
     else:
@@ -217,7 +219,7 @@ def main():
             assert opened["phase"] == "awaiting_input", opened
             _, targeting = ui_intent(client, lambda s: {"action": "ui.activate", "control": next(
                 a["control"] for a in s["actions"] if a.get("action") == "ui.activate"
-                and a.get("label", "").lower() in {"throw", "投掷"})})
+                and a.get("label", "").lower() in {"throw", "投掷", "扔出"})})
             assert targeting["phase"] == "awaiting_input", targeting
             assert any(a["action"] == "cell.cancel" for a in targeting["actions"]), targeting
             ui_intent(client, lambda s: {"action": "cell.cancel"} if any(

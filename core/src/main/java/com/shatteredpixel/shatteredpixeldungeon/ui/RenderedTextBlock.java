@@ -25,6 +25,8 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.RenderedText;
 import com.watabou.noosa.ui.Component;
 
@@ -95,6 +97,52 @@ public class RenderedTextBlock extends Component {
 
 	public String text(){
 		return text;
+	}
+
+	/** A pure reading of already-laid-out words. Partly clipped words are never expanded to full text. */
+	public synchronized VisibleText visibleTextFragment() {
+		StringBuilder result = new StringBuilder(), separators = new StringBuilder();
+		boolean clipped = false, visible = false, omitted = false;
+		if (words == null) return new VisibleText("", false, false);
+		for (RenderedText word : words) {
+			if (word == SPACE) { separators.append(' '); continue; }
+			if (word == NEWLINE) { separators.append('\n'); continue; }
+			if (word == null) continue;
+			boolean shown = true;
+			Camera camera = null;
+			for (Gizmo current = word; current != null; current = current.parent) {
+				if (!current.exists || !current.alive || !current.visible || !current.active) shown = false;
+				if (camera == null && current.camera != null) camera = current.camera;
+			}
+			// Calling Visual.isVisible()/camera() here would populate camera caches during a query.
+			float width = word.width(), height = word.height();
+			boolean intersects = shown && camera != null && camera.scroll != null && width > 0 && height > 0
+					&& word.angle == 0 && word.origin.x == 0 && word.origin.y == 0
+					&& word.x < camera.scroll.x + camera.width && word.x + width > camera.scroll.x
+					&& word.y < camera.scroll.y + camera.height && word.y + height > camera.scroll.y;
+			boolean complete = intersects && word.x >= camera.scroll.x && word.y >= camera.scroll.y
+					&& word.x + width <= camera.scroll.x + camera.width && word.y + height <= camera.scroll.y + camera.height;
+			visible |= intersects;
+			if (complete && word.text() != null) {
+				if (result.length() > 0) {
+					if (omitted) result.append('\n');
+					else result.append(separators);
+				}
+				result.append(word.text()); omitted = false;
+			} else { clipped = true; omitted = true; }
+			separators.setLength(0);
+		}
+		// GameLog disables markup; preserve its original spacing when every rendered word fits.
+		String shownText = !clipped && !highlightingEnabled && text != null ? text : result.toString();
+		return new VisibleText(shownText, clipped, visible);
+	}
+
+	public static final class VisibleText {
+		public final String text;
+		public final boolean clipped, visible;
+		public VisibleText(String text, boolean clipped, boolean visible) {
+			this.text = text; this.clipped = clipped; this.visible = visible;
+		}
 	}
 
 	public void maxWidth(int maxWidth){

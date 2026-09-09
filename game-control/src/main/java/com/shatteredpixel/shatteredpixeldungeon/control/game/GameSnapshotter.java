@@ -91,18 +91,19 @@ public final class GameSnapshotter {
             entries.sort(Comparator.comparing(path -> path.getFileName().toString()));
             for (Path entry : entries) {
                 String name = entry.getFileName().toString();
-                if (Files.isSymbolicLink(entry)) continue;
-                if (PROFILE_FILES.contains(name) && Files.isRegularFile(entry, LinkOption.NOFOLLOW_LINKS)) {
-                    readFile(entry, files, errors);
+                String original=name.endsWith(".spdtmp")?name.substring(0,name.length()-7):name;
+                if (PROFILE_FILES.contains(original)) {
+                    readGameEntry(entry,files,errors);
+                } else if (name.matches("game[0-9]+") && Files.isSymbolicLink(entry)) {
+                    errors.add(map("path",name,"error","symbolic_game_directory_not_captured"));
                 } else if (name.matches("game[0-9]+") && Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS)) {
                     try (DirectoryStream<Path> game = Files.newDirectoryStream(entry)) {
                         List<Path> saves = new ArrayList<>();
                         for (Path save : game) {
-                            if (save.getFileName().toString().matches("(?:game|depth[0-9]+(?:-branch[0-9]+)?)\\.dat")
-                                    && Files.isRegularFile(save, LinkOption.NOFOLLOW_LINKS)) saves.add(save);
+                            if (save.getFileName().toString().matches("(?:game|depth[0-9]+(?:-branch[0-9]+)?)\\.dat(?:\\.spdtmp)?")) saves.add(save);
                         }
                         saves.sort(Comparator.comparing(path -> path.getFileName().toString()));
-                        for (Path save : saves) readFile(save, files, errors);
+                        for (Path save : saves) readGameEntry(save, files, errors);
                     }
                 }
             }
@@ -111,6 +112,20 @@ public final class GameSnapshotter {
         }
         return map("status", errors.isEmpty() ? "captured_declared_scope" : "incomplete", "files", files,
                 "errors", errors, "policy", "allowlisted_game_files_only_no_symlinks_no_audit");
+    }
+
+    private void readGameEntry(Path file,List<Object> files,List<Object> errors){
+        String path=profile.relativize(file).toString();
+        if(Files.isSymbolicLink(file)){
+            errors.add(map("path",path,"error","symbolic_game_file_not_captured"));
+        }else if(Files.isDirectory(file,LinkOption.NOFOLLOW_LINKS)){
+            // A directory blocking a save name is relevant, but its unrelated contents are not game data.
+            files.add(map("path",path,"entry_kind","directory","data",null));
+        }else if(Files.isRegularFile(file,LinkOption.NOFOLLOW_LINKS)){
+            readFile(file,files,errors);
+        }else{
+            errors.add(map("path",path,"error","game_file_entry_unavailable"));
+        }
     }
 
     private void readFile(Path file, List<Object> files, List<Object> errors) {

@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ProtocolException;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.RuntimeObserver;
+import com.watabou.noosa.VisualCue;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
@@ -67,6 +68,45 @@ public final class GameController implements RuntimeObserver {
         public RunOutcome(String runId,boolean won){this.runId=runId;this.won=won;}
         public Map<String,Object> data(){return map("scope_id","run:"+runId,"result",won?"won":"lost");}
     }
+    public static final class GameLogSnapshot {
+        public final String scopeId,occurredAt;
+        public final List<RuntimeObserver.LogEntry> entries;
+        public GameLogSnapshot(String scopeId,String occurredAt,List<RuntimeObserver.LogEntry> entries){
+            this.scopeId=scopeId;this.occurredAt=occurredAt;
+            this.entries=Collections.unmodifiableList(new ArrayList<>(entries));
+        }
+        public Map<String,Object> data(){
+            List<Map<String,Object>> lines=new ArrayList<>();
+            for(RuntimeObserver.LogEntry entry:entries)lines.add(Collections.unmodifiableMap(map("text",entry.text,"color",entry.color,"clipped",entry.clipped)));
+            return Collections.unmodifiableMap(map("format","display_snapshot_v1","occurred_at",occurredAt,
+                    "entries",Collections.unmodifiableList(lines)));
+        }
+    }
+    public static final class VisualSnapshot {
+        public final String runId,scopeId,mapContext,occurredAt;
+        public final int depth;
+        public final long generation;
+        private final Object levelIdentity;
+        private final boolean presentationReady;
+        public final List<VisualCue> cues;
+        public VisualSnapshot(String runId,Object levelIdentity,int depth,String mapContext,long generation,String occurredAt,List<VisualCue> cues){
+            this(runId,levelIdentity,depth,mapContext,generation,occurredAt,cues,true);
+        }
+        public VisualSnapshot(String runId,Object levelIdentity,int depth,String mapContext,long generation,String occurredAt,List<VisualCue> cues,boolean presentationReady){
+            this.runId=runId;this.scopeId="run:"+runId;this.levelIdentity=levelIdentity;this.depth=depth;
+            this.mapContext=mapContext;this.generation=generation;this.occurredAt=occurredAt;
+            this.presentationReady=presentationReady;
+            this.cues=Collections.unmodifiableList(new ArrayList<>(cues));
+        }
+        private List<Map<String,Object>> cueData(){
+            List<Map<String,Object>> data=new ArrayList<>();
+            for(VisualCue cue:cues)data.add(Collections.unmodifiableMap(map("kind",cue.kind,"cell",cue.cell)));
+            return Collections.unmodifiableList(data);
+        }
+        public Map<String,Object> data(){return Collections.unmodifiableMap(map("format","display_snapshot_v1","depth",depth,
+                "map_context",mapContext,"occurred_at",occurredAt,"cues",cueData()));}
+        public Map<String,Object> stateData(){return map("status","last_rendered","depth",depth,"map_context",mapContext,"cues",cueData());}
+    }
     /** A wire response may become ready while the original continuous action still runs. */
     public static final class Execution {
         public final CompletableFuture<State> firstResponse;
@@ -106,10 +146,14 @@ public final class GameController implements RuntimeObserver {
     private final ConcurrentLinkedQueue<Work> queue=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<SaveResult> saves=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<RunOutcome> outcomes=new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<GameLogSnapshot> gameLogs=new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<VisualSnapshot> visuals=new ConcurrentLinkedQueue<>();
+    private final Map<String,List<RuntimeObserver.LogEntry>> lastGameLogByRun=new HashMap<>();
     private final ConcurrentLinkedQueue<CancelControl> cancellations=new ConcurrentLinkedQueue<>();
     private final Consumer<Throwable> errors;
     private final ArrayList<Runnable> afterHandoff=new ArrayList<>();
     private volatile State latest;
+    private volatile VisualSnapshot renderedVisual;
     private volatile boolean disposed, exiting;
     private volatile String plannedRun;
     private volatile Map<String,Object> runOutcome;
@@ -120,6 +164,11 @@ public final class GameController implements RuntimeObserver {
     private boolean failedExecutionHold;
     private long frame, executedFrame, revision;
     private long activityGeneration;
+    private long drawGeneration,stableAfterDraw=-1,stableInputGeneration;
+    private Object stableLevel;
+    private String stableRun;
+    private int stableDepth;
+    private boolean stableBlocked;
     private String signature;
 
     public GameController(Path profile,String menuScope,Consumer<Throwable> errors) {
@@ -146,6 +195,8 @@ public final class GameController implements RuntimeObserver {
     public boolean disposed(){return disposed;}
     public SaveResult pollSave(){return saves.poll();}
     public RunOutcome pollRunOutcome(){return outcomes.poll();}
+    public GameLogSnapshot pollGameLog(){return gameLogs.poll();}
+    public VisualSnapshot pollVisual(){return visuals.poll();}
     public void prepareRun(String id){plannedRun=id;}
     public void exitNow(){if(Gdx.app!=null) Gdx.app.postRunnable(()->Gdx.app.exit());}
 
@@ -160,6 +211,28 @@ public final class GameController implements RuntimeObserver {
     @Override public void onRunEnded(String runId,boolean won){
         if(runId==null)return;
         RunOutcome outcome=new RunOutcome(runId,won);runOutcome=Collections.unmodifiableMap(outcome.data());outcomes.add(outcome);
+    }
+    @Override public synchronized void onGameLog(String runId,List<RuntimeObserver.LogEntry> entries){
+        if(runId==null)return;
+        List<RuntimeObserver.LogEntry> copy=Collections.unmodifiableList(new ArrayList<>(entries));
+        if(copy.equals(lastGameLogByRun.get(runId)))return;
+        lastGameLogByRun.put(runId,copy);
+        gameLogs.add(new GameLogSnapshot("run:"+runId,Instant.now().toString(),copy));
+    }
+    @Override public boolean observesVisualCues(){return true;}
+    @Override public synchronized void onVisualCues(String runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady){
+        if(runId==null||levelIdentity==null)return;
+        TreeSet<VisualCue> normalized=new TreeSet<>(Comparator.comparingInt((VisualCue cue)->cue.cell).thenComparing(cue->cue.kind));
+        normalized.addAll(cues);
+        List<VisualCue> copy=new ArrayList<>(normalized);
+        VisualSnapshot previous=renderedVisual;
+        boolean sameMap=previous!=null&&previous.levelIdentity==levelIdentity&&previous.depth==depth&&previous.runId.equals(runId);
+        String context=sameMap?previous.mapContext:UUID.randomUUID().toString();
+        boolean changed=!sameMap||!copy.equals(previous.cues);
+        VisualSnapshot snapshot=new VisualSnapshot(runId,levelIdentity,depth,context,++drawGeneration,
+                changed?Instant.now().toString():previous.occurredAt,copy,presentationReady);
+        renderedVisual=snapshot;
+        if(changed)visuals.add(snapshot);
     }
     @Override public void onDispose(){
         disposed=true;
@@ -239,8 +312,9 @@ public final class GameController implements RuntimeObserver {
     private void atBoundary(){
         try {
             processCancellation();
-            if(Game.instance==null||Game.scene()==null||Game.switchingScene()||Game.hasPendingCallbacks()||hasPendingEffects(Game.scene()))return;
+            if(Game.instance==null||Game.scene()==null||Game.switchingScene()||Game.hasPendingCallbacks()||hasPendingEffects(Game.scene())){resetRenderedBoundary();return;}
             if(continuousHandoff()){
+                resetRenderedBoundary();
                 if(executing.activityVersion==null){
                     executing.activityVersion="activity:"+epoch+":"+(++activityGeneration);
                     executing.activityKind=Dungeon.hero.resting?"rest":"travel";
@@ -253,7 +327,8 @@ public final class GameController implements RuntimeObserver {
                 if(query!=null&&query.args==null){queue.poll();deliver(query.result,captureContinuous());}
                 return;
             }
-            if(!stable())return;
+            if(!stable()){resetRenderedBoundary();return;}
+            if(!renderedBoundaryReady())return;
             if(runActive() && Dungeon.runIdentityNeedsSave) Dungeon.saveAll();
             if(executing!=null && frame>executedFrame){
                 State state=capture(true); Work done=executing;executing=null;deliver(done.result,state);
@@ -275,6 +350,7 @@ public final class GameController implements RuntimeObserver {
                 work.startCell=Dungeon.hero==null?-1:Dungeon.hero.pos;
                 work.originScopeId=before.scopeId;
                 executing=work;executedFrame=frame;
+                resetRenderedBoundary();
                 enteredGame=true;
                 perform(work.args);
             }catch(Throwable error){
@@ -344,6 +420,28 @@ public final class GameController implements RuntimeObserver {
     private <T> void deliver(CompletableFuture<T> future,T value){afterHandoff.add(()->future.complete(value));}
     private void reject(CompletableFuture<?> future,Throwable error){afterHandoff.add(()->future.completeExceptionally(error));}
     private void reportAfterHandoff(Throwable error){afterHandoff.add(()->errors.accept(error));}
+    private void resetRenderedBoundary(){stableAfterDraw=-1;stableLevel=null;stableRun=null;}
+    /** Game.render draws before step: the first stable post-step state must survive a later full draw. */
+    private boolean renderedBoundaryReady(){
+        if(!(Game.scene() instanceof GameScene)){resetRenderedBoundary();return true;}
+        VisualSnapshot rendered=renderedVisual;
+        if(!matchesCurrentVisual(rendered)){resetRenderedBoundary();return false;}
+        long input=Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();
+        boolean blocked=GameScene.interfaceBlockingHero()||GameScene.isSelectingCell();
+        if(stableAfterDraw<0||stableLevel!=Dungeon.level||!Objects.equals(stableRun,Dungeon.runId)
+                ||stableDepth!=Dungeon.depth||stableInputGeneration!=input||stableBlocked!=blocked){
+            stableAfterDraw=rendered.generation;stableLevel=Dungeon.level;stableRun=Dungeon.runId;
+            stableDepth=Dungeon.depth;stableInputGeneration=input;stableBlocked=blocked;return false;
+        }
+        return rendered.generation>stableAfterDraw&&rendered.presentationReady;
+    }
+    private boolean matchesCurrentVisual(VisualSnapshot rendered){
+        return rendered!=null&&rendered.levelIdentity==Dungeon.level&&rendered.depth==Dungeon.depth&&Objects.equals(rendered.runId,Dungeon.runId);
+    }
+    private Map<String,Object> visualState(){
+        VisualSnapshot rendered=renderedVisual;
+        return matchesCurrentVisual(rendered)?rendered.stateData():map("status","not_rendered","map_context",null,"cues",Collections.emptyList());
+    }
     private State captureContinuous(){
         State ordinary=capture(false);
         Map<String,Object> activity=map("kind",executing.activityKind,"target_id",executing.requestId,"state_version",executing.activityVersion);
@@ -367,6 +465,7 @@ public final class GameController implements RuntimeObserver {
         Map<String,Object> pub=new LinkedHashMap<>(captured.publicState);
         Map<String,Object> uiState=ui.describeUi();
         pub.put("ui",uiState);
+        if(Game.scene() instanceof GameScene)pub.put("visual_cues",visualState());
         boolean active=runActive();
         if(!active){pub.remove("hero");pub.remove("map");pub.remove("inventory");pub.remove("visible_entities");}
         String scope=active && Dungeon.runId!=null?"run:"+Dungeon.runId:menuScope;
@@ -391,6 +490,8 @@ public final class GameController implements RuntimeObserver {
                 :Game.scene() instanceof InterlevelScene?"awaiting_input":"menu_ready";
         Map<String,Object> decisionState=new LinkedHashMap<>(pub);
         decisionState.remove("ui");
+        // A marker fading or a particle flickering is display evidence, not another world action.
+        decisionState.remove("visual_cues");
         long inputGeneration=Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();
         String nextSignature=scope+"|"+phase+"|"+ui.intentSignature()+"|"+inputGeneration+"|"+JsonCodec.encode(decisionState);
         if(forceNewVersion||!nextSignature.equals(signature)){revision++;signature=nextSignature;}

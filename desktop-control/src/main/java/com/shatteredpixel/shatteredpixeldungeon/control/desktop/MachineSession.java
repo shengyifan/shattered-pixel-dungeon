@@ -33,6 +33,8 @@ public final class MachineSession implements AutoCloseable {
         void prepareRun(String id);
         GameController.SaveResult pollSave();
         default GameController.RunOutcome pollRunOutcome(){return null;}
+        default GameController.GameLogSnapshot pollGameLog(){return null;}
+        default GameController.VisualSnapshot pollVisual(){return null;}
         boolean exiting();
         boolean disposed();
         void exitNow();
@@ -70,6 +72,8 @@ public final class MachineSession implements AutoCloseable {
             public void prepareRun(String id){game.prepareRun(id);}
             public GameController.SaveResult pollSave(){return game.pollSave();}
             public GameController.RunOutcome pollRunOutcome(){return game.pollRunOutcome();}
+            public GameController.GameLogSnapshot pollGameLog(){return game.pollGameLog();}
+            public GameController.VisualSnapshot pollVisual(){return game.pollVisual();}
             public boolean exiting(){return game.exiting();}
             public boolean disposed(){return game.disposed();}
             public void exitNow(){game.exitNow();}
@@ -148,7 +152,9 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("protocol_version",1,"cli_version","CLI.0.3.0","game_version","3.3.8",
+                    result=map("protocol_version",1,"cli_version","CLI.0.4.0","game_version","3.3.8",
+                            "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
+                            "session_id",store.sessionId(),"audit_schema_version",4,
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
                             "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit"));break;
@@ -158,7 +164,7 @@ public final class MachineSession implements AutoCloseable {
                     result=store.getRequest(scope,requiredIdentifier(request.args,"target_id"));
                     if(result==null)throw new ProtocolException("REQUEST_NOT_FOUND","Request not found");break;
                 case "history.list":result=store.history(scope,number(request.args,"after",0),limit(request.args));break;
-                case "events.read":result=store.events(scope,number(request.args,"after",0),limit(request.args));break;
+                case "events.read":drainSaves();result=store.events(scope,number(request.args,"after",0),limit(request.args));break;
                 case "action.execute":{
                     if(request.stateVersion==null)throw new ProtocolException("STATE_VERSION_REQUIRED","state_version is required");
                     if(cancelRequest){
@@ -335,6 +341,16 @@ public final class MachineSession implements AutoCloseable {
         while((outcome=game.pollRunOutcome())!=null){
             store.ensureScope("run:"+outcome.runId,"run",outcome.runId);
             store.event("run:"+outcome.runId,"run.ended",outcome.data());
+        }
+        GameController.GameLogSnapshot log;
+        while((log=game.pollGameLog())!=null){
+            store.ensureScope(log.scopeId,"run",log.scopeId.substring(4));
+            store.event(log.scopeId,"game.log",log.data());
+        }
+        GameController.VisualSnapshot visual;
+        while((visual=game.pollVisual())!=null){
+            store.ensureScope(visual.scopeId,"run",visual.runId);
+            store.event(visual.scopeId,"game.visual",visual.data());
         }
     }
     @SuppressWarnings("unchecked") private Map<String,Object> withLastSave(Object result,String scope){

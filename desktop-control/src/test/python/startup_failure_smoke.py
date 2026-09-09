@@ -13,6 +13,8 @@ def main():
     root=Path(__file__).resolve().parents[4]
     profile=root/"desktop-control/build/fixtures"/("startup-failure-"+uuid.uuid4().hex)
     emergency=profile/"audit/emergency";emergency.mkdir(parents=True)
+    from test_ui import configure_test_ui
+    configure_test_ui(profile)
     (profile/"test_fixture.json").write_text(json.dumps({"test_fixture":True,"counts_as_win":False},indent=2))
     # The importer must preserve an existing archived file, making Files.move fail before GameController exists.
     (emergency/"fixture.log").write_bytes(b"fixture diagnostic bytes\xff")

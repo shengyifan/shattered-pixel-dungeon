@@ -22,6 +22,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.CharHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.OptionSlider;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RadialMenu;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RightClickMenu;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
@@ -106,7 +107,8 @@ public final class UiBridge {
         Map<String, Object> ui = describeUi();
         List<Map<String, Object>> retained = new ArrayList<>();
         for (Map<String, Object> node : nodes) {
-            if (!(controls.get(node.get("id")) instanceof FloatingText)) retained.add(node);
+            Gizmo control=controls.get(node.get("id"));
+            if (!(control instanceof FloatingText)&&!isGameLogText(control)) retained.add(node);
         }
         ui.put("controls", retained);
         return signature(ui);
@@ -396,6 +398,9 @@ public final class UiBridge {
     private static Gizmo topWindow(Gizmo gizmo) {
         if (!shown(gizmo)) return null;
         Gizmo result = gizmo instanceof Window || gizmo instanceof RightClickMenu ? gizmo : null;
+        // Log words are rendered leaves, never windows. Do not invoke Visual.isVisible on them:
+        // that getter caches cameras and would make reading a log mutate its renderer state.
+        if (isGameLogText(gizmo)) return result;
         if (gizmo instanceof Group) {
             for (Gizmo child : ((Group) gizmo).childrenSnapshot()) {
                 Gizmo next = topWindow(child);
@@ -408,6 +413,7 @@ public final class UiBridge {
     private static InventoryPane selectingInventory(Gizmo gizmo) {
         if (!shown(gizmo)) return null;
         if (gizmo instanceof InventoryPane && ((InventoryPane) gizmo).isSelecting()) return (InventoryPane) gizmo;
+        if (isGameLogText(gizmo)) return null;
         if (gizmo instanceof Group) {
             for (Gizmo child : ((Group) gizmo).childrenSnapshot()) {
                 InventoryPane found = selectingInventory(child);
@@ -419,6 +425,8 @@ public final class UiBridge {
 
     private void walk(Gizmo gizmo, String parentId, ScrollPane pane, boolean inUi) {
         if (!shown(gizmo)) return;
+        RenderedTextBlock.VisibleText logFragment = gameLogFragment(gizmo);
+        if (logFragment != null && !logFragment.visible) return;
         boolean ui = inUi || gizmo instanceof Component || gizmo instanceof Window || gizmo instanceof ActionArea;
         String role = role(gizmo, pane);
         String nodeId = parentId;
@@ -427,8 +435,9 @@ public final class UiBridge {
             controls.put(nodeId, gizmo);
             Map<String, Object> node = map("id", nodeId, "role", role, "enabled", gizmo.isActive());
             if (parentId != null) node.put("parent", parentId);
-            String text = visibleText(gizmo);
+            String text = logFragment == null ? visibleText(gizmo) : logFragment.text;
             if (text != null && !text.isEmpty()) node.put("text", text);
+            if (logFragment != null && logFragment.clipped) node.put("clipped", true);
             if (gizmo instanceof Button) {
                 Button button = (Button) gizmo;
                 String hover = hoverText(button);
@@ -538,6 +547,8 @@ public final class UiBridge {
     }
 
     private static String visibleText(Gizmo gizmo) {
+        RenderedTextBlock.VisibleText logFragment = gameLogFragment(gizmo);
+        if (logFragment != null) return logFragment.visible ? logFragment.text : null;
         if (gizmo instanceof RenderedTextBlock) return ((RenderedTextBlock) gizmo).text();
         if (gizmo instanceof BitmapText) return ((BitmapText) gizmo).text();
         if (gizmo instanceof StyledButton) return ((StyledButton) gizmo).text();
@@ -556,6 +567,16 @@ public final class UiBridge {
             }
         }
         return result.toString();
+    }
+
+    private static RenderedTextBlock.VisibleText gameLogFragment(Gizmo gizmo) {
+        return isGameLogText(gizmo) ? ((RenderedTextBlock) gizmo).visibleTextFragment() : null;
+    }
+    private static boolean isGameLogText(Gizmo gizmo) {
+        if (!(gizmo instanceof RenderedTextBlock)) return false;
+        for (Gizmo parent = gizmo.parent; parent != null; parent = parent.parent)
+            if (parent instanceof GameLog) return true;
+        return false;
     }
 
     private static List<String> gestures(Button button) {

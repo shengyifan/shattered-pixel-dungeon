@@ -17,6 +17,7 @@ import zipfile
 from machine_smoke import Client
 
 CLASSES = ["WARRIOR", "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"]
+CHINESE_CLASSES = {"WARRIOR": "战士", "MAGE": "法师", "ROGUE": "盗贼", "HUNTRESS": "女猎手", "DUELIST": "决斗家", "CLERIC": "牧师"}
 SUBCLASSES = {
     "BERSERKER": "WARRIOR", "GLADIATOR": "WARRIOR", "BATTLEMAGE": "MAGE", "WARLOCK": "MAGE",
     "ASSASSIN": "ROGUE", "FREERUNNER": "ROGUE", "SNIPER": "HUNTRESS", "WARDEN": "HUNTRESS",
@@ -44,6 +45,8 @@ def norm(text):
 
 class FixtureClient(Client):
     def __init__(self, command, profile):
+        from test_ui import configure_test_ui
+        configure_test_ui(profile)
         self.trace = (profile / "public-trace.jsonl").open("a")
         self.last_state = None
         super().__init__(command, profile)
@@ -94,7 +97,7 @@ def reach_game(client, hero_class):
             return client.state()  # allow pending UI displays to refresh after fixture setup
         ui = observation.get("ui", {})
         if ui.get("scene") == "HeroSelectScene" and not selected and not ui.get("modal"):
-            click(client, lambda label: norm(label) == norm(hero_class))
+            click(client, lambda label: norm(label) in {norm(hero_class), norm(CHINESE_CLASSES[hero_class])})
             selected = True
             continue
         if ui.get("scene") == "HeroSelectScene" and ui.get("modal") and selected:
@@ -102,7 +105,7 @@ def reach_game(client, hero_class):
             continue
         options = [a for a in state["actions"] if a["action"] == "ui.activate" and a.get("label")]
         choice = None
-        for label in ["continue", "继续", "enter", "进入", "play", "开始游戏", "new game", "start", "开始"]:
+        for label in ["continue", "继续", "enter", "进入", "play", "开始游戏", "new game", "新游戏", "start", "开始"]:
             choice = next((a for a in options if label in a["label"].lower()), None)
             if choice:
                 break
@@ -144,7 +147,7 @@ def visible_target(state, floor=False):
     cells = [c for c in observation["map"]["cells"] if c["visibility"] == "visible"
              and c["cell"] != hero and c["cell"] not in occupied
              and max(abs(c["x"] - hero % width), abs(c["y"] - hero // width)) == 1
-             and any(word in c["name"].lower() for word in ("floor", "grass", "water", "door"))]
+             and any(word in c["name"].lower() for word in ("floor", "grass", "water", "door", "地板", "地面", "草", "水", "门"))]
     assert cells, {"no_visible_target": observation["map"]}
     return cells[0]["cell"]
 

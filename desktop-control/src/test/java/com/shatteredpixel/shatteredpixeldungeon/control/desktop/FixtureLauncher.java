@@ -136,6 +136,7 @@ public final class FixtureLauncher {
         System.setProperty("Specification-Version", "3.3.8");
         System.setProperty("Implementation-Version", "896");
         try (ProfileLock lock = new ProfileLock(profile); AuditStore store = new AuditStore(profile.resolve("audit"))) {
+            configureTestUi(profile);
             AtomicReference<MachineSession> reference = new AtomicReference<>();
             GameController game = new GameController(profile, store.menuScope(), error -> { if (reference.get() != null) reference.get().recordException(error); });
             try (MachineSession session = new MachineSession(store, game, protocol)) {
@@ -151,9 +152,24 @@ public final class FixtureLauncher {
         }
     }
 
+    private static void configureTestUi(Path profile)throws IOException {
+        // Native startup reads these before the first frame. All paths were already restricted
+        // to the isolated fixture root and the profile lock is held before touching preferences.
+        Path file=profile.resolve("settings.xml");
+        if(Files.isSymbolicLink(file))throw new IOException("Fixture settings must not be a symbolic link");
+        Properties settings=new Properties();
+        if(Files.isRegularFile(file))try(InputStream input=Files.newInputStream(file)){settings.loadFromXML(input);}
+        if(Languages.CHI_SMPL.code().equals(settings.getProperty(SPDSettings.KEY_LANG))
+                &&"false".equals(settings.getProperty(SPDSettings.KEY_FULLSCREEN)))return;
+        settings.setProperty(SPDSettings.KEY_LANG,Languages.CHI_SMPL.code());
+        settings.setProperty(SPDSettings.KEY_FULLSCREEN,"false");
+        try(OutputStream output=Files.newOutputStream(file)){settings.storeToXML(output,"Isolated fixture UI preferences","UTF-8");}
+    }
+
     private static final class FixtureObserver implements RuntimeObserver {
         final GameController game; final Fixture fixture; final Path profile;
         boolean menuPrepared, injected; String lastVersion;
+        Boolean lastWindowFocus;
         Mob fixtureTarget;
         FixtureObserver(GameController game, Fixture fixture, Path profile) { this.game=game; this.fixture=fixture; this.profile=profile; }
         RuntimeObserver forwardingObserver() {
@@ -171,7 +187,8 @@ public final class FixtureLauncher {
                 if (!menuPrepared && Game.scene() != null && !Game.switchingScene()) {
                     Badges.loadGlobal();
                     for (Badges.Badge badge : Badges.Badge.values()) if (badge.name().startsWith("UNLOCK_")) Badges.unlock(badge);
-                    SPDSettings.language(Languages.ENGLISH); Messages.setup(Languages.ENGLISH);
+                    SPDSettings.language(Languages.CHI_SMPL); Messages.setup(Languages.CHI_SMPL);
+                    SPDSettings.fullscreen(false);
                     SPDSettings.intro(false);
                     menuPrepared = true;
                 }
@@ -181,15 +198,23 @@ public final class FixtureLauncher {
                     injected = true;
                     Map<String, Object> meta = map("test_fixture", true, "counts_as_win", false, "fixture", fixture.id,
                             "hero_class", fixture.heroClass.name(), "subclass", fixture.subclass.name(), "injected", true,
-                            "ability_label", Dungeon.hero.armorAbility == null ? null : Dungeon.hero.armorAbility.name());
+                            "ability_label", Dungeon.hero.armorAbility == null ? null : Dungeon.hero.armorAbility.name(),
+                            "language",Messages.lang().name(),"fullscreen",Gdx.graphics.isFullscreen());
                     write(profile.resolve("test_fixture.json"), meta);
                 }
                 game.afterFrame();
                 GameController.State state = game.latest();
-                if (injected && state != null && !state.version.equals(lastVersion)) {
+                Boolean focused=windowFocused();
+                if(!java.util.Objects.equals(lastWindowFocus,focused)){
+                    lastWindowFocus=focused;
+                    Files.writeString(profile.resolve("fixture-focus.jsonl"),JsonCodec.encode(map("test_fixture",true,
+                            "focused",focused,"occurred_at",java.time.Instant.now().toString(),"state_version",state==null?null:state.version))+"\n",
+                            StandardCharsets.UTF_8,StandardOpenOption.CREATE,StandardOpenOption.APPEND);
+                }
+                if (injected && Dungeon.hero != null && state != null && !state.version.equals(lastVersion)) {
                     lastVersion = state.version;
                     Map<String, Object> checkpoint = map("test_fixture", true, "internal_assertion_only", true,
-                            "state_version", state.version, "subclass", Dungeon.hero.subClass.name(),
+                            "state_version", state.version, "subclass", Dungeon.hero.subClass.name(),"window_focused",focused,
                             "armor_charge", Dungeon.hero.belongings.armor instanceof ClassArmor ? ((ClassArmor) Dungeon.hero.belongings.armor).charge : null,
                             "target_hp", fixtureTarget == null ? null : fixtureTarget.HP,
                             "monk_energy", Dungeon.hero.buff(MonkEnergy.class) == null ? null : Dungeon.hero.buff(MonkEnergy.class).energy,
@@ -213,6 +238,14 @@ public final class FixtureLauncher {
         @Override public void onDispose() { game.onDispose(); }
         @Override public void onSave(String id,int slot,Throwable error) { game.onSave(id,slot,error); }
         @Override public boolean exitRequested() { return game.exitRequested(); }
+    }
+
+    private static Boolean windowFocused(){
+        if(Gdx.graphics==null)return null;
+        try {
+            Object window=Gdx.graphics.getClass().getMethod("getWindow").invoke(Gdx.graphics);
+            return (Boolean)window.getClass().getMethod("isFocused").invoke(window);
+        } catch(ReflectiveOperationException error){throw new IllegalStateException("Test window focus probe unavailable",error);}
     }
 
     private static Mob prepare(Fixture fixture) throws Exception {

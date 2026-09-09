@@ -27,6 +27,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.TextureFilm;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.particles.Emitter;
@@ -114,9 +116,26 @@ public class GooSprite extends MobSprite {
 						&& new Ballistica(i, ch.pos, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID).collisionPos == ch.pos) {
 					Emitter e = CellEmitter.get(i);
 					e.pour(GooParticle.FACTORY, 0.04f);
+					if (Game.observer.observesVisualCues()) e.observeDraw(new GooDrawObserver(i));
 					pumpUpEmitters.add(e);
 				}
 			}
+		}
+	}
+
+	public static final class GooDrawObserver implements Emitter.DrawObserver {
+		private final int cell;
+		private boolean observed;
+		public GooDrawObserver(int cell) { this.cell = cell; }
+		@Override public void resetObservation() { observed = false; }
+		/** Called after clipping: hidden sources do not postpone an input boundary. */
+		public boolean recordVisibleFrame(boolean eligible, boolean hasDrawable) {
+			if (!eligible) return true;
+			if (hasDrawable) observed = true;
+			return observed;
+		}
+		@Override public void afterDraw(Emitter emitter) {
+			if (Game.observer.observesVisualCues()) GameScene.observeGooEmitterDraw(emitter, cell, this);
 		}
 	}
 

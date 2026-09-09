@@ -22,13 +22,20 @@
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.ui.Component;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
+import com.watabou.noosa.RuntimeObserver;
 import com.watabou.utils.Signal;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class GameLog extends Component implements Signal.Listener<String> {
@@ -39,6 +46,8 @@ public class GameLog extends Component implements Signal.Listener<String> {
 
 	private RenderedTextBlock lastEntry;
 	private int lastColor;
+	private final String logContextId = Dungeon.runId;
+	private final IdentityHashMap<RenderedTextBlock, Integer> entryColors = new IdentityHashMap<>();
 
 	private static ArrayList<Entry> entries = new ArrayList<>();
 
@@ -96,7 +105,8 @@ public class GameLog extends Component implements Signal.Listener<String> {
 					} else {
 
 						lastEntry = PixelScene.renderTextBlock( text, 6 );
-						lastEntry.hardlight( color );
+							lastEntry.hardlight( color );
+							entryColors.put(lastEntry, color);
 						lastColor = color;
 						add( lastEntry );
 
@@ -115,6 +125,7 @@ public class GameLog extends Component implements Signal.Listener<String> {
 							if (nLines > maxLines) {
 								RenderedTextBlock r = ((RenderedTextBlock) members.get(0));
 								remove(r);
+								entryColors.remove(r);
 								r.destroy();
 
 								entries.remove( 0 );
@@ -134,11 +145,35 @@ public class GameLog extends Component implements Signal.Listener<String> {
 	}
 	
 	private synchronized void recreateLines() {
+		entryColors.clear();
 		for (Entry entry : entries) {
 			lastEntry = PixelScene.renderTextBlock( entry.text, 6 );
 			lastEntry.hardlight( lastColor = entry.color );
+			entryColors.put(lastEntry, entry.color);
 			add( lastEntry );
 		}
+	}
+
+	@Override
+	public synchronized void draw() {
+		super.draw();
+		RuntimeObserver observer = Game.observer;
+		if (observer == RuntimeObserver.NONE || !exists || !alive || !isVisible() || !isActive()
+				|| logContextId == null || !Objects.equals(logContextId, Dungeon.runId) || Game.instance == null) return;
+		Gizmo root = this;
+		while (root.parent != null) root = root.parent;
+		if (root != Game.scene()) return;
+		ArrayList<RuntimeObserver.LogEntry> displayed = new ArrayList<>();
+		for (Gizmo child : members) {
+			if (!(child instanceof RenderedTextBlock) || !child.exists || !child.alive
+					|| !child.isVisible() || !child.isActive()) continue;
+			RenderedTextBlock text = (RenderedTextBlock) child;
+			Integer color = entryColors.get(text);
+			RenderedTextBlock.VisibleText fragment = text.visibleTextFragment();
+			if (color != null && fragment.visible)
+				displayed.add(new RuntimeObserver.LogEntry(fragment.text, color, fragment.clipped));
+		}
+		observer.onGameLog(logContextId, Collections.unmodifiableList(displayed));
 	}
 
 	public synchronized void newLine() {

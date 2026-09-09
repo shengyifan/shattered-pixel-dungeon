@@ -207,6 +207,28 @@ public class GameScene extends PixelScene {
 	private LootIndicator loot;
 	private ActionIndicator action;
 	private ResumeIndicator resume;
+	private com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector visualCueCollector;
+
+	@Override
+	public void draw() {
+		if (!Game.observer.observesVisualCues()) {
+			super.draw();
+			return;
+		}
+		if (visualCueCollector == null) visualCueCollector = new com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector(this);
+		visualCueCollector.beginDraw();
+		super.draw();
+		visualCueCollector.finishDraw();
+	}
+
+	/** Optional draw annotations; these never ask the simulation to create or predict effects. */
+	public static void observeTargetedCellDraw(com.watabou.noosa.Visual source, int cell) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.targetDrawn(source, cell);
+	}
+
+	public static void observeGooEmitterDraw(Emitter source, int cell, com.shatteredpixel.shatteredpixeldungeon.sprites.GooSprite.GooDrawObserver observation) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.gooEmitterDrawn(source, cell, observation);
+	}
 
 	{
 		inGameScene = true;
