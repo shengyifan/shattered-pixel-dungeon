@@ -8,39 +8,13 @@ import time
 import traceback
 import uuid
 
-from fixture_smoke import FixtureClient, checkpoint, close_choices, freeze_runtime, reach_game, select_inventory_item
+from fixture_smoke import FixtureClient, act, checkpoint, close_choices, freeze_runtime, reach_game, select_inventory_item
 
 CASES = ["shop-trade", "shop-steal", "shop-steal-warning", "ghost-reward", "wandmaker-reward",
          "blacksmith-cashout", "blacksmith-pickaxe", "blacksmith-reforge", "companion",
          "alchemy-energy", "resurrect", "amulet-stay", "amulet-end",
          "shop-stack", "shop-steal-failure", "blacksmith-harden", "blacksmith-upgrade", "blacksmith-smith",
          "companion-attack", "companion-resummon", "blessed-ankh", "amulet-pickup"]
-
-
-def act(client, action, **args):
-    for _ in range(6):
-        response = client.request("action.execute", {"action": action, **args})
-        if response.get("error", {}).get("code") == "STALE_STATE":
-            client.state()
-            continue
-        assert response.get("ok"), response
-        if response.get("status") == "in_progress":
-            request_id, scope = response["id"], response["scope_id"]
-            deadline = time.monotonic() + 40
-            while time.monotonic() < deadline:
-                record = client.request("request.get", {"target_id": request_id}, scope=scope)
-                assert record["ok"], record
-                if record["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
-                    response = record["result"]["response"]
-                    assert response.get("ok"), response
-                    break
-                time.sleep(0.05)
-            else:
-                raise TimeoutError("Low-frequency action did not complete")
-        result = response["result"]
-        client.scope, client.version, client.last_state = result["scope_id"], result["state_version"], result
-        return result
-    raise AssertionError("No stable current intent version")
 
 
 def click(client, predicate):
@@ -187,8 +161,11 @@ def reward(client, profile, wandmaker):
             "quest_consumable_removed": wandmaker, "quest_completion_checked": True}
 
 
-def values(client, profile):
-    return checkpoint(profile, client.state()["state_version"])["low_frequency"]
+def values(client, profile, state=None):
+    """Read only a postcondition; pass the action result to test its completion boundary."""
+    if state is None:
+        state = client.state()
+    return checkpoint(profile, state["state_version"])["low_frequency"]
 
 
 def empty_slot(client, index=0):
@@ -205,8 +182,8 @@ def blacksmith(client, profile, case):
     if case == "blacksmith-reforge":
         choose(client, "reforge")
         empty_slot(client)
-        act(client, "ui.back")  # cancel the first item selector without consuming favor or gear
-        assert values(client, profile)["blacksmith_favor"] == before["blacksmith_favor"]
+        cancelled = act(client, "ui.back")  # original selector cancellation
+        assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
         empty_slot(client)
         select_inventory_item(client, lambda label: label.lower().startswith("sword"))
         empty_slot(client)
@@ -223,8 +200,8 @@ def blacksmith(client, profile, case):
         return {"selector_cancel_checked": True, "two_items_reforged_into_one": True, "favor_cost": 500}
     option = "pickaxe" if case == "blacksmith-pickaxe" else "cash out"
     choose(client, option)
-    choose(client, "nevermind")
-    assert values(client, profile)["blacksmith_favor"] == before["blacksmith_favor"]
+    cancelled = choose(client, "nevermind")
+    assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
     choose(client, option)
     done = choose(client, "yes, i want" if case == "blacksmith-pickaxe" else "give me the gold")
     after = checkpoint(profile, done["state_version"])["low_frequency"]
@@ -245,8 +222,8 @@ def smith_service(client, profile, case):
     service = case.removeprefix("blacksmith-")
     choose(client, service)
     if service == "smith":
-        choose(client, "nevermind")
-        assert values(client, profile)["blacksmith_favor"] == before["blacksmith_favor"]
+        cancelled = choose(client, "nevermind")
+        assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
         choose(client, service)
         paid = choose(client, "warm the forge")
         paid_values = checkpoint(profile, paid["state_version"])["low_frequency"]
@@ -258,8 +235,8 @@ def smith_service(client, profile, case):
         assert len(choices) >= 2, choices
         label = choices[0]["label"]
         act(client, "ui.activate", control=choices[0]["control"])
-        choose(client, "cancel")
-        assert values(client, profile)["blacksmith_rewards_pending"]
+        cancelled = choose(client, "cancel")
+        assert values(client, profile, cancelled)["blacksmith_rewards_pending"]
         choose(client, label)
         reward_state = choose(client, "confirm")
         after = checkpoint(profile, reward_state["state_version"])["low_frequency"]
@@ -268,8 +245,8 @@ def smith_service(client, profile, case):
         return {"smith_cost": 2000, "purchase_confirmation_cancelled": True,
                 "mandatory_reward_window_back_blocked": True, "reward_preview_cancelled": True,
                 "generated_reward_received": True, "reward_list_cleared": True}
-    act(client, "ui.back")
-    assert values(client, profile)["blacksmith_favor"] == before["blacksmith_favor"]
+    cancelled = act(client, "ui.back")
+    assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
     choose(client, service)
     result = click(client, lambda label: label.lower().startswith("sword"))
     after = checkpoint(profile, result["state_version"])["low_frequency"]
@@ -294,14 +271,14 @@ def companion(client, profile):
     initial = client.state()
     rose_menu(client, "outfit")
     empty_slot(client)
-    act(client, "ui.back")
-    assert values(client, profile)["rose_weapon"] is None
+    cancelled = act(client, "ui.back")
+    assert values(client, profile, cancelled)["rose_weapon"] is None
     empty_slot(client)
-    select_inventory_item(client, lambda label: label.lower().startswith("sword"))
-    assert values(client, profile)["rose_weapon"] == "Sword"
+    equipped = select_inventory_item(client, lambda label: label.lower().startswith("sword"))
+    assert values(client, profile, equipped)["rose_weapon"] == "Sword"
     empty_slot(client)
-    select_inventory_item(client, lambda label: "leather armor" in label.lower())
-    assert values(client, profile)["rose_armor"] == "LeatherArmor"
+    armored = select_inventory_item(client, lambda label: "leather armor" in label.lower())
+    assert values(client, profile, armored)["rose_armor"] == "LeatherArmor"
     act(client, "ui.back")
     summoned = rose_menu(client, "summon")
     summoned_values = checkpoint(profile, summoned["state_version"])["low_frequency"]
@@ -323,15 +300,20 @@ def companion(client, profile):
     following = act(client, "cell.select", cell=following["observation"]["hero"]["cell"])
     assert checkpoint(profile, following["state_version"])["low_frequency"]["ghost_defending_cell"] == -1
     rose_menu(client, "outfit")
-    choose(client, "sword")
-    choose(client, "leather armor")
+    weapon_returned = choose(client, "sword")
+    assert values(client, profile, weapon_returned)["rose_weapon"] is None
+    assert quantity(weapon_returned, "sword") == quantity(initial, "sword")
+    armor_returned = choose(client, "leather armor")
+    assert values(client, profile, armor_returned)["rose_armor"] is None
+    assert quantity(armor_returned, "leather armor") == 1
     returned = act(client, "ui.back")
     restored = checkpoint(profile, returned["state_version"])["low_frequency"]
     assert restored["rose_weapon"] is None and restored["rose_armor"] is None
     assert quantity(returned, "sword") == quantity(initial, "sword") and quantity(returned, "leather armor") == 1
     return {"outfit_selector_cancel_checked": True, "weapon_and_armor_equipped": True,
             "summon_consumed_full_charge": True, "direct_cancel_checked": True, "defend_target_assigned": True,
-            "follow_hero_command_checked": True, "equipment_returned_to_inventory": True}
+            "follow_hero_command_checked": True, "equipment_returned_to_inventory": True,
+            "equipment_handoff_verified_in_each_action_response": True}
 
 
 def companion_variant(client, profile, resummon):
@@ -385,8 +367,8 @@ def alchemy_energy(client, profile):
     before = values(client, profile)["dungeon_energy"]
     choose(client, "energize items")
     select_inventory_item(client, lambda label: "healing" in label.lower())
-    act(client, "ui.back")
-    assert values(client, profile)["dungeon_energy"] == before
+    cancelled = act(client, "ui.back")
+    assert values(client, profile, cancelled)["dungeon_energy"] == before
     select_inventory_item(client, lambda label: "healing" in label.lower())
     energized = choose(client, "turn 1 into")
     after_energy = checkpoint(profile, energized["state_version"])["low_frequency"]["dungeon_energy"]
@@ -413,8 +395,8 @@ def resurrection(client, profile):
     blocked_back = act(client, "ui.back")
     assert blocked_back["observation"]["ui"] == dead["observation"]["ui"]
     choose(client, "worn shortsword")
-    act(client, "ui.back")
-    assert values(client, profile)["ankhs_used"] == before["ankhs_used"]
+    cancelled = act(client, "ui.back")
+    assert values(client, profile, cancelled)["ankhs_used"] == before["ankhs_used"]
     choose(client, "worn shortsword")
     select_inventory_item(client, lambda label: "cloth armor" in label.lower())
     warning = choose(client, "preserve these items")
@@ -533,10 +515,12 @@ def run_one(root, classpath, runtime_id, case):
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
                "com.shatteredpixel.shatteredpixeldungeon.control.desktop.FixtureLauncher", "--fixture", "lowfreq:" + case]
-    client = FixtureClient(command, profile)
+    client = FixtureClient(command, profile, verify_gui=True)
     report = dict(test_fixture=True, counts_as_win=False, case=case, profile=str(profile.relative_to(root)), runtime_id=runtime_id)
     try:
-        assert client.request("protocol.info")["ok"]
+        hello = client.request("protocol.info")
+        assert hello["ok"], hello
+        report.update(build_id=hello["result"]["build_id"], cli_version=hello["result"]["cli_version"])
         reach_game(client, "WARRIOR")
         if case == "shop-stack":
             evidence = shop_stack(client)
@@ -571,15 +555,35 @@ def run_one(root, classpath, runtime_id, case):
         report.update(ok=False, error=repr(error), traceback=traceback.format_exc())
     finally:
         try:
-            close_choices(client)
-            client.finish()
+            if report.get("ok"):
+                close_choices(client)
+                client.finish()
+                assert client.process.poll() == 0, {"unexpected_exit_code": client.process.poll()}
+            elif client.process.poll() is None:
+                # Never add UI decisions after a failed or uncertain operation.
+                client.process.stdin.close()
+                client.process.wait(timeout=20)
         except Exception as error:
             report["ok"] = False
-            report["cleanup_error"] = str(error)
+            report["cleanup_error"] = repr(error)
+        finally:
             if client.process.poll() is None:
-                client.process.terminate()
-                client.process.wait(timeout=10)
-        client.trace.close()
+                try:
+                    client.process.terminate()
+                    client.process.wait(timeout=10)
+                except Exception as error:
+                    report["cleanup_termination_error"] = repr(error)
+                    client.process.kill()
+                    client.process.wait(timeout=10)
+                report["cleanup_forced_termination"] = True
+                report["ok"] = False
+            client.stderr.close()
+            client.trace.close()
+        report.update(exit_code=client.process.poll(),
+                      gui_language="CHI_SMPL", fullscreen=False,
+                      gui_postconditions_checked=client.gui_postconditions_checked,
+                      public_game_prose_checked_on_every_response=True,
+                      pending_actions_use_original_terminal_response=True)
         (profile / "low-frequency-result.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(report, ensure_ascii=False), flush=True)
     return report
@@ -593,10 +597,14 @@ def main():
     root = Path(__file__).resolve().parents[4]
     classpath = (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip()
     classpath, runtime_id = freeze_runtime(root, classpath)
-    results = [run_one(root, classpath, runtime_id, case) for case in args.cases.split(",")]
-    summary = dict(test_fixture=True, counts_as_win=False, runtime_id=runtime_id,
-                   total=len(results), passed=sum(r["ok"] for r in results), results=results)
-    (root / "desktop-control/build/fixtures" / runtime_id / "low-frequency-results.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+    print(json.dumps({"started_runtime": runtime_id, "cases": args.cases.split(",")}), flush=True)
+    results = []
+    for case in args.cases.split(","):
+        results.append(run_one(root, classpath, runtime_id, case))
+        summary = dict(test_fixture=True, counts_as_win=False, runtime_id=runtime_id,
+                       planned_total=len(args.cases.split(",")), total=len(results),
+                       passed=sum(r["ok"] for r in results), results=results)
+        (root / "desktop-control/build/fixtures" / runtime_id / "low-frequency-results.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if not all(r["ok"] for r in results):
         raise SystemExit(1)
 

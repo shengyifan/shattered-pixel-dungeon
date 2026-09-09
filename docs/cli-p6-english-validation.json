@@ -1,0 +1,725 @@
+{
+  "test_fixture": true,
+  "counts_as_legitimate_win": false,
+  "checked_at_utc": "2026-09-09T05:34:58.934981+00:00",
+  "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+  "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+  "cli_version": "CLI.0.8.5",
+  "all_cases_passed": false,
+  "total": 22,
+  "passed": 14,
+  "failed": 8,
+  "gui_postconditions_checked": 545,
+  "gui_postconditions_in_passed_cases": 376,
+  "raw_summary": "desktop-control/build/fixtures/runtime-492eab0194ec44ba900b788f10016cf7/low-frequency-results.json",
+  "frozen_runner_source": "desktop-control/build/fixtures/runtime-492eab0194ec44ba900b788f10016cf7/python-source",
+  "baseline_preserved": [
+    "docs/cli-p6-low-frequency.md",
+    "docs/cli-p6-low-frequency.json"
+  ],
+  "validation": {
+    "every_response_game_prose": "English; recursively validated, raw audit payloads excluded",
+    "gui": "Every non-quit response containing an observation, plus every pending logical terminal response, is matched to the same state_version and scope_id in original UiSceneAssertions; CHI_SMPL and fullscreen=false.",
+    "after_failure": "EOF only, no UI cancellation/confirmation or other new gameplay operation",
+    "successful_exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "no_formal_profiles": true,
+    "production_changes": false
+  },
+  "results": [
+    {
+      "case": "shop-trade",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-shop-trade-c13bfb47ae374ea4a4918ac7c78427b4",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 38,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-shop-trade-c13bfb47ae374ea4a4918ac7c78427b4/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-trade-c13bfb47ae374ea4a4918ac7c78427b4/public-trace.jsonl",
+      "evidence": {
+        "buy_cancel_checked": true,
+        "sell_cancel_checked": true,
+        "purchase_cost": 150,
+        "sale_value": 30,
+        "inventory_quantity_round_trip": true
+      }
+    },
+    {
+      "case": "shop-steal",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-164be9ba8ea04e389ff9b5d050cc1201",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 21,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-shop-steal-164be9ba8ea04e389ff9b5d050cc1201/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-164be9ba8ea04e389ff9b5d050cc1201/public-trace.jsonl",
+      "evidence": {
+        "buy_window_cancel_checked": true,
+        "actual_100_percent_steal": true,
+        "gold_unchanged": true,
+        "charge_before": 5,
+        "charge_after": 2
+      }
+    },
+    {
+      "case": "shop-steal-warning",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-warning-017ee62edc7647b19d86f7bc541b3e81",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 17,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-shop-steal-warning-017ee62edc7647b19d86f7bc541b3e81/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-warning-017ee62edc7647b19d86f7bc541b3e81/public-trace.jsonl",
+      "failure": {
+        "request_id": "5e25f73ded54-21",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-133"
+        },
+        "error_code": "EXECUTION_UNKNOWN",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [
+          {
+            "action": "ui.activate",
+            "control": "ui-131",
+            "gestures": [
+              "click"
+            ],
+            "label": "Buy for 150g"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-133",
+            "gestures": [
+              "click"
+            ],
+            "label": "Steal with 33% chance\nCharges used: 1"
+          }
+        ],
+        "displayed_text": "是的，我确定",
+        "translation_diagnostic": "ambiguous_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "ghost-reward",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-ghost-reward-1cd35f9be4d74eeb8f60dcc32cd8e6ff",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 15,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-ghost-reward-1cd35f9be4d74eeb8f60dcc32cd8e6ff/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-ghost-reward-1cd35f9be4d74eeb8f60dcc32cd8e6ff/public-trace.jsonl",
+      "failure": {
+        "request_id": "e113651e5d89-17",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-130"
+        },
+        "error_code": "EXECUTION_UNKNOWN",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [
+          {
+            "action": "ui.activate",
+            "control": "ui-130",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Sword"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-134",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Leather Armor"
+          }
+        ],
+        "displayed_text": "确定",
+        "translation_diagnostic": "ambiguous_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "wandmaker-reward",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-wandmaker-reward-6deb34101fdd40d7ad5e595110f67d2d",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 15,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-wandmaker-reward-6deb34101fdd40d7ad5e595110f67d2d/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-wandmaker-reward-6deb34101fdd40d7ad5e595110f67d2d/public-trace.jsonl",
+      "failure": {
+        "request_id": "8c7b4baccd73-17",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-133"
+        },
+        "error_code": "EXECUTION_UNKNOWN",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [
+          {
+            "action": "ui.activate",
+            "control": "ui-133",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Wand of Magic Missile"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-137",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Wand of Fireblast"
+          }
+        ],
+        "displayed_text": "确定",
+        "translation_diagnostic": "ambiguous_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "blacksmith-cashout",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-cashout-e5ff62b6cf5c4a898a9d4ca14c9c37b0",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 25,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blacksmith-cashout-e5ff62b6cf5c4a898a9d4ca14c9c37b0/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-cashout-e5ff62b6cf5c4a898a9d4ca14c9c37b0/public-trace.jsonl",
+      "evidence": {
+        "confirmation_cancel_checked": true,
+        "reward_and_favor_verified": true,
+        "favor_before": 3000,
+        "favor_after": 0
+      }
+    },
+    {
+      "case": "blacksmith-pickaxe",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-pickaxe-16e24082b6394addb47ddcdc07200845",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 25,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blacksmith-pickaxe-16e24082b6394addb47ddcdc07200845/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-pickaxe-16e24082b6394addb47ddcdc07200845/public-trace.jsonl",
+      "evidence": {
+        "confirmation_cancel_checked": true,
+        "reward_and_favor_verified": true,
+        "favor_before": 2000,
+        "favor_after": 1750
+      }
+    },
+    {
+      "case": "blacksmith-reforge",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-reforge-4aee96a485b24a87b2ebffc2dd478a10",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 33,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blacksmith-reforge-4aee96a485b24a87b2ebffc2dd478a10/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-reforge-4aee96a485b24a87b2ebffc2dd478a10/public-trace.jsonl",
+      "evidence": {
+        "selector_cancel_checked": true,
+        "two_items_reforged_into_one": true,
+        "favor_cost": 500
+      }
+    },
+    {
+      "case": "companion",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-companion-3b99c55facd64a64b7d8696c8ff8ff0f",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 33,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-companion-3b99c55facd64a64b7d8696c8ff8ff0f/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-companion-3b99c55facd64a64b7d8696c8ff8ff0f/public-trace.jsonl",
+      "failure": {
+        "request_id": "0e73bc40327d-35",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-344"
+        },
+        "error_code": "AUDIT_UNAVAILABLE",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [
+          {
+            "action": "ui.activate",
+            "control": "ui-338",
+            "gestures": [
+              "click"
+            ],
+            "label": "DROP"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-340",
+            "gestures": [
+              "click"
+            ],
+            "label": "THROW"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-342",
+            "gestures": [
+              "click"
+            ],
+            "label": "UNEQUIP"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-344",
+            "gestures": [
+              "click"
+            ],
+            "label": "SUMMON"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-346",
+            "gestures": [
+              "click"
+            ],
+            "label": "OUTFIT"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-348",
+            "gestures": [
+              "click"
+            ]
+          }
+        ],
+        "displayed_text": "悲伤幽灵: \"再次向你问好，战士。\" ",
+        "translation_diagnostic": "no_safe_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "alchemy-energy",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-alchemy-energy-d82bdd3597d94c87a9d5ec0ac944eaa6",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 37,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-alchemy-energy-d82bdd3597d94c87a9d5ec0ac944eaa6/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-alchemy-energy-d82bdd3597d94c87a9d5ec0ac944eaa6/public-trace.jsonl",
+      "evidence": {
+        "energize_cancel_checked": true,
+        "one_item_converted_to_energy": 6,
+        "exotic_potion_crafted": true,
+        "energy_spent": 4,
+        "same_scope": true
+      }
+    },
+    {
+      "case": "resurrect",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-resurrect-85c451c71c9043bfb912ad639f5672c0",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-resurrect-85c451c71c9043bfb912ad639f5672c0/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-resurrect-85c451c71c9043bfb912ad639f5672c0/public-trace.jsonl",
+      "failure": {
+        "request_id": "1f82a43cb9ed-26",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-148"
+        },
+        "error_code": "EXECUTION_UNKNOWN",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [
+          {
+            "action": "ui.activate",
+            "control": "ui-140",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Cloth Armor"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-144",
+            "gestures": [
+              "click",
+              "long"
+            ]
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-148",
+            "gestures": [
+              "click"
+            ],
+            "label": "Preserve these items"
+          }
+        ],
+        "displayed_text": "是的，我确定",
+        "translation_diagnostic": "ambiguous_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "amulet-stay",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-amulet-stay-7e75aa25987040b69648af7d3ceb094d",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 19,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-amulet-stay-7e75aa25987040b69648af7d3ceb094d/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-amulet-stay-7e75aa25987040b69648af7d3ceb094d/public-trace.jsonl",
+      "evidence": {
+        "amulet_scene_choice_read": true,
+        "stay_returns_to_same_run": true
+      }
+    },
+    {
+      "case": "amulet-end",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-amulet-end-7f7dbb872fc8434bb31c9f86a45d5cfb",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 32,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-amulet-end-7f7dbb872fc8434bb31c9f86a45d5cfb/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-amulet-end-7f7dbb872fc8434bb31c9f86a45d5cfb/public-trace.jsonl",
+      "evidence": {
+        "amulet_scene_choice_read": true,
+        "test_only_win_event_recorded": true,
+        "rankings_and_victory_window_shown": true,
+        "victory_close_button_used": true,
+        "counts_as_legitimate_win": false
+      }
+    },
+    {
+      "case": "shop-stack",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-shop-stack-a1dbad5ac30d44a8b6a7c030c80370f8",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 44,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-shop-stack-a1dbad5ac30d44a8b6a7c030c80370f8/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-stack-a1dbad5ac30d44a8b6a7c030c80370f8/public-trace.jsonl",
+      "evidence": {
+        "sell_one_and_buyback": true,
+        "sell_all_and_buyback": true,
+        "stack_restored_each_time": true,
+        "sale_prices": [
+          30,
+          90
+        ],
+        "gold_round_trip": true
+      }
+    },
+    {
+      "case": "shop-steal-failure",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-failure-4c477c356fb54cc7993c6b1c74e58401",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 15,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-shop-steal-failure-4c477c356fb54cc7993c6b1c74e58401/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-failure-4c477c356fb54cc7993c6b1c74e58401/public-trace.jsonl",
+      "failure": {
+        "request_id": "20be37a629ed-18",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-133"
+        },
+        "error_code": "EXECUTION_UNKNOWN",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [],
+        "displayed_text": "是的，我确定",
+        "translation_diagnostic": "ambiguous_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "blacksmith-harden",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-harden-7d682b07efbd461f8eb060bde2e93754",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blacksmith-harden-7d682b07efbd461f8eb060bde2e93754/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-harden-7d682b07efbd461f8eb060bde2e93754/public-trace.jsonl",
+      "evidence": {
+        "service": "harden",
+        "item_selector_cancelled": true,
+        "favor_cost": 500,
+        "actual_item_effect_in_final_response": true
+      }
+    },
+    {
+      "case": "blacksmith-upgrade",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-upgrade-e1ba6ba4203d40209fc319ff7726cf5c",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blacksmith-upgrade-e1ba6ba4203d40209fc319ff7726cf5c/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-upgrade-e1ba6ba4203d40209fc319ff7726cf5c/public-trace.jsonl",
+      "evidence": {
+        "service": "upgrade",
+        "item_selector_cancelled": true,
+        "favor_cost": 1000,
+        "actual_item_effect_in_final_response": true
+      }
+    },
+    {
+      "case": "blacksmith-smith",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-smith-4f0dafa6a1d14dc3979fa87b01221adf",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blacksmith-smith-4f0dafa6a1d14dc3979fa87b01221adf/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-smith-4f0dafa6a1d14dc3979fa87b01221adf/public-trace.jsonl",
+      "failure": {
+        "request_id": "d25f16b31387-26",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-165"
+        },
+        "error_code": "EXECUTION_UNKNOWN",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [
+          {
+            "action": "ui.activate",
+            "control": "ui-165",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Sai"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-169",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Runic Blade"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-173",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Throwing Hammer"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-177",
+            "gestures": [
+              "click",
+              "long"
+            ],
+            "label": "Scale Armor"
+          }
+        ],
+        "displayed_text": "确定",
+        "translation_diagnostic": "ambiguous_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "companion-attack",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-companion-attack-5b640c2ef49241f2a5fd1871056908fc",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 26,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-companion-attack-5b640c2ef49241f2a5fd1871056908fc/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-companion-attack-5b640c2ef49241f2a5fd1871056908fc/public-trace.jsonl",
+      "failure": {
+        "request_id": "ed63c849d1e9-28",
+        "op": "action.execute",
+        "args": {
+          "action": "ui.activate",
+          "control": "ui-230"
+        },
+        "error_code": "AUDIT_UNAVAILABLE",
+        "last_public_scene": "GameScene",
+        "previous_allowed_controls": [
+          {
+            "action": "ui.activate",
+            "control": "ui-224",
+            "gestures": [
+              "click"
+            ],
+            "label": "DROP"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-226",
+            "gestures": [
+              "click"
+            ],
+            "label": "THROW"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-228",
+            "gestures": [
+              "click"
+            ],
+            "label": "UNEQUIP"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-230",
+            "gestures": [
+              "click"
+            ],
+            "label": "SUMMON"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-232",
+            "gestures": [
+              "click"
+            ],
+            "label": "OUTFIT"
+          },
+          {
+            "action": "ui.activate",
+            "control": "ui-234",
+            "gestures": [
+              "click"
+            ]
+          }
+        ],
+        "displayed_text": "悲伤幽灵: \"再次向你问好，战士。\" ",
+        "translation_diagnostic": "no_safe_resource_translation",
+        "diagnosis_source": "isolated internal.exceptions; diagnostic only, never used to choose an action"
+      }
+    },
+    {
+      "case": "companion-resummon",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-companion-resummon-397562413ce346698ec8e73631e9fb63",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 20,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-companion-resummon-397562413ce346698ec8e73631e9fb63/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-companion-resummon-397562413ce346698ec8e73631e9fb63/public-trace.jsonl",
+      "evidence": {
+        "setup_previous_summon_with_nearly_full_recharge": true,
+        "native_wait_completed_recharge": true,
+        "second_summon_branch_executed": true,
+        "full_charge_consumed": true
+      }
+    },
+    {
+      "case": "blessed-ankh",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-blessed-ankh-1bd419a9bf734e87a29e49243491eb98",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 16,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blessed-ankh-1bd419a9bf734e87a29e49243491eb98/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blessed-ankh-1bd419a9bf734e87a29e49243491eb98/public-trace.jsonl",
+      "evidence": {
+        "original_poison_death": true,
+        "automatic_blessed_resurrection": true,
+        "no_item_selection_window": true,
+        "ankh_consumed_inventory_preserved": true,
+        "same_scope": true
+      }
+    },
+    {
+      "case": "amulet-pickup",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-amulet-pickup-6ddfba217ae04e84a7923bd4ae2ecb80",
+      "runtime_id": "runtime-492eab0194ec44ba900b788f10016cf7",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "cli_version": "CLI.0.8.5",
+      "gui_postconditions_checked": 18,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-amulet-pickup-6ddfba217ae04e84a7923bd4ae2ecb80/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-amulet-pickup-6ddfba217ae04e84a7923bd4ae2ecb80/public-trace.jsonl",
+      "evidence": {
+        "ground_item_pickup_used": true,
+        "native_delayed_pickup_callback_completed": true,
+        "first_acquisition_story_shown": true,
+        "stay_retains_amulet_and_scope": true
+      }
+    }
+  ]
+}
