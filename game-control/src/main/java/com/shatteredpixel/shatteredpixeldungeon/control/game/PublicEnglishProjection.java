@@ -102,6 +102,7 @@ public final class PublicEnglishProjection {
                     }
                 }
                 properties.clear();properties.put("scene",currentScene);
+                properties.putAll(PublicDialogSignatures.identify(ui));
                 properties.put("modal",ui.get("modal"));properties.put("cell_input",ui.get("cell_input"));
                 if(ui.get("cell_prompt") instanceof String)properties.put("cell_prompt",ui.get("cell_prompt"));
                 currentInspectedControl=null;currentInspectedKnown=null;
@@ -116,6 +117,12 @@ public final class PublicEnglishProjection {
                 boolean game="GameScene".equals(currentScene)||"game".equals(currentScene);
                 boolean start="StartScene".equals(currentScene)||"start".equals(currentScene);
                 boolean modal=Boolean.TRUE.equals(ui.get("modal"));
+                int weaponAugments=(one(buttons,"Speed","速度")?1:0)+(one(buttons,"Damage","伤害")?1:0)
+                        +(one(buttons,"Remove Augmentation","移除强化")?1:0);
+                int armorAugments=(one(buttons,"Evasion","闪避")?1:0)+(one(buttons,"Defense","防御")?1:0)
+                        +(one(buttons,"Remove Augmentation","移除强化")?1:0);
+                properties.put("augmentation_window",game&&modal&&one(texts,"你想强化哪个属性？","What would you like to enhance?")
+                        &&one(buttons,"算了","Never mind")&&(weaponAugments==2||armorAugments==2));
                 Set<String> itemTexts=new HashSet<>(),itemButtons=new HashSet<>();
                 if(currentInspectedControl!=null)for(Map<?,?> node:currentNodes.values())if(withinRoot(node,currentNodes,currentInspectedControl))
                     for(String key:Arrays.asList("text","label"))if(node.get(key) instanceof String) {
@@ -127,7 +134,11 @@ public final class PublicEnglishProjection {
                 properties.put("sneak_weapon_menu",originalItemMenu&&itemTitle(itemTexts,"匕首","长匕首","暗杀之刃","dagger","dirk","assassin's blade"));
                 properties.put("combo_weapon_menu",originalItemMenu&&itemTitle(itemTexts,"魔岩拳套","镶钉手套","双钗","stone gauntlet","studded gloves","sai"));
                 properties.put("shadow_clone_menu",originalItemMenu&&itemTitle(itemTexts,"英雄风衣","hero's garb")
-                        &&shadowCloneDescription(itemTexts));
+                        &&rogueAbilityDescription(itemTexts,"盗贼召唤一个_暗影映像_，并能使唤其帮助自己战斗。",
+                        "The Rogue summons a _Shadow Clone_, which can be directed to aid him in combat."));
+                properties.put("death_mark_menu",originalItemMenu&&itemTitle(itemTexts,"英雄风衣","hero's garb")
+                        &&rogueAbilityDescription(itemTexts,"盗贼向选中的敌人施加_夺命印记_。被标记的敌人将受到额外伤害，但不会在标记期间死亡。",
+                        "The Rogue places a _Death Mark_ on a chosen enemy. Marked enemies take bonus damage, but cannot die until the mark ends."));
                 properties.put("upgrade_preview",game&&modal&&one(texts,"升级一件物品","Upgrade an Item")
                         &&upgradeDescription(texts)&&one(buttons,"升级","Upgrade")&&one(buttons,"返回","Back"));
                 properties.put("scroll_cancel",game&&modal&&one(texts,
@@ -175,6 +186,7 @@ public final class PublicEnglishProjection {
                 properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);properties.put("button",false);
                 properties.remove("inspected_item_level_known");
                 properties.put("ranking_record",false);
+                properties.remove("visible_window_texts");
                 Set<Object> visited=new HashSet<>();
                 for(Map<?,?> ancestor=node;ancestor!=null;) {
                     if(currentInspectedKnown!=null&&currentInspectedControl.equals(ancestor.get("id")))
@@ -182,6 +194,14 @@ public final class PublicEnglishProjection {
                     if(ancestor.containsKey("checked"))properties.put("checkbox",true);
                     if("slider".equals(ancestor.get("role")))properties.put("slider",true);
                     if("button".equals(ancestor.get("role")))properties.put("button",true);
+                    if(Boolean.TRUE.equals(properties.get("modal"))&&"window".equals(ancestor.get("role"))&&ancestor.get("parent")==null
+                            &&ancestor.get("id") instanceof String&&currentNodes.containsKey(ancestor.get("id"))) {
+                        List<String> descriptions=new ArrayList<>();
+                        for(Map<?,?> candidate:currentNodes.values())if(withinRoot(candidate,currentNodes,(String)ancestor.get("id"))
+                                &&!Boolean.TRUE.equals(candidate.get("clipped"))&&"text".equals(candidate.get("role"))&&candidate.get("text") instanceof String)
+                            descriptions.add((String)candidate.get("text"));
+                        properties.put("visible_window_texts",Collections.unmodifiableList(descriptions));
+                    }
                     if(("RankingsScene".equals(currentScene)||"rankings".equals(currentScene))
                             &&Boolean.FALSE.equals(properties.get("modal"))&&"button".equals(ancestor.get("role"))
                             &&ancestor.get("text") instanceof String&&((String)ancestor.get("text")).matches(
@@ -220,14 +240,14 @@ public final class PublicEnglishProjection {
                     ||text.matches(java.util.regex.Pattern.quote("Upgrading an item permanently improves it:")+"(?:\\nYou have _[0-9]+_ upgrade items left\\.)?"))return true;
             return false;
         }
-        private static boolean shadowCloneDescription(Set<String> values) {
+        private static boolean rogueAbilityDescription(Set<String> values,String chinese,String english) {
             boolean armor=false,ability=false;
             for(String text:values)for(String paragraph:text.split("\\n\\n",-1)) {
                 if(paragraph.equals("裹着这身与黑暗融为一体的斗篷时，盗贼能够施展一项特殊技能。")
                         ||paragraph.equals("While wearing this dark garb, the Rogue can perform a special ability."))armor=true;
-                if(paragraph.matches(java.util.regex.Pattern.quote("盗贼召唤一个_暗影映像_，并能使唤其帮助自己战斗。")
+                if(paragraph.matches(java.util.regex.Pattern.quote(chinese)
                         +" 现在使用该能力将消耗_[0-9]+(?:\\.[0-9]+)?_的充能。")
-                        ||paragraph.matches(java.util.regex.Pattern.quote("The Rogue summons a _Shadow Clone_, which can be directed to aid him in combat.")
+                        ||paragraph.matches(java.util.regex.Pattern.quote(english)
                         +" Using the ability right now will consume _[0-9]+(?:\\.[0-9]+)?_ charge\\."))ability=true;
             }
             return armor&&ability;

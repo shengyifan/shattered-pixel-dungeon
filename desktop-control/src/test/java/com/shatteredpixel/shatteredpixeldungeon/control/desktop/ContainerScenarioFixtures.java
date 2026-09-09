@@ -155,7 +155,7 @@ final class ContainerScenarioFixtures {
         Field field = type.getDeclaredField(name); field.setAccessible(true); return field.get(object);
     }
 
-    private static void quietPocket(Hero hero) {
+    static void quietPocket(Hero hero) {
         for (Mob mob : new ArrayList<>(Dungeon.level.mobs)) {
             for (Buff buff : mob.buffs()) Actor.remove(buff);
             Actor.remove(mob);

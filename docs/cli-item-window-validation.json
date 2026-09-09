@@ -1,0 +1,51 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "status": "passed",
+  "total": 2,
+  "passed": 2,
+  "gui_postconditions_checked": 94,
+  "source_report": "desktop-control/build/fixtures/runtime-17b0efa009d642a3881e894684a66879/root-window-results.json",
+  "results": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "itemui:augment-weapon",
+      "profile": "desktop-control/build/fixtures/item-window-augment-weapon-128c1420b2034f0984ba22b628599d36",
+      "runtime_id": "runtime-17b0efa009d642a3881e894684a66879",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "build_id": "eaa0a40853b3f5e193dc72d53cbc5e3d68b17e808f64af756affd7f21a2dcfde",
+      "original_cancel": true,
+      "original_back": true,
+      "original_augmentation": "SPEED",
+      "original_remove_augmentation": true,
+      "current_option_not_advertised": true,
+      "stones_consumed": 2,
+      "ok": true,
+      "gui_postconditions_checked": 47
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "itemui:augment-armor",
+      "profile": "desktop-control/build/fixtures/item-window-augment-armor-2e6d3326aa254361b04f6c65fa67c0d4",
+      "runtime_id": "runtime-17b0efa009d642a3881e894684a66879",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "build_id": "eaa0a40853b3f5e193dc72d53cbc5e3d68b17e808f64af756affd7f21a2dcfde",
+      "original_cancel": true,
+      "original_back": true,
+      "original_augmentation": "EVASION",
+      "original_remove_augmentation": true,
+      "current_option_not_advertised": true,
+      "stones_consumed": 2,
+      "ok": true,
+      "gui_postconditions_checked": 47
+    }
+  ],
+  "prior_failed_attempts": [
+    "desktop-control/build/fixtures/item-window-augment-weapon-68acbb5d8ad74c7c8459d44ab8117081/item-window-result.json",
+    "desktop-control/build/fixtures/item-window-augment-armor-532e551069944dedbeb1e74782c935f0/item-window-result.json"
+  ]
+}

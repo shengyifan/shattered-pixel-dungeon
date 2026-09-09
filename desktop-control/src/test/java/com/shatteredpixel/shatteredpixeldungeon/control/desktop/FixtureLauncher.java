@@ -106,6 +106,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("container") && ContainerScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("itemui") && ItemWindowFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("ending") && EndingScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("inspect") && InspectedItemFixtures.supports(name)) {
@@ -250,6 +252,7 @@ public final class FixtureLauncher {
                             "transition_scenario", fixture.kind.equals("scenario") ? TransitionScenarioFixtures.assertions() : null,
                             "notes", fixture.kind.equals("notes") ? NoteScenarioFixtures.assertions() : null,
                             "containers", fixture.kind.equals("container") ? ContainerScenarioFixtures.assertions() : null,
+                            "item_window", fixture.kind.equals("itemui") ? ItemWindowFixtures.assertions() : null,
                             "ending", fixture.kind.equals("ending") ? EndingScenarioFixtures.assertions() : null,
                             "inspection", fixture.kind.equals("inspect") ? InspectedItemFixtures.assertions() : null,
                             "effect_buffs", buffNames(Dungeon.hero), "target_buffs", fixtureTarget == null ? null : buffNames(fixtureTarget),
@@ -285,6 +288,9 @@ public final class FixtureLauncher {
         if (fixture.kind.equals("container")) {
             ContainerScenarioFixtures.prepare(fixture.name, hero);
             return null;
+        }
+        if (fixture.kind.equals("itemui")) {
+            ItemWindowFixtures.prepare(fixture.name,hero);return null;
         }
         if(fixture.kind.equals("ending")){EndingScenarioFixtures.prepare(fixture.name,hero);return null;}
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;

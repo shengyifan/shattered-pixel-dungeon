@@ -1,0 +1,144 @@
+{
+  "test_fixture": true,
+  "counts_as_legitimate_win": false,
+  "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+  "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+  "cli_version": "CLI.0.8.7",
+  "previous_baseline": "docs/cli-p6-english-validation.json",
+  "unit_tests": {
+    "class": "PublicDialogSignaturesTest",
+    "total": 9,
+    "passed": 9
+  },
+  "total": 6,
+  "passed": 5,
+  "failed": 1,
+  "gui_postconditions_checked": 161,
+  "raw_summary": "desktop-control/build/fixtures/runtime-e059db884557412cbab28be75c4930ee/low-frequency-results.json",
+  "result": "All six previous confirmation-translation failures passed the original confirmation boundary; five entire cases passed, one later failed at the original displayed wandmaker farewell.",
+  "results": [
+    {
+      "case": "shop-steal-warning",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-warning-c191c950ca9843559b42c99b07460ac8",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 23,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-shop-steal-warning-c191c950ca9843559b42c99b07460ac8/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-warning-c191c950ca9843559b42c99b07460ac8/public-trace.jsonl",
+      "evidence": {
+        "risky_steal_warning_shown": true,
+        "native_confirmation_cancelled_without_cost": true
+      }
+    },
+    {
+      "case": "ghost-reward",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-ghost-reward-13b5ef2ecfa84a1ea3d311c7a9ebd322",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 24,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-ghost-reward-13b5ef2ecfa84a1ea3d311c7a9ebd322/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-ghost-reward-13b5ef2ecfa84a1ea3d311c7a9ebd322/public-trace.jsonl",
+      "evidence": {
+        "reward_preview_cancel_checked": true,
+        "reward_received_in_final_response": true,
+        "quest_consumable_removed": false,
+        "quest_completion_checked": true
+      }
+    },
+    {
+      "case": "wandmaker-reward",
+      "ok": false,
+      "profile": "desktop-control/build/fixtures/p6-wandmaker-reward-fb5c99bf7431439fb6c2a3dc99a16629",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 21,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-wandmaker-reward-fb5c99bf7431439fb6c2a3dc99a16629/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-wandmaker-reward-fb5c99bf7431439fb6c2a3dc99a16629/public-trace.jsonl",
+      "failure": {
+        "request_id": "35bc2d2f02c5-23",
+        "error_code": "EXECUTION_UNKNOWN",
+        "displayed_text": "老杖匠: \"祝你在试炼中好运，战士！\" ",
+        "translation_diagnostic": "no_safe_resource_translation",
+        "confirmation_reached": true,
+        "confirmation_cancel_and_reopen_verified": true,
+        "new_failure_after_confirmation": true,
+        "diagnosis_source": "isolated internal.exceptions and public trace; not used to select an action"
+      }
+    },
+    {
+      "case": "resurrect",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-resurrect-612cb7534295464183c8080ec2904b6b",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 40,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-resurrect-612cb7534295464183c8080ec2904b6b/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-resurrect-612cb7534295464183c8080ec2904b6b/public-trace.jsonl",
+      "evidence": {
+        "death_from_original_poison_tick": true,
+        "mandatory_window_back_does_not_skip": true,
+        "item_selector_cancel_checked": true,
+        "missing_item_warning_cancelled": true,
+        "selected_items_preserved": true,
+        "ankh_consumed": true,
+        "same_scope_after_resurrection": true,
+        "kept_item_details_available": true,
+        "lost_gray_item_preserved_in_public_inventory": true,
+        "lost_gray_item_open_rejected": "ACTION_UNAVAILABLE",
+        "rejected_request_id_burned": true,
+        "rejection_did_not_change_observed_world": true
+      }
+    },
+    {
+      "case": "shop-steal-failure",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-shop-steal-failure-733ae9883b7a4dd485d2d45ae9944b4f",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 20,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-shop-steal-failure-733ae9883b7a4dd485d2d45ae9944b4f/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-shop-steal-failure-733ae9883b7a4dd485d2d45ae9944b4f/public-trace.jsonl",
+      "evidence": {
+        "actual_failed_theft": true,
+        "attempts": 1,
+        "rng_overridden": false,
+        "displayed_success_percent": 2,
+        "shopkeeper_fled": true,
+        "no_item_acquired": true,
+        "no_gold_or_charge_spent_on_native_failure": true
+      }
+    },
+    {
+      "case": "blacksmith-smith",
+      "ok": true,
+      "profile": "desktop-control/build/fixtures/p6-blacksmith-smith-768187e094d54d8893527482f11f4d9b",
+      "runtime_id": "runtime-e059db884557412cbab28be75c4930ee",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "cli_version": "CLI.0.8.7",
+      "gui_postconditions_checked": 33,
+      "exit_code": 0,
+      "report": "desktop-control/build/fixtures/p6-blacksmith-smith-768187e094d54d8893527482f11f4d9b/low-frequency-result.json",
+      "public_trace": "desktop-control/build/fixtures/p6-blacksmith-smith-768187e094d54d8893527482f11f4d9b/public-trace.jsonl",
+      "evidence": {
+        "smith_cost": 2000,
+        "purchase_confirmation_cancelled": true,
+        "mandatory_reward_window_back_blocked": true,
+        "reward_preview_cancelled": true,
+        "generated_reward_received": true,
+        "reward_list_cleared": true
+      }
+    }
+  ]
+}

@@ -106,6 +106,9 @@ public final class DisplayedTextEnglish {
         String scope=PUBLIC_SCENE_SCOPES.get(scene);
         String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
         String resolved;
+        if(("gamescene".equals(scope)||"heroselectscene".equals(scope))&&Boolean.TRUE.equals(context.get("modal"))
+                &&context.get("visible_window_texts") instanceof List
+                &&(resolved=describedName(displayed,(List<?>)context.get("visible_window_texts")))!=null)return resolved;
         if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("button"))
                 &&context.get("inspected_item_level_known") instanceof Boolean) {
             if(Boolean.TRUE.equals(context.get("cloak_item_menu"))
@@ -116,8 +119,25 @@ public final class DisplayedTextEnglish {
                     &&(resolved=policyResource(displayed,"items.weapon.melee.gloves.ability_name"))!=null)return resolved;
             if(Boolean.TRUE.equals(context.get("shadow_clone_menu"))
                     &&(resolved=policyResource(displayed,"actors.hero.abilities.rogue.shadowclone.name"))!=null)return resolved;
+            if(Boolean.TRUE.equals(context.get("death_mark_menu"))
+                    &&(resolved=policyResource(displayed,"actors.hero.abilities.rogue.deathmark.name"))!=null)return resolved;
         }
         if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("button"))) {
+            if(Boolean.TRUE.equals(context.get("steal_warning"))) {
+                if((resolved=policyResource(displayed,"windows.wndtradeitem.steal_warn_yes"))!=null)return resolved;
+                if((resolved=policyResource(displayed,"windows.wndtradeitem.steal_warn_no"))!=null)return resolved;
+            }
+            if(Boolean.TRUE.equals(context.get("resurrection_warning"))) {
+                if((resolved=policyResource(displayed,"windows.wndresurrect.warn_yes"))!=null)return resolved;
+                if((resolved=policyResource(displayed,"windows.wndresurrect.warn_no"))!=null)return resolved;
+            }
+            if(Boolean.TRUE.equals(context.get("reward_confirmation"))) {
+                if((resolved=policyResource(displayed,"windows.wndsadghost.confirm"))!=null)return resolved;
+                if((resolved=policyResource(displayed,"windows.wndsadghost.cancel"))!=null)return resolved;
+            }
+            if(Boolean.TRUE.equals(context.get("augmentation_window"))) {
+                String label=unique(dictionary.augmentationLabels.get(displayed));if(label!=null)return label;
+            }
             if(Boolean.TRUE.equals(context.get("upgrade_preview"))
                     &&(resolved=policyResource(displayed,"windows.wndupgrade.back"))!=null)return resolved;
             if(Boolean.TRUE.equals(context.get("scroll_cancel"))) {
@@ -239,6 +259,34 @@ public final class DisplayedTextEnglish {
     }
 
     public Map<String,Integer> statistics() { return dictionary.statistics; }
+
+    /** Only complete current public description units may resolve their own paired name. */
+    private String describedName(String displayed,List<?> visibleTexts) {
+        Set<String> original=dictionary.exact.get(displayed);
+        if(original==null||unique(original)!=null)return null;
+        Set<String> names=new TreeSet<>();
+        for(NamedDescription description:dictionary.namedDescriptions) {
+            if(!description.name.chinese.equals(displayed))continue;
+            for(Object raw:visibleTexts)if(raw instanceof String&&descriptionMatches((String)raw,description.body)) {
+                names.add(description.name.english);break;
+            }
+        }
+        return unique(names);
+    }
+
+    private boolean descriptionMatches(String displayed,ResourcePair description) {
+        try{translate(displayed);}catch(PublicTextUnavailableException unavailable){return false;}
+        List<String> units=new ArrayList<>();units.add(displayed);
+        Collections.addAll(units,displayed.split("\\n\\n",-1));
+        for(String unit:units)for(String source:new String[]{description.chinese,description.english}) {
+            if(unit.equals(source))return true;
+            for(String separator:new String[]{" ","\n\n"})if(unit.startsWith(source+separator)) {
+                String rest=unit.substring(source.length()+separator.length());
+                for(Pattern cost:dictionary.descriptionCosts)if(cost.matcher(rest).matches())return true;
+            }
+        }
+        return false;
+    }
 
     private String abilityRow(String displayed) {
         Matcher header=ABILITY_ROW.matcher(displayed);if(!header.matches())return null;
@@ -562,6 +610,10 @@ public final class DisplayedTextEnglish {
             bodyTemplate=new Printf(body.chinese).arguments.isEmpty()?null:new Template(body.chinese,body.english);
         }
     }
+    private static final class NamedDescription {
+        final ResourcePair name,body;
+        NamedDescription(ResourcePair name,ResourcePair body){this.name=name;this.body=body;}
+    }
     private static final class Printf {
         final List<String> literals=new ArrayList<>();
         final List<Argument> arguments=new ArrayList<>();
@@ -629,6 +681,9 @@ public final class DisplayedTextEnglish {
         final List<Template> bindingInputTemplates;
         final Template spearActual,spearTypical;
         final List<AbilityRow> abilityRows;
+        final List<NamedDescription> namedDescriptions;
+        final List<Pattern> descriptionCosts;
+        final Map<String,Set<String>> augmentationLabels;
         Dictionary(Map<String,String> chinese,Map<String,String> english) {
             Map<String,Set<String>> entries=new TreeMap<>();List<Template> patterns=new ArrayList<>();
             Map<String,Map<String,Set<String>>> byScene=new TreeMap<>();
@@ -653,10 +708,34 @@ public final class DisplayedTextEnglish {
                 }
             }
             abilityRows=Collections.unmodifiableList(rows);
+            List<NamedDescription> descriptions=new ArrayList<>();List<Pattern> costs=new ArrayList<>();
+            for(String key:new TreeSet<>(chinese.keySet())) {
+                boolean ability=key.startsWith("actors.hero.abilities.")&&!key.contains("$")&&key.endsWith(".name");
+                boolean talent=key.matches("actors\\.hero\\.talent\\.[a-z_]+\\.title");
+                if(!ability&&!talent||english.get(key)==null)continue;
+                String base=key.substring(0,key.lastIndexOf('.')+1);
+                for(String suffix:new String[]{"desc"}) {
+                    String cn=chinese.get(base+suffix),en=english.get(base+suffix);
+                    // No live formatting arguments or object identities participate.
+                    if(cn!=null&&en!=null&&new Printf(cn).arguments.isEmpty()&&new Printf(en).arguments.isEmpty())
+                        descriptions.add(new NamedDescription(new ResourcePair(chinese.get(key),english.get(key)),new ResourcePair(cn,en)));
+                }
+            }
+            for(String key:new String[]{"actors.hero.abilities.armorability.cost","items.armor.classarmor.charge_use","actors.hero.abilities.cleric.trinity.cost"})
+                for(String format:new String[]{chinese.get(key),english.get(key)})if(format!=null) {
+                    Printf parsed=new Printf(format);StringBuilder pattern=new StringBuilder("\\A");
+                    for(int i=0;i<parsed.arguments.size();i++)pattern.append(Pattern.quote(parsed.literals.get(i))).append("[0-9]+(?:[.,][0-9]+)*");
+                    pattern.append(Pattern.quote(parsed.literals.get(parsed.literals.size()-1))).append("\\z");
+                    costs.add(Pattern.compile(pattern.toString()));
+                }
+            namedDescriptions=Collections.unmodifiableList(descriptions);descriptionCosts=Collections.unmodifiableList(costs);
+            Map<String,Set<String>> augmentation=new TreeMap<>();
             for(String key:new TreeSet<>(chinese.keySet())) {
                 String source=chinese.get(key),target=english.get(key);
                 if(source==null||target==null||!containsChinese(source))continue;
                 pairs++;entries.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
+                if(key.startsWith("items.stones.stoneofaugmentation$wndaugment."))
+                    augmentation.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
                 if(key.startsWith("windows.wndkeybindings."))bindings.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
                 if(key.startsWith("ui.customnotebutton$customnotewindow."))notes.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
                 if(key.startsWith("windows.wndkeybindings$wndchangebinding.")) {
@@ -669,7 +748,12 @@ public final class DisplayedTextEnglish {
                         ||key.equals("windows.wndheroinfo.subclasses")||key.equals("rankings$record.won")
                         ||key.equals("items.artifacts.cloakofshadows.ac_stealth")||key.equals("items.weapon.melee.dagger.ability_name")
                         ||key.equals("items.weapon.melee.gloves.ability_name")||key.equals("actors.hero.abilities.rogue.shadowclone.name")
+                        ||key.equals("actors.hero.abilities.rogue.deathmark.name")
                         ||key.equals("windows.wndupgrade.back")||key.equals("items.scrolls.inventoryscroll.yes")||key.equals("items.scrolls.inventoryscroll.no"))
+                    policies.put(key,new ResourcePair(source,target));
+                if(key.equals("windows.wndtradeitem.steal_warn_yes")||key.equals("windows.wndtradeitem.steal_warn_no")
+                        ||key.equals("windows.wndresurrect.warn_yes")||key.equals("windows.wndresurrect.warn_no")
+                        ||key.equals("windows.wndsadghost.confirm")||key.equals("windows.wndsadghost.cancel"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
                     catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
@@ -688,6 +772,9 @@ public final class DisplayedTextEnglish {
                     }catch(IllegalArgumentException mismatch){unsupported++;}
                 }
             }
+            Map<String,Set<String>> immutableAugmentation=new TreeMap<>();
+            for(Map.Entry<String,Set<String>> entry:augmentation.entrySet())immutableAugmentation.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
+            augmentationLabels=Collections.unmodifiableMap(immutableAugmentation);
             int resourceStrings=entries.size();
             // WndHeroInfo renders these resource paragraphs as separate complete
             // text blocks. Pair only the six static, argument-free descriptions;
