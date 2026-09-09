@@ -31,10 +31,13 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IllegalFormatException;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /*
 	Simple wrapper class for libGDX I18NBundles.
@@ -48,15 +51,54 @@ public class Messages {
 	private static ArrayList<I18NBundle> bundles;
 	private static Languages lang;
 	private static Locale locale;
+	private static final ThreadLocal<LanguageContext> scopedLanguage = new ThreadLocal<>();
+	private static final ThreadLocal<EnumMap<Languages, LanguageContext>> scopedResources =
+			ThreadLocal.withInitial(() -> new EnumMap<>(Languages.class));
+
+	private static final class LanguageContext {
+		final Languages language;
+		final Locale locale;
+		final ArrayList<I18NBundle> bundles;
+		final HashMap<String, DecimalFormat> formatters = new HashMap<>();
+
+		LanguageContext(Languages language) {
+			this.language = language;
+			locale = language == Languages.ENGLISH ? Locale.ENGLISH : new Locale(language.code());
+			bundles = loadBundles(language);
+		}
+	}
+
+	/**
+	 * Read localized text on this thread without changing the game's selected language.
+	 * Resources and number formatters are private to the calling thread and language.
+	 * The scope is deliberately not inherited by threads or scheduled callbacks.
+	 * Use only for pure presentation reads: gameplay itself has language-dependent rules.
+	 */
+	public static <T> T withLanguage(Languages language, Supplier<T> supplier) {
+		Objects.requireNonNull(language, "language");
+		Objects.requireNonNull(supplier, "supplier");
+		LanguageContext previous = scopedLanguage.get();
+		if (previous != null && previous.language == language) return supplier.get();
+		LanguageContext context = scopedResources.get().computeIfAbsent(language, LanguageContext::new);
+		scopedLanguage.set(context);
+		try {
+			return supplier.get();
+		} finally {
+			if (previous == null) scopedLanguage.remove();
+			else scopedLanguage.set(previous);
+		}
+	}
 
 	public static final String NO_TEXT_FOUND = "!!!NO TEXT FOUND!!!";
 
 	public static Languages lang(){
-		return lang;
+		LanguageContext context = scopedLanguage.get();
+		return context == null ? lang : context.language;
 	}
 
 	public static Locale locale(){
-		return locale;
+		LanguageContext context = scopedLanguage.get();
+		return context == null ? locale : context.locale;
 	}
 
 	/**
@@ -86,26 +128,29 @@ public class Messages {
 
 		//store language and locale info for various string logic
 		Messages.lang = lang;
-		Locale bundleLocal;
 		if (lang == Languages.ENGLISH){
 			locale = Locale.ENGLISH;
-			bundleLocal = Locale.ROOT; //english is source, uses root locale for fetching bundle
 		} else {
 			locale = new Locale(lang.code());
-			bundleLocal = locale;
 		}
 		formatters.clear();
+		bundles = loadBundles(lang);
+	}
 
-		bundles = new ArrayList<>();
+	private static ArrayList<I18NBundle> loadBundles(Languages language) {
+		// English is the source bundle. This only reads assets; it never changes GUI settings.
+		Locale bundleLocal = language == Languages.ENGLISH ? Locale.ROOT : new Locale(language.code());
+		ArrayList<I18NBundle> loaded = new ArrayList<>();
 		for (String file : prop_files) {
 			if (bundleLocal.getLanguage().equals("id")){
 				//This is a really silly hack to fix some platforms using "id" for indonesian and some using "in" (Android 14- mostly).
 				//So if we detect "id" then we treat "###_in" as the base bundle so that it gets loaded instead of English.
-				bundles.add(I18NBundle.createBundle(Gdx.files.internal(file + "_in"), bundleLocal));
+				loaded.add(I18NBundle.createBundle(Gdx.files.internal(file + "_in"), bundleLocal));
 			} else {
-				bundles.add(I18NBundle.createBundle(Gdx.files.internal(file), bundleLocal));
+				loaded.add(I18NBundle.createBundle(Gdx.files.internal(file), bundleLocal));
 			}
 		}
+		return loaded;
 	}
 
 
@@ -148,7 +193,8 @@ public class Messages {
 
 	private static String getFromBundle(String key){
 		String result;
-		for (I18NBundle b : bundles){
+		LanguageContext context = scopedLanguage.get();
+		for (I18NBundle b : context == null ? bundles : context.bundles){
 			result = b.get(key);
 			//if it isn't the return string for no key found, return it
 			if (result.length() != key.length()+6 || !result.contains(key)){
@@ -176,15 +222,17 @@ public class Messages {
 	private static HashMap<String, DecimalFormat> formatters;
 
 	public static String decimalFormat( String format, double number ){
-		if (!formatters.containsKey(format)){
-			formatters.put(format, new DecimalFormat(format, DecimalFormatSymbols.getInstance(locale())));
+		LanguageContext context = scopedLanguage.get();
+		HashMap<String, DecimalFormat> activeFormatters = context == null ? formatters : context.formatters;
+		if (!activeFormatters.containsKey(format)){
+			activeFormatters.put(format, new DecimalFormat(format, DecimalFormatSymbols.getInstance(locale())));
 		}
-		return formatters.get(format).format(number);
+		return activeFormatters.get(format).format(number);
 	}
 
 	public static String capitalize( String str ){
 		if (str.length() == 0)  return str;
-		else                    return str.substring( 0, 1 ).toUpperCase(locale) + str.substring( 1 );
+		else                    return str.substring( 0, 1 ).toUpperCase(locale()) + str.substring( 1 );
 	}
 
 	//Words which should not be capitalized in title case, mostly prepositions which appear ingame
@@ -195,7 +243,7 @@ public class Messages {
 
 	public static String titleCase( String str ){
 		//English capitalizes every word except for a few exceptions
-		if (lang == Languages.ENGLISH){
+		if (lang() == Languages.ENGLISH){
 			String result = "";
 			//split by any unicode space character
 			for (String word : str.split("(?<=\\p{Zs})")){
@@ -214,10 +262,10 @@ public class Messages {
 	}
 
 	public static String upperCase( String str ){
-		return str.toUpperCase(locale);
+		return str.toUpperCase(locale());
 	}
 
 	public static String lowerCase( String str ){
-		return str.toLowerCase(locale);
+		return str.toLowerCase(locale());
 	}
 }

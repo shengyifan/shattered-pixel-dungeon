@@ -49,6 +49,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.Holiday;
@@ -81,13 +82,17 @@ public final class PlayerObservation {
                                 "custom_terrain_descriptions", map("action", "cell.select", "mode", "examine")),
                         "inspection_policy", "Use current ui controls and their action descriptors; details are read from displayed windows"));
         if (hero == null || !"game".equals(scene)) return out;
-        out.put("hero", hero(hero));
-        out.put("inventory", inventory(hero));
-        if (level != null && level.map != null) {
-            out.put("map", terrain(level));
-            out.put("visible_entities", entities(hero, level));
-        }
-        return out;
+        // Only this pure projection is localized. Never carry the override into original
+        // input callbacks, actor work, UI construction or the internal model capture.
+        return Messages.withLanguage(Languages.ENGLISH, () -> {
+            out.put("hero", hero(hero));
+            out.put("inventory", inventory(hero));
+            if (level != null && level.map != null) {
+                out.put("map", terrain(level));
+                out.put("visible_entities", entities(hero, level));
+            }
+            return out;
+        });
     }
 
     private static Map<String, Object> hero(Hero hero) {
@@ -187,6 +192,10 @@ public final class PlayerObservation {
     }
 
     public static Map<String, Object> item(Item item, String locator, boolean equipped) {
+        return Messages.withLanguage(Languages.ENGLISH, () -> itemInCurrentLanguage(item, locator, equipped));
+    }
+
+    private static Map<String, Object> itemInCurrentLanguage(Item item, String locator, boolean equipped) {
         boolean typeKnown = !(item instanceof Potion || item instanceof Scroll || item instanceof Ring)
                 || (item instanceof Potion && ((Potion) item).isKnown())
                 || (item instanceof Scroll && ((Scroll) item).isKnown())
@@ -214,6 +223,10 @@ public final class PlayerObservation {
 
     /** Shared with the UI bridge for item hover labels that must not populate game caches. */
     public static String displayItemName(Item item) {
+        return Messages.withLanguage(Languages.ENGLISH, () -> itemNameInCurrentLanguage(item));
+    }
+
+    private static String itemNameInCurrentLanguage(Item item) {
         if (!(item instanceof Pasty)) return item.name();
         // Pasty.name() would fill Holiday.cached when empty. Compute its existing display
         // selection without changing that cache or any gameplay state.
