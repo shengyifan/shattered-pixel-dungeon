@@ -319,9 +319,9 @@ public final class AuditStore implements AutoCloseable {
     public synchronized void eventWithOriginalText(String scopeId,String kind,Map<String,Object> data,Map<String,Object> original) {
         if(kind==null)throw new IllegalArgumentException("Event kind is required");
         String english=JsonCodec.encode(data);
-        String diagnostic=JsonCodec.encode(Values.map("scope_id",scopeId,"kind",kind,"original_display",original));
         transaction(() -> {
-            insertEvent(scopeId,kind,english);
+            long eventSequence=insertEvent(scopeId,kind,english);
+            String diagnostic=JsonCodec.encode(Values.map("event_sequence",eventSequence,"scope_id",scopeId,"kind",kind,"original_display",original));
             try(PreparedStatement s=writer.prepareStatement("INSERT INTO internal.logs(channel,text,created_at,session_id) VALUES(?,?,?,?)")) {
                 s.setString(1,"displayed_text_original");s.setString(2,diagnostic);s.setString(3,now());s.setString(4,activeSession);s.executeUpdate();
             }
@@ -389,11 +389,11 @@ public final class AuditStore implements AutoCloseable {
                 "origin_scope_id",rows.getString("origin_scope_id"),"origin_request_id",rows.getString("origin_request_id"));
     }
 
-    private void insertEvent(String scopeId, String kind, String json) throws SQLException {
-        insertEvent(scopeId,kind,json,activeSession);
+    private long insertEvent(String scopeId, String kind, String json) throws SQLException {
+        return insertEvent(scopeId,kind,json,activeSession);
     }
 
-    private void insertEvent(String scopeId,String kind,String json,String sessionId)throws SQLException{
+    private long insertEvent(String scopeId,String kind,String json,String sessionId)throws SQLException{
         String created = now();
         long sequence;
         try (PreparedStatement s = writer.prepareStatement("INSERT INTO main.events(scope_id,kind,data_json,created_at,session_id) VALUES(?,?,?,?,?)")) {
@@ -406,6 +406,7 @@ public final class AuditStore implements AutoCloseable {
         try (PreparedStatement s = writer.prepareStatement("INSERT INTO internal.events(sequence,scope_id,kind,data_json,created_at,session_id) VALUES(?,?,?,?,?,?)")) {
             s.setLong(1, sequence); s.setString(2, scopeId); s.setString(3, kind); s.setString(4, json); s.setString(5, created);s.setString(6,sessionId); s.executeUpdate();
         }
+        return sequence;
     }
 
     public synchronized boolean hasScope(String scopeId) {

@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
+import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
@@ -83,6 +84,10 @@ public final class UiBridge {
         refresh();
         Map<String, Object> result = map("scene", scene == null ? "none" : scene.getClass().getSimpleName(),
                 "modal", scope instanceof Window || scope instanceof RightClickMenu, "controls", new ArrayList<>(nodes));
+        if(scene!=null&&Gdx.graphics!=null) {
+            Languages selected=Boolean.TRUE.equals(new ClassInitializationProbe().initialized(Messages.class))?Messages.selectedLanguage():null;
+            result.put("display",map("language",selected==null?null:selected.code(),"fullscreen",Gdx.graphics.isFullscreen()));
+        }
         if (cellSelector != null && scope == scene && cellSelector.listener != null) {
             String prompt = englishRead(() -> cellSelector.listener.prompt());
             result.put("cell_prompt", prompt);

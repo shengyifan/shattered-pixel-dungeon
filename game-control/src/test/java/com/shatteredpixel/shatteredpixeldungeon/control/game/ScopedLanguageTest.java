@@ -68,6 +68,7 @@ class ScopedLanguageTest {
 
         String result = Messages.withLanguage(Languages.ENGLISH, () -> {
             assertEquals(Languages.ENGLISH, Messages.lang());
+            assertEquals(Languages.CHI_SMPL, Messages.selectedLanguage());
             assertEquals(Locale.ENGLISH, Messages.locale());
             assertEquals("Potion of Healing", Messages.titleCase("potion of healing"));
             assertEquals("1.50", Messages.decimalFormat("#0.00", 1.5));
@@ -82,6 +83,29 @@ class ScopedLanguageTest {
         assertSame(locale, SnapshotFields.read(Messages.class, "locale"));
         assertSame(formatters, SnapshotFields.read(Messages.class, "formatters"));
         assertEquals(before, formatters);
+    }
+
+    @Test void publicDisplayReportsSelectedLanguageAndActualGraphicsModeWithoutChangingEither() {
+        com.badlogic.gdx.Graphics previous=com.badlogic.gdx.Gdx.graphics;
+        java.util.concurrent.atomic.AtomicBoolean fullscreen=new java.util.concurrent.atomic.AtomicBoolean(false);
+        com.badlogic.gdx.Gdx.graphics=(com.badlogic.gdx.Graphics)java.lang.reflect.Proxy.newProxyInstance(
+                com.badlogic.gdx.Graphics.class.getClassLoader(),new Class<?>[]{com.badlogic.gdx.Graphics.class},
+                (proxy,method,args)->{
+                    if(method.getName().equals("isFullscreen"))return fullscreen.get();
+                    if(method.getReturnType()==boolean.class)return false;
+                    if(method.getReturnType()==int.class)return 0;
+                    if(method.getReturnType()==float.class)return 0f;
+                    return null;
+                });
+        try {
+            com.watabou.noosa.Scene scene=new com.watabou.noosa.Scene();
+            UiBridge bridge=new UiBridge(()->scene);
+            Map<?,?> shown=Messages.withLanguage(Languages.ENGLISH,()->(Map<?,?>)bridge.describeUi().get("display"));
+            assertEquals("zh",shown.get("language"));assertEquals(false,shown.get("fullscreen"));
+            fullscreen.set(true);
+            assertEquals(true,((Map<?,?>)bridge.describeUi().get("display")).get("fullscreen"));
+            assertEquals(Languages.CHI_SMPL,Messages.lang());
+        } finally { com.badlogic.gdx.Gdx.graphics=previous; }
     }
 
     @Test

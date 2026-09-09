@@ -96,6 +96,11 @@ public class Messages {
 		return context == null ? lang : context.language;
 	}
 
+	/** The application's selected language, independent of a temporary presentation scope. */
+	public static Languages selectedLanguage() {
+		return lang;
+	}
+
 	public static Locale locale(){
 		LanguageContext context = scopedLanguage.get();
 		return context == null ? locale : context.locale;

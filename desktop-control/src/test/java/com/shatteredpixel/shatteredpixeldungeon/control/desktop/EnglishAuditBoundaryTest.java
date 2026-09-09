@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditStore;
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditException;
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -27,6 +28,8 @@ public class EnglishAuditBoundaryTest {
                 Statement statement = db.createStatement()) {
                 try(ResultSet rows=statement.executeQuery("SELECT text FROM logs WHERE channel='displayed_text_original'")) {
                     assertTrue(rows.next());assertTrue(rows.getString(1).contains("你向下走去。"));
+                    long linked=((Number)JsonCodec.decode(rows.getString(1)).get("event_sequence")).longValue();
+                    assertEquals(((Number)store.events(scope,0,10).get(0).get("sequence")).longValue(),linked);
                 }
                 statement.execute("CREATE TRIGGER fail_original BEFORE INSERT ON logs WHEN NEW.channel='displayed_text_original' BEGIN SELECT RAISE(ABORT,'test failure'); END");
             }
