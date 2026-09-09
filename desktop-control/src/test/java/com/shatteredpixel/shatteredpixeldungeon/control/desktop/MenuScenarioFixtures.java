@@ -4,17 +4,19 @@ import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.watabou.noosa.Game;
 import java.util.Map;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 
 /** Profile progress preparation only. All menu changes and game creation use original public actions. */
 final class MenuScenarioFixtures {
-    static boolean supports(String name) { return name.equals("locked") || name.equals("unlocked") || name.equals("daily") || name.equals("random-confirm") || name.equals("daily-cycle"); }
+    static boolean supports(String name) { return name.equals("locked") || name.equals("unlocked") || name.equals("daily") || name.equals("random-confirm") || name.equals("daily-cycle") || name.equals("daily-future") || name.equals("seed-duplicate"); }
     static void prepare(String name) {
         if(!name.equals("locked")) {
             Badges.unlock(Badges.Badge.VICTORY);
             SPDSettings.victoryNagged(true); // This fixture represents a previously acknowledged victory.
         }
+        if(name.equals("daily-future"))SPDSettings.lastDaily(Game.realTime+3L*24*60*60*1000);
     }
     static Map<String,Object> assertions() {
         return map("victory_unlocked",Badges.isUnlocked(Badges.Badge.VICTORY),

@@ -64,9 +64,7 @@
   ],
   "scope": "profile_progress_then_original_menu_callbacks",
   "not_verified": [
-    "custom_seed_duplicate_regular_save_rejection",
-    "daily_future_clock_warning",
-    "seed_value_edge_cases"
+    "seed_value_numeric_and_malformed_edge_cases"
   ],
   "new_game_cases": [
     {
@@ -181,5 +179,46 @@
     ],
     "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
     "ok": true
-  }
+  },
+  "remaining_guard_cases": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "menu:daily-future",
+      "runtime_id": "runtime-fffed111458a4415af877d68e5e97749",
+      "profile": "desktop-control/build/fixtures/menu-options-daily-future-ccfbf600096148179410db0835baa8cf",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "cases": [
+        {
+          "case": "daily_future_warning",
+          "initial_last_daily_in_future": true,
+          "original_warning_and_back": true,
+          "system_clock_changed": false
+        }
+      ],
+      "build_id": "f55e5d93369bbf96cd8623f321cb99cdcd450ea75c9a33644ed50e6fb43c32c4",
+      "ok": true
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "menu:seed-duplicate",
+      "runtime_id": "runtime-fffed111458a4415af877d68e5e97749",
+      "profile": "desktop-control/build/fixtures/menu-options-seed-duplicate-42c0e929cfdc4096983426e1b00fa212",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "cases": [
+        {
+          "case": "duplicate_regular_seed_rejected",
+          "seed_source": "original_public_save_details",
+          "seed": "KKS-VHF-HFV",
+          "original_duplicate_warning": true,
+          "actual_setting_cleared": true
+        }
+      ],
+      "build_id": "f55e5d93369bbf96cd8623f321cb99cdcd450ea75c9a33644ed50e6fb43c32c4",
+      "ok": true
+    }
+  ]
 }

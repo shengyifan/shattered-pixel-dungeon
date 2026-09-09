@@ -199,6 +199,43 @@ def daily_cycle(client,results):
                     "fresh_scope":True,"original_daily_replay_flag":True,"system_clock_changed":False})
 
 
+def daily_future(client,results):
+    initial=prepared_menu(client)
+    unavailable=daily_control(client)
+    assert any("It seems you've started a daily that's in the future!" in n.get("text","") for n in nodes(unavailable))
+    returned=act(client,"ui.back")
+    assert returned["scope_id"]==initial["scope_id"]
+    results.append({"case":"daily_future_warning","initial_last_daily_in_future":True,
+                    "original_warning_and_back":True,"system_clock_changed":False})
+
+
+def seed_duplicate(client,results):
+    prepared_menu(client)
+    choose(client,"Start")
+    first=reach_game(client,"WARRIOR")
+    assert not menu_assertion(client,first)["game_custom_seed"]
+    act(client,"game.save")
+    act(client,"ui.back");choose(client,"Main Menu")
+    start=choose(client,"Enter the Dungeon")
+    saved=[a for a in controls(start) if "warrior" in a.get("label","").lower()]
+    assert len(saved)==1
+    details=act(client,"ui.activate",control=saved[0]["control"])
+    codes=[n["text"] for n in nodes(details) if re.fullmatch(r"[A-Z]{3}-[A-Z]{3}-[A-Z]{3}",n.get("text", ""))]
+    assert len(codes)==1,ui(details)
+    observed_seed=codes[0]
+    act(client,"ui.back")
+    choose(client,"New Game");choose(client,"warrior");choose(client,"Game Options")
+    seed=choose(client,"Custom Seed")
+    field=controls(seed,"ui.text")[0]["control"]
+    act(client,"ui.text",control=field,text=observed_seed)
+    rejected=choose(client,"Set")
+    assert any("You already have a regular game in progress with that seed." in n.get("text","") for n in nodes(rejected))
+    assert menu_assertion(client,rejected)["custom_seed"]==""
+    act(client,"ui.back")
+    results.append({"case":"duplicate_regular_seed_rejected","seed_source":"original_public_save_details", "seed":observed_seed,
+                    "original_duplicate_warning":True,"actual_setting_cleared":True})
+
+
 def run_case(root,classpath,runtime_id,name):
     profile=root/"desktop-control/build/fixtures"/("menu-options-"+name+"-"+uuid.uuid4().hex)
     profile.mkdir(parents=True)
@@ -210,7 +247,8 @@ def run_case(root,classpath,runtime_id,name):
     try:
         hello=client.request("protocol.info");assert hello["ok"],hello
         result["build_id"]=hello["result"]["build_id"]
-        {"locked":locked,"unlocked":unlocked,"daily":daily_start,"random-confirm":random_confirm,"daily-cycle":daily_cycle}[name](client,result["cases"])
+        {"locked":locked,"unlocked":unlocked,"daily":daily_start,"random-confirm":random_confirm,"daily-cycle":daily_cycle,
+         "daily-future":daily_future,"seed-duplicate":seed_duplicate}[name](client,result["cases"])
         result["ok"]=True
     except Exception as error:
         result.update(ok=False,error=repr(error),traceback=traceback.format_exc())
@@ -236,9 +274,9 @@ def run_case(root,classpath,runtime_id,name):
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument("--cases",default="locked,unlocked,daily,random-confirm,daily-cycle")
+    parser.add_argument("--cases",default="locked,unlocked,daily,random-confirm,daily-cycle,daily-future,seed-duplicate")
     names=parser.parse_args().cases.split(",")
-    assert all(name in {"locked","unlocked","daily","random-confirm","daily-cycle"} for name in names)
+    assert all(name in {"locked","unlocked","daily","random-confirm","daily-cycle","daily-future","seed-duplicate"} for name in names)
     root=Path(__file__).resolve().parents[4]
     classpath,runtime_id=freeze_runtime(root,(root/"desktop-control/build/test-runtime-classpath.txt").read_text().strip())
     reports=[run_case(root,classpath,runtime_id,name) for name in names]

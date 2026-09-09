@@ -29,6 +29,8 @@
 
 `menu-options-daily-cycle-ef68fc9f8aed42ed869b857efe6596ce`进一步完成原每日局循环：原Daily Yes开局并保存→原Main Menu→原New Game尝试第二个daily，被原“已有daily在进行中”说明拒绝；原存档Erase先取消，保存详情仍保留，再原确认删除这份隔离测试档；新建时显示原今日重玩说明，经原Yes进入dailyReplay=true的新run scope。该流程不改系统时钟、不直接删文件、不重放旧请求，最终正常保存退出。公开倒计时按钮通过它实际显示的HH:mm:ss形态识别；逐次使用当前版本。证据作为`daily_cycle`追加，先前结果不回写。
 
+再补两种原校验：`menu-options-daily-future-ccfbf600096148179410db0835baa8cf`仅在profile初态设置未来lastDaily，未改系统时钟，原Daily按钮显示未来日期警告并可原Back；`menu-options-seed-duplicate-42c0e929cfdc4096983426e1b00fa212`先通过原Start创建普通局，从原公开存档详情读其种子代码，再在另一次新局配置中输入同代码，原Set给出已有普通存档冲突说明且实际设置清空。种子来源是公开详情，未读取内部种子或存档。两份证据追加于`remaining_guard_cases`。
+
 ```sh
 ./gradlew :desktop-control:writeTestRuntimeClasspath
 python3 desktop-control/src/test/python/menu_options_scenario_smoke.py
