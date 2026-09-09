@@ -1,0 +1,830 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "runtime_id": "runtime-5af654b6c895445cbdf4a1d400e9371b",
+  "profile": "desktop-control/build/fixtures/menu-scenes-d6a2a70396224dbd80ec09e5fb0cc0d1",
+  "language": "zh",
+  "window_mode": "windowed",
+  "cases": [
+    {
+      "label": "关于",
+      "scene": "AboutScene",
+      "same_menu_scope": true,
+      "actions": [
+        [
+          "ui.scroll",
+          null
+        ],
+        [
+          "ui.activate",
+          "ShatteredPixel.com"
+        ],
+        [
+          "ui.activate",
+          "alekskomitov.com"
+        ],
+        [
+          "ui.activate",
+          "celesti-whispers.itch.io"
+        ],
+        [
+          "ui.activate",
+          "youtube.com/@Lumine..."
+        ],
+        [
+          "ui.activate",
+          "watabou.itch.io"
+        ],
+        [
+          "ui.activate",
+          "libgdx.com"
+        ],
+        [
+          "ui.activate",
+          "gamedev.place/@arcnor"
+        ],
+        [
+          "ui.activate",
+          "github.com/prurigro"
+        ],
+        [
+          "ui.activate",
+          "transifex.com/shattered-pixel/..."
+        ],
+        [
+          "ui.activate",
+          "freesound.org"
+        ],
+        [
+          "ui.activate",
+          "返回"
+        ],
+        [
+          "ui.back",
+          null
+        ],
+        [
+          "app.quit",
+          null
+        ]
+      ],
+      "displayed_text_samples": [
+        "Shattered Pixel Dungeon",
+        "Developed by: _Evan Debenham_\nBased on Pixel Dungeon's open source",
+        "ShatteredPixel.com",
+        "Splash Art & Design:",
+        "Aleksandar Komitov",
+        "alekskomitov.com",
+        "Sound Effects:",
+        "Celesti",
+        "celesti-whispers.itch.io",
+        "Music:",
+        "Lumine Haaristo",
+        "youtube.com/@Lumine..."
+      ],
+      "original_back_to_title": true
+    },
+    {
+      "label": "改动",
+      "scene": "ChangesScene",
+      "same_menu_scope": true,
+      "actions": [
+        [
+          "ui.activate",
+          "0.5-"
+        ],
+        [
+          "ui.activate",
+          "0.6"
+        ],
+        [
+          "ui.activate",
+          "0.7"
+        ],
+        [
+          "ui.activate",
+          "0.8"
+        ],
+        [
+          "ui.activate",
+          "0.9"
+        ],
+        [
+          "ui.activate",
+          "1.X"
+        ],
+        [
+          "ui.activate",
+          "2.X"
+        ],
+        [
+          "ui.activate",
+          "3.X"
+        ],
+        [
+          "ui.activate",
+          "返回"
+        ],
+        [
+          "ui.scroll",
+          null
+        ],
+        [
+          "ui.scroll",
+          null
+        ],
+        [
+          "ui.select",
+          "改动详情由开发者亲自撰写，且仅提供英文版本。"
+        ],
+        [
+          "ui.activate",
+          "Overview and ETA"
+        ],
+        [
+          "ui.activate",
+          "Expanding Tester Area in Patches"
+        ],
+        [
+          "ui.activate",
+          "Imp Quest Overhaul"
+        ],
+        [
+          "ui.activate",
+          "Other Changes"
+        ],
+        [
+          "ui.select",
+          "v3.3"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Dev Commentary"
+        ],
+        [
+          "ui.activate",
+          "Quest Tester Area Progress"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Quest Tester Area Enemies"
+        ],
+        [
+          "ui.activate",
+          "Quest Tester Area Hazards"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Quest Tester Area Progress"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Dev Commentary"
+        ],
+        [
+          "ui.activate",
+          "Initial Imp Quest Tester Area"
+        ],
+        [
+          "ui.activate",
+          "New Artifact and Trinket!"
+        ],
+        [
+          "ui.activate",
+          "Randomize Options"
+        ],
+        [
+          "ui.activate",
+          "Hostile Champions and Albino Rats"
+        ],
+        [
+          "ui.activate",
+          "Chalice of Blood Upgrading"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Thrown Weapon Talents"
+        ],
+        [
+          "ui.activate",
+          "Thrown Weapon Buffs"
+        ],
+        [
+          "ui.activate",
+          "Bolas and Boomerangs"
+        ],
+        [
+          "ui.select",
+          "v3.2"
+        ],
+        [
+          "ui.activate",
+          "Dev Commentary"
+        ],
+        [
+          "ui.activate",
+          "Thrown Weapon Sets"
+        ],
+        [
+          "ui.activate",
+          "New Title Background and Text Banners!"
+        ],
+        [
+          "ui.activate",
+          "Hit and Miss Icons"
+        ],
+        [
+          "ui.activate",
+          "Interface Changes"
+        ],
+        [
+          "ui.activate",
+          "Survivalist's Intuition"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Thrown Weapon Buffs"
+        ],
+        [
+          "ui.activate",
+          "Cleric & Priest Buffs"
+        ],
+        [
+          "ui.activate",
+          "Warrior & Gladiator Buffs"
+        ],
+        [
+          "ui.activate",
+          "Battlemage Buffs/Changes"
+        ],
+        [
+          "ui.activate",
+          "Thrown Weapon Nerfs"
+        ],
+        [
+          "ui.activate",
+          "Thrown Weapon Talent Nerfs"
+        ],
+        [
+          "ui.activate",
+          "Berserker Nerfs"
+        ],
+        [
+          "ui.select",
+          "v3.1"
+        ],
+        [
+          "ui.activate",
+          "Dev Commentary"
+        ],
+        [
+          "ui.activate",
+          "Warrior Mini Rework"
+        ],
+        [
+          "ui.activate",
+          "New Rooms and Terrain Types"
+        ],
+        [
+          "ui.activate",
+          "Ferret Tuft"
+        ],
+        [
+          "ui.activate",
+          "New Badges"
+        ],
+        [
+          "ui.activate",
+          "New Rare Enemies"
+        ],
+        [
+          "ui.activate",
+          "Exploration and Quest Score"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Cleric Buffs"
+        ],
+        [
+          "ui.activate",
+          "Cleric Nerfs"
+        ],
+        [
+          "ui.select",
+          "v3.0"
+        ],
+        [
+          "ui.activate",
+          "Developer Commentary"
+        ],
+        [
+          "ui.activate",
+          "The Cleric!"
+        ],
+        [
+          "ui.activate",
+          "Cleric Subclasses"
+        ],
+        [
+          "ui.activate",
+          "Cleric Armor Abilities"
+        ],
+        [
+          "ui.activate",
+          "Visual & Interface Changes"
+        ],
+        [
+          "ui.activate",
+          "杂项改动"
+        ],
+        [
+          "ui.activate",
+          "Bug修复"
+        ],
+        [
+          "ui.activate",
+          "Trinket Buffs"
+        ],
+        [
+          "ui.activate",
+          "Weapon Ability Buffs"
+        ],
+        [
+          "ui.activate",
+          "Trinket Nerfs"
+        ],
+        [
+          "ui.activate",
+          "Shared Upgrades Nerf"
+        ],
+        [
+          "ui.back",
+          null
+        ],
+        [
+          "app.quit",
+          null
+        ]
+      ],
+      "displayed_text_samples": [
+        "0.5-",
+        "0.5-",
+        "0.6",
+        "0.6",
+        "0.7",
+        "0.7",
+        "0.8",
+        "0.8",
+        "0.9",
+        "0.9",
+        "1.X",
+        "1.X"
+      ],
+      "original_back_to_title": true
+    },
+    {
+      "label": "日志",
+      "scene": "JournalScene",
+      "same_menu_scope": true,
+      "actions": [
+        [
+          "ui.activate",
+          "炼金指南"
+        ],
+        [
+          "ui.activate",
+          "地牢指南"
+        ],
+        [
+          "ui.activate",
+          "图鉴"
+        ],
+        [
+          "ui.activate",
+          "徽章"
+        ],
+        [
+          "ui.activate",
+          "解锁法师！"
+        ],
+        [
+          "ui.activate",
+          "解锁盗贼！"
+        ],
+        [
+          "ui.activate",
+          "解锁女猎手！"
+        ],
+        [
+          "ui.activate",
+          "解锁决斗家！"
+        ],
+        [
+          "ui.activate",
+          "解锁牧师！"
+        ],
+        [
+          "ui.activate",
+          "新晋怪物猎人"
+        ],
+        [
+          "ui.activate",
+          "新晋财宝猎人"
+        ],
+        [
+          "ui.activate",
+          "新晋附魔师"
+        ],
+        [
+          "ui.activate",
+          "新晋冒险家"
+        ],
+        [
+          "ui.activate",
+          "健身菜鸟"
+        ],
+        [
+          "ui.activate",
+          "新晋美食家"
+        ],
+        [
+          "ui.activate",
+          "炼金学徒"
+        ],
+        [
+          "ui.activate",
+          "粘液保洁员"
+        ],
+        [
+          "ui.activate",
+          "百般武艺"
+        ],
+        [
+          "ui.activate",
+          "燃尽"
+        ],
+        [
+          "ui.activate",
+          "中毒"
+        ],
+        [
+          "ui.activate",
+          "窒息"
+        ],
+        [
+          "ui.activate",
+          "饿毙"
+        ],
+        [
+          "ui.activate",
+          "变成薄饼"
+        ],
+        [
+          "ui.activate",
+          "新晋调查员"
+        ],
+        [
+          "ui.activate",
+          "新晋地牢人"
+        ],
+        [
+          "ui.activate",
+          "新晋角逐者"
+        ],
+        [
+          "ui.activate",
+          "和平主义者"
+        ],
+        [
+          "ui.activate",
+          "复仇的滋味！"
+        ],
+        [
+          "ui.activate",
+          "万物通识"
+        ],
+        [
+          "ui.activate",
+          "伏“法”"
+        ],
+        [
+          "ui.activate",
+          "闹乌龙"
+        ],
+        [
+          "ui.activate",
+          "上好祭品"
+        ],
+        [
+          "ui.activate",
+          "千面手"
+        ],
+        [
+          "ui.activate",
+          "安全隐患"
+        ],
+        [
+          "ui.activate",
+          "非主流垂钓"
+        ],
+        [
+          "ui.activate",
+          "死神来了"
+        ],
+        [
+          "ui.activate",
+          "背包客"
+        ],
+        [
+          "ui.activate",
+          "角斗士之怒"
+        ],
+        [
+          "ui.activate",
+          "魔兽世界"
+        ],
+        [
+          "ui.activate",
+          "致命失足"
+        ],
+        [
+          "ui.activate",
+          "通关！"
+        ],
+        [
+          "ui.activate",
+          "狂乱的鸡尾酒"
+        ],
+        [
+          "ui.activate",
+          "幸福结局"
+        ],
+        [
+          "ui.activate",
+          "随机获胜！"
+        ],
+        [
+          "ui.activate",
+          "现在...你也..."
+        ],
+        [
+          "ui.activate",
+          "泯然众人"
+        ],
+        [
+          "ui.activate",
+          "全能宗师"
+        ],
+        [
+          "ui.activate",
+          "另类死亡爱好者"
+        ],
+        [
+          "ui.activate",
+          "万事通"
+        ],
+        [
+          "ui.activate",
+          "青铜斗士"
+        ],
+        [
+          "ui.activate",
+          "返回"
+        ],
+        [
+          "ui.back",
+          null
+        ],
+        [
+          "app.quit",
+          null
+        ]
+      ],
+      "displayed_text_samples": [
+        "日志",
+        "你的徽章"
+      ],
+      "tab_candidates": [
+        "炼金指南",
+        "地牢指南",
+        "图鉴",
+        "徽章",
+        "解锁法师！",
+        "解锁盗贼！",
+        "解锁女猎手！",
+        "解锁决斗家！",
+        "解锁牧师！",
+        "新晋怪物猎人",
+        "新晋财宝猎人",
+        "新晋附魔师",
+        "新晋冒险家",
+        "健身菜鸟",
+        "新晋美食家",
+        "炼金学徒",
+        "粘液保洁员",
+        "百般武艺",
+        "燃尽",
+        "中毒",
+        "窒息",
+        "饿毙",
+        "变成薄饼",
+        "新晋调查员",
+        "新晋地牢人",
+        "新晋角逐者",
+        "和平主义者",
+        "复仇的滋味！",
+        "万物通识",
+        "伏“法”",
+        "闹乌龙",
+        "上好祭品",
+        "千面手",
+        "安全隐患",
+        "非主流垂钓",
+        "死神来了",
+        "背包客",
+        "角斗士之怒",
+        "魔兽世界",
+        "致命失足",
+        "通关！",
+        "狂乱的鸡尾酒",
+        "幸福结局",
+        "随机获胜！",
+        "现在...你也...",
+        "泯然众人",
+        "全能宗师",
+        "另类死亡爱好者",
+        "万事通",
+        "青铜斗士",
+        "返回"
+      ],
+      "verified_tabs": [
+        "徽章",
+        "图鉴",
+        "炼金指南"
+      ],
+      "original_back_to_title": true
+    },
+    {
+      "label": "排行榜",
+      "scene": "RankingsScene",
+      "same_menu_scope": true,
+      "actions": [
+        [
+          "ui.activate",
+          "返回"
+        ],
+        [
+          "ui.back",
+          null
+        ],
+        [
+          "app.quit",
+          null
+        ]
+      ],
+      "displayed_text_samples": [
+        "排行榜",
+        "目前为止还没有已经结束的游戏。"
+      ],
+      "original_back_to_title": true
+    },
+    {
+      "label": "支持游戏开发",
+      "scene": "SupporterScene",
+      "same_menu_scope": true,
+      "actions": [
+        [
+          "ui.activate",
+          "返回"
+        ],
+        [
+          "ui.activate",
+          "前往在Patreon上的主页。"
+        ],
+        [
+          "ui.back",
+          null
+        ],
+        [
+          "app.quit",
+          null
+        ]
+      ],
+      "displayed_text_samples": [
+        "支持游戏开发",
+        "我不希望破碎的像素地牢沾染任何广告或侵入性微交易要素。那些东西毁了不知多少免费游戏。相应地，我希望玩家们能对本游戏进行直接的支持！\n\n如果您喜欢玩破碎的像素地牢并且想要帮助我持续地开发它，请考虑考虑在_Patreon_上支持我吧！Patreon可为您提供独占福利！\n_-抢先体验：_游玩包含未来更新的版本。\n_-每周开发小日志：_分享我正着力进行的工作。\n_-",
+        "前往在Patreon上的主页。",
+        "前往在Patreon上的主页。"
+      ],
+      "original_back_to_title": true
+    },
+    {
+      "label": "游戏新闻",
+      "scene": "NewsScene",
+      "same_menu_scope": true,
+      "actions": [
+        [
+          "ui.activate",
+          "返回"
+        ],
+        [
+          "ui.activate",
+          "启用新闻"
+        ],
+        [
+          "ui.activate",
+          "查阅更多"
+        ],
+        [
+          "ui.back",
+          null
+        ],
+        [
+          "app.quit",
+          null
+        ]
+      ],
+      "displayed_text_samples": [
+        "游戏新闻",
+        "启用新闻",
+        "启用新闻",
+        "新闻仅能由开发者以英文撰写。\n\n您已禁用新闻功能，所以这里什么也不会显示。",
+        "查阅更多",
+        "查阅更多"
+      ],
+      "original_back_to_title": true
+    }
+  ],
+  "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+  "initial_scene": "WelcomeScene",
+  "ok": true,
+  "public_language": "zh",
+  "english_contract_verified": false,
+  "actual_scene_classes": [
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.AboutScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.ChangesScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.JournalScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.NewsScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.RankingsScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.SupporterScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene",
+    "com.shatteredpixel.shatteredpixeldungeon.scenes.WelcomeScene"
+  ]
+}

@@ -215,7 +215,7 @@ def test_bomb_hidden(client):
             "hidden_smoke_and_number_not_published": True, "hidden_no_drawable_did_not_block": True}
 
 
-def run_one(root, classpath, runtime_id, name):
+def run_one(root, classpath, runtime_id, name, test=None):
     profile = root / "desktop-control/build/fixtures" / ("visual-" + name + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
@@ -236,8 +236,9 @@ def run_one(root, classpath, runtime_id, name):
         assert setup["fullscreen"] is False, "Real fixture must remain windowed"
         assert setup["language"] == "CHI_SMPL"
         report["window_mode"] = "windowed"
-        report["evidence"] = {"red": test_red, "goo": test_goo, "hidden": test_hidden, "frozen": test_frozen,
-                              "bomb": test_bomb, "bomb-hidden": test_bomb_hidden}[name](client)
+        selected = test or {"red": test_red, "goo": test_goo, "hidden": test_hidden, "frozen": test_frozen,
+                            "bomb": test_bomb, "bomb-hidden": test_bomb_hidden}[name]
+        report["evidence"] = selected(client)
         report["ok"] = True
     except Exception as error:
         report.update(ok=False, error=repr(error), traceback=traceback.format_exc())

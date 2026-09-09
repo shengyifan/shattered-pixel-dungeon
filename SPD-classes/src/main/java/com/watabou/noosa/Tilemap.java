@@ -55,6 +55,29 @@ public class Tilemap extends Visual {
 	private int topLeftUpdating;
 	private int bottomRightUpdating;
 
+	public interface DrawObserver { void afterDraw(Tilemap source); }
+	public interface DrawnTileVisitor { void tile(float left, float top, float right, float bottom); }
+	private DrawObserver drawObserver;
+	public void observeDraw(DrawObserver observer) { drawObserver = observer; }
+
+	/** Pure geometry from the existing rendered quad buffer; never reads the model's tile data. */
+	public void visitDrawnTiles(DrawnTileVisitor visitor) {
+		if (buffer == null || quads == null || visitor == null) return;
+		int count = Math.min(size, quads.limit()/16);
+		for (int tile = 0; tile < count; tile++) {
+			int offset = tile*16;
+			float left = quads.get(offset), top = quads.get(offset+1);
+			float right = quads.get(offset+8), bottom = quads.get(offset+9);
+			if (Float.isFinite(left) && Float.isFinite(top) && Float.isFinite(right) && Float.isFinite(bottom)
+					&& right > left && bottom > top) visitor.tile(left, top, right, bottom);
+		}
+	}
+
+	@Override public void revive() {
+		drawObserver = null;
+		super.revive();
+	}
+
 	public Tilemap( Object tx, TextureFilm tileset ) {
 
 		super( 0, 0, 0, 0 );
@@ -228,6 +251,7 @@ public class Tilemap extends Visual {
 		script.camera( camera );
 
 		script.drawQuadSet( buffer, size, 0 );
+		if (drawObserver != null) drawObserver.afterDraw(this);
 
 	}
 	

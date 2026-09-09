@@ -11,6 +11,7 @@ import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.Tilemap;
 import com.watabou.noosa.Visual;
 import com.watabou.noosa.VisualCue;
 import com.watabou.noosa.particles.Emitter;
@@ -56,6 +57,17 @@ public final class VisualCueCollector {
     }
 
     public void targetDrawn(Visual source, int cell) { offer(source, "red_target", cell); }
+
+    public void tilemapDrawn(Tilemap source, String kind) {
+        if (!collecting || !drawable(source) || resolvedCamera(source) != Camera.main
+                || source.angle != 0 || source.scale.x != 1 || source.scale.y != 1
+                || source.origin.x != 0 || source.origin.y != 0) return;
+        source.visitDrawnTiles((left, top, right, bottom) -> {
+            int cell = VisualCueProjection.gridCell(source.x + left, source.y + top,
+                    right-left, bottom-top, DungeonTilemap.SIZE, level.width(), level.length());
+            if (cell >= 0) offer(source, kind, cell);
+        });
+    }
 
     public void particleEmitterDrawn(Emitter emitter, CellParticleCue observation) {
         if (!collecting || !attached(emitter)) return;

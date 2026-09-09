@@ -19,10 +19,12 @@ import java.util.Arrays;
 
 /** Test-source-only initial states. Actions and warning reads after setup use the public protocol. */
 final class VisualCueFixtures {
-    static boolean supports(String name) { return Arrays.asList("visual-red", "visual-goo", "visual-hidden", "visual-frozen", "visual-bomb", "visual-bomb-hidden").contains(name); }
+    static boolean supports(String name) { return Arrays.asList("visual-red", "visual-goo", "visual-hidden", "visual-frozen", "visual-bomb", "visual-bomb-hidden", "visual-traps", "visual-traps-hidden").contains(name); }
 
     static void prepare(String name, Hero hero) throws Exception {
-        if (name.equals("visual-red")) {
+        if (name.equals("visual-traps") || name.equals("visual-traps-hidden")) {
+            TenguTrapFixtures.prepare(name.endsWith("-hidden"), hero);
+        } else if (name.equals("visual-red")) {
             YogDzewa boss = new YogDzewa();
             set(boss, "phase", 1);
             set(boss, "abilityCooldown", 0f);

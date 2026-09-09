@@ -810,6 +810,8 @@ public class PrisonBossLevel extends Level {
 			}
 			
 			v.map( data, tileW );
+			if (Game.observer.observesVisualCues()) v.observeDraw(
+					new com.shatteredpixel.shatteredpixeldungeon.effects.TilemapCue("fading_trap_pattern"));
 			setFade();
 			return v;
 		}

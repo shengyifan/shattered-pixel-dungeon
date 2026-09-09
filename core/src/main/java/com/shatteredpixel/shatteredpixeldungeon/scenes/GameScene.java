@@ -234,6 +234,10 @@ public class GameScene extends PixelScene {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.floatingTextDrawn(source, cell);
 	}
 
+	public static void observeTilemapDraw(com.watabou.noosa.Tilemap source, String kind) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.tilemapDrawn(source, kind);
+	}
+
 	{
 		inGameScene = true;
 	}

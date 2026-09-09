@@ -1,0 +1,121 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "runtime_id": "runtime-3b0830ec63244f5d8e5877fef2514fc9",
+  "total": 2,
+  "passed": 2,
+  "results": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "visual-traps",
+      "profile": "desktop-control/build/fixtures/visual-traps-1fcf876738f24e2fa0f306f770d21982",
+      "runtime_id": "runtime-3b0830ec63244f5d8e5877fef2514fc9",
+      "completion_assertions": "final_action_response",
+      "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+      "language": "zh",
+      "window_mode": "windowed",
+      "evidence": {
+        "native_level": "PrisonBossLevel",
+        "native_boss": "Tengu",
+        "depth": 10,
+        "first_pattern_in_final_zap_response": [
+          779,
+          811,
+          812,
+          813,
+          840,
+          841,
+          842,
+          843,
+          844,
+          845,
+          968
+        ],
+        "first_pattern_after_actual_modal_close": [
+          775,
+          776,
+          777,
+          779,
+          807,
+          811,
+          812,
+          813,
+          840,
+          841,
+          842,
+          843,
+          844,
+          845,
+          968
+        ],
+        "second_pattern_in_final_zap_response": [
+          775,
+          776,
+          777,
+          778,
+          779,
+          780,
+          807,
+          809,
+          810,
+          812,
+          813,
+          840,
+          841,
+          843,
+          845,
+          967
+        ],
+        "native_damage_jump_created_both_patterns": true,
+        "no_post_setup_test_pattern_replacement": true,
+        "actual_cell_examine_and_modal_suppression": true,
+        "offscreen_suppression_and_restore": true,
+        "native_turn_delay_and_alpha_fade": true,
+        "faded_hidden_traps_not_reconstructed": true,
+        "old_pattern_history_retained": true,
+        "replacement_uses_current_draw_only": true
+      },
+      "ok": true
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "visual-traps-hidden",
+      "profile": "desktop-control/build/fixtures/visual-traps-hidden-edef968227e84f08ac581d9de34cd8b7",
+      "runtime_id": "runtime-3b0830ec63244f5d8e5877fef2514fc9",
+      "completion_assertions": "final_action_response",
+      "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+      "language": "zh",
+      "window_mode": "windowed",
+      "evidence": {
+        "native_fading_layer_behind_wall_test_only": true,
+        "hidden_pattern_not_published": true,
+        "hidden_pattern_not_in_history": true,
+        "public_wait_seconds": 0.3349598339991644
+      },
+      "ok": true
+    }
+  ],
+  "schema": 1,
+  "scope": "Tengu FadingTraps actual rendered quad pattern",
+  "gui_language": "zh",
+  "cli_language": "zh",
+  "language_note": "Measured before the requested English CLI projection is implemented; retained as actually tested.",
+  "new_visual_kind": "fading_trap_pattern",
+  "unit_tests": {
+    "tilemap_quad_buffer": 3,
+    "projection": 4,
+    "attachment": 2,
+    "emitter_readiness_tail": 6,
+    "floating_text": 4,
+    "passed": 19
+  },
+  "previous_overstrict_assertion": {
+    "profile": "desktop-control/build/fixtures/visual-traps-780320ec26ca42f3935ee30647e7e792",
+    "counted_as_pass": false,
+    "initial_final_response_count": 9,
+    "after_modal_close_count": 10,
+    "reason": "A later actual draw can expose additional cells under conservative viewport/HUD filtering; modal close is required to restore visible pattern content, not exactly reproduce an earlier projected set."
+  }
+}

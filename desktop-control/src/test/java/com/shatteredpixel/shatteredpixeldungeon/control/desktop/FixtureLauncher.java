@@ -98,6 +98,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("lowfreq") && LowFrequencyFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("scenario") && TransitionScenarioFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("spell") && name.matches("[A-Za-z]+")) {
                 heroClass = HeroClass.CLERIC;
                 subclass = Arrays.asList("Smite", "LayOnHands", "AuraOfProtection", "WallOfLight").contains(name) ? HeroSubClass.PALADIN
@@ -168,7 +170,7 @@ public final class FixtureLauncher {
 
     private static final class FixtureObserver implements RuntimeObserver {
         final GameController game; final Fixture fixture; final Path profile;
-        boolean menuPrepared, injected; String lastVersion;
+        boolean menuPrepared, injected; String lastVersion, lastUiVersion;
         Boolean lastWindowFocus;
         Mob fixtureTarget;
         FixtureObserver(GameController game, Fixture fixture, Path profile) { this.game=game; this.fixture=fixture; this.profile=profile; }
@@ -189,6 +191,7 @@ public final class FixtureLauncher {
                     for (Badges.Badge badge : Badges.Badge.values()) if (badge.name().startsWith("UNLOCK_")) Badges.unlock(badge);
                     SPDSettings.language(Languages.CHI_SMPL); Messages.setup(Languages.CHI_SMPL);
                     SPDSettings.fullscreen(false);
+                    Gdx.graphics.setTitle("CLI 场景测试 · " + fixture.id);
                     SPDSettings.intro(false);
                     menuPrepared = true;
                 }
@@ -204,6 +207,10 @@ public final class FixtureLauncher {
                 }
                 game.afterFrame();
                 GameController.State state = game.latest();
+                if (state != null && !state.version.equals(lastUiVersion)) {
+                    UiSceneAssertions.record(profile, state);
+                    lastUiVersion = state.version;
+                }
                 Boolean focused=windowFocused();
                 if(!java.util.Objects.equals(lastWindowFocus,focused)){
                     lastWindowFocus=focused;
@@ -222,6 +229,7 @@ public final class FixtureLauncher {
                             "tome_partial", Dungeon.hero.belongings.getItem(HolyTome.class) == null ? null : get(Dungeon.hero.belongings.getItem(HolyTome.class), "partialCharge"),
                             "weapon_charge", Dungeon.hero.buff(MeleeWeapon.Charger.class) == null ? null : Dungeon.hero.buff(MeleeWeapon.Charger.class).charges + Dungeon.hero.buff(MeleeWeapon.Charger.class).partialCharge,
                             "low_frequency", fixture.kind.equals("lowfreq") ? LowFrequencyFixtures.assertions() : null,
+                            "transition_scenario", fixture.kind.equals("scenario") ? TransitionScenarioFixtures.assertions() : null,
                             "effect_buffs", buffNames(Dungeon.hero), "target_buffs", fixtureTarget == null ? null : buffNames(fixtureTarget),
                             "trinity_form", Dungeon.hero.armorAbility instanceof Trinity && fixture.kind.equals("spell") ? get(Dungeon.hero.armorAbility, fixture.name.equals("BodyForm") ? "bodyForm" : fixture.name.equals("MindForm") ? "mindForm" : "spiritForm") != null : null);
                     Files.writeString(profile.resolve("fixture-assertions.jsonl"), JsonCodec.encode(checkpoint) + "\n",
@@ -257,6 +265,10 @@ public final class FixtureLauncher {
         Talent.initSubclassTalents(hero);
         if (fixture.kind.equals("lowfreq")) {
             LowFrequencyFixtures.prepare(fixture.name, hero);
+            return null;
+        }
+        if (fixture.kind.equals("scenario")) {
+            TransitionScenarioFixtures.prepare(fixture.name, hero);
             return null;
         }
         if (fixture.kind.equals("ui")) {

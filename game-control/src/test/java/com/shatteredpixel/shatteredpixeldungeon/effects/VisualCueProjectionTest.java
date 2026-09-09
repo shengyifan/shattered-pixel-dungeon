@@ -41,4 +41,13 @@ class VisualCueProjectionTest {
                 new VisualCueProjection.Viewport(Float.NaN, 0, 160, 160, 0, 0, 1), Collections.emptyList()));
         assertFalse(VisualCueProjection.permits(22, 10, 100, visible, 16, null, Collections.emptyList()));
     }
+
+    @Test void onlyActualAlignedFullTileGeometryMapsToAnInBoundsCell() {
+        assertEquals(22, VisualCueProjection.gridCell(32,32,16,16,16,10,100));
+        assertEquals(-1, VisualCueProjection.gridCell(33,32,16,16,16,10,100));
+        assertEquals(-1, VisualCueProjection.gridCell(32,32,8,16,16,10,100));
+        assertEquals(-1, VisualCueProjection.gridCell(160,32,16,16,16,10,100), "Do not wrap an out-of-bounds column to another row");
+        assertEquals(-1, VisualCueProjection.gridCell(32,160,16,16,16,10,100));
+        assertEquals(-1, VisualCueProjection.gridCell(Float.NaN,32,16,16,16,10,100));
+    }
 }

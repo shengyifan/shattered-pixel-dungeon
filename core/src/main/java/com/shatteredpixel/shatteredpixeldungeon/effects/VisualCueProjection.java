@@ -54,4 +54,13 @@ final class VisualCueProjection {
         for (Rect blocker : blockers) if (bounds.overlaps(blocker)) return false;
         return true;
     }
+
+    static int gridCell(float left, float top, float width, float height, int tileSize, int gridWidth, int gridLength) {
+        if (!Float.isFinite(left) || !Float.isFinite(top) || tileSize <= 0 || gridWidth <= 0
+                || width != tileSize || height != tileSize || left < 0 || top < 0
+                || left % tileSize != 0 || top % tileSize != 0) return -1;
+        int column = (int)(left/tileSize), row = (int)(top/tileSize);
+        if (column >= gridWidth || row >= gridLength/gridWidth) return -1;
+        return row*gridWidth + column;
+    }
 }
