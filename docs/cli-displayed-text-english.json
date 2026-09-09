@@ -14,7 +14,7 @@
     "note": "One deterministic visible-name/number argument vector per resource template; not all runtime parameter combinations."
   },
   "public_language_names": 23,
-  "unit_tests_passed": 37,
+  "unit_tests_passed": 43,
   "normalization_policy_count": 2,
   "normalized_ambiguous_strings": 3,
   "unresolved_without_public_context": 52,

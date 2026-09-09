@@ -11,6 +11,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UiBridgeTest {
+    private static class TestBindingRow extends TestButton implements com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings.BindingRow {
+        int callbacks;
+        @Override public void chooseBindingSlot(int slot) {callbacks++;}
+    }
     private static class TestScene extends Scene {
         int backCount;
         @Override protected void onBackPressed() { backCount++; }
@@ -44,6 +48,19 @@ class UiBridgeTest {
         assertFalse(ui.toString().contains("DO_NOT_DISCLOSE"));
         Map<String, Object> activation = actions.stream().filter(a -> "ui.activate".equals(a.get("action"))).findFirst().orElseThrow();
         assertEquals(List.of("click", "right", "long"), activation.get("gestures"));
+    }
+
+    @Test void publishedBindingSlotsMatchTheExistingActionAndDoNotEnableAnInactiveRow() {
+        TestScene scene=new TestScene();TestBindingRow row=new TestBindingRow();scene.add(row);
+        UiBridge bridge=new UiBridge(()->scene);
+        @SuppressWarnings("unchecked") List<Map<String,Object>> nodes=(List<Map<String,Object>>)bridge.describeUi().get("controls");
+        Map<String,Object> described=nodes.stream().filter(n->n.containsKey("binding_slots")).findFirst().orElseThrow();
+        Map<String,Object> action=bridge.describeActions().stream().filter(a->a.get("action").equals("ui.binding_slot")).findFirst().orElseThrow();
+        assertEquals(List.of(1,2,3),described.get("binding_slots"));assertEquals(action.get("slots"),described.get("binding_slots"));
+        assertEquals(action.get("control"),described.get("id"));assertEquals(0,row.callbacks);
+        row.active=false;
+        assertTrue(bridge.describeActions().stream().noneMatch(a->a.get("action").equals("ui.binding_slot")));
+        assertTrue(bridge.describeUi().toString().contains("binding_slots"));assertEquals(0,row.callbacks);
     }
 
     @Test void invokesEachSemanticCallbackExactlyOnceAndRejectsUnsupportedGesture() {

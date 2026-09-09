@@ -24,6 +24,8 @@
 
 拼接的段落、标题、数量和物品名称可以按完整资源单元组合，包括本身以括号、markup 或 ASCII 前缀开始的完整资源。完整资源与模板匹配失败后，同段中以实际中文句末标点分隔的完整句子也可分别匹配，原有空白保持不变；模板自带的前导换行会先完整匹配，不被提前 trim。无法解释的中文后缀不会被删除。可见输入长度、递归层数、组合段数和工作量均有界，超限同样返回稳定的不可用错误。
 
+完整外层游戏高亮包装 `_..._` / `**...**` 可以在完整资源和模板匹配之后递归处理：只翻译实际提供的完整 inner，再把原标记包回。例如 `_第1层_` → `_Floor 1_`，数字直接来自可见字串。未闭合的动态模板、未知 inner 或未知尾文不会被补全；裁剪双世界测试不会因未显示的后半段不同而产生不同答案。已有完整词的普通组合仍可原样保留开放标记，例如 `_战士` → `_warrior`，绝不制造一个原输入没有的 closing marker。
+
 公开场景消歧覆盖当前公开 scene 类名白名单和 `GameSnapshotter.sceneName` 已有别名，不接受任意内部对象类名。例子：
 
 | 相同可见中文 | 已公开上下文 | 结果 |
@@ -49,10 +51,16 @@
 | GameScene 且 `game_menu=true` | 设置 | `windows.wndgame.settings` → Settings |
 | GameScene 且 `chasm_prompt=true` | 不，我改主意了 | `levels.features.chasm.no` → No, I changed my mind |
 | JournalScene 且完整 heading 严格匹配 `_名称_ (数字/数字)`，可带末尾冒号 | 装备、投掷武器、法杖、饰物等 | 只搜索 `journal.catalog.*.title` 与 `windows.wndjournal$catalogtab.title_*`，保留已经显示的计数和格式 |
+| 当前 node、公开 parent 链或 action.control 所指行具有 `binding_slots:[1,2,3]` | 键位行的完整名称或完整多行文本，例如 `选择快捷栏\nNone\nNone\nNone` | `key_binding=true` 时只在 `windows.wndkeybindings.*` 中查唯一完整资源单元，得到 Quickslot Selector；不把普通 Toolbar 文案归为键位行 |
+| 同一公开 UI 同时存在至少一个精确三槽绑定行、Action/行动、Key 1/按键1、Key 2/按键2、Key 3/按键3 表头和 Default Bindings/恢复默认键位按钮 | 键位主面板文案，包括完整“确定” | `key_binding_panel=true`，仍限定 `windows.wndkeybindings.*` 完整资源域，得到 Confirm |
 
 `save_details` 的实际公开签名是 StartScene + modal，同时出现 Continue/继续、Erase/删除按钮，以及 Strength/力量、Health/生命、Gold Collected/金币收集数、Maximum Depth/最高层数标签；不存在此前假设的 Info/Enter 按钮。`game_menu` 要求 GameScene + modal 且同时出现 Settings/设置和 Main Menu/主菜单。`chasm_prompt` 要求 GameScene + modal，且实际显示完整原生跳崖确认问题或其对应英文；不从近似问题或隐藏 Window 类推断。
 
 每项策略都验证 false、缺 scene、错误 scene 或缺少相应公开标记时不能获得该策略的译文。隐藏对象不同但可见 context 相同仍返回相同结果。context 本身不自动批准任意相邻文案；完整未知尾部仍拒绝，裁剪后的不完整单字仍保留 partial 行为。
+
+`binding_slots` 是现有 `ui.binding_slot.slots` 已公布的同一个三槽事实，不公开 Java 类名或隐藏键位。关闭或不可操作的行仍可描述其槽位，但不会因此新增可执行动作。上下文只沿已公开关联传播；缺失 parent、没有该 node 的 action.control、槽位为字符串或不是精确的 1/2/3，都不能获得键位语境。过去响应没有这些公开关联时不会借用后来响应的 UI 补上。
+
+主面板签名中的每个要素都不可缺少；只有“确定”按钮或隐藏的 Window 类名不够。主面板以外的键位编辑子窗没有因此自动获得上下文，需其自身已公开输入事实另行验证。
 
 ## 覆盖与缓存
 
@@ -67,13 +75,15 @@
 | 格式模板 | 584 对全部成功解析，参数集合没有缺项 |
 | 实际带参模板样本 | 584 个，每模板使用一组确定性的可见名称/数值；578 个逐字匹配原英文 `String.format`，6 个安全拒绝 |
 | 公开语言名称 | 23 种全部测试，含中文以外脚本和 Latin 名称 |
-| 独立单测 | 37 项通过 |
+| 独立单测 | 43 项通过 |
 
 6 个带参拒绝来自三组真实资源碰撞：`神圣%s` 对应 `%s of light` / `holy %s`；`死于：%s` 对应 `Slain by: %s` / `Killed by: %s`；矛的实际能力说明和典型能力说明具有完全相同中文，英文却有无 `typically` 的差别。这些不能通过读取隐藏模型来区分。模板样本没有穷举所有真实参数组合，不能据此宣称整个游戏所有显示文本都已覆盖。
 
 实机投石详情发现的同段拼接缺口已作为单独回归：输入仅是已经显示的完整中文，包含 1 阶、2–5 伤害、9 力量、0–1 额外伤害和 5/5 剩余次数；转换结果精确对应资源中各句的英文组合。测试改变输入为 4/5 时输出只随可见输入变化，没有 Item 或 Hero 对象参与。含未知后半句的完整输入仍拒绝，被裁输入仍使用明确的 partial 占位。
 
 Supporter 页的 intro、跨多行 Patreon 说明、以括号开头的英文回报提示及 `- Evan` 签名，也用原已显示组合文本进行了精确回归。584 模板样本的允许拒绝项现在锁定为上述六个资源 key；未预期的新拒绝会使测试失败，不能在“多数模板通过”的统计中被掩盖。
+
+键位行、主面板与完整高亮包装补充同时通过 9 项 `PublicEnglishProjectionTest` 和 11 项 `UiBridgeTest`，与 43 项转换器测试合计 63 项定向检查；真实设置操作仍由单独的 settings 场景报告验收，不把这些单测计为实机通过。
 
 全部无上下文歧义来源列在 [cli-displayed-text-english.json](cli-displayed-text-english.json)，原始 55 组及原英文候选保持不变，另列规范化支持项，不会因少数公开 context 或规范化已可处理就把整个目录标为通过。`ambiguous_chinese_strings=55` 仍表示原始候选差异；新增 `normalized_ambiguous_strings=3` 表示受上述规则支持的子集。通用 `button` 角色不能解决所有碰撞；实际关闭窗口的 `Close` 仍需要足够公开证据，不能因为它不是 slider 就反向猜测。`暴雨` 的 terrain 表现与 Combo 动作等也需要已公开且足以区分的上下文。`神圣%s` 和矛说明中 `typically` 的差异没有放宽。尚未接入的上下文不会被假定存在。
 

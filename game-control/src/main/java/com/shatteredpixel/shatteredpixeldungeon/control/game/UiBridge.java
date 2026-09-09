@@ -506,8 +506,9 @@ public final class UiBridge {
                 node.put("option_index_base", 0);
                 if (gizmo.isActive()) addAction("ui.choose", nodeId, node, "options", options);
             }
-            if (gizmo instanceof WndKeyBindings.BindingRow && gizmo.isActive()) {
-                addAction("ui.binding_slot", nodeId, node, "slots", Arrays.asList(1, 2, 3));
+            if (gizmo instanceof WndKeyBindings.BindingRow) {
+                node.put("binding_slots",Arrays.asList(1, 2, 3));
+                if(gizmo.isActive())addAction("ui.binding_slot", nodeId, node, "slots", Arrays.asList(1, 2, 3));
             }
             if (gizmo instanceof WndKeyBindings.BindingInput && gizmo.isActive()) {
                 addAction("ui.binding_key", nodeId, node, "arguments", Collections.singletonList("keycode"));

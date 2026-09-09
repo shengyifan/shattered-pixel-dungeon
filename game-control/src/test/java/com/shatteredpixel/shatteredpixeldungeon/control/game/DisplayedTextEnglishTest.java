@@ -77,6 +77,32 @@ class DisplayedTextEnglishTest {
         assertEquals("\n\nCarrying _warrior_.",t.translate("\n\n携带_战士_。"));
     }
 
+    @Test void symmetricGameHighlightWrappersTranslateOnlyTheirCompleteDisplayedInnerText() {
+        DisplayedTextEnglish t=translator("第%d层","Floor %d","战士","warrior");
+        assertEquals("_Floor 1_",t.translate("_第1层_"));
+        assertEquals("**Floor 27**",t.translate("**第27层**"));
+        assertEquals("**warrior**",t.translate("**战士**"));
+        assertEquals("_Floor 9_",t.translate("_第9层_"),"The number comes from the provided text, not any current level");
+    }
+
+    @Test void incompleteWrappersDoNotInventClosingMarkersAndUnknownInnerOrTailTextIsRejected() {
+        DisplayedTextEnglish t=translator("第%d层","Floor %d","战士","warrior");
+        for(String text:java.util.Arrays.asList("_第1层","**第1层*","_第1层未知尾文_","_第1层_未知尾文")) {
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate(text));
+            assertEquals("Partially displayed text",t.translateVisible(text,true).text);
+        }
+        assertEquals("_warrior",t.translate("_战士"),"Existing complete word composition preserves an open marker without fabricating its close");
+    }
+
+    @Test void identicalVisibleHighlightedHeadersCannotRevealDifferentUnseenParagraphs() {
+        DisplayedTextEnglish first=translator("第%d层","Floor %d","_第7层_后面是安全房间","_Floor 7_ leads to a safe room");
+        DisplayedTextEnglish second=translator("第%d层","Floor %d","_第7层_后面是致命陷阱","_Floor 7_ leads to a lethal trap");
+        assertEquals("_Floor 7_",first.translateVisible("_第7层_",true).text);
+        assertEquals(first.translateVisible("_第7层_",true).text,second.translateVisible("_第7层_",true).text);
+        assertEquals("Partially displayed text",first.translateVisible("_第7",true).text);
+        assertEquals(first.translateVisible("_第7",true).text,second.translateVisible("_第7",true).text);
+    }
+
     @Test void realDisplayedThrowingStoneDescriptionUsesOnlyItsSuppliedKnownValues() throws Exception {
         String displayed="这些石头被人用砂纸打磨成趁手的形状，比普通石头更适合大力投向目标。\n\n"
                 +"这组_1阶_的投掷武器能造成_2~5点伤害_并且需要_9点力量_来正常使用。 你的额外力量会使你在使用这件武器时造成_0~1点额外伤害_。\n\n"
@@ -343,6 +369,40 @@ class DisplayedTextEnglishTest {
         assertEquals("Partially displayed text",incomplete.text);assertTrue(incomplete.partial);
         assertEquals("Partially displayed text",t.translateVisibleInContext("关闭",true,Collections.emptyMap()).text);
         assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("删除",Collections.emptyMap()));
+    }
+
+    @Test void keyBindingContextUsesItsCompleteResourceDomainForRowsAndMultilineText() {
+        DisplayedTextEnglish t=DisplayedTextEnglish.fromResources(
+                Map.of("windows.wndkeybindings.quickslot_selector","选择快捷栏","ui.toolbar.quickslot_select","选择快捷栏"),
+                Map.of("windows.wndkeybindings.quickslot_selector","Quickslot Selector","ui.toolbar.quickslot_select","Select Quickslot"));
+        assertEquals("Quickslot Selector",t.translateInContext("选择快捷栏",Map.of("key_binding",true)));
+        assertEquals("Quickslot Selector\nNone\nNone\nNone",t.translateInContext("选择快捷栏\nNone\nNone\nNone",Map.of("key_binding",true)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("选择快捷栏",Map.of("key_binding",false)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("选择快捷栏",Map.of("key_binding","true","hidden_class","BindingRow")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate("选择快捷栏"));
+        assertEquals("Select Quickslot",t.translateInContext("Select Quickslot",Map.of("key_binding",true)));
+    }
+
+    @Test void keyBindingContextDoesNotExpandHiddenClassDomainsOrUnknownSuffixes() {
+        DisplayedTextEnglish t=DisplayedTextEnglish.fromResources(
+                Map.of("windows.wndkeybindings.quickslot_selector","选择快捷栏","ui.toolbar.quickslot_select","选择快捷栏",
+                        "windows.wndkeybindings$hidden.prompt","内部文案","other.prompt","内部文案"),
+                Map.of("windows.wndkeybindings.quickslot_selector","Quickslot Selector","ui.toolbar.quickslot_select","Select Quickslot",
+                        "windows.wndkeybindings$hidden.prompt","Hidden binding meaning","other.prompt","Other meaning"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("选择快捷栏未知尾文",Map.of("key_binding",true)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("内部文案",Map.of("key_binding",true)));
+        assertEquals("Partially displayed text",t.translateVisibleInContext("选择快",true,Map.of("key_binding",true)).text);
+    }
+
+    @Test void keyBindingPanelConfirmationRequiresTheExplicitPublicSignatureFlag() {
+        DisplayedTextEnglish t=DisplayedTextEnglish.fromResources(
+                Map.of("windows.wndkeybindings.confirm","确定","other.confirm","确定"),
+                Map.of("windows.wndkeybindings.confirm","Confirm","other.confirm","Okay"));
+        assertEquals("Confirm",t.translateInContext("确定",Map.of("key_binding_panel",true)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("确定",Map.of("key_binding_panel",false)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("确定",Map.of("key_binding_panel","true","hidden_window","WndKeyBindings")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("确定未知尾文",Map.of("key_binding_panel",true)));
+        assertEquals("Partially displayed text",t.translateVisibleInContext("确",true,Map.of("key_binding_panel",true)).text);
     }
 
     @Test void unknownChineseHasStableEnglishErrorAndOriginalOnlyInDiagnosticAccessor() {

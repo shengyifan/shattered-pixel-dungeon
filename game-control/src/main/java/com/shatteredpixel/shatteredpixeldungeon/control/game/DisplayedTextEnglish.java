@@ -100,6 +100,15 @@ public final class DisplayedTextEnglish {
         String scope=PUBLIC_SCENE_SCOPES.get(scene);
         String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
         String resolved;
+        if(Boolean.TRUE.equals(context.get("key_binding"))||Boolean.TRUE.equals(context.get("key_binding_panel"))) {
+            String label=unique(dictionary.keyBindingLabels.get(displayed));
+            if(label!=null)return label;
+            if(displayed.indexOf('\n')>=0) {
+                StringBuilder result=new StringBuilder();String[] lines=displayed.split("\\n",-1);
+                for(int i=0;i<lines.length;i++){if(i>0)result.append('\n');result.append(translateInContext(lines[i],context));}
+                return result.toString();
+            }
+        }
         if("back".equalsIgnoreCase(shortcut)
                 &&(resolved=policyResource(displayed,"windows.wndkeybindings.back"))!=null)return resolved;
         boolean slider=Boolean.TRUE.equals(context.get("slider")),checkbox=Boolean.TRUE.equals(context.get("checkbox"));
@@ -200,6 +209,12 @@ public final class DisplayedTextEnglish {
             }
         }
         if(!candidates.isEmpty()) return remember(text,unique(candidates),context);
+        String marker=text.length()>4&&text.startsWith("**")&&text.endsWith("**")?"**":
+                text.length()>2&&text.startsWith("_")&&text.endsWith("_")?"_":null;
+        if(marker!=null) {
+            String inner=translate(text.substring(marker.length(),text.length()-marker.length()),context,depth+1);
+            return remember(text,inner==null?null:marker+inner+marker,context);
+        }
         String trimmed=text.trim();
         if(!trimmed.equals(text)) {
             int start=text.indexOf(trimmed);
@@ -398,15 +413,17 @@ public final class DisplayedTextEnglish {
         final Map<String,Map<String,Set<String>>> sceneEntries;
         final Map<String,ResourcePair> policyResources;
         final Map<String,Set<String>> catalogTitles;
+        final Map<String,Set<String>> keyBindingLabels;
         Dictionary(Map<String,String> chinese,Map<String,String> english) {
             Map<String,Set<String>> entries=new TreeMap<>();List<Template> patterns=new ArrayList<>();
             Map<String,Map<String,Set<String>>> byScene=new TreeMap<>();
-            Map<String,ResourcePair> policies=new TreeMap<>();Map<String,Set<String>> catalogs=new TreeMap<>();
+            Map<String,ResourcePair> policies=new TreeMap<>();Map<String,Set<String>> catalogs=new TreeMap<>(),bindings=new TreeMap<>();
             int pairs=0,templatePairs=0,unsupported=0;
             for(String key:new TreeSet<>(chinese.keySet())) {
                 String source=chinese.get(key),target=english.get(key);
                 if(source==null||target==null||!containsChinese(source))continue;
                 pairs++;entries.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
+                if(key.startsWith("windows.wndkeybindings."))bindings.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
                 if(key.equals("windows.wndkeybindings.back")||key.equals("windows.wndsettings$displaytab.off")
                         ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no")
                         ||key.equals("items.journal.guidebook.hint_status"))
@@ -444,6 +461,9 @@ public final class DisplayedTextEnglish {
             Map<String,Set<String>> titles=new TreeMap<>();
             for(Map.Entry<String,Set<String>> entry:catalogs.entrySet())titles.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
             catalogTitles=Collections.unmodifiableMap(titles);
+            Map<String,Set<String>> bindingLabels=new TreeMap<>();
+            for(Map.Entry<String,Set<String>> entry:bindings.entrySet())bindingLabels.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
+            keyBindingLabels=Collections.unmodifiableMap(bindingLabels);
             Map<String,Set<String>> immutable=new LinkedHashMap<>();Map<String,String> unambiguous=new LinkedHashMap<>(),normalizedValues=new LinkedHashMap<>();
             Map<Character,List<String>> starts=new HashMap<>();
             int ambiguous=0,normalizedAmbiguous=0;

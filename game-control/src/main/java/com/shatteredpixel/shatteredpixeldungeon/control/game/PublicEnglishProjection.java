@@ -80,9 +80,11 @@ public final class PublicEnglishProjection {
                 currentScene=(String)ui.get("scene");
                 currentNodes=new LinkedHashMap<>();
                 Set<String> buttons=new HashSet<>(),texts=new HashSet<>();
+                boolean hasBindingRow=false;
                 for(Object value:(List<?>)ui.get("controls")) if(value instanceof Map) {
                     Map<?,?> node=(Map<?,?>)value;
                     if(node.get("id") instanceof String)currentNodes.put((String)node.get("id"),node);
+                    if(bindingSlots(node.get("binding_slots")))hasBindingRow=true;
                     for(String key:Arrays.asList("text","label")) if(node.get(key) instanceof String) {
                         texts.add((String)node.get(key));
                         if("button".equals(node.get("role")))buttons.add((String)node.get(key));
@@ -99,6 +101,9 @@ public final class PublicEnglishProjection {
                 properties.put("chasm_prompt",game&&modal&&one(texts,
                         "Do you really want to jump into the chasm? A fall that far will be painful.",
                         "你确定要跳入深渊中？从这么高的地方摔下去一定很疼。"));
+                properties.put("key_binding_panel",hasBindingRow&&one(texts,"Action","行动")
+                        &&one(texts,"Key 1","按键1")&&one(texts,"Key 2","按键2")&&one(texts,"Key 3","按键3")
+                        &&one(buttons,"Default Bindings","恢复默认键位"));
             } else if(source.get("scene") instanceof String) {
                 currentScene=(String)source.get("scene");properties.put("scene",currentScene);
             }
@@ -106,11 +111,12 @@ public final class PublicEnglishProjection {
                     source.get("control") instanceof String?currentNodes.get(source.get("control")):null;
             if(node!=null) {
                 properties.put("role",node.get("role"));
-                properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);
+                properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);
                 Set<Object> visited=new HashSet<>();
                 for(Map<?,?> ancestor=node;ancestor!=null;) {
                     if(ancestor.containsKey("checked"))properties.put("checkbox",true);
                     if("slider".equals(ancestor.get("role")))properties.put("slider",true);
+                    if(bindingSlots(ancestor.get("binding_slots")))properties.put("key_binding",true);
                     if(!properties.containsKey("shortcut_action")&&ancestor.get("shortcut_action") instanceof String)
                         properties.put("shortcut_action",ancestor.get("shortcut_action"));
                     Object parent=ancestor.get("parent");
@@ -123,6 +129,14 @@ public final class PublicEnglishProjection {
         private static boolean one(Set<String> values,String... alternatives) {
             for(String value:alternatives)if(values.contains(value))return true;
             return false;
+        }
+        private static boolean bindingSlots(Object value) {
+            if(!(value instanceof List)||((List<?>)value).size()!=3)return false;
+            for(int i=0;i<3;i++) {
+                Object slot=((List<?>)value).get(i);
+                if(!(slot instanceof Number)||((Number)slot).doubleValue()!=i+1)return false;
+            }
+            return true;
         }
         private static Map<?,?> ui(Map<?,?> source) {
             Object observation=source.get("observation");

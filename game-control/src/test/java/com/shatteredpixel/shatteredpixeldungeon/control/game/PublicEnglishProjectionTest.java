@@ -62,4 +62,59 @@ class PublicEnglishProjectionTest {
         off.put("parent","unknown-parent");
         assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(off,ui));
     }
+
+    @Test void bindingContextFollowsPublishedSlotsAndPublicControlOrParentLinks() {
+        Map<String,Object> row=map("id","binding-row","role","component","binding_slots",Arrays.asList(1L,2L,3L));
+        Map<String,Object> label=map("id","binding-label","role","text","parent","binding-row","text","选择快捷栏\nNone\nNone\nNone");
+        Map<String,Object> ui=map("scene","GameScene","modal",true,"controls",Arrays.asList(row,label));
+        assertEquals("Quickslot Selector\nNone\nNone\nNone",PublicEnglishProjection.copyWithUi(label,ui).get("text"));
+        Map<String,Object> action=map("action","ui.binding_slot","control","binding-row","slots",Arrays.asList(1,2,3),"label","选择快捷栏");
+        assertEquals("Quickslot Selector",PublicEnglishProjection.copyWithUi(action,ui).get("label"));
+        assertEquals("选择快捷栏",action.get("label"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copy(action));
+        label.put("parent","missing-parent");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(label,ui));
+    }
+
+    @Test void missingOrMalformedBindingSlotsCannotBorrowAPreviousResponseContext() {
+        Map<String,Object> row=map("id","row","role","component","binding_slots",Arrays.asList(1,2,3));
+        Map<String,Object> ui=map("scene","GameScene","modal",true,"controls",Arrays.asList(row));
+        Map<String,Object> action=map("action","ui.binding_slot","control","row","label","选择快捷栏");
+        assertEquals("Quickslot Selector",PublicEnglishProjection.copyWithUi(action,ui).get("label"));
+        for(Object bad:Arrays.asList(Arrays.asList(1,2,4),Arrays.asList(1.2,2,3),Arrays.asList("1","2","3"))) {
+            row.put("binding_slots",bad);
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(action,ui));
+        }
+        row.remove("binding_slots");row.put("hidden_class","BindingRow");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(action,ui));
+    }
+
+    private static java.util.List<Map<String,Object>> bindingPanel() {
+        return new java.util.ArrayList<>(Arrays.asList(
+                map("id","row","role","entry","binding_slots",Arrays.asList(1,2,3)),
+                map("id","action-head","role","text","text","行动"),map("id","key1-head","role","text","text","按键1"),
+                map("id","key2-head","role","text","text","按键2"),map("id","key3-head","role","text","text","按键3"),
+                map("id","defaults","role","button","text","恢复默认键位"),map("id","confirm","role","button","text","确定")));
+    }
+
+    @Test void fullBindingPanelSignatureTranslatesConfirmationAndEveryRequiredPublicFactIsNecessary() {
+        java.util.List<Map<String,Object>> nodes=bindingPanel();
+        Map<String,Object> ui=map("scene","GameScene","modal",true,"controls",nodes);
+        Map<String,Object> action=map("action","ui.activate","control","confirm","label","确定");
+        assertEquals("Confirm",PublicEnglishProjection.copyWithUi(action,ui).get("label"));
+        for(int index=0;index<6;index++) {
+            Map<String,Object> removed=nodes.remove(index);
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(action,ui),"Missing public signature component "+index);
+            nodes.add(index,removed);
+        }
+        assertEquals("确定",action.get("label"));
+    }
+
+    @Test void aNewResponseCannotBorrowThePreviousKeyBindingPanelSignature() {
+        Map<String,Object> action=map("action","ui.activate","control","confirm","label","确定");
+        Map<String,Object> full=map("scene","GameScene","modal",true,"controls",bindingPanel());
+        assertEquals("Confirm",PublicEnglishProjection.copyWithUi(action,full).get("label"));
+        Map<String,Object> next=map("scene","GameScene","modal",true,"controls",Arrays.asList(map("id","confirm","role","button","text","确定")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(action,next));
+    }
 }
