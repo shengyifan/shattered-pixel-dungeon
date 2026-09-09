@@ -1,0 +1,243 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "status": "partial",
+  "whole_scenarios_passed": 0,
+  "description_and_talent_pages_verified": 6,
+  "source_report": "desktop-control/build/fixtures/runtime-6eedb1a932514cfe9fb0fc7fd270f444/hero-info-results.json",
+  "cases": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "hero_info.warrior",
+      "runtime_id": "runtime-6eedb1a932514cfe9fb0fc7fd270f444",
+      "profile": "desktop-control/build/fixtures/hero-info-warrior-38cb020f1c084731ad1b25e2cb5e4389",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "tabs": [
+        {
+          "index": 0,
+          "title": "warrior",
+          "state_version": "46337814-7525-4210-b157-8b990d44d89f:7",
+          "displayed_texts": [
+            "warrior",
+            "The Warrior starts with a _unique broken seal_ that grants him a burst of shielding when he is below half health. The seal can be moved between armors, and can _transfer a single upgrade_ with it.",
+            "The Warrior also starts with a _worn shortsword_, _three throwing stones_, cloth armor, a waterskin, and a velvet pouch.",
+            "The Warrior automatically identifies:\n_-_ Scrolls of Identify\n_-_ Potions of Healing\n_-_ Scrolls of Rage"
+          ]
+        },
+        {
+          "index": 1,
+          "title": "Talents",
+          "state_version": "46337814-7525-4210-b157-8b990d44d89f:8",
+          "displayed_texts": [
+            "Talents",
+            "The hero gains one talent point each time they level up. Higher tier talents appear after defeating the second boss.",
+            "Reach level 6 to unlock more talents.",
+            "tier 1"
+          ]
+        }
+      ],
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "ok": false,
+      "error": "AssertionError({'id': '3f8928653782-16', 'scope_id': 'menu:3ce2f3d3-147e-450e-8887-f79eff6e0ad0', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}})",
+      "traceback": "Traceback (most recent call last):\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/hero_info_smoke.py\", line 30, in run_case\n    panel=act(client,\"ui.activate\",control=tab)\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/fixture_smoke.py\", line 123, in act\n    raise AssertionError(result)\nAssertionError: {'id': '3f8928653782-16', 'scope_id': 'menu:3ce2f3d3-147e-450e-8887-f79eff6e0ad0', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}}\n",
+      "gui_postconditions_checked": 14
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "hero_info.mage",
+      "runtime_id": "runtime-6eedb1a932514cfe9fb0fc7fd270f444",
+      "profile": "desktop-control/build/fixtures/hero-info-mage-3086dc13385444feb7d317178886af02",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "tabs": [
+        {
+          "index": 0,
+          "title": "mage",
+          "state_version": "d884e0a4-2004-4d24-b634-d0473a25b1b5:7",
+          "displayed_texts": [
+            "mage",
+            "The Mage starts with a _unique staff_, which recharges significantly faster than a wand and has 1 more charge. The staff _can be imbued with any wand_ the Mage finds in the dungeon.",
+            "The Mage also starts with a _wand of magic missile_ imbued in his staff, cloth armor, a waterskin, and a velvet pouch.",
+            "The Mage automatically identifies:\n_-_ Scrolls of Identify\n_-_ Potions of Liquid Flame\n_-_ Scrolls of Upgrade"
+          ]
+        },
+        {
+          "index": 1,
+          "title": "Talents",
+          "state_version": "d884e0a4-2004-4d24-b634-d0473a25b1b5:8",
+          "displayed_texts": [
+            "Talents",
+            "The hero gains one talent point each time they level up. Higher tier talents appear after defeating the second boss.",
+            "Reach level 6 to unlock more talents.",
+            "tier 1"
+          ]
+        }
+      ],
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "ok": false,
+      "error": "AssertionError({'id': '2ca637c69a9f-16', 'scope_id': 'menu:e3784cf6-bff5-4dfe-92a5-09b68c0c75fb', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}})",
+      "traceback": "Traceback (most recent call last):\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/hero_info_smoke.py\", line 30, in run_case\n    panel=act(client,\"ui.activate\",control=tab)\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/fixture_smoke.py\", line 123, in act\n    raise AssertionError(result)\nAssertionError: {'id': '2ca637c69a9f-16', 'scope_id': 'menu:e3784cf6-bff5-4dfe-92a5-09b68c0c75fb', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}}\n",
+      "gui_postconditions_checked": 14
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "hero_info.rogue",
+      "runtime_id": "runtime-6eedb1a932514cfe9fb0fc7fd270f444",
+      "profile": "desktop-control/build/fixtures/hero-info-rogue-4a0661c9a09544599a48dd192af93f40",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "tabs": [
+        {
+          "index": 0,
+          "title": "rogue",
+          "state_version": "3803b36a-d780-4915-8fa7-dc149231c3dd:7",
+          "displayed_texts": [
+            "rogue",
+            "The Rogue starts with a _unique Cloak of Shadows_, which he can use to become invisible at will.",
+            "The Rogue can _detect secrets and traps_ from a greater distance.",
+            "The Rogue also starts with _a dagger_, _three throwing knives_, cloth armor, a waterskin, and a velvet pouch.",
+            "The Rogue automatically identifies:\n_-_ Scrolls of Identify\n_-_ Potions of Invisibility\n_-_ Scrolls of Magic Mapping"
+          ]
+        },
+        {
+          "index": 1,
+          "title": "Talents",
+          "state_version": "3803b36a-d780-4915-8fa7-dc149231c3dd:8",
+          "displayed_texts": [
+            "Talents",
+            "The hero gains one talent point each time they level up. Higher tier talents appear after defeating the second boss.",
+            "Reach level 6 to unlock more talents.",
+            "tier 1"
+          ]
+        }
+      ],
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "ok": false,
+      "error": "AssertionError({'id': '87f2e4f5900e-16', 'scope_id': 'menu:89a69de5-25c0-4871-b463-510163ee5cda', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}})",
+      "traceback": "Traceback (most recent call last):\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/hero_info_smoke.py\", line 30, in run_case\n    panel=act(client,\"ui.activate\",control=tab)\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/fixture_smoke.py\", line 123, in act\n    raise AssertionError(result)\nAssertionError: {'id': '87f2e4f5900e-16', 'scope_id': 'menu:89a69de5-25c0-4871-b463-510163ee5cda', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}}\n",
+      "gui_postconditions_checked": 14
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "hero_info.huntress",
+      "runtime_id": "runtime-6eedb1a932514cfe9fb0fc7fd270f444",
+      "profile": "desktop-control/build/fixtures/hero-info-huntress-f168d9fa079a4e63a0b664b028586b57",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "tabs": [
+        {
+          "index": 0,
+          "title": "huntress",
+          "state_version": "e4bcecb8-8c81-4296-bbf1-2e30dc61e568:7",
+          "displayed_texts": [
+            "huntress",
+            "The Huntress starts with a _unique spirit bow_, which can fire an infinite number of conjured arrows.",
+            "The Huntress can travel through tall grass _without trampling it_.",
+            "The Huntress also starts with _studded gloves_, cloth armor, a waterskin, and a velvet pouch.",
+            "The Huntress automatically identifies:\n_-_ Scrolls of Identify\n_-_ Potions of Mind Vision\n_-_ Scrolls of Lullaby"
+          ]
+        },
+        {
+          "index": 1,
+          "title": "Talents",
+          "state_version": "e4bcecb8-8c81-4296-bbf1-2e30dc61e568:8",
+          "displayed_texts": [
+            "Talents",
+            "The hero gains one talent point each time they level up. Higher tier talents appear after defeating the second boss.",
+            "Reach level 6 to unlock more talents.",
+            "tier 1"
+          ]
+        }
+      ],
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "ok": false,
+      "error": "AssertionError({'id': '6a1de58d1b40-16', 'scope_id': 'menu:9213076a-136a-4e2c-af5a-e439f7b2ad45', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}})",
+      "traceback": "Traceback (most recent call last):\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/hero_info_smoke.py\", line 30, in run_case\n    panel=act(client,\"ui.activate\",control=tab)\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/fixture_smoke.py\", line 123, in act\n    raise AssertionError(result)\nAssertionError: {'id': '6a1de58d1b40-16', 'scope_id': 'menu:9213076a-136a-4e2c-af5a-e439f7b2ad45', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}}\n",
+      "gui_postconditions_checked": 14
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "hero_info.duelist",
+      "runtime_id": "runtime-6eedb1a932514cfe9fb0fc7fd270f444",
+      "profile": "desktop-control/build/fixtures/hero-info-duelist-e2bbc430e44340b1b9b5709d7df717d3",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "tabs": [
+        {
+          "index": 0,
+          "title": "duelist",
+          "state_version": "5f7828b2-38a4-40a6-a9b2-1fa5f8b441c5:7",
+          "displayed_texts": [
+            "duelist",
+            "The Duelist starts with a _unique rapier_ with a special ability that recharges over time.",
+            "Every weapon in the game has a _different special ability_ that the Duelist can use.",
+            "The Duelist also starts with _two throwing spikes_, cloth armor, a waterskin, and a velvet pouch.",
+            "The Duelist automatically identifies:\n_-_ Scrolls of Identify\n_-_ Potions of Strength\n_-_ Scrolls of Mirror Image"
+          ]
+        },
+        {
+          "index": 1,
+          "title": "Talents",
+          "state_version": "5f7828b2-38a4-40a6-a9b2-1fa5f8b441c5:8",
+          "displayed_texts": [
+            "Talents",
+            "The hero gains one talent point each time they level up. Higher tier talents appear after defeating the second boss.",
+            "Reach level 6 to unlock more talents.",
+            "tier 1"
+          ]
+        }
+      ],
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "ok": false,
+      "error": "AssertionError({'id': 'fd0c5898d6b2-16', 'scope_id': 'menu:b92563af-a248-43b3-bda2-2cfc33201b0a', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}})",
+      "traceback": "Traceback (most recent call last):\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/hero_info_smoke.py\", line 30, in run_case\n    panel=act(client,\"ui.activate\",control=tab)\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/fixture_smoke.py\", line 123, in act\n    raise AssertionError(result)\nAssertionError: {'id': 'fd0c5898d6b2-16', 'scope_id': 'menu:b92563af-a248-43b3-bda2-2cfc33201b0a', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}}\n",
+      "gui_postconditions_checked": 14
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "hero_info.cleric",
+      "runtime_id": "runtime-6eedb1a932514cfe9fb0fc7fd270f444",
+      "profile": "desktop-control/build/fixtures/hero-info-cleric-4d8a5e6c7f0c4497bb5b616070a39ef1",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "tabs": [
+        {
+          "index": 0,
+          "title": "cleric",
+          "state_version": "173e2679-77ff-4a09-a775-4472713abfdf:7",
+          "displayed_texts": [
+            "cleric",
+            "The Cleric starts with a _unique holy tome_, which they can use to cast various spells.",
+            "Most of the Cleric's talents are focused around learning or upgrading spells.",
+            "The Cleric also starts with _a cudgel_, cloth armor, a waterskin, and a velvet pouch.",
+            "The Cleric automatically identifies:\n_-_ Scrolls of Identify\n_-_ Potions of Purity\n_-_ Scrolls of Remove Curse"
+          ]
+        },
+        {
+          "index": 1,
+          "title": "Talents",
+          "state_version": "173e2679-77ff-4a09-a775-4472713abfdf:8",
+          "displayed_texts": [
+            "Talents",
+            "The hero gains one talent point each time they level up. Higher tier talents appear after defeating the second boss.",
+            "Reach level 6 to unlock more talents.",
+            "tier 1"
+          ]
+        }
+      ],
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c",
+      "ok": false,
+      "error": "AssertionError({'id': '75a3b9d3e70c-16', 'scope_id': 'menu:f1c2ec75-d44e-459f-b00b-94603258df96', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}})",
+      "traceback": "Traceback (most recent call last):\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/hero_info_smoke.py\", line 30, in run_case\n    panel=act(client,\"ui.activate\",control=tab)\n  File \"/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/src/test/python/fixture_smoke.py\", line 123, in act\n    raise AssertionError(result)\nAssertionError: {'id': '75a3b9d3e70c-16', 'scope_id': 'menu:f1c2ec75-d44e-459f-b00b-94603258df96', 'ok': False, 'error': {'code': 'EXECUTION_UNKNOWN'}, 'result': {'persistence': {'last_save': None, 'saves_during_request': []}}}\n",
+      "gui_postconditions_checked": 14
+    }
+  ],
+  "remaining": "Native subclass title 专精 is ambiguous; full four-tab scenario still fails."
+}

@@ -116,6 +116,10 @@ public final class PublicEnglishProjection {
                 boolean game="GameScene".equals(currentScene)||"game".equals(currentScene);
                 boolean start="StartScene".equals(currentScene)||"start".equals(currentScene);
                 boolean modal=Boolean.TRUE.equals(ui.get("modal"));
+                properties.put("victory_congratulations",("RankingsScene".equals(currentScene)||"rankings".equals(currentScene))
+                        &&modal&&one(texts,"Victory!","获胜！")&&one(buttons,"Support","赞助")&&one(buttons,"Close","关闭")
+                        &&one(texts,"Congratulations on conquering the dungeon! You've unlocked some new features that are available when choosing a hero:",
+                        "恭喜您征服了这座地牢！新的游戏选项已经解锁，你可以在选择英雄时查看并设置："));
                 properties.put("save_details",start&&modal&&one(buttons,"Continue","继续")&&one(buttons,"Erase","删除")
                         &&one(texts,"Strength","力量")&&one(texts,"Health","生命")
                         &&one(texts,"Gold Collected","金币收集数")&&one(texts,"Maximum Depth","最高层数"));

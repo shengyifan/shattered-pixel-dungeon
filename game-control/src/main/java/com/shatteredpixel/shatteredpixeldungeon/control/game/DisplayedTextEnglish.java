@@ -156,6 +156,9 @@ public final class DisplayedTextEnglish {
                 &&(resolved=policyResource(displayed,"windows.wndgame.settings"))!=null)return resolved;
         if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("chasm_prompt"))
                 &&(resolved=policyResource(displayed,"levels.features.chasm.no"))!=null)return resolved;
+        if("rankingsscene".equals(scope)&&Boolean.TRUE.equals(context.get("victory_congratulations"))
+                &&Boolean.TRUE.equals(context.get("button"))
+                &&(resolved=policyResource(displayed,"windows.wndvictorycongrats.close"))!=null)return resolved;
         if("journalscene".equals(scope)) {
             Matcher heading=CATALOG_HEADING.matcher(displayed);
             if(heading.matches()) {
@@ -538,7 +541,7 @@ public final class DisplayedTextEnglish {
                 }
                 if(key.equals("windows.wndkeybindings.back")||key.equals("windows.wndsettings$displaytab.off")
                         ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no")
-                        ||key.equals("items.journal.guidebook.hint_status"))
+                        ||key.equals("items.journal.guidebook.hint_status")||key.equals("windows.wndvictorycongrats.close"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
                     catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
@@ -558,6 +561,23 @@ public final class DisplayedTextEnglish {
                 }
             }
             int resourceStrings=entries.size();
+            // WndHeroInfo renders these resource paragraphs as separate complete
+            // text blocks. Pair only the six static, argument-free descriptions;
+            // never translate a clipped prefix or infer a missing paragraph.
+            int heroParagraphs=0;
+            for(String hero:new String[]{"warrior","mage","rogue","huntress","duelist","cleric"}) {
+                String key="actors.hero.heroclass."+hero+"_desc";
+                String source=chinese.get(key),target=english.get(key);
+                if(source==null||target==null||!new Printf(source).arguments.isEmpty()||!new Printf(target).arguments.isEmpty())continue;
+                String[] sources=source.split("\n\n",-1),targets=target.split("\n\n",-1);
+                if(sources.length<2||sources.length!=targets.length)continue;
+                boolean complete=true;
+                for(int i=0;i<sources.length;i++)if(sources[i].isEmpty()||targets[i].isEmpty())complete=false;
+                if(!complete)continue;
+                for(int i=0;i<sources.length;i++)if(containsChinese(sources[i])) {
+                    entries.computeIfAbsent(sources[i],ignored->new TreeSet<>()).add(targets[i]);heroParagraphs++;
+                }
+            }
             Map<String,String> names=new TreeMap<>();
             for(Languages language:Languages.values()) {
                 String englishName=language==Languages.CHI_SMPL?"Simplified Chinese":language==Languages.CHI_TRAD?"Traditional Chinese":
@@ -619,6 +639,7 @@ public final class DisplayedTextEnglish {
             counts.put("normalized_ambiguous_strings",normalizedAmbiguous);
             counts.put("compiled_template_pairs",patterns.size());counts.put("unsupported_template_pairs",unsupported);
             counts.put("language_names",names.size());
+            counts.put("hero_description_paragraphs",heroParagraphs);
             statistics=Collections.unmodifiableMap(counts);
         }
     }

@@ -10,13 +10,17 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 
 /** Profile progress preparation only. All menu changes and game creation use original public actions. */
 final class MenuScenarioFixtures {
-    static boolean supports(String name) { return name.equals("locked") || name.equals("unlocked") || name.equals("daily") || name.equals("random-confirm") || name.equals("daily-cycle") || name.equals("daily-future") || name.equals("seed-duplicate"); }
+    static boolean supports(String name) { return name.equals("locked") || name.equals("unlocked") || name.equals("daily") || name.equals("random-confirm") || name.equals("daily-cycle") || name.equals("daily-future") || name.equals("seed-duplicate") || name.equals("hero-info"); }
     static void prepare(String name) {
         if(!name.equals("locked")) {
             Badges.unlock(Badges.Badge.VICTORY);
             SPDSettings.victoryNagged(true); // This fixture represents a previously acknowledged victory.
         }
         if(name.equals("daily-future"))SPDSettings.lastDaily(Game.realTime+3L*24*60*60*1000);
+        if(name.equals("hero-info")) {
+            Badges.unlock(Badges.Badge.BOSS_SLAIN_2);
+            Badges.unlock(Badges.Badge.BOSS_SLAIN_4);
+        }
     }
     static Map<String,Object> assertions() {
         return map("victory_unlocked",Badges.isUnlocked(Badges.Badge.VICTORY),
