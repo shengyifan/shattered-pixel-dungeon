@@ -9,14 +9,41 @@ from fixture_smoke import FixtureClient, act, freeze_runtime
 from menu_scenario_smoke import choose, return_to_title, ui
 
 
-def run_case(root,classpath,runtime_id,hero):
+def actual_window(client,state,name):
+    rows=[json.loads(line) for line in (client.profile/"ui-assertions.jsonl").read_text().splitlines()]
+    row=next(row for row in reversed(rows) if row["state_version"]==state["state_version"])
+    assert any(value.endswith("."+name) for value in row["window_classes"]),row
+
+
+def details_case(client,panel,tabs,index):
+    choices=[a["control"] for a in panel["actions"] if a["action"]=="ui.activate" and a["control"] not in tabs]
+    assert len(choices)==(2 if index==2 else 3),choices
+    reports=[]
+    for control in choices:
+        detail=act(client,"ui.activate",control=control)
+        window="WndInfoSubclass" if index==2 else "WndInfoArmorAbility"
+        actual_window(client,detail,window)
+        title=next(n["text"] for n in ui(detail)["controls"] if n.get("text"))
+        talents=[a for a in detail["actions"] if a["action"]=="ui.activate"]
+        opened=[]
+        for talent in talents:
+            explanation=act(client,"ui.activate",control=talent["control"])
+            actual_window(client,explanation,"WndInfoTalent")
+            opened.append({"label":talent.get("label"),"state_version":explanation["state_version"]})
+            back=act(client,"ui.back");actual_window(client,back,window)
+        restored=act(client,"ui.back");actual_window(client,restored,"WndHeroInfo")
+        reports.append({"title":title,"window":window,"talents":opened,"original_back":True})
+    return reports
+
+
+def run_case(root,classpath,runtime_id,hero,details=False):
     profile=root/"desktop-control/build/fixtures"/("hero-info-"+hero+"-"+uuid.uuid4().hex)
     profile.mkdir(parents=True)
     command=["java","-XstartOnFirstThread","--enable-native-access=ALL-UNNAMED","--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
              "-cp",classpath,"com.shatteredpixel.shatteredpixeldungeon.control.desktop.FixtureLauncher","--fixture","menu:hero-info"]
     client=FixtureClient(command,profile,verify_gui=True)
     result={"test_fixture":True,"counts_as_win":False,"fixture":"hero_info."+hero,"runtime_id":runtime_id,
-            "profile":str(profile.relative_to(root)),"cli_language":"en","gui_language":"zh","tabs":[]}
+            "profile":str(profile.relative_to(root)),"cli_language":"en","gui_language":"zh","tabs":[],"details_requested":details}
     try:
         hello=client.request("protocol.info");assert hello["ok"],hello
         result["build_id"]=hello["result"]["build_id"]
@@ -32,6 +59,7 @@ def run_case(root,classpath,runtime_id,hero):
             expected=[hero,"Talents","Subclasses","Armor Abilities"][index]
             assert expected.casefold() in {text.casefold() for text in texts},{"expected":expected,"texts":texts}
             result["tabs"].append({"index":index,"title":expected,"state_version":panel["state_version"],"displayed_texts":texts})
+            if details and index>=2:result["tabs"][-1]["details"]=details_case(client,panel,tabs,index)
         returned=act(client,"ui.back")
         assert ui(returned)["scene"]=="HeroSelectScene" and not ui(returned)["modal"]
         assert returned["scope_id"].startswith("menu:")
@@ -48,17 +76,18 @@ def run_case(root,classpath,runtime_id,hero):
             client.stderr.close();client.trace.close()
         result["gui_postconditions_checked"]=client.gui_postconditions_checked
         (profile/"hero-info-result.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
-    print(json.dumps(result,ensure_ascii=False),flush=True)
+    print(json.dumps({k:v for k,v in result.items() if k!="tabs"},ensure_ascii=False),flush=True)
     return result
 
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument("--heroes",default="warrior,mage,rogue,huntress,duelist,cleric")
-    heroes=parser.parse_args().heroes.split(",")
+    parser.add_argument("--details",action="store_true",help="Also open native subclass, armor ability, and nested talent details")
+    args=parser.parse_args();heroes=args.heroes.split(",")
     assert all(hero in {"warrior","mage","rogue","huntress","duelist","cleric"} for hero in heroes)
     root=Path(__file__).resolve().parents[4]
     classpath,runtime_id=freeze_runtime(root,(root/"desktop-control/build/test-runtime-classpath.txt").read_text().strip())
-    reports=[run_case(root,classpath,runtime_id,hero) for hero in heroes]
+    reports=[run_case(root,classpath,runtime_id,hero,args.details) for hero in heroes]
     output=root/"desktop-control/build/fixtures"/runtime_id/"hero-info-results.json"
     output.write_text(json.dumps(reports,ensure_ascii=False,indent=2)+"\n")
     if not all(r.get("ok") for r in reports):raise SystemExit(1)
