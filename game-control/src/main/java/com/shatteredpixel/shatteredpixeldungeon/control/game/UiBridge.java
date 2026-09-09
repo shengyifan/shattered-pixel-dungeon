@@ -510,8 +510,9 @@ public final class UiBridge {
                 node.put("binding_slots",Arrays.asList(1, 2, 3));
                 if(gizmo.isActive())addAction("ui.binding_slot", nodeId, node, "slots", Arrays.asList(1, 2, 3));
             }
-            if (gizmo instanceof WndKeyBindings.BindingInput && gizmo.isActive()) {
-                addAction("ui.binding_key", nodeId, node, "arguments", Collections.singletonList("keycode"));
+            if (gizmo instanceof WndKeyBindings.BindingInput) {
+                node.put("binding_input",true);
+                if(gizmo.isActive())addAction("ui.binding_key", nodeId, node, "arguments", Collections.singletonList("keycode"));
             }
             if (gizmo instanceof CheckBox) node.put("checked", ((CheckBox) gizmo).checked());
             if (gizmo instanceof HealthBar) {

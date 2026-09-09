@@ -10,6 +10,8 @@
 
 本组没有编辑实际按键、选择其他GUI语言、点击译者署名、切换全屏或穷举所有设置值，不能标记整个设置类全部通过。后续需要针对这些适用分支分别构造中间状态。当前窗口化是用户指定约束，测试不会为了覆盖全屏值而擅自切换。
 
+补充`settings-scenes-648e328acae247be97d9649a3a0adcfb`已通过原Wait第一键位输入：经ui.binding_slot打开原编辑窗，使用LibGDX公开键码142选择F12，原文确实显示F12，再原Cancel返回，Wait绑定保持原值。完整设置流程仍通过。当前binding_input语义只解释原公开输入控件，并在按钮和模板参数中分别使用原Unbind Key与None含义；它没有生成OS键盘事件。新结果作为`key_input_cancel`追加，原失败不回写。
+
 ```sh
 ./gradlew :desktop-control:writeTestRuntimeClasspath
 python3 desktop-control/src/test/python/settings_scenario_smoke.py

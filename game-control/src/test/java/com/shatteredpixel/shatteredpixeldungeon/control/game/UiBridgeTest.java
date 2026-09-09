@@ -15,6 +15,11 @@ class UiBridgeTest {
         int callbacks;
         @Override public void chooseBindingSlot(int slot) {callbacks++;}
     }
+    private static class TestBindingInput extends TestButton implements com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings.BindingInput {
+        int chosen;
+        @Override public boolean acceptsBindingKey(int code) {return code>=0;}
+        @Override public void chooseBindingKey(int code) {chosen++;}
+    }
     private static class TestScene extends Scene {
         int backCount;
         @Override protected void onBackPressed() { backCount++; }
@@ -61,6 +66,18 @@ class UiBridgeTest {
         row.active=false;
         assertTrue(bridge.describeActions().stream().noneMatch(a->a.get("action").equals("ui.binding_slot")));
         assertTrue(bridge.describeUi().toString().contains("binding_slots"));assertEquals(0,row.callbacks);
+    }
+
+    @Test void publishedBindingInputMatchesTheExistingKeyActionWithoutInvokingIt() {
+        TestScene scene=new TestScene();TestBindingInput input=new TestBindingInput();scene.add(input);
+        UiBridge bridge=new UiBridge(()->scene);
+        @SuppressWarnings("unchecked") List<Map<String,Object>> nodes=(List<Map<String,Object>>)bridge.describeUi().get("controls");
+        Map<String,Object> node=nodes.stream().filter(n->Boolean.TRUE.equals(n.get("binding_input"))).findFirst().orElseThrow();
+        Map<String,Object> action=bridge.describeActions().stream().filter(a->a.get("action").equals("ui.binding_key")).findFirst().orElseThrow();
+        assertEquals(node.get("id"),action.get("control"));assertEquals(0,input.chosen);
+        input.active=false;
+        assertTrue(bridge.describeActions().stream().noneMatch(a->a.get("action").equals("ui.binding_key")));
+        assertTrue(bridge.describeUi().toString().contains("binding_input"));assertEquals(0,input.chosen);
     }
 
     @Test void invokesEachSemanticCallbackExactlyOnceAndRejectsUnsupportedGesture() {

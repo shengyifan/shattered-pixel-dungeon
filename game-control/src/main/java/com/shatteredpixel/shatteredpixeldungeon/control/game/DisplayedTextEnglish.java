@@ -100,6 +100,29 @@ public final class DisplayedTextEnglish {
         String scope=PUBLIC_SCENE_SCOPES.get(scene);
         String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
         String resolved;
+        if(Boolean.TRUE.equals(context.get("key_binding_input"))) {
+            if(Boolean.TRUE.equals(context.get("button"))) {
+                String label=unique(dictionary.bindingInputLabels.get(displayed));
+                if(label!=null)return label;
+            }
+            String template=bindingInputTemplate(displayed);
+            if(template!=null)return template;
+            if(displayed.indexOf('\n')>=0) {
+                StringBuilder result=new StringBuilder();String[] lines=displayed.split("\\n",-1);
+                for(int i=0;i<lines.length;i++){if(i>0)result.append('\n');result.append(translateInContext(lines[i],context));}
+                return result.toString();
+            }
+            // An isolated word is not enough to tell the current key value from
+            // the Unbind Key button. Only the full template or public button role can.
+            if(dictionary.bindingInputLabels.containsKey(displayed)&&dictionary.keyBindingLabels.containsKey(displayed)
+                    &&!java.util.Objects.equals(unique(dictionary.bindingInputLabels.get(displayed)),unique(dictionary.keyBindingLabels.get(displayed))))
+                throw unavailable(displayed,"binding_input_text_requires_public_role_or_complete_template");
+        }
+        if("gamescene".equals(scope)&&(Boolean.TRUE.equals(context.get("custom_note_input"))
+                ||Boolean.TRUE.equals(context.get("custom_note_view"))||Boolean.TRUE.equals(context.get("custom_note_delete")))) {
+            String label=unique(dictionary.customNoteLabels.get(displayed));
+            if(label!=null)return label;
+        }
         if(Boolean.TRUE.equals(context.get("key_binding"))||Boolean.TRUE.equals(context.get("key_binding_panel"))) {
             String label=unique(dictionary.keyBindingLabels.get(displayed));
             if(label!=null)return label;
@@ -147,6 +170,27 @@ public final class DisplayedTextEnglish {
     private String policyResource(String displayed,String key) {
         ResourcePair resource=dictionary.policyResources.get(key);
         return resource!=null&&resource.chinese.equals(displayed)&&!containsNonLatinText(resource.english)?resource.english:null;
+    }
+
+    private String bindingInputTemplate(String displayed) {
+        Set<String> candidates=new TreeSet<>();boolean matched=false;
+        for(Template template:dictionary.bindingInputTemplates) {
+            if(!displayed.contains(template.anchor))continue;
+            Matcher matcher=template.pattern.matcher(displayed);if(!matcher.matches())continue;
+            matched=true;
+            Map<Integer,String> arguments=new HashMap<>();boolean valid=true;
+            for(int i=0;i<template.source.arguments.size();i++) {
+                String value=matcher.group(i+1);
+                String english=containsNonLatinText(value)?unique(dictionary.keyBindingLabels.get(value)):value;
+                int slot=template.source.arguments.get(i).index;
+                if(english==null||arguments.containsKey(slot)&&!arguments.get(slot).equals(english)){valid=false;break;}
+                arguments.put(slot,english);
+            }
+            if(valid){String english=template.target.render(arguments);if(english!=null)candidates.add(english);}
+        }
+        String resolved=unique(candidates);
+        if(matched&&resolved==null)throw unavailable(displayed,"binding_template_parameter_requires_public_key_domain");
+        return resolved;
     }
 
     public Map<String,Integer> statistics() { return dictionary.statistics; }
@@ -414,16 +458,25 @@ public final class DisplayedTextEnglish {
         final Map<String,ResourcePair> policyResources;
         final Map<String,Set<String>> catalogTitles;
         final Map<String,Set<String>> keyBindingLabels;
+        final Map<String,Set<String>> customNoteLabels;
+        final Map<String,Set<String>> bindingInputLabels;
+        final List<Template> bindingInputTemplates;
         Dictionary(Map<String,String> chinese,Map<String,String> english) {
             Map<String,Set<String>> entries=new TreeMap<>();List<Template> patterns=new ArrayList<>();
             Map<String,Map<String,Set<String>>> byScene=new TreeMap<>();
-            Map<String,ResourcePair> policies=new TreeMap<>();Map<String,Set<String>> catalogs=new TreeMap<>(),bindings=new TreeMap<>();
+            Map<String,ResourcePair> policies=new TreeMap<>();Map<String,Set<String>> catalogs=new TreeMap<>(),bindings=new TreeMap<>(),notes=new TreeMap<>(),bindingInputs=new TreeMap<>();
+            List<Template> bindingTemplates=new ArrayList<>();
             int pairs=0,templatePairs=0,unsupported=0;
             for(String key:new TreeSet<>(chinese.keySet())) {
                 String source=chinese.get(key),target=english.get(key);
                 if(source==null||target==null||!containsChinese(source))continue;
                 pairs++;entries.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
                 if(key.startsWith("windows.wndkeybindings."))bindings.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
+                if(key.startsWith("ui.customnotebutton$customnotewindow."))notes.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
+                if(key.startsWith("windows.wndkeybindings$wndchangebinding.")) {
+                    bindingInputs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
+                    if(!new Printf(source).arguments.isEmpty())try{bindingTemplates.add(new Template(source,target));}catch(IllegalArgumentException mismatch){/* remains unavailable */}
+                }
                 if(key.equals("windows.wndkeybindings.back")||key.equals("windows.wndsettings$displaytab.off")
                         ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no")
                         ||key.equals("items.journal.guidebook.hint_status"))
@@ -464,6 +517,12 @@ public final class DisplayedTextEnglish {
             Map<String,Set<String>> bindingLabels=new TreeMap<>();
             for(Map.Entry<String,Set<String>> entry:bindings.entrySet())bindingLabels.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
             keyBindingLabels=Collections.unmodifiableMap(bindingLabels);
+            Map<String,Set<String>> noteLabels=new TreeMap<>();
+            for(Map.Entry<String,Set<String>> entry:notes.entrySet())noteLabels.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
+            customNoteLabels=Collections.unmodifiableMap(noteLabels);
+            Map<String,Set<String>> inputLabels=new TreeMap<>();
+            for(Map.Entry<String,Set<String>> entry:bindingInputs.entrySet())inputLabels.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
+            bindingInputLabels=Collections.unmodifiableMap(inputLabels);bindingInputTemplates=Collections.unmodifiableList(bindingTemplates);
             Map<String,Set<String>> immutable=new LinkedHashMap<>();Map<String,String> unambiguous=new LinkedHashMap<>(),normalizedValues=new LinkedHashMap<>();
             Map<Character,List<String>> starts=new HashMap<>();
             int ambiguous=0,normalizedAmbiguous=0;

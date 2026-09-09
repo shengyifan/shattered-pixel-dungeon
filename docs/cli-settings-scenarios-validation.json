@@ -94,5 +94,87 @@
   "test_correction": {
     "profile": "desktop-control/build/fixtures/settings-scenes-aafa2fad28d04eaba8d77c6b3758190f",
     "reason": "Original WndKeyBindings ignores Back; use original Cancel."
+  },
+  "key_input_cancel": {
+    "test_fixture": true,
+    "counts_as_win": false,
+    "runtime_id": "runtime-e8034d60b9db4ed18b7c512c665e7bb6",
+    "profile": "desktop-control/build/fixtures/settings-scenes-648e328acae247be97d9649a3a0adcfb",
+    "cli_language": "en",
+    "gui_language": "zh",
+    "cases": [
+      {
+        "title": "Display Settings",
+        "gui": {
+          "gui_language": "CHI_SMPL",
+          "fullscreen": false,
+          "asserted_state_version": "cee6fa08-8d00-4204-8b62-ec396d443233:5"
+        },
+        "brightness": {
+          "label": "Brightness",
+          "old": 0,
+          "tested": -1,
+          "restored": true
+        },
+        "grid": {
+          "label": "Visual Grid",
+          "old": 0,
+          "tested": -1,
+          "restored": true
+        }
+      },
+      {
+        "title": "Interface Settings",
+        "gui": {
+          "gui_language": "CHI_SMPL",
+          "fullscreen": false,
+          "asserted_state_version": "cee6fa08-8d00-4204-8b62-ec396d443233:10"
+        }
+      },
+      {
+        "title": "Input Settings",
+        "gui": {
+          "gui_language": "CHI_SMPL",
+          "fullscreen": false,
+          "asserted_state_version": "cee6fa08-8d00-4204-8b62-ec396d443233:11"
+        },
+        "binding_rows": 36,
+        "binding_key_input_and_original_cancel": true,
+        "binding_back_preserved_editor": true
+      },
+      {
+        "title": "Connectivity Settings",
+        "gui": {
+          "gui_language": "CHI_SMPL",
+          "fullscreen": false,
+          "asserted_state_version": "cee6fa08-8d00-4204-8b62-ec396d443233:18"
+        }
+      },
+      {
+        "title": "Audio Settings",
+        "gui": {
+          "gui_language": "CHI_SMPL",
+          "fullscreen": false,
+          "asserted_state_version": "cee6fa08-8d00-4204-8b62-ec396d443233:19"
+        },
+        "music_volume": {
+          "label": "Music Volume",
+          "old": 10,
+          "tested": 0,
+          "restored": true
+        }
+      },
+      {
+        "title": "Language Settings",
+        "gui": {
+          "gui_language": "CHI_SMPL",
+          "fullscreen": false,
+          "asserted_state_version": "cee6fa08-8d00-4204-8b62-ec396d443233:22"
+        },
+        "current_language_available_in_english": true
+      }
+    ],
+    "build_id": "f55e5d93369bbf96cd8623f321cb99cdcd450ea75c9a33644ed50e6fb43c32c4",
+    "ok": true
   }
 }

@@ -117,4 +117,99 @@ class PublicEnglishProjectionTest {
         Map<String,Object> next=map("scene","GameScene","modal",true,"controls",Arrays.asList(map("id","confirm","role","button","text","确定")));
         assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(action,next));
     }
+
+    private static Map<String,Object> noteInput(String title,int maxLength,boolean multiline) {
+        return map("scene","GameScene","modal",true,"controls",new java.util.ArrayList<>(Arrays.asList(
+                map("id","title","role","text","text",title),
+                map("id","input","role","text_input","value","Original English user text","max_length",maxLength,"multiline",multiline),
+                map("id","confirm","role","button","text","确定"),map("id","cancel","role","button","text","取消"))));
+    }
+
+    @Test void noteInputRequiresTheMatchingStandardTitleAndPublishedInputShape() {
+        Map<String,Object> confirm=map("action","ui.activate","control","confirm","label","确定");
+        for(String title:Arrays.asList("New Text Note","新建地牢楼层备注","New Inventory Item Note","新建物品类别备注","Edit Title"))
+            assertEquals("Confirm",PublicEnglishProjection.copyWithUi(confirm,noteInput(title,50,false)).get("label"));
+        for(String title:Arrays.asList("Add Text","编辑文本"))
+            assertEquals("Confirm",PublicEnglishProjection.copyWithUi(confirm,noteInput(title,500,true)).get("label"));
+        for(Map<String,Object> ui:Arrays.asList(noteInput("New Text Note",500,true),noteInput("Add Text",50,false),noteInput("New Text Note",51,false)))
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(confirm,ui));
+    }
+
+    @Test void userTypedTitleCannotImpersonateANoteDialogAndEachInputSignaturePartIsRequired() {
+        Map<String,Object> confirm=map("action","ui.activate","control","confirm","label","确定");
+        Map<String,Object> wrong=noteInput("An unrelated dialog",50,false);
+        @SuppressWarnings("unchecked") java.util.List<Map<String,Object>> wrongNodes=(java.util.List<Map<String,Object>>)wrong.get("controls");
+        wrongNodes.get(1).put("value","New Text Note");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(confirm,wrong));
+        for(int missing=0;missing<4;missing++) {
+            Map<String,Object> ui=noteInput("New Text Note",50,false);
+            @SuppressWarnings("unchecked") java.util.List<Map<String,Object>> nodes=(java.util.List<Map<String,Object>>)ui.get("controls");
+            nodes.remove(missing);
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(confirm,ui));
+        }
+        Map<String,Object> ui=noteInput("New Text Note",50,false);ui.put("modal",false);
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(confirm,ui));
+        ui.put("modal",true);ui.put("scene","StartScene");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(confirm,ui));
+    }
+
+    @Test void noteViewDeletionUsesOnlyTheThreePublishedButtonsAndNotAUserTitle() {
+        Map<String,Object> deletion=map("action","ui.activate","control","delete","label","删除");
+        java.util.List<Map<String,Object>> nodes=new java.util.ArrayList<>(Arrays.asList(
+                map("id","title","role","text","text","A user's arbitrary title"),
+                map("id","edit","role","button","text","编辑标题"),map("id","body","role","button","text","添加文本"),
+                map("id","delete","role","button","text","删除")));
+        Map<String,Object> ui=map("scene","GameScene","modal",true,"controls",nodes);
+        assertEquals("Delete",PublicEnglishProjection.copyWithUi(deletion,ui).get("label"));
+        nodes.get(0).put("text","A different user title and hidden item association");nodes.get(2).put("text","Edit Text");
+        assertEquals("Delete",PublicEnglishProjection.copyWithUi(deletion,ui).get("label"));
+        for(int index=1;index<4;index++) {
+            Map<String,Object> removed=nodes.remove(index);
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(deletion,ui));
+            nodes.add(index,removed);
+        }
+    }
+
+    @Test void noteDeleteConfirmationNeedsTheWholePublicQuestionAndBothChoices() {
+        Map<String,Object> confirm=map("action","ui.activate","control","confirm","label","确定");
+        java.util.List<Map<String,Object>> nodes=new java.util.ArrayList<>(Arrays.asList(
+                map("id","question","role","text","text","你确定要删除这个备注吗？"),
+                map("id","confirm","role","button","text","确定"),map("id","cancel","role","button","text","取消")));
+        Map<String,Object> ui=map("scene","GameScene","modal",true,"controls",nodes);
+        assertEquals("Confirm",PublicEnglishProjection.copyWithUi(confirm,ui).get("label"));
+        nodes.get(0).put("text","Are you sure you want to delete this custom note?");
+        assertEquals("Confirm",PublicEnglishProjection.copyWithUi(confirm,ui).get("label"));
+        nodes.get(0).put("text","Are you sure you want to delete this custom note? Hidden extra text");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(confirm,ui));
+        nodes.get(0).put("text","Are you sure you want to delete this custom note?");nodes.remove(2);
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(confirm,ui));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copy(confirm));
+    }
+
+    @Test void bindingInputPublicMarkerAndButtonAncestorsDistinguishNoneFromUnbindKey() {
+        Map<String,Object> window=map("id","input-window","role","window","binding_input",true);
+        Map<String,Object> button=map("id","unbind","role","button","parent","input-window","label","无按键");
+        Map<String,Object> child=map("id","unbind-label","role","text","parent","unbind","text","无按键");
+        Map<String,Object> current=map("id","current","role","text","parent","input-window","text","当前键位：_无按键_");
+        Map<String,Object> ui=map("scene","GameScene","modal",true,"controls",Arrays.asList(window,button,child,current));
+        assertEquals("Unbind Key",PublicEnglishProjection.copyWithUi(child,ui).get("text"));
+        assertEquals("Unbind Key",PublicEnglishProjection.copyWithUi(map("action","ui.activate","control","unbind","label","无按键"),ui).get("label"));
+        assertEquals("Current binding: _None_",PublicEnglishProjection.copyWithUi(current,ui).get("text"));
+        child.put("parent","input-window");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(child,ui));
+    }
+
+    @Test void editingInputCannotBorrowOldPanelStateOrUnpublishedWindowClass() {
+        Map<String,Object> button=map("id","unbind","role","button","label","无按键");
+        Map<String,Object> window=map("id","input-window","role","window","binding_input",true);
+        Map<String,Object> ui=map("scene","GameScene","modal",true,"controls",Arrays.asList(window,button));
+        assertEquals("Unbind Key",PublicEnglishProjection.copyWithUi(button,ui).get("label"));
+        window.remove("binding_input");window.put("hidden_window","WndChangeBinding");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(button,ui));
+        window.put("binding_input","true");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(button,ui));
+        Map<String,Object> oldPanel=map("scene","GameScene","modal",true,"controls",bindingPanel());
+        assertEquals("Confirm",PublicEnglishProjection.copyWithUi(map("action","ui.activate","control","confirm","label","确定"),oldPanel).get("label"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->PublicEnglishProjection.copyWithUi(button,ui));
+    }
 }

@@ -80,11 +80,17 @@ public final class PublicEnglishProjection {
                 currentScene=(String)ui.get("scene");
                 currentNodes=new LinkedHashMap<>();
                 Set<String> buttons=new HashSet<>(),texts=new HashSet<>();
-                boolean hasBindingRow=false;
+                boolean hasBindingRow=false,hasBindingInput=false,hasNoteTitleInput=false,hasNoteBodyInput=false;
                 for(Object value:(List<?>)ui.get("controls")) if(value instanceof Map) {
                     Map<?,?> node=(Map<?,?>)value;
                     if(node.get("id") instanceof String)currentNodes.put((String)node.get("id"),node);
                     if(bindingSlots(node.get("binding_slots")))hasBindingRow=true;
+                    if(Boolean.TRUE.equals(node.get("binding_input")))hasBindingInput=true;
+                    if("text_input".equals(node.get("role"))&&node.get("max_length") instanceof Number) {
+                        double limit=((Number)node.get("max_length")).doubleValue();
+                        if(limit==50&&Boolean.FALSE.equals(node.get("multiline")))hasNoteTitleInput=true;
+                        if(limit==500&&Boolean.TRUE.equals(node.get("multiline")))hasNoteBodyInput=true;
+                    }
                     for(String key:Arrays.asList("text","label")) if(node.get(key) instanceof String) {
                         texts.add((String)node.get(key));
                         if("button".equals(node.get("role")))buttons.add((String)node.get(key));
@@ -104,6 +110,16 @@ public final class PublicEnglishProjection {
                 properties.put("key_binding_panel",hasBindingRow&&one(texts,"Action","行动")
                         &&one(texts,"Key 1","按键1")&&one(texts,"Key 2","按键2")&&one(texts,"Key 3","按键3")
                         &&one(buttons,"Default Bindings","恢复默认键位"));
+                properties.put("key_binding_input",hasBindingInput);
+                boolean noteButtons=one(buttons,"Confirm","确定")&&one(buttons,"Cancel","取消");
+                boolean noteTitle=one(texts,"New Text Note","新建文本备注","New Dungeon Floor Note","新建地牢楼层备注",
+                        "New Inventory Item Note","新建背包物品备注","New Item Type Note","新建物品类别备注","Edit Title","编辑标题");
+                boolean noteBody=one(texts,"Add Text","添加文本","Edit Text","编辑文本");
+                properties.put("custom_note_input",game&&modal&&noteButtons&&(hasNoteTitleInput&&noteTitle||hasNoteBodyInput&&noteBody));
+                properties.put("custom_note_view",game&&modal&&one(buttons,"Edit Title","编辑标题")
+                        &&one(buttons,"Add Text","添加文本","Edit Text","编辑文本")&&one(buttons,"Delete","删除"));
+                properties.put("custom_note_delete",game&&modal&&noteButtons&&one(texts,
+                        "Are you sure you want to delete this custom note?","你确定要删除这个备注吗？"));
             } else if(source.get("scene") instanceof String) {
                 currentScene=(String)source.get("scene");properties.put("scene",currentScene);
             }
@@ -111,11 +127,12 @@ public final class PublicEnglishProjection {
                     source.get("control") instanceof String?currentNodes.get(source.get("control")):null;
             if(node!=null) {
                 properties.put("role",node.get("role"));
-                properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);
+                properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);properties.put("button",false);
                 Set<Object> visited=new HashSet<>();
                 for(Map<?,?> ancestor=node;ancestor!=null;) {
                     if(ancestor.containsKey("checked"))properties.put("checkbox",true);
                     if("slider".equals(ancestor.get("role")))properties.put("slider",true);
+                    if("button".equals(ancestor.get("role")))properties.put("button",true);
                     if(bindingSlots(ancestor.get("binding_slots")))properties.put("key_binding",true);
                     if(!properties.containsKey("shortcut_action")&&ancestor.get("shortcut_action") instanceof String)
                         properties.put("shortcut_action",ancestor.get("shortcut_action"));

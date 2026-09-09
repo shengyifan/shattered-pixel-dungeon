@@ -405,6 +405,65 @@ class DisplayedTextEnglishTest {
         assertEquals("Partially displayed text",t.translateVisibleInContext("确",true,Map.of("key_binding_panel",true)).text);
     }
 
+    @Test void customNoteFlagsResolveOnlyCompleteNoteResourceTextInThePublicGameScene() {
+        DisplayedTextEnglish t=DisplayedTextEnglish.fromResources(
+                Map.of("ui.customnotebutton$customnotewindow.confirm","确定","other.confirm","确定",
+                        "ui.customnotebutton$customnotewindow.delete","删除","other.delete","删除"),
+                Map.of("ui.customnotebutton$customnotewindow.confirm","Confirm","other.confirm","Okay",
+                        "ui.customnotebutton$customnotewindow.delete","Delete","other.delete","Erase"));
+        for(String flag:java.util.Arrays.asList("custom_note_input","custom_note_view","custom_note_delete")) {
+            assertEquals("Confirm",t.translateInContext("确定",Map.of("scene","GameScene",flag,true)));
+            assertEquals("Delete",t.translateInContext("删除",Map.of("scene","game",flag,true)));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("确定",Map.of("scene","GameScene",flag,false)));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("确定",Map.of("scene","StartScene",flag,true)));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("确定",Map.of(flag,true)));
+        }
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("删除未知尾文",Map.of("scene","GameScene","custom_note_view",true)));
+        assertEquals("Partially displayed text",t.translateVisibleInContext("确",true,Map.of("scene","GameScene","custom_note_input",true)).text);
+    }
+
+    private static DisplayedTextEnglish bindingInputTranslator() {
+        return DisplayedTextEnglish.fromResources(
+                Map.of("windows.wndkeybindings.none","无按键","windows.wndkeybindings.wait","等待",
+                        "windows.wndkeybindings.quickslot_selector","选择快捷栏","ui.toolbar.quickslot_select","选择快捷栏",
+                        "windows.wndkeybindings$wndchangebinding.unbind","无按键",
+                        "windows.wndkeybindings$wndchangebinding.desc_current","当前键位：_%s_",
+                        "windows.wndkeybindings$wndchangebinding.desc_first","按下一个按键以替代_%s_的第一键位。",
+                        "other.unrelated","额外语义"),
+                Map.of("windows.wndkeybindings.none","None","windows.wndkeybindings.wait","Wait",
+                        "windows.wndkeybindings.quickslot_selector","Quickslot Selector","ui.toolbar.quickslot_select","Select Quickslot",
+                        "windows.wndkeybindings$wndchangebinding.unbind","Unbind Key",
+                        "windows.wndkeybindings$wndchangebinding.desc_current","Current binding: _%s_",
+                        "windows.wndkeybindings$wndchangebinding.desc_first","Press a key to change the first key binding for: _%s_.",
+                        "other.unrelated","An unrelated global meaning"));
+    }
+
+    @Test void bindingInputButtonAndCompleteTemplateUseDifferentExplicitResourceDomains() {
+        DisplayedTextEnglish t=bindingInputTranslator();
+        Map<String,Object> input=Map.of("key_binding_input",true);
+        assertEquals("Unbind Key",t.translateInContext("无按键",Map.of("key_binding_input",true,"button",true)));
+        assertEquals("Current binding: _None_",t.translateInContext("当前键位：_无按键_",input));
+        assertEquals("Press a key to change the first key binding for: _Quickslot Selector_.",
+                t.translateInContext("按下一个按键以替代_选择快捷栏_的第一键位。",input));
+        assertEquals("Press a key to change the first key binding for: _Wait_.\nCurrent binding: _None_",
+                t.translateInContext("按下一个按键以替代_等待_的第一键位。\n当前键位：_无按键_",input));
+        assertEquals("Current binding: _Space_",t.translateInContext("当前键位：_Space_",input));
+    }
+
+    @Test void bindingInputCannotGuessIsolatedWordsOrUseUnknownGlobalParameterMeanings() {
+        DisplayedTextEnglish t=bindingInputTranslator();
+        for(Map<String,Object> context:java.util.Arrays.<Map<String,Object>>asList(Map.of("key_binding_input",false,"button",true),
+                Map.of("key_binding_input",true,"button",false),Map.of("key_binding_input",true,"key_binding_panel",true),
+                Map.of("hidden_class","WndChangeBinding")))
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("无按键",context));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("当前键位：_额外语义_",Map.of("key_binding_input",true)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("当前键位：_无按键_未知尾文",Map.of("key_binding_input",true)));
+        assertEquals("Partially displayed text",t.translateVisibleInContext("当前键位：_无",true,Map.of("key_binding_input",true)).text);
+        String first=t.translateInContext("当前键位：_无按键_",Map.of("scene","GameScene","key_binding_input",true,"hidden_capture","object A"));
+        String second=t.translateInContext("当前键位：_无按键_",Map.of("scene","GameScene","key_binding_input",true,"hidden_capture",new Object()));
+        assertEquals(first,second);
+    }
+
     @Test void unknownChineseHasStableEnglishErrorAndOriginalOnlyInDiagnosticAccessor() {
         DisplayedTextEnglish t=translator("战士","warrior");
         DisplayedTextEnglish.PublicTextUnavailableException error=assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,

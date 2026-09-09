@@ -58,6 +58,15 @@ def test_settings(client, result):
             state = choose(client, "Key Bindings")
             assert ui(state)["modal"] and controls(state, "ui.binding_slot"), ui(state)
             evidence["binding_rows"] = len(controls(state, "ui.binding_slot"))
+            row=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            editing=act(client,"ui.binding_slot",control=row["control"],slot=1)
+            key=controls(editing,"ui.binding_key")[0]
+            edited=act(client,"ui.binding_key",control=key["control"],keycode=142)
+            assert any("F12" in n.get("text","") for n in nodes(edited))
+            state=choose(client,"Cancel")
+            unchanged=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            assert "F12" not in unchanged.get("label","")
+            evidence["binding_key_input_and_original_cancel"] = True
             state = act(client, "ui.back")
             assert controls(state,"ui.binding_slot"), "The original binding editor ignores Back to protect edits"
             evidence["binding_back_preserved_editor"] = True

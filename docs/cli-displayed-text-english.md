@@ -53,6 +53,11 @@
 | JournalScene 且完整 heading 严格匹配 `_名称_ (数字/数字)`，可带末尾冒号 | 装备、投掷武器、法杖、饰物等 | 只搜索 `journal.catalog.*.title` 与 `windows.wndjournal$catalogtab.title_*`，保留已经显示的计数和格式 |
 | 当前 node、公开 parent 链或 action.control 所指行具有 `binding_slots:[1,2,3]` | 键位行的完整名称或完整多行文本，例如 `选择快捷栏\nNone\nNone\nNone` | `key_binding=true` 时只在 `windows.wndkeybindings.*` 中查唯一完整资源单元，得到 Quickslot Selector；不把普通 Toolbar 文案归为键位行 |
 | 同一公开 UI 同时存在至少一个精确三槽绑定行、Action/行动、Key 1/按键1、Key 2/按键2、Key 3/按键3 表头和 Default Bindings/恢复默认键位按钮 | 键位主面板文案，包括完整“确定” | `key_binding_panel=true`，仍限定 `windows.wndkeybindings.*` 完整资源域，得到 Confirm |
+| 当前公开 UI 中有 `binding_input=true` 节点，且当前 node 或公开 parent 链是 button | 键位编辑按钮的完整文字 | `key_binding_input` + `button`，只用 `windows.wndkeybindings$wndchangebinding.*`；无按键 → Unbind Key |
+| 同一编辑输入标记存在，文本完整匹配键位编辑子域的已显示模板 | 当前键位、按下某键以修改某动作等说明 | 外层只用编辑子域，已显示参数只用主 `windows.wndkeybindings.*`，所以 Current binding 的无按键参数 → None |
+| GameScene + modal，标准 Note 标题、Confirm/Cancel 及匹配的公开输入规格全部存在 | 自定义 Note 输入文案 | `custom_note_input=true`，只限定 `ui.customnotebutton$customnotewindow.*` |
+| GameScene + modal，同时有 Edit Title、Add Text 或 Edit Text、Delete 三类按钮 | 当前自定义 Note 视图文案 | `custom_note_view=true`，同 Note 资源域将删除译为 Delete |
+| GameScene + modal，完整原生删除 Note 问题及 Confirm/Cancel 同时显示 | Note 删除确认文案 | `custom_note_delete=true`，同 Note 资源域将确定译为 Confirm |
 
 `save_details` 的实际公开签名是 StartScene + modal，同时出现 Continue/继续、Erase/删除按钮，以及 Strength/力量、Health/生命、Gold Collected/金币收集数、Maximum Depth/最高层数标签；不存在此前假设的 Info/Enter 按钮。`game_menu` 要求 GameScene + modal 且同时出现 Settings/设置和 Main Menu/主菜单。`chasm_prompt` 要求 GameScene + modal，且实际显示完整原生跳崖确认问题或其对应英文；不从近似问题或隐藏 Window 类推断。
 
@@ -60,7 +65,11 @@
 
 `binding_slots` 是现有 `ui.binding_slot.slots` 已公布的同一个三槽事实，不公开 Java 类名或隐藏键位。关闭或不可操作的行仍可描述其槽位，但不会因此新增可执行动作。上下文只沿已公开关联传播；缺失 parent、没有该 node 的 action.control、槽位为字符串或不是精确的 1/2/3，都不能获得键位语境。过去响应没有这些公开关联时不会借用后来响应的 UI 补上。
 
-主面板签名中的每个要素都不可缺少；只有“确定”按钮或隐藏的 Window 类名不够。主面板以外的键位编辑子窗没有因此自动获得上下文，需其自身已公开输入事实另行验证。
+主面板签名中的每个要素都不可缺少；只有“确定”按钮或隐藏的 Window 类名不够。键位编辑子窗不会从旧主面板自动沿用上下文，只有当前可见输入节点发布 `binding_input=true` 时，才采用上表的编辑规则。这个标记与原 `ui.binding_key` 是同一事实，不导出 Java 类型；停用输入仍不会因此新增可执行动作。
+
+“无按键”在当前键位说明中是 None，在可点击的解除绑定按钮上是 Unbind Key，不能整窗统一替换。button 布尔仅来自已公开 role 链；孤立且非 button 的同词仍拒绝。子域完整模板的参数必须是已经显示的主键位域名称或现成英文键名，不能因为全局其他资源能译一个词就擅自把它当作动作/键名。未知参数、尾文和被裁一半的模板继续拒绝或返回 partial，其他任意 `$hidden` 子域没有开放。
+
+Note 标题输入限 50 字符、单行，并要求完整标题匹配 New Text Note、New Dungeon Floor Note、New Inventory Item Note、New Item Type Note 或 Edit Title 的中英文资源；正文输入限 500 字符、多行，并要求 Add Text 或 Edit Text。两类规格不能交换。签名不会读取 `text_input.value` 中的用户标题来猜窗口类型。删除确认问题必须完整等于 `Are you sure you want to delete this custom note?` 或原中文“你确定要删除这个备注吗？”。缺少按钮、输入、标准标题、对应场景或 modal 标志时不获得此消歧。
 
 ## 覆盖与缓存
 
@@ -75,7 +84,7 @@
 | 格式模板 | 584 对全部成功解析，参数集合没有缺项 |
 | 实际带参模板样本 | 584 个，每模板使用一组确定性的可见名称/数值；578 个逐字匹配原英文 `String.format`，6 个安全拒绝 |
 | 公开语言名称 | 23 种全部测试，含中文以外脚本和 Latin 名称 |
-| 独立单测 | 43 项通过 |
+| 独立单测 | 46 项通过 |
 
 6 个带参拒绝来自三组真实资源碰撞：`神圣%s` 对应 `%s of light` / `holy %s`；`死于：%s` 对应 `Slain by: %s` / `Killed by: %s`；矛的实际能力说明和典型能力说明具有完全相同中文，英文却有无 `typically` 的差别。这些不能通过读取隐藏模型来区分。模板样本没有穷举所有真实参数组合，不能据此宣称整个游戏所有显示文本都已覆盖。
 
@@ -83,7 +92,7 @@
 
 Supporter 页的 intro、跨多行 Patreon 说明、以括号开头的英文回报提示及 `- Evan` 签名，也用原已显示组合文本进行了精确回归。584 模板样本的允许拒绝项现在锁定为上述六个资源 key；未预期的新拒绝会使测试失败，不能在“多数模板通过”的统计中被掩盖。
 
-键位行、主面板与完整高亮包装补充同时通过 9 项 `PublicEnglishProjectionTest` 和 11 项 `UiBridgeTest`，与 43 项转换器测试合计 63 项定向检查；真实设置操作仍由单独的 settings 场景报告验收，不把这些单测计为实机通过。
+键位、完整高亮包装和 Note 公开签名补充同时通过 15 项 `PublicEnglishProjectionTest` 和 12 项 `UiBridgeTest`，与 46 项转换器测试合计 73 项定向检查；真实操作由单独的 settings / notes 场景报告验收，不把这些单测计为实机通过。
 
 全部无上下文歧义来源列在 [cli-displayed-text-english.json](cli-displayed-text-english.json)，原始 55 组及原英文候选保持不变，另列规范化支持项，不会因少数公开 context 或规范化已可处理就把整个目录标为通过。`ambiguous_chinese_strings=55` 仍表示原始候选差异；新增 `normalized_ambiguous_strings=3` 表示受上述规则支持的子集。通用 `button` 角色不能解决所有碰撞；实际关闭窗口的 `Close` 仍需要足够公开证据，不能因为它不是 slider 就反向猜测。`暴雨` 的 terrain 表现与 Combo 动作等也需要已公开且足以区分的上下文。`神圣%s` 和矛说明中 `typically` 的差异没有放宽。尚未接入的上下文不会被假定存在。
 
