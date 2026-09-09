@@ -29,6 +29,7 @@ public final class DisplayedTextEnglish {
     private static final Pattern FORMAT = Pattern.compile("%(?:(\\d+)\\$)?([-#+0,(<]*)(\\d+)?(?:\\.(\\d+))?([sdfxXeEgGbBhH%])");
     private static final Map<String,String> PUBLIC_SCENE_SCOPES=publicSceneScopes();
     private static final Pattern CATALOG_HEADING=Pattern.compile("\\A_([^_\\r\\n]+)_ \\(([0-9]+)/([0-9]+)\\)(:?)\\z");
+    private static final Pattern ABILITY_ROW=Pattern.compile("\\A_([^_\\r\\n]+) (\\([0-9]+(?:连击|内力)\\)):_ ([\\s\\S]+)\\z");
     // Reviewed display vocabulary preserves the distinction available in the Chinese
     // text itself. It must not infer whether this word describes an ability or a buff.
     private static final Map<String,String> CONSERVATIVE_WORDS=Collections.singletonMap("凝神","Focus");
@@ -53,6 +54,7 @@ public final class DisplayedTextEnglish {
         if(language!=null)return language;
         if (!containsNonLatinText(displayed)) return displayed;
         if (displayed.length() > MAX_TEXT) throw unavailable(displayed, "displayed_text_too_long");
+        String row=abilityRow(displayed);if(row!=null)return row;
         if(dictionary.exact.containsKey(displayed)) {
             String exact=exactTranslation(displayed,inspectedLevelKnown);
             if(exact==null)throw unavailable(displayed,"ambiguous_resource_translation");
@@ -104,6 +106,13 @@ public final class DisplayedTextEnglish {
         String scope=PUBLIC_SCENE_SCOPES.get(scene);
         String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
         String resolved;
+        if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("button"))
+                &&context.get("inspected_item_level_known") instanceof Boolean) {
+            if(Boolean.TRUE.equals(context.get("cloak_item_menu"))
+                    &&(resolved=policyResource(displayed,"items.artifacts.cloakofshadows.ac_stealth"))!=null)return resolved;
+            if(Boolean.TRUE.equals(context.get("sneak_weapon_menu"))
+                    &&(resolved=policyResource(displayed,"items.weapon.melee.dagger.ability_name"))!=null)return resolved;
+        }
         if("heroselectscene".equals(scope)&&Boolean.TRUE.equals(context.get("hero_subclass_page"))
                 &&(resolved=policyResource(displayed,"windows.wndheroinfo.subclasses"))!=null)return resolved;
         if("rankingsscene".equals(scope)&&Boolean.TRUE.equals(context.get("ranking_record"))) {
@@ -219,6 +228,33 @@ public final class DisplayedTextEnglish {
 
     public Map<String,Integer> statistics() { return dictionary.statistics; }
 
+    private String abilityRow(String displayed) {
+        Matcher header=ABILITY_ROW.matcher(displayed);if(!header.matches())return null;
+        Set<String> candidates=new TreeSet<>();
+        for(AbilityRow row:dictionary.abilityRows) {
+            if(!row.name.chinese.equals(header.group(1)))continue;
+            String cost=completePair(row.cost,row.costTemplate,header.group(2));
+            String body=completePair(row.body,row.bodyTemplate,header.group(3));
+            if(cost!=null&&body!=null)candidates.add("_"+row.name.english+" "+cost+":_ "+body);
+        }
+        String translated=unique(candidates);
+        if(translated==null)throw unavailable(displayed,"displayed_ability_row_requires_matching_full_resources");
+        return translated;
+    }
+
+    private String completePair(ResourcePair pair,Template template,String displayed) {
+        if(template==null)return pair.chinese.equals(displayed)?pair.english:null;
+        Matcher matcher=template.pattern.matcher(displayed);if(!matcher.matches())return null;
+        Map<Integer,String> arguments=new HashMap<>();
+        for(int i=0;i<template.source.arguments.size();i++) {
+            int slot=template.source.arguments.get(i).index;String value;
+            try{value=translate(matcher.group(i+1));}catch(PublicTextUnavailableException unavailable){return null;}
+            if(arguments.containsKey(slot)&&!arguments.get(slot).equals(value))return null;
+            arguments.put(slot,value);
+        }
+        return template.target.render(arguments);
+    }
+
     /** A result already in this public UI may resolve a complete resource match, never a prefix. */
     private String matchingPublicCellPrompt(String displayed,String prompt) {
         if(prompt.isEmpty()||containsNonLatinText(prompt))return null;
@@ -302,11 +338,11 @@ public final class DisplayedTextEnglish {
         }
         if(!candidates.isEmpty()) return remember(text,unique(candidates),context);
         // Native descriptions append complete resource/template units with visible
-        // spaces. A unit may itself contain several sentences: splitting it at every
+        // whitespace. A unit may itself contain several sentences: splitting it at every
         // Chinese full stop would discard that resource's exact matching boundary.
         Set<String> concatenated=new TreeSet<>();
-        for(int i=1;i<text.length()-1;i++)if(text.charAt(i)==' '&&text.charAt(i-1)!=' ') {
-            int end=i+1;while(end<text.length()&&text.charAt(end)==' ')end++;
+        for(int i=1;i<text.length()-1;i++)if(Character.isWhitespace(text.charAt(i))&&!Character.isWhitespace(text.charAt(i-1))) {
+            int end=i+1;while(end<text.length()&&Character.isWhitespace(text.charAt(end)))end++;
             if(end==text.length())continue;
             context.spend();
             Set<String> left=completeResourceUnit(text.substring(0,i),context,depth+1);
@@ -505,6 +541,15 @@ public final class DisplayedTextEnglish {
         final String chinese,english;
         ResourcePair(String chinese,String english){this.chinese=chinese;this.english=english;}
     }
+    private static final class AbilityRow {
+        final ResourcePair name,cost,body;
+        final Template costTemplate,bodyTemplate;
+        AbilityRow(ResourcePair name,ResourcePair cost,ResourcePair body) {
+            this.name=name;this.cost=cost;this.body=body;
+            costTemplate=new Template(cost.chinese,cost.english);
+            bodyTemplate=new Printf(body.chinese).arguments.isEmpty()?null:new Template(body.chinese,body.english);
+        }
+    }
     private static final class Printf {
         final List<String> literals=new ArrayList<>();
         final List<Argument> arguments=new ArrayList<>();
@@ -571,6 +616,7 @@ public final class DisplayedTextEnglish {
         final Map<String,Set<String>> bindingInputLabels;
         final List<Template> bindingInputTemplates;
         final Template spearActual,spearTypical;
+        final List<AbilityRow> abilityRows;
         Dictionary(Map<String,String> chinese,Map<String,String> english) {
             Map<String,Set<String>> entries=new TreeMap<>();List<Template> patterns=new ArrayList<>();
             Map<String,Map<String,Set<String>>> byScene=new TreeMap<>();
@@ -578,6 +624,23 @@ public final class DisplayedTextEnglish {
             List<Template> bindingTemplates=new ArrayList<>();
             Template actualSpear=null,typicalSpear=null;
             int pairs=0,templatePairs=0,unsupported=0;
+            List<AbilityRow> rows=new ArrayList<>();
+            for(String key:new TreeSet<>(chinese.keySet())) {
+                boolean combo=key.matches("actors\\.buffs\\.combo\\$combomove\\.[a-z]+\\.name");
+                boolean monk=key.matches("actors\\.buffs\\.monkenergy\\$monkability\\$[a-z]+\\.name");
+                if(!combo&&!monk)continue;
+                String cost=combo?"windows.wndcombo.combo_req":"windows.wndmonkabilities.energycost";
+                String base=key.substring(0,key.length()-4);
+                for(String suffix:new String[]{"desc","empower_desc"}) {
+                    if(english.get(key)==null||chinese.get(cost)==null||english.get(cost)==null
+                            ||chinese.get(base+suffix)==null||english.get(base+suffix)==null)continue;
+                    try{rows.add(new AbilityRow(new ResourcePair(chinese.get(key),english.get(key)),
+                            new ResourcePair(chinese.get(cost),english.get(cost)),
+                            new ResourcePair(chinese.get(base+suffix),english.get(base+suffix))));}
+                    catch(IllegalArgumentException unsupportedRow){/* Exact displayed row remains unavailable. */}
+                }
+            }
+            abilityRows=Collections.unmodifiableList(rows);
             for(String key:new TreeSet<>(chinese.keySet())) {
                 String source=chinese.get(key),target=english.get(key);
                 if(source==null||target==null||!containsChinese(source))continue;
@@ -591,7 +654,8 @@ public final class DisplayedTextEnglish {
                 if(key.equals("windows.wndkeybindings.back")||key.equals("windows.wndsettings$displaytab.off")
                         ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no")
                         ||key.equals("items.journal.guidebook.hint_status")||key.equals("windows.wndvictorycongrats.close")
-                        ||key.equals("windows.wndheroinfo.subclasses")||key.equals("rankings$record.won"))
+                        ||key.equals("windows.wndheroinfo.subclasses")||key.equals("rankings$record.won")
+                        ||key.equals("items.artifacts.cloakofshadows.ac_stealth")||key.equals("items.weapon.melee.dagger.ability_name"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
                     catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);

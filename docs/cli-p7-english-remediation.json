@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "test_fixture": true,
+  "counts_as_win": false,
+  "cli_language": "en",
+  "gui_language": "CHI_SMPL",
+  "windowed": true,
+  "baseline_runtime": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+  "baseline_status": "in_progress",
+  "note": "These are narrow reruns of failed cases. The original complete 188-case baseline remains unchanged and is not claimed to pass.",
+  "supplemental_passed": 6,
+  "supplemental_total": 6,
+  "cases": [
+    {
+      "case": "subclass:WARDEN",
+      "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/subclass-WARDEN-51d191eb47574ad6b3111a561b91ccc8",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "WARDEN",
+        "active_indicator": false,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "armor:Shockwave",
+      "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/armor-Shockwave-8a37616298c447bca9abfad8155d53e5",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "Shockwave",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "class:ROGUE",
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/class-ROGUE-1f729f902aff4a00bd70f8c1c129c96b",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "initial_item": "cloak of shadows",
+        "opened_real_item_window": true
+      }
+    },
+    {
+      "case": "subclass:GLADIATOR",
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/subclass-GLADIATOR-94ed6585528d4381865b56c5bc7dfe8c",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "GLADIATOR",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:MONK",
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/subclass-MONK-1211ac5c33ae4041825c6dd8fdf281af",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "MONK",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "weapon:Dagger",
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "passed": true,
+      "profile": "desktop-control/build/fixtures/weapon-Dagger-e86e32883e5440e380ae00cc3260bb81",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Dagger",
+        "ability_label": "sneak",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.0
+      }
+    }
+  ]
+}

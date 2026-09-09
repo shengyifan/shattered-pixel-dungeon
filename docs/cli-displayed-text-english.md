@@ -111,3 +111,9 @@ Supporter 页的 intro、跨多行 Patreon 说明、以括号开头的英文回�
 当原UI用空格拼接多条资源时，翻译先对完整资源或模板尝试边界，再完整翻译剩余已显示文字。多句模板保持整体，所有分解结果必须唯一，未知尾部和歧义都会拒绝；原数字与可见分隔符保留。7项正反例和WARDEN、Shockwave两项原生施放专项通过，结果保存在 `desktop-control/build/fixtures/runtime-96551553ca2a4d1fb60019fb00082495/results.json`。
 
 Hero Info专精标题和胜利排行过去时分别受完整公开页签说明、非模态排行按钮完整三行显示签名约束。4项边界测试覆盖缺失场景、窗口、父链、尾文和历史上下文；不读取隐藏职业或rec.win。六职业4页与原胜利窗口完整流程的证据分别见 `cli-hero-info-validation.json`、`cli-ending-amulet-validation.json`。
+
+## 招式列表与物品菜单
+
+角斗士与武僧的原列表把完整招式名、完整消耗模板及完整说明组合为一行。转换器仅在三者配对且结果唯一时输出对应原英文；不能用裸露“暴雨”等名称猜测上下文。暗影斗篷和匕首系菜单仅在当前inspected_item所指公开窗口、完整物品标题、原DROP/THROW/EQUIP或UNEQUIP按钮齐全时区分STEALTH和sneak，并限制到该根窗口内的按钮父链。
+
+两组新增10项正反例通过，相关定向合计113项。真实盗贼、角斗士、武僧、匕首4项均通过，82次GUI后置核验；详见 `cli-p7-english-remediation.json`。原188项冻结批次的失败保留，补验与原报告分开。

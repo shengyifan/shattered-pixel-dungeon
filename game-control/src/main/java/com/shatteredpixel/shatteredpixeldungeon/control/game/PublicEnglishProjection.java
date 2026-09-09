@@ -116,6 +116,15 @@ public final class PublicEnglishProjection {
                 boolean game="GameScene".equals(currentScene)||"game".equals(currentScene);
                 boolean start="StartScene".equals(currentScene)||"start".equals(currentScene);
                 boolean modal=Boolean.TRUE.equals(ui.get("modal"));
+                Set<String> itemTexts=new HashSet<>(),itemButtons=new HashSet<>();
+                if(currentInspectedControl!=null)for(Map<?,?> node:currentNodes.values())if(withinRoot(node,currentNodes,currentInspectedControl))
+                    for(String key:Arrays.asList("text","label"))if(node.get(key) instanceof String) {
+                        itemTexts.add((String)node.get(key));if("button".equals(node.get("role")))itemButtons.add((String)node.get(key));
+                    }
+                boolean originalItemMenu=game&&modal&&currentInspectedControl!=null
+                        &&one(itemButtons,"DROP","放下")&&one(itemButtons,"THROW","扔出")&&one(itemButtons,"EQUIP","装备","UNEQUIP","取下");
+                properties.put("cloak_item_menu",originalItemMenu&&itemTitle(itemTexts,"暗影斗篷","cloak of shadows"));
+                properties.put("sneak_weapon_menu",originalItemMenu&&itemTitle(itemTexts,"匕首","长匕首","暗杀之刃","dagger","dirk","assassin's blade"));
                 properties.put("victory_congratulations",("RankingsScene".equals(currentScene)||"rankings".equals(currentScene))
                         &&modal&&one(texts,"Victory!","获胜！")&&one(buttons,"Support","赞助")&&one(buttons,"Close","关闭")
                         &&one(texts,"Congratulations on conquering the dungeon! You've unlocked some new features that are available when choosing a hero:",
@@ -181,6 +190,20 @@ public final class PublicEnglishProjection {
         }
         private static boolean one(Set<String> values,String... alternatives) {
             for(String value:alternatives)if(values.contains(value))return true;
+            return false;
+        }
+        private static boolean itemTitle(Set<String> values,String... names) {
+            for(String value:values)for(String name:names)
+                if(value.matches("(?i)"+java.util.regex.Pattern.quote(name)+"(?: [+-][0-9]+)?(?: x[1-9][0-9]*)?"))return true;
+            return false;
+        }
+        private static boolean withinRoot(Map<?,?> node,Map<String,Map<?,?>> nodes,String root) {
+            Set<Object> visited=new HashSet<>();
+            for(Map<?,?> current=node;current!=null;) {
+                if(root.equals(current.get("id")))return true;
+                Object parent=current.get("parent");if(parent==null||!visited.add(parent))return false;
+                current=nodes.get(parent);
+            }
             return false;
         }
         private static boolean bindingSlots(Object value) {
