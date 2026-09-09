@@ -16,6 +16,15 @@
 
 此组没有确认种子生成后的实际游戏、每日游戏真正创建或Randomize的Confirm分支，不能据此把全部开局配置标为通过。后续从这些确认之前的状态分别构造并测试。
 
+## 原确认后的游戏创建补充
+
+随后独立补充两项通过：
+
+- `menu-options-unlocked-03bd88ad7ef34edf8b80a442ecce68fc`通过原Set设置`ABC-DEF-GHI`，再用原Start创建实际一级战士，取得新run scope；同版本后置断言确认`Dungeon.customSeedText`为该输入且非daily。正常保存并退出。
+- `menu-options-daily-11d1a1e7c54743649c4fcf18eb556899`通过原Daily Run→Yes创建实际一级战士，取得新run scope；后置断言确认daily=true、dailyReplay=false及原日期种子标记，正常保存退出。没有改系统时钟或直接调用初始化作为操作替代。
+
+两项均保持英文CLI、中文窗口化，新增证据保存在原JSON的`new_game_cases`，没有回写此前仅配置验证的结果。种子开局测试曾多加一次Back，按原游戏正确退到TitleScene，测试修正为直接使用当前已广告Start；这不是生产故障。Randomize确认和daily复玩/已有局拒绝仍待独立场景。
+
 ```sh
 ./gradlew :desktop-control:writeTestRuntimeClasspath
 python3 desktop-control/src/test/python/menu_options_scenario_smoke.py

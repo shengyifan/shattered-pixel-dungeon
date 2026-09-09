@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Construct prior profile progress, then exercise original opening-options callbacks."""
 import json
+import argparse
 from pathlib import Path
 import time
 import traceback
 import uuid
 
-from fixture_smoke import FixtureClient, assert_gui_environment, freeze_runtime
+from fixture_smoke import FixtureClient, assert_gui_environment, freeze_runtime, reach_game
 from low_frequency_smoke import act
 from menu_scenario_smoke import choose, return_to_title, ui
 
@@ -99,6 +100,31 @@ def unlocked(client, results):
     assert any(a.get("label")=="Custom Seed" for a in controls(cancelled)) and not menu_assertion(client,cancelled)["daily"]
     results.append({"case":"daily_decline","native_prompt_and_no":True,"game_created":False})
 
+    seed=choose(client,"Custom Seed")
+    field=controls(seed,"ui.text")[0]["control"]
+    act(client,"ui.text",control=field,text="ABC-DEF-GHI")
+    choose(client,"Set")
+    choose(client,"Start")
+    game=reach_game(client,"WARRIOR")
+    applied=menu_assertion(client,game)
+    assert applied["game_custom_seed"]=="ABC-DEF-GHI" and not applied["daily"]
+    assert game["scope_id"].startswith("run:") and game["observation"]["hero"]["level"]==1
+    assert_gui_environment(client.profile,game)
+    results.append({"case":"seeded_game_creation","original_start_created_run":True,"original_seed_applied":True,"hero_level":1})
+
+
+def daily_start(client,results):
+    initial=prepared_menu(client)
+    choose(client,"Daily Run")
+    choose(client,"Yes")
+    game=reach_game(client,"WARRIOR")
+    applied=menu_assertion(client,game)
+    assert applied["daily"] is True and applied["daily_replay"] is False
+    assert applied["game_custom_seed"] and game["scope_id"]!=initial["scope_id"]
+    assert game["observation"]["hero"]["level"]==1
+    assert_gui_environment(client.profile,game)
+    results.append({"case":"daily_game_creation","original_yes_created_run":True,"original_daily_flags_applied":True,"hero_level":1})
+
 
 def run_case(root,classpath,runtime_id,name):
     profile=root/"desktop-control/build/fixtures"/("menu-options-"+name+"-"+uuid.uuid4().hex)
@@ -111,14 +137,19 @@ def run_case(root,classpath,runtime_id,name):
     try:
         hello=client.request("protocol.info");assert hello["ok"],hello
         result["build_id"]=hello["result"]["build_id"]
-        (locked if name=="locked" else unlocked)(client,result["cases"])
+        {"locked":locked,"unlocked":unlocked,"daily":daily_start}[name](client,result["cases"])
         result["ok"]=True
     except Exception as error:
         result.update(ok=False,error=repr(error),traceback=traceback.format_exc())
     finally:
         try:
             if result.get("ok"):
-                return_to_title(client);client.finish();assert client.process.returncode==0
+                current=client.state()
+                if ui(current)["scene"]=="GameScene":
+                    assert current["phase"]=="player_ready"
+                    act(client,"game.save")
+                else:return_to_title(client)
+                client.finish();assert client.process.returncode==0
             elif client.process.poll() is None:
                 client.process.stdin.close();client.process.wait(timeout=35)
         except Exception as error:result.update(ok=False,cleanup_error=repr(error))
@@ -131,9 +162,13 @@ def run_case(root,classpath,runtime_id,name):
 
 
 def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--cases",default="locked,unlocked,daily")
+    names=parser.parse_args().cases.split(",")
+    assert all(name in {"locked","unlocked","daily"} for name in names)
     root=Path(__file__).resolve().parents[4]
     classpath,runtime_id=freeze_runtime(root,(root/"desktop-control/build/test-runtime-classpath.txt").read_text().strip())
-    reports=[run_case(root,classpath,runtime_id,name) for name in ("locked","unlocked")]
+    reports=[run_case(root,classpath,runtime_id,name) for name in names]
     (root/"desktop-control/build/menu-options-validation.json").write_text(json.dumps(reports,ensure_ascii=False,indent=2)+"\n")
     if not all(r.get("ok") for r in reports):raise SystemExit(1)
 

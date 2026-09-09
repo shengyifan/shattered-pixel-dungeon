@@ -64,9 +64,67 @@
   ],
   "scope": "profile_progress_then_original_menu_callbacks",
   "not_verified": [
-    "seeded_game_creation",
-    "daily_game_creation",
     "randomize_confirm",
-    "randomize_saved_challenge_count"
+    "randomize_saved_challenge_count",
+    "daily_repeat_and_existing_daily_rejection"
+  ],
+  "new_game_cases": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "menu:unlocked",
+      "runtime_id": "runtime-87d1692543a3496cbec6700ebeeaf7ae",
+      "profile": "desktop-control/build/fixtures/menu-options-unlocked-03bd88ad7ef34edf8b80a442ecce68fc",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "cases": [
+        {
+          "case": "seed_set_clear",
+          "invalid_length_rejected_without_edit": true,
+          "actual_setting_roundtrip": true
+        },
+        {
+          "case": "challenge_toggle",
+          "challenge_label": "Hostile champions",
+          "persisted_and_restored": true
+        },
+        {
+          "case": "randomize_cancel",
+          "native_window_and_cancel": true
+        },
+        {
+          "case": "daily_decline",
+          "native_prompt_and_no": true,
+          "game_created": false
+        },
+        {
+          "case": "seeded_game_creation",
+          "original_start_created_run": true,
+          "original_seed_applied": true,
+          "hero_level": 1
+        }
+      ],
+      "build_id": "2adcc5a0d82d2fd3ababa77fe660472c053dbc0dc2f409a46e0f79a8d7dad3b8",
+      "ok": true
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "menu:daily",
+      "runtime_id": "runtime-196c5d89497e45c996127aef316aaced",
+      "profile": "desktop-control/build/fixtures/menu-options-daily-11d1a1e7c54743649c4fcf18eb556899",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "cases": [
+        {
+          "case": "daily_game_creation",
+          "original_yes_created_run": true,
+          "original_daily_flags_applied": true,
+          "hero_level": 1
+        }
+      ],
+      "build_id": "81737d35e310c014f53c22182ddd8e69822281f7afba404aaa5fc533cf1003cb",
+      "ok": true
+    }
   ]
 }
