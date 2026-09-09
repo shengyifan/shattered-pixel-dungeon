@@ -1,14 +1,14 @@
 {
   "schema": 1,
   "validation_date": "2026-09-09",
-  "phase": "ground_pile_and_ordinary_chest",
+  "phase": "ground_piles_chests_and_matching_keys",
   "test_fixture": true,
   "counts_as_win": false,
   "gui_language": "CHI_SMPL",
   "window_mode": "windowed",
   "cli_language": "en",
-  "total": 2,
-  "passed": 2,
+  "total": 4,
+  "passed": 4,
   "status": "passed",
   "results": [
     {
@@ -87,6 +87,108 @@
         "com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem"
       ],
       "source_result": "desktop-control/build/fixtures/containers-chest-hidden-5b2de649e4fd476eb2cc3407232fbd41/containers-scenario-result.json"
+    },
+    {
+      "case_id": "containers.locked_chest",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-locked-chest-12b3d99eed0a463eb6481c80e09f8aeb",
+      "runtime_id": "runtime-d975294673694d678d55c3f12b2b4bd2",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "scope_id": "run:73ff3a13-e58f-4061-b348-004f0e0965a7",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "8107e922-4bfa-4a26-adc3-41e5cad56a8f:7"
+      },
+      "evidence": {
+        "case_id": "containers.locked_chest",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [
+          {
+            "no_key_refusal_spends_no_turn_or_payload": true,
+            "original_key_pickup": "golden key",
+            "quantity": 1
+          }
+        ],
+        "native_wraith_spawn_checked": false
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 22,
+      "source_result": "desktop-control/build/fixtures/containers-locked-chest-12b3d99eed0a463eb6481c80e09f8aeb/containers-scenario-result.json",
+      "public_trace_responses": 31,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem"
+      ]
+    },
+    {
+      "case_id": "containers.crystal_chest",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-crystal-chest-e1dd61726287461d80418c776ffe408f",
+      "runtime_id": "runtime-d975294673694d678d55c3f12b2b4bd2",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "scope_id": "run:2e3ff0d7-47f7-4456-bf0d-fdbda40b9962",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "68384304-c415-4305-9913-b30bb9268517:7"
+      },
+      "evidence": {
+        "case_id": "containers.crystal_chest",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": true,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "wand of fireblast",
+          "wand of magic missile"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [
+          {
+            "no_key_refusal_spends_no_turn_or_payload": true,
+            "original_key_pickup": "crystal key",
+            "quantity": 2
+          }
+        ],
+        "native_wraith_spawn_checked": false
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 27,
+      "source_result": "desktop-control/build/fixtures/containers-crystal-chest-e1dd61726287461d80418c776ffe408f/containers-scenario-result.json",
+      "public_trace_responses": 42,
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem"
+      ],
+      "additional_public_trace_assertion": {
+        "kind": "original_visible_wand_category_retained",
+        "occurrences": 23,
+        "first_samples": [
+          {
+            "request_id": "13f8e447f587-14",
+            "cell": 500,
+            "description": "You can see _a wand_ inside, but to open the chest you need a crystal key."
+          },
+          {
+            "request_id": "13f8e447f587-14",
+            "cell": 566,
+            "description": "You can see _a wand_ inside, but to open the chest you need a crystal key."
+          }
+        ],
+        "method": "Read-only assertion on the already-recorded original response DTOs; no later game query."
+      }
     }
   ],
   "preparation": "Test-only quiet pocket on a generated first floor, original Item/Heap instances and hidden initial levels; ordinary Warrior statistics preserved. Ambient actors/spawners/hazards/heaps are removed before measurement. No world mutation outside original public actions after preparation.",
@@ -126,15 +228,19 @@
     },
     {
       "type": "LOCKED_CHEST",
-      "status": "pending",
-      "planned_case": "containers.locked_chest",
-      "original_behavior": "No matching GoldenKey: native refusal without opening. Correct current-depth key is consumed in onOperateComplete; then HEAP. No confirmation window."
+      "status": "partial",
+      "original_behavior": "No matching GoldenKey: native refusal without opening. Correct current-depth key is consumed in onOperateComplete; then HEAP. No confirmation window.",
+      "case_refs": [
+        "containers.locked_chest"
+      ]
     },
     {
       "type": "CRYSTAL_CHEST",
-      "status": "pending",
-      "planned_case": "containers.crystal_chest",
-      "original_behavior": "Current-depth CrystalKey is consumed on operation. Before opening the original description already reveals artifact/wand/ring category, not exact content or level."
+      "status": "partial",
+      "original_behavior": "Current-depth CrystalKey is consumed on operation. Before opening the original description already reveals artifact/wand/ring category, not exact content or level.",
+      "case_refs": [
+        "containers.crystal_chest"
+      ]
     },
     {
       "type": "TOMB",
@@ -182,10 +288,28 @@
     }
   ],
   "limits": [
-    "Only two named cases passed in this phase; pending implementations are not evidence.",
+    "Only the four named cases in the first two groups passed; remaining Heap/door implementations are still pending.",
     "The hidden-content contrast uses two same-looking boxes at different public cells in one isolated world, not a claim that every full-world pair is equivalent.",
     "Opening reveals item names but does not identify equipment levels; levels +2/+4 remained private.",
     "The quiet test arena is not a normal playthrough, generated-room or ambient-monster validation.",
     "No screenshots, keyboard/mouse simulation, Computer Use or formal profiles were used."
+  ],
+  "groups": [
+    {
+      "name": "ground_pile_and_ordinary_chest",
+      "case_refs": [
+        "containers.heap_multi",
+        "containers.chest_hidden"
+      ],
+      "build_id": "2701ef08b535b467f57fd35febb480042cff8bef80195820c27c7f8dc2a9046c"
+    },
+    {
+      "name": "locked_and_crystal_chests",
+      "case_refs": [
+        "containers.locked_chest",
+        "containers.crystal_chest"
+      ],
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6"
+    }
   ]
 }

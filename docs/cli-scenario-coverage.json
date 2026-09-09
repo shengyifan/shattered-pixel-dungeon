@@ -62,12 +62,12 @@
       "partial": 59
     },
     "fully_passed_records": 0,
-    "evidence_entries": 240,
+    "evidence_entries": 242,
     "planned_scenarios": 35,
     "callback_records_requiring_individual_mapping": 997,
     "scenario_family_member_status_counts": {
-      "pending": 141,
-      "partial": 2,
+      "pending": 137,
+      "partial": 6,
       "not_applicable": 3
     },
     "scenario_families": 11,
@@ -4836,6 +4836,75 @@
         "key_checks": [],
         "native_wraith_spawn_checked": false
       }
+    },
+    "containers.locked_chest": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/2",
+      "case": "containers.locked_chest",
+      "validation_status": "passed",
+      "runtime_id": "runtime-d975294673694d678d55c3f12b2b4bd2",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "profile": "desktop-control/build/fixtures/containers-locked-chest-12b3d99eed0a463eb6481c80e09f8aeb",
+      "public_trace": "desktop-control/build/fixtures/containers-locked-chest-12b3d99eed0a463eb6481c80e09f8aeb/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Named original no-key refusal/key pickup/open/pickup only; no wrong-depth, artifact or whole-class claim.",
+      "claim": {
+        "case_id": "containers.locked_chest",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [
+          {
+            "no_key_refusal_spends_no_turn_or_payload": true,
+            "original_key_pickup": "golden key",
+            "quantity": 1
+          }
+        ],
+        "native_wraith_spawn_checked": false
+      }
+    },
+    "containers.crystal_chest": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/3",
+      "case": "containers.crystal_chest",
+      "validation_status": "passed",
+      "runtime_id": "runtime-d975294673694d678d55c3f12b2b4bd2",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "profile": "desktop-control/build/fixtures/containers-crystal-chest-e1dd61726287461d80418c776ffe408f",
+      "public_trace": "desktop-control/build/fixtures/containers-crystal-chest-e1dd61726287461d80418c776ffe408f/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Named original no-key refusal/key pickup/open/pickup only; no wrong-depth, artifact or whole-class claim.",
+      "claim": {
+        "case_id": "containers.crystal_chest",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": true,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "wand of fireblast",
+          "wand of magic missile"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [
+          {
+            "no_key_refusal_spends_no_turn_or_payload": true,
+            "original_key_pickup": "crystal key",
+            "quantity": 2
+          }
+        ],
+        "native_wraith_spawn_checked": false
+      }
     }
   },
   "ui_records": [
@@ -5805,6 +5874,13 @@
             "containers.chest_hidden"
           ],
           "covered": "Original three-stack pickup and closed ordinary-chest inspect/open/pickup in a prepared quiet pocket. No ambient gameplay or other Heap type behavior inferred."
+        },
+        {
+          "case_refs": [
+            "containers.locked_chest",
+            "containers.crystal_chest"
+          ],
+          "covered": "Original no-key refusal, visible ground key pickup, exact one-key use in native open and normal loot collection; no invented confirmation dialog."
         }
       ],
       "pending_scenarios": [
@@ -7219,6 +7295,13 @@
             "containers.chest_hidden"
           ],
           "covered": "Actual direct WndInfoItem constructed by closed CHEST examine, two different hidden payloads yield identical displayed text and no inspected_item subject. Back spends no turn. Other item/container descriptions remain pending."
+        },
+        {
+          "case_refs": [
+            "containers.locked_chest",
+            "containers.crystal_chest"
+          ],
+          "covered": "Original closed locked/crystal chest examine, no turn and no item subject. Crystal preserves visible wand category; specific wand identity/levels stay hidden until opening (levels still unidentified afterward)."
         }
       ],
       "pending_scenarios": [
@@ -14958,8 +15041,10 @@
           "id": "LOCKED_CHEST",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.locked_chest"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -14970,8 +15055,10 @@
           "id": "CRYSTAL_CHEST",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.crystal_chest"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -15017,7 +15104,9 @@
       ],
       "case_refs": [
         "containers.chest_hidden",
+        "containers.crystal_chest",
         "containers.heap_multi",
+        "containers.locked_chest",
         "p6.shop-stack",
         "p6.shop-trade"
       ],
@@ -15026,7 +15115,7 @@
     {
       "id": "world.doors_keys",
       "title": "锁门、楼层关联钥匙与Journal数量",
-      "status": "pending",
+      "status": "partial",
       "owner": "visibility_boundary",
       "fixture_setup": "用真实 Notes key 机制准备各钥匙、相邻门及错层钥匙；新增SkeletonKey特殊规则。",
       "public_steps": [
@@ -15094,8 +15183,10 @@
           "id": "LOCKED_CHEST:GoldenKey",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java",
           "line": 1204,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.locked_chest"
+          ],
           "required_variants": [
             "有正确钥匙",
             "无钥匙/错层",
@@ -15107,8 +15198,10 @@
           "id": "CRYSTAL_CHEST:CrystalKey",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java",
           "line": 1204,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.crystal_chest"
+          ],
           "required_variants": [
             "有正确钥匙",
             "无钥匙/错层",
@@ -15117,7 +15210,10 @@
           ]
         }
       ],
-      "case_refs": [],
+      "case_refs": [
+        "containers.locked_chest",
+        "containers.crystal_chest"
+      ],
       "coverage_rule": "Every member and branch needs its own accepted fixture assertion. A family-level partial case does not pass all members. No full Cartesian-product coverage is claimed."
     },
     {
@@ -17046,6 +17142,14 @@
         "containers.chest_hidden"
       ],
       "note": "First container group only: HEAP and ordinary CHEST partial; remaining types/keys still pending."
+    },
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "containers.locked_chest",
+        "containers.crystal_chest"
+      ],
+      "note": "Second container group: GoldenKey and CrystalKey no-key/success branches only; partial mappings."
     }
   ]
 }
