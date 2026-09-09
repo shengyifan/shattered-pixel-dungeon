@@ -1,0 +1,95 @@
+{
+  "test_fixture": true,
+  "counts_as_legitimate_win": false,
+  "runtime_id": "runtime-c0369aec996a4859b9d4b2471fef1a04",
+  "build_id": "f96ddbb8c5f6e7512546144dba45fa695f6fc1bfb325bad2deaee026979a0ebe",
+  "cli_version": "CLI.0.8.10",
+  "total": 2,
+  "passed": 2,
+  "gui_postconditions_checked": 37,
+  "same_frozen_binary_for_both_cases_and_retry": true,
+  "production_changes": false,
+  "initial_attempts": "desktop-control/build/fixtures/runtime-c0369aec996a4859b9d4b2471fef1a04/item-window-results.json",
+  "preserved_test_failure": {
+    "profile": "desktop-control/build/fixtures/item-window-divination-unknown-feccc43ced584dc1919f569c35dce6fe",
+    "source_report": "desktop-control/build/fixtures/item-window-divination-unknown-feccc43ced584dc1919f569c35dce6fe/item-window-result.json",
+    "cause": "The test required title case Scroll of Divination, while the actual public English resource is scroll of divination. The original result window and four English result names were already present.",
+    "fix": "Only compare the exact title name case-insensitively. No prose removed, no production change, no result selection or RNG override.",
+    "retry": "desktop-control/build/fixtures/runtime-c0369aec996a4859b9d4b2471fef1a04/divination-unknown-retry-result.json"
+  },
+  "results": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "itemui:divination-unknown",
+      "profile": "desktop-control/build/fixtures/item-window-divination-unknown-a618f63e1b8c448d805441a9862d23a4",
+      "runtime_id": "runtime-c0369aec996a4859b9d4b2471fef1a04",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "build_id": "f96ddbb8c5f6e7512546144dba45fa695f6fc1bfb325bad2deaee026979a0ebe",
+      "cli_version": "CLI.0.8.10",
+      "original_result_window": true,
+      "displayed_identified_types": [
+        "ring of elements",
+        "scroll of recharging",
+        "potion of paralytic gas",
+        "scroll of teleportation"
+      ],
+      "identified_count": 4,
+      "native_random_choice_not_overridden": true,
+      "back_closes_without_refund": true,
+      "item_details_cancel_without_consumption": true,
+      "scrolls_consumed": 1,
+      "effect_verified_in_read_response": true,
+      "initial_unknown_count": 33,
+      "ok": true,
+      "gui_postconditions_checked": 19,
+      "exit_code": 0,
+      "source_report": "desktop-control/build/fixtures/item-window-divination-unknown-a618f63e1b8c448d805441a9862d23a4/item-window-result.json",
+      "public_trace": "desktop-control/build/fixtures/item-window-divination-unknown-a618f63e1b8c448d805441a9862d23a4/public-trace.jsonl",
+      "read_postcondition": {
+        "request_id": "f6043bf2231a-18",
+        "state_version": "328446fb-6672-44c4-a225-fb78e398e8be:9",
+        "phase": "awaiting_input",
+        "scene": "game",
+        "window_classes": [
+          "com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfDivination$WndDivination"
+        ],
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false
+      }
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "itemui:divination-known",
+      "profile": "desktop-control/build/fixtures/item-window-divination-known-80248051ecb3405fa16aefb1a629bf53",
+      "runtime_id": "runtime-c0369aec996a4859b9d4b2471fef1a04",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "build_id": "f96ddbb8c5f6e7512546144dba45fa695f6fc1bfb325bad2deaee026979a0ebe",
+      "cli_version": "CLI.0.8.10",
+      "no_result_window_when_all_known": true,
+      "original_nothing_left_log": true,
+      "knowledge_unchanged": true,
+      "item_details_cancel_without_consumption": true,
+      "scrolls_consumed": 1,
+      "effect_verified_in_read_response": true,
+      "initial_unknown_count": 0,
+      "ok": true,
+      "gui_postconditions_checked": 18,
+      "exit_code": 0,
+      "source_report": "desktop-control/build/fixtures/item-window-divination-known-80248051ecb3405fa16aefb1a629bf53/item-window-result.json",
+      "public_trace": "desktop-control/build/fixtures/item-window-divination-known-80248051ecb3405fa16aefb1a629bf53/public-trace.jsonl",
+      "read_postcondition": {
+        "request_id": "6304b59d56e8-18",
+        "state_version": "56bb0edf-30d2-4fea-9bbc-04594179933c:9",
+        "phase": "player_ready",
+        "scene": "game",
+        "window_classes": [],
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false
+      }
+    }
+  ]
+}
