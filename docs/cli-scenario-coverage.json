@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "inventory_date": "2026-09-09",
-  "source_revision": "71533d85b7a2fd80c1d423b9e9e4f8ef8d3cca42",
+  "source_revision": "82ba2a3abfdaacb1c9da0a5eed858ec88ec4b02f",
   "source_catalog": "docs/cli-ui-coverage.json",
   "source_catalog_summary": {
-    "parsed_types": 2746,
+    "parsed_types": 2750,
     "records": 1910,
     "unmapped_inputs": 0,
     "categories": {
@@ -58,11 +58,11 @@
     "window_records": 153,
     "status_counts": {
       "not_applicable": 3,
-      "pending": 130,
-      "partial": 37
+      "pending": 119,
+      "partial": 48
     },
     "fully_passed_records": 0,
-    "evidence_entries": 216,
+    "evidence_entries": 233,
     "planned_scenarios": 35,
     "callback_records_requiring_individual_mapping": 997,
     "scenario_family_member_status_counts": {
@@ -4177,6 +4177,341 @@
       "window_mode": "windowed",
       "scope": "Only this recorded fixture branch; no current-source rerun or full-class coverage is implied.",
       "claim": "Drawn effects and hidden/modal/offscreen suppression only. No new scene/window branch inferred."
+    },
+    "language.english_protocol_chinese_gui": {
+      "report": "docs/cli-english-protocol-validation.json",
+      "json_pointer": "/passed/0",
+      "case": "language.english_protocol_chinese_gui",
+      "validation_status": "passed",
+      "runtime_id": "runtime-f3db7a7224104683bcd95fea61bdfd61",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/english-protocol-7c11f2b46dfa45d4ae6131f1d0592333",
+      "public_trace": "desktop-control/build/fixtures/english-protocol-7c11f2b46dfa45d4ae6131f1d0592333/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": "Original live menu/item/throw-cancel/food-log/save/restart with Chinese windowed GUI; English public responses and preserved scope."
+    },
+    "language.legacy_chinese_audit_presentation": {
+      "report": "docs/cli-english-protocol-validation.json",
+      "json_pointer": "/passed/1",
+      "case": "language.legacy_chinese_audit_presentation",
+      "validation_status": "passed",
+      "runtime_id": "runtime-f3db7a7224104683bcd95fea61bdfd61",
+      "build_id": null,
+      "profile": "desktop-control/build/fixtures/english-migration-c4b2d3421f9a4624af26870824b060c9",
+      "public_trace": "desktop-control/build/fixtures/english-migration-c4b2d3421f9a4624af26870824b060c9/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": "Eight actual legacy Chinese request records / 120 prose fields presented in English; complete old Journal introduction matches the source English resource; original rows and snapshot blobs in both audit schemas unchanged. Historical presentation is not execution of those old UI callbacks."
+    },
+    "menu.english.AboutScene": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/0",
+      "case": "AboutScene",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": {
+        "original_button_label": "About",
+        "same_menu_scope": true,
+        "original_back_to_title": true,
+        "coverage": "Enter the named original scene, read the exposed public controls/text, and return with original Back. Advertising a control does not prove activating it."
+      }
+    },
+    "menu.english.ChangesScene": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/1",
+      "case": "ChangesScene",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": {
+        "original_button_label": "Changes",
+        "same_menu_scope": true,
+        "original_back_to_title": true,
+        "coverage": "Enter the named original scene, read the exposed public controls/text, and return with original Back. Advertising a control does not prove activating it."
+      }
+    },
+    "menu.english.JournalScene": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/2",
+      "case": "JournalScene",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": {
+        "original_button_label": "Journal",
+        "same_menu_scope": true,
+        "original_back_to_title": true,
+        "coverage": "Enter the named original scene, read the exposed public controls/text, and return with original Back. Advertising a control does not prove activating it."
+      }
+    },
+    "menu.english.RankingsScene": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/3",
+      "case": "RankingsScene",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": {
+        "original_button_label": "Rankings",
+        "same_menu_scope": true,
+        "original_back_to_title": true,
+        "coverage": "Enter the named original scene, read the exposed public controls/text, and return with original Back. Advertising a control does not prove activating it."
+      }
+    },
+    "menu.english.SupporterScene": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/4",
+      "case": "SupporterScene",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": {
+        "original_button_label": "Support the Game",
+        "same_menu_scope": true,
+        "original_back_to_title": true,
+        "coverage": "Enter the named original scene, read the exposed public controls/text, and return with original Back. Advertising a control does not prove activating it."
+      }
+    },
+    "menu.english.NewsScene": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/5",
+      "case": "NewsScene",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": {
+        "original_button_label": "News",
+        "same_menu_scope": true,
+        "original_back_to_title": true,
+        "coverage": "Enter the named original scene, read the exposed public controls/text, and return with original Back. Advertising a control does not prove activating it."
+      }
+    },
+    "menu.english.JournalScene.tab.badges": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/2/verified_tabs/0",
+      "case": "JournalScene / Badges",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": "The original named tab is activated and remains in JournalScene. Embedded tab component only: no individual badge, catalogue item, guide page or WndJournal window invocation is claimed."
+    },
+    "menu.english.JournalScene.tab.catalogs": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/2/verified_tabs/1",
+      "case": "JournalScene / Catalogs",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": "The original named tab is activated and remains in JournalScene. Embedded tab component only: no individual badge, catalogue item, guide page or WndJournal window invocation is claimed."
+    },
+    "menu.english.JournalScene.tab.dungeon_guide": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/2/verified_tabs/2",
+      "case": "JournalScene / Dungeon Guide",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": "The original named tab is activated and remains in JournalScene. Embedded tab component only: no individual badge, catalogue item, guide page or WndJournal window invocation is claimed."
+    },
+    "menu.english.JournalScene.tab.alchemy_guide": {
+      "report": "docs/cli-menu-validation.json",
+      "json_pointer": "/english_revalidation/cases/2/verified_tabs/3",
+      "case": "JournalScene / Alchemy Guide",
+      "validation_status": "passed",
+      "runtime_id": "runtime-ea5f0d0ce43f40a6a48c01bbc7e4931a",
+      "build_id": "299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86",
+      "profile": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a",
+      "public_trace": "desktop-control/build/fixtures/menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only the recorded named branch. No whole-class pass or future-build revalidation is implied.",
+      "claim": "The original named tab is activated and remains in JournalScene. Embedded tab component only: no individual badge, catalogue item, guide page or WndJournal window invocation is claimed."
+    },
+    "transition.fall": {
+      "report": "docs/cli-transition-scenarios-validation.json",
+      "json_pointer": "/passed/0",
+      "case": "transition.fall",
+      "validation_status": "passed",
+      "runtime_id": "runtime-259a313fcfc94bae9008272d6e890784",
+      "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+      "profile": "desktop-control/build/fixtures/scenario-fall-9de5af93e8b44643867e540ee63c4bc0",
+      "public_trace": "desktop-control/build/fixtures/scenario-fall-9de5af93e8b44643867e540ee63c4bc0/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "zh_historical",
+      "scope": "Historical actual Chinese GUI + Chinese public-text engine branch. English CLI revalidation remains pending; no whole-class pass.",
+      "claim": {
+        "language": "CHI_SMPL",
+        "fullscreen": false,
+        "case_id": "transition.fall",
+        "original_jump_cancel": true,
+        "original_jump_confirm": true,
+        "landing_finished_in_final_response": true,
+        "hp_before": 1000,
+        "hp_after": 505,
+        "depth_after": 2,
+        "bleeding_and_cripple_applied": true,
+        "same_scope": true
+      },
+      "english_contract_verified": false
+    },
+    "transition.branch_roundtrip": {
+      "report": "docs/cli-transition-scenarios-validation.json",
+      "json_pointer": "/passed/1",
+      "case": "transition.branch_roundtrip",
+      "validation_status": "passed",
+      "runtime_id": "runtime-259a313fcfc94bae9008272d6e890784",
+      "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+      "profile": "desktop-control/build/fixtures/scenario-branch-1ccb655cdc3141e693c302e78ace04f5",
+      "public_trace": "desktop-control/build/fixtures/scenario-branch-1ccb655cdc3141e693c302e78ace04f5/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "zh_historical",
+      "scope": "Historical actual Chinese GUI + Chinese public-text engine branch. English CLI revalidation remains pending; no whole-class pass.",
+      "claim": {
+        "language": "CHI_SMPL",
+        "fullscreen": false,
+        "case_id": "transition.branch_roundtrip",
+        "original_enter_cancel_and_confirm": true,
+        "original_mining_generation_completed": true,
+        "original_exit_warning_cancel_and_confirm": true,
+        "returned_original_caves_floor": true,
+        "same_scope": true
+      },
+      "english_contract_verified": false
+    },
+    "transition.story_prison": {
+      "report": "docs/cli-transition-scenarios-validation.json",
+      "json_pointer": "/passed/2",
+      "case": "transition.story_prison",
+      "validation_status": "passed",
+      "runtime_id": "runtime-259a313fcfc94bae9008272d6e890784",
+      "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+      "profile": "desktop-control/build/fixtures/scenario-story-prison-400d8c10ef7140b88fbb941264dd14e9",
+      "public_trace": "desktop-control/build/fixtures/scenario-story-prison-400d8c10ef7140b88fbb941264dd14e9/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "zh_historical",
+      "scope": "Historical actual Chinese GUI + Chinese public-text engine branch. English CLI revalidation remains pending; no whole-class pass.",
+      "claim": {
+        "language": "CHI_SMPL",
+        "fullscreen": false,
+        "case_id": "transition.story_prison",
+        "story_actually_displayed": true,
+        "original_continue_used": true,
+        "next_stable_floor": 6,
+        "same_scope": true
+      },
+      "english_contract_verified": false
+    },
+    "transition.story_caves": {
+      "report": "docs/cli-transition-scenarios-validation.json",
+      "json_pointer": "/passed/3",
+      "case": "transition.story_caves",
+      "validation_status": "passed",
+      "runtime_id": "runtime-259a313fcfc94bae9008272d6e890784",
+      "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+      "profile": "desktop-control/build/fixtures/scenario-story-caves-40eef31b944241a0b0d63025027ed0e5",
+      "public_trace": "desktop-control/build/fixtures/scenario-story-caves-40eef31b944241a0b0d63025027ed0e5/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "zh_historical",
+      "scope": "Historical actual Chinese GUI + Chinese public-text engine branch. English CLI revalidation remains pending; no whole-class pass.",
+      "claim": {
+        "language": "CHI_SMPL",
+        "fullscreen": false,
+        "case_id": "transition.story_caves",
+        "story_actually_displayed": true,
+        "original_continue_used": true,
+        "next_stable_floor": 11,
+        "same_scope": true
+      },
+      "english_contract_verified": false
+    },
+    "transition.story_city": {
+      "report": "docs/cli-transition-scenarios-validation.json",
+      "json_pointer": "/passed/4",
+      "case": "transition.story_city",
+      "validation_status": "passed",
+      "runtime_id": "runtime-f0b786b15dc94781818dbc14cdaa4e7b",
+      "build_id": "ea06531e9e6700bf1aa57023b15f3d51e9f1eb9127562fba41bd9c74a1f63022",
+      "profile": "desktop-control/build/fixtures/scenario-story-city-f621bf7f22434f36adc6b4e2e4d90b87",
+      "public_trace": "desktop-control/build/fixtures/scenario-story-city-f621bf7f22434f36adc6b4e2e4d90b87/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "zh_historical",
+      "scope": "Historical actual Chinese GUI + Chinese public-text engine branch. English CLI revalidation remains pending; no whole-class pass.",
+      "claim": {
+        "language": "CHI_SMPL",
+        "fullscreen": false,
+        "case_id": "transition.story_city",
+        "story_actually_displayed": true,
+        "original_continue_used": true,
+        "next_stable_floor": 16,
+        "same_scope": true
+      },
+      "english_contract_verified": false
     }
   },
   "ui_records": [
@@ -4880,8 +5215,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/CavesLevel.java",
       "catalog_line": 146,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "transition.branch_roundtrip"
+          ],
+          "covered": "Original Caves branch-entry and Mining exit-warning dialogs each cancelled then confirmed; actual Mining generation and return to original caves in same run. Historical Chinese public text; other quest types/conditions pending."
+        }
+      ],
       "pending_scenarios": [
         "transition.branch_roundtrip"
       ],
@@ -4922,8 +5264,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/MiningLevel.java",
       "catalog_line": 286,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "transition.branch_roundtrip"
+          ],
+          "covered": "Original Caves branch-entry and Mining exit-warning dialogs each cancelled then confirmed; actual Mining generation and return to original caves in same run. Historical Chinese public text; other quest types/conditions pending."
+        }
+      ],
       "pending_scenarios": [
         "transition.branch_roundtrip"
       ],
@@ -4936,8 +5285,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/Chasm.java",
       "catalog_line": 67,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "transition.fall"
+          ],
+          "covered": "Original jump confirmation opened; No cancels without moving/damage, Yes runs actual FALL and finishes injured landing with Bleeding/Cripple. Historical Chinese public text; English rerun pending."
+        }
+      ],
       "pending_scenarios": [
         "transition.fall"
       ],
@@ -4950,8 +5306,15 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/AboutScene.java",
       "catalog_line": 42,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "menu.english.AboutScene"
+          ],
+          "covered": "Original About button enters AboutScene; public controls/text read in English, then original Back returns with same menu scope. External links, purchases and unselected entries are not exercised."
+        }
+      ],
       "pending_scenarios": [
         "menus.help_changes"
       ],
@@ -5053,8 +5416,15 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/ChangesScene.java",
       "catalog_line": 62,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "menu.english.ChangesScene"
+          ],
+          "covered": "Original Changes button enters ChangesScene; public controls/text read in English, then original Back returns with same menu scope. External links, purchases and unselected entries are not exercised."
+        }
+      ],
       "pending_scenarios": [
         "menus.help_changes"
       ],
@@ -5078,6 +5448,22 @@
             "king.report"
           ],
           "covered": "Original ready boundary, selected item/ability/NPC/visual paths; not all terrain, interactions, combat outcomes or scene callbacks."
+        },
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Real public Welcome -> original Back to Title -> HeroSelect -> Game, original item/throw/food actions, explicit save/quit and same-scope fresh JVM Continue. GUI language/window state is separately attested. Other branches remain pending."
+        },
+        {
+          "case_refs": [
+            "transition.fall",
+            "transition.branch_roundtrip",
+            "transition.story_prison",
+            "transition.story_caves",
+            "transition.story_city"
+          ],
+          "covered": "Before-trigger and after-settlement endpoints for the five named transitions only; no additional level, room or ending coverage inferred."
         }
       ],
       "pending_scenarios": [
@@ -5094,7 +5480,7 @@
       "id": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/GameScene.java#GameScene$anonymous10",
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/GameScene.java",
-      "catalog_line": 1739,
+      "catalog_line": 1743,
       "status": "pending",
       "evidence": [],
       "pending_scenarios": [
@@ -5124,6 +5510,12 @@
             "p7.class:CLERIC"
           ],
           "covered": "Original visible class control -> enter; test-only unlock prerequisites are prepared. Does not cover normal unlock progression, class info tabs, options or locked-class rejection."
+        },
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Real public Welcome -> original Back to Title -> HeroSelect -> Game, original item/throw/food actions, explicit save/quit and same-scope fresh JVM Continue. GUI language/window state is separately attested. Other branches remain pending."
         }
       ],
       "pending_scenarios": [
@@ -5203,6 +5595,22 @@
             "resurrection.fresh_jvm"
           ],
           "covered": "First DESCEND and real RESURRECT/CONTINUE paths only; no FALL/RETURN/RESET/SURFACE/branch proof inferred."
+        },
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Real public Welcome -> original Back to Title -> HeroSelect -> Game, original item/throw/food actions, explicit save/quit and same-scope fresh JVM Continue. GUI language/window state is separately attested. Other branches remain pending."
+        },
+        {
+          "case_refs": [
+            "transition.fall",
+            "transition.branch_roundtrip",
+            "transition.story_prison",
+            "transition.story_caves",
+            "transition.story_city"
+          ],
+          "covered": "Actual FALL and branch round-trip plus first Prison/Caves/City region story requiring original Continue, then stable target floor. Story is InterlevelScene RenderedTextBlock, not WndStory. Halls story remains pending and these five need English-contract reruns."
         }
       ],
       "pending_scenarios": [
@@ -5237,8 +5645,24 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/JournalScene.java",
       "catalog_line": 50,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "menu.english.JournalScene"
+          ],
+          "covered": "Original Journal button enters JournalScene; public controls/text read in English, then original Back returns with same menu scope. External links, purchases and unselected entries are not exercised."
+        },
+        {
+          "case_refs": [
+            "menu.english.JournalScene.tab.badges",
+            "menu.english.JournalScene.tab.catalogs",
+            "menu.english.JournalScene.tab.dungeon_guide",
+            "menu.english.JournalScene.tab.alchemy_guide"
+          ],
+          "covered": "Original Badges, Catalogs, Dungeon Guide and Alchemy Guide tab controls activated. The report checks scene retention; individual entry windows, note editing and full scroll/page content remain pending."
+        }
+      ],
       "pending_scenarios": [
         "knowledge.catalog"
       ],
@@ -5251,8 +5675,15 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/NewsScene.java",
       "catalog_line": 50,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "menu.english.NewsScene"
+          ],
+          "covered": "Original News button enters NewsScene; public controls/text read in English, then original Back returns with same menu scope. External links, purchases and unselected entries are not exercised."
+        }
+      ],
       "pending_scenarios": [
         "menus.news_support"
       ],
@@ -5299,6 +5730,12 @@
             "p6.amulet-end"
           ],
           "covered": "Direct Amulet-end transition and visible victory overlay only; opening record details / all tabs / permanent-death ranking pending."
+        },
+        {
+          "case_refs": [
+            "menu.english.RankingsScene"
+          ],
+          "covered": "Original Rankings button enters RankingsScene; public controls/text read in English, then original Back returns with same menu scope. External links, purchases and unselected entries are not exercised."
         }
       ],
       "pending_scenarios": [
@@ -5314,8 +5751,15 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/StartScene.java",
       "catalog_line": 50,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Public trace of the fresh-JVM resume contains StartScene; original saved-Warrior slot selected and same run resumed. Slot deletion, sorting and multi-slot variants remain pending."
+        }
+      ],
       "pending_scenarios": [
         "menu.bootstrap"
       ],
@@ -5328,8 +5772,15 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SupporterScene.java",
       "catalog_line": 42,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "menu.english.SupporterScene"
+          ],
+          "covered": "Original Support the Game button enters SupporterScene; public controls/text read in English, then original Back returns with same menu scope. External links, purchases and unselected entries are not exercised."
+        }
+      ],
       "pending_scenarios": [
         "menus.news_support"
       ],
@@ -5356,8 +5807,26 @@
       "category": "scene",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/TitleScene.java",
       "catalog_line": 64,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Real public Welcome -> original Back to Title -> HeroSelect -> Game, original item/throw/food actions, explicit save/quit and same-scope fresh JVM Continue. GUI language/window state is separately attested. Other branches remain pending."
+        },
+        {
+          "case_refs": [
+            "menu.english.AboutScene",
+            "menu.english.ChangesScene",
+            "menu.english.JournalScene",
+            "menu.english.RankingsScene",
+            "menu.english.SupporterScene",
+            "menu.english.NewsScene"
+          ],
+          "covered": "Original title buttons open each of the six named scenes and original Back returns. No link/account/purchase operation is inferred from its advertisement."
+        }
+      ],
       "pending_scenarios": [
         "menu.bootstrap"
       ],
@@ -5391,6 +5860,12 @@
             "p7.class:WARRIOR"
           ],
           "covered": "Public trace contains WelcomeScene and normal first-run entry; update, cleanup-warning and corruption branches remain untested."
+        },
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Real public Welcome -> original Back to Title -> HeroSelect -> Game, original item/throw/food actions, explicit save/quit and same-scope fresh JVM Continue. GUI language/window state is separately attested. Other branches remain pending."
         }
       ],
       "pending_scenarios": [
@@ -6168,8 +6643,15 @@
       "category": "window",
       "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGameInProgress.java",
       "catalog_line": 44,
-      "status": "pending",
-      "evidence": [],
+      "status": "partial",
+      "evidence": [
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Original StartScene GameButton opens the saved-game detail window (StartScene.java GameButton.onClick); Continue restores the same run. Erase is only displayed, never confirmed in this case."
+        }
+      ],
       "pending_scenarios": [
         "menu.bootstrap"
       ],
@@ -6876,6 +7358,12 @@
             "layout.packaged"
           ],
           "covered": "Actual initial item menus plus throw cancellation and food consumption; per-item dynamic actions and all gestures are separate cases."
+        },
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Original Worn Shortsword English description, Throwing Stone target cancellation with unchanged quantity, and native EAT with English drawn log; Chinese windowed GUI attested. Does not cover all item menus."
         }
       ],
       "pending_scenarios": [
@@ -6955,7 +7443,7 @@
       "id": "menu.bootstrap",
       "group": "menus",
       "title": "首启、版本更新、标题、开始与存档入口",
-      "status": "pending",
+      "status": "partial",
       "owner": "root",
       "fixture_setup": "独立临时 profile 分别准备首次安装、相同版本和旧版本设置；不读取正式存档。",
       "public_steps": [
@@ -6978,6 +7466,14 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGameInProgress.java#WndGameInProgress$anonymous3$anonymous1",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndHardNotification.java#WndHardNotification",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndStory.java#WndStory"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "language.english_protocol_chinese_gui"
+          ],
+          "covered": "Observed Welcome, Title, HeroSelect, Interlevel, Game and resume Start scene paths; settings/update/cleanup and destructive slot deletion variants remain pending."
+        }
       ]
     },
     {
@@ -7051,7 +7547,7 @@
       "id": "menus.help_changes",
       "group": "menus",
       "title": "说明、关于、更新列表及弹层",
-      "status": "pending",
+      "status": "partial",
       "owner": "root",
       "fixture_setup": "测试 profile 和本地版本更新内容。",
       "public_steps": [
@@ -7065,13 +7561,22 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/ChangesScene.java#ChangesScene",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/changelist/WndChanges.java#WndChanges",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/changelist/WndChangesTabbed.java#WndChangesTabbed"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "menu.english.AboutScene",
+            "menu.english.ChangesScene"
+          ],
+          "covered": "About/Changes enter/read/Back only; changelist version selection and WndChanges/WndChangesTabbed still pending."
+        }
       ]
     },
     {
       "id": "menus.news_support",
       "group": "menus",
       "title": "新闻、文章、支持与出错状态",
-      "status": "pending",
+      "status": "partial",
       "owner": "root",
       "fixture_setup": "使用独立测试网络响应或禁网场景；不购买、不外发账号请求。",
       "public_steps": [
@@ -7085,13 +7590,22 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/NewsScene.java#NewsScene$WndArticle",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SupporterScene.java#SupporterScene",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndSupportPrompt.java#WndSupportPrompt"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "menu.english.SupporterScene",
+            "menu.english.NewsScene"
+          ],
+          "covered": "Supporter and news-disabled News scene enter/read/Back; no article load, external navigation, support payment or account request."
+        }
       ]
     },
     {
       "id": "knowledge.catalog",
       "group": "knowledge",
       "title": "主菜单 JournalScene 与局内 Journal/文档/图鉴",
-      "status": "pending",
+      "status": "partial",
       "owner": "root",
       "fixture_setup": "测试 profile 设置少量已见与未见条目、钥匙与文档页；不同隐藏内容保持公开状态相同。",
       "public_steps": [
@@ -7109,6 +7623,17 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndDocument.java#WndDocument",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndJournal.java#WndJournal",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndJournalItem.java#WndJournalItem"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "menu.english.JournalScene.tab.badges",
+            "menu.english.JournalScene.tab.catalogs",
+            "menu.english.JournalScene.tab.dungeon_guide",
+            "menu.english.JournalScene.tab.alchemy_guide"
+          ],
+          "covered": "Only four original JournalScene tab entries. The scene embeds WndJournal tab components; this does not pass WndJournal, WndBadge, WndDocument or WndJournalItem windows."
+        }
       ]
     },
     {
@@ -7166,7 +7691,7 @@
       "id": "knowledge.rankings",
       "group": "knowledge",
       "title": "排名详情、计分及历史物品详情",
-      "status": "pending",
+      "status": "partial",
       "owner": "runtime_architecture",
       "fixture_setup": "人为构造已结算测试记录，无正式通关声明。",
       "public_steps": [
@@ -7180,6 +7705,14 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndRanking.java#WndRanking",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndRanking.java#WndRanking$StatsTab$anonymous2$anonymous1",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndScoreBreakdown.java#WndScoreBreakdown"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "menu.english.RankingsScene"
+          ],
+          "covered": "Empty Rankings scene entry/read/Back only; WndRanking and score-detail interaction are separate pending cases."
+        }
       ]
     },
     {
@@ -7570,7 +8103,7 @@
       "id": "transition.fall",
       "group": "lifecycle",
       "title": "跳崖取消、确认与受伤着陆",
-      "status": "pending",
+      "status": "partial",
       "owner": "runtime_architecture",
       "fixture_setup": "合法已见 chasm 和可进入下层；无正式存档。",
       "public_steps": [
@@ -7583,13 +8116,21 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/Chasm.java#Chasm$anonymous1$anonymous1",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java#InterlevelScene",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java#InterlevelScene$anonymous6"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "transition.fall"
+          ],
+          "covered": "Original cancel/confirm/FALL/landing branch recorded in Chinese; English public-text revalidation remains pending."
+        }
       ]
     },
     {
       "id": "transition.branch_roundtrip",
       "group": "lifecycle",
       "title": "矿区支线入口和出口往返",
-      "status": "pending",
+      "status": "partial",
       "owner": "runtime_architecture",
       "fixture_setup": "原 CavesLevel/MiningLevel 合法 transition 与任务前提。",
       "public_steps": [
@@ -7603,13 +8144,21 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/MiningLevel.java#MiningLevel$anonymous2$anonymous1",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java#InterlevelScene",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java#InterlevelScene$anonymous6"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "transition.branch_roundtrip"
+          ],
+          "covered": "Original branch entry and exit cancel/confirm, native generated Mining floor and return; English public-text revalidation remains pending."
+        }
       ]
     },
     {
       "id": "transition.other_warnings",
       "group": "lifecycle",
       "title": "城市、最终 Boss 门、返回/重置与失败弹窗",
-      "status": "pending",
+      "status": "partial",
       "owner": "runtime_architecture",
       "fixture_setup": "独立合法 CityLevel/HallsBossLevel 与可控缺层/恢复失败 fixture。",
       "public_steps": [
@@ -7629,6 +8178,16 @@
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndError.java#WndError",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndHardNotification.java#WndHardNotification",
         "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndStory.java#WndStory"
+      ],
+      "recorded_evidence": [
+        {
+          "case_refs": [
+            "transition.story_prison",
+            "transition.story_caves",
+            "transition.story_city"
+          ],
+          "covered": "First Prison/Caves/City region story and original Continue; Halls story, RETURN/RESET/SURFACE, errors and other level warnings remain pending. Chinese historical records only."
+        }
       ]
     },
     {
@@ -13794,7 +14353,7 @@
     "Trinity blazing activation does not cover imbue type selection or confirmation.",
     "Amulet direct end reaches Rankings/WndVictoryCongrats, not SurfaceScene or a complete ascending return.",
     "Drawn Boss cue fixtures validate actual visual observations; they are not Boss victories or all mechanics tests.",
-    "Newly assigned menu, transition and Tengu-trap cases remain pending until their exact reports are accepted.",
+    "New reports are mapped only to the exact listed branches; English revalidation of historical transitions, Halls story and unselected scene/window paths remain pending.",
     "Scene/window type counts are only the UI dimension. scenario_families separately inventory containers, key/door rules, traps, plants, environment, special/secret/quest rooms, unknown-item knowledge and Boss mechanics; untested members remain pending."
   ],
   "scenario_families": [
@@ -15950,6 +16509,39 @@
         "king.report"
       ],
       "coverage_rule": "Every member and branch needs its own accepted fixture assertion. A family-level partial case does not pass all members. No full Cartesian-product coverage is claimed."
+    }
+  ],
+  "cross_cutting_evidence": [
+    {
+      "case_refs": [
+        "language.legacy_chinese_audit_presentation"
+      ],
+      "scope": "Historical public English presentation and raw audit immutability only; no new scene/window action is claimed."
+    }
+  ],
+  "evidence_updates": [
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "language.english_protocol_chinese_gui",
+        "language.legacy_chinese_audit_presentation",
+        "menu.english.AboutScene",
+        "menu.english.ChangesScene",
+        "menu.english.JournalScene",
+        "menu.english.RankingsScene",
+        "menu.english.SupporterScene",
+        "menu.english.NewsScene",
+        "menu.english.JournalScene.tab.badges",
+        "menu.english.JournalScene.tab.catalogs",
+        "menu.english.JournalScene.tab.dungeon_guide",
+        "menu.english.JournalScene.tab.alchemy_guide",
+        "transition.fall",
+        "transition.branch_roundtrip",
+        "transition.story_prison",
+        "transition.story_caves",
+        "transition.story_city"
+      ],
+      "note": "Added exact English protocol and menu/tab branches plus five historical Chinese transitions; no entire scene/window class is passed."
     }
   ]
 }

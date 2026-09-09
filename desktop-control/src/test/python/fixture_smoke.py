@@ -12,6 +12,7 @@ import re
 import os
 import shutil
 import time
+import unicodedata
 import uuid
 import zipfile
 from machine_smoke import Client
@@ -36,6 +37,29 @@ FLOOR_TARGETS = {"HeroicLeap", "SmokeBomb", "Feint", "WarpBeacon", "PowerOfMany"
 SPELL_SELF = {"BlessSpell", "LayOnHands", "MnemonicPrayer"}
 SPELL_FLOOR = {"Flash", "HallowedGround", "WallOfLight", "BeamingRay"}
 SNEAK_WEAPONS = {"Dagger", "Dirk", "AssassinsBlade"}
+GAME_PROSE_FIELDS = {"name", "class_name", "subclass_name", "label", "text", "description",
+                     "prompt", "cell_prompt", "item_prompt", "options", "message", "title",
+                     "hint", "tooltip", "disabled_reason"}
+RAW_FIELDS = {"raw_request", "raw_response", "raw_bytes", "raw_format", "raw_json"}
+
+
+def game_prose_values(value, path=(), prose=False):
+    """Same prose/raw distinction as english_protocol_smoke; opaque data stays literal."""
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key not in RAW_FIELDS:
+                yield from game_prose_values(child, path + (key,), key in GAME_PROSE_FIELDS)
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield from game_prose_values(child, path + (index,), prose)
+    elif prose and isinstance(value, str):
+        yield path, value
+
+
+def assert_game_prose_english(value):
+    bad = [(path, text) for path, text in game_prose_values(value)
+           if any(char.isalpha() and "LATIN" not in unicodedata.name(char, "") for char in text)]
+    assert not bad, {"non_english_game_prose": bad[:10]}
 
 
 def norm(text):
@@ -43,11 +67,13 @@ def norm(text):
 
 
 class FixtureClient(Client):
-    def __init__(self, command, profile):
+    def __init__(self, command, profile, verify_gui=False):
         from test_ui import configure_test_ui
         configure_test_ui(profile)
         self.trace = (profile / "public-trace.jsonl").open("a")
         self.last_state = None
+        self.verify_gui = verify_gui
+        self.gui_postconditions_checked = 0
         super().__init__(command, profile)
 
     def request(self, op, args=None, **kwargs):
@@ -56,6 +82,14 @@ class FixtureClient(Client):
             self.last_state = result["result"]
         self.trace.write(json.dumps({"test_fixture": True, "op": op, "args": args, "response": result}, ensure_ascii=False) + "\n")
         self.trace.flush()
+        # Preserve evidence before rejecting a malformed translation. This includes
+        # nested request.get/history/events responses; raw audit fields remain opaque.
+        assert_game_prose_english(result)
+        data = result.get("result")
+        quitting = op == "action.execute" and isinstance(args, dict) and args.get("action") == "app.quit"
+        if self.verify_gui and not quitting and result.get("ok") and isinstance(data, dict) and "observation" in data:
+            assert_gui_environment(self.profile, data)
+            self.gui_postconditions_checked += 1
         return result
 
 
@@ -503,7 +537,7 @@ def run_one(root, classpath, fixture, runtime_id):
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
                "com.shatteredpixel.shatteredpixeldungeon.control.desktop.FixtureLauncher", "--fixture", fixture]
-    client = FixtureClient(command, profile)
+    client = FixtureClient(command, profile, verify_gui=True)
     report = {"test_fixture": True, "counts_as_win": False, "fixture": fixture, "profile": str(profile), "runtime_id": runtime_id}
     try:
         assert client.request("protocol.info")["ok"]
@@ -523,18 +557,24 @@ def run_one(root, classpath, fixture, runtime_id):
             evidence = monk_test(client, profile, name, bool(mode))
         else:
             evidence = subclass_test(client, profile, name)
-        report.update(ok=True, evidence=evidence)
+        report.update(ok=True, evidence=evidence, every_response_game_prose_checked=True,
+                      gui_postconditions_checked=client.gui_postconditions_checked)
     except Exception as error:
         report.update(ok=False, error=str(error))
     finally:
         try:
             close_choices(client, discard=True)
             client.finish()
+            assert client.process.poll() == 0, {"fixture_exit_code": client.process.poll()}
         except Exception as error:
-            report["cleanup_error"] = str(error)
-            if client.process.poll() is None:
-                client.process.terminate()
-                client.process.wait(timeout=10)
+            report.update(ok=False, cleanup_error=str(error))
+            try:
+                if client.process.poll() is None:
+                    client.process.terminate()
+                    client.process.wait(timeout=10)
+            except Exception as termination_error:
+                report["cleanup_termination_error"] = str(termination_error)
+        report["gui_postconditions_checked"] = client.gui_postconditions_checked
         client.trace.close()
         (profile / "fixture-result.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(report, ensure_ascii=False), flush=True)
