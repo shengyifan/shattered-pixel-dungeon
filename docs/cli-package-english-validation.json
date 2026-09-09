@@ -1,0 +1,143 @@
+{
+  "verified": true,
+  "test_fixture": true,
+  "counts_as_win": false,
+  "bundle": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-5d5dcb736f044bc4b713029047a94cff/中文 应用目录 with spaces/Shattered Pixel Dungeon.app",
+  "source_bundle": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/fixture-runtime/CLI.0.7.2-305930ce1d3b/Shattered Pixel Dungeon.app",
+  "binary": {
+    "architecture": {
+      "Contents/MacOS/spdctl": "Mach-O 64-bit executable arm64",
+      "Contents/MacOS/spdctl-jvm": "Mach-O 64-bit executable arm64",
+      "Contents/MacOS/Shattered Pixel Dungeon": "Mach-O 64-bit executable arm64",
+      "Contents/runtime/Contents/Home/lib/server/libjvm.dylib": "Mach-O 64-bit dynamically linked shared library arm64"
+    },
+    "build_id": "305930ce1d3bcc092ff4dc60057aead5657ba62d0bb77e1224f3803feece5b92",
+    "cli_version": "CLI.0.7.2",
+    "code_signature_verified": true,
+    "test_classes_absent": true
+  },
+  "cases": [
+    {
+      "case_id": "package.english_raw_pipe",
+      "verified": true,
+      "profile": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-b41396be5858429a9571f29b97e081c5/原始管道 中文目录 with spaces",
+      "gui_display": {
+        "language": "zh",
+        "fullscreen": false
+      },
+      "jvm": {
+        "pid": 87779,
+        "loaded_libjvm": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-b41396be5858429a9571f29b97e081c5/中文 应用目录 with spaces/Shattered Pixel Dungeon.app/Contents/runtime/Contents/Home/lib/server/libjvm.dylib",
+        "loaded_sqlite_jni": [
+          "/private/var/folders/23/bqsfpxf12_g5r_7xvr4wjwtw0000gn/T/sqlite-3.53.4.0-e36cc774-db28-4ac2-ae84-1a92825e9f4e-libsqlitejdbc.dylib"
+        ]
+      },
+      "exact_frames_checked": 5,
+      "runtime": {
+        "java_version": "25.0.4",
+        "os_arch": "aarch64",
+        "error_file": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-b41396be5858429a9571f29b97e081c5/原始管道 中文目录 with spaces/audit/emergency/hs_err_pid%p.log",
+        "profile": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-b41396be5858429a9571f29b97e081c5/原始管道 中文目录 with spaces",
+        "build_id": "305930ce1d3bcc092ff4dc60057aead5657ba62d0bb77e1224f3803feece5b92"
+      },
+      "profile_lock_rejects_second_process": true,
+      "malformed_utf8_recovery": true,
+      "duplicate_id_rejected": true,
+      "eof_has_no_push": true,
+      "final_frame_without_newline": true,
+      "database_checks": [
+        {
+          "side": "public",
+          "integrity": "ok",
+          "inspection_sqlite_version": "3.53.4"
+        },
+        {
+          "side": "internal",
+          "integrity": "ok",
+          "inspection_sqlite_version": "3.53.4"
+        }
+      ]
+    },
+    {
+      "case_id": "package.english_game_and_restart",
+      "verified": true,
+      "profile": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-5d5dcb736f044bc4b713029047a94cff/实际游戏 中文目录 with spaces",
+      "scope_id": "run:a11725d7-dbbb-4243-9937-55fa916e40ab",
+      "jvm": {
+        "pid": 88412,
+        "loaded_libjvm": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-5d5dcb736f044bc4b713029047a94cff/中文 应用目录 with spaces/Shattered Pixel Dungeon.app/Contents/runtime/Contents/Home/lib/server/libjvm.dylib",
+        "loaded_sqlite_jni": [
+          "/private/var/folders/23/bqsfpxf12_g5r_7xvr4wjwtw0000gn/T/sqlite-3.53.4.0-24fffd89-c08e-4dbf-bed2-f4bdc1a4caa1-libsqlitejdbc.dylib"
+        ]
+      },
+      "restarted_jvm": {
+        "pid": 88446,
+        "loaded_libjvm": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-5d5dcb736f044bc4b713029047a94cff/中文 应用目录 with spaces/Shattered Pixel Dungeon.app/Contents/runtime/Contents/Home/lib/server/libjvm.dylib",
+        "loaded_sqlite_jni": [
+          "/private/var/folders/23/bqsfpxf12_g5r_7xvr4wjwtw0000gn/T/sqlite-3.53.4.0-01abb26f-7b99-4e40-b3c1-afd99897e308-libsqlitejdbc.dylib"
+        ]
+      },
+      "settings": {
+        "original_fullscreen_checkbox_checked": false,
+        "display": {
+          "language": "zh",
+          "fullscreen": false
+        }
+      },
+      "original_draw_pair": {
+        "scope_id": "run:a11725d7-dbbb-4243-9937-55fa916e40ab",
+        "public_event_sequence": 7,
+        "occurred_at": "2026-09-09T03:25:24.997235Z",
+        "english_food_message": "That food tasted delicious!",
+        "original_displayed_food_message": "吃起来不错！"
+      },
+      "checks": [
+        "packaged_start_and_original_tutorial_to_ready",
+        "actual_selected_chinese_and_windowed_settings_confirmed",
+        "original_inventory_throw_cancel_preserves_quantity",
+        "original_drawn_english_log_and_explicit_save_receipt",
+        "second_packaged_jvm_restores_same_run_and_original_history"
+      ],
+      "database_checks": [
+        {
+          "side": "public",
+          "integrity": "ok",
+          "inspection_sqlite_version": "3.53.4"
+        },
+        {
+          "side": "internal",
+          "integrity": "ok",
+          "inspection_sqlite_version": "3.53.4"
+        }
+      ]
+    }
+  ],
+  "reused_raw_report": "/Users/shengyifan/Workspace/shattered-pixel-dungeon/desktop-control/build/package-check/english-b41396be5858429a9571f29b97e081c5/原始管道 中文目录 with spaces/raw-pipe-result.json",
+  "injected_java_classes_or_agents": false,
+  "external_java_home_or_classpath": false,
+  "not_tested": [
+    "real_Intel_hardware",
+    "Gatekeeper_notarization",
+    "all_game_scenarios"
+  ],
+  "prior_attempts": [
+    {
+      "output": "desktop-control/build/package-check/english-d898af7180944b5a9a650b7d00f4e3b6",
+      "cli_version": "CLI.0.7.1",
+      "classification": "production_text_projection_gap",
+      "detail": "Original first tutorial displayed Guidebook hint could not be disambiguated from Alchemy Guide. Original flow retained; later fixed and actually rerun in the package."
+    },
+    {
+      "output": "desktop-control/build/package-check/english-b41396be5858429a9571f29b97e081c5",
+      "cli_version": "CLI.0.7.2",
+      "classification": "test_locator_error_with_independent_raw_case_pass",
+      "detail": "Fullscreen was present as public node.text with checked=false; the test incorrectly looked only at label. The original raw case report remains unchanged and is reused by the final same-build report."
+    },
+    {
+      "output": "desktop-control/build/package-check/english-9204b0763a144dfe9699836cb9573295",
+      "cli_version": "CLI.0.7.2",
+      "classification": "test_client_inheritance_error",
+      "detail": "A shared fixture helper added a field that the custom package constructor had not initialized; the package client was decoupled from that helper without relaxing language or display assertions."
+    }
+  ]
+}
