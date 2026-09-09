@@ -3,6 +3,8 @@ package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditStore;
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditException;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.GameController;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.*;
 import java.io.*;
 import java.math.BigDecimal;
@@ -152,9 +154,9 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("protocol_version",1,"cli_version","CLI.0.6.0","game_version","3.3.8",
+                    result=map("protocol_version",1,"cli_version","CLI.0.7.0","game_version","3.3.8",
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
-                            "session_id",store.sessionId(),"audit_schema_version",4,
+                            "session_id",store.sessionId(),"audit_schema_version",4,"text_language","en",
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
                             "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit"));break;
@@ -345,7 +347,18 @@ public final class MachineSession implements AutoCloseable {
         GameController.GameLogSnapshot log;
         while((log=game.pollGameLog())!=null){
             store.ensureScope(log.scopeId,"run",log.scopeId.substring(4));
-            store.event(log.scopeId,"game.log",log.data());
+            Map<String,Object> original=log.data();
+            Map<String,Object> english;
+            try { english=PublicEnglishProjection.copy(original); }
+            catch(DisplayedTextEnglish.PublicTextUnavailableException unavailable) {
+                // The display event really happened even if its English presentation failed.
+                // Keep the entire original batch privately, never only the offending fragment.
+                store.recordLog("displayed_text_untranslated",JsonCodec.encode(map("scope_id",log.scopeId,
+                        "kind","game.log","original_display",original)));
+                throw unavailable;
+            }
+            english.put("text_language","en");
+            store.eventWithOriginalText(log.scopeId,"game.log",english,original);
         }
         GameController.VisualSnapshot visual;
         while((visual=game.pollVisual())!=null){
@@ -420,10 +433,10 @@ public final class MachineSession implements AutoCloseable {
     public void recordLog(String channel,String text){
         try{serial.execute(()->{try{store.recordLog(channel,text);}catch(Throwable error){fatal(error);}});}catch(RejectedExecutionException ignored){}
     }
-    private static Map<String,Object> success(String id,String scope,String status,Object result){return map("id",id,"scope_id",scope,"ok",true,"status",status,"result",result);}
+    private static Map<String,Object> success(String id,String scope,String status,Object result){return map("id",id,"scope_id",scope,"ok",true,"status",status,"result",PublicEnglishProjection.copy(result));}
     private static Map<String,Object> failure(String id,String scope,String code){return map("id",id,"scope_id",scope,"ok",false,"error",map("code",code));}
     private static Throwable unwrap(Throwable e){while((e instanceof ExecutionException||e instanceof CompletionException)&&e.getCause()!=null)e=e.getCause();return e;}
-    private static String code(Throwable e){e=unwrap(e);return e instanceof GameController.NotExecuted?((GameController.NotExecuted)e).code:e instanceof ProtocolException?((ProtocolException)e).code:e instanceof IllegalArgumentException?"INVALID_ARGUMENT":e instanceof TimeoutException?"STATE_UNAVAILABLE":"ENGINE_ERROR";}
+    private static String code(Throwable e){e=unwrap(e);return e instanceof GameController.NotExecuted?((GameController.NotExecuted)e).code:e instanceof DisplayedTextEnglish.PublicTextUnavailableException?DisplayedTextEnglish.UNAVAILABLE_CODE:e instanceof ProtocolException?((ProtocolException)e).code:e instanceof IllegalArgumentException?"INVALID_ARGUMENT":e instanceof TimeoutException?"STATE_UNAVAILABLE":"ENGINE_ERROR";}
     private static String validText(Object v){return v instanceof String&&!((String)v).isEmpty()?(String)v:null;}
     private static String identity(Object v,int maximum){return v instanceof String&&Identifiers.valid((String)v,maximum)?(String)v:null;}
     private static String requiredString(Map<String,Object> args,String key){String s=validText(args.get(key));if(s==null)throw new ProtocolException("INVALID_ARGUMENT",key+" is required");return s;}

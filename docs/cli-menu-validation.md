@@ -14,3 +14,7 @@ python3 desktop-control/src/test/python/menu_scenario_smoke.py
 ```
 
 这份报告证明的是六条原导航路线，不证明每个目标场景内部的全部交互。逐项待测记录见[场景覆盖清单](cli-scenario-coverage.json)。
+
+## 英文CLI复跑
+
+`menu-scenes-56e2f4c2b51842a3b935d3cc36f2316a`完成六类原进入/返回及Journal的Badges、Catalogs、Dungeon Guide、Alchemy Guide四个页签，公开控件使用英文；独立同版本GUI断言仍为CHI_SMPL、窗口化。新结果作为原JSON中的english_revalidation追加，旧中文基线没有改写。此项没有扩大为每个页面内全部按钮均通过。

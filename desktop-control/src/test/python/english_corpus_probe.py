@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""Offline English projection diagnostics from closed fixtures' PUBLIC response JSON only.
+
+Never opens an engine, UI, SQLite database, save, hidden assertion stream or formal profile.
+The Java test tool revalidates every trace, excludes active profiles and summarizes every
+unavailable text leaf instead of stopping at the first failure in a response.
+"""
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import uuid
+
+from fixture_smoke import freeze_runtime
+
+
+REPORTS = [
+    "docs/cli-menu-validation.json",
+    "docs/cli-king-visual-validation.json",
+    "docs/cli-tengu-traps-validation.json",
+    "docs/cli-transition-scenarios-validation.json",
+    "docs/cli-game-log-validation.json",
+    "docs/cli-visual-cues-validation.json",
+    "docs/cli-tengu-bomb-validation.json",
+    "docs/cli-p6-low-frequency.json",
+    "docs/cli-p7-validation.json",
+]
+
+
+def no_symlinks(root, candidate):
+    current = root
+    for part in candidate.relative_to(root).parts:
+        current /= part
+        if current.is_symlink():
+            raise ValueError("Symbolic links are not accepted")
+
+
+def checked_trace(root, value):
+    path = Path(os.path.abspath(root / value))
+    fixtures = root / "desktop-control/build/fixtures"
+    if not path.is_relative_to(fixtures) or path.name != "public-trace.jsonl":
+        raise ValueError("Only build/fixtures public-trace.jsonl inputs are accepted")
+    no_symlinks(root, path)
+    if not path.is_file():
+        raise ValueError("Public trace does not exist")
+    if not any(path.parent.glob("*-result.json")):
+        raise ValueError("Fixture has no completed test report")
+    return path
+
+
+def profiles(value):
+    if isinstance(value, dict):
+        if isinstance(value.get("profile"), str):
+            yield value["profile"]
+        for child in value.values():
+            yield from profiles(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from profiles(child)
+
+
+def collect(root, without_p7=False, extra_traces=()):
+    candidates = set(extra_traces)
+    skipped = []
+    for relative in REPORTS:
+        if without_p7 and relative.endswith("cli-p7-validation.json"):
+            continue
+        report = root / relative
+        if report.is_file():
+            no_symlinks(root, report)
+            for profile in profiles(json.loads(report.read_text())):
+                candidates.add(str(Path(profile) / "public-trace.jsonl"))
+    # Preserve earlier closed menu attempts, including the original Chinese six-scene batch.
+    for report in (root / "desktop-control/build/fixtures").glob("menu-scenes-*/menu-scenario-result.json"):
+        candidates.add(str(report.parent / "public-trace.jsonl"))
+    traces = []
+    for value in sorted(candidates):
+        try:
+            traces.append(str(checked_trace(root, value).relative_to(root)))
+        except ValueError as rejected:
+            skipped.append({"candidate": value, "reason": str(rejected)})
+    return sorted(set(traces)), skipped
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--without-p7", action="store_true", help="Scan the priority Chinese corpus without the older 188-case matrix")
+    parser.add_argument("--no-build", action="store_true", help="Use the current compiled test classpath without rebuilding")
+    parser.add_argument("--trace", action="append", default=[], help="Additional closed build/fixtures/.../public-trace.jsonl")
+    parser.add_argument("--baseline-inputs", help="Reuse an earlier build/english-corpus/.../inputs.json corpus exactly; never overwrite that report")
+    args = parser.parse_args()
+    root = Path(__file__).resolve().parents[4]
+    baseline = None
+    if args.baseline_inputs:
+        baseline = Path(os.path.abspath(root / args.baseline_inputs))
+        if not baseline.is_relative_to(root / "desktop-control/build/english-corpus") or baseline.name != "inputs.json":
+            raise ValueError("Baseline must be a build/english-corpus inputs.json")
+        no_symlinks(root, baseline)
+        selected = json.loads(baseline.read_text())
+        traces = [str(checked_trace(root, trace).relative_to(root)) for trace in selected["traces"]]
+        skipped = []
+        if args.trace or args.without_p7:
+            raise ValueError("An exact baseline cannot be combined with new traces or exclusions")
+    else:
+        traces, skipped = collect(root, args.without_p7, args.trace)
+    if not traces:
+        raise SystemExit("No eligible closed fixture public traces")
+    if not args.no_build:
+        subprocess.run([str(root / "gradlew"), ":desktop-control:writeTestRuntimeClasspath", "--console=plain"], cwd=root, check=True)
+    classpath, runtime_id = freeze_runtime(root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip())
+    output_dir = root / "desktop-control/build/english-corpus" / uuid.uuid4().hex
+    output_dir.mkdir(parents=True)
+    manifest = {"test_only": True, "input_kind": "public_fixture_responses", "runtime_id": runtime_id,
+                "traces": traces, "selection_skipped": skipped,
+                "baseline_inputs": str(baseline.relative_to(root)) if baseline else None,
+                "total_input_bytes": sum((root / trace).stat().st_size for trace in traces)}
+    manifest_path = output_dir / "inputs.json"
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+    output = output_dir / "report.json"
+    # This main loads only strict JSON and the paired resource dictionary, never a launcher.
+    subprocess.run(["java", "-Xmx1g", "-cp", classpath,
+                    "com.shatteredpixel.shatteredpixeldungeon.control.desktop.EnglishCorpusProbe",
+                    str(root), str(manifest_path), str(output)], cwd=root, check=True)
+
+
+if __name__ == "__main__":
+    main()

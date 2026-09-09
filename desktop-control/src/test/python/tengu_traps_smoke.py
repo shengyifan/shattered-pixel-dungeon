@@ -14,9 +14,9 @@ KIND = "fading_trap_pattern"
 def zap_boss(client):
     state = client.state()
     target = next(e for e in state["observation"]["visible_entities"] if e.get("context_action") == "attack")
-    wand = next(i for i in state["observation"]["inventory"] if "魔弹法杖" in i["name"])
+    wand = next(i for i in state["observation"]["inventory"] if i["name"] == "wand of magic missile")
     opened = act(client, "inventory.open", locator=wand["locator"])
-    zap = next(a for a in opened["actions"] if a.get("label") == "释放")
+    zap = next(a for a in opened["actions"] if a.get("label") == "ZAP")
     targeting = act(client, "ui.activate", control=zap["control"])
     assert any(a["action"] == "cell.select" for a in targeting["actions"])
     # This original item target callback causes damage -> Tengu.jump -> original
@@ -40,7 +40,7 @@ def test_patterns(client):
     # custom visual is registered; no hidden trap name is copied into a cue.
     info = act(client, "cell.select", cell=min(first_cells), mode="examine")
     assert info["observation"]["ui"]["modal"] and visual(info)["cues"] == []
-    assert any("毒镖陷阱" in n.get("text", "") for n in info["observation"]["ui"]["controls"])
+    assert any(n.get("text") == "Poison Dart Trap" for n in info["observation"]["ui"]["controls"])
     restored = act(client, "ui.back")
     assert kind_cells(restored, KIND) & first_cells
     restored_cells = kind_cells(restored, KIND)

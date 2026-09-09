@@ -315,6 +315,20 @@ public final class AuditStore implements AutoCloseable {
         });
     }
 
+    /** Public English text and original displayed wording share one durable commit. */
+    public synchronized void eventWithOriginalText(String scopeId,String kind,Map<String,Object> data,Map<String,Object> original) {
+        if(kind==null)throw new IllegalArgumentException("Event kind is required");
+        String english=JsonCodec.encode(data);
+        String diagnostic=JsonCodec.encode(Values.map("scope_id",scopeId,"kind",kind,"original_display",original));
+        transaction(() -> {
+            insertEvent(scopeId,kind,english);
+            try(PreparedStatement s=writer.prepareStatement("INSERT INTO internal.logs(channel,text,created_at,session_id) VALUES(?,?,?,?)")) {
+                s.setString(1,"displayed_text_original");s.setString(2,diagnostic);s.setString(3,now());s.setString(4,activeSession);s.executeUpdate();
+            }
+            return null;
+        });
+    }
+
     public synchronized void recordSave(String scopeId, int slot, boolean success, Throwable error) {
         recordSave(UUID.randomUUID().toString(),scopeId,slot,success,now(),null,null,error);
     }
@@ -651,6 +665,12 @@ public final class AuditStore implements AutoCloseable {
     private void insertException(Attempt attempt, Throwable error) throws SQLException {
         StringWriter stack = new StringWriter();
         error.printStackTrace(new PrintWriter(stack));
+        if(error instanceof com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish.PublicTextUnavailableException) {
+            com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish.PublicTextUnavailableException textError=
+                    (com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish.PublicTextUnavailableException)error;
+            stack.append("\nPrivate displayed text: ").append(textError.diagnosticOriginalText())
+                    .append("\nTranslation diagnostic: ").append(textError.diagnosticReason());
+        }
         try (PreparedStatement s = writer.prepareStatement("INSERT INTO internal.exceptions(exchange_id,scope_id,id,exception_class,message,stack_trace,thread_name,created_at,session_id) VALUES(?,?,?,?,?,?,?,?,?)")) {
             if (attempt == null) s.setNull(1, java.sql.Types.INTEGER); else s.setLong(1, attempt.exchangeId);
             s.setString(2, attempt == null ? null : attempt.scopeId); s.setString(3, attempt == null ? null : attempt.id);

@@ -7,7 +7,7 @@ import traceback
 import uuid
 import xml.etree.ElementTree as ET
 
-from fixture_smoke import FixtureClient, freeze_runtime
+from fixture_smoke import FixtureClient, freeze_runtime, assert_gui_environment
 from low_frequency_smoke import act
 from test_ui import configure_test_ui
 
@@ -30,7 +30,7 @@ def return_to_title(client):
         if ui(state)["scene"] == "TitleScene" and not ui(state)["modal"]:
             return state
         if ui(state)["scene"] == "WelcomeScene":
-            label = "继续" if any(a.get("label") == "继续" for a in state["actions"]) else "进入地牢"
+            label = "Continue" if any(a.get("label") == "Continue" for a in state["actions"]) else "Enter the Dungeon"
             choose(client, label)
         else:
             act(client, "ui.back")
@@ -47,14 +47,13 @@ def scene_case(client, label, expected):
               "actions": [(a["action"], a.get("label")) for a in opened["actions"]],
               "displayed_text_samples": [n["text"][:180] for n in ui(opened)["controls"] if n.get("text")][:12]}
     if expected == "JournalScene":
-        tabs = ["徽章", "图鉴", "冒险指南", "炼金指南"]
+        tabs = ["Badges", "Catalogs", "Dungeon Guide", "Alchemy Guide"]
         result["tab_candidates"] = [a.get("label") for a in opened["actions"] if a["action"] == "ui.activate"]
         result["verified_tabs"] = []
         for tab in tabs:
-            if any(a.get("label") == tab for a in client.state()["actions"]):
-                panel = choose(client, tab)
-                assert ui(panel)["scene"] == expected
-                result["verified_tabs"].append(tab)
+            panel = choose(client, tab)
+            assert ui(panel)["scene"] == expected
+            result["verified_tabs"].append(tab)
     returned = return_to_title(client)
     assert returned["scope_id"] == start["scope_id"]
     result["original_back_to_title"] = True
@@ -89,9 +88,11 @@ def main():
         report["build_id"] = hello["result"]["build_id"]
         initial = client.state(); report["initial_scene"] = ui(initial)["scene"]
         title = return_to_title(client)
-        assert any(a.get("label") == "进入地牢" for a in title["actions"])
-        for label, expected in [("关于", "AboutScene"), ("改动", "ChangesScene"), ("日志", "JournalScene"),
-                                ("排行榜", "RankingsScene"), ("支持游戏开发", "SupporterScene"), ("游戏新闻", "NewsScene")]:
+        report["gui_environment"] = assert_gui_environment(profile, title)
+        report["cli_language"] = "en"
+        assert any(a.get("label") == "Enter the Dungeon" for a in title["actions"])
+        for label, expected in [("About", "AboutScene"), ("Changes", "ChangesScene"), ("Journal", "JournalScene"),
+                                ("Rankings", "RankingsScene"), ("Support the Game", "SupporterScene"), ("News", "NewsScene")]:
             report["cases"].append(scene_case(client, label, expected))
         report["ok"] = True
     except Exception as error:

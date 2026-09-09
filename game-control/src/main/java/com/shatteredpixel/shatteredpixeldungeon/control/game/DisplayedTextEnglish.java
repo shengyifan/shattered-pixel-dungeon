@@ -28,6 +28,10 @@ public final class DisplayedTextEnglish {
     // is not a printf placeholder. These conversions cover the paired bundled resources.
     private static final Pattern FORMAT = Pattern.compile("%(?:(\\d+)\\$)?([-#+0,(<]*)(\\d+)?(?:\\.(\\d+))?([sdfxXeEgGbBhH%])");
     private static final Map<String,String> PUBLIC_SCENE_SCOPES=publicSceneScopes();
+    private static final Pattern CATALOG_HEADING=Pattern.compile("\\A_([^_\\r\\n]+)_ \\(([0-9]+)/([0-9]+)\\)(:?)\\z");
+    // Reviewed display vocabulary preserves the distinction available in the Chinese
+    // text itself. It must not infer whether this word describes an ability or a buff.
+    private static final Map<String,String> CONSERVATIVE_WORDS=Collections.singletonMap("凝神","Focus");
     private final Dictionary dictionary;
 
     /** The immutable asset index is built once per classloader, outside subsequent translations. */
@@ -40,6 +44,7 @@ public final class DisplayedTextEnglish {
 
     public String translate(String displayed) {
         if (displayed == null) return null;
+        String word=CONSERVATIVE_WORDS.get(displayed);if(word!=null)return word;
         String language=dictionary.languageNames.get(displayed.toLowerCase(Locale.ROOT));
         if(language!=null)return language;
         if (!containsNonLatinText(displayed)) return displayed;
@@ -62,6 +67,8 @@ public final class DisplayedTextEnglish {
 
     /** Only reviewed, already-public scene names restrict the resource search. No live object is inspected. */
     public String translateInScene(String displayed,String publicScene) {
+        String word=CONSERVATIVE_WORDS.get(displayed);if(word!=null)return word;
+        String normalized=dictionary.normalized.get(displayed);if(normalized!=null)return normalized;
         String scope=PUBLIC_SCENE_SCOPES.get(publicScene);
         if(scope!=null && displayed!=null && containsNonLatinText(displayed)) {
             Map<String,Set<String>> entries=dictionary.sceneEntries.get(scope);
@@ -77,6 +84,56 @@ public final class DisplayedTextEnglish {
             if (!clipped) throw unavailable;
             return new VisibleText("Partially displayed text", true);
         }
+    }
+
+    /** Context contains only previously public DTO facts; unknown fields never influence translation. */
+    public String translateInContext(String displayed,Map<String,Object> publicContext) {
+        String word=CONSERVATIVE_WORDS.get(displayed);if(word!=null)return word;
+        if(displayed==null || !containsNonLatinText(displayed))return translate(displayed);
+        if(displayed.length()>MAX_TEXT)throw unavailable(displayed,"displayed_text_too_long");
+        Map<String,Object> context=publicContext==null?Collections.emptyMap():publicContext;
+        String scene=context.get("scene") instanceof String?(String)context.get("scene"):null;
+        String scope=PUBLIC_SCENE_SCOPES.get(scene);
+        String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
+        String resolved;
+        if("back".equalsIgnoreCase(shortcut)
+                &&(resolved=policyResource(displayed,"windows.wndkeybindings.back"))!=null)return resolved;
+        boolean slider=Boolean.TRUE.equals(context.get("slider")),checkbox=Boolean.TRUE.equals(context.get("checkbox"));
+        if(slider||checkbox) {
+            if((resolved=policyResource(displayed,"windows.wndsettings$displaytab.off"))!=null)return resolved;
+            if(displayed.indexOf('\n')>=0) {
+                StringBuilder result=new StringBuilder();String[] lines=displayed.split("\\n",-1);
+                for(int i=0;i<lines.length;i++) {if(i>0)result.append('\n');result.append(translateInContext(lines[i],context));}
+                return result.toString();
+            }
+        }
+        if("startscene".equals(scope)&&Boolean.TRUE.equals(context.get("save_details"))
+                &&(resolved=policyResource(displayed,"windows.wndgameinprogress.erase"))!=null)return resolved;
+        if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("game_menu"))
+                &&(resolved=policyResource(displayed,"windows.wndgame.settings"))!=null)return resolved;
+        if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("chasm_prompt"))
+                &&(resolved=policyResource(displayed,"levels.features.chasm.no"))!=null)return resolved;
+        if("journalscene".equals(scope)) {
+            Matcher heading=CATALOG_HEADING.matcher(displayed);
+            if(heading.matches()) {
+                String title=unique(dictionary.catalogTitles.get(heading.group(1)));
+                if(title!=null)return "_"+title+"_ ("+heading.group(2)+"/"+heading.group(3)+")"+heading.group(4);
+            }
+        }
+        return translateInScene(displayed,scene);
+    }
+
+    public VisibleText translateVisibleInContext(String displayed,boolean clipped,Map<String,Object> publicContext) {
+        try{return new VisibleText(translateInContext(displayed,publicContext),false);}
+        catch(PublicTextUnavailableException unavailable) {
+            if(!clipped)throw unavailable;
+            return new VisibleText("Partially displayed text",true);
+        }
+    }
+
+    private String policyResource(String displayed,String key) {
+        ResourcePair resource=dictionary.policyResources.get(key);
+        return resource!=null&&resource.chinese.equals(displayed)&&!containsNonLatinText(resource.english)?resource.english:null;
     }
 
     public Map<String,Integer> statistics() { return dictionary.statistics; }
@@ -110,6 +167,7 @@ public final class DisplayedTextEnglish {
     }
 
     private String translate(String text, Context context, int depth) {
+        String word=CONSERVATIVE_WORDS.get(text);if(word!=null)return word;
         String language=dictionary.languageNames.get(text.toLowerCase(Locale.ROOT));
         if(language!=null)return language;
         if (!containsNonLatinText(text)) return text;
@@ -117,13 +175,7 @@ public final class DisplayedTextEnglish {
         if (depth > MAX_DEPTH || context.unavailable.contains(text)) return null;
         if (context.translated.containsKey(text)) return context.translated.get(text);
         Set<String> exact=dictionary.exact.get(text);
-        if (exact != null) return remember(text, unique(exact), context);
-        String trimmed=text.trim();
-        if(!trimmed.equals(text)) {
-            int start=text.indexOf(trimmed);
-            String translated=translate(trimmed,context,depth+1);
-            return remember(text,translated==null?null:text.substring(0,start)+translated+text.substring(start+trimmed.length()),context);
-        }
+        if (exact != null) return remember(text, dictionary.resolved.get(text), context);
 
         Set<String> candidates=new TreeSet<>();
         for (Template template : dictionary.templates) {
@@ -144,6 +196,12 @@ public final class DisplayedTextEnglish {
             }
         }
         if(!candidates.isEmpty()) return remember(text,unique(candidates),context);
+        String trimmed=text.trim();
+        if(!trimmed.equals(text)) {
+            int start=text.indexOf(trimmed);
+            String translated=translate(trimmed,context,depth+1);
+            return remember(text,translated==null?null:text.substring(0,start)+translated+text.substring(start+trimmed.length()),context);
+        }
 
         // Concatenated resource paragraphs are separate visible units. This only
         // divides supplied text; it never fetches the unseen rest of a resource.
@@ -179,25 +237,31 @@ public final class DisplayedTextEnglish {
         if(segments>256)throw new LimitReached();
         context.spend();
         if(memo.containsKey(offset))return memo.get(offset);
-        if(!isNonLatinText(text.codePointAt(offset))) {
-            int end=offset;
-            while(end<text.length() && !isNonLatinText(text.codePointAt(end))) end+=Character.charCount(text.codePointAt(end));
-            String rest=compose(text,end,context,memo,segments+1);
-            String result=rest==null?null:join(text.substring(offset,end),rest);
-            memo.put(offset,result);return result;
-        }
         List<String> entries=dictionary.prefixes.get(text.charAt(offset));
-        if(entries==null) {memo.put(offset,null);return null;}
         // Prefer the longest complete resource unit at this boundary. Equal source
         // strings retain all English candidates and cannot be resolved by insertion order.
-        for(String source:entries) {
+        if(entries!=null)for(String source:entries) {
             if(!text.startsWith(source,offset))continue;
-            String translated=unique(dictionary.exact.get(source));
+            String translated=dictionary.resolved.get(source);
             if(translated==null) {memo.put(offset,null);return null;}
             String rest=compose(text,offset+source.length(),context,memo,segments+1);
             if(rest!=null) {String result=join(translated,rest);memo.put(offset,result);return result;}
         }
+        if(!isNonLatinText(text.codePointAt(offset))) {
+            int end=offset+Character.charCount(text.codePointAt(offset));
+            while(end<text.length() && !isNonLatinText(text.codePointAt(end)) && !resourceStartsAt(text,end))
+                end+=Character.charCount(text.codePointAt(end));
+            String rest=compose(text,end,context,memo,segments+1);
+            String result=rest==null?null:join(text.substring(offset,end),rest);
+            memo.put(offset,result);return result;
+        }
         memo.put(offset,null);return null;
+    }
+
+    private boolean resourceStartsAt(String text,int offset) {
+        List<String> sources=dictionary.prefixes.get(text.charAt(offset));
+        if(sources!=null)for(String source:sources)if(text.startsWith(source,offset))return true;
+        return false;
     }
 
     private static String remember(String source,String translated,Context context) {
@@ -205,6 +269,13 @@ public final class DisplayedTextEnglish {
         return translated;
     }
     private static String unique(Set<String> values) {
+        String exact=uniqueIgnoringCase(values);
+        if(exact!=null||values==null||values.isEmpty())return exact;
+        Set<String> withoutOptionalPeriod=new TreeSet<>();
+        for(String value:values)withoutOptionalPeriod.add(withoutSingleTerminalPeriod(value));
+        return uniqueIgnoringCase(withoutOptionalPeriod);
+    }
+    private static String uniqueIgnoringCase(Set<String> values) {
         if(values==null || values.isEmpty())return null;
         String first=null,folded=null;
         for(String value:values) {
@@ -213,6 +284,13 @@ public final class DisplayedTextEnglish {
             else if(!folded.equals(value.toLowerCase(Locale.ROOT)))return null;
         }
         return first;
+    }
+    private static String withoutSingleTerminalPeriod(String value) {
+        // A normal word/number followed by one final period only. Do not trim,
+        // collapse an ellipsis, or strip a period following other punctuation.
+        if(value.length()>1&&value.endsWith(".")&&Character.isLetterOrDigit(value.codePointBefore(value.length()-1)))
+            return value.substring(0,value.length()-1);
+        return value;
     }
     private static String join(String left,String right) {
         if(!left.isEmpty()&&!right.isEmpty() && Character.isLetterOrDigit(left.charAt(left.length()-1))
@@ -252,6 +330,10 @@ public final class DisplayedTextEnglish {
     private static final class Argument {
         final int index;final char conversion;
         Argument(int index,char conversion){this.index=index;this.conversion=conversion;}
+    }
+    private static final class ResourcePair {
+        final String chinese,english;
+        ResourcePair(String chinese,String english){this.chinese=chinese;this.english=english;}
     }
     private static final class Printf {
         final List<String> literals=new ArrayList<>();
@@ -304,19 +386,28 @@ public final class DisplayedTextEnglish {
     private static final class Dictionary {
         final Map<String,Set<String>> exact;
         final Map<String,String> resolved;
+        final Map<String,String> normalized;
         final Map<Character,List<String>> prefixes;
         final List<Template> templates;
         final Map<String,Integer> statistics;
         final Map<String,String> languageNames;
         final Map<String,Map<String,Set<String>>> sceneEntries;
+        final Map<String,ResourcePair> policyResources;
+        final Map<String,Set<String>> catalogTitles;
         Dictionary(Map<String,String> chinese,Map<String,String> english) {
             Map<String,Set<String>> entries=new TreeMap<>();List<Template> patterns=new ArrayList<>();
             Map<String,Map<String,Set<String>>> byScene=new TreeMap<>();
+            Map<String,ResourcePair> policies=new TreeMap<>();Map<String,Set<String>> catalogs=new TreeMap<>();
             int pairs=0,templatePairs=0,unsupported=0;
             for(String key:new TreeSet<>(chinese.keySet())) {
                 String source=chinese.get(key),target=english.get(key);
                 if(source==null||target==null||!containsChinese(source))continue;
                 pairs++;entries.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
+                if(key.equals("windows.wndkeybindings.back")||key.equals("windows.wndsettings$displaytab.off")
+                        ||key.equals("windows.wndgameinprogress.erase")||key.equals("windows.wndgame.settings")||key.equals("levels.features.chasm.no"))
+                    policies.put(key,new ResourcePair(source,target));
+                if(key.startsWith("journal.catalog.")&&key.endsWith(".title")||key.startsWith("windows.wndjournal$catalogtab.title_"))
+                    catalogs.computeIfAbsent(source,ignored->new TreeSet<>()).add(target);
                 if(key.startsWith("scenes.")) {
                     int dot=key.indexOf('.',7);
                     String scope=dot<0?"":key.substring(7,dot);
@@ -344,15 +435,29 @@ public final class DisplayedTextEnglish {
                 scenes.put(scene.getKey(),Collections.unmodifiableMap(strings));
             }
             sceneEntries=Collections.unmodifiableMap(scenes);
-            Map<String,Set<String>> immutable=new LinkedHashMap<>();Map<String,String> unambiguous=new LinkedHashMap<>();
+            policyResources=Collections.unmodifiableMap(policies);
+            Map<String,Set<String>> titles=new TreeMap<>();
+            for(Map.Entry<String,Set<String>> entry:catalogs.entrySet())titles.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
+            catalogTitles=Collections.unmodifiableMap(titles);
+            Map<String,Set<String>> immutable=new LinkedHashMap<>();Map<String,String> unambiguous=new LinkedHashMap<>(),normalizedValues=new LinkedHashMap<>();
             Map<Character,List<String>> starts=new HashMap<>();
-            int ambiguous=0;
+            int ambiguous=0,normalizedAmbiguous=0;
             for(Map.Entry<String,Set<String>> entry:entries.entrySet()) {
                 immutable.put(entry.getKey(),Collections.unmodifiableSet(entry.getValue()));
-                String resolvedValue=unique(entry.getValue());
-                if(resolvedValue==null)ambiguous++;else unambiguous.put(entry.getKey(),resolvedValue);
-                if(!entry.getKey().isEmpty()&&isChinese(entry.getKey().codePointAt(0)))
+                boolean wasAmbiguous=uniqueIgnoringCase(entry.getValue())==null;
+                if(wasAmbiguous)ambiguous++;
+                String resolvedValue=CONSERVATIVE_WORDS.containsKey(entry.getKey())?CONSERVATIVE_WORDS.get(entry.getKey()):unique(entry.getValue());
+                if(resolvedValue!=null) {
+                    unambiguous.put(entry.getKey(),resolvedValue);
+                    if(wasAmbiguous) {normalizedAmbiguous++;normalizedValues.put(entry.getKey(),resolvedValue);}
+                }
+                if(!entry.getKey().isEmpty())
                     starts.computeIfAbsent(entry.getKey().charAt(0),ignored->new ArrayList<>()).add(entry.getKey());
+            }
+            for(Map.Entry<String,String> word:CONSERVATIVE_WORDS.entrySet()) {
+                unambiguous.put(word.getKey(),word.getValue());
+                List<String> startsWith=starts.computeIfAbsent(word.getKey().charAt(0),ignored->new ArrayList<>());
+                if(!startsWith.contains(word.getKey()))startsWith.add(word.getKey());
             }
             for(Map.Entry<Character,List<String>> entry:starts.entrySet()) {
                 entry.getValue().sort((a,b)->a.length()!=b.length()?Integer.compare(b.length(),a.length()):a.compareTo(b));
@@ -360,8 +465,10 @@ public final class DisplayedTextEnglish {
             }
             exact=Collections.unmodifiableMap(immutable);prefixes=Collections.unmodifiableMap(starts);templates=Collections.unmodifiableList(patterns);
             resolved=Collections.unmodifiableMap(unambiguous);
+            normalized=Collections.unmodifiableMap(normalizedValues);
             Map<String,Integer> counts=new LinkedHashMap<>();counts.put("resource_pairs",pairs);counts.put("unique_chinese_strings",resourceStrings);
             counts.put("ambiguous_chinese_strings",ambiguous);counts.put("source_template_pairs",templatePairs);
+            counts.put("normalized_ambiguous_strings",normalizedAmbiguous);
             counts.put("compiled_template_pairs",patterns.size());counts.put("unsupported_template_pairs",unsupported);
             counts.put("language_names",names.size());
             statistics=Collections.unmodifiableMap(counts);

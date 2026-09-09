@@ -17,6 +17,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Pasty;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CharHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
@@ -73,7 +74,9 @@ public final class UiBridge {
 
     public List<Map<String, Object>> describeActions() {
         refresh();
-        return new ArrayList<>(actions);
+        return PublicEnglishProjection.copyWithUi(new ArrayList<>(actions),map(
+                "scene",scene==null?"none":scene.getClass().getSimpleName(),
+                "modal",scope instanceof Window||scope instanceof RightClickMenu,"controls",new ArrayList<>(nodes)));
     }
 
     public Map<String, Object> describeUi() {
@@ -81,14 +84,14 @@ public final class UiBridge {
         Map<String, Object> result = map("scene", scene == null ? "none" : scene.getClass().getSimpleName(),
                 "modal", scope instanceof Window || scope instanceof RightClickMenu, "controls", new ArrayList<>(nodes));
         if (cellSelector != null && scope == scene && cellSelector.listener != null) {
-            String prompt = cellSelector.listener.prompt();
+            String prompt = englishRead(() -> cellSelector.listener.prompt());
             result.put("cell_prompt", prompt);
             result.put("cell_input", cellAvailable());
         }
         if (scope instanceof InventoryPane) {
-            result.put("item_prompt", ((InventoryPane) scope).getSelector().textPrompt());
+            result.put("item_prompt", englishRead(() -> ((InventoryPane) scope).getSelector().textPrompt()));
         }
-        return result;
+        return PublicEnglishProjection.copy(result);
     }
 
     /** A process-local signature of public control state and live callback lifetimes. */
@@ -349,6 +352,16 @@ public final class UiBridge {
     }
 
     private void refresh() {
+        englishRead(() -> { refreshControls(); return null; });
+    }
+
+    /** Only description getters run here; perform and its original callbacks run after finally restores the GUI language. */
+    private static <T> T englishRead(Supplier<T> read) {
+        if (!Boolean.TRUE.equals(new ClassInitializationProbe().initialized(Messages.class))) return read.get();
+        return Messages.withLanguage(Languages.ENGLISH, read);
+    }
+
+    private void refreshControls() {
         Scene current = sceneSource.get();
         if (current != scene) {
             identities.clear();

@@ -7,7 +7,7 @@ import time
 import traceback
 import uuid
 
-from fixture_smoke import FixtureClient, close_choices, freeze_runtime, reach_game
+from fixture_smoke import FixtureClient, assert_gui_environment, close_choices, freeze_runtime, reach_game
 from low_frequency_smoke import act
 
 
@@ -119,7 +119,7 @@ def test_hidden(client):
 
 def test_frozen(client):
     def frozen(state):
-        return any(buff.get("name") == "时间气泡" for buff in state["observation"]["hero"]["buffs"])
+        return any(buff.get("name") == "time bubble" for buff in state["observation"]["hero"]["buffs"])
     initial = client.state()
     assert frozen(initial)
     # Let the normal startup grace expire; never assign Game.timeTotal in this live test.
@@ -130,14 +130,14 @@ def test_frozen(client):
                 if str(node.get("shortcut_action", "")).lower() == "back")
     act(client, "ui.activate", control=menu["id"])
     state = client.state()
-    settings = next(a for a in state["actions"] if a.get("label") == "设置")
+    settings = next(a for a in state["actions"] if a.get("label") == "Settings")
     state = act(client, "ui.activate", control=settings["control"])
     candidates = [a["control"] for a in state["actions"] if a["action"] == "ui.activate" and not a.get("label")]
     for control in candidates:
-        if any(a["action"] == "ui.value" and "界面模式" in a.get("label", "") for a in state["actions"]):
+        if any(a["action"] == "ui.value" and "Interface Mode" in a.get("label", "") for a in state["actions"]):
             break
         state = act(client, "ui.activate", control=control)
-    mode = next(a for a in state["actions"] if a["action"] == "ui.value" and "界面模式" in a.get("label", ""))
+    mode = next(a for a in state["actions"] if a["action"] == "ui.value" and "Interface Mode" in a.get("label", ""))
     old = next(n["value"] for n in state["observation"]["ui"]["controls"] if n["id"] == mode["control"])
     start = time.monotonic()
     rebuilt = act(client, "ui.value", control=mode["control"], value=0 if old != 0 else 2)
@@ -230,7 +230,9 @@ def run_one(root, classpath, runtime_id, name, test=None):
         assert hello["ok"], hello
         report["build_id"] = hello["result"].get("build_id")
         started = reach_game(client, "WARRIOR")
-        assert started["observation"]["hero"]["class_name"] == "战士", "Future real runs must use the actual Chinese UI"
+        assert started["observation"]["hero"]["class_name"] == "warrior", "Public descriptions must be English"
+        report["gui_environment"] = assert_gui_environment(profile, started)
+        report["cli_language"] = "en"
         report["language"] = "zh"
         setup = json.loads((profile / "test_fixture.json").read_text())
         assert setup["fullscreen"] is False, "Real fixture must remain windowed"

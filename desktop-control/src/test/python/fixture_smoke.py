@@ -17,7 +17,6 @@ import zipfile
 from machine_smoke import Client
 
 CLASSES = ["WARRIOR", "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"]
-CHINESE_CLASSES = {"WARRIOR": "战士", "MAGE": "法师", "ROGUE": "盗贼", "HUNTRESS": "女猎手", "DUELIST": "决斗家", "CLERIC": "牧师"}
 SUBCLASSES = {
     "BERSERKER": "WARRIOR", "GLADIATOR": "WARRIOR", "BATTLEMAGE": "MAGE", "WARLOCK": "MAGE",
     "ASSASSIN": "ROGUE", "FREERUNNER": "ROGUE", "SNIPER": "HUNTRESS", "WARDEN": "HUNTRESS",
@@ -94,10 +93,11 @@ def reach_game(client, hero_class):
         observation = state["observation"]
         if observation.get("scene") == "game":
             assert observation["hero"]["class"] == hero_class.lower(), observation["hero"]
+            assert observation["hero"]["class_name"] == hero_class.lower(), observation["hero"]
             return client.state()  # allow pending UI displays to refresh after fixture setup
         ui = observation.get("ui", {})
         if ui.get("scene") == "HeroSelectScene" and not selected and not ui.get("modal"):
-            click(client, lambda label: norm(label) in {norm(hero_class), norm(CHINESE_CLASSES[hero_class])})
+            click(client, lambda label: norm(label) == norm(hero_class))
             selected = True
             continue
         if ui.get("scene") == "HeroSelectScene" and ui.get("modal") and selected:
@@ -105,8 +105,9 @@ def reach_game(client, hero_class):
             continue
         options = [a for a in state["actions"] if a["action"] == "ui.activate" and a.get("label")]
         choice = None
-        for label in ["continue", "继续", "enter", "进入", "play", "开始游戏", "new game", "新游戏", "start", "开始"]:
-            choice = next((a for a in options if label in a["label"].lower()), None)
+        # Exact English resource labels; GUI language is checked separately after actions.
+        for label in ["Continue", "Enter the Dungeon", "Play", "New Game", "Start"]:
+            choice = next((a for a in options if a["label"] == label), None)
             if choice:
                 break
         if choice:
@@ -147,7 +148,7 @@ def visible_target(state, floor=False):
     cells = [c for c in observation["map"]["cells"] if c["visibility"] == "visible"
              and c["cell"] != hero and c["cell"] not in occupied
              and max(abs(c["x"] - hero % width), abs(c["y"] - hero // width)) == 1
-             and any(word in c["name"].lower() for word in ("floor", "grass", "water", "door", "地板", "地面", "草", "水", "门"))]
+             and any(word in c["name"].lower() for word in ("floor", "grass", "water", "door"))]
     assert cells, {"no_visible_target": observation["map"]}
     return cells[0]["cell"]
 
@@ -164,6 +165,24 @@ def checkpoint(profile, version):
                     return row
         time.sleep(0.02)
     raise AssertionError("Missing internal test assertion checkpoint for completed public response")
+
+
+def assert_gui_environment(profile, state):
+    """Postcondition only: UiSceneAssertions never supplies an action or target."""
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        path = profile / "ui-assertions.jsonl"
+        if path.exists():
+            for line in path.read_text().splitlines():
+                row = json.loads(line)
+                if row["state_version"] == state["state_version"]:
+                    assert row["scope_id"] == state["scope_id"], row
+                    assert row["language"] == "CHI_SMPL", row
+                    assert row["fullscreen"] is False, row
+                    return {"gui_language": row["language"], "fullscreen": row["fullscreen"],
+                            "asserted_state_version": row["state_version"]}
+        time.sleep(0.02)
+    raise AssertionError("Missing original GUI language/window assertion for completed public response")
 
 
 def initial_item_test(client, hero_class):
@@ -488,7 +507,8 @@ def run_one(root, classpath, fixture, runtime_id):
     report = {"test_fixture": True, "counts_as_win": False, "fixture": fixture, "profile": str(profile), "runtime_id": runtime_id}
     try:
         assert client.request("protocol.info")["ok"]
-        reach_game(client, hero_class)
+        started = reach_game(client, hero_class)
+        report.update(cli_language="en", gui_environment=assert_gui_environment(profile, started))
         if kind == "class":
             evidence = initial_item_test(client, hero_class)
         elif kind == "armor":

@@ -14,7 +14,28 @@
     "note": "One deterministic visible-name/number argument vector per resource template; not all runtime parameter combinations."
   },
   "public_language_names": 23,
-  "unit_tests_passed": 20,
+  "unit_tests_passed": 36,
+  "normalization_policy_count": 2,
+  "normalized_ambiguous_strings": 3,
+  "unresolved_without_public_context": 52,
+  "normalization_support": [
+    {
+      "policy": "single_optional_terminal_period",
+      "displayed_chinese": "选择要释放魔法的位置",
+      "normalized_english": "Choose a location to zap"
+    },
+    {
+      "policy": "single_optional_terminal_period",
+      "displayed_chinese": "我将稍后决定",
+      "normalized_english": "I'll decide later"
+    },
+    {
+      "policy": "conservative_display_vocabulary",
+      "displayed_chinese": "凝神",
+      "normalized_english": "Focus",
+      "note": "Faithful to the distinction in the displayed Chinese, not a claim that the original ability/buff English resource was always Focus. Existing English focused is preserved."
+    }
+  ],
   "ambiguous_resources": [
     {
       "displayed_chinese": "专精",

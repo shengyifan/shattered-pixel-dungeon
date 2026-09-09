@@ -6,11 +6,12 @@ import time
 import traceback
 import uuid
 
-from fixture_smoke import FixtureClient, close_choices, freeze_runtime, reach_game
+from fixture_smoke import FixtureClient, assert_gui_environment, close_choices, freeze_runtime, reach_game
 from low_frequency_smoke import act
 from visual_cue_smoke import read_visual_events, visual
 
 KINDS = {"summoning_bones", "summoning_shadows", "summoning_green_flames", "summoning_sparks"}
+MINION_NAMES = {"dwarven ghoul", "dwarf warlock", "dwarf monk", "golem"}
 
 
 def cues(state):
@@ -37,9 +38,9 @@ def test_visible(client):
     for _ in range(3):
         spawned = act(client, "wait")
         entities = {e.get("name") for e in spawned["observation"]["visible_entities"]}
-        if len(entities - old_entities) >= 4:
+        if MINION_NAMES <= entities - old_entities:
             break
-    assert len(entities - old_entities) >= 4, spawned["observation"]["visible_entities"]
+    assert MINION_NAMES <= entities - old_entities, spawned["observation"]["visible_entities"]
     tail = cues(spawned)
     time.sleep(2.5)  # Render time only; do not advance the original summoning timers.
     cleared = client.state()
@@ -79,7 +80,9 @@ def run_case(root, classpath, runtime_id, name):
         assert hello["ok"], hello
         report["build_id"] = hello["result"]["build_id"]
         started = reach_game(client, "WARRIOR")
-        assert started["observation"]["hero"]["class_name"] == "战士"
+        assert started["observation"]["hero"]["class_name"] == "warrior"
+        report["gui_environment"] = assert_gui_environment(profile, started)
+        report["cli_language"] = "en"
         setup = json.loads((profile / "test_fixture.json").read_text())
         assert setup["fullscreen"] is False and setup["language"] == "CHI_SMPL"
         report.update(language="zh", window_mode="windowed")

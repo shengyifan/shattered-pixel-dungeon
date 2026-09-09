@@ -11,6 +11,9 @@ dependencies {
 }
 test {
     useJUnitPlatform()
+    // Desktop/app packages already include these resources. Unit tests need the
+    // same immutable dictionary on their classpath, without a production path fallback.
+    classpath += files(project(':core').file('src/main/assets'))
     jvmArgs '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED'
 }
 

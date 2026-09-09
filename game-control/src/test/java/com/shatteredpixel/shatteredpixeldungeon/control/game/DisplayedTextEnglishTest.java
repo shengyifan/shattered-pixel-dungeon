@@ -72,6 +72,11 @@ class DisplayedTextEnglishTest {
         assertEquals("Partially displayed text",clipped.text);assertTrue(clipped.partial);
     }
 
+    @Test void aTemplatesOwnLeadingNewlinesAreMatchedBeforeWhitespaceComposition() {
+        DisplayedTextEnglish t=translator("\n\n携带_%s_。","\n\nCarrying _%s_.","战士","warrior");
+        assertEquals("\n\nCarrying _warrior_.",t.translate("\n\n携带_战士_。"));
+    }
+
     @Test void realDisplayedThrowingStoneDescriptionUsesOnlyItsSuppliedKnownValues() throws Exception {
         String displayed="这些石头被人用砂纸打磨成趁手的形状，比普通石头更适合大力投向目标。\n\n"
                 +"这组_1阶_的投掷武器能造成_2~5点伤害_并且需要_9点力量_来正常使用。 你的额外力量会使你在使用这件武器时造成_0~1点额外伤害_。\n\n"
@@ -89,6 +94,27 @@ class DisplayedTextEnglishTest {
         }
     }
 
+    @Test void completeResourceUnitsMayBeginWithParenthesesOrMarkupButPartialUnitsAreNotExpanded() {
+        DisplayedTextEnglish t=translator("介绍。","Introduction.","(仅提供英文内容)","(Available only in English.)",
+                "_-功能：_描述。","_-Feature:_ Description.");
+        assertEquals("Introduction.\n(Available only in English.)\n- Evan",t.translate("介绍。\n(仅提供英文内容)\n- Evan"));
+        assertEquals("Introduction. _-Feature:_ Description.",t.translate("介绍。 _-功能：_描述。"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate("介绍。\n(仅提供英文"));
+        assertEquals("Partially displayed text",t.translateVisible("介绍。\n(仅提供英文",true).text);
+    }
+
+    @Test void actualSupporterParagraphCompositionKeepsAllDisplayedResourceUnitsAndSignature() throws Exception {
+        try(URLClassLoader loader=new URLClassLoader(new java.net.URL[]{Path.of("../core/src/main/assets").toAbsolutePath().toUri().toURL()},null)) {
+            DisplayedTextEnglish t=DisplayedTextEnglish.fromClassLoader(loader);
+            Properties zh=read(loader,"messages/scenes/scenes_zh.properties"),en=read(loader,"messages/scenes/scenes.properties");
+            String displayed=zh.getProperty("scenes.supporterscene.intro")+"\n\n"+zh.getProperty("scenes.supporterscene.patreon_msg")
+                    +"\n"+zh.getProperty("scenes.supporterscene.patreon_english")+"\n\n- Evan";
+            String expected=en.getProperty("scenes.supporterscene.intro")+"\n\n"+en.getProperty("scenes.supporterscene.patreon_msg")
+                    +"\n"+en.getProperty("scenes.supporterscene.patreon_english")+"\n\n- Evan";
+            assertEquals(expected,t.translateInScene(displayed,"SupporterScene"));
+        }
+    }
+
     @Test void literalPercentProseIsNotMistakenForAPrintfConversion() {
         DisplayedTextEnglish t=translator("额外25%伤害。","25% more damage.");
         assertEquals("25% more damage.",t.translate("额外25%伤害。"));
@@ -103,6 +129,66 @@ class DisplayedTextEnglishTest {
             assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate("关闭 (2)"));
         }
         assertEquals("Cancel",translator("取消","Cancel","取消","cancel").translate("取消"));
+    }
+
+    @Test void oneOptionalTerminalPeriodNormalizesEquivalentResourceCandidatesOnly() {
+        DisplayedTextEnglish t=translator("位置提示","Choose a location to zap.","位置提示","Choose a location to zap");
+        DisplayedTextEnglish reverse=translator("位置提示","Choose a location to zap","位置提示","Choose a location to zap.");
+        assertEquals("Choose a location to zap",t.translate("位置提示"));
+        assertEquals(t.translate("位置提示"),reverse.translate("位置提示"));
+        assertEquals("Choose a location to zap.",t.translate("Choose a location to zap."),"Already-English input keeps its own punctuation");
+        assertEquals("Only one choice.",translator("唯一提示","Only one choice.").translate("唯一提示"));
+        DisplayedTextEnglish scoped=DisplayedTextEnglish.fromResources(
+                Map.of("scenes.gamescene.prompt","位置提示","scenes.titlescene.prompt","位置提示"),
+                Map.of("scenes.gamescene.prompt","Choose a location to zap.","scenes.titlescene.prompt","Choose a location to zap"));
+        assertEquals("Choose a location to zap",scoped.translateInContext("位置提示",Map.of("scene","GameScene","hidden_object","wand")));
+        assertEquals("Choose a location to zap",scoped.translateInContext("位置提示",Map.of("scene","TitleScene","hidden_object","staff")));
+    }
+
+    @Test void optionalPeriodDoesNotCollapseEllipsesQuestionsOtherPunctuationOrTrailingWhitespace() {
+        String[][] pairs={{"Choose...","Choose"},{"Choose..","Choose."},{"Choose…","Choose"},
+                {"Choose?","Choose"},{"Choose!","Choose"},{"Choose?.","Choose?"},{"Choose,.","Choose,"},
+                {"Choose. ","Choose"}};
+        for(String[] pair:pairs)assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                ()->translator("提示",pair[0],"提示",pair[1]).translate("提示"),java.util.Arrays.toString(pair));
+    }
+
+    @Test void conservativeFocusWordDoesNotInferAbilityOrBuffAcrossPublicScenesOrHiddenObjects() {
+        Map<String,String> zh=Map.of("actors.someability.name","凝神","actors.somebuff.name","凝神",
+                "scenes.gamescene.label","凝神","scenes.titlescene.label","凝神","status","状态：%s");
+        Map<String,String> en=Map.of("actors.someability.name","focus","actors.somebuff.name","focused",
+                "scenes.gamescene.label","focused","scenes.titlescene.label","focus","status","State: %s");
+        DisplayedTextEnglish t=DisplayedTextEnglish.fromResources(zh,en);
+        Map<String,Object> first=Map.of("scene","GameScene","role","button","hidden_object","monk ability");
+        Map<String,Object> second=Map.of("scene","TitleScene","role","entry","hidden_object","monster buff");
+        assertEquals("Focus",t.translateInContext("凝神",first));
+        assertEquals("Focus",t.translateInContext("凝神",second));
+        assertEquals("Focus",t.translate("凝神"));
+        assertEquals("State: Focus",t.translate("状态：凝神"));
+        assertEquals("Focus (3)",t.translate("凝神 (3)"));
+        assertEquals("focused",t.translate("focused"),"The existing pure English model getter is not renamed");
+    }
+
+    @Test void equivalentNormalizationsNeverSwallowAnUnknownSuffixOrExpandAClippedPrefix() {
+        DisplayedTextEnglish t=translator("选择位置","Choose a location.","选择位置","Choose a location");
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate("凝神未知后文"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate("选择位置未知后文"));
+        assertEquals("Focus visible English suffix",t.translate("凝神 visible English suffix"));
+        assertEquals("Partially displayed text",t.translateVisible("凝",true).text);
+        assertEquals("Partially displayed text",t.translateVisible("选择位",true).text);
+        assertEquals("Choose a location",t.translateVisible("选择位置",true).text);
+    }
+
+    @Test void bundledNormalizationKeepsTheOriginalAmbiguityCountAndNamesTheSupportedSubset() throws Exception {
+        try(URLClassLoader loader=new URLClassLoader(new java.net.URL[]{Path.of("../core/src/main/assets").toAbsolutePath().toUri().toURL()},null)) {
+            DisplayedTextEnglish t=DisplayedTextEnglish.fromClassLoader(loader);
+            assertEquals("Choose a location to zap",t.translate("选择要释放魔法的位置"));
+            assertEquals("I'll decide later",t.translate("我将稍后决定"));
+            assertEquals("Focus",t.translate("凝神"));
+            assertEquals(55,t.statistics().get("ambiguous_chinese_strings"));
+            assertEquals(3,t.statistics().get("normalized_ambiguous_strings"));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate("神圣战士"));
+        }
     }
 
     @Test void matchingDifferentTemplatesMustAgreeOnTheEnglishResult() {
@@ -159,6 +245,84 @@ class DisplayedTextEnglishTest {
         DisplayedTextEnglish t=DisplayedTextEnglish.fromResources(zh,en);
         assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInScene("同文","TitleScene"));
         assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInScene("同文隐藏尾部","TitleScene"));
+    }
+
+    private static DisplayedTextEnglish contextTranslator() {
+        Map<String,String> zh=new TreeMap<>(),en=new TreeMap<>();
+        String[][] rows={{"windows.wndkeybindings.back","返回","Back"},{"other.return","返回","Return"},
+                {"windows.wndsettings$displaytab.off","关闭","Off"},{"other.close","关闭","Close"},
+                {"windows.wndgameinprogress.erase","删除","Erase"},{"other.delete","删除","Delete"},
+                {"windows.wndgame.settings","设置","Settings"},{"other.set","设置","Set"},
+                {"levels.features.chasm.no","不，我改主意了","No, I changed my mind"},{"other.no","不，我改主意了","Never mind"},
+                {"other.shake","震屏","Screen Shake"},{"other.high","最高","High"}};
+        for(String[] row:rows){zh.put(row[0],row[1]);en.put(row[0],row[2]);}
+        return DisplayedTextEnglish.fromResources(zh,en);
+    }
+
+    @Test void backRequiresTheAlreadyPublicShortcutAndCannotUseHiddenWidgetTypes() {
+        DisplayedTextEnglish t=contextTranslator();
+        assertEquals("Back",t.translateInContext("返回",Map.of("scene","SupporterScene","shortcut_action","BACK")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("返回",Map.of("scene","SupporterScene","role","button")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("返回",Map.of("hidden_widget_class","ExitButton")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("返回隐藏尾部",Map.of("shortcut_action","back")));
+    }
+
+    @Test void offRequiresPublicSliderOrCheckboxEvidenceIncludingWholeMultilineSliderText() {
+        DisplayedTextEnglish t=contextTranslator();
+        assertEquals("Off",t.translateInContext("关闭",Map.of("slider",true)));
+        assertEquals("Off",t.translateInContext("关闭",Map.of("checkbox",true)));
+        assertEquals("Screen Shake\nOff\nHigh",t.translateInContext("震屏\n关闭\n最高",Map.of("scene","GameScene","slider",true)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("关闭",Map.of("slider",false,"checkbox",false)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("关闭",Map.of("slider","true")));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("关闭隐藏设置",Map.of("slider",true)));
+    }
+
+    @Test void eraseRequiresStartSceneAndThePublicSaveDetailsSignatureFlag() {
+        DisplayedTextEnglish t=contextTranslator();
+        assertEquals("Erase",t.translateInContext("删除",Map.of("scene","StartScene","save_details",true)));
+        assertEquals("Erase",t.translateInContext("删除",Map.of("scene","start","save_details",true)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("删除",Map.of("scene","StartScene","save_details",false)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("删除",Map.of("scene","GameScene","save_details",true)));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("删除",Map.of("save_details",true)));
+    }
+
+    @Test void gameMenuAndChasmNeedTheirOwnPublicSignatureFlagsAndGameScene() {
+        DisplayedTextEnglish t=contextTranslator();
+        assertEquals("Settings",t.translateInContext("设置",Map.of("scene","GameScene","game_menu",true)));
+        assertEquals("No, I changed my mind",t.translateInContext("不，我改主意了",Map.of("scene","game","chasm_prompt",true)));
+        for(String flag:new String[]{"game_menu","chasm_prompt"}) {
+            String text=flag.equals("game_menu")?"设置":"不，我改主意了";
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext(text,Map.of("scene","GameScene",flag,false)));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext(text,Map.of("scene","StartScene",flag,true)));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext(text,Map.of(flag,true)));
+        }
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("不，我改主意了隐藏尾文",Map.of("scene","GameScene","chasm_prompt",true)));
+    }
+
+    @Test void journalHeadingsRequirePublicJournalSceneAndExactDisplayedCountSyntax() throws Exception {
+        try(URLClassLoader loader=new URLClassLoader(new java.net.URL[]{Path.of("../core/src/main/assets").toAbsolutePath().toUri().toURL()},null)) {
+            DisplayedTextEnglish t=DisplayedTextEnglish.fromClassLoader(loader);Map<String,Object> context=Map.of("scene","JournalScene");
+            assertEquals("_Equipment_ (0/165)",t.translateInContext("_装备_ (0/165)",context));
+            assertEquals("_thrown weapons_ (0/16):",t.translateInContext("_投掷武器_ (0/16):",context));
+            assertEquals("_wands_ (0/13):",t.translateInContext("_法杖_ (0/13):",context));
+            assertEquals("_trinkets_ (0/17):",t.translateInContext("_饰物_ (0/17):",context));
+            assertEquals("_Equipment_ (12/165)",t.translateInContext("_装备_ (12/165)",context));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("_装备_ (0/165)",Map.of("scene","GameScene")));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("_装备_ (?/165)",context));
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("_装备_ (0/165)隐藏尾文",context));
+        }
+    }
+
+    @Test void identicalPublicContextIsIndependentOfHiddenExtrasAndClippedIncompleteTextStaysPartial() {
+        DisplayedTextEnglish t=contextTranslator();
+        Map<String,Object> first=new LinkedHashMap<>(Map.of("scene","StartScene","save_details",true));
+        Map<String,Object> second=new LinkedHashMap<>(first);first.put("hidden_save",new Object());second.put("hidden_save","a different run");
+        assertEquals(t.translateInContext("删除",first),t.translateInContext("删除",second));
+        assertEquals("Erase",t.translateVisibleInContext("删除",true,first).text);
+        DisplayedTextEnglish.VisibleText incomplete=t.translateVisibleInContext("删",true,first);
+        assertEquals("Partially displayed text",incomplete.text);assertTrue(incomplete.partial);
+        assertEquals("Partially displayed text",t.translateVisibleInContext("关闭",true,Collections.emptyMap()).text);
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translateInContext("删除",Collections.emptyMap()));
     }
 
     @Test void unknownChineseHasStableEnglishErrorAndOriginalOnlyInDiagnosticAccessor() {
@@ -225,13 +389,16 @@ class DisplayedTextEnglishTest {
                 for(String key:zh.stringPropertyNames())if(en.containsKey(key)&&zh.getProperty(key).codePoints().anyMatch(c->Character.UnicodeScript.of(c)==Character.UnicodeScript.HAN))
                     values.computeIfAbsent(zh.getProperty(key),ignored->new TreeSet<>()).add(en.getProperty(key));
             }
-            int resolved=0,rejected=0;
+            int resolved=0,rejected=0,normalized=0;
             for(Map.Entry<String,TreeSet<String>> entry:values.entrySet()) {
                 TreeSet<String> folded=new TreeSet<>();for(String value:entry.getValue())folded.add(value.toLowerCase(Locale.ROOT));
                 if(folded.size()==1) {assertEquals(folded.first(),t.translate(entry.getKey()).toLowerCase(Locale.ROOT));resolved++;}
-                else {assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate(entry.getKey()));rejected++;}
+                else if(entry.getKey().equals("凝神")||entry.getKey().equals("选择要释放魔法的位置")||entry.getKey().equals("我将稍后决定")) {
+                    assertNotNull(t.translate(entry.getKey()));normalized++;
+                } else {assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->t.translate(entry.getKey()));rejected++;}
             }
-            System.out.println("DISPLAYED_TEXT_RESOURCE_STATS "+t.statistics()+" resolved_complete="+resolved+" ambiguous_complete="+rejected);
+            assertEquals(3,normalized);assertEquals(52,rejected);
+            System.out.println("DISPLAYED_TEXT_RESOURCE_STATS "+t.statistics()+" resolved_complete="+resolved+" normalized_ambiguous_complete="+normalized+" rejected_ambiguous_complete="+rejected);
         }
     }
 
@@ -269,6 +436,9 @@ class DisplayedTextEnglishTest {
                 }
             }
             assertEquals(584,cases);assertTrue(resolved>500,"Most reviewed templates must support actual arguments");
+            assertEquals(new TreeSet<>(java.util.Arrays.asList("actors.hero.spells.holyward.glyph_name","actors.hero.spells.holyweapon.ench_name",
+                    "actors.mobs.mob.rankings_desc","items.item.rankings_desc","items.weapon.melee.spear.ability_desc",
+                    "items.weapon.melee.spear.typical_ability_desc")),new TreeSet<>(rejected),"Only reviewed resource collisions may remain unsupported");
             System.out.println("DISPLAYED_TEXT_FORMATTED_STATS cases="+cases+" resolved="+resolved+" rejected="+rejected.size()
                     +" construction_ms="+constructionNanos/1_000_000.0+" rejected_keys="+rejected);
         }
