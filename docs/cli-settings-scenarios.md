@@ -12,6 +12,8 @@
 
 补充`settings-scenes-648e328acae247be97d9649a3a0adcfb`已通过原Wait第一键位输入：经ui.binding_slot打开原编辑窗，使用LibGDX公开键码142选择F12，原文确实显示F12，再原Cancel返回，Wait绑定保持原值。完整设置流程仍通过。当前binding_input语义只解释原公开输入控件，并在按钮和模板参数中分别使用原Unbind Key与None含义；它没有生成OS键盘事件。新结果作为`key_input_cancel`追加，原失败不回写。
 
+`settings-scenes-562de3390c8c467e8ec0a9e0723d6e32`进一步通过原确认：给Wait第一槽选F12并在子窗Confirm，在第二槽尝试同键时原窗口显示“This key is already bound to this action.”且没有可执行Confirm；原Cancel返回后，主面板Confirm应用绑定，重新打开仍见F12。随后原Default Bindings→Confirm恢复，重新打开Wait不再有F12。六页签及原Back保护仍通过。新证据为`key_confirm_duplicate_and_default`；本项没有声称重启JVM后的键位持久化或所有冲突分支均已验证。
+
 ```sh
 ./gradlew :desktop-control:writeTestRuntimeClasspath
 python3 desktop-control/src/test/python/settings_scenario_smoke.py

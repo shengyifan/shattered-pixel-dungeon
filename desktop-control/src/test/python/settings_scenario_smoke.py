@@ -67,6 +67,28 @@ def test_settings(client, result):
             unchanged=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
             assert "F12" not in unchanged.get("label","")
             evidence["binding_key_input_and_original_cancel"] = True
+            editing=act(client,"ui.binding_slot",control=unchanged["control"],slot=1)
+            key=controls(editing,"ui.binding_key")[0]
+            act(client,"ui.binding_key",control=key["control"],keycode=142)
+            draft=choose(client,"Confirm")
+            row=next(a for a in controls(draft,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            assert "F12" in row["label"]
+            duplicate=act(client,"ui.binding_slot",control=row["control"],slot=2)
+            key=controls(duplicate,"ui.binding_key")[0]
+            duplicate=act(client,"ui.binding_key",control=key["control"],keycode=142)
+            assert any("This key is already bound to this action." in n.get("text","") for n in nodes(duplicate))
+            assert not any(a.get("label")=="Confirm" for a in controls(duplicate,"ui.activate"))
+            choose(client,"Cancel")
+            choose(client,"Confirm")
+            state=choose(client,"Key Bindings")
+            row=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            assert "F12" in row["label"], "The original parent Confirm must apply the actual binding"
+            choose(client,"Default Bindings")
+            choose(client,"Confirm")
+            state=choose(client,"Key Bindings")
+            row=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            assert "F12" not in row["label"]
+            evidence["binding_confirm_duplicate_guard_default_restore"] = True
             state = act(client, "ui.back")
             assert controls(state,"ui.binding_slot"), "The original binding editor ignores Back to protect edits"
             evidence["binding_back_preserved_editor"] = True
