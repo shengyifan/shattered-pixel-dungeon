@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "cases": [
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "menu:locked",
+      "runtime_id": "runtime-bdb33b5692e24952a0baba0f126fe042",
+      "profile": "desktop-control/build/fixtures/menu-options-locked-dd4f5dd29e274511963dba2b0cb39945",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "cases": [
+        {
+          "case": "Custom Seed",
+          "original_locked_explanation": true,
+          "original_back": true
+        },
+        {
+          "case": "Daily Run",
+          "original_locked_explanation": true,
+          "original_back": true
+        },
+        {
+          "case": "Challenges",
+          "original_locked_explanation": true,
+          "original_back": true
+        }
+      ],
+      "build_id": "81737d35e310c014f53c22182ddd8e69822281f7afba404aaa5fc533cf1003cb",
+      "ok": true
+    },
+    {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "fixture": "menu:unlocked",
+      "runtime_id": "runtime-bdb33b5692e24952a0baba0f126fe042",
+      "profile": "desktop-control/build/fixtures/menu-options-unlocked-4f801384dd1f45ae87a1dc34af0250e0",
+      "cli_language": "en",
+      "gui_language": "zh",
+      "cases": [
+        {
+          "case": "seed_set_clear",
+          "invalid_length_rejected_without_edit": true,
+          "actual_setting_roundtrip": true
+        },
+        {
+          "case": "challenge_toggle",
+          "challenge_label": "Hostile champions",
+          "persisted_and_restored": true
+        },
+        {
+          "case": "randomize_cancel",
+          "native_window_and_cancel": true
+        },
+        {
+          "case": "daily_decline",
+          "native_prompt_and_no": true,
+          "game_created": false
+        }
+      ],
+      "build_id": "81737d35e310c014f53c22182ddd8e69822281f7afba404aaa5fc533cf1003cb",
+      "ok": true
+    }
+  ],
+  "scope": "profile_progress_then_original_menu_callbacks",
+  "not_verified": [
+    "seeded_game_creation",
+    "daily_game_creation",
+    "randomize_confirm",
+    "randomize_saved_challenge_count"
+  ]
+}

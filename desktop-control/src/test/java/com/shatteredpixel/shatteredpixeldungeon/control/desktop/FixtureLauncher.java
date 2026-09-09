@@ -98,6 +98,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("lowfreq") && LowFrequencyFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("menu") && MenuScenarioFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("scenario") && TransitionScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("spell") && name.matches("[A-Za-z]+")) {
@@ -189,6 +191,7 @@ public final class FixtureLauncher {
                 if (!menuPrepared && Game.scene() != null && !Game.switchingScene()) {
                     Badges.loadGlobal();
                     for (Badges.Badge badge : Badges.Badge.values()) if (badge.name().startsWith("UNLOCK_")) Badges.unlock(badge);
+                    if(fixture.kind.equals("menu"))MenuScenarioFixtures.prepare(fixture.name);
                     SPDSettings.language(Languages.CHI_SMPL); Messages.setup(Languages.CHI_SMPL);
                     SPDSettings.fullscreen(false);
                     Gdx.graphics.setTitle("CLI 场景测试 · " + fixture.id);
@@ -209,6 +212,10 @@ public final class FixtureLauncher {
                 GameController.State state = game.latest();
                 if (state != null && !state.version.equals(lastUiVersion)) {
                     UiSceneAssertions.record(profile, state);
+                    if(fixture.kind.equals("menu"))Files.writeString(profile.resolve("menu-assertions.jsonl"),
+                            JsonCodec.encode(map("test_fixture",true,"internal_assertion_only",true,
+                                    "state_version",state.version,"menu",MenuScenarioFixtures.assertions()))+"\n",
+                            StandardCharsets.UTF_8,StandardOpenOption.CREATE,StandardOpenOption.APPEND);
                     lastUiVersion = state.version;
                 }
                 Boolean focused=windowFocused();
@@ -259,7 +266,7 @@ public final class FixtureLauncher {
     private static Mob prepare(Fixture fixture) throws Exception {
         Hero hero = Dungeon.hero;
         if (hero.heroClass != fixture.heroClass) throw new IllegalStateException("Start the fixture's required class through the public menu");
-        if (fixture.kind.equals("class")) return null;
+        if (fixture.kind.equals("class") || fixture.kind.equals("menu")) return null;
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;
         hero.subClass = fixture.subclass;
         Talent.initSubclassTalents(hero);
