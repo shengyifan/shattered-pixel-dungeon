@@ -195,13 +195,23 @@ public final class PlayerObservation {
         return Messages.withLanguage(Languages.ENGLISH, () -> itemInCurrentLanguage(item, locator, equipped));
     }
 
+    /** Minimal knowledge about the description already composed by an item-info window. */
+    public static Map<String,Object> inspectedItemKnowledge(Item item,Boolean levelKnownWhenRendered) {
+        if(item==null)return null;
+        return map("level_known",levelKnowledgeApplicable(item)?levelKnownWhenRendered:null);
+    }
+
+    private static boolean levelKnowledgeApplicable(Item item) {
+        return item instanceof EquipableItem || item instanceof Wand || item instanceof Trinket || item instanceof BrokenSeal;
+    }
+
     private static Map<String, Object> itemInCurrentLanguage(Item item, String locator, boolean equipped) {
         boolean typeKnown = !(item instanceof Potion || item instanceof Scroll || item instanceof Ring)
                 || (item instanceof Potion && ((Potion) item).isKnown())
                 || (item instanceof Scroll && ((Scroll) item).isKnown())
                 || (item instanceof Ring && ((Ring) item).isKnown());
         boolean curseApplicable = item instanceof EquipableItem || item instanceof Wand;
-        boolean levelApplicable = curseApplicable || item instanceof Trinket || item instanceof BrokenSeal;
+        boolean levelApplicable = levelKnowledgeApplicable(item);
         Map<String, Object> result = map("locator", locator, "name", displayItemName(item),
                 "quantity", item.quantity(), "equipped", equipped,
                 "type_known", typeKnown, "level_known", levelApplicable ? item.levelKnown : null,

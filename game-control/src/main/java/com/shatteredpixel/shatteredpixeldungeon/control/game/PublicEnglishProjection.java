@@ -64,18 +64,23 @@ public final class PublicEnglishProjection {
         final String scene;
         final Map<String,Map<?,?>> nodes;
         final Map<String,Object> textContext;
+        final String inspectedControl;
+        final Boolean inspectedLevelKnown;
         Context(String scene) {
             this.scene=scene;nodes=Collections.emptyMap();
             textContext=new LinkedHashMap<>();textContext.put("scene",scene);
+            inspectedControl=null;inspectedLevelKnown=null;
         }
-        Context(String scene,Map<String,Map<?,?>> nodes,Map<String,Object> textContext) {
+        Context(String scene,Map<String,Map<?,?>> nodes,Map<String,Object> textContext,String inspectedControl,Boolean inspectedLevelKnown) {
             this.scene=scene;this.nodes=nodes;this.textContext=textContext;
+            this.inspectedControl=inspectedControl;this.inspectedLevelKnown=inspectedLevelKnown;
         }
         Context derive(Map<?,?> source) {
             Map<?,?> ui=ui(source);
             String currentScene=scene;
             Map<String,Map<?,?>> currentNodes=nodes;
             Map<String,Object> properties=new LinkedHashMap<>(textContext);
+            String currentInspectedControl=inspectedControl;Boolean currentInspectedKnown=inspectedLevelKnown;
             if(ui!=null) {
                 currentScene=(String)ui.get("scene");
                 currentNodes=new LinkedHashMap<>();
@@ -97,6 +102,17 @@ public final class PublicEnglishProjection {
                     }
                 }
                 properties.clear();properties.put("scene",currentScene);
+                properties.put("modal",ui.get("modal"));properties.put("cell_input",ui.get("cell_input"));
+                if(ui.get("cell_prompt") instanceof String)properties.put("cell_prompt",ui.get("cell_prompt"));
+                currentInspectedControl=null;currentInspectedKnown=null;
+                Object inspected=ui.get("inspected_item");
+                if(Boolean.TRUE.equals(ui.get("modal"))&&inspected instanceof Map) {
+                    Map<?,?> item=(Map<?,?>)inspected;
+                    Map<?,?> owner=item.get("control") instanceof String?currentNodes.get(item.get("control")):null;
+                    if(owner!=null&&"window".equals(owner.get("role"))&&owner.get("parent")==null&&item.get("level_known") instanceof Boolean) {
+                        currentInspectedControl=(String)item.get("control");currentInspectedKnown=(Boolean)item.get("level_known");
+                    }
+                }
                 boolean game="GameScene".equals(currentScene)||"game".equals(currentScene);
                 boolean start="StartScene".equals(currentScene)||"start".equals(currentScene);
                 boolean modal=Boolean.TRUE.equals(ui.get("modal"));
@@ -122,14 +138,21 @@ public final class PublicEnglishProjection {
                         "Are you sure you want to delete this custom note?","你确定要删除这个备注吗？"));
             } else if(source.get("scene") instanceof String) {
                 currentScene=(String)source.get("scene");properties.put("scene",currentScene);
+                if(!java.util.Objects.equals(currentScene,scene)){
+                    currentInspectedControl=null;currentInspectedKnown=null;properties.remove("inspected_item_level_known");
+                    properties.remove("cell_prompt");properties.remove("cell_input");properties.remove("modal");
+                }
             }
             Map<?,?> node=source.get("role") instanceof String?source:
                     source.get("control") instanceof String?currentNodes.get(source.get("control")):null;
             if(node!=null) {
                 properties.put("role",node.get("role"));
                 properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);properties.put("button",false);
+                properties.remove("inspected_item_level_known");
                 Set<Object> visited=new HashSet<>();
                 for(Map<?,?> ancestor=node;ancestor!=null;) {
+                    if(currentInspectedKnown!=null&&currentInspectedControl.equals(ancestor.get("id")))
+                        properties.put("inspected_item_level_known",currentInspectedKnown);
                     if(ancestor.containsKey("checked"))properties.put("checkbox",true);
                     if("slider".equals(ancestor.get("role")))properties.put("slider",true);
                     if("button".equals(ancestor.get("role")))properties.put("button",true);
@@ -141,7 +164,7 @@ public final class PublicEnglishProjection {
                     ancestor=currentNodes.get(parent);
                 }
             }
-            return new Context(currentScene,currentNodes,properties);
+            return new Context(currentScene,currentNodes,properties,currentInspectedControl,currentInspectedKnown);
         }
         private static boolean one(Set<String> values,String... alternatives) {
             for(String value:alternatives)if(values.contains(value))return true;

@@ -32,6 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.ui.changelist.ChangeButton;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Gizmo;
@@ -77,13 +78,15 @@ public final class UiBridge {
         refresh();
         return PublicEnglishProjection.copyWithUi(new ArrayList<>(actions),map(
                 "scene",scene==null?"none":scene.getClass().getSimpleName(),
-                "modal",scope instanceof Window||scope instanceof RightClickMenu,"controls",new ArrayList<>(nodes)));
+                "modal",scope instanceof Window||scope instanceof RightClickMenu,"controls",new ArrayList<>(nodes),
+                "inspected_item",inspectedItemKnowledge()));
     }
 
     public Map<String, Object> describeUi() {
         refresh();
         Map<String, Object> result = map("scene", scene == null ? "none" : scene.getClass().getSimpleName(),
-                "modal", scope instanceof Window || scope instanceof RightClickMenu, "controls", new ArrayList<>(nodes));
+                "modal", scope instanceof Window || scope instanceof RightClickMenu, "controls", new ArrayList<>(nodes),
+                "inspected_item",inspectedItemKnowledge());
         if(scene!=null&&Gdx.graphics!=null) {
             Languages selected=Boolean.TRUE.equals(new ClassInitializationProbe().initialized(Messages.class))?Messages.selectedLanguage():null;
             result.put("display",map("language",selected==null?null:selected.code(),"fullscreen",Gdx.graphics.isFullscreen()));
@@ -97,6 +100,14 @@ public final class UiBridge {
             result.put("item_prompt", englishRead(() -> ((InventoryPane) scope).getSelector().textPrompt()));
         }
         return PublicEnglishProjection.copy(result);
+    }
+
+    private Map<String,Object> inspectedItemKnowledge() {
+        if(!(scope instanceof WndInfoItem))return null;
+        WndInfoItem window=(WndInfoItem)scope;
+        Map<String,Object> knowledge=PlayerObservation.inspectedItemKnowledge(window.inspectedItem(),window.inspectedLevelKnown());
+        if(knowledge!=null)knowledge.put("control",id(window));
+        return knowledge;
     }
 
     /** A process-local signature of public control state and live callback lifetimes. */

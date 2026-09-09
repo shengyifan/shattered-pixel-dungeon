@@ -37,6 +37,18 @@ public class WndInfoItem extends Window {
 
 	//only one WndInfoItem can appear at a time
 	private static WndInfoItem INSTANCE;
+	private Item inspectedItem;
+	private Boolean inspectedLevelKnown;
+
+	/** The object whose description this existing window displays; containers have no item subject. */
+	public Item inspectedItem() { return inspectedItem; }
+	/** Knowledge used to compose the cached description, not a fresh read of a changing item. */
+	public Boolean inspectedLevelKnown() { return inspectedLevelKnown; }
+
+	private void bindDescriptionItem(Item item) {
+		inspectedItem = item;
+		inspectedLevelKnown = item == null ? null : item.levelKnown;
+	}
 
 	public WndInfoItem( Heap heap ) {
 
@@ -80,6 +92,9 @@ public class WndInfoItem extends Window {
 		IconTitle titlebar = new IconTitle( heap );
 		titlebar.color( TITLE_COLOR );
 		
+		// FOR_SALE displays the top item's existing info; every actual container
+		// keeps only its original container description and never exposes a subject.
+		bindDescriptionItem(heap.type == Heap.Type.FOR_SALE ? heap.peek() : null);
 		RenderedTextBlock txtInfo = PixelScene.renderTextBlock( heap.info(), 6 );
 
 		layoutFields(titlebar, txtInfo);
@@ -97,6 +112,7 @@ public class WndInfoItem extends Window {
 		IconTitle titlebar = new IconTitle( item );
 		titlebar.color( color );
 		
+		bindDescriptionItem(item);
 		RenderedTextBlock txtInfo = PixelScene.renderTextBlock( item.info(), 6 );
 		
 		layoutFields(titlebar, txtInfo);

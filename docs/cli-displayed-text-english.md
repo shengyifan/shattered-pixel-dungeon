@@ -94,7 +94,9 @@ Supporter 页的 intro、跨多行 Patreon 说明、以括号开头的英文回�
 
 键位、完整高亮包装和 Note 公开签名补充同时通过 15 项 `PublicEnglishProjectionTest` 和 12 项 `UiBridgeTest`，与 46 项转换器测试合计 73 项定向检查；真实操作由单独的 settings / notes 场景报告验收，不把这些单测计为实机通过。
 
-全部无上下文歧义来源列在 [cli-displayed-text-english.json](cli-displayed-text-english.json)，原始 55 组及原英文候选保持不变，另列规范化支持项，不会因少数公开 context 或规范化已可处理就把整个目录标为通过。`ambiguous_chinese_strings=55` 仍表示原始候选差异；新增 `normalized_ambiguous_strings=3` 表示受上述规则支持的子集。通用 `button` 角色不能解决所有碰撞；实际关闭窗口的 `Close` 仍需要足够公开证据，不能因为它不是 slider 就反向猜测。`暴雨` 的 terrain 表现与 Combo 动作等也需要已公开且足以区分的上下文。`神圣%s` 和矛说明中 `typically` 的差异没有放宽。尚未接入的上下文不会被假定存在。
+目标选择的已画文案可在同一公开 UI 的 `cell_input=true` 且 `modal=false` 时，用已有英文 `cell_prompt` 消除完全资源匹配的歧义。该英文必须是已显示中文资源或完整模板的确切候选；旧 prompt、中文 prompt、缺失标志、局部前缀和未知尾文均不能提供上下文。8 项 `PublicCellPromptEnglishTest` 检查该限制；连同物品知识时点专项，当前相关定向测试为 92 项。
+
+全部无上下文歧义来源列在 [cli-displayed-text-english.json](cli-displayed-text-english.json)，原始 55 组及原英文候选保持不变，另列规范化支持项，不会因少数公开 context 或规范化已可处理就把整个目录标为通过。`ambiguous_chinese_strings=55` 仍表示原始候选差异；新增 `normalized_ambiguous_strings=3` 表示受上述规则支持的子集。通用 `button` 角色不能解决所有碰撞；实际关闭窗口的 `Close` 仍需要足够公开证据，不能因为它不是 slider 就反向猜测。`暴雨` 的 terrain 表现与 Combo 动作等也需要已公开且足以区分的上下文。`神圣%s` 没有放宽。矛说明现在只在当前公开窗口提供同正文知识时点的 `ui.inspected_item.level_known` 时可区分 actual / typical；缺少该关联的历史文案仍拒绝，详见 [物品正文知识验证](cli-inspected-item-validation.md)。新增 11 项知识时点专项与原 73 项定向检查共 84 项通过，原 55 组歧义及无上下文模板样本统计不变。尚未接入的上下文不会被假定存在。
 
 默认构造器通过 static Holder 对每个 classloader 只建一次不可变索引；一次隔离测试测得完整资源加载与建索引约 54 毫秒，这不是平台性能承诺。完整字串查询使用预计算结果；模板正则和资源前缀也预先构造。查询仅有局部临时 memo，不维护跨请求的“最后对象”或“最后译文”缓存，不打开额外文件。
 

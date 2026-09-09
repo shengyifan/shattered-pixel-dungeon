@@ -106,6 +106,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("ending") && EndingScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("inspect") && InspectedItemFixtures.supports(name)) {
+                heroClass = HeroClass.DUELIST; subclass = HeroSubClass.NONE;
             } else if (kind.equals("spell") && name.matches("[A-Za-z]+")) {
                 heroClass = HeroClass.CLERIC;
                 subclass = Arrays.asList("Smite", "LayOnHands", "AuraOfProtection", "WallOfLight").contains(name) ? HeroSubClass.PALADIN
@@ -215,6 +217,7 @@ public final class FixtureLauncher {
                 }
                 game.afterFrame();
                 GameController.State state = game.latest();
+                if(fixture.kind.equals("inspect"))InspectedItemFixtures.observed(state);
                 if(fixture.kind.equals("scenario"))TransitionScenarioFixtures.observed(state);
                 if (state != null && !state.version.equals(lastUiVersion)) {
                     UiSceneAssertions.record(profile, state);
@@ -245,6 +248,7 @@ public final class FixtureLauncher {
                             "transition_scenario", fixture.kind.equals("scenario") ? TransitionScenarioFixtures.assertions() : null,
                             "notes", fixture.kind.equals("notes") ? NoteScenarioFixtures.assertions() : null,
                             "ending", fixture.kind.equals("ending") ? EndingScenarioFixtures.assertions() : null,
+                            "inspection", fixture.kind.equals("inspect") ? InspectedItemFixtures.assertions() : null,
                             "effect_buffs", buffNames(Dungeon.hero), "target_buffs", fixtureTarget == null ? null : buffNames(fixtureTarget),
                             "trinity_form", Dungeon.hero.armorAbility instanceof Trinity && fixture.kind.equals("spell") ? get(Dungeon.hero.armorAbility, fixture.name.equals("BodyForm") ? "bodyForm" : fixture.name.equals("MindForm") ? "mindForm" : "spiritForm") != null : null);
                     Files.writeString(profile.resolve("fixture-assertions.jsonl"), JsonCodec.encode(checkpoint) + "\n",
@@ -279,6 +283,10 @@ public final class FixtureLauncher {
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;
         hero.subClass = fixture.subclass;
         Talent.initSubclassTalents(hero);
+        if(fixture.kind.equals("inspect")) {
+            makeArena(hero);InspectedItemFixtures.prepare(fixture.name,hero);
+            Item.updateQuickslot();Dungeon.observe();hero.checkVisibleMobs();return null;
+        }
         if (fixture.kind.equals("lowfreq")) {
             LowFrequencyFixtures.prepare(fixture.name, hero);
             return null;

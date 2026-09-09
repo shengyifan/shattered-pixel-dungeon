@@ -43,6 +43,10 @@ public final class DisplayedTextEnglish {
     public static DisplayedTextEnglish fromClassLoader(ClassLoader loader) { return new DisplayedTextEnglish(load(loader)); }
 
     public String translate(String displayed) {
+        return translateDisplayed(displayed,null);
+    }
+
+    private String translateDisplayed(String displayed,Boolean inspectedLevelKnown) {
         if (displayed == null) return null;
         String word=CONSERVATIVE_WORDS.get(displayed);if(word!=null)return word;
         String language=dictionary.languageNames.get(displayed.toLowerCase(Locale.ROOT));
@@ -50,12 +54,12 @@ public final class DisplayedTextEnglish {
         if (!containsNonLatinText(displayed)) return displayed;
         if (displayed.length() > MAX_TEXT) throw unavailable(displayed, "displayed_text_too_long");
         if(dictionary.exact.containsKey(displayed)) {
-            String exact=dictionary.resolved.get(displayed);
+            String exact=exactTranslation(displayed,inspectedLevelKnown);
             if(exact==null)throw unavailable(displayed,"ambiguous_resource_translation");
             return exact;
         }
         try {
-            String translated = translate(displayed, new Context(), 0);
+            String translated = translate(displayed, new Context(inspectedLevelKnown), 0);
             if (translated == null || containsNonLatinText(translated)) throw unavailable(displayed, "no_safe_resource_translation");
             return translated;
         } catch (LimitReached limit) { throw unavailable(displayed, "translation_work_limit"); }
@@ -100,6 +104,9 @@ public final class DisplayedTextEnglish {
         String scope=PUBLIC_SCENE_SCOPES.get(scene);
         String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
         String resolved;
+        if(Boolean.TRUE.equals(context.get("cell_input"))&&Boolean.FALSE.equals(context.get("modal"))
+                &&context.get("cell_prompt") instanceof String
+                &&(resolved=matchingPublicCellPrompt(displayed,(String)context.get("cell_prompt")))!=null)return resolved;
         if(Boolean.TRUE.equals(context.get("key_binding_input"))) {
             if(Boolean.TRUE.equals(context.get("button"))) {
                 String label=unique(dictionary.bindingInputLabels.get(displayed));
@@ -156,7 +163,12 @@ public final class DisplayedTextEnglish {
                 if(title!=null)return "_"+title+"_ ("+heading.group(2)+"/"+heading.group(3)+")"+heading.group(4);
             }
         }
-        return translateInScene(displayed,scene);
+        try { return translateInScene(displayed,scene); }
+        catch(PublicTextUnavailableException unavailable) {
+            Object known=context.get("inspected_item_level_known");
+            if(!(known instanceof Boolean))throw unavailable;
+            return translateDisplayed(displayed,(Boolean)known);
+        }
     }
 
     public VisibleText translateVisibleInContext(String displayed,boolean clipped,Map<String,Object> publicContext) {
@@ -195,6 +207,26 @@ public final class DisplayedTextEnglish {
 
     public Map<String,Integer> statistics() { return dictionary.statistics; }
 
+    /** A result already in this public UI may resolve a complete resource match, never a prefix. */
+    private String matchingPublicCellPrompt(String displayed,String prompt) {
+        if(prompt.isEmpty()||containsNonLatinText(prompt))return null;
+        Set<String> exact=dictionary.exact.get(displayed);
+        if(exact!=null&&exact.contains(prompt))return prompt;
+        for(Template template:dictionary.templates) {
+            if(!displayed.contains(template.anchor))continue;
+            Matcher matcher=template.pattern.matcher(displayed);if(!matcher.matches())continue;
+            Map<Integer,String> arguments=new HashMap<>();boolean valid=true;
+            for(int i=0;i<template.source.arguments.size();i++) {
+                int slot=template.source.arguments.get(i).index;String value;
+                try{value=translate(matcher.group(i+1));}catch(PublicTextUnavailableException unavailable){valid=false;break;}
+                if(arguments.containsKey(slot)&&!arguments.get(slot).equals(value)){valid=false;break;}
+                arguments.put(slot,value);
+            }
+            if(valid&&prompt.equals(template.target.render(arguments)))return prompt;
+        }
+        return null;
+    }
+
     public static final class VisibleText {
         public final String text;
         public final boolean partial;
@@ -218,6 +250,8 @@ public final class DisplayedTextEnglish {
     private static final class LimitReached extends RuntimeException { }
     private static final class Context {
         int work;
+        final Boolean inspectedLevelKnown;
+        Context(Boolean inspectedLevelKnown){this.inspectedLevelKnown=inspectedLevelKnown;}
         final Map<String,String> translated=new HashMap<>();
         final Set<String> unavailable=new TreeSet<>();
         void spend() { if (++work > MAX_WORK) throw new LimitReached(); }
@@ -232,10 +266,12 @@ public final class DisplayedTextEnglish {
         if (depth > MAX_DEPTH || context.unavailable.contains(text)) return null;
         if (context.translated.containsKey(text)) return context.translated.get(text);
         Set<String> exact=dictionary.exact.get(text);
-        if (exact != null) return remember(text, dictionary.resolved.get(text), context);
+        if (exact != null) return remember(text, exactTranslation(text,context.inspectedLevelKnown), context);
 
         Set<String> candidates=new TreeSet<>();
         for (Template template : dictionary.templates) {
+            if(context.inspectedLevelKnown!=null && (template==dictionary.spearActual&&!context.inspectedLevelKnown
+                    ||template==dictionary.spearTypical&&context.inspectedLevelKnown))continue;
             if (!text.contains(template.anchor)) continue;
             Matcher matcher=template.pattern.matcher(text);
             if (!matcher.matches()) continue;
@@ -268,6 +304,19 @@ public final class DisplayedTextEnglish {
 
         // Concatenated resource paragraphs are separate visible units. This only
         // divides supplied text; it never fetches the unseen rest of a resource.
+        // Keep a resource's own single line breaks together (e.g. Spear's two
+        // displayed stat lines) before trying smaller line units.
+        if(text.contains("\n\n")) {
+            StringBuilder result=new StringBuilder();boolean valid=true;int start=0;
+            while(start<text.length()) {
+                int end=text.indexOf("\n\n",start);if(end<0)end=text.length();
+                String part=translate(text.substring(start,end),context,depth+1);
+                if(part==null){valid=false;break;}
+                result.append(part);
+                if(end<text.length()){result.append("\n\n");start=end+2;}else start=end;
+            }
+            if(valid)return remember(text,result.toString(),context);
+        }
         if(text.indexOf('\n')>=0) {
             StringBuilder result=new StringBuilder(); boolean valid=true;
             int start=0;
@@ -305,7 +354,7 @@ public final class DisplayedTextEnglish {
         // strings retain all English candidates and cannot be resolved by insertion order.
         if(entries!=null)for(String source:entries) {
             if(!text.startsWith(source,offset))continue;
-            String translated=dictionary.resolved.get(source);
+            String translated=exactTranslation(source,context.inspectedLevelKnown);
             if(translated==null) {memo.put(offset,null);return null;}
             String rest=compose(text,offset+source.length(),context,memo,segments+1);
             if(rest!=null) {String result=join(translated,rest);memo.put(offset,result);return result;}
@@ -325,6 +374,12 @@ public final class DisplayedTextEnglish {
         List<String> sources=dictionary.prefixes.get(text.charAt(offset));
         if(sources!=null)for(String source:sources)if(text.startsWith(source,offset))return true;
         return false;
+    }
+
+    private String exactTranslation(String displayed,Boolean inspectedLevelKnown) {
+        Template selected=inspectedLevelKnown==null?null:inspectedLevelKnown?dictionary.spearActual:dictionary.spearTypical;
+        if(selected!=null&&selected.chinese.equals(displayed))return selected.english;
+        return dictionary.resolved.get(displayed);
     }
 
     private static String remember(String source,String translated,Context context) {
@@ -427,7 +482,9 @@ public final class DisplayedTextEnglish {
     }
     private static final class Template {
         final Printf source,target;final Pattern pattern;final String anchor;
+        final String chinese,english;
         Template(String chinese,String english) {
+            this.chinese=chinese;this.english=english;
             source=new Printf(chinese);target=new Printf(english);
             if(source.arguments.isEmpty() || !source.slots.equals(target.slots))throw new IllegalArgumentException("Resource argument mismatch");
             StringBuilder regex=new StringBuilder("\\A");String longest="";
@@ -461,11 +518,13 @@ public final class DisplayedTextEnglish {
         final Map<String,Set<String>> customNoteLabels;
         final Map<String,Set<String>> bindingInputLabels;
         final List<Template> bindingInputTemplates;
+        final Template spearActual,spearTypical;
         Dictionary(Map<String,String> chinese,Map<String,String> english) {
             Map<String,Set<String>> entries=new TreeMap<>();List<Template> patterns=new ArrayList<>();
             Map<String,Map<String,Set<String>>> byScene=new TreeMap<>();
             Map<String,ResourcePair> policies=new TreeMap<>();Map<String,Set<String>> catalogs=new TreeMap<>(),bindings=new TreeMap<>(),notes=new TreeMap<>(),bindingInputs=new TreeMap<>();
             List<Template> bindingTemplates=new ArrayList<>();
+            Template actualSpear=null,typicalSpear=null;
             int pairs=0,templatePairs=0,unsupported=0;
             for(String key:new TreeSet<>(chinese.keySet())) {
                 String source=chinese.get(key),target=english.get(key);
@@ -491,7 +550,11 @@ public final class DisplayedTextEnglish {
                 }
                 if(!new Printf(source).arguments.isEmpty()) {
                     templatePairs++;
-                    try {patterns.add(new Template(source,target));}catch(IllegalArgumentException mismatch){unsupported++;}
+                    try {
+                        Template template=new Template(source,target);patterns.add(template);
+                        if(key.equals("items.weapon.melee.spear.ability_desc"))actualSpear=template;
+                        if(key.equals("items.weapon.melee.spear.typical_ability_desc"))typicalSpear=template;
+                    }catch(IllegalArgumentException mismatch){unsupported++;}
                 }
             }
             int resourceStrings=entries.size();
@@ -548,6 +611,7 @@ public final class DisplayedTextEnglish {
                 entry.setValue(Collections.unmodifiableList(entry.getValue()));
             }
             exact=Collections.unmodifiableMap(immutable);prefixes=Collections.unmodifiableMap(starts);templates=Collections.unmodifiableList(patterns);
+            spearActual=actualSpear;spearTypical=typicalSpear;
             resolved=Collections.unmodifiableMap(unambiguous);
             normalized=Collections.unmodifiableMap(normalizedValues);
             Map<String,Integer> counts=new LinkedHashMap<>();counts.put("resource_pairs",pairs);counts.put("unique_chinese_strings",resourceStrings);
