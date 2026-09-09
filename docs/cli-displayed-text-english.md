@@ -127,3 +127,9 @@ Hero Info专精标题和胜利排行过去时分别受完整公开页签说明�
 ## 静态正文与窗口确认
 
 同中文的能力或天赋名称，只能由当前模态窗口中完整显示且可安全翻译的静态full.desc配对消歧；所有候选必须唯一，不能由旧按钮、隐藏对象或任意短说明推断。平衡符石按完整问题/取消/两项当前属性按钮确定窗口资源。独立PublicDialogSignatures只接收公开DTO树，严格检查当前完整两按钮对话，分别区分偷窃、复活与奖励预览；不为未知物品正文提供兜底。20项新增边界测试与职业详情、符石和确认窗口各组实际结果见相应validation文档。
+
+## 已显示战斗浮字
+
+仅对已存在FloatingText，且原纯visibleCueText返回的完整可见串与当前节点text完全一致时，UI增加presentation=floating_text。英文投影只凭该公开标记把完整“闪避”译为dodged、完整“夺命印记”反馈译为marked for death；菜单death mark与属性Evasion仍各用原窗口上下文。缺标记、普通文本、不可见或模态覆盖、截断与未知尾文均不能借用此规则。
+
+该逻辑不调用Hero.defenseVerb或任何buff getter，避免原格挡/随机分支的副作用。6项独立回归及实际墓碑战斗、DeathMark施放通过。P7的188项完整证据索引与原失败批次见 `cli-p7-english-validation.md/json`；容器10项分支见 `cli-containers.md/json`。

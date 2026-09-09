@@ -466,6 +466,8 @@ public final class UiBridge {
             if (parentId != null) node.put("parent", parentId);
             String text = logFragment == null ? visibleText(gizmo) : logFragment.text;
             if (text != null && !text.isEmpty()) node.put("text", text);
+            if(gizmo instanceof FloatingText&&text!=null&&text.equals(((FloatingText)gizmo).visibleCueText()))
+                node.put("presentation","floating_text");
             if (logFragment != null && logFragment.clipped) node.put("clipped", true);
             if (gizmo instanceof Button) {
                 Button button = (Button) gizmo;

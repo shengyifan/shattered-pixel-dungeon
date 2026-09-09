@@ -1,6 +1,6 @@
-# 地面物品与容器专项：前三组
+# 地面物品与容器专项：前四组
 
-2026-09-09，前三组七个具名场景通过：地面多层拾取、普通双箱、锁箱、水晶双箱、普通骨骸、英雄遗骸及待售物品。结果见 [cli-containers-validation.json](cli-containers-validation.json)。共 202 个公开响应，155 次实际 GUI 后置检查；GUI 为简体中文、窗口化，CLI 游戏文案为英语。墓碑的完整测试仍失败/待修。所有本组进程已退出。
+2026-09-09，前四组十个具名场景通过：八种 Heap 各有一个明确范围内的路径，另有普通铁钥匙门和水晶钥匙门。结果见 [cli-containers-validation.json](cli-containers-validation.json)。共 284 个公开响应，221 次实际 GUI 后置检查；GUI 为简体中文、窗口化，CLI 游戏文案为英语。所有本组进程已退出。这不代表各类型的全部变体都已通过。
 
 这些是 test-only 的中间状态专项，不是正常游玩或通关证据。测试在真实生成的第 1 层准备一个安静区域，清理无关怪物、刷新器、地面物品与环境干扰，放置原 Item/Heap 实例。战士等级、力量和生命没有放大。准备结束后，只通过公开 CLI 的原 `cell.select`、examine、Back 和拾取流程改变世界。
 
@@ -13,6 +13,9 @@
 | `containers.skeleton` | 非诅咒物品组成的 SKELETON，经原 `setHauntedIfCursed` 准备。 | 查看不耗回合且不暴露隐藏名称；原直接开启、正常拾取，装备等级仍未知。本例只覆盖非 haunted 分支。 |
 | `containers.remains` | 非诅咒物品组成的 REMAINS，经原 `setHauntedIfCursed` 准备。 | 原英雄遗骸表象、查看、开启和拾取都完成；不冒充跨局 Bones 文件产生历史或 haunted 分支。 |
 | `containers.for_sale` | 原 Shopkeeper 与单件正价格口粮待售堆；初始有足够测试金币。 | 原 cell 操作进入 WndTradeItem，Back 取消不扣金币、不取物、不额外耗回合；再次进入后按公开 `Buy for 50g` 购买，金币恰少 50、口粮增一、待售堆移除。 |
+| `containers.iron_door` | 原 LOCKED_DOOR 与地面同层 IronKey。 | 无钥匙时拒绝不耗回合，地形和钥匙不变；拾取后原开锁恰消耗一把钥匙，随后实际穿过原门。没有确认窗口。 |
+| `containers.crystal_door` | 原 CRYSTAL_DOOR 与地面同层 CrystalKey。 | 无钥匙拒绝、原钥匙拾取、一把钥匙消耗、解除屏障及实际穿过均完成。没有确认窗口。 |
+| `containers.tomb` | 原 TOMB 藏未鉴定长剑，普通战士；不控制开墓后的 RNG。 | 原查看不泄漏内容；直接开墓真实生成幽灵。根据实际公开状态先移动到堆格、再同格拾取，物品正常获得且等级仍未知。本次原战斗浮字实际出现 `dodged` 与 `presentation=floating_text`。 |
 
 不同载荷的存在、真实等级与私有物品列表，只在公开动作完成后按同一 `state_version` 作后置断言。它们不提供要打开的箱子、目标 cell 或下一动作。该对照证明的是同一隔离世界中两个不同位置箱子的公开表象一致，不冒充所有世界状态的完整双世界证明。
 
@@ -20,9 +23,11 @@
 
 曾有一次 HEAP 失败：三个物品已经按原流程全部拾取，测试却错误期待金币下沉。源码 `Item.dropsDownHeap` 默认为 false，本例三种物品均未覆盖它，`Heap.drop` 使用 `addFirst`，实际顺序应为投石 → 金币 → 口粮。已修正测试期待并完整重跑；原失败报告保留，未计入通过。
 
-第三组的墓碑尝试保留为失败：原开墓已生成四个幽灵，并让长剑名称变得可见；但移动到物品格后继续拾取时，原战斗浮字“闪避”触发英语歧义，请求返回 `EXECUTION_UNKNOWN`。整项没有通过，失败后 EOF 正常退出 0。没有以隐藏数据选择动作，也没有因为已观察到生成幽灵就将完整墓碑流程标成成功。
+第三组的墓碑尝试原样保留为失败：原开墓已生成四个幽灵，并让长剑名称变得可见；但移动到物品格后继续拾取时，原战斗浮字“闪避”触发英语歧义，请求返回 `EXECUTION_UNKNOWN`。失败后 EOF 正常退出 0，没有因为已观察到生成幽灵就将那次完整流程标成成功。
 
-Heap 的八种原生类型已经核对。除 TOMB 外，其他七类已有上表中的具体路径证据；这些仍是各类型的部分分支，不能发明取消窗口或扩大到全部变体：
+第四组使用修复后的冻结运行时完整重跑墓碑，正常开启、移动、拾取和退出均通过。原公开请求 `736ba3701802-22`、`-23`、`-24` 确实记录了 `text=dodged`、`presentation=floating_text`，因此不是没有触发旧问题的偶然通过。修复按实际可见 FloatingText 标记解释已有文字，没有重调用会改变防御状态的 `Hero.defenseVerb`，也没有为得到闪避而筛选或修改 RNG。
+
+Heap 的八种原生类型已经核对，并都有上表中的具体路径证据；这些仍是各类型的部分分支，不能发明取消窗口或扩大到全部变体：
 
 - `HEAP`：逐次拾取堆顶；空堆销毁。
 - `FOR_SALE`：单件且 `value()>0` 才进入原 WndTradeItem 购买窗口，可以 Back 取消。其他待售堆形态走原拾取分支。
@@ -34,7 +39,7 @@ Heap 的八种原生类型已经核对。除 TOMB 外，其他七类已有上表
 
 上述普通容器的成功开启在相邻时花 `Key.TIME_TO_UNLOCK`，当前为 1 个回合。无钥匙拒绝不等于一个待确认窗口。相关源码为 [Heap.java](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java)、[Hero.java](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java) 的 `handle`、`actPickUp`、`actOpenChest` 与 `onOperateComplete`，以及 [Key.java](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/keys/Key.java)。
 
-锁门计划也单独记录在 JSON 中：LOCKED_DOOR 使用当前层 IronKey，CRYSTAL_DOOR 使用当前层 CrystalKey；LOCKED_EXIT/WornKey 需要另一个真实出口或 Boss 层初态，HERO_LKD_DR 则属于 SkeletonKey 神器特例。这些尚未计入本组通过。
+锁门也单独记录在 JSON 中：LOCKED_DOOR/当前层 IronKey 和 CRYSTAL_DOOR/当前层 CrystalKey 已有上表证据；LOCKED_EXIT/WornKey 需要另一个真实出口或 Boss 层初态，HERO_LKD_DR 属于 SkeletonKey 神器特例，后两项仍待测，不能混用对应关系。
 
 测试 source-set 为 [ContainerScenarioFixtures.java](../desktop-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/desktop/ContainerScenarioFixtures.java)，客户端为 [containers_scenario_smoke.py](../desktop-control/src/test/python/containers_scenario_smoke.py)。后置回合时钟使用 `Statistics.duration + Hero` 的原 Actor 时间，因此正常保存的 `Actor.fixTime` 不会造成假回合差异。私有数据不用于行动选择。
 
@@ -49,4 +54,6 @@ python3 desktop-control/src/test/python/containers_scenario_smoke.py --cases hea
 
 第三组成功部分可用 `--cases skeleton,remains,for-sale` 重跑。骨骸/遗骸使用 `runtime-454c705126004dda94ca8f904e44aa6f`，build ID 为 `79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99`；交易使用 `runtime-c540ec459fc6478ba9025329e2dccf85`，build ID 为 `d60337932a6b331cb8232497266a62c488a7d6a3b69fb11ce41e0b33119b3629`。同一 runtime 的墓碑失败仍独立保留。
 
-墓碑完整流程与锁门入口仍标为 pending；错层钥匙、SkeletonKey 替代钥匙与诅咒分心、haunted 骨骸、零价值或含多个物品的待售堆、背包容量等变体也未被本组代替。没有使用截图、键鼠模拟、Computer Use 或正式 profile；本组结果不代表整个 Heap 类、全部房间或所有诅咒/背包边界都已通过。
+第四组使用 `--cases iron-door,crystal-door,tomb`，冻结运行时为 `runtime-8d0cacd690df4dffb70ac0d9ffca3101`，build ID 为 `f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22`。
+
+WornKey 出口、神器造锁/开锁、错层钥匙、SkeletonKey 替代钥匙与诅咒分心、haunted 骨骸、零价值或含多个物品的待售堆、背包容量等变体仍未被本组代替。没有使用截图、键鼠模拟、Computer Use 或正式 profile；本组结果不代表整个 Heap 类、全部房间或所有诅咒/背包边界都已通过。

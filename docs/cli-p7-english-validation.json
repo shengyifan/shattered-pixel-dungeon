@@ -1,0 +1,3530 @@
+{
+  "schema": 1,
+  "test_fixture": true,
+  "counts_as_win": false,
+  "cli_language": "en",
+  "gui_language": "CHI_SMPL",
+  "windowed": true,
+  "baseline": {
+    "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+    "passed": 148,
+    "total": 188,
+    "failed": 40,
+    "report": "desktop-control/build/fixtures/runtime-8ed9a6fc8be247fa8f9041183ab40c10/results.json"
+  },
+  "coverage_after_targeted_reruns": {
+    "passed": 188,
+    "total": 188,
+    "note": "Consolidated evidence across the unchanged complete baseline and only its failed cases rerun after relevant fixes. This is not one new 188-case all-pass execution."
+  },
+  "families": {
+    "class": 6,
+    "subclass": 12,
+    "armor": 38,
+    "spell": 54,
+    "weapon": 64,
+    "monk": 10,
+    "ui": 4
+  },
+  "batches": [
+    {
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "report": "desktop-control/build/fixtures/runtime-8ed9a6fc8be247fa8f9041183ab40c10/results.json",
+      "passed": 148,
+      "total": 188
+    },
+    {
+      "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+      "report": "desktop-control/build/fixtures/runtime-96551553ca2a4d1fb60019fb00082495/results.json",
+      "passed": 2,
+      "total": 2
+    },
+    {
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "report": "desktop-control/build/fixtures/runtime-c3ede86ce840487a8cef94607f83a4b5/results.json",
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "report": "desktop-control/build/fixtures/runtime-bfb2dbc90a1748989a0c0435669430a2/results.json",
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "report": "desktop-control/build/fixtures/runtime-0a28aed0ccac4779a3eacc5b11364e17/results.json",
+      "passed": 27,
+      "total": 29
+    },
+    {
+      "runtime_id": "runtime-76f3e5ccfc5c42099991281b65cc463d",
+      "report": "desktop-control/build/fixtures/runtime-76f3e5ccfc5c42099991281b65cc463d/results.json",
+      "passed": 1,
+      "total": 2
+    },
+    {
+      "runtime_id": "runtime-7c78f3e8a26f49198f1fbd3a371b670f",
+      "report": "desktop-control/build/fixtures/runtime-7c78f3e8a26f49198f1fbd3a371b670f/results.json",
+      "passed": 1,
+      "total": 1
+    }
+  ],
+  "public_responses_in_selected_successes": 4337,
+  "gui_postconditions_in_selected_successes": 3961,
+  "same_response_assertion": "Use the completed action response state_version, including original request.get terminal response after in_progress. No state.get is used to wait for a missing effect.",
+  "results": [
+    {
+      "case": "class:WARRIOR",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/class-WARRIOR-5419658ab4ed4d44b615bec473da7a88",
+      "public_trace": "desktop-control/build/fixtures/class-WARRIOR-5419658ab4ed4d44b615bec473da7a88/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/class-WARRIOR-5419658ab4ed4d44b615bec473da7a88/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "initial_item": "worn shortsword",
+        "opened_real_item_window": true
+      }
+    },
+    {
+      "case": "class:MAGE",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/class-MAGE-82ec57ad103c45e585ae032e6d0d8887",
+      "public_trace": "desktop-control/build/fixtures/class-MAGE-82ec57ad103c45e585ae032e6d0d8887/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/class-MAGE-82ec57ad103c45e585ae032e6d0d8887/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "initial_item": "staff of magic missile",
+        "opened_real_item_window": true
+      }
+    },
+    {
+      "case": "class:ROGUE",
+      "passed": true,
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "profile": "desktop-control/build/fixtures/class-ROGUE-1f729f902aff4a00bd70f8c1c129c96b",
+      "public_trace": "desktop-control/build/fixtures/class-ROGUE-1f729f902aff4a00bd70f8c1c129c96b/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/class-ROGUE-1f729f902aff4a00bd70f8c1c129c96b/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "initial_item": "cloak of shadows",
+        "opened_real_item_window": true
+      }
+    },
+    {
+      "case": "class:HUNTRESS",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/class-HUNTRESS-93bf78ac60fb4a9e8a93b06002a42cdb",
+      "public_trace": "desktop-control/build/fixtures/class-HUNTRESS-93bf78ac60fb4a9e8a93b06002a42cdb/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/class-HUNTRESS-93bf78ac60fb4a9e8a93b06002a42cdb/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "initial_item": "spirit bow",
+        "opened_real_item_window": true
+      }
+    },
+    {
+      "case": "class:DUELIST",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/class-DUELIST-3095d3cbe8c54fb6b27d65fc8c4c3b5f",
+      "public_trace": "desktop-control/build/fixtures/class-DUELIST-3095d3cbe8c54fb6b27d65fc8c4c3b5f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/class-DUELIST-3095d3cbe8c54fb6b27d65fc8c4c3b5f/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "initial_item": "rapier",
+        "opened_real_item_window": true
+      }
+    },
+    {
+      "case": "class:CLERIC",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/class-CLERIC-203bffa150bf414fab2dfa68ebb2270f",
+      "public_trace": "desktop-control/build/fixtures/class-CLERIC-203bffa150bf414fab2dfa68ebb2270f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/class-CLERIC-203bffa150bf414fab2dfa68ebb2270f/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "initial_item": "holy tome",
+        "opened_real_item_window": true
+      }
+    },
+    {
+      "case": "subclass:BERSERKER",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-BERSERKER-920c9d3e93e147b4ab5ebd2ebfc08a50",
+      "public_trace": "desktop-control/build/fixtures/subclass-BERSERKER-920c9d3e93e147b4ab5ebd2ebfc08a50/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-BERSERKER-920c9d3e93e147b4ab5ebd2ebfc08a50/fixture-result.json",
+      "public_responses": 19,
+      "gui_postconditions_checked": 17,
+      "evidence": {
+        "subclass": "BERSERKER",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:GLADIATOR",
+      "passed": true,
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "profile": "desktop-control/build/fixtures/subclass-GLADIATOR-94ed6585528d4381865b56c5bc7dfe8c",
+      "public_trace": "desktop-control/build/fixtures/subclass-GLADIATOR-94ed6585528d4381865b56c5bc7dfe8c/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-GLADIATOR-94ed6585528d4381865b56c5bc7dfe8c/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "GLADIATOR",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:BATTLEMAGE",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-BATTLEMAGE-4ef1c91b0e784c1b9edad4050ea9e544",
+      "public_trace": "desktop-control/build/fixtures/subclass-BATTLEMAGE-4ef1c91b0e784c1b9edad4050ea9e544/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-BATTLEMAGE-4ef1c91b0e784c1b9edad4050ea9e544/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "BATTLEMAGE",
+        "active_indicator": false,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:WARLOCK",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-WARLOCK-b39debd66fdb4ee3b0f22e85f3cb4755",
+      "public_trace": "desktop-control/build/fixtures/subclass-WARLOCK-b39debd66fdb4ee3b0f22e85f3cb4755/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-WARLOCK-b39debd66fdb4ee3b0f22e85f3cb4755/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "WARLOCK",
+        "active_indicator": false,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:ASSASSIN",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-ASSASSIN-166f51db07a34c519ccc6babf4eb0738",
+      "public_trace": "desktop-control/build/fixtures/subclass-ASSASSIN-166f51db07a34c519ccc6babf4eb0738/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-ASSASSIN-166f51db07a34c519ccc6babf4eb0738/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "subclass": "ASSASSIN",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:FREERUNNER",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-FREERUNNER-a5cf887e6d9b4972a20c3beb0be15a80",
+      "public_trace": "desktop-control/build/fixtures/subclass-FREERUNNER-a5cf887e6d9b4972a20c3beb0be15a80/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-FREERUNNER-a5cf887e6d9b4972a20c3beb0be15a80/fixture-result.json",
+      "public_responses": 19,
+      "gui_postconditions_checked": 17,
+      "evidence": {
+        "subclass": "FREERUNNER",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:SNIPER",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-SNIPER-57f037d3c95b4ae59e398f17cab94be8",
+      "public_trace": "desktop-control/build/fixtures/subclass-SNIPER-57f037d3c95b4ae59e398f17cab94be8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-SNIPER-57f037d3c95b4ae59e398f17cab94be8/fixture-result.json",
+      "public_responses": 19,
+      "gui_postconditions_checked": 17,
+      "evidence": {
+        "subclass": "SNIPER",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:WARDEN",
+      "passed": true,
+      "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/subclass-WARDEN-51d191eb47574ad6b3111a561b91ccc8",
+      "public_trace": "desktop-control/build/fixtures/subclass-WARDEN-51d191eb47574ad6b3111a561b91ccc8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-WARDEN-51d191eb47574ad6b3111a561b91ccc8/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "WARDEN",
+        "active_indicator": false,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:CHAMPION",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-CHAMPION-6038f6539d7c43b490b4327ff6128ff8",
+      "public_trace": "desktop-control/build/fixtures/subclass-CHAMPION-6038f6539d7c43b490b4327ff6128ff8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-CHAMPION-6038f6539d7c43b490b4327ff6128ff8/fixture-result.json",
+      "public_responses": 19,
+      "gui_postconditions_checked": 17,
+      "evidence": {
+        "subclass": "CHAMPION",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:MONK",
+      "passed": true,
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "profile": "desktop-control/build/fixtures/subclass-MONK-1211ac5c33ae4041825c6dd8fdf281af",
+      "public_trace": "desktop-control/build/fixtures/subclass-MONK-1211ac5c33ae4041825c6dd8fdf281af/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-MONK-1211ac5c33ae4041825c6dd8fdf281af/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "subclass": "MONK",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:PRIEST",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-PRIEST-85725348d0ec4a3e9ea27f9147aa8aa1",
+      "public_trace": "desktop-control/build/fixtures/subclass-PRIEST-85725348d0ec4a3e9ea27f9147aa8aa1/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-PRIEST-85725348d0ec4a3e9ea27f9147aa8aa1/fixture-result.json",
+      "public_responses": 19,
+      "gui_postconditions_checked": 17,
+      "evidence": {
+        "subclass": "PRIEST",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "subclass:PALADIN",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/subclass-PALADIN-c7c2e10375654644b3b69eedba0b027f",
+      "public_trace": "desktop-control/build/fixtures/subclass-PALADIN-c7c2e10375654644b3b69eedba0b027f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/subclass-PALADIN-c7c2e10375654644b3b69eedba0b027f/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "subclass": "PALADIN",
+        "active_indicator": true,
+        "public_action_and_effect_checked": true
+      }
+    },
+    {
+      "case": "armor:HeroicLeap",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-HeroicLeap-655576d51e084456a2cd3708645d4615",
+      "public_trace": "desktop-control/build/fixtures/armor-HeroicLeap-655576d51e084456a2cd3708645d4615/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-HeroicLeap-655576d51e084456a2cd3708645d4615/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "HeroicLeap",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "armor:Shockwave",
+      "passed": true,
+      "runtime_id": "runtime-96551553ca2a4d1fb60019fb00082495",
+      "build_id": "b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e",
+      "profile": "desktop-control/build/fixtures/armor-Shockwave-8a37616298c447bca9abfad8155d53e5",
+      "public_trace": "desktop-control/build/fixtures/armor-Shockwave-8a37616298c447bca9abfad8155d53e5/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Shockwave-8a37616298c447bca9abfad8155d53e5/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "Shockwave",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "armor:Endure",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-Endure-f28ec308140946f3aa68c70bc426533c",
+      "public_trace": "desktop-control/build/fixtures/armor-Endure-f28ec308140946f3aa68c70bc426533c/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Endure-f28ec308140946f3aa68c70bc426533c/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "Endure",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 70.59999
+      }
+    },
+    {
+      "case": "armor:ElementalBlast",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-ElementalBlast-d70f87f0f2e440a896271ca483d77069",
+      "public_trace": "desktop-control/build/fixtures/armor-ElementalBlast-d70f87f0f2e440a896271ca483d77069/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-ElementalBlast-d70f87f0f2e440a896271ca483d77069/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "ElementalBlast",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "armor:WildMagic",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-WildMagic-00873b2466254b3b90b5f9a5e81989fc",
+      "public_trace": "desktop-control/build/fixtures/armor-WildMagic-00873b2466254b3b90b5f9a5e81989fc/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-WildMagic-00873b2466254b3b90b5f9a5e81989fc/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "WildMagic",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 85.0
+      }
+    },
+    {
+      "case": "armor:WarpBeacon",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-WarpBeacon-024b52940f1144af98bdcf56a80f9874",
+      "public_trace": "desktop-control/build/fixtures/armor-WarpBeacon-024b52940f1144af98bdcf56a80f9874/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-WarpBeacon-024b52940f1144af98bdcf56a80f9874/fixture-result.json",
+      "public_responses": 32,
+      "gui_postconditions_checked": 30,
+      "evidence": {
+        "ability": "WarpBeacon",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": true,
+        "charge_before": 100.0,
+        "charge_after": 79.0
+      }
+    },
+    {
+      "case": "armor:SmokeBomb",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-SmokeBomb-588aa9fbe0fe434da26aaf591f79abb8",
+      "public_trace": "desktop-control/build/fixtures/armor-SmokeBomb-588aa9fbe0fe434da26aaf591f79abb8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-SmokeBomb-588aa9fbe0fe434da26aaf591f79abb8/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "SmokeBomb",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 70.2
+      }
+    },
+    {
+      "case": "armor:DeathMark",
+      "passed": true,
+      "runtime_id": "runtime-7c78f3e8a26f49198f1fbd3a371b670f",
+      "build_id": "939638b9dfb1b5000d2ea4815187a89dbc4cb3729493279e9df3a9d8c4efe04b",
+      "profile": "desktop-control/build/fixtures/armor-DeathMark-0338a3a4c2c04f8cb81fe9438816ae41",
+      "public_trace": "desktop-control/build/fixtures/armor-DeathMark-0338a3a4c2c04f8cb81fe9438816ae41/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-DeathMark-0338a3a4c2c04f8cb81fe9438816ae41/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "DeathMark",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 85.0
+      }
+    },
+    {
+      "case": "armor:ShadowClone",
+      "passed": true,
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "profile": "desktop-control/build/fixtures/armor-ShadowClone-16445c2d71e148bdb3f36e2760aaece0",
+      "public_trace": "desktop-control/build/fixtures/armor-ShadowClone-16445c2d71e148bdb3f36e2760aaece0/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-ShadowClone-16445c2d71e148bdb3f36e2760aaece0/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "ShadowClone",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "armor:SpectralBlades",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-SpectralBlades-8df8562c83734b0cad970e602f13acc8",
+      "public_trace": "desktop-control/build/fixtures/armor-SpectralBlades-8df8562c83734b0cad970e602f13acc8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-SpectralBlades-8df8562c83734b0cad970e602f13acc8/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "SpectralBlades",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 85.2
+      }
+    },
+    {
+      "case": "armor:NaturesPower",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-NaturesPower-6f327c71a4d54aefac2808153555ba78",
+      "public_trace": "desktop-control/build/fixtures/armor-NaturesPower-6f327c71a4d54aefac2808153555ba78/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-NaturesPower-6f327c71a4d54aefac2808153555ba78/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "NaturesPower",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "armor:SpiritHawk",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-SpiritHawk-4a2b85c949f84b30a12d445aa16a82f1",
+      "public_trace": "desktop-control/build/fixtures/armor-SpiritHawk-4a2b85c949f84b30a12d445aa16a82f1/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-SpiritHawk-4a2b85c949f84b30a12d445aa16a82f1/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "SpiritHawk",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "armor:Challenge",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-Challenge-79aab1dfe0244e3da0f7293b7bb09150",
+      "public_trace": "desktop-control/build/fixtures/armor-Challenge-79aab1dfe0244e3da0f7293b7bb09150/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Challenge-79aab1dfe0244e3da0f7293b7bb09150/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "Challenge",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.0
+      }
+    },
+    {
+      "case": "armor:ElementalStrike",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-ElementalStrike-c1d16f0be7e946a39282d7c512d96412",
+      "public_trace": "desktop-control/build/fixtures/armor-ElementalStrike-c1d16f0be7e946a39282d7c512d96412/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-ElementalStrike-c1d16f0be7e946a39282d7c512d96412/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "ElementalStrike",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 85.2
+      }
+    },
+    {
+      "case": "armor:Feint",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-Feint-8e06f9c52118497b9b572b2b80eeaa4b",
+      "public_trace": "desktop-control/build/fixtures/armor-Feint-8e06f9c52118497b9b572b2b80eeaa4b/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Feint-8e06f9c52118497b9b572b2b80eeaa4b/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "Feint",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 70.2
+      }
+    },
+    {
+      "case": "armor:AscendedForm",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-AscendedForm-0d43cbf040324adf9124a885e33e5a8a",
+      "public_trace": "desktop-control/build/fixtures/armor-AscendedForm-0d43cbf040324adf9124a885e33e5a8a/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-AscendedForm-0d43cbf040324adf9124a885e33e5a8a/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "AscendedForm",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 70.2
+      }
+    },
+    {
+      "case": "armor:Trinity",
+      "passed": true,
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "profile": "desktop-control/build/fixtures/armor-Trinity-d2b3e49f7fd04b9aa7e74d8028615289",
+      "public_trace": "desktop-control/build/fixtures/armor-Trinity-d2b3e49f7fd04b9aa7e74d8028615289/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Trinity-d2b3e49f7fd04b9aa7e74d8028615289/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "ability": "Trinity",
+        "target_cancel_checked": false,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 85.2
+      }
+    },
+    {
+      "case": "armor:PowerOfMany",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-PowerOfMany-0515014f95d14a1d8a376bfd3deda209",
+      "public_trace": "desktop-control/build/fixtures/armor-PowerOfMany-0515014f95d14a1d8a376bfd3deda209/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-PowerOfMany-0515014f95d14a1d8a376bfd3deda209/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "PowerOfMany",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 79.2
+      }
+    },
+    {
+      "case": "armor:Ratmogrify",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-Ratmogrify-68624c392b914eca863012fe8ac2c91f",
+      "public_trace": "desktop-control/build/fixtures/armor-Ratmogrify-68624c392b914eca863012fe8ac2c91f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Ratmogrify-68624c392b914eca863012fe8ac2c91f/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "ability": "Ratmogrify",
+        "target_cancel_checked": true,
+        "resource_empty_checked": false,
+        "paid_teleport_checked": false,
+        "charge_before": 100.0,
+        "charge_after": 70.2
+      }
+    },
+    {
+      "case": "spell:AuraOfProtection",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-AuraOfProtection-e8fb97a092e94832ae4b091d3d4cb958",
+      "public_trace": "desktop-control/build/fixtures/spell-AuraOfProtection-e8fb97a092e94832ae4b091d3d4cb958/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-AuraOfProtection-e8fb97a092e94832ae4b091d3d4cb958/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "AuraOfProtection",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:BeamingRay",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-BeamingRay-68accff958014836845c1e9371a0f418",
+      "public_trace": "desktop-control/build/fixtures/spell-BeamingRay-68accff958014836845c1e9371a0f418/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-BeamingRay-68accff958014836845c1e9371a0f418/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "BeamingRay",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.025641026
+      }
+    },
+    {
+      "case": "spell:BlessSpell",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-BlessSpell-0caee1a5331e451c9f3bc0a482c1b815",
+      "public_trace": "desktop-control/build/fixtures/spell-BlessSpell-0caee1a5331e451c9f3bc0a482c1b815/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-BlessSpell-0caee1a5331e451c9f3bc0a482c1b815/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "BlessSpell",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.025641026
+      }
+    },
+    {
+      "case": "spell:BodyForm",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-BodyForm-3c3e0bc4ca38424f81db5836f96cea49",
+      "public_trace": "desktop-control/build/fixtures/spell-BodyForm-3c3e0bc4ca38424f81db5836f96cea49/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-BodyForm-3c3e0bc4ca38424f81db5836f96cea49/fixture-result.json",
+      "public_responses": 29,
+      "gui_postconditions_checked": 27,
+      "evidence": {
+        "spell": "BodyForm",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": true,
+        "charge_before": 10.0,
+        "charge_after": 8.0
+      }
+    },
+    {
+      "case": "spell:Cleanse",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Cleanse-09aea36a6a8a46e093b13d084b76d2f8",
+      "public_trace": "desktop-control/build/fixtures/spell-Cleanse-09aea36a6a8a46e093b13d084b76d2f8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Cleanse-09aea36a6a8a46e093b13d084b76d2f8/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "Cleanse",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:DivineIntervention",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-DivineIntervention-4dd15e93be9c46fea4819191ab6742e4",
+      "public_trace": "desktop-control/build/fixtures/spell-DivineIntervention-4dd15e93be9c46fea4819191ab6742e4/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-DivineIntervention-4dd15e93be9c46fea4819191ab6742e4/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "DivineIntervention",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 5.028571429
+      }
+    },
+    {
+      "case": "spell:DivineSense",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-DivineSense-5e6af984154744ab8e158896484149d7",
+      "public_trace": "desktop-control/build/fixtures/spell-DivineSense-5e6af984154744ab8e158896484149d7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-DivineSense-5e6af984154744ab8e158896484149d7/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "DivineSense",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.0
+      }
+    },
+    {
+      "case": "spell:Flash",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Flash-c6dc59efc5a143eaabbae3b61f46e0ea",
+      "public_trace": "desktop-control/build/fixtures/spell-Flash-c6dc59efc5a143eaabbae3b61f46e0ea/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Flash-c6dc59efc5a143eaabbae3b61f46e0ea/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "Flash",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:GuidingLight",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-GuidingLight-c0fc6cb34ebc4e7593e09ad7abf91e08",
+      "public_trace": "desktop-control/build/fixtures/spell-GuidingLight-c0fc6cb34ebc4e7593e09ad7abf91e08/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-GuidingLight-c0fc6cb34ebc4e7593e09ad7abf91e08/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "GuidingLight",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.025641026
+      }
+    },
+    {
+      "case": "spell:HallowedGround",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HallowedGround-72645dcfc9e24c2fb6fd9cf651944e72",
+      "public_trace": "desktop-control/build/fixtures/spell-HallowedGround-72645dcfc9e24c2fb6fd9cf651944e72/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HallowedGround-72645dcfc9e24c2fb6fd9cf651944e72/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "HallowedGround",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:HolyIntuition",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyIntuition-c4308460a1be469c88142cae34ff3c5a",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyIntuition-c4308460a1be469c88142cae34ff3c5a/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyIntuition-c4308460a1be469c88142cae34ff3c5a/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "spell": "HolyIntuition",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:HolyLance",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyLance-f54a794d613748b0a8af3f99deda55b7",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyLance-f54a794d613748b0a8af3f99deda55b7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyLance-f54a794d613748b0a8af3f99deda55b7/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "HolyLance",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 6.027777778
+      }
+    },
+    {
+      "case": "spell:HolyWard",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyWard-f0070c60055145118a1139b1c559faed",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyWard-f0070c60055145118a1139b1c559faed/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyWard-f0070c60055145118a1139b1c559faed/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "HolyWard",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.0
+      }
+    },
+    {
+      "case": "spell:HolyWeapon",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyWeapon-2b35ab9f13ce457287ac92a6e985462d",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyWeapon-2b35ab9f13ce457287ac92a6e985462d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyWeapon-2b35ab9f13ce457287ac92a6e985462d/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "HolyWeapon",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.0
+      }
+    },
+    {
+      "case": "spell:Judgement",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Judgement-5be7e3a0731649beb3f01791617520e8",
+      "public_trace": "desktop-control/build/fixtures/spell-Judgement-5be7e3a0731649beb3f01791617520e8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Judgement-5be7e3a0731649beb3f01791617520e8/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "Judgement",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 7.027027028
+      }
+    },
+    {
+      "case": "spell:LayOnHands",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-LayOnHands-f75563be3027461fa3bae50eb1ee2af1",
+      "public_trace": "desktop-control/build/fixtures/spell-LayOnHands-f75563be3027461fa3bae50eb1ee2af1/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-LayOnHands-f75563be3027461fa3bae50eb1ee2af1/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "LayOnHands",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.0
+      }
+    },
+    {
+      "case": "spell:LifeLinkSpell",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-LifeLinkSpell-01aa901f900148a7a686627512097c3f",
+      "public_trace": "desktop-control/build/fixtures/spell-LifeLinkSpell-01aa901f900148a7a686627512097c3f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-LifeLinkSpell-01aa901f900148a7a686627512097c3f/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "LifeLinkSpell",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:MindForm",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-MindForm-a93375b79194471092e729fce45aa3e9",
+      "public_trace": "desktop-control/build/fixtures/spell-MindForm-a93375b79194471092e729fce45aa3e9/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-MindForm-a93375b79194471092e729fce45aa3e9/fixture-result.json",
+      "public_responses": 27,
+      "gui_postconditions_checked": 25,
+      "evidence": {
+        "spell": "MindForm",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 7.0
+      }
+    },
+    {
+      "case": "spell:MnemonicPrayer",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-MnemonicPrayer-5f7590cb39a646a6b2cb037b5a561a81",
+      "public_trace": "desktop-control/build/fixtures/spell-MnemonicPrayer-5f7590cb39a646a6b2cb037b5a561a81/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-MnemonicPrayer-5f7590cb39a646a6b2cb037b5a561a81/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "MnemonicPrayer",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.0
+      }
+    },
+    {
+      "case": "spell:Radiance",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Radiance-d2a9e36e27214451bcbce67e4e40a2ce",
+      "public_trace": "desktop-control/build/fixtures/spell-Radiance-d2a9e36e27214451bcbce67e4e40a2ce/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Radiance-d2a9e36e27214451bcbce67e4e40a2ce/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "Radiance",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:RecallInscription",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-RecallInscription-8719517080374aea93bcd64cb4af315b",
+      "public_trace": "desktop-control/build/fixtures/spell-RecallInscription-8719517080374aea93bcd64cb4af315b/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-RecallInscription-8719517080374aea93bcd64cb4af315b/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "RecallInscription",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 7.027027028
+      }
+    },
+    {
+      "case": "spell:ShieldOfLight",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-ShieldOfLight-1a43841435c14622a02788754b90a570",
+      "public_trace": "desktop-control/build/fixtures/spell-ShieldOfLight-1a43841435c14622a02788754b90a570/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-ShieldOfLight-1a43841435c14622a02788754b90a570/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "ShieldOfLight",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.0
+      }
+    },
+    {
+      "case": "spell:Smite",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Smite-b70e8ce2205b4812b8bf86daedad7f93",
+      "public_trace": "desktop-control/build/fixtures/spell-Smite-b70e8ce2205b4812b8bf86daedad7f93/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Smite-b70e8ce2205b4812b8bf86daedad7f93/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "Smite",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:SpiritForm",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-SpiritForm-aa3068d26e36409a8b4849704e70057e",
+      "public_trace": "desktop-control/build/fixtures/spell-SpiritForm-aa3068d26e36409a8b4849704e70057e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-SpiritForm-aa3068d26e36409a8b4849704e70057e/fixture-result.json",
+      "public_responses": 27,
+      "gui_postconditions_checked": 25,
+      "evidence": {
+        "spell": "SpiritForm",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 6.0
+      }
+    },
+    {
+      "case": "spell:Stasis",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Stasis-0cac6b5adebf42369824e48bce2bc2fa",
+      "public_trace": "desktop-control/build/fixtures/spell-Stasis-0cac6b5adebf42369824e48bce2bc2fa/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Stasis-0cac6b5adebf42369824e48bce2bc2fa/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "spell": "Stasis",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": false,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 8.02631579
+      }
+    },
+    {
+      "case": "spell:Sunray",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Sunray-29fe4dded3ac4dc1af1f385726280883",
+      "public_trace": "desktop-control/build/fixtures/spell-Sunray-29fe4dded3ac4dc1af1f385726280883/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Sunray-29fe4dded3ac4dc1af1f385726280883/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "Sunray",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 9.025641026
+      }
+    },
+    {
+      "case": "spell:WallOfLight",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-WallOfLight-7dd42f3f8c3f4221b1072947caa5dcff",
+      "public_trace": "desktop-control/build/fixtures/spell-WallOfLight-7dd42f3f8c3f4221b1072947caa5dcff/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-WallOfLight-7dd42f3f8c3f4221b1072947caa5dcff/fixture-result.json",
+      "public_responses": 30,
+      "gui_postconditions_checked": 28,
+      "evidence": {
+        "spell": "WallOfLight",
+        "cast_and_resource_spend_verified": true,
+        "target_cancel_checked": true,
+        "unhandled_long_noop_checked": false,
+        "charge_before": 10.0,
+        "charge_after": 7.027027028
+      }
+    },
+    {
+      "case": "weapon:Pickaxe",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Pickaxe-1ddcb613051c4de6804ee86c7082dba7",
+      "public_trace": "desktop-control/build/fixtures/weapon-Pickaxe-1ddcb613051c4de6804ee86c7082dba7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Pickaxe-1ddcb613051c4de6804ee86c7082dba7/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Pickaxe",
+        "ability_label": "pierce",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:AssassinsBlade",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-AssassinsBlade-9cd9a7bc22a44ab0b8fbbe523762b7bf",
+      "public_trace": "desktop-control/build/fixtures/weapon-AssassinsBlade-9cd9a7bc22a44ab0b8fbbe523762b7bf/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-AssassinsBlade-9cd9a7bc22a44ab0b8fbbe523762b7bf/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "AssassinsBlade",
+        "ability_label": "sneak",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.0
+      }
+    },
+    {
+      "case": "weapon:BattleAxe",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-BattleAxe-4537af6962eb4715a8860727c9d3ea82",
+      "public_trace": "desktop-control/build/fixtures/weapon-BattleAxe-4537af6962eb4715a8860727c9d3ea82/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-BattleAxe-4537af6962eb4715a8860727c9d3ea82/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "BattleAxe",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Crossbow",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Crossbow-2b144cf27cb74b86ba2f8d6ac2658589",
+      "public_trace": "desktop-control/build/fixtures/weapon-Crossbow-2b144cf27cb74b86ba2f8d6ac2658589/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Crossbow-2b144cf27cb74b86ba2f8d6ac2658589/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Crossbow",
+        "ability_label": "charged shot",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": false,
+        "charge_before": 8.0,
+        "charge_after": 7.0
+      }
+    },
+    {
+      "case": "weapon:Cudgel",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Cudgel-4ca2c5c5a12240f0b4c2fe96eeb4890f",
+      "public_trace": "desktop-control/build/fixtures/weapon-Cudgel-4ca2c5c5a12240f0b4c2fe96eeb4890f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Cudgel-4ca2c5c5a12240f0b4c2fe96eeb4890f/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Cudgel",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Dagger",
+      "passed": true,
+      "runtime_id": "runtime-c3ede86ce840487a8cef94607f83a4b5",
+      "build_id": "e4b889639bcf3b073b426fe7b3bc7df98cd876fb805026bc91bc9677adfcf2e6",
+      "profile": "desktop-control/build/fixtures/weapon-Dagger-e86e32883e5440e380ae00cc3260bb81",
+      "public_trace": "desktop-control/build/fixtures/weapon-Dagger-e86e32883e5440e380ae00cc3260bb81/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Dagger-e86e32883e5440e380ae00cc3260bb81/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Dagger",
+        "ability_label": "sneak",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.0
+      }
+    },
+    {
+      "case": "weapon:Dirk",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Dirk-4c431cfa41ee427b83ce515b2324cece",
+      "public_trace": "desktop-control/build/fixtures/weapon-Dirk-4c431cfa41ee427b83ce515b2324cece/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Dirk-4c431cfa41ee427b83ce515b2324cece/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Dirk",
+        "ability_label": "sneak",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.0
+      }
+    },
+    {
+      "case": "weapon:Flail",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Flail-88730e63e4384cb4b23193c9bb53e1dc",
+      "public_trace": "desktop-control/build/fixtures/weapon-Flail-88730e63e4384cb4b23193c9bb53e1dc/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Flail-88730e63e4384cb4b23193c9bb53e1dc/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Flail",
+        "ability_label": "spin",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": false,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Gauntlet",
+      "passed": true,
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "profile": "desktop-control/build/fixtures/weapon-Gauntlet-9213276640d3468f8ebb65d9570789f1",
+      "public_trace": "desktop-control/build/fixtures/weapon-Gauntlet-9213276640d3468f8ebb65d9570789f1/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Gauntlet-9213276640d3468f8ebb65d9570789f1/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Gauntlet",
+        "ability_label": "combo strike",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Glaive",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Glaive-1dba7d525404452585627f268e3a8eef",
+      "public_trace": "desktop-control/build/fixtures/weapon-Glaive-1dba7d525404452585627f268e3a8eef/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Glaive-1dba7d525404452585627f268e3a8eef/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Glaive",
+        "ability_label": "spike",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.0341883
+      }
+    },
+    {
+      "case": "weapon:Gloves",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Gloves-b247c52a9cca49f9853f8276d6d25ad8",
+      "public_trace": "desktop-control/build/fixtures/weapon-Gloves-b247c52a9cca49f9853f8276d6d25ad8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Gloves-b247c52a9cca49f9853f8276d6d25ad8/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Gloves",
+        "ability_label": "combo strike",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Greataxe",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Greataxe-685f5daef1544e4f9ebe6540e77e6b07",
+      "public_trace": "desktop-control/build/fixtures/weapon-Greataxe-685f5daef1544e4f9ebe6540e77e6b07/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Greataxe-685f5daef1544e4f9ebe6540e77e6b07/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Greataxe",
+        "ability_label": "retribution",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Greatshield",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Greatshield-cbd090fef9ee4ac7992eb071fd8b4d79",
+      "public_trace": "desktop-control/build/fixtures/weapon-Greatshield-cbd090fef9ee4ac7992eb071fd8b4d79/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Greatshield-cbd090fef9ee4ac7992eb071fd8b4d79/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Greatshield",
+        "ability_label": "guard",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": false,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Greatsword",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Greatsword-5f8fbe5fd12a4af2ad25b13db07ef412",
+      "public_trace": "desktop-control/build/fixtures/weapon-Greatsword-5f8fbe5fd12a4af2ad25b13db07ef412/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Greatsword-5f8fbe5fd12a4af2ad25b13db07ef412/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Greatsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:HandAxe",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-HandAxe-1b851bea738c4f299740b5da632b6bc3",
+      "public_trace": "desktop-control/build/fixtures/weapon-HandAxe-1b851bea738c4f299740b5da632b6bc3/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-HandAxe-1b851bea738c4f299740b5da632b6bc3/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "HandAxe",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Katana",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Katana-b4f9c97aacff4e98b7605a0d25c27d5d",
+      "public_trace": "desktop-control/build/fixtures/weapon-Katana-b4f9c97aacff4e98b7605a0d25c27d5d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Katana-b4f9c97aacff4e98b7605a0d25c27d5d/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Katana",
+        "ability_label": "lunge",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Longsword",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Longsword-aca4dd5c17144dccb03c6d0ecef5e4ee",
+      "public_trace": "desktop-control/build/fixtures/weapon-Longsword-aca4dd5c17144dccb03c6d0ecef5e4ee/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Longsword-aca4dd5c17144dccb03c6d0ecef5e4ee/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Longsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Mace",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Mace-2968609404d440779d5094571e45dcf9",
+      "public_trace": "desktop-control/build/fixtures/weapon-Mace-2968609404d440779d5094571e45dcf9/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Mace-2968609404d440779d5094571e45dcf9/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Mace",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Quarterstaff",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Quarterstaff-680aa4ad41be4488b7b851e2c9ded081",
+      "public_trace": "desktop-control/build/fixtures/weapon-Quarterstaff-680aa4ad41be4488b7b851e2c9ded081/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Quarterstaff-680aa4ad41be4488b7b851e2c9ded081/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Quarterstaff",
+        "ability_label": "defensive stance",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": false,
+        "charge_before": 8.0,
+        "charge_after": 7.0
+      }
+    },
+    {
+      "case": "weapon:Rapier",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Rapier-a8370e1b313048979bcd9166a825192a",
+      "public_trace": "desktop-control/build/fixtures/weapon-Rapier-a8370e1b313048979bcd9166a825192a/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Rapier-a8370e1b313048979bcd9166a825192a/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Rapier",
+        "ability_label": "lunge",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:RoundShield",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-RoundShield-a7c6f095d2f74d2a9e85956582762677",
+      "public_trace": "desktop-control/build/fixtures/weapon-RoundShield-a7c6f095d2f74d2a9e85956582762677/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-RoundShield-a7c6f095d2f74d2a9e85956582762677/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "RoundShield",
+        "ability_label": "guard",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": false,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:RunicBlade",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-RunicBlade-2c85575cf21e4f1d869811be99d2f6e1",
+      "public_trace": "desktop-control/build/fixtures/weapon-RunicBlade-2c85575cf21e4f1d869811be99d2f6e1/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-RunicBlade-2c85575cf21e4f1d869811be99d2f6e1/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "RunicBlade",
+        "ability_label": "runic slash",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Sai",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Sai-a377508591f84057bf741d47511e8897",
+      "public_trace": "desktop-control/build/fixtures/weapon-Sai-a377508591f84057bf741d47511e8897/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Sai-a377508591f84057bf741d47511e8897/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Sai",
+        "ability_label": "combo strike",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Scimitar",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Scimitar-5213d36e9a7b48b8905bd51b36bc3711",
+      "public_trace": "desktop-control/build/fixtures/weapon-Scimitar-5213d36e9a7b48b8905bd51b36bc3711/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Scimitar-5213d36e9a7b48b8905bd51b36bc3711/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Scimitar",
+        "ability_label": "sword dance",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": false,
+        "charge_before": 8.0,
+        "charge_after": 7.0
+      }
+    },
+    {
+      "case": "weapon:Shortsword",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Shortsword-fcf6a1abf0984026871b691954d508cc",
+      "public_trace": "desktop-control/build/fixtures/weapon-Shortsword-fcf6a1abf0984026871b691954d508cc/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Shortsword-fcf6a1abf0984026871b691954d508cc/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Shortsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Sickle",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Sickle-dd24b3258ff64f80ae3aa7657c72414e",
+      "public_trace": "desktop-control/build/fixtures/weapon-Sickle-dd24b3258ff64f80ae3aa7657c72414e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Sickle-dd24b3258ff64f80ae3aa7657c72414e/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Sickle",
+        "ability_label": "harvest",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Spear",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Spear-634fe43f7b6d4f00b2b35a01ff231587",
+      "public_trace": "desktop-control/build/fixtures/weapon-Spear-634fe43f7b6d4f00b2b35a01ff231587/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Spear-634fe43f7b6d4f00b2b35a01ff231587/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Spear",
+        "ability_label": "spike",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.0341883
+      }
+    },
+    {
+      "case": "weapon:Sword",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Sword-e572b84143b442898920eef5983ce7f8",
+      "public_trace": "desktop-control/build/fixtures/weapon-Sword-e572b84143b442898920eef5983ce7f8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Sword-e572b84143b442898920eef5983ce7f8/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "Sword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:WarHammer",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-WarHammer-ebc6a53b7612441d8a61fd9ad3fe3155",
+      "public_trace": "desktop-control/build/fixtures/weapon-WarHammer-ebc6a53b7612441d8a61fd9ad3fe3155/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-WarHammer-ebc6a53b7612441d8a61fd9ad3fe3155/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "WarHammer",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:WarScythe",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-WarScythe-2467654926d14905abeede390295c67e",
+      "public_trace": "desktop-control/build/fixtures/weapon-WarScythe-2467654926d14905abeede390295c67e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-WarScythe-2467654926d14905abeede390295c67e/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "WarScythe",
+        "ability_label": "harvest",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:Whip",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Whip-0431fc81f9ac4efdbdd492b2c68aeb98",
+      "public_trace": "desktop-control/build/fixtures/weapon-Whip-0431fc81f9ac4efdbdd492b2c68aeb98/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Whip-0431fc81f9ac4efdbdd492b2c68aeb98/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Whip",
+        "ability_label": "lash",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": false,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "weapon:WornShortsword",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-WornShortsword-7ff0c75508534585a1db7ac06aaf1c68",
+      "public_trace": "desktop-control/build/fixtures/weapon-WornShortsword-7ff0c75508534585a1db7ac06aaf1c68/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-WornShortsword-7ff0c75508534585a1db7ac06aaf1c68/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "weapon": "WornShortsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": true,
+        "resource_empty_checked": false,
+        "target_cancel_checked": true,
+        "charge_before": 8.0,
+        "charge_after": 7.017094
+      }
+    },
+    {
+      "case": "monk:Dash",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-Dash-accfbd9fc609483a86466181d39462b7",
+      "public_trace": "desktop-control/build/fixtures/monk-Dash-accfbd9fc609483a86466181d39462b7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Dash-accfbd9fc609483a86466181d39462b7/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "monk_ability": "Dash",
+        "actual_ability_and_energy_spend": true,
+        "energy_before": 20.0,
+        "energy_after": 17.0
+      }
+    },
+    {
+      "case": "monk:DragonKick",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-DragonKick-5db237963c0248cf97d7e65e53c07435",
+      "public_trace": "desktop-control/build/fixtures/monk-DragonKick-5db237963c0248cf97d7e65e53c07435/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-DragonKick-5db237963c0248cf97d7e65e53c07435/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "monk_ability": "DragonKick",
+        "actual_ability_and_energy_spend": true,
+        "energy_before": 20.0,
+        "energy_after": 16.0
+      }
+    },
+    {
+      "case": "monk:Flurry",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-Flurry-3a258b2d31be46da834b0d70314cf40a",
+      "public_trace": "desktop-control/build/fixtures/monk-Flurry-3a258b2d31be46da834b0d70314cf40a/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Flurry-3a258b2d31be46da834b0d70314cf40a/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "monk_ability": "Flurry",
+        "actual_ability_and_energy_spend": true,
+        "energy_before": 20.0,
+        "energy_after": 19.0
+      }
+    },
+    {
+      "case": "monk:Focus",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-Focus-5ca454bd361145c380297f1bc7bb07a0",
+      "public_trace": "desktop-control/build/fixtures/monk-Focus-5ca454bd361145c380297f1bc7bb07a0/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Focus-5ca454bd361145c380297f1bc7bb07a0/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "monk_ability": "Focus",
+        "actual_ability_and_energy_spend": true,
+        "energy_before": 20.0,
+        "energy_after": 18.0
+      }
+    },
+    {
+      "case": "monk:Meditate",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-Meditate-86f6768557014e79bb1178fc1cfc82e1",
+      "public_trace": "desktop-control/build/fixtures/monk-Meditate-86f6768557014e79bb1178fc1cfc82e1/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Meditate-86f6768557014e79bb1178fc1cfc82e1/fixture-result.json",
+      "public_responses": 20,
+      "gui_postconditions_checked": 18,
+      "evidence": {
+        "monk_ability": "Meditate",
+        "actual_ability_and_energy_spend": true,
+        "energy_before": 20.0,
+        "energy_after": 15.0
+      }
+    },
+    {
+      "case": "ui:identify",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/ui-identify-33da94bae3384ae49165520a6ea34d6f",
+      "public_trace": "desktop-control/build/fixtures/ui-identify-33da94bae3384ae49165520a6ea34d6f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/ui-identify-33da94bae3384ae49165520a6ea34d6f/fixture-result.json",
+      "public_responses": 23,
+      "gui_postconditions_checked": 21,
+      "evidence": {
+        "interaction": "identify",
+        "original_selector_and_confirmation": true,
+        "public_result_verified": true
+      }
+    },
+    {
+      "case": "ui:upgrade",
+      "passed": true,
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "profile": "desktop-control/build/fixtures/ui-upgrade-5441d8ab60204cca9b3f9ca67dec5a14",
+      "public_trace": "desktop-control/build/fixtures/ui-upgrade-5441d8ab60204cca9b3f9ca67dec5a14/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/ui-upgrade-5441d8ab60204cca9b3f9ca67dec5a14/fixture-result.json",
+      "public_responses": 26,
+      "gui_postconditions_checked": 24,
+      "evidence": {
+        "interaction": "upgrade",
+        "original_selector_and_confirmation": true,
+        "public_result_verified": true
+      }
+    },
+    {
+      "case": "ui:cancel-confirm",
+      "passed": true,
+      "runtime_id": "runtime-bfb2dbc90a1748989a0c0435669430a2",
+      "build_id": "fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4",
+      "profile": "desktop-control/build/fixtures/ui-cancel-confirm-500945a3d19a4401824e983ec50f9dec",
+      "public_trace": "desktop-control/build/fixtures/ui-cancel-confirm-500945a3d19a4401824e983ec50f9dec/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/ui-cancel-confirm-500945a3d19a4401824e983ec50f9dec/fixture-result.json",
+      "public_responses": 27,
+      "gui_postconditions_checked": 25,
+      "evidence": {
+        "interaction": "cancel-confirm",
+        "original_selector_and_confirmation": true,
+        "public_result_verified": true
+      }
+    },
+    {
+      "case": "ui:alchemy",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/ui-alchemy-a3e3c163743f41bc9dea168fbb589c74",
+      "public_trace": "desktop-control/build/fixtures/ui-alchemy-a3e3c163743f41bc9dea168fbb589c74/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/ui-alchemy-a3e3c163743f41bc9dea168fbb589c74/fixture-result.json",
+      "public_responses": 42,
+      "gui_postconditions_checked": 40,
+      "evidence": {
+        "alchemy_crafted_from_three_seeds": true,
+        "same_run_scope": true
+      }
+    },
+    {
+      "case": "armor:HeroicLeap:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-HeroicLeap-empty-a61d6a9701fd48ee9817bdf16c2b7ddb",
+      "public_trace": "desktop-control/build/fixtures/armor-HeroicLeap-empty-a61d6a9701fd48ee9817bdf16c2b7ddb/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-HeroicLeap-empty-a61d6a9701fd48ee9817bdf16c2b7ddb/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "HeroicLeap",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:Shockwave:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-Shockwave-empty-dadefbea0b544f24b35d3e45d794d75d",
+      "public_trace": "desktop-control/build/fixtures/armor-Shockwave-empty-dadefbea0b544f24b35d3e45d794d75d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Shockwave-empty-dadefbea0b544f24b35d3e45d794d75d/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "Shockwave",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:Endure:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-Endure-empty-7a307012f4e04447a06e4a043026d4a4",
+      "public_trace": "desktop-control/build/fixtures/armor-Endure-empty-7a307012f4e04447a06e4a043026d4a4/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Endure-empty-7a307012f4e04447a06e4a043026d4a4/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "Endure",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:ElementalBlast:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-ElementalBlast-empty-7e31fe1d45174a53a3bf5ca395354b1e",
+      "public_trace": "desktop-control/build/fixtures/armor-ElementalBlast-empty-7e31fe1d45174a53a3bf5ca395354b1e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-ElementalBlast-empty-7e31fe1d45174a53a3bf5ca395354b1e/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "ElementalBlast",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:WildMagic:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-WildMagic-empty-4f0ce79e2ff64857be26a6eb2242dd35",
+      "public_trace": "desktop-control/build/fixtures/armor-WildMagic-empty-4f0ce79e2ff64857be26a6eb2242dd35/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-WildMagic-empty-4f0ce79e2ff64857be26a6eb2242dd35/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "WildMagic",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:WarpBeacon:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-WarpBeacon-empty-ec495bc9b5184d74afc3078cdf809aad",
+      "public_trace": "desktop-control/build/fixtures/armor-WarpBeacon-empty-ec495bc9b5184d74afc3078cdf809aad/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-WarpBeacon-empty-ec495bc9b5184d74afc3078cdf809aad/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "WarpBeacon",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:SmokeBomb:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-SmokeBomb-empty-6fbc2b548201466bbfb7106aff7d155e",
+      "public_trace": "desktop-control/build/fixtures/armor-SmokeBomb-empty-6fbc2b548201466bbfb7106aff7d155e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-SmokeBomb-empty-6fbc2b548201466bbfb7106aff7d155e/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "SmokeBomb",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:DeathMark:empty",
+      "passed": true,
+      "runtime_id": "runtime-76f3e5ccfc5c42099991281b65cc463d",
+      "build_id": "eaa0a40853b3f5e193dc72d53cbc5e3d68b17e808f64af756affd7f21a2dcfde",
+      "profile": "desktop-control/build/fixtures/armor-DeathMark-empty-56b6af38f45b4f9f9f8d367926f6de0e",
+      "public_trace": "desktop-control/build/fixtures/armor-DeathMark-empty-56b6af38f45b4f9f9f8d367926f6de0e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-DeathMark-empty-56b6af38f45b4f9f9f8d367926f6de0e/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "DeathMark",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:ShadowClone:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-ShadowClone-empty-e1e3b5025711402189ca98be74434d93",
+      "public_trace": "desktop-control/build/fixtures/armor-ShadowClone-empty-e1e3b5025711402189ca98be74434d93/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-ShadowClone-empty-e1e3b5025711402189ca98be74434d93/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "ShadowClone",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:SpectralBlades:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-SpectralBlades-empty-486b47e42d2c40e29c2dc219f97cdc59",
+      "public_trace": "desktop-control/build/fixtures/armor-SpectralBlades-empty-486b47e42d2c40e29c2dc219f97cdc59/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-SpectralBlades-empty-486b47e42d2c40e29c2dc219f97cdc59/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "SpectralBlades",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:NaturesPower:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-NaturesPower-empty-ddda1b8ad23047fd8b15e85fe6a0b566",
+      "public_trace": "desktop-control/build/fixtures/armor-NaturesPower-empty-ddda1b8ad23047fd8b15e85fe6a0b566/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-NaturesPower-empty-ddda1b8ad23047fd8b15e85fe6a0b566/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "NaturesPower",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:SpiritHawk:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-SpiritHawk-empty-f18fbea6929a4d24bc264a8b1ffdfd83",
+      "public_trace": "desktop-control/build/fixtures/armor-SpiritHawk-empty-f18fbea6929a4d24bc264a8b1ffdfd83/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-SpiritHawk-empty-f18fbea6929a4d24bc264a8b1ffdfd83/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "SpiritHawk",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:Challenge:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-Challenge-empty-1ea6b88e190744e8a0131967ca138a7e",
+      "public_trace": "desktop-control/build/fixtures/armor-Challenge-empty-1ea6b88e190744e8a0131967ca138a7e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Challenge-empty-1ea6b88e190744e8a0131967ca138a7e/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "Challenge",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:ElementalStrike:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-ElementalStrike-empty-628221a536eb47e88e420c6daaf22367",
+      "public_trace": "desktop-control/build/fixtures/armor-ElementalStrike-empty-628221a536eb47e88e420c6daaf22367/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-ElementalStrike-empty-628221a536eb47e88e420c6daaf22367/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "ElementalStrike",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:Feint:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-Feint-empty-828bd3069971421a8edb122dad1ec7f3",
+      "public_trace": "desktop-control/build/fixtures/armor-Feint-empty-828bd3069971421a8edb122dad1ec7f3/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Feint-empty-828bd3069971421a8edb122dad1ec7f3/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "Feint",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:AscendedForm:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-AscendedForm-empty-7185ae4f1ee9487fa3c2e0382b1afd4e",
+      "public_trace": "desktop-control/build/fixtures/armor-AscendedForm-empty-7185ae4f1ee9487fa3c2e0382b1afd4e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-AscendedForm-empty-7185ae4f1ee9487fa3c2e0382b1afd4e/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "AscendedForm",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:Trinity:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-Trinity-empty-9844cbd94ee5420aaca7af5b806caf81",
+      "public_trace": "desktop-control/build/fixtures/armor-Trinity-empty-9844cbd94ee5420aaca7af5b806caf81/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Trinity-empty-9844cbd94ee5420aaca7af5b806caf81/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "Trinity",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:PowerOfMany:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/armor-PowerOfMany-empty-9bb3fac0c6e44969a9ec8be0ea3eb324",
+      "public_trace": "desktop-control/build/fixtures/armor-PowerOfMany-empty-9bb3fac0c6e44969a9ec8be0ea3eb324/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-PowerOfMany-empty-9bb3fac0c6e44969a9ec8be0ea3eb324/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "PowerOfMany",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "armor:Ratmogrify:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/armor-Ratmogrify-empty-eca53d27ca9d4be2affde6a12da78e85",
+      "public_trace": "desktop-control/build/fixtures/armor-Ratmogrify-empty-eca53d27ca9d4be2affde6a12da78e85/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/armor-Ratmogrify-empty-eca53d27ca9d4be2affde6a12da78e85/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "ability": "Ratmogrify",
+        "target_cancel_checked": false,
+        "resource_empty_checked": true,
+        "paid_teleport_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "spell:AuraOfProtection:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-AuraOfProtection-empty-15cdcc1d23084db5b85df01259c3d267",
+      "public_trace": "desktop-control/build/fixtures/spell-AuraOfProtection-empty-15cdcc1d23084db5b85df01259c3d267/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-AuraOfProtection-empty-15cdcc1d23084db5b85df01259c3d267/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "AuraOfProtection",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:BeamingRay:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-BeamingRay-empty-f8738e307d004205959c14db0895a6c7",
+      "public_trace": "desktop-control/build/fixtures/spell-BeamingRay-empty-f8738e307d004205959c14db0895a6c7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-BeamingRay-empty-f8738e307d004205959c14db0895a6c7/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "BeamingRay",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:BlessSpell:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-BlessSpell-empty-819e43d0b6c94525a0f1c4f702733841",
+      "public_trace": "desktop-control/build/fixtures/spell-BlessSpell-empty-819e43d0b6c94525a0f1c4f702733841/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-BlessSpell-empty-819e43d0b6c94525a0f1c4f702733841/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "BlessSpell",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:BodyForm:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-BodyForm-empty-ad93a669ae2f425dbdf5938eaab5b144",
+      "public_trace": "desktop-control/build/fixtures/spell-BodyForm-empty-ad93a669ae2f425dbdf5938eaab5b144/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-BodyForm-empty-ad93a669ae2f425dbdf5938eaab5b144/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "BodyForm",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:Cleanse:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Cleanse-empty-1065522350d447758b401608cf065760",
+      "public_trace": "desktop-control/build/fixtures/spell-Cleanse-empty-1065522350d447758b401608cf065760/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Cleanse-empty-1065522350d447758b401608cf065760/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "Cleanse",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:DivineIntervention:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-DivineIntervention-empty-5b2b5c95b628449a9df5b03276edf2b5",
+      "public_trace": "desktop-control/build/fixtures/spell-DivineIntervention-empty-5b2b5c95b628449a9df5b03276edf2b5/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-DivineIntervention-empty-5b2b5c95b628449a9df5b03276edf2b5/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "DivineIntervention",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:DivineSense:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-DivineSense-empty-3926237204ec4c73b8a2d3fe85072356",
+      "public_trace": "desktop-control/build/fixtures/spell-DivineSense-empty-3926237204ec4c73b8a2d3fe85072356/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-DivineSense-empty-3926237204ec4c73b8a2d3fe85072356/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "DivineSense",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:Flash:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Flash-empty-1621bc9c10fb4fa1a8b93971fbb9668f",
+      "public_trace": "desktop-control/build/fixtures/spell-Flash-empty-1621bc9c10fb4fa1a8b93971fbb9668f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Flash-empty-1621bc9c10fb4fa1a8b93971fbb9668f/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "Flash",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:GuidingLight:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-GuidingLight-empty-2b38b8f10c504a75a03813a7cf96a82d",
+      "public_trace": "desktop-control/build/fixtures/spell-GuidingLight-empty-2b38b8f10c504a75a03813a7cf96a82d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-GuidingLight-empty-2b38b8f10c504a75a03813a7cf96a82d/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "GuidingLight",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:HallowedGround:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HallowedGround-empty-1cd9521bb0d344ab880d869c2d60443f",
+      "public_trace": "desktop-control/build/fixtures/spell-HallowedGround-empty-1cd9521bb0d344ab880d869c2d60443f/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HallowedGround-empty-1cd9521bb0d344ab880d869c2d60443f/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "HallowedGround",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:HolyIntuition:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyIntuition-empty-f007e1ce3d2d4ac59dcc4ab871ebb1c8",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyIntuition-empty-f007e1ce3d2d4ac59dcc4ab871ebb1c8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyIntuition-empty-f007e1ce3d2d4ac59dcc4ab871ebb1c8/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "HolyIntuition",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:HolyLance:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyLance-empty-189dcece2ab04d0eae7d06995d01dc3d",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyLance-empty-189dcece2ab04d0eae7d06995d01dc3d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyLance-empty-189dcece2ab04d0eae7d06995d01dc3d/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "HolyLance",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:HolyWard:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyWard-empty-9b7444cede5a48ceb7ac5c61dd6ac6db",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyWard-empty-9b7444cede5a48ceb7ac5c61dd6ac6db/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyWard-empty-9b7444cede5a48ceb7ac5c61dd6ac6db/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "HolyWard",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:HolyWeapon:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-HolyWeapon-empty-aa02b218bfaf4101a7cce3e361cfb5b1",
+      "public_trace": "desktop-control/build/fixtures/spell-HolyWeapon-empty-aa02b218bfaf4101a7cce3e361cfb5b1/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-HolyWeapon-empty-aa02b218bfaf4101a7cce3e361cfb5b1/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "HolyWeapon",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:Judgement:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Judgement-empty-5a7e30ef2ec84800be0084fc21c9dbec",
+      "public_trace": "desktop-control/build/fixtures/spell-Judgement-empty-5a7e30ef2ec84800be0084fc21c9dbec/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Judgement-empty-5a7e30ef2ec84800be0084fc21c9dbec/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "Judgement",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:LayOnHands:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-LayOnHands-empty-91ca98e9864d4f11abd329f3ac985603",
+      "public_trace": "desktop-control/build/fixtures/spell-LayOnHands-empty-91ca98e9864d4f11abd329f3ac985603/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-LayOnHands-empty-91ca98e9864d4f11abd329f3ac985603/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "LayOnHands",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:LifeLinkSpell:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-LifeLinkSpell-empty-3ed99c08a392420192f7678185b0b7ec",
+      "public_trace": "desktop-control/build/fixtures/spell-LifeLinkSpell-empty-3ed99c08a392420192f7678185b0b7ec/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-LifeLinkSpell-empty-3ed99c08a392420192f7678185b0b7ec/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "LifeLinkSpell",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:MindForm:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-MindForm-empty-d0faf2f6757a43bcafdfd2915c84f6a5",
+      "public_trace": "desktop-control/build/fixtures/spell-MindForm-empty-d0faf2f6757a43bcafdfd2915c84f6a5/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-MindForm-empty-d0faf2f6757a43bcafdfd2915c84f6a5/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "MindForm",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:MnemonicPrayer:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-MnemonicPrayer-empty-eab2b9efcc894b37bc3d544a24e7cac5",
+      "public_trace": "desktop-control/build/fixtures/spell-MnemonicPrayer-empty-eab2b9efcc894b37bc3d544a24e7cac5/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-MnemonicPrayer-empty-eab2b9efcc894b37bc3d544a24e7cac5/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "MnemonicPrayer",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:Radiance:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Radiance-empty-968fc96c22f24974a52a5f9e29f5634e",
+      "public_trace": "desktop-control/build/fixtures/spell-Radiance-empty-968fc96c22f24974a52a5f9e29f5634e/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Radiance-empty-968fc96c22f24974a52a5f9e29f5634e/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "Radiance",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:RecallInscription:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-RecallInscription-empty-d0c14906400d40619c38a9a2fbfabc91",
+      "public_trace": "desktop-control/build/fixtures/spell-RecallInscription-empty-d0c14906400d40619c38a9a2fbfabc91/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-RecallInscription-empty-d0c14906400d40619c38a9a2fbfabc91/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "RecallInscription",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:ShieldOfLight:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-ShieldOfLight-empty-424f8b11ffd84d3c9b11568e0340e163",
+      "public_trace": "desktop-control/build/fixtures/spell-ShieldOfLight-empty-424f8b11ffd84d3c9b11568e0340e163/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-ShieldOfLight-empty-424f8b11ffd84d3c9b11568e0340e163/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "ShieldOfLight",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:Smite:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Smite-empty-bca899c67a15460286709de1565e705a",
+      "public_trace": "desktop-control/build/fixtures/spell-Smite-empty-bca899c67a15460286709de1565e705a/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Smite-empty-bca899c67a15460286709de1565e705a/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "Smite",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:SpiritForm:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-SpiritForm-empty-0a37595e70b0495588f8741a5ba84933",
+      "public_trace": "desktop-control/build/fixtures/spell-SpiritForm-empty-0a37595e70b0495588f8741a5ba84933/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-SpiritForm-empty-0a37595e70b0495588f8741a5ba84933/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "SpiritForm",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:Stasis:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Stasis-empty-ce2db0081fc443d98ec9ccc611d0cba7",
+      "public_trace": "desktop-control/build/fixtures/spell-Stasis-empty-ce2db0081fc443d98ec9ccc611d0cba7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Stasis-empty-ce2db0081fc443d98ec9ccc611d0cba7/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "Stasis",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:Sunray:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-Sunray-empty-572e429ec997408dadb1fd524160e2dd",
+      "public_trace": "desktop-control/build/fixtures/spell-Sunray-empty-572e429ec997408dadb1fd524160e2dd/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-Sunray-empty-572e429ec997408dadb1fd524160e2dd/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "Sunray",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "spell:WallOfLight:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/spell-WallOfLight-empty-a2648116beea49e0baae658cc8a57d0d",
+      "public_trace": "desktop-control/build/fixtures/spell-WallOfLight-empty-a2648116beea49e0baae658cc8a57d0d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/spell-WallOfLight-empty-a2648116beea49e0baae658cc8a57d0d/fixture-result.json",
+      "public_responses": 22,
+      "gui_postconditions_checked": 20,
+      "evidence": {
+        "spell": "WallOfLight",
+        "empty_resource_native_refusal_checked": true,
+        "dimmed_control_checked": true
+      }
+    },
+    {
+      "case": "weapon:Pickaxe:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Pickaxe-empty-e8dcfa33f0334fb6a1990c881ead3cef",
+      "public_trace": "desktop-control/build/fixtures/weapon-Pickaxe-empty-e8dcfa33f0334fb6a1990c881ead3cef/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Pickaxe-empty-e8dcfa33f0334fb6a1990c881ead3cef/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Pickaxe",
+        "ability_label": "pierce",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:AssassinsBlade:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-AssassinsBlade-empty-792ed02f8b5443318524449edc7a475b",
+      "public_trace": "desktop-control/build/fixtures/weapon-AssassinsBlade-empty-792ed02f8b5443318524449edc7a475b/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-AssassinsBlade-empty-792ed02f8b5443318524449edc7a475b/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "AssassinsBlade",
+        "ability_label": "sneak",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:BattleAxe:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-BattleAxe-empty-527b79793ec14a95bbe2d0a0c1c92248",
+      "public_trace": "desktop-control/build/fixtures/weapon-BattleAxe-empty-527b79793ec14a95bbe2d0a0c1c92248/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-BattleAxe-empty-527b79793ec14a95bbe2d0a0c1c92248/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "BattleAxe",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Crossbow:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Crossbow-empty-e451882caa12475589e3b5ce9c279b91",
+      "public_trace": "desktop-control/build/fixtures/weapon-Crossbow-empty-e451882caa12475589e3b5ce9c279b91/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Crossbow-empty-e451882caa12475589e3b5ce9c279b91/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Crossbow",
+        "ability_label": "charged shot",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Cudgel:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Cudgel-empty-4b8ddf776c8545cfa0ad500f5f869d1c",
+      "public_trace": "desktop-control/build/fixtures/weapon-Cudgel-empty-4b8ddf776c8545cfa0ad500f5f869d1c/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Cudgel-empty-4b8ddf776c8545cfa0ad500f5f869d1c/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Cudgel",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Dagger:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Dagger-empty-1b42835cd90745f69d938e819921590b",
+      "public_trace": "desktop-control/build/fixtures/weapon-Dagger-empty-1b42835cd90745f69d938e819921590b/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Dagger-empty-1b42835cd90745f69d938e819921590b/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Dagger",
+        "ability_label": "sneak",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Dirk:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Dirk-empty-29e9af989dcb435ba286277c7eabb276",
+      "public_trace": "desktop-control/build/fixtures/weapon-Dirk-empty-29e9af989dcb435ba286277c7eabb276/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Dirk-empty-29e9af989dcb435ba286277c7eabb276/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Dirk",
+        "ability_label": "sneak",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Flail:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Flail-empty-498bda6ef4704593ac2b457c91c4d17b",
+      "public_trace": "desktop-control/build/fixtures/weapon-Flail-empty-498bda6ef4704593ac2b457c91c4d17b/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Flail-empty-498bda6ef4704593ac2b457c91c4d17b/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Flail",
+        "ability_label": "spin",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Gauntlet:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Gauntlet-empty-b698d2358d354093b8a86904db8fe833",
+      "public_trace": "desktop-control/build/fixtures/weapon-Gauntlet-empty-b698d2358d354093b8a86904db8fe833/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Gauntlet-empty-b698d2358d354093b8a86904db8fe833/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Gauntlet",
+        "ability_label": "combo strike",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Glaive:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Glaive-empty-4a1621b87162430db8be8df73c8a9782",
+      "public_trace": "desktop-control/build/fixtures/weapon-Glaive-empty-4a1621b87162430db8be8df73c8a9782/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Glaive-empty-4a1621b87162430db8be8df73c8a9782/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Glaive",
+        "ability_label": "spike",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Gloves:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Gloves-empty-7a8cbb2d4e744dcd8329d06a4cb435e6",
+      "public_trace": "desktop-control/build/fixtures/weapon-Gloves-empty-7a8cbb2d4e744dcd8329d06a4cb435e6/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Gloves-empty-7a8cbb2d4e744dcd8329d06a4cb435e6/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Gloves",
+        "ability_label": "combo strike",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Greataxe:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Greataxe-empty-c8d5c91f00d1445682af8e1072798a3c",
+      "public_trace": "desktop-control/build/fixtures/weapon-Greataxe-empty-c8d5c91f00d1445682af8e1072798a3c/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Greataxe-empty-c8d5c91f00d1445682af8e1072798a3c/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Greataxe",
+        "ability_label": "retribution",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Greatshield:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Greatshield-empty-1a2eb81b5b0e46f18d480487c35d99f8",
+      "public_trace": "desktop-control/build/fixtures/weapon-Greatshield-empty-1a2eb81b5b0e46f18d480487c35d99f8/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Greatshield-empty-1a2eb81b5b0e46f18d480487c35d99f8/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Greatshield",
+        "ability_label": "guard",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Greatsword:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Greatsword-empty-65dcc365126e423984b686867819421d",
+      "public_trace": "desktop-control/build/fixtures/weapon-Greatsword-empty-65dcc365126e423984b686867819421d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Greatsword-empty-65dcc365126e423984b686867819421d/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Greatsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:HandAxe:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-HandAxe-empty-6f423149dae74fdaae2a3027b44d0225",
+      "public_trace": "desktop-control/build/fixtures/weapon-HandAxe-empty-6f423149dae74fdaae2a3027b44d0225/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-HandAxe-empty-6f423149dae74fdaae2a3027b44d0225/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "HandAxe",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Katana:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Katana-empty-b419d8c8975b47e18b5ee2b1f19d6495",
+      "public_trace": "desktop-control/build/fixtures/weapon-Katana-empty-b419d8c8975b47e18b5ee2b1f19d6495/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Katana-empty-b419d8c8975b47e18b5ee2b1f19d6495/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Katana",
+        "ability_label": "lunge",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Longsword:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Longsword-empty-d0f0e3cd0fad4401bf9578827c7700ae",
+      "public_trace": "desktop-control/build/fixtures/weapon-Longsword-empty-d0f0e3cd0fad4401bf9578827c7700ae/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Longsword-empty-d0f0e3cd0fad4401bf9578827c7700ae/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Longsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Mace:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Mace-empty-3621da57a33b44c3b91e3f4b8d5cd472",
+      "public_trace": "desktop-control/build/fixtures/weapon-Mace-empty-3621da57a33b44c3b91e3f4b8d5cd472/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Mace-empty-3621da57a33b44c3b91e3f4b8d5cd472/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Mace",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Quarterstaff:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Quarterstaff-empty-25e838205eb64e15bec608f580b32ad7",
+      "public_trace": "desktop-control/build/fixtures/weapon-Quarterstaff-empty-25e838205eb64e15bec608f580b32ad7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Quarterstaff-empty-25e838205eb64e15bec608f580b32ad7/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Quarterstaff",
+        "ability_label": "defensive stance",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Rapier:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Rapier-empty-aa2cd0b177354c85b03188a0dce2fd9c",
+      "public_trace": "desktop-control/build/fixtures/weapon-Rapier-empty-aa2cd0b177354c85b03188a0dce2fd9c/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Rapier-empty-aa2cd0b177354c85b03188a0dce2fd9c/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Rapier",
+        "ability_label": "lunge",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:RoundShield:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-RoundShield-empty-929ce5391ff040dbb88bf718fd86df92",
+      "public_trace": "desktop-control/build/fixtures/weapon-RoundShield-empty-929ce5391ff040dbb88bf718fd86df92/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-RoundShield-empty-929ce5391ff040dbb88bf718fd86df92/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "RoundShield",
+        "ability_label": "guard",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:RunicBlade:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-RunicBlade-empty-e95d5f6185744a1a853f2ec004239736",
+      "public_trace": "desktop-control/build/fixtures/weapon-RunicBlade-empty-e95d5f6185744a1a853f2ec004239736/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-RunicBlade-empty-e95d5f6185744a1a853f2ec004239736/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "RunicBlade",
+        "ability_label": "runic slash",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Sai:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/weapon-Sai-empty-90444b65cd3a46b9a1af2c87c8c338f9",
+      "public_trace": "desktop-control/build/fixtures/weapon-Sai-empty-90444b65cd3a46b9a1af2c87c8c338f9/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Sai-empty-90444b65cd3a46b9a1af2c87c8c338f9/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Sai",
+        "ability_label": "combo strike",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Scimitar:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Scimitar-empty-cc3517cdd02b4999b083b9923d0001bb",
+      "public_trace": "desktop-control/build/fixtures/weapon-Scimitar-empty-cc3517cdd02b4999b083b9923d0001bb/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Scimitar-empty-cc3517cdd02b4999b083b9923d0001bb/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Scimitar",
+        "ability_label": "sword dance",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Shortsword:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Shortsword-empty-e382bc53bd73462b8a6e6ce85c4398f4",
+      "public_trace": "desktop-control/build/fixtures/weapon-Shortsword-empty-e382bc53bd73462b8a6e6ce85c4398f4/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Shortsword-empty-e382bc53bd73462b8a6e6ce85c4398f4/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Shortsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Sickle:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Sickle-empty-d72087a6183f42aab43e8dc48f6a5e35",
+      "public_trace": "desktop-control/build/fixtures/weapon-Sickle-empty-d72087a6183f42aab43e8dc48f6a5e35/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Sickle-empty-d72087a6183f42aab43e8dc48f6a5e35/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Sickle",
+        "ability_label": "harvest",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Spear:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Spear-empty-4b66e60df7494b858c20a056be710deb",
+      "public_trace": "desktop-control/build/fixtures/weapon-Spear-empty-4b66e60df7494b858c20a056be710deb/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Spear-empty-4b66e60df7494b858c20a056be710deb/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Spear",
+        "ability_label": "spike",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Sword:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Sword-empty-318f3b61448a4b6c846a625c098bd875",
+      "public_trace": "desktop-control/build/fixtures/weapon-Sword-empty-318f3b61448a4b6c846a625c098bd875/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Sword-empty-318f3b61448a4b6c846a625c098bd875/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Sword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:WarHammer:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-WarHammer-empty-e2e262428dfb41e6b288635bb009e7a7",
+      "public_trace": "desktop-control/build/fixtures/weapon-WarHammer-empty-e2e262428dfb41e6b288635bb009e7a7/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-WarHammer-empty-e2e262428dfb41e6b288635bb009e7a7/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "WarHammer",
+        "ability_label": "heavy blow",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:WarScythe:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-WarScythe-empty-a8591eea6a144d2fa1c7f50624c92242",
+      "public_trace": "desktop-control/build/fixtures/weapon-WarScythe-empty-a8591eea6a144d2fa1c7f50624c92242/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-WarScythe-empty-a8591eea6a144d2fa1c7f50624c92242/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "WarScythe",
+        "ability_label": "harvest",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:Whip:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-Whip-empty-81323bd43a9f47c48ed550f2c79ad3bc",
+      "public_trace": "desktop-control/build/fixtures/weapon-Whip-empty-81323bd43a9f47c48ed550f2c79ad3bc/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-Whip-empty-81323bd43a9f47c48ed550f2c79ad3bc/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "Whip",
+        "ability_label": "lash",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "weapon:WornShortsword:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/weapon-WornShortsword-empty-175247dbb9ad4c5e984676162cd57711",
+      "public_trace": "desktop-control/build/fixtures/weapon-WornShortsword-empty-175247dbb9ad4c5e984676162cd57711/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/weapon-WornShortsword-empty-175247dbb9ad4c5e984676162cd57711/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "weapon": "WornShortsword",
+        "ability_label": "cleave",
+        "actual_resource_spend_verified": false,
+        "resource_empty_checked": true,
+        "target_cancel_checked": false,
+        "charge_before": 0.0,
+        "charge_after": 0.0
+      }
+    },
+    {
+      "case": "monk:Dash:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-Dash-empty-06f7cc134bec4823b53eeb60178b116a",
+      "public_trace": "desktop-control/build/fixtures/monk-Dash-empty-06f7cc134bec4823b53eeb60178b116a/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Dash-empty-06f7cc134bec4823b53eeb60178b116a/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "monk_ability": "Dash",
+        "insufficient_energy_disables_choice": true
+      }
+    },
+    {
+      "case": "monk:DragonKick:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-DragonKick-empty-4705f0deba0743dc844fcbc8c08ff9ad",
+      "public_trace": "desktop-control/build/fixtures/monk-DragonKick-empty-4705f0deba0743dc844fcbc8c08ff9ad/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-DragonKick-empty-4705f0deba0743dc844fcbc8c08ff9ad/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "monk_ability": "DragonKick",
+        "insufficient_energy_disables_choice": true
+      }
+    },
+    {
+      "case": "monk:Flurry:empty",
+      "passed": true,
+      "runtime_id": "runtime-8ed9a6fc8be247fa8f9041183ab40c10",
+      "build_id": "c1e66e48d551e564ac4d58f962cead31aac266551ec0e92bde9b6695931d58c8",
+      "profile": "desktop-control/build/fixtures/monk-Flurry-empty-530073a9215a45e1a4b2cc5e2134304d",
+      "public_trace": "desktop-control/build/fixtures/monk-Flurry-empty-530073a9215a45e1a4b2cc5e2134304d/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Flurry-empty-530073a9215a45e1a4b2cc5e2134304d/fixture-result.json",
+      "public_responses": 16,
+      "gui_postconditions_checked": 14,
+      "evidence": {
+        "monk_ability": "Flurry",
+        "zero_energy_no_indicator": true
+      }
+    },
+    {
+      "case": "monk:Focus:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-Focus-empty-2e9f8bba25ed4ac8999a2c9a929e6376",
+      "public_trace": "desktop-control/build/fixtures/monk-Focus-empty-2e9f8bba25ed4ac8999a2c9a929e6376/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Focus-empty-2e9f8bba25ed4ac8999a2c9a929e6376/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "monk_ability": "Focus",
+        "insufficient_energy_disables_choice": true
+      }
+    },
+    {
+      "case": "monk:Meditate:empty",
+      "passed": true,
+      "runtime_id": "runtime-0a28aed0ccac4779a3eacc5b11364e17",
+      "build_id": "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
+      "profile": "desktop-control/build/fixtures/monk-Meditate-empty-a1825400c29c4fe9a3b96fdb80f4539b",
+      "public_trace": "desktop-control/build/fixtures/monk-Meditate-empty-a1825400c29c4fe9a3b96fdb80f4539b/public-trace.jsonl",
+      "result": "desktop-control/build/fixtures/monk-Meditate-empty-a1825400c29c4fe9a3b96fdb80f4539b/fixture-result.json",
+      "public_responses": 21,
+      "gui_postconditions_checked": 19,
+      "evidence": {
+        "monk_ability": "Meditate",
+        "insufficient_energy_disables_choice": true
+      }
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 {
   "schema": 1,
   "validation_date": "2026-09-09",
-  "phase": "first_three_container_groups",
+  "phase": "first_four_container_groups",
   "test_fixture": true,
   "counts_as_win": false,
   "gui_language": "CHI_SMPL",
   "window_mode": "windowed",
   "cli_language": "en",
-  "total": 7,
-  "passed": 7,
+  "total": 10,
+  "passed": 10,
   "status": "passed",
   "results": [
     {
@@ -290,6 +290,134 @@
       "actual_window_classes_after_public_responses": [
         "com.shatteredpixel.shatteredpixeldungeon.windows.WndTradeItem"
       ]
+    },
+    {
+      "case_id": "containers.iron_door",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-iron-door-77787c80c94247cbaefcbe5e71a30205",
+      "runtime_id": "runtime-8d0cacd690df4dffb70ac0d9ffca3101",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "scope_id": "run:af17a413-9b9e-4026-9bb3-834ce8fa99f1",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "88003077-b158-4327-8d2c-139bfa34f2d9:7"
+      },
+      "evidence": {
+        "case_id": "containers.iron_door",
+        "no_key_refusal_without_turn": true,
+        "original_key_pickup": "iron key",
+        "one_key_consumed": true,
+        "unlocked_then_crossed": true,
+        "cancel_dialog": "not_applicable_original_flow_is_direct"
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 22,
+      "public_trace_responses": 29,
+      "source_result": "desktop-control/build/fixtures/containers-iron-door-77787c80c94247cbaefcbe5e71a30205/containers-scenario-result.json",
+      "actual_window_classes_after_public_responses": []
+    },
+    {
+      "case_id": "containers.crystal_door",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-crystal-door-8d9c17b707a44f66b10b526602dc3594",
+      "runtime_id": "runtime-8d0cacd690df4dffb70ac0d9ffca3101",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "scope_id": "run:21a3f795-1a66-49f8-a954-100bdea929b8",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "f81d03ea-12ab-4708-936e-ed5375a5bbd2:7"
+      },
+      "evidence": {
+        "case_id": "containers.crystal_door",
+        "no_key_refusal_without_turn": true,
+        "original_key_pickup": "crystal key",
+        "one_key_consumed": true,
+        "unlocked_then_crossed": true,
+        "cancel_dialog": "not_applicable_original_flow_is_direct"
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 22,
+      "public_trace_responses": 29,
+      "source_result": "desktop-control/build/fixtures/containers-crystal-door-8d9c17b707a44f66b10b526602dc3594/containers-scenario-result.json",
+      "actual_window_classes_after_public_responses": []
+    },
+    {
+      "case_id": "containers.tomb",
+      "test_fixture": true,
+      "counts_as_win": false,
+      "profile": "desktop-control/build/fixtures/containers-tomb-0c986399b0c1454aa19e524cd864ef9e",
+      "runtime_id": "runtime-8d0cacd690df4dffb70ac0d9ffca3101",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "scope_id": "run:c94abc3b-5ec8-4c79-adec-46403cdc19d7",
+      "gui_environment": {
+        "gui_language": "CHI_SMPL",
+        "fullscreen": false,
+        "asserted_state_version": "c1f94f13-e3d5-40be-bb8b-ef78c6dcabad:7"
+      },
+      "evidence": {
+        "case_id": "containers.tomb",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": true
+      },
+      "cli_language": "en",
+      "ok": true,
+      "gui_postconditions_checked": 22,
+      "public_trace_responses": 24,
+      "source_result": "desktop-control/build/fixtures/containers-tomb-0c986399b0c1454aa19e524cd864ef9e/containers-scenario-result.json",
+      "actual_window_classes_after_public_responses": [
+        "com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoItem"
+      ],
+      "additional_public_trace_assertion": {
+        "kind": "native_dodge_feedback_with_actual_floating_text_marker",
+        "samples": [
+          {
+            "request_id": "736ba3701802-22",
+            "node": {
+              "id": "ui-176",
+              "role": "text",
+              "enabled": true,
+              "text": "dodged",
+              "presentation": "floating_text"
+            }
+          },
+          {
+            "request_id": "736ba3701802-23",
+            "node": {
+              "id": "ui-176",
+              "role": "text",
+              "enabled": true,
+              "text": "dodged",
+              "presentation": "floating_text"
+            }
+          },
+          {
+            "request_id": "736ba3701802-24",
+            "node": {
+              "id": "ui-176",
+              "role": "text",
+              "enabled": true,
+              "text": "dodged",
+              "presentation": "floating_text"
+            }
+          }
+        ],
+        "method": "Read-only check of the original completed public responses, not a later game query or defenseVerb recomputation."
+      }
     }
   ],
   "preparation": "Test-only quiet pocket on a generated first floor, original Item/Heap instances and hidden initial levels; ordinary Warrior statistics preserved. Ambient actors/spawners/hazards/heaps are removed before measurement. No world mutation outside original public actions after preparation.",
@@ -355,11 +483,13 @@
     },
     {
       "type": "TOMB",
-      "status": "pending",
-      "planned_case": "containers.tomb",
+      "status": "partial",
       "original_behavior": "Direct opening calls Wraith.spawnAround(hero.pos) in four cardinal directions, then HEAP.",
-      "latest_attempt": "failed_original_dodge_feedback_translation",
-      "complete_case_passed": false
+      "latest_attempt": "passed_with_original_visible_dodge_feedback",
+      "complete_case_passed": true,
+      "case_refs": [
+        "containers.tomb"
+      ]
     },
     {
       "type": "SKELETON",
@@ -381,15 +511,19 @@
   "door_plan": [
     {
       "terrain": "LOCKED_DOOR",
-      "status": "pending",
-      "planned_case": "containers.iron_door",
-      "key": "same-depth IronKey"
+      "status": "partial",
+      "key": "same-depth IronKey",
+      "case_refs": [
+        "containers.iron_door"
+      ]
     },
     {
       "terrain": "CRYSTAL_DOOR",
-      "status": "pending",
-      "planned_case": "containers.crystal_door",
-      "key": "same-depth CrystalKey"
+      "status": "partial",
+      "key": "same-depth CrystalKey",
+      "case_refs": [
+        "containers.crystal_door"
+      ]
     },
     {
       "terrain": "LOCKED_EXIT",
@@ -405,7 +539,7 @@
     }
   ],
   "limits": [
-    "Only the seven named complete cases in the first three groups passed; TOMB is failed/pending and doors remain pending.",
+    "Ten declared complete cases passed. Each of eight Heap types has a bounded path, plus ordinary IronKey/CrystalKey doors; this is not full coverage of every type variant. WornKey exit and SkeletonKey artifact-created locks remain pending.",
     "The hidden-content contrast uses two same-looking boxes at different public cells in one isolated world, not a claim that every full-world pair is equivalent.",
     "Opening reveals item names but does not identify equipment levels; levels +2/+4 remained private.",
     "The quiet test arena is not a normal playthrough, generated-room or ambient-monster validation.",
@@ -439,6 +573,15 @@
         "79a9475442be928160b04a7be9116ea93dfd5eb699c47f15fbd36bd7d343da99",
         "d60337932a6b331cb8232497266a62c488a7d6a3b69fb11ce41e0b33119b3629"
       ]
+    },
+    {
+      "name": "ordinary_key_doors_and_native_tomb",
+      "case_refs": [
+        "containers.iron_door",
+        "containers.crystal_door",
+        "containers.tomb"
+      ],
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22"
     }
   ]
 }

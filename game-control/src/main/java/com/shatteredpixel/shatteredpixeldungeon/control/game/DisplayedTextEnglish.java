@@ -106,6 +106,10 @@ public final class DisplayedTextEnglish {
         String scope=PUBLIC_SCENE_SCOPES.get(scene);
         String shortcut=context.get("shortcut_action") instanceof String?(String)context.get("shortcut_action"):null;
         String resolved;
+        if("floating_text".equals(context.get("presentation"))
+                &&(resolved=policyResource(displayed,"actors.char.def_verb"))!=null)return resolved;
+        if("floating_text".equals(context.get("presentation"))
+                &&(resolved=policyResource(displayed,"actors.hero.abilities.rogue.deathmark$deathmarktracker.name"))!=null)return resolved;
         if(("gamescene".equals(scope)||"heroselectscene".equals(scope))&&Boolean.TRUE.equals(context.get("modal"))
                 &&context.get("visible_window_texts") instanceof List
                 &&(resolved=describedName(displayed,(List<?>)context.get("visible_window_texts")))!=null)return resolved;
@@ -751,7 +755,8 @@ public final class DisplayedTextEnglish {
                         ||key.equals("actors.hero.abilities.rogue.deathmark.name")
                         ||key.equals("windows.wndupgrade.back")||key.equals("items.scrolls.inventoryscroll.yes")||key.equals("items.scrolls.inventoryscroll.no"))
                     policies.put(key,new ResourcePair(source,target));
-                if(key.equals("windows.wndtradeitem.steal_warn_yes")||key.equals("windows.wndtradeitem.steal_warn_no")
+                if(key.equals("actors.char.def_verb")||key.equals("windows.wndtradeitem.steal_warn_yes")||key.equals("windows.wndtradeitem.steal_warn_no")
+                        ||key.equals("actors.hero.abilities.rogue.deathmark$deathmarktracker.name")
                         ||key.equals("windows.wndresurrect.warn_yes")||key.equals("windows.wndresurrect.warn_no")
                         ||key.equals("windows.wndsadghost.confirm")||key.equals("windows.wndsadghost.cancel"))
                     policies.put(key,new ResourcePair(source,target));

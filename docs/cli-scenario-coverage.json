@@ -62,12 +62,12 @@
       "partial": 63
     },
     "fully_passed_records": 0,
-    "evidence_entries": 255,
+    "evidence_entries": 258,
     "planned_scenarios": 35,
     "callback_records_requiring_individual_mapping": 997,
     "scenario_family_member_status_counts": {
-      "pending": 134,
-      "partial": 9,
+      "pending": 131,
+      "partial": 12,
       "not_applicable": 3
     },
     "scenario_families": 11,
@@ -5296,6 +5296,78 @@
         "price_from_public_button": 50,
         "original_buy_and_inventory_gain": true
       }
+    },
+    "containers.iron_door": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/7",
+      "case": "containers.iron_door",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8d0cacd690df4dffb70ac0d9ffca3101",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "profile": "desktop-control/build/fixtures/containers-iron-door-77787c80c94247cbaefcbe5e71a30205",
+      "public_trace": "desktop-control/build/fixtures/containers-iron-door-77787c80c94247cbaefcbe5e71a30205/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only named ordinary-key doors or original tomb open/pickup and actual displayed dodge feedback. No wrong-depth/artifact/all-variant pass.",
+      "claim": {
+        "case_id": "containers.iron_door",
+        "no_key_refusal_without_turn": true,
+        "original_key_pickup": "iron key",
+        "one_key_consumed": true,
+        "unlocked_then_crossed": true,
+        "cancel_dialog": "not_applicable_original_flow_is_direct"
+      }
+    },
+    "containers.crystal_door": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/8",
+      "case": "containers.crystal_door",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8d0cacd690df4dffb70ac0d9ffca3101",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "profile": "desktop-control/build/fixtures/containers-crystal-door-8d9c17b707a44f66b10b526602dc3594",
+      "public_trace": "desktop-control/build/fixtures/containers-crystal-door-8d9c17b707a44f66b10b526602dc3594/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only named ordinary-key doors or original tomb open/pickup and actual displayed dodge feedback. No wrong-depth/artifact/all-variant pass.",
+      "claim": {
+        "case_id": "containers.crystal_door",
+        "no_key_refusal_without_turn": true,
+        "original_key_pickup": "crystal key",
+        "one_key_consumed": true,
+        "unlocked_then_crossed": true,
+        "cancel_dialog": "not_applicable_original_flow_is_direct"
+      }
+    },
+    "containers.tomb": {
+      "report": "docs/cli-containers-validation.json",
+      "json_pointer": "/results/9",
+      "case": "containers.tomb",
+      "validation_status": "passed",
+      "runtime_id": "runtime-8d0cacd690df4dffb70ac0d9ffca3101",
+      "build_id": "f67189df2341300c337703db4dbc30f2521f279044ad5b0aa15a398f837a5e22",
+      "profile": "desktop-control/build/fixtures/containers-tomb-0c986399b0c1454aa19e524cd864ef9e",
+      "public_trace": "desktop-control/build/fixtures/containers-tomb-0c986399b0c1454aa19e524cd864ef9e/public-trace.jsonl",
+      "language": "CHI_SMPL",
+      "window_mode": "windowed",
+      "cli_language": "en",
+      "scope": "Only named ordinary-key doors or original tomb open/pickup and actual displayed dodge feedback. No wrong-depth/artifact/all-variant pass.",
+      "claim": {
+        "case_id": "containers.tomb",
+        "closed_payloads_not_published": true,
+        "native_container_inspection_no_turn": true,
+        "different_hidden_payloads_same_public_description": false,
+        "native_direct_open_without_cancel_dialog": true,
+        "revealed_item_names_after_open": [
+          "longsword"
+        ],
+        "equipment_levels_remain_unknown": true,
+        "original_pickup_after_open": true,
+        "key_checks": [],
+        "native_wraith_spawn_checked": true
+      }
     }
   },
   "ui_records": [
@@ -6303,6 +6375,14 @@
             "containers.for_sale"
           ],
           "covered": "Three complete declared bone/sale workflows only. TOMB combat-text failure is preserved and not counted as passed."
+        },
+        {
+          "case_refs": [
+            "containers.iron_door",
+            "containers.crystal_door",
+            "containers.tomb"
+          ],
+          "covered": "Original no-key refusals, visible Iron/Crystal key pickup, one-key unlock and crossing; separate real tomb opening/wraith spawning and loot pickup, including actual dodged floating feedback. Old tomb failure retained."
         }
       ],
       "pending_scenarios": [
@@ -7795,6 +7875,12 @@
             "containers.remains"
           ],
           "covered": "Original nonhaunted Skeletal remains/Hero remains examine, no item subject/name leakage, then native opening/pickup. Haunted variants and all bones-generation history remain pending."
+        },
+        {
+          "case_refs": [
+            "containers.tomb"
+          ],
+          "covered": "Original Tomb examine with null inspected item subject and hidden payload, then original open/spawn/pickup. No claim about all trap/haunted variants."
         }
       ],
       "pending_scenarios": [
@@ -15621,8 +15707,10 @@
           "id": "TOMB",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
           "line": 62,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.tomb"
+          ],
           "required_variants": [
             "未开启/开启",
             "可见/记忆/隐藏",
@@ -15666,6 +15754,7 @@
         "containers.locked_chest",
         "containers.remains",
         "containers.skeleton",
+        "containers.tomb",
         "p6.shop-stack",
         "p6.shop-trade"
       ],
@@ -15690,8 +15779,10 @@
           "id": "LOCKED_DOOR:IronKey",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java",
           "line": 1204,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.iron_door"
+          ],
           "required_variants": [
             "有正确钥匙",
             "无钥匙/错层",
@@ -15703,8 +15794,10 @@
           "id": "CRYSTAL_DOOR:CrystalKey",
           "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java",
           "line": 1204,
-          "status": "pending",
-          "case_refs": [],
+          "status": "partial",
+          "case_refs": [
+            "containers.crystal_door"
+          ],
           "required_variants": [
             "有正确钥匙",
             "无钥匙/错层",
@@ -15770,8 +15863,10 @@
         }
       ],
       "case_refs": [
-        "containers.locked_chest",
-        "containers.crystal_chest"
+        "containers.crystal_chest",
+        "containers.crystal_door",
+        "containers.iron_door",
+        "containers.locked_chest"
       ],
       "coverage_rule": "Every member and branch needs its own accepted fixture assertion. A family-level partial case does not pass all members. No full Cartesian-product coverage is claimed."
     },
@@ -17734,6 +17829,15 @@
         "containers.for_sale"
       ],
       "note": "Complete nonhaunted SKELETON/REMAINS and single-item FOR_SALE workflows. TOMB failure is not promoted."
+    },
+    {
+      "date": "2026-09-09",
+      "added_refs": [
+        "containers.iron_door",
+        "containers.crystal_door",
+        "containers.tomb"
+      ],
+      "note": "Ordinary Iron/Crystal key doors and complete tomb retry passed; original tomb translation failure retained. Still no whole class or all variants pass."
     }
   ]
 }

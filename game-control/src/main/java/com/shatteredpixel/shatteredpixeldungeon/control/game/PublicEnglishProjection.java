@@ -183,6 +183,8 @@ public final class PublicEnglishProjection {
                     source.get("control") instanceof String?currentNodes.get(source.get("control")):null;
             if(node!=null) {
                 properties.put("role",node.get("role"));
+                properties.remove("presentation");
+                if(node.get("presentation") instanceof String)properties.put("presentation",node.get("presentation"));
                 properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);properties.put("button",false);
                 properties.remove("inspected_item_level_known");
                 properties.put("ranking_record",false);
