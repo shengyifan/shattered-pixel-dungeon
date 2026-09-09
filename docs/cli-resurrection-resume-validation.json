@@ -1,0 +1,104 @@
+{
+  "test_fixture": true,
+  "counts_as_win": false,
+  "evidence": {
+    "before": {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-e4aabc591da24fc8b60dc0b27928344b",
+      "profile": "desktop-control/build/fixtures/resurrection-resume-f4b803b1199d4a25aad5b33f125d2b8e",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "expected": "blocked",
+      "prepared": {
+        "scope_id": "run:9c441f70-ac0b-4937-b657-6bae94b60cc2",
+        "build_id": "1743ebb8868b895c891c69cc13b6051b65fc686af523ef513735afa2dc2e3af5",
+        "original_pause": {
+          "thread": "SHPD Render Thread",
+          "hp": 0,
+          "run_id": "9c441f70-ac0b-4937-b657-6bae94b60cc2",
+          "window": "WndResurrect",
+          "actor_thread": "SHPD Actor Thread",
+          "actor_alive": true,
+          "actor_yielded": true,
+          "actor_processing": false,
+          "fullscreen": false,
+          "language": "CHI_SMPL",
+          "original_pause_returned": true
+        },
+        "saved_hp": 0,
+        "saved_unblessed_ankhs": 1,
+        "save_receipts": 3
+      },
+      "verified": true,
+      "reproduced_blocked": true,
+      "blocked": {
+        "response_seconds": 30.483,
+        "initial_status": "in_progress",
+        "logical_status": "EXECUTING",
+        "request_id": "5094a368c1a0-7",
+        "scheduler": {
+          "thread": "main",
+          "hp": 0,
+          "run_id": "9c441f70-ac0b-4937-b657-6bae94b60cc2",
+          "window": "WndResurrect",
+          "actor_thread": null,
+          "actor_alive": false,
+          "actor_yielded": false,
+          "actor_processing": false,
+          "fullscreen": false,
+          "language": "CHI_SMPL"
+        }
+      }
+    },
+    "after": {
+      "test_fixture": true,
+      "counts_as_win": false,
+      "runtime_id": "runtime-83972fbe6b3c4590baeb4673e1d5bfd1",
+      "profile": "desktop-control/build/fixtures/resurrection-resume-216942ffc188497ebc15852e4f8e031e",
+      "language": "CHI_SMPL",
+      "fullscreen": false,
+      "expected": "ready",
+      "prepared": {
+        "scope_id": "run:e6c8d4ee-d4b1-414c-a9f2-22e297f4b149",
+        "build_id": "2a10e28123af207570a7e2f4bad19ed7193ca38d593f0936d50c9a5d9d7eadb0",
+        "original_pause": {
+          "thread": "SHPD Render Thread",
+          "hp": 0,
+          "run_id": "e6c8d4ee-d4b1-414c-a9f2-22e297f4b149",
+          "window": "WndResurrect",
+          "actor_thread": "SHPD Actor Thread",
+          "actor_alive": true,
+          "actor_yielded": true,
+          "actor_processing": false,
+          "fullscreen": false,
+          "language": "CHI_SMPL",
+          "original_pause_returned": true
+        },
+        "saved_hp": 0,
+        "saved_unblessed_ankhs": 1,
+        "save_receipts": 3
+      },
+      "verified": true,
+      "reproduced_blocked": false,
+      "restored_window": {
+        "thread": "main",
+        "hp": 0,
+        "run_id": "e6c8d4ee-d4b1-414c-a9f2-22e297f4b149",
+        "window": "WndResurrect",
+        "actor_thread": null,
+        "actor_alive": false,
+        "actor_yielded": false,
+        "actor_processing": false,
+        "fullscreen": false,
+        "language": "CHI_SMPL"
+      },
+      "blocked_actions_still_rejected": true,
+      "mandatory_back_still_blocked": true,
+      "item_selector_cancelled": true,
+      "same_scope_after_original_resurrection": true,
+      "original_ankh_consumed": true,
+      "post_resurrection_save_confirmed": true
+    }
+  }
+}

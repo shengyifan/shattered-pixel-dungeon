@@ -253,7 +253,10 @@ public final class GameController implements RuntimeObserver {
         if(Game.scene() instanceof InterlevelScene)return ((InterlevelScene)Game.scene()).awaitingUserInput();
         if(!(Game.scene() instanceof GameScene))return true;
         Hero h=Dungeon.hero;
-        if(h==null||!Actor.isYielded())return false;
+        if(h==null)return false;
+        // A saved death choice can be rendered before the scheduler has ever existed.
+        // Living heroes still need the original Actor handoff; stopped workers are excluded.
+        if(!Actor.isYielded()&&!(GameScene.actorThreadNotStarted()&&!aliveAtBoundary(h)))return false;
         if(h.sprite!=null&&h.sprite.isMoving)return false;
         return GameScene.interfaceBlockingHero()||!aliveAtBoundary(h)||(h.ready&&h.curAction==null&&!h.resting);
     }

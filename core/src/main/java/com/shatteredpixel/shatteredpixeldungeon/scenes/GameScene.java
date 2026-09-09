@@ -226,8 +226,12 @@ public class GameScene extends PixelScene {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.targetDrawn(source, cell);
 	}
 
-	public static void observeGooEmitterDraw(Emitter source, int cell, com.shatteredpixel.shatteredpixeldungeon.sprites.GooSprite.GooDrawObserver observation) {
-		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.gooEmitterDrawn(source, cell, observation);
+	public static void observeCellParticleDraw(Emitter source, com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue observation) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.particleEmitterDrawn(source, observation);
+	}
+
+	public static void observeFloatingTextDraw(FloatingText source, int cell) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.floatingTextDrawn(source, cell);
 	}
 
 	{
@@ -841,10 +845,21 @@ public class GameScene extends PixelScene {
 
 	private static Thread actorThread;
 
-	/** Runs a short render-thread task only while the actor has handed off this same monitor. */
+	/** Render-thread read: no scheduler has been created and no actor is being processed. */
+	public static boolean actorThreadNotStarted() {
+		return actorThread == null && !Actor.processing();
+	}
+
+	/** Runs a short render-thread task before scheduler creation, or at its actual wait monitor. */
 	public static boolean atActorHandoff(Runnable action) {
 		Thread actor = actorThread;
-		if (actor == null || !actor.isAlive()) return false;
+		if (actor == null) {
+			if (!actorThreadNotStarted()) return false;
+			action.run();
+			return true;
+		}
+		// A terminated worker is not the initial, never-started scene boundary.
+		if (!actor.isAlive()) return false;
 		return Actor.atHandoff(actor, action);
 	}
 	

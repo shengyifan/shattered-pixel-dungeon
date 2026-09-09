@@ -123,20 +123,8 @@ public class GooSprite extends MobSprite {
 		}
 	}
 
-	public static final class GooDrawObserver implements Emitter.DrawObserver {
-		private final int cell;
-		private boolean observed;
-		public GooDrawObserver(int cell) { this.cell = cell; }
-		@Override public void resetObservation() { observed = false; }
-		/** Called after clipping: hidden sources do not postpone an input boundary. */
-		public boolean recordVisibleFrame(boolean eligible, boolean hasDrawable) {
-			if (!eligible) return true;
-			if (hasDrawable) observed = true;
-			return observed;
-		}
-		@Override public void afterDraw(Emitter emitter) {
-			if (Game.observer.observesVisualCues()) GameScene.observeGooEmitterDraw(emitter, cell, this);
-		}
+	public static final class GooDrawObserver extends com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue {
+		public GooDrawObserver(int cell) { super("black_goo_droplets", cell, GooParticle.FACTORY, GooParticle.class); }
 	}
 
 	public void clearEmitters(){

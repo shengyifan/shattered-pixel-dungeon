@@ -4,6 +4,8 @@ import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.GooSprite;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
+import com.watabou.noosa.Visual;
 import com.watabou.noosa.particles.Emitter;
 import org.junit.jupiter.api.Test;
 
@@ -96,5 +98,22 @@ class EmitterDrawObserverTest {
     @Test void progressReadRespectsNativeEmitterFreezeOverrides() {
         Emitter emitter = new Emitter() { @Override protected boolean isFrozen() { return true; } };
         assertFalse(emitter.canProgress());
+    }
+
+    @Test void actualTailParticlesRemainEligibleAfterTheirEmitterStopsOrChangesFactory() {
+        Emitter emitter = new Emitter();
+        Emitter.Factory factory = new Emitter.Factory() {
+            @Override public void emit(Emitter source, int index, float x, float y) { fail("Inspection must not emit"); }
+        };
+        CellParticleCue cue = new CellParticleCue("fixture_visual", 22, factory, Visual.class);
+        Visual tail = new Visual(0, 0, 1, 1) {};
+        emitter.add(tail);
+        emitter.startDelayed(factory, 1, 0, 1);
+        assertTrue(cue.emitting(emitter)); assertTrue(cue.matches(tail));
+        emitter.on = false;
+        assertFalse(cue.emitting(emitter)); assertTrue(cue.matches(tail));
+        assertTrue(cue.recordVisibleFrame(false, false), "A stopped source cannot start a wait");
+        assertFalse(cue.matches(null)); assertFalse(cue.matches(new Gizmo()));
+        assertEquals(1, emitter.countLiving());
     }
 }

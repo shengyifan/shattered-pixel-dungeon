@@ -92,9 +92,13 @@ def test_goo(client):
     assert not reopened["observation"]["ui"]["modal"] and kind_cells(reopened, "black_goo_droplets")
     assert visual(reopened)["map_context"] == visual(warning)["map_context"]
     resolved = act(client, "wait")
-    assert not kind_cells(resolved, "black_goo_droplets"), visual(resolved)
+    tail = kind_cells(resolved, "black_goo_droplets")
+    time.sleep(1.2)
+    faded = client.state()
+    assert not kind_cells(faded, "black_goo_droplets"), visual(faded)
     return {"native_boss": "Goo", "displayed_boss_name": goo["name"], "expanded_particle_cells_in_final_wait_response": sorted(cells),
-            "outer_ring_actually_drawn": True, "warning_cleared_after_native_attack": True,
+            "outer_ring_actually_drawn": True, "native_tail_cells_after_attack": sorted(tail),
+            "warning_cleared_after_native_attack_and_natural_render_fade": True,
             "modal_suppression_and_reappearance_verified": True,
             "no_pump_or_fov_refresh_from_observer": True}
 
@@ -153,6 +157,64 @@ def test_frozen(client):
             "old_version_deadlock_reproduced": False, "game_time_or_particles_forced": False}
 
 
+def test_bomb(client):
+    first = wait_result(client, "bomb_smoke", "Tengu native bomb")
+    anchor = kind_cells(first, "bomb_countdown_3")
+    assert len(anchor) == 1, {"native_first_countdown_missing_in_final_response": visual(first)}
+    assert any(n.get("text") == "3..." for n in first["observation"]["ui"]["controls"]), "Cue must match the original displayed literal"
+    smoke = kind_cells(first, "bomb_smoke")
+    assert anchor <= smoke
+    history = read_visual_events(client)
+    shown_three = next(e for e in history if any(c["kind"] == "bomb_countdown_3" for c in e["data"]["cues"]))
+    # Original floating text disappears with render time; a later query must not
+    # refill it from the still-pending BombAbility timer.
+    time.sleep(1.2)
+    faded = client.state()
+    assert not any(c["kind"].startswith("bomb_countdown_") for c in visual(faded)["cues"])
+    assert kind_cells(faded, "bomb_smoke")
+    assert shown_three in read_visual_events(client)
+    menu = next(n for n in faded["observation"]["ui"]["controls"] if str(n.get("shortcut_action", "")).lower() == "back")
+    modal = act(client, "ui.activate", control=menu["id"])
+    assert modal["observation"]["ui"]["modal"] and visual(modal)["cues"] == []
+    restored = act(client, "ui.back")
+    assert kind_cells(restored, "bomb_smoke")
+    offscreen = act(client, "view.pan", x=5000, y=5000)
+    assert not any(c["kind"].startswith("bomb_") for c in visual(offscreen)["cues"]), visual(offscreen)
+    restored = act(client, "view.pan", x=-5000, y=-5000)
+    assert kind_cells(restored, "bomb_smoke"), visual(restored)
+    numbered = []
+    for number in (2, 1):
+        state = act(client, "wait")
+        assert kind_cells(state, "bomb_countdown_" + str(number)) == anchor, visual(state)
+        assert any(n.get("text") == str(number) + "..." for n in state["observation"]["ui"]["controls"])
+        numbered.append(number)
+    exploded = act(client, "wait")
+    # Native tail particles are permitted while they still draw, even after the
+    # factory changes to BlastParticle. No gameplay action is used to clear them.
+    tail = kind_cells(exploded, "bomb_smoke")
+    time.sleep(1.2)
+    clear = client.state()
+    assert not any(c["kind"].startswith("bomb_") for c in visual(clear)["cues"]), visual(clear)
+    retained = read_visual_events(client)
+    assert all(any(any(c["kind"] == "bomb_countdown_" + str(n) for c in e["data"]["cues"]) for e in retained) for n in (3, 2, 1))
+    return {"native_boss": "Tengu", "smoke_cells_in_final_throw_response": sorted(smoke),
+            "countdown_anchor_from_draw": next(iter(anchor)), "native_countdowns_in_final_action_responses": [3] + numbered,
+            "ui_literals_equal_cue_mapping": True, "faded_countdown_not_reconstructed": True,
+            "modal_and_offscreen_suppression": True, "native_tail_cells_after_explosion": sorted(tail),
+            "cleared_after_natural_render_fade": True, "all_displayed_numbers_retained_in_history": True}
+
+
+def test_bomb_hidden(client):
+    start = time.monotonic()
+    state = act(client, "wait")
+    elapsed = time.monotonic() - start
+    assert elapsed < 10
+    assert not any(c["kind"].startswith("bomb_") for c in visual(state)["cues"]), visual(state)
+    assert not any(any(c["kind"].startswith("bomb_") for c in e["data"]["cues"]) for e in read_visual_events(client))
+    return {"native_bomb_buff_at_hidden_cell_test_only": True, "response_seconds": elapsed,
+            "hidden_smoke_and_number_not_published": True, "hidden_no_drawable_did_not_block": True}
+
+
 def run_one(root, classpath, runtime_id, name):
     profile = root / "desktop-control/build/fixtures" / ("visual-" + name + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
@@ -174,7 +236,8 @@ def run_one(root, classpath, runtime_id, name):
         assert setup["fullscreen"] is False, "Real fixture must remain windowed"
         assert setup["language"] == "CHI_SMPL"
         report["window_mode"] = "windowed"
-        report["evidence"] = {"red": test_red, "goo": test_goo, "hidden": test_hidden, "frozen": test_frozen}[name](client)
+        report["evidence"] = {"red": test_red, "goo": test_goo, "hidden": test_hidden, "frozen": test_frozen,
+                              "bomb": test_bomb, "bomb-hidden": test_bomb_hidden}[name](client)
         report["ok"] = True
     except Exception as error:
         report.update(ok=False, error=repr(error), traceback=traceback.format_exc())
@@ -197,7 +260,7 @@ def main():
     parser.add_argument("--cases", default="red,goo,hidden,frozen")
     args = parser.parse_args()
     cases = args.cases.split(",")
-    assert all(case in {"red", "goo", "hidden", "frozen"} for case in cases)
+    assert all(case in {"red", "goo", "hidden", "frozen", "bomb", "bomb-hidden"} for case in cases)
     root = Path(__file__).resolve().parents[4]
     classpath, runtime_id = freeze_runtime(root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip())
     results = [run_one(root, classpath, runtime_id, name) for name in cases]

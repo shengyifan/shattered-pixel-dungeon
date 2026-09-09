@@ -69,6 +69,9 @@ public class RenderedText extends Image {
 	public String text(){
 		return text;
 	}
+
+	/** Pure rendering capability read; does not measure text or allocate a font. */
+	public boolean hasRenderableText() { return font != null && text != null && !text.isEmpty(); }
 	
 	public void size( int size ){
 		this.size = size;

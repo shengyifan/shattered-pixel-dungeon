@@ -142,12 +142,34 @@ public class FloatingText extends RenderedTextBlock {
 	private float timeLeft;
 	
 	private int key = -1;
+	private int observationCell = -1;
 
 	private static final SparseArray<ArrayList<FloatingText>> stacks = new SparseArray<>();
 	
 	public FloatingText() {
 		super(9*PixelScene.defaultZoom);
 		setHightlighting(false);
+	}
+
+	@Override public void revive() {
+		observationCell = -1;
+		super.revive();
+	}
+
+	@Override public void draw() {
+		super.draw();
+		if (observationCell >= 0 && Game.observer.observesVisualCues())
+			GameScene.observeFloatingTextDraw(this, observationCell);
+	}
+
+	/** Only already-renderable, fully visible words qualify. No timer or status model is read. */
+	public String visibleCueText() {
+		if (words == null || words.isEmpty()) return null;
+		for (RenderedText word : words) {
+			if (word == null || !word.hasRenderableText() || !Float.isFinite(word.am + word.aa) || word.am + word.aa <= 0) return null;
+		}
+		VisibleText fragment = visibleTextFragment();
+		return fragment.visible && !fragment.clipped ? fragment.text : null;
 	}
 	
 	@Override
@@ -255,12 +277,22 @@ public class FloatingText extends RenderedTextBlock {
 	}
 	
 	public static void show( float x, float y, int key, String text, int color, int iconIdx, boolean left ) {
+		show(x, y, key, text, color, iconIdx, left, -1);
+	}
+
+	/** Same displayed text and stacking as show; additionally marks its original grid anchor. */
+	public static void showOnCell(float x, float y, int cell, String text, int color) {
+		show(x, y, cell, text, color, -1, false, cell);
+	}
+
+	private static void show(float x, float y, int key, String text, int color, int iconIdx, boolean left, int cell) {
 		Game.runOnRenderThread(new Callback() {
 			@Override
 			public void call() {
 				FloatingText txt = GameScene.status();
 				if (txt != null){
 					txt.reset(x, y, text, color, iconIdx, left);
+					if (Game.observer.observesVisualCues()) txt.observationCell = cell;
 					if (key != -1) push(txt, key);
 				}
 			}

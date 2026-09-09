@@ -43,4 +43,15 @@ final class VisualCueProjection {
         for (Rect blocker : blockers) if (cellScreen.overlaps(blocker)) return false;
         return true;
     }
+
+    static boolean permitsScreenBounds(Rect bounds, Viewport camera, List<Rect> blockers) {
+        if (bounds == null || camera == null || !Float.isFinite(bounds.left) || !Float.isFinite(bounds.top)
+                || !Float.isFinite(bounds.right) || !Float.isFinite(bounds.bottom)
+                || bounds.right <= bounds.left || bounds.bottom <= bounds.top) return false;
+        if (bounds.left < camera.screenX || bounds.top < camera.screenY
+                || bounds.right > camera.screenX + camera.width*camera.zoom
+                || bounds.bottom > camera.screenY + camera.height*camera.zoom) return false;
+        for (Rect blocker : blockers) if (bounds.overlaps(blocker)) return false;
+        return true;
+    }
 }

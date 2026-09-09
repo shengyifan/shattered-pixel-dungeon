@@ -39,6 +39,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.ClericSpell;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Sheep;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
@@ -733,12 +734,20 @@ public class DwarfKing extends Mob {
 
 				if (summon == DKGolem.class){
 					particles.pour(SparkParticle.STATIC, 0.05f);
+					if (Game.observer.observesVisualCues()) particles.observeDraw(new CellParticleCue(
+							"summoning_sparks", pos, SparkParticle.STATIC, SparkParticle.class));
 				} else if (summon == DKWarlock.class){
 					particles.pour(ShadowParticle.UP, 0.1f);
+					if (Game.observer.observesVisualCues()) particles.observeDraw(new CellParticleCue(
+							"summoning_shadows", pos, ShadowParticle.UP, ShadowParticle.class));
 				} else if (summon == DKMonk.class){
 					particles.pour(ElmoParticle.FACTORY, 0.1f);
+					if (Game.observer.observesVisualCues()) particles.observeDraw(new CellParticleCue(
+							"summoning_green_flames", pos, ElmoParticle.FACTORY, ElmoParticle.class));
 				} else {
 					particles.pour(Speck.factory(Speck.RATTLE), 0.1f);
+					if (Game.observer.observesVisualCues()) particles.observeDraw(new CellParticleCue(
+							"summoning_bones", pos, Speck.factory(Speck.RATTLE), Speck.class));
 				}
 
 			} else if (!on && particles != null) {
