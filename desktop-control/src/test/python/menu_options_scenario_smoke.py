@@ -2,6 +2,7 @@
 """Construct prior profile progress, then exercise original opening-options callbacks."""
 import json
 import argparse
+import re
 from pathlib import Path
 import time
 import traceback
@@ -149,6 +150,55 @@ def random_confirm(client,results):
                     "selected_class":actual["selected_class"]})
 
 
+def daily_control(client):
+    state=client.state()
+    choices=[a for a in controls(state) if a.get("label")=="Daily Run" or re.fullmatch(r"[0-9]{2}:[0-9]{2}:[0-9]{2}\+?",a.get("label") or "")]
+    assert len(choices)==1,choices
+    return act(client,"ui.activate",control=choices[0]["control"])
+
+
+def daily_cycle(client,results):
+    daily_start(client,results)
+    original_run=client.scope
+    act(client,"game.save")
+    act(client,"ui.back")
+    choose(client,"Main Menu")
+    choose(client,"Enter the Dungeon")
+    choose(client,"New Game")
+    choose(client,"warrior")
+    choose(client,"Game Options")
+    rejected=daily_control(client)
+    assert any("You already have a daily run in progress." in n.get("text","") for n in nodes(rejected))
+    results.append({"case":"existing_daily_rejected","original_explanation":True,"new_game_created":False})
+    act(client,"ui.back")
+    return_to_title(client)
+    start=choose(client,"Enter the Dungeon")
+    saved=[a for a in controls(start) if "warrior" in a.get("label","").lower()]
+    assert len(saved)==1,saved
+    act(client,"ui.activate",control=saved[0]["control"])
+    choose(client,"Erase")
+    cancelled=choose(client,"No, I want to continue")
+    assert any(a.get("label")=="Continue" for a in controls(cancelled))
+    results.append({"case":"save_erase_cancel","original_no_preserved_save_details":True})
+    choose(client,"Erase")
+    choose(client,"Yes, delete this save")
+    after=client.state()
+    if ui(after)["scene"]=="StartScene":choose(client,"New Game")
+    else:
+        return_to_title(client);choose(client,"Enter the Dungeon")
+    choose(client,"warrior")
+    choose(client,"Game Options")
+    repeat=daily_control(client)
+    assert any("You have already played today's daily." in n.get("text","") for n in nodes(repeat))
+    choose(client,"Yes")
+    game=reach_game(client,"WARRIOR")
+    actual=menu_assertion(client,game)
+    assert actual["daily"] is True and actual["daily_replay"] is True
+    assert game["scope_id"]!=original_run
+    results.append({"case":"daily_replay_after_original_erase","original_erase_and_repeat_prompt":True,
+                    "fresh_scope":True,"original_daily_replay_flag":True,"system_clock_changed":False})
+
+
 def run_case(root,classpath,runtime_id,name):
     profile=root/"desktop-control/build/fixtures"/("menu-options-"+name+"-"+uuid.uuid4().hex)
     profile.mkdir(parents=True)
@@ -160,7 +210,7 @@ def run_case(root,classpath,runtime_id,name):
     try:
         hello=client.request("protocol.info");assert hello["ok"],hello
         result["build_id"]=hello["result"]["build_id"]
-        {"locked":locked,"unlocked":unlocked,"daily":daily_start,"random-confirm":random_confirm}[name](client,result["cases"])
+        {"locked":locked,"unlocked":unlocked,"daily":daily_start,"random-confirm":random_confirm,"daily-cycle":daily_cycle}[name](client,result["cases"])
         result["ok"]=True
     except Exception as error:
         result.update(ok=False,error=repr(error),traceback=traceback.format_exc())
@@ -186,9 +236,9 @@ def run_case(root,classpath,runtime_id,name):
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument("--cases",default="locked,unlocked,daily,random-confirm")
+    parser.add_argument("--cases",default="locked,unlocked,daily,random-confirm,daily-cycle")
     names=parser.parse_args().cases.split(",")
-    assert all(name in {"locked","unlocked","daily","random-confirm"} for name in names)
+    assert all(name in {"locked","unlocked","daily","random-confirm","daily-cycle"} for name in names)
     root=Path(__file__).resolve().parents[4]
     classpath,runtime_id=freeze_runtime(root,(root/"desktop-control/build/test-runtime-classpath.txt").read_text().strip())
     reports=[run_case(root,classpath,runtime_id,name) for name in names]

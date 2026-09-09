@@ -27,6 +27,8 @@
 
 `menu-options-random-confirm-006f82002fa348949291efe61724e8fe`随后补充通过原Randomize确认：勾选随机角色与挑战、原滑条选择2、点击原Confirm，得到原只读挑战结果窗，恰好2项已选且不可编辑；后置断言确认原挑战位图有2位、原随机角色为已解锁HUNTRESS，randomizedClass=true，再原Back返回选角。只测试一次真实随机结果，不筛种子或重抽到特定角色；结果追加到`randomize_confirmation`。daily复玩/已有局拒绝仍未验证。
 
+`menu-options-daily-cycle-ef68fc9f8aed42ed869b857efe6596ce`进一步完成原每日局循环：原Daily Yes开局并保存→原Main Menu→原New Game尝试第二个daily，被原“已有daily在进行中”说明拒绝；原存档Erase先取消，保存详情仍保留，再原确认删除这份隔离测试档；新建时显示原今日重玩说明，经原Yes进入dailyReplay=true的新run scope。该流程不改系统时钟、不直接删文件、不重放旧请求，最终正常保存退出。公开倒计时按钮通过它实际显示的HH:mm:ss形态识别；逐次使用当前版本。证据作为`daily_cycle`追加，先前结果不回写。
+
 ```sh
 ./gradlew :desktop-control:writeTestRuntimeClasspath
 python3 desktop-control/src/test/python/menu_options_scenario_smoke.py

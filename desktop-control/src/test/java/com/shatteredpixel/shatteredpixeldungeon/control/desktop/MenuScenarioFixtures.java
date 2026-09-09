@@ -9,7 +9,7 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 
 /** Profile progress preparation only. All menu changes and game creation use original public actions. */
 final class MenuScenarioFixtures {
-    static boolean supports(String name) { return name.equals("locked") || name.equals("unlocked") || name.equals("daily") || name.equals("random-confirm"); }
+    static boolean supports(String name) { return name.equals("locked") || name.equals("unlocked") || name.equals("daily") || name.equals("random-confirm") || name.equals("daily-cycle"); }
     static void prepare(String name) {
         if(!name.equals("locked")) {
             Badges.unlock(Badges.Badge.VICTORY);

@@ -64,7 +64,9 @@
   ],
   "scope": "profile_progress_then_original_menu_callbacks",
   "not_verified": [
-    "daily_repeat_and_existing_daily_rejection"
+    "custom_seed_duplicate_regular_save_rejection",
+    "daily_future_clock_warning",
+    "seed_value_edge_cases"
   ],
   "new_game_cases": [
     {
@@ -143,6 +145,41 @@
       }
     ],
     "build_id": "694d886aff2e24301bbbc7e4d5fc7f200506446d1b89a1443740e4e88adeeda3",
+    "ok": true
+  },
+  "daily_cycle": {
+    "test_fixture": true,
+    "counts_as_win": false,
+    "fixture": "menu:daily-cycle",
+    "runtime_id": "runtime-6978a6f741f34e57b1e4bafc07dc38c1",
+    "profile": "desktop-control/build/fixtures/menu-options-daily-cycle-ef68fc9f8aed42ed869b857efe6596ce",
+    "cli_language": "en",
+    "gui_language": "zh",
+    "cases": [
+      {
+        "case": "daily_game_creation",
+        "original_yes_created_run": true,
+        "original_daily_flags_applied": true,
+        "hero_level": 1
+      },
+      {
+        "case": "existing_daily_rejected",
+        "original_explanation": true,
+        "new_game_created": false
+      },
+      {
+        "case": "save_erase_cancel",
+        "original_no_preserved_save_details": true
+      },
+      {
+        "case": "daily_replay_after_original_erase",
+        "original_erase_and_repeat_prompt": true,
+        "fresh_scope": true,
+        "original_daily_replay_flag": true,
+        "system_clock_changed": false
+      }
+    ],
+    "build_id": "ecbc869926f9fcc0534b8cd84e20483150846cdca82b4e5f97954e866b794a79",
     "ok": true
   }
 }
