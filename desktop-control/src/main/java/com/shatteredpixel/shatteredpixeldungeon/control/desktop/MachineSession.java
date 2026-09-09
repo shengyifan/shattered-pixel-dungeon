@@ -154,7 +154,7 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("protocol_version",1,"cli_version","CLI.0.8.6","game_version","3.3.8",
+                    result=map("protocol_version",1,"cli_version","CLI.0.8.7","game_version","3.3.8",
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
                             "session_id",store.sessionId(),"audit_schema_version",4,"text_language","en",
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
@@ -252,7 +252,9 @@ public final class MachineSession implements AutoCloseable {
             }
             try{
                 if(attempt==null)attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format,frame.receivedAt,processingStartedAt);
-                drainSaves();
+                // Receipts must remain durable, but another queued display failure
+                // must not replace this request's original error with an audit error.
+                drainSaveReceipts();
                 Map<String,Object> response=failure(id,scope,dispatchAttempted&&!definitelyNotExecuted?"EXECUTION_UNKNOWN":code(error));
                 if(dispatchAttempted&&!definitelyNotExecuted&&!attempt.duplicate)
                     response.put("result",withPersistence(attempt,Collections.emptyMap(),scope));
@@ -335,7 +337,7 @@ public final class MachineSession implements AutoCloseable {
         boolean success=!output.checkError();store.markOutputAttempt(attempt,success);
         if(!success)throw new IllegalStateException("OUTPUT_CLOSED");
     }
-    private void drainSaves(){
+    private void drainSaveReceipts(){
         GameController.SaveResult save;
         while((save=game.pollSave())!=null)store.recordSave(save.receiptId,save.runId==null?store.menuScope():"run:"+save.runId,
                 save.slot,save.error==null,save.occurredAt,save.originScopeId,save.originRequestId,save.error);
@@ -344,6 +346,9 @@ public final class MachineSession implements AutoCloseable {
             store.ensureScope("run:"+outcome.runId,"run",outcome.runId);
             store.event("run:"+outcome.runId,"run.ended",outcome.data());
         }
+    }
+    private void drainSaves(){
+        drainSaveReceipts();
         GameController.GameLogSnapshot log;
         while((log=game.pollGameLog())!=null){
             store.ensureScope(log.scopeId,"run",log.scopeId.substring(4));

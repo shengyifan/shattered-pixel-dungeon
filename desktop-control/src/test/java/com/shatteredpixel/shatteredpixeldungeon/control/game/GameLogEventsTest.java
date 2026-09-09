@@ -72,6 +72,31 @@ public class GameLogEventsTest {
             }
         }
     }
+    @Test public void consecutiveUntranslatableDisplaysPreserveTheOriginalRequestFailureAndBothPrivateBatches()throws Exception{
+        try(AuditStore store=new AuditStore(temporary.newFolder().toPath())) {
+            store.ensureScope("run:a","run","a");store.beginSession("translation-failure");
+            FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
+            game.logs.add(snapshot("run:a","未收录的第一条实际显示甲"));
+            game.logs.add(snapshot("run:a","未收录的第二条实际显示乙"));
+            try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {
+                session.accept(JsonCodec.encode(map("scope_id","run:a","id","display-query","op","events.read"))).get(5,TimeUnit.SECONDS);
+                assertEquals("PUBLIC_TEXT_UNAVAILABLE",((Map<?,?>)last(wire).get("error")).get("code"));
+                assertEquals(1,wire.toString("UTF-8").lines().count());
+                assertFalse(wire.toString("UTF-8").contains("未收录"));
+                assertEquals("REJECTED",store.getRequest("run:a","display-query").get("status"));
+                assertTrue(game.exits>0); // The second display failure still closes the session.
+                try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+store.internalDatabase());Statement s=db.createStatement()) {
+                    try(ResultSet rows=s.executeQuery("SELECT COUNT(*) FROM logs WHERE channel='displayed_text_untranslated'")) {
+                        assertTrue(rows.next());assertEquals(2,rows.getInt(1));
+                    }
+                    try(ResultSet rows=s.executeQuery("SELECT COUNT(*) FROM exceptions WHERE exception_class LIKE '%PublicTextUnavailableException'")) {
+                        assertTrue(rows.next());assertTrue(rows.getInt(1)>=2);
+                    }
+                }
+                assertTrue(store.events("run:a",0,100).isEmpty());
+            }
+        }
+    }
     @Test public void visualHistoryRetainsDisappearedCuesAndNeverSerializesTheLevelIdentity()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             store.ensureScope("run:a","run","a");FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
@@ -92,6 +117,7 @@ public class GameLogEventsTest {
     private static GameController.GameLogSnapshot snapshot(String scope,String text){return new GameController.GameLogSnapshot(scope,"2026-09-09T01:00:00Z",List.of(new RuntimeObserver.LogEntry(text,0xffffff)));}
     private static Map<String,Object> last(ByteArrayOutputStream wire)throws Exception{String[] rows=wire.toString("UTF-8").strip().split("\\R");return JsonCodec.decode(rows[rows.length-1]);}
     private static final class FakeGame implements MachineSession.GamePort{
+        int exits;
         final Queue<GameController.GameLogSnapshot> logs=new ArrayDeque<>();
         final Queue<GameController.VisualSnapshot> visuals=new ArrayDeque<>();
         final GameController.State state=new GameController.State("run:a","v1","player_ready",map("visible",true),map("private",true),Collections.emptyList());
@@ -104,6 +130,6 @@ public class GameLogEventsTest {
         public GameController.VisualSnapshot pollVisual(){return visuals.poll();}
         public boolean exiting(){return false;}
         public boolean disposed(){return false;}
-        public void exitNow(){}
+        public void exitNow(){exits++;}
     }
 }
