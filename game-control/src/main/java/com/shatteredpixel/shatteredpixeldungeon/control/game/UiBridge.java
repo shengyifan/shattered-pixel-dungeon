@@ -454,6 +454,8 @@ public final class UiBridge {
 
     private void walk(Gizmo gizmo, String parentId, ScrollPane pane, boolean inUi) {
         if (!shown(gizmo)) return;
+        RenderedTextBlock.VisibleText floatingFragment=floatingFragment(gizmo);
+        if(gizmo instanceof FloatingText&&floatingFragment==null)return;
         RenderedTextBlock.VisibleText logFragment = gameLogFragment(gizmo);
         if (logFragment != null && !logFragment.visible) return;
         boolean ui = inUi || gizmo instanceof Component || gizmo instanceof Window || gizmo instanceof ActionArea;
@@ -464,10 +466,11 @@ public final class UiBridge {
             controls.put(nodeId, gizmo);
             Map<String, Object> node = map("id", nodeId, "role", role, "enabled", gizmo.isActive());
             if (parentId != null) node.put("parent", parentId);
-            String text = logFragment == null ? visibleText(gizmo) : logFragment.text;
+            String text = floatingFragment!=null?floatingFragment.text:logFragment == null ? visibleText(gizmo) : logFragment.text;
             if (text != null && !text.isEmpty()) node.put("text", text);
-            if(gizmo instanceof FloatingText&&text!=null&&text.equals(((FloatingText)gizmo).visibleCueText()))
+            if(floatingFragment!=null&&!floatingFragment.clipped)
                 node.put("presentation","floating_text");
+            if(floatingFragment!=null&&floatingFragment.clipped)node.put("clipped",true);
             if (logFragment != null && logFragment.clipped) node.put("clipped", true);
             if (gizmo instanceof Button) {
                 Button button = (Button) gizmo;
@@ -580,6 +583,10 @@ public final class UiBridge {
     }
 
     private static String visibleText(Gizmo gizmo) {
+        if(gizmo instanceof FloatingText) {
+            RenderedTextBlock.VisibleText fragment=floatingFragment(gizmo);
+            return fragment==null?null:fragment.text;
+        }
         RenderedTextBlock.VisibleText logFragment = gameLogFragment(gizmo);
         if (logFragment != null) return logFragment.visible ? logFragment.text : null;
         if (gizmo instanceof RenderedTextBlock) return ((RenderedTextBlock) gizmo).text();
@@ -600,6 +607,12 @@ public final class UiBridge {
             }
         }
         return result.toString();
+    }
+
+    private static RenderedTextBlock.VisibleText floatingFragment(Gizmo gizmo) {
+        if(!(gizmo instanceof FloatingText))return null;
+        RenderedTextBlock.VisibleText text=((FloatingText)gizmo).displayedText();
+        return text!=null&&text.visible&&!text.text.isEmpty()?text:null;
     }
 
     private static RenderedTextBlock.VisibleText gameLogFragment(Gizmo gizmo) {

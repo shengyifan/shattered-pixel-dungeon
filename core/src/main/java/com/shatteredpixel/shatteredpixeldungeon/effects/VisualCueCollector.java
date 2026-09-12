@@ -34,6 +34,7 @@ public final class VisualCueCollector {
     private final Map<String, VisualCue> offered = new LinkedHashMap<>();
     private final List<ParticleObservation> particleObservations = new ArrayList<>();
     private final Map<String, VisualCueProjection.Rect> textBounds = new LinkedHashMap<>();
+    private final List<FloatingText> drawnTexts = new ArrayList<>();
     private List<VisualCue> lastPublished = Collections.emptyList();
 
     private static final class ParticleObservation {
@@ -49,6 +50,8 @@ public final class VisualCueCollector {
     public VisualCueCollector(GameScene scene) { this.scene = scene; }
 
     public void beginDraw() {
+        for(FloatingText previous:drawnTexts)previous.clearDisplayedText();
+        drawnTexts.clear();
         offered.clear();
         particleObservations.clear();
         textBounds.clear();
@@ -85,6 +88,8 @@ public final class VisualCueCollector {
 
     public void floatingTextDrawn(FloatingText source, int cell) {
         if (!collecting || !attached(source) || resolvedCamera(source) != Camera.main) return;
+        drawnTexts.add(source);
+        if(cell<0)return;
         String kind = countdownKind(source.visibleCueText());
         if (kind == null) return;
         VisualCueProjection.Rect bounds = screenBounds(source, Camera.main);
@@ -149,6 +154,9 @@ public final class VisualCueCollector {
                             || VisualCueProjection.permitsScreenBounds(textBounds.get(cue.kind + ":" + cue.cell), viewport, blockers)))
                     visible.add(cue);
             }
+            final VisualCueProjection.Viewport textViewport=viewport;
+            for(FloatingText text:drawnTexts)if(attached(text))text.recordDisplayedText(word ->
+                    resolvedCamera(word)==camera&&VisualCueProjection.permitsScreenBounds(screenBounds(word,camera),textViewport,blockers));
         }
         boolean initialVisualsReady = true;
         for (ParticleObservation observed : particleObservations) {

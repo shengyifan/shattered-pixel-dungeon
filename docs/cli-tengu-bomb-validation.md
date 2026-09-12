@@ -33,6 +33,8 @@
 
 炸弹两例使用 `runtime-d0c0dfa701a34937b2342ad1611cd65b`，生产构建 `cc0aea3ba61e9ac8a4d4870ea83601d6f8856ffddbbf7c5dbdb2ae0e4f7bacd0`。粘咕回归使用 `runtime-130a2c9d50344730917e3a80d422b46e`，构建 `2a10e28123af207570a7e2f4bad19ed7193ca38d593f0936d50c9a5d9d7eadb0`。逐例公开 trace、profile 与机器结果记录在 [cli-tengu-bomb-validation.json](cli-tengu-bomb-validation.json)。旧粘咕测试的“攻击后立即清空”断言失败证据保留，没有改写成通过；验收已按真实尾粒子语义调整后重新实测。
 
+**历史覆盖范围更正：** 上表的隐藏、视口和遮挡断言只检查 `observation.visual_cues` 及 `game.visual` 事件，不能证明整个 `ui.controls` 都经过相同过滤。后续只读复核发现，旧隐藏夹具的公开 trace 在请求 `2bbc24fce5bc-15`、`-17`、`-18`、`-19` 中仍含 `ui-128` 的完整 `text="3..."`，同时 cue 为空。原始报告保留；这里不再把旧断言概括为整个 CLI 没有数字。原引擎的浮字层位于 fog 之上，单凭 FOV 外也不能断言屏幕完全没画。通用 UI 浮字的未绘制、视口裁剪及后续 HUD 遮挡边界，需要独立的实际绘制缓存与公开 pan 夹具验收。
+
 ```sh
 ./gradlew :game-control:test --tests '*FloatingTextCueTest' --tests '*EmitterDrawObserverTest' --tests '*VisualCue*Test' :desktop-control:writeTestRuntimeClasspath
 python3 desktop-control/src/test/python/visual_cue_smoke.py --cases bomb,bomb-hidden,goo

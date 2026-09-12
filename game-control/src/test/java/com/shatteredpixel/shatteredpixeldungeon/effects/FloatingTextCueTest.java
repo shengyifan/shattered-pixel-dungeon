@@ -54,6 +54,54 @@ class FloatingTextCueTest {
         });
     }
 
+    @Test void completedDrawCacheOmitsUnrenderedOffscreenTransparentAndCoveredWords() throws Exception {
+        withFloatingText(source -> {
+            source.camera=new Camera(0,0,100,100,1);
+            RenderedText first=word(source,"Visible",10),second=word(source,"hidden tail",150);
+            set(source,RenderedTextBlock.class,"text","Visible hidden tail");
+            assertNull(source.displayedText(),"A stored string is not a completed draw");
+            source.recordDisplayedText(word->true);
+            assertEquals("Visible",source.displayedText().text);assertTrue(source.displayedText().clipped);
+            for(int i=0;i<10;i++)assertEquals("Visible",source.displayedText().text);
+            assertEquals(10,first.x);assertEquals(150,second.x);
+            first.x=200;source.recordDisplayedText(word->true);assertNull(source.displayedText());
+            first.x=10;first.am=0;source.recordDisplayedText(word->true);assertNull(source.displayedText());
+            first.am=1;source.recordDisplayedText(word->false);assertNull(source.displayedText(),"Later opaque UI covers the word");
+            set(first,RenderedText.class,"font",null);source.recordDisplayedText(word->true);assertNull(source.displayedText());
+        });
+    }
+
+    @Test void unknownTailAndPartialGlyphCannotBeRecoveredAndPoolReuseClearsDrawCache() throws Exception {
+        withFloatingText(source -> {
+            source.camera=new Camera(0,0,100,100,1);
+            RenderedText first=word(source,"known",10),second=word(source,"private A",95);
+            set(source,RenderedTextBlock.class,"text","known private A");source.recordDisplayedText(word->true);
+            assertEquals("known",source.displayedText().text);
+            set(second,RenderedText.class,"text","private B");set(source,RenderedTextBlock.class,"text","known private B");
+            source.recordDisplayedText(word->true);assertEquals("known",source.displayedText().text);
+            first.x=95;source.recordDisplayedText(word->true);assertNull(source.displayedText(),"No complete visible word means no public node");
+            first.x=10;source.recordDisplayedText(word->true);assertNotNull(source.displayedText());
+            source.clearDisplayedText();assertNull(source.displayedText());source.recordDisplayedText(word->true);
+            source.revive();assertNull(source.displayedText());
+        });
+    }
+
+    @Test void spacesAreSeparatorsAndDoNotTurnAFullyDrawnPhraseIntoAnUnrenderableWord() throws Exception {
+        withFloatingText(source -> {
+            source.camera=new Camera(0,0,100,100,1);word(source,"marked",10);
+            @SuppressWarnings("unchecked") ArrayList<RenderedText> words=(ArrayList<RenderedText>)get(source,RenderedTextBlock.class,"words");
+            words.add((RenderedText)get(null,RenderedTextBlock.class,"SPACE"));word(source,"death",30);
+            set(source,RenderedTextBlock.class,"text","marked death");source.recordDisplayedText(word->true);
+            assertEquals("marked death",source.displayedText().text);assertFalse(source.displayedText().clipped);
+        });
+    }
+
+    private static RenderedText word(FloatingText source,String value,float x)throws Exception {
+        RenderedText word=new RenderedText();set(word,RenderedText.class,"text",value);set(word,RenderedText.class,"font",allocate(BitmapFont.class));
+        word.x=x;word.y=20;word.width=12;word.height=8;source.add(word);
+        @SuppressWarnings("unchecked") ArrayList<RenderedText> words=(ArrayList<RenderedText>)get(source,RenderedTextBlock.class,"words");words.add(word);return word;
+    }
+
     @Test void floatingBoundsMustFitTheViewportAndAvoidHudEvenWhenAnchorCellFits() {
         VisualCueProjection.Viewport view = new VisualCueProjection.Viewport(0, 0, 100, 100, 10, 20, 2);
         VisualCueProjection.Rect text = new VisualCueProjection.Rect(30, 40, 60, 50);

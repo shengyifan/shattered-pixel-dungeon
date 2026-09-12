@@ -141,3 +141,7 @@ Mob.yell的公开说话者与引号正文分别按完整资源/模板翻译，�
 ## 首次支持提示
 
 WndSupportPrompt的标题、intro、Patreon说明、中文GUI追加的英文奖励提示及署名，按包内原资源完整组合匹配，并要求同一公开根窗口与原两按钮。只有真实Close按钮/其子文字可使用wndsupportprompt.close；无关文本、Patreon按钮、未知尾部或clipped节点不能借用。30项相关定向测试及原WornKey触发/Back保护/Close/开锁完整流程通过，未使用supportNagged跳过弹窗。
+
+## 浮字可见缓存的后续收紧
+
+CLI.0.8.12不再因缺少presentation标记而回读FloatingText原全文。实际完整draw缓存可见word后，通用UI在分配节点ID之前过滤不可见内容；详见 `cli-floating-visibility-validation.md`。先前两浮字词的翻译规则仍保留，但只有真实显示的输入可以到达它们。

@@ -3,6 +3,14 @@
   "test_fixture": true,
   "counts_as_win": false,
   "scope": "Tengu native bomb rendering and shared particle tail regression",
+  "historical_scope_correction": {
+    "original_assertions": "observation.visual_cues and game.visual only; not the entire ui.controls tree",
+    "public_trace": "desktop-control/build/fixtures/visual-bomb-hidden-d3320fc8473f4d6ea8d15384177384d0/public-trace.jsonl",
+    "requests_still_containing_full_ui_number": ["2bbc24fce5bc-15", "2bbc24fce5bc-17", "2bbc24fce5bc-18", "2bbc24fce5bc-19"],
+    "node": "ui-128",
+    "text": "3...",
+    "note": "The original raw report remains unchanged. Empty visual cues do not establish suppression of generic UI text. Native status text draws above fog, so FOV exclusion alone is not proof that no pixels were visible. Viewport and HUD suppression of generic floating text is validated separately."
+  },
   "supported_new_visual_kinds": [
     "bomb_smoke",
     "bomb_countdown_3",
@@ -100,7 +108,8 @@
       "evidence": {
         "native_bomb_buff_at_hidden_cell_test_only": true,
         "response_seconds": 0.3177345829899423,
-        "hidden_smoke_and_number_not_published": true,
+        "hidden_smoke_and_number_cues_not_published": true,
+        "assertion_scope": "visual_cues and game.visual events only",
         "hidden_no_drawable_did_not_block": true
       },
       "ok": true

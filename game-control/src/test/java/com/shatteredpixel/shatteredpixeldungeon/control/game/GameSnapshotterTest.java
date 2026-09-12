@@ -391,6 +391,9 @@ class GameSnapshotterTest {
             set(damage, Group.class, "members", new ArrayList<Gizmo>());
             set(damage, RenderedTextBlock.class, "text", "4");
             scene.add(damage);
+            assertFalse(JsonCodec.encode(bridge.describeUi()).contains("\"text\":\"4\""), "An unrendered float has no public text or handle");
+            assertEquals(presentation,bridge.contextSignature());
+            set(damage,FloatingText.class,"displayedText",new RenderedTextBlock.VisibleText("4",false,true));
             assertTrue(JsonCodec.encode(bridge.describeUi()).contains("\"text\":\"4\""));
             assertNotEquals(presentation, bridge.contextSignature());
             assertEquals(intent, bridge.intentSignature());

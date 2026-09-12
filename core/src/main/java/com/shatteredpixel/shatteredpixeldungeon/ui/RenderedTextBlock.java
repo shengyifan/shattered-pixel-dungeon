@@ -101,6 +101,11 @@ public class RenderedTextBlock extends Component {
 
 	/** A pure reading of already-laid-out words. Partly clipped words are never expanded to full text. */
 	public synchronized VisibleText visibleTextFragment() {
+		return visibleTextFragment(null);
+	}
+
+	/** Optional draw-time restriction, used for words later covered by another visible layer. */
+	protected synchronized VisibleText visibleTextFragment(java.util.function.Predicate<RenderedText> completeWord) {
 		StringBuilder result = new StringBuilder(), separators = new StringBuilder();
 		boolean clipped = false, visible = false, omitted = false;
 		if (words == null) return new VisibleText("", false, false);
@@ -122,6 +127,7 @@ public class RenderedTextBlock extends Component {
 					&& word.y < camera.scroll.y + camera.height && word.y + height > camera.scroll.y;
 			boolean complete = intersects && word.x >= camera.scroll.x && word.y >= camera.scroll.y
 					&& word.x + width <= camera.scroll.x + camera.width && word.y + height <= camera.scroll.y + camera.height;
+			complete &= completeWord == null || completeWord.test(word);
 			visible |= intersects;
 			if (complete && word.text() != null) {
 				if (result.length() > 0) {

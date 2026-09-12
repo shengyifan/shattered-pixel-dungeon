@@ -143,6 +143,7 @@ public class FloatingText extends RenderedTextBlock {
 	
 	private int key = -1;
 	private int observationCell = -1;
+	private VisibleText displayedText;
 
 	private static final SparseArray<ArrayList<FloatingText>> stacks = new SparseArray<>();
 	
@@ -153,13 +154,27 @@ public class FloatingText extends RenderedTextBlock {
 
 	@Override public void revive() {
 		observationCell = -1;
+		displayedText = null;
 		super.revive();
 	}
 
 	@Override public void draw() {
 		super.draw();
-		if (observationCell >= 0 && Game.observer.observesVisualCues())
+		if (Game.observer.observesVisualCues())
 			GameScene.observeFloatingTextDraw(this, observationCell);
+		else displayedText = null;
+	}
+
+	/** The previous completed draw's visible words; queries never render or regenerate text. */
+	public VisibleText displayedText() { return displayedText; }
+
+	void clearDisplayedText() { displayedText = null; }
+
+	/** Called after the scene has drawn its later UI layers. Omit partial glyph-only fragments. */
+	void recordDisplayedText(java.util.function.Predicate<RenderedText> uncoveredWord) {
+		VisibleText fragment = visibleTextFragment(word -> word.hasRenderableText()
+				&& Float.isFinite(word.am + word.aa) && word.am + word.aa > 0 && uncoveredWord.test(word));
+		displayedText = fragment.visible && !fragment.text.isEmpty() ? fragment : null;
 	}
 
 	/** Only already-renderable, fully visible words qualify. No timer or status model is read. */
