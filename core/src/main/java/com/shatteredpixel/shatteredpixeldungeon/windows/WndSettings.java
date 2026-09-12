@@ -401,8 +401,8 @@ public class WndSettings extends WndTabbed {
 
 			if ((int)Math.ceil(2* Game.density) < PixelScene.maxDefaultZoom) {
 				optUIScale = new OptionSlider(Messages.get(this, "scale"),
-						(int)Math.ceil(2* Game.density)+ "X",
-						PixelScene.maxDefaultZoom + "X",
+						Messages.concat((int)Math.ceil(2* Game.density), Messages.literal("X")),
+						Messages.concat(PixelScene.maxDefaultZoom, Messages.literal("X")),
 						(int)Math.ceil(2* Game.density),
 						PixelScene.maxDefaultZoom ) {
 					@Override
@@ -1064,11 +1064,11 @@ public class WndSettings extends WndTabbed {
 			final Languages currLang = Messages.lang();
 
 			txtLangInfo = PixelScene.renderTextBlock(6);
-			String info = "_" + Messages.titleCase(currLang.nativeName()) + "_ - ";
-			if (currLang == Languages.ENGLISH) info += "This is the source language, written by the developer.";
-			else if (currLang.status() == Languages.Status.O_COMPLETE) info += Messages.get(this, "completed");
-			else if (currLang.status() == Languages.Status.__UNREVIEW) info += Messages.get(this, "unreviewed");
-			else if (currLang.status() == Languages.Status.X_UNFINISH) info += Messages.get(this, "unfinished");
+			String info = Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(currLang.nativeName())), Messages.literal("_ - "));
+			if (currLang == Languages.ENGLISH) info = Messages.concat(info, Messages.literal("This is the source language, written by the developer."));
+			else if (currLang.status() == Languages.Status.O_COMPLETE) info = Messages.concat(info, Messages.get(this, "completed"));
+			else if (currLang.status() == Languages.Status.__UNREVIEW) info = Messages.concat(info, Messages.get(this, "unreviewed"));
+			else if (currLang.status() == Languages.Status.X_UNFINISH) info = Messages.concat(info, Messages.get(this, "unfinished"));
 			txtLangInfo.text(info);
 
 			if (currLang.status() == Languages.Status.__UNREVIEW) txtLangInfo.setHightlighting(true, CharSprite.WARNING);
@@ -1148,8 +1148,8 @@ public class WndSettings extends WndTabbed {
 							entries[3] = "\n";
 							index = 4;
 							for (int i = 0; i < reviewers.length; i++){
-								entries[index] = reviewers[i];
-								if (i < reviewers.length-1) entries[index] += ", ";
+								entries[index] = Messages.externalText(reviewers[i]);
+								if (i < reviewers.length-1) entries[index] = Messages.concat(entries[index], Messages.literal(", "));
 								entries[index+1] = " ";
 								index += 2;
 							}
@@ -1166,15 +1166,15 @@ public class WndSettings extends WndTabbed {
 
 						//reviewers are also shown as translators
 						for (int i = 0; i < reviewers.length; i++){
-							entries[index] = reviewers[i];
-							if (i < reviewers.length-1 || translators.length > 0) entries[index] += ", ";
+							entries[index] = Messages.externalText(reviewers[i]);
+							if (i < reviewers.length-1 || translators.length > 0) entries[index] = Messages.concat(entries[index], Messages.literal(", "));
 							entries[index+1] = " ";
 							index += 2;
 						}
 
 						for (int i = 0; i < translators.length; i++){
-							entries[index] = translators[i];
-							if (i < translators.length-1) entries[index] += ", ";
+							entries[index] = Messages.externalText(translators[i]);
+							if (i < translators.length-1) entries[index] = Messages.concat(entries[index], Messages.literal(", "));
 							entries[index+1] = " ";
 							index += 2;
 						}

@@ -25,7 +25,7 @@ class Client:
 
     def request(self, op, args=None, request_id=None, scope=None, version=None):
         self.counter += 1
-        req = {"id": request_id or f"{self.prefix}-{self.counter}", "op": op}
+        req = {"protocol_version": 2, "id": request_id or f"{self.prefix}-{self.counter}", "op": op}
         if scope is not None or self.scope is not None:
             req["scope_id"] = scope or self.scope
         if args is not None:

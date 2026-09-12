@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
@@ -45,7 +47,7 @@ public class WndList extends Window {
 				pos += GAP;
 			}
 			
-			RenderedTextBlock item = PixelScene.renderTextBlock( "-" + items[i], 6 );
+			RenderedTextBlock item = PixelScene.renderTextBlock( Messages.concat(Messages.literal("-"), items[i]), 6 );
 			item.setPos( MARGIN, pos );
 			item.maxWidth(WIDTH - MARGIN*2);
 			add( item );

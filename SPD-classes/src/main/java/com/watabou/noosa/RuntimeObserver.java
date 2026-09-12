@@ -15,6 +15,15 @@ public interface RuntimeObserver {
     default void onDispose() {}
     default void onSave(String runId, int slot, Throwable error) {}
     default void onRunEnded(String runId, boolean won) {}
+    /** Optional immutable text provenance. NONE preserves the original String identity. */
+    default String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments) { return rendered; }
+    /** The successful source-language template permits masking parameters the GUI did not display. */
+    default String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments, String guiTemplate) {
+        return onTextResource(rendered, resolvedKey, language, arguments);
+    }
+    default String onTextOperation(String operation, String rendered, Object... operands) { return rendered; }
+    default void onTextBound(Object owner, String rendered) {}
+    default void onTextReleased(Object owner) {}
     /** Snapshot of text that an existing game log control has just drawn, never a raw log signal. */
     default void onGameLog(String contextId, List<LogEntry> entries) {}
     default boolean observesVisualCues() { return false; }

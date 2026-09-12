@@ -369,17 +369,17 @@ public class AscensionChallenge extends Buff {
 	@Override
 	public String desc() {
 		String desc = Messages.get(this, "desc");
-		desc += "\n";
+		desc = Messages.concat(desc, Messages.literal("\n"));
 		if (stacks < 2){
 
-			desc += "\n" + Messages.get(this, "desc_clear");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_clear")));
 
 		} else {
 
-			if (stacks >= 2)    desc += "\n" + Messages.get(this, "desc_beckon");
-			if (stacks >= 4)    desc += "\n" + Messages.get(this, "desc_haste");
-			if (stacks >= 6)    desc += "\n" + Messages.get(this, "desc_slow");
-			if (stacks >= 8)    desc += "\n" + Messages.get(this, "desc_damage");
+			if (stacks >= 2)    desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_beckon")));
+			if (stacks >= 4)    desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_haste")));
+			if (stacks >= 6)    desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_slow")));
+			if (stacks >= 8)    desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_damage")));
 
 		}
 

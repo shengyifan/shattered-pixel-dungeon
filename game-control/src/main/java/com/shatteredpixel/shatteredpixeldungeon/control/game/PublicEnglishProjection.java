@@ -1,285 +1,150 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
+import java.util.*;
 
-/** English presentation of already-public DTOs. Opaque identities and raw audit bytes are not prose. */
+/** Pure presentation of frozen, already player-visible text. No game getters or reverse lookup. */
 public final class PublicEnglishProjection {
     private static final Set<String> TEXT_FIELDS = new HashSet<>(Arrays.asList(
             "name", "class_name", "subclass_name", "label", "text", "description", "prompt",
-            "cell_prompt", "item_prompt", "title", "message", "disabled_reason"));
-    private static final class DictionaryHolder {
-        private static final DisplayedTextEnglish VALUE = new DisplayedTextEnglish();
-    }
+            "cell_prompt", "item_prompt", "title", "message", "disabled_reason", "options"));
+    private static final Set<String> OPAQUE_FIELDS = new HashSet<>(Arrays.asList(
+            "text_sources", "text_diagnostics", "presentation", "response", "response_json",
+            "raw_request", "raw_bytes", "request_json", "original_payload"));
     private PublicEnglishProjection() { }
 
-    public static String text(String value) { return DictionaryHolder.VALUE.translate(value); }
-
+    /** Capture while String identities and their control bindings are still available. */
     @SuppressWarnings("unchecked")
-    public static <T> T copy(T source) { return (T) value(source, null, new Context(null)); }
+    public static <T> T freeze(T source) { return (T) freezeValue(source, null, false); }
 
-    @SuppressWarnings("unchecked")
-    public static <T> T copyInScene(T source,String publicScene) { return (T) value(source,null,new Context(publicScene)); }
-
-    @SuppressWarnings("unchecked")
-    public static <T> T copyWithUi(T source,Map<String,Object> publicUi) {
-        return (T)value(source,null,new Context(null).derive(publicUi));
-    }
-
-    private static Object value(Object source, String field,Context context) {
+    private static Object freezeValue(Object source, String field, boolean clipped) {
         if (source instanceof Map) {
-            Map<?,?> original = (Map<?,?>) source;
-            context = context.derive(original);
-            Map<String,Object> translated = new LinkedHashMap<>();
-            boolean partial = false;
-            for (Map.Entry<?,?> entry : original.entrySet()) {
+            Map<?, ?> input = (Map<?, ?>) source;
+            if (TextProvenance.isToken(input)) return source;
+            Map<String, Object> result = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : input.entrySet()) {
                 String key = (String) entry.getKey();
-                Object item = entry.getValue();
-                if (key.equals("text") && item instanceof String && Boolean.TRUE.equals(original.get("clipped"))) {
-                    DisplayedTextEnglish.VisibleText visible = DictionaryHolder.VALUE.translateVisibleInContext((String) item, true,context.textContext);
-                    translated.put(key, visible.text); partial |= visible.partial;
-                } else translated.put(key, value(item, key,context));
+                boolean rendered = input.get("text_sources") instanceof Map
+                        && ((Map<?, ?>) input.get("text_sources")).containsKey(key);
+                result.put(key, OPAQUE_FIELDS.contains(key) || rendered ? entry.getValue()
+                        : freezeValue(entry.getValue(), key, "text".equals(key) && Boolean.TRUE.equals(input.get("clipped"))));
             }
-            if (partial) translated.put("translation_status", "partial");
-            return translated;
+            return Collections.unmodifiableMap(result);
         }
         if (source instanceof List) {
-            List<Object> translated = new ArrayList<>();
-            for (Object item : (List<?>) source) translated.add(value(item, field,context));
-            return translated;
+            List<Object> result = new ArrayList<>();
+            for (Object item : (List<?>) source) result.add(freezeValue(item, field, clipped));
+            return Collections.unmodifiableList(result);
         }
-        if (source instanceof String && (TEXT_FIELDS.contains(field) || "options".equals(field)))
-            return DictionaryHolder.VALUE.translateInContext((String)source,context.textContext);
+        if (source instanceof String && TEXT_FIELDS.contains(field))
+            return TextProvenance.INSTANCE.capture(null, (String) source, clipped);
         return source;
     }
 
-    /** Context consists entirely of nodes, relations, labels and metadata already in the public DTO. */
-    private static final class Context {
-        final String scene;
-        final Map<String,Map<?,?>> nodes;
-        final Map<String,Object> textContext;
-        final String inspectedControl;
-        final Boolean inspectedLevelKnown;
-        Context(String scene) {
-            this.scene=scene;nodes=Collections.emptyMap();
-            textContext=new LinkedHashMap<>();textContext.put("scene",scene);
-            inspectedControl=null;inspectedLevelKnown=null;
-        }
-        Context(String scene,Map<String,Map<?,?>> nodes,Map<String,Object> textContext,String inspectedControl,Boolean inspectedLevelKnown) {
-            this.scene=scene;this.nodes=nodes;this.textContext=textContext;
-            this.inspectedControl=inspectedControl;this.inspectedLevelKnown=inspectedLevelKnown;
-        }
-        Context derive(Map<?,?> source) {
-            Map<?,?> ui=ui(source);
-            String currentScene=scene;
-            Map<String,Map<?,?>> currentNodes=nodes;
-            Map<String,Object> properties=new LinkedHashMap<>(textContext);
-            String currentInspectedControl=inspectedControl;Boolean currentInspectedKnown=inspectedLevelKnown;
-            if(ui!=null) {
-                currentScene=(String)ui.get("scene");
-                currentNodes=new LinkedHashMap<>();
-                Set<String> buttons=new HashSet<>(),texts=new HashSet<>();
-                boolean hasBindingRow=false,hasBindingInput=false,hasNoteTitleInput=false,hasNoteBodyInput=false;
-                for(Object value:(List<?>)ui.get("controls")) if(value instanceof Map) {
-                    Map<?,?> node=(Map<?,?>)value;
-                    if(node.get("id") instanceof String)currentNodes.put((String)node.get("id"),node);
-                    if(bindingSlots(node.get("binding_slots")))hasBindingRow=true;
-                    if(Boolean.TRUE.equals(node.get("binding_input")))hasBindingInput=true;
-                    if("text_input".equals(node.get("role"))&&node.get("max_length") instanceof Number) {
-                        double limit=((Number)node.get("max_length")).doubleValue();
-                        if(limit==50&&Boolean.FALSE.equals(node.get("multiline")))hasNoteTitleInput=true;
-                        if(limit==500&&Boolean.TRUE.equals(node.get("multiline")))hasNoteBodyInput=true;
+    public static String text(String value) {
+        return (String) TextProvenance.INSTANCE.render(TextProvenance.INSTANCE.capture(null, value, false)).get("text");
+    }
+    @SuppressWarnings("unchecked")
+    public static <T> T copy(T source) { return (T) renderValue(freeze(source)); }
+    /** Retained source-level helpers; scene contents are no longer used to guess translations. */
+    public static <T> T copyInScene(T source, String scene) { return copy(source); }
+    public static <T> T copyWithUi(T source, Map<String,Object> ui) { return copy(source); }
+
+    @SuppressWarnings("unchecked")
+    private static Object renderValue(Object source) {
+        if (source instanceof Map) {
+            Map<String,Object> input = (Map<String,Object>) source;
+            if (TextProvenance.isToken(input)) return TextProvenance.INSTANCE.render(input).get("text");
+            Map<String,Object> result = new LinkedHashMap<>();
+            Map<String,Object> sources = new LinkedHashMap<>();
+            Map<String,Object> diagnostics = new LinkedHashMap<>();
+            if(input.get("text_sources") instanceof Map)sources.putAll((Map<String,Object>)input.get("text_sources"));
+            if(input.get("text_diagnostics") instanceof Map)diagnostics.putAll((Map<String,Object>)input.get("text_diagnostics"));
+            for (Map.Entry<String,Object> entry : input.entrySet()) {
+                String field = entry.getKey(); Object value = entry.getValue();
+                if (value instanceof Map && TextProvenance.isToken((Map<?,?>) value)) {
+                    Map<String,Object> rendered = TextProvenance.INSTANCE.render((Map<String,Object>) value);
+                    result.put(field, rendered.get("text"));
+                    sources.put(field, rendered.get("source"));
+                    diagnostics.remove(field);
+                    if (!"complete".equals(rendered.get("translation_status")))
+                        diagnostics.put(field, rendered.get("diagnostic"));
+                } else if ("options".equals(field) && value instanceof List) {
+                    List<Object> texts = new ArrayList<>(), origins = new ArrayList<>();
+                    int index = 0;
+                    boolean sourceTokens=false;
+                    for (Object option : (List<?>) value) {
+                        if (option instanceof Map && TextProvenance.isToken((Map<?,?>)option)) {
+                            sourceTokens=true;
+                            Map<String,Object> rendered = TextProvenance.INSTANCE.render((Map<String,Object>)option);
+                            texts.add(rendered.get("text")); origins.add(rendered.get("source"));
+                            if (!"complete".equals(rendered.get("translation_status")))
+                                diagnostics.put("options[" + index + "]", rendered.get("diagnostic"));
+                        } else { texts.add(option); origins.add(null); }
+                        index++;
                     }
-                    for(String key:Arrays.asList("text","label")) if(node.get(key) instanceof String) {
-                        texts.add((String)node.get(key));
-                        if("button".equals(node.get("role")))buttons.add((String)node.get(key));
-                    }
+                    result.put(field,texts);
+                    if (sourceTokens) sources.put(field,origins);
+                } else result.put(field, OPAQUE_FIELDS.contains(field) ? value : renderValue(value));
+            }
+            if (!sources.isEmpty()) result.put("text_sources", sources);
+            if (!diagnostics.isEmpty()) {
+                result.put("translation_status", "partial"); result.put("text_diagnostics", diagnostics);
+            } else {
+                result.remove("translation_status"); result.remove("text_diagnostics");
+            }
+            return result;
+        }
+        if (source instanceof List) {
+            List<Object> result = new ArrayList<>();
+            for (Object item : (List<?>)source) result.add(renderValue(item));
+            return result;
+        }
+        return source;
+    }
+
+    public static Map<String,Object> presentation(Object rendered) {
+        List<Object> diagnostics = new ArrayList<>();
+        collectDiagnostics(rendered, "$", diagnostics);
+        Map<String,Object> result = new LinkedHashMap<>();
+        result.put("status", diagnostics.isEmpty() ? "complete" : "partial");
+        result.put("diagnostics", diagnostics);
+        return result;
+    }
+    private static void collectDiagnostics(Object value, String path, List<Object> result) {
+        if (value instanceof Map) {
+            Map<?,?> map = (Map<?,?>)value;
+            if (map.get("text_diagnostics") instanceof Map)
+                for (Map.Entry<?,?> entry : ((Map<?,?>)map.get("text_diagnostics")).entrySet()) {
+                    Map<String,Object> diagnostic = new LinkedHashMap<>();
+                    diagnostic.put("field", path + "." + entry.getKey()); diagnostic.put("code", entry.getValue());
+                    result.add(diagnostic);
                 }
-                properties.clear();properties.put("scene",currentScene);
-                properties.putAll(PublicDialogSignatures.identify(ui));
-                properties.put("modal",ui.get("modal"));properties.put("cell_input",ui.get("cell_input"));
-                if(ui.get("cell_prompt") instanceof String)properties.put("cell_prompt",ui.get("cell_prompt"));
-                currentInspectedControl=null;currentInspectedKnown=null;
-                Object inspected=ui.get("inspected_item");
-                if(Boolean.TRUE.equals(ui.get("modal"))&&inspected instanceof Map) {
-                    Map<?,?> item=(Map<?,?>)inspected;
-                    Map<?,?> owner=item.get("control") instanceof String?currentNodes.get(item.get("control")):null;
-                    if(owner!=null&&"window".equals(owner.get("role"))&&owner.get("parent")==null&&item.get("level_known") instanceof Boolean) {
-                        currentInspectedControl=(String)item.get("control");currentInspectedKnown=(Boolean)item.get("level_known");
-                    }
-                }
-                boolean game="GameScene".equals(currentScene)||"game".equals(currentScene);
-                boolean start="StartScene".equals(currentScene)||"start".equals(currentScene);
-                boolean modal=Boolean.TRUE.equals(ui.get("modal"));
-                int weaponAugments=(one(buttons,"Speed","速度")?1:0)+(one(buttons,"Damage","伤害")?1:0)
-                        +(one(buttons,"Remove Augmentation","移除强化")?1:0);
-                int armorAugments=(one(buttons,"Evasion","闪避")?1:0)+(one(buttons,"Defense","防御")?1:0)
-                        +(one(buttons,"Remove Augmentation","移除强化")?1:0);
-                properties.put("augmentation_window",game&&modal&&one(texts,"你想强化哪个属性？","What would you like to enhance?")
-                        &&one(buttons,"算了","Never mind")&&(weaponAugments==2||armorAugments==2));
-                Set<String> itemTexts=new HashSet<>(),itemButtons=new HashSet<>();
-                if(currentInspectedControl!=null)for(Map<?,?> node:currentNodes.values())if(withinRoot(node,currentNodes,currentInspectedControl))
-                    for(String key:Arrays.asList("text","label"))if(node.get(key) instanceof String) {
-                        itemTexts.add((String)node.get(key));if("button".equals(node.get("role")))itemButtons.add((String)node.get(key));
-                    }
-                boolean originalItemMenu=game&&modal&&currentInspectedControl!=null
-                        &&one(itemButtons,"DROP","放下")&&one(itemButtons,"THROW","扔出")&&one(itemButtons,"EQUIP","装备","UNEQUIP","取下");
-                properties.put("cloak_item_menu",originalItemMenu&&itemTitle(itemTexts,"暗影斗篷","cloak of shadows"));
-                properties.put("sneak_weapon_menu",originalItemMenu&&itemTitle(itemTexts,"匕首","长匕首","暗杀之刃","dagger","dirk","assassin's blade"));
-                properties.put("combo_weapon_menu",originalItemMenu&&itemTitle(itemTexts,"魔岩拳套","镶钉手套","双钗","stone gauntlet","studded gloves","sai"));
-                properties.put("shadow_clone_menu",originalItemMenu&&itemTitle(itemTexts,"英雄风衣","hero's garb")
-                        &&rogueAbilityDescription(itemTexts,"盗贼召唤一个_暗影映像_，并能使唤其帮助自己战斗。",
-                        "The Rogue summons a _Shadow Clone_, which can be directed to aid him in combat."));
-                properties.put("death_mark_menu",originalItemMenu&&itemTitle(itemTexts,"英雄风衣","hero's garb")
-                        &&rogueAbilityDescription(itemTexts,"盗贼向选中的敌人施加_夺命印记_。被标记的敌人将受到额外伤害，但不会在标记期间死亡。",
-                        "The Rogue places a _Death Mark_ on a chosen enemy. Marked enemies take bonus damage, but cannot die until the mark ends."));
-                properties.put("upgrade_preview",game&&modal&&one(texts,"升级一件物品","Upgrade an Item")
-                        &&upgradeDescription(texts)&&one(buttons,"升级","Upgrade")&&one(buttons,"返回","Back"));
-                properties.put("scroll_cancel",game&&modal&&one(texts,
-                        "你真的想终止这张卷轴的施放？这张卷轴之前未被鉴定，因此它仍会被消耗掉。",
-                        "Do you really want to cancel this scroll usage? The scroll wasn't previously identified, so it will be consumed anyway.")
-                        &&one(buttons,"是的，我确定","Yes, I'm positive")&&one(buttons,"不，我改变主意了","No, I changed my mind"));
-                properties.put("victory_congratulations",("RankingsScene".equals(currentScene)||"rankings".equals(currentScene))
-                        &&modal&&one(texts,"Victory!","获胜！")&&one(buttons,"Support","赞助")&&one(buttons,"Close","关闭")
-                        &&one(texts,"Congratulations on conquering the dungeon! You've unlocked some new features that are available when choosing a hero:",
-                        "恭喜您征服了这座地牢！新的游戏选项已经解锁，你可以在选择英雄时查看并设置："));
-                properties.put("hero_subclass_page",("HeroSelectScene".equals(currentScene)||"hero_select".equals(currentScene))
-                        &&modal&&one(texts,"专精","subclasses","Subclasses")&&one(texts,
-                        "击杀第二个Boss后可以选择一种职业专精。","A subclass can be chosen after defeating the second boss."));
-                properties.put("save_details",start&&modal&&one(buttons,"Continue","继续")&&one(buttons,"Erase","删除")
-                        &&one(texts,"Strength","力量")&&one(texts,"Health","生命")
-                        &&one(texts,"Gold Collected","金币收集数")&&one(texts,"Maximum Depth","最高层数"));
-                properties.put("game_menu",game&&modal&&one(buttons,"Settings","设置")&&one(buttons,"Main Menu","主菜单"));
-                properties.put("chasm_prompt",game&&modal&&one(texts,
-                        "Do you really want to jump into the chasm? A fall that far will be painful.",
-                        "你确定要跳入深渊中？从这么高的地方摔下去一定很疼。"));
-                properties.put("key_binding_panel",hasBindingRow&&one(texts,"Action","行动")
-                        &&one(texts,"Key 1","按键1")&&one(texts,"Key 2","按键2")&&one(texts,"Key 3","按键3")
-                        &&one(buttons,"Default Bindings","恢复默认键位"));
-                properties.put("key_binding_input",hasBindingInput);
-                boolean noteButtons=one(buttons,"Confirm","确定")&&one(buttons,"Cancel","取消");
-                boolean noteTitle=one(texts,"New Text Note","新建文本备注","New Dungeon Floor Note","新建地牢楼层备注",
-                        "New Inventory Item Note","新建背包物品备注","New Item Type Note","新建物品类别备注","Edit Title","编辑标题");
-                boolean noteBody=one(texts,"Add Text","添加文本","Edit Text","编辑文本");
-                properties.put("custom_note_input",game&&modal&&noteButtons&&(hasNoteTitleInput&&noteTitle||hasNoteBodyInput&&noteBody));
-                properties.put("custom_note_view",game&&modal&&one(buttons,"Edit Title","编辑标题")
-                        &&one(buttons,"Add Text","添加文本","Edit Text","编辑文本")&&one(buttons,"Delete","删除"));
-                properties.put("custom_note_delete",game&&modal&&noteButtons&&one(texts,
-                        "Are you sure you want to delete this custom note?","你确定要删除这个备注吗？"));
-            } else if(source.get("scene") instanceof String) {
-                currentScene=(String)source.get("scene");properties.put("scene",currentScene);
-                if(!java.util.Objects.equals(currentScene,scene)){
-                    currentInspectedControl=null;currentInspectedKnown=null;properties.remove("inspected_item_level_known");
-                    properties.remove("cell_prompt");properties.remove("cell_input");properties.remove("modal");
-                }
+            for (Map.Entry<?,?> entry : map.entrySet())
+                if (!OPAQUE_FIELDS.contains(entry.getKey())) collectDiagnostics(entry.getValue(),path + "." + entry.getKey(),result);
+        } else if (value instanceof List) {
+            int i = 0;
+            for (Object item : (List<?>)value) collectDiagnostics(item,path + "[" + i++ + "]",result);
+        }
+    }
+
+    /** Presentation cannot invalidate an otherwise unchanged action context. */
+    public static Object semantics(Object value) {
+        if (value instanceof Map) {
+            Map<String,Object> result = new LinkedHashMap<>();
+            for (Map.Entry<?,?> entry : ((Map<?,?>)value).entrySet()) {
+                String key = (String) entry.getKey();
+                if (!OPAQUE_FIELDS.contains(key) && !"template".equals(key) && !"english".equals(key) && !"formatted_text".equals(key) && !"fixed_prefix".equals(key)
+                        && !"translation_status".equals(key) && !"display".equals(key))
+                    result.put(key,semantics(entry.getValue()));
             }
-            Map<?,?> node=source.get("role") instanceof String?source:
-                    source.get("control") instanceof String?currentNodes.get(source.get("control")):null;
-            properties.put("support_prompt_close",false);
-            if(Boolean.TRUE.equals(properties.get("support_prompt"))&&node!=null) {
-                Set<Object> visited=new HashSet<>();
-                for(Map<?,?> actual=currentNodes.get(node.get("id"));actual!=null;) {
-                    if("button".equals(actual.get("role"))) {
-                        properties.put("support_prompt_close","关闭".equals(actual.get("text"))||"Close".equals(actual.get("text")));
-                        break;
-                    }
-                    Object parent=actual.get("parent");if(parent==null||!visited.add(parent))break;
-                    actual=currentNodes.get(parent);
-                }
-            }
-            if(node!=null) {
-                properties.put("role",node.get("role"));
-                properties.remove("presentation");
-                if(node.get("presentation") instanceof String)properties.put("presentation",node.get("presentation"));
-                properties.remove("shortcut_action");properties.put("checkbox",false);properties.put("slider",false);properties.put("key_binding",false);properties.put("button",false);
-                properties.remove("inspected_item_level_known");
-                properties.put("ranking_record",false);
-                properties.remove("visible_window_texts");
-                Set<Object> visited=new HashSet<>();
-                for(Map<?,?> ancestor=node;ancestor!=null;) {
-                    if(currentInspectedKnown!=null&&currentInspectedControl.equals(ancestor.get("id")))
-                        properties.put("inspected_item_level_known",currentInspectedKnown);
-                    if(ancestor.containsKey("checked"))properties.put("checkbox",true);
-                    if("slider".equals(ancestor.get("role")))properties.put("slider",true);
-                    if("button".equals(ancestor.get("role")))properties.put("button",true);
-                    if(Boolean.TRUE.equals(properties.get("modal"))&&"window".equals(ancestor.get("role"))&&ancestor.get("parent")==null
-                            &&ancestor.get("id") instanceof String&&currentNodes.containsKey(ancestor.get("id"))) {
-                        List<String> descriptions=new ArrayList<>();
-                        for(Map<?,?> candidate:currentNodes.values())if(withinRoot(candidate,currentNodes,(String)ancestor.get("id"))
-                                &&!Boolean.TRUE.equals(candidate.get("clipped"))&&"text".equals(candidate.get("role"))&&candidate.get("text") instanceof String)
-                            descriptions.add((String)candidate.get("text"));
-                        properties.put("visible_window_texts",Collections.unmodifiableList(descriptions));
-                    }
-                    if(("RankingsScene".equals(currentScene)||"rankings".equals(currentScene))
-                            &&Boolean.FALSE.equals(properties.get("modal"))&&"button".equals(ancestor.get("role"))
-                            &&ancestor.get("text") instanceof String&&((String)ancestor.get("text")).matches(
-                            "(?:[1-9][0-9]*| )\\n(?:获得Yendor护符|Obtained the Amulet of Yendor)\\n[0-9]+"))
-                        properties.put("ranking_record",true);
-                    if(bindingSlots(ancestor.get("binding_slots")))properties.put("key_binding",true);
-                    if(!properties.containsKey("shortcut_action")&&ancestor.get("shortcut_action") instanceof String)
-                        properties.put("shortcut_action",ancestor.get("shortcut_action"));
-                    Object parent=ancestor.get("parent");
-                    if(parent==null||!visited.add(parent))break;
-                    ancestor=currentNodes.get(parent);
-                }
-            }
-            return new Context(currentScene,currentNodes,properties,currentInspectedControl,currentInspectedKnown);
+            return result;
         }
-        private static boolean one(Set<String> values,String... alternatives) {
-            for(String value:alternatives)if(values.contains(value))return true;
-            return false;
+        if (value instanceof List) {
+            List<Object> result = new ArrayList<>();
+            for (Object item : (List<?>)value) result.add(semantics(item));
+            return result;
         }
-        private static boolean itemTitle(Set<String> values,String... names) {
-            for(String value:values)for(String name:names)
-                if(value.matches("(?i)"+java.util.regex.Pattern.quote(name)+"(?: [+-][0-9]+)?(?: x[1-9][0-9]*)?"))return true;
-            return false;
-        }
-        private static boolean withinRoot(Map<?,?> node,Map<String,Map<?,?>> nodes,String root) {
-            Set<Object> visited=new HashSet<>();
-            for(Map<?,?> current=node;current!=null;) {
-                if(root.equals(current.get("id")))return true;
-                Object parent=current.get("parent");if(parent==null||!visited.add(parent))return false;
-                current=nodes.get(parent);
-            }
-            return false;
-        }
-        private static boolean upgradeDescription(Set<String> values) {
-            for(String text:values)if(text.matches(java.util.regex.Pattern.quote("升级这件物品会永久提升其如下属性：")+"(?:\\n你还剩有_[0-9]+个_升级用物品。)?")
-                    ||text.matches(java.util.regex.Pattern.quote("Upgrading an item permanently improves it:")+"(?:\\nYou have _[0-9]+_ upgrade items left\\.)?"))return true;
-            return false;
-        }
-        private static boolean rogueAbilityDescription(Set<String> values,String chinese,String english) {
-            boolean armor=false,ability=false;
-            for(String text:values)for(String paragraph:text.split("\\n\\n",-1)) {
-                if(paragraph.equals("裹着这身与黑暗融为一体的斗篷时，盗贼能够施展一项特殊技能。")
-                        ||paragraph.equals("While wearing this dark garb, the Rogue can perform a special ability."))armor=true;
-                if(paragraph.matches(java.util.regex.Pattern.quote(chinese)
-                        +" 现在使用该能力将消耗_[0-9]+(?:\\.[0-9]+)?_的充能。")
-                        ||paragraph.matches(java.util.regex.Pattern.quote(english)
-                        +" Using the ability right now will consume _[0-9]+(?:\\.[0-9]+)?_ charge\\."))ability=true;
-            }
-            return armor&&ability;
-        }
-        private static boolean bindingSlots(Object value) {
-            if(!(value instanceof List)||((List<?>)value).size()!=3)return false;
-            for(int i=0;i<3;i++) {
-                Object slot=((List<?>)value).get(i);
-                if(!(slot instanceof Number)||((Number)slot).doubleValue()!=i+1)return false;
-            }
-            return true;
-        }
-        private static Map<?,?> ui(Map<?,?> source) {
-            Object observation=source.get("observation");
-            if(observation instanceof Map)return ui((Map<?,?>)observation);
-            Object nested=source.get("ui");
-            if(nested instanceof Map)return ui((Map<?,?>)nested);
-            return source.get("scene") instanceof String&&source.get("controls") instanceof List?source:null;
-        }
+        return value;
     }
 }

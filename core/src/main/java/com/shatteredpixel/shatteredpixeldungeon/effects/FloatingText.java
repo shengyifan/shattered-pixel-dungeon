@@ -153,6 +153,7 @@ public class FloatingText extends RenderedTextBlock {
 	}
 
 	@Override public void revive() {
+		Game.observer.onTextReleased(this);
 		observationCell = -1;
 		displayedText = null;
 		super.revive();

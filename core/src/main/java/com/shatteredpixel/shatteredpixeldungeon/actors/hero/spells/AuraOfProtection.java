@@ -48,7 +48,7 @@ public class AuraOfProtection extends ClericSpell {
 	public String desc() {
 		int dmgReduction = 10 + 10*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
 		int glyphPow = 25 + 25*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
-		return Messages.get(this, "desc", dmgReduction, glyphPow) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.concat(Messages.concat(Messages.get(this, "desc", dmgReduction, glyphPow), Messages.literal("\n\n")), Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero)));
 	}
 
 	@Override

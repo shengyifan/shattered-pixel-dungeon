@@ -101,7 +101,7 @@ public abstract class ArmorAbility implements Bundlable {
 	}
 
 	public String desc(){
-		return Messages.get(this, "desc") + "\n\n" + Messages.get(this, "cost", (int)baseChargeUse);
+		return Messages.concat(Messages.concat(Messages.get(this, "desc"), Messages.literal("\n\n")), Messages.get(this, "cost", (int)baseChargeUse));
 	}
 
 	public int icon(){

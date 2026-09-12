@@ -46,11 +46,11 @@ public class WndSupportPrompt extends Window {
 		add(title);
 
 		String message = Messages.get(WndSupportPrompt.class, "intro");
-		message += "\n\n" + Messages.get(SupporterScene.class, "patreon_msg");
+		message = Messages.concat(message, Messages.concat(Messages.literal("\n\n"), Messages.get(SupporterScene.class, "patreon_msg")));
 		if (Messages.lang() != Languages.ENGLISH) {
-			message += "\n" + Messages.get(SupporterScene.class, "patreon_english");
+			message = Messages.concat(message, Messages.concat(Messages.literal("\n"), Messages.get(SupporterScene.class, "patreon_english")));
 		}
-		message += "\n- Evan";
+		message = Messages.concat(message, Messages.literal("\n- Evan"));
 
 		RenderedTextBlock text = PixelScene.renderTextBlock( 6 );
 		text.text( message, width );

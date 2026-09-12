@@ -445,7 +445,7 @@ public class CavesBossLevel extends Level {
 	public String tileDesc( int tile ) {
 		switch (tile) {
 			case Terrain.WATER:
-				return super.tileDesc( tile ) + "\n\n" + Messages.get(CavesBossLevel.class, "water_desc");
+				return Messages.concat(Messages.concat(super.tileDesc( tile ), Messages.literal("\n\n")), Messages.get(CavesBossLevel.class, "water_desc"));
 			case Terrain.ENTRANCE:
 			case Terrain.ENTRANCE_SP:
 				return Messages.get(CavesLevel.class, "entrance_desc");

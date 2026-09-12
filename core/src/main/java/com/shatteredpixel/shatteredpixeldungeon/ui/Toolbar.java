@@ -138,13 +138,13 @@ public class Toolbar extends Component {
 
 					String info = "";
 					if (ControllerHandler.controllerActive){
-						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + ": " + Messages.get(Toolbar.class, "quickslot_select") + "\n";
-						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.RIGHT_CLICK, true)) + ": " + Messages.get(Toolbar.class, "quickslot_assign") + "\n";
-						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + ": " + Messages.get(Toolbar.class, "quickslot_cancel");
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "quickslot_select")), Messages.literal("\n")));
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.RIGHT_CLICK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "quickslot_assign")), Messages.literal("\n")));
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "quickslot_cancel")));
 					} else {
-						info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + ": " + Messages.get(Toolbar.class, "quickslot_select") + "\n";
-						info += Messages.get(WndKeyBindings.class, SPDAction.RIGHT_CLICK.name()) + ": " + Messages.get(Toolbar.class, "quickslot_assign") + "\n";
-						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + ": " + Messages.get(Toolbar.class, "quickslot_cancel");
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()), Messages.literal(": ")), Messages.get(Toolbar.class, "quickslot_select")), Messages.literal("\n")));
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.get(WndKeyBindings.class, SPDAction.RIGHT_CLICK.name()), Messages.literal(": ")), Messages.get(Toolbar.class, "quickslot_assign")), Messages.literal("\n")));
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false))), Messages.literal(": ")), Messages.get(Toolbar.class, "quickslot_cancel")));
 					}
 
 					Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, "quickslot_prompt"), info, slotNames, slotIcons) {
@@ -403,11 +403,11 @@ public class Toolbar extends Component {
 					}
 					String info = "";
 					if (ControllerHandler.controllerActive){
-						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + ": " + Messages.get(Toolbar.class, "container_select") + "\n";
-						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + ": " + Messages.get(Toolbar.class, "container_cancel");
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "container_select")), Messages.literal("\n")));
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "container_cancel")));
 					} else {
-						info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + ": " + Messages.get(Toolbar.class, "container_select") + "\n";
-						info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + ": " + Messages.get(Toolbar.class, "container_cancel");
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()), Messages.literal(": ")), Messages.get(Toolbar.class, "container_select")), Messages.literal("\n")));
+						info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false))), Messages.literal(": ")), Messages.get(Toolbar.class, "container_cancel")));
 					}
 
 					Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, "container_prompt"), info, names, images){
@@ -445,13 +445,13 @@ public class Toolbar extends Component {
 
 							String info = "";
 							if (ControllerHandler.controllerActive){
-								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + ": " + Messages.get(Toolbar.class, "item_select") + "\n";
-								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.RIGHT_CLICK, true)) + ": " + Messages.get(Toolbar.class, "item_use") + "\n";
-								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + ": " + Messages.get(Toolbar.class, "item_cancel");
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "item_select")), Messages.literal("\n")));
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.RIGHT_CLICK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "item_use")), Messages.literal("\n")));
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "item_cancel")));
 							} else {
-								info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + ": " + Messages.get(Toolbar.class, "item_select") + "\n";
-								info += Messages.get(WndKeyBindings.class, SPDAction.RIGHT_CLICK.name()) + ": " + Messages.get(Toolbar.class, "item_use") + "\n";
-								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + ": " + Messages.get(Toolbar.class, "item_cancel");
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()), Messages.literal(": ")), Messages.get(Toolbar.class, "item_select")), Messages.literal("\n")));
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.get(WndKeyBindings.class, SPDAction.RIGHT_CLICK.name()), Messages.literal(": ")), Messages.get(Toolbar.class, "item_use")), Messages.literal("\n")));
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false))), Messages.literal(": ")), Messages.get(Toolbar.class, "item_cancel")));
 							}
 
 							Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, "item_prompt"), info, itemNames, itemIcons){

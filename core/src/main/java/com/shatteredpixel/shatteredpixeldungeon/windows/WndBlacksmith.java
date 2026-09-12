@@ -83,7 +83,7 @@ public class WndBlacksmith extends Window {
 				GameScene.show(new WndOptions(
 						troll.sprite(),
 						Messages.titleCase( troll.name() ),
-						Messages.get(WndBlacksmith.class, "pickaxe_verify") + (pickaxeCost == 0 ? "\n\n" + Messages.get(WndBlacksmith.class, "pickaxe_free") : ""),
+						Messages.concat(Messages.get(WndBlacksmith.class, "pickaxe_verify"), (pickaxeCost == 0 ? Messages.concat(Messages.literal("\n\n"), Messages.get(WndBlacksmith.class, "pickaxe_free")) : "")),
 						Messages.get(WndBlacksmith.class, "pickaxe_yes"),
 						Messages.get(WndBlacksmith.class, "pickaxe_no")
 				){

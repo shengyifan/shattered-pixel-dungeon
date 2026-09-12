@@ -488,7 +488,7 @@ public enum Talent {
 		if (metamorphed){
 			String metaDesc = Messages.get(this, name() + ".meta_desc");
 			if (!metaDesc.equals(Messages.NO_TEXT_FOUND)){
-				return Messages.get(this, name() + ".desc") + "\n\n" + metaDesc;
+				return Messages.concat(Messages.concat(Messages.get(this, name() + ".desc"), Messages.literal("\n\n")), metaDesc);
 			}
 		}
 		return Messages.get(this, name() + ".desc");
@@ -1152,7 +1152,7 @@ public enum Talent {
 					tier.put(talent, Math.min(tierBundle.getInt(talent.name()), talent.maxPoints()));
 				}
 			}
-			bundle.put(TALENT_TIER+(i+1), tierBundle);
+			bundle.put(Messages.concat(TALENT_TIER, (i+1)), tierBundle);
 		}
 
 		Bundle replacementsBundle = new Bundle();
@@ -1195,7 +1195,7 @@ public enum Talent {
 
 		for (int i = 0; i < MAX_TALENT_TIERS; i++){
 			LinkedHashMap<Talent, Integer> tier = hero.talents.get(i);
-			Bundle tierBundle = bundle.contains(TALENT_TIER+(i+1)) ? bundle.getBundle(TALENT_TIER+(i+1)) : null;
+			Bundle tierBundle = bundle.contains(Messages.concat(TALENT_TIER, (i+1))) ? bundle.getBundle(Messages.concat(TALENT_TIER, (i+1))) : null;
 
 			if (tierBundle != null){
 				for (String tName : tierBundle.getKeys()){

@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ProtocolException;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.RuntimeObserver;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
 import com.watabou.noosa.VisualCue;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -41,14 +42,14 @@ public final class GameController implements RuntimeObserver {
         State(String scopeId,String version,String phase,Map<String,Object> publicState,
               Map<String,Object> internalState,List<Map<String,Object>> actions,Map<String,Object> runOutcome){
             this.scopeId=scopeId; this.version=version; this.phase=phase;
-            this.publicState=publicState; this.internalState=internalState; this.actions=actions;
+            this.publicState=PublicEnglishProjection.freeze(publicState); this.internalState=internalState; this.actions=PublicEnglishProjection.freeze(actions);
             this.runOutcome=runOutcome;
         }
         public Map<String,Object> result() {
             Map<String,Object> result=map("scope_id",scopeId,"state_version",version,"phase",phase,
                     "observation",publicState,"actions",actions);
             if(runOutcome!=null)result.put("run_outcome",runOutcome);
-            return result;
+            return PublicEnglishProjection.copy(result);
         }
     }
     public static final class SaveResult {
@@ -69,17 +70,26 @@ public final class GameController implements RuntimeObserver {
         public Map<String,Object> data(){return map("scope_id","run:"+runId,"result",won?"won":"lost");}
     }
     public static final class GameLogSnapshot {
-        public final String scopeId,occurredAt;
+        public final String scopeId,occurredAt,guiLanguage;
         public final List<RuntimeObserver.LogEntry> entries;
+        private final Map<String,Object> frozen;
         public GameLogSnapshot(String scopeId,String occurredAt,List<RuntimeObserver.LogEntry> entries){
-            this.scopeId=scopeId;this.occurredAt=occurredAt;
-            this.entries=Collections.unmodifiableList(new ArrayList<>(entries));
+            this(scopeId,occurredAt,entries,null);
         }
-        public Map<String,Object> data(){
+        public GameLogSnapshot(String scopeId,String occurredAt,List<RuntimeObserver.LogEntry> entries,String guiLanguage){
+            this.scopeId=scopeId;this.occurredAt=occurredAt;this.guiLanguage=guiLanguage;
+            this.entries=Collections.unmodifiableList(new ArrayList<>(entries));
             List<Map<String,Object>> lines=new ArrayList<>();
-            for(RuntimeObserver.LogEntry entry:entries)lines.add(Collections.unmodifiableMap(map("text",entry.text,"color",entry.color,"clipped",entry.clipped)));
-            return Collections.unmodifiableMap(map("format","display_snapshot_v1","occurred_at",occurredAt,
+            for(RuntimeObserver.LogEntry entry:entries)lines.add(Collections.unmodifiableMap(map(
+                    "text",TextProvenance.INSTANCE.capture(entry,entry.text,entry.clipped),"color",entry.color,"clipped",entry.clipped)));
+            this.frozen=Collections.unmodifiableMap(map("format","display_snapshot_v2","occurred_at",occurredAt,"gui_language",guiLanguage,
                     "entries",Collections.unmodifiableList(lines)));
+        }
+        public Map<String,Object> data(){return frozen;}
+        public Map<String,Object> originalData(){
+            List<Map<String,Object>> lines=new ArrayList<>();
+            for(RuntimeObserver.LogEntry entry:entries)lines.add(map("text",entry.text,"color",entry.color,"clipped",entry.clipped));
+            return map("format","display_snapshot_v2","occurred_at",occurredAt,"gui_language",guiLanguage,"entries",lines);
         }
     }
     public static final class VisualSnapshot {
@@ -148,13 +158,14 @@ public final class GameController implements RuntimeObserver {
     private final ConcurrentLinkedQueue<RunOutcome> outcomes=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<GameLogSnapshot> gameLogs=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<VisualSnapshot> visuals=new ConcurrentLinkedQueue<>();
-    private final Map<String,List<RuntimeObserver.LogEntry>> lastGameLogByRun=new HashMap<>();
+    private final Map<String,Object> lastGameLogByRun=new HashMap<>();
     private final ConcurrentLinkedQueue<CancelControl> cancellations=new ConcurrentLinkedQueue<>();
     private final Consumer<Throwable> errors;
     private final ArrayList<Runnable> afterHandoff=new ArrayList<>();
     private volatile State latest;
     private volatile VisualSnapshot renderedVisual;
     private volatile boolean disposed, exiting;
+    private volatile Throwable closureReason;
     private volatile String plannedRun;
     private volatile Map<String,Object> runOutcome;
     // Published before perform: native saves can complete synchronously or on the Interlevel worker.
@@ -165,7 +176,8 @@ public final class GameController implements RuntimeObserver {
     private long frame, executedFrame, revision;
     private long activityGeneration;
     private long drawGeneration,stableAfterDraw=-1,stableInputGeneration;
-    private Object stableLevel;
+    private Object stableLevel, stableMenuScene;
+    private long stableMenuFrame, stableMenuInput;
     private String stableRun;
     private int stableDepth;
     private boolean stableBlocked;
@@ -175,21 +187,29 @@ public final class GameController implements RuntimeObserver {
         this.menuScope=menuScope; this.snapshotter=new GameSnapshotter(profile); this.errors=errors;
     }
     public CompletableFuture<State> observe() {
-        Work work=new Work(null,null,null); queue.add(work); return work.result;
+        Work work=new Work(null,null,null); enqueue(work); return work.result;
     }
     public CompletableFuture<State> execute(String version,Map<String,Object> args) {
         return start(version,args,null).completion;
     }
     public Execution start(String version,Map<String,Object> args,String requestId){
-        Work work=new Work(version,args,requestId);queue.add(work);return work.execution;
+        Work work=new Work(version,args,requestId);enqueue(work);return work.execution;
+    }
+    private synchronized void enqueue(Work work) {
+        if(disposed)work.result.completeExceptionally(work.args==null?closureReason:new NotExecuted("ENGINE_ERROR",closureReason));
+        else queue.add(work);
+    }
+    private synchronized void enqueue(CancelControl control) {
+        if(disposed)control.result.completeExceptionally("commit".equals(control.kind)?new NotExecuted("ENGINE_ERROR",closureReason):closureReason);
+        else cancellations.add(control);
     }
     public CompletableFuture<State> prepareCancellation(String version,String target){
-        CancelControl control=new CancelControl("prepare",version,target);cancellations.add(control);return control.result;
+        CancelControl control=new CancelControl("prepare",version,target);enqueue(control);return control.result;
     }
     public CompletableFuture<State> cancelPrepared(String version,String target){
-        CancelControl control=new CancelControl("commit",version,target);cancellations.add(control);return control.result;
+        CancelControl control=new CancelControl("commit",version,target);enqueue(control);return control.result;
     }
-    public void abortCancellation(String version){cancellations.add(new CancelControl("abort",version,null));}
+    public void abortCancellation(String version){enqueue(new CancelControl("abort",version,null));}
     public State latest(){return latest;}
     public boolean exiting(){return exiting;}
     public boolean disposed(){return disposed;}
@@ -215,9 +235,14 @@ public final class GameController implements RuntimeObserver {
     @Override public synchronized void onGameLog(String runId,List<RuntimeObserver.LogEntry> entries){
         if(runId==null)return;
         List<RuntimeObserver.LogEntry> copy=Collections.unmodifiableList(new ArrayList<>(entries));
-        if(copy.equals(lastGameLogByRun.get(runId)))return;
-        lastGameLogByRun.put(runId,copy);
-        gameLogs.add(new GameLogSnapshot("run:"+runId,Instant.now().toString(),copy));
+        com.shatteredpixel.shatteredpixeldungeon.messages.Languages language=
+                Boolean.TRUE.equals(new ClassInitializationProbe().initialized(com.shatteredpixel.shatteredpixeldungeon.messages.Messages.class))
+                        ? com.shatteredpixel.shatteredpixeldungeon.messages.Messages.selectedLanguage() : null;
+        GameLogSnapshot snapshot=new GameLogSnapshot("run:"+runId,Instant.now().toString(),copy,language==null?null:language.code());
+        Object capturedEntries=map("gui_language",snapshot.guiLanguage,"entries",snapshot.data().get("entries"));
+        if(capturedEntries.equals(lastGameLogByRun.get(runId)))return;
+        lastGameLogByRun.put(runId,capturedEntries);
+        gameLogs.add(snapshot);
     }
     @Override public boolean observesVisualCues(){return true;}
     @Override public synchronized void onVisualCues(String runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady){
@@ -234,14 +259,33 @@ public final class GameController implements RuntimeObserver {
         renderedVisual=snapshot;
         if(changed)visuals.add(snapshot);
     }
-    @Override public void onDispose(){
-        disposed=true;
-        ProtocolException e=new ProtocolException("SESSION_CLOSED","Game session closed");
-        if(executing!=null) executing.result.completeExceptionally(e);
-        Work work; while((work=queue.poll())!=null)work.result.completeExceptionally(e);
-        CancelControl control;while((control=cancellations.poll())!=null)control.result.completeExceptionally(e);
-        if(cancellationCompletion!=null)cancellationCompletion.completeExceptionally(e);
+    @Override public String onTextResource(String text,String key,String language,Object[] arguments) {
+        return TextProvenance.INSTANCE.onTextResource(text,key,language,arguments);
     }
+    @Override public String onTextResource(String text,String key,String language,Object[] arguments,String guiTemplate) {
+        return TextProvenance.INSTANCE.onTextResource(text,key,language,arguments,guiTemplate);
+    }
+    @Override public String onTextOperation(String operation,String text,Object... operands) {
+        return TextProvenance.INSTANCE.onTextOperation(operation,text,operands);
+    }
+    @Override public void onTextBound(Object owner,String text) { TextProvenance.INSTANCE.onTextBound(owner,text); }
+    @Override public void onTextReleased(Object owner) { TextProvenance.INSTANCE.onTextReleased(owner); }
+    /** A launch/runtime failure must release waiting requests before transport teardown. */
+    public void runtimeFailed(Throwable error) { closeWith(Objects.requireNonNull(error)); }
+    @Override public void onDispose(){ closeWith(new ProtocolException("SESSION_CLOSED","Game session closed")); }
+    private synchronized void closeWith(Throwable error){
+        if(disposed)return;
+        closureReason=error;
+        disposed=true;
+        TextProvenance.INSTANCE.clear();
+        if(executing!=null)executing.result.completeExceptionally(error);
+        Work work;
+        while((work=queue.poll())!=null)work.result.completeExceptionally(work.args==null?error:new NotExecuted("ENGINE_ERROR",error));
+        CancelControl control;
+        while((control=cancellations.poll())!=null)control.result.completeExceptionally("commit".equals(control.kind)?new NotExecuted("ENGINE_ERROR",error):error);
+        if(cancellationCompletion!=null)cancellationCompletion.completeExceptionally(error);
+    }
+
     private boolean runActive(){
         return (Game.scene() instanceof GameScene || Game.scene() instanceof AmuletScene
                 || Game.scene() instanceof SurfaceScene || Game.scene() instanceof InterlevelScene
@@ -423,10 +467,21 @@ public final class GameController implements RuntimeObserver {
     private <T> void deliver(CompletableFuture<T> future,T value){afterHandoff.add(()->future.complete(value));}
     private void reject(CompletableFuture<?> future,Throwable error){afterHandoff.add(()->future.completeExceptionally(error));}
     private void reportAfterHandoff(Throwable error){afterHandoff.add(()->errors.accept(error));}
-    private void resetRenderedBoundary(){stableAfterDraw=-1;stableLevel=null;stableRun=null;}
+    private void resetRenderedBoundary(){stableAfterDraw=-1;stableLevel=null;stableRun=null;stableMenuScene=null;}
     /** Game.render draws before step: the first stable post-step state must survive a later full draw. */
     private boolean renderedBoundaryReady(){
-        if(!(Game.scene() instanceof GameScene)){resetRenderedBoundary();return true;}
+        if(!(Game.scene() instanceof GameScene)){
+            stableAfterDraw=-1;stableLevel=null;stableRun=null;
+            Object scene=Game.scene();
+            long input=Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();
+            if(stableMenuScene!=scene||stableMenuInput!=input){
+                stableMenuScene=scene;stableMenuFrame=frame;stableMenuInput=input;return false;
+            }
+            // Game.render draws before step. The scene first seen after a switch has
+            // not drawn yet; a later frame is required before reporting its controls.
+            return scene!=null&&frame>stableMenuFrame;
+        }
+        stableMenuScene=null;
         VisualSnapshot rendered=renderedVisual;
         if(!matchesCurrentVisual(rendered)){resetRenderedBoundary();return false;}
         long input=Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();
@@ -466,7 +521,7 @@ public final class GameController implements RuntimeObserver {
     private State capture(boolean forceNewVersion){
         GameSnapshotter.Capture captured=snapshotter.capture();
         Map<String,Object> pub=new LinkedHashMap<>(captured.publicState);
-        Map<String,Object> uiState=ui.describeUi();
+        Map<String,Object> uiState=ui.frozenUi();
         pub.put("ui",uiState);
         if(Game.scene() instanceof GameScene)pub.put("visual_cues",visualState());
         boolean active=runActive();
@@ -475,7 +530,7 @@ public final class GameController implements RuntimeObserver {
         Map<String,Object> outcome=runOutcome;
         if(active&&outcome!=null&&!scope.equals(outcome.get("scope_id"))){runOutcome=null;outcome=null;}
         if(outcome!=null)pub.put("run_outcome",outcome);
-        List<Map<String,Object>> actions=new ArrayList<>(ui.describeActions());
+        List<Map<String,Object>> actions=new ArrayList<>(ui.frozenActions());
         if(Game.scene() instanceof GameScene && Dungeon.hero!=null && Dungeon.hero.ready
                 && !GameScene.interfaceBlockingHero() && !GameScene.isSelectingCell()){
             actions.add(map("action","move.step","parameters",map("direction",Arrays.asList("north","northeast","east","southeast","south","southwest","west","northwest"))));
@@ -496,7 +551,7 @@ public final class GameController implements RuntimeObserver {
         // A marker fading or a particle flickering is display evidence, not another world action.
         decisionState.remove("visual_cues");
         long inputGeneration=Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();
-        String nextSignature=scope+"|"+phase+"|"+ui.intentSignature()+"|"+inputGeneration+"|"+JsonCodec.encode(decisionState);
+        String nextSignature=scope+"|"+phase+"|"+ui.intentSignature()+"|"+inputGeneration+"|"+JsonCodec.encode(PublicEnglishProjection.semantics(decisionState));
         if(forceNewVersion||!nextSignature.equals(signature)){revision++;signature=nextSignature;}
         String version=epoch+":"+revision;
         Map<String,Object> internal=new LinkedHashMap<>(captured.internalState);
@@ -525,7 +580,7 @@ public final class GameController implements RuntimeObserver {
                 && PlayerObservation.displayedShield(hero)>0;
     }
     private String shortcut(String name){
-        Object controls=ui.describeUi().get("controls");
+        Object controls=ui.frozenUi().get("controls");
         if(controls instanceof List)for(Object value:(List<?>)controls){
             if(!(value instanceof Map))continue;
             Map<?,?> control=(Map<?,?>)value;

@@ -269,7 +269,7 @@ public class Berserk extends ShieldBuff implements ActionIndicator.Action {
 	@Override
 	public Visual secondaryVisual() {
 		BitmapText txt = new BitmapText(PixelScene.pixelFont);
-		txt.text((int) (power * 100) + "%");
+		txt.text(Messages.concat((int) (power * 100), Messages.literal("%")));
 		txt.hardlight(CharSprite.POSITIVE);
 		txt.measure();
 		return txt;
@@ -332,7 +332,7 @@ public class Berserk extends ShieldBuff implements ActionIndicator.Action {
 	public String iconTextDisplay(){
 		switch (state){
 			case NORMAL: default:
-				return (int)(power*100) + "%";
+				return Messages.concat((int)(power*100), Messages.literal("%"));
 			case BERSERK:
 				return Integer.toString(shielding());
 			case RECOVERING:
@@ -366,9 +366,9 @@ public class Berserk extends ShieldBuff implements ActionIndicator.Action {
 				return Messages.get(this, "berserk_desc", shielding());
 			case RECOVERING:
 				if (levelRecovery > 0){
-					return Messages.get(this, "recovering_desc") + "\n\n" + Messages.get(this, "recovering_desc_levels", levelRecovery);
+					return Messages.concat(Messages.concat(Messages.get(this, "recovering_desc"), Messages.literal("\n\n")), Messages.get(this, "recovering_desc_levels", levelRecovery));
 				} else {
-					return Messages.get(this, "recovering_desc") + "\n\n" + Messages.get(this, "recovering_desc_turns", turnRecovery);
+					return Messages.concat(Messages.concat(Messages.get(this, "recovering_desc"), Messages.literal("\n\n")), Messages.get(this, "recovering_desc_turns", turnRecovery));
 				}
 		}
 		

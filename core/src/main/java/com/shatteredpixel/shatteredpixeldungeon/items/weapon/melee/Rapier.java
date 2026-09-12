@@ -86,7 +86,7 @@ public class Rapier extends MeleeWeapon {
 
 	public String upgradeAbilityStat(int level){
 		int dmgBoost = 5 + Math.round(1.5f*level);
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+		return Messages.concat(Messages.concat(augment.damageFactor(min(level)+dmgBoost), Messages.literal("-")), augment.damageFactor(max(level)+dmgBoost));
 	}
 
 	public static void lungeAbility(Hero hero, Integer target, float dmgMulti, int dmgBoost, MeleeWeapon wep){

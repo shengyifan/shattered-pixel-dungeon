@@ -130,9 +130,9 @@ public class GnollExile extends Gnoll {
 	public String description() {
 		String desc = super.description();
 		if (state == PASSIVE){
-			desc += "\n\n" + Messages.get(this, "desc_passive");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_passive")));
 		} else {
-			desc += "\n\n" + Messages.get(this, "desc_aggro");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_aggro")));
 		}
 		return desc;
 	}

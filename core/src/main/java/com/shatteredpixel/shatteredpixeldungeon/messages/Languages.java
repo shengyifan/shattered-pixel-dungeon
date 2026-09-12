@@ -74,7 +74,7 @@ public enum Languages {
 	}
 
 	public String nativeName(){
-		return name;
+		return com.watabou.noosa.Game.observer.onTextOperation("language_name", name, code);
 	}
 
 	public String code(){

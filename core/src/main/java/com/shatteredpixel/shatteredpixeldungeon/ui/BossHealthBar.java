@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
@@ -203,9 +205,9 @@ public class BossHealthBar extends Component {
 				}
 
 				if (shield <= 0){
-					hpText.text(health + "/" + max);
+					hpText.text(Messages.concat(Messages.concat(health, Messages.literal("/")), max));
 				} else {
-					hpText.text(health + "+" + shield +  "/" + max);
+					hpText.text(Messages.concat(Messages.concat(Messages.concat(Messages.concat(health, Messages.literal("+")), shield), Messages.literal("/")), max));
 				}
 				hpText.measure();
 				hpText.x = hp.x + (large ? (96-hpText.width())/2f : 1);

@@ -115,7 +115,7 @@ public class MonkEnergy extends Buff implements ActionIndicator.Action {
 	public String desc() {
 		String desc = Messages.get(this, "desc", (int)energy, energyCap());
 		if (cooldown > 0){
-			desc += "\n\n" + Messages.get(this, "desc_cooldown", cooldown);
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_cooldown", cooldown)));
 		}
 		return desc;
 	}

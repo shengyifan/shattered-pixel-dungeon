@@ -269,9 +269,9 @@ public class MiningLevel extends CavesLevel {
 
 			if (!Blacksmith.Quest.bossBeaten()){
 				switch (Blacksmith.Quest.Type()){
-					case Blacksmith.Quest.CRYSTAL: warnText += "\n\n" + Messages.get(Blacksmith.class, "exit_warn_crystal"); break;
-					case Blacksmith.Quest.GNOLL: warnText += "\n\n" + Messages.get(Blacksmith.class, "exit_warn_gnoll"); break;
-					case Blacksmith.Quest.FUNGI: warnText += "\n\n" + Messages.get(Blacksmith.class, "exit_warn_fungi"); break;
+					case Blacksmith.Quest.CRYSTAL: warnText = Messages.concat(warnText, Messages.concat(Messages.literal("\n\n"), Messages.get(Blacksmith.class, "exit_warn_crystal"))); break;
+					case Blacksmith.Quest.GNOLL: warnText = Messages.concat(warnText, Messages.concat(Messages.literal("\n\n"), Messages.get(Blacksmith.class, "exit_warn_gnoll"))); break;
+					case Blacksmith.Quest.FUNGI: warnText = Messages.concat(warnText, Messages.concat(Messages.literal("\n\n"), Messages.get(Blacksmith.class, "exit_warn_fungi"))); break;
 				}
 			}
 
@@ -307,7 +307,7 @@ public class MiningLevel extends CavesLevel {
 			case Terrain.WALL:
 				return Messages.get(MiningLevel.class, "wall_desc");
 			case Terrain.WALL_DECO:
-				return super.tileDesc(tile) + "\n\n" +  Messages.get(MiningLevel.class, "gold_extra_desc");
+				return Messages.concat(Messages.concat(super.tileDesc(tile), Messages.literal("\n\n")), Messages.get(MiningLevel.class, "gold_extra_desc"));
 			case Terrain.MINE_CRYSTAL:
 				return Messages.get(MiningLevel.class, "crystal_desc");
 			case Terrain.MINE_BOULDER:

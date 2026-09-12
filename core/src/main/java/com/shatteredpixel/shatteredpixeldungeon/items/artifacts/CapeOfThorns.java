@@ -65,11 +65,11 @@ public class CapeOfThorns extends Artifact {
 	public String desc() {
 		String desc = Messages.get(this, "desc");
 		if (isEquipped( Dungeon.hero )) {
-			desc += "\n\n";
+			desc = Messages.concat(desc, Messages.literal("\n\n"));
 			if (cooldown == 0)
-				desc += Messages.get(this, "desc_inactive");
+				desc = Messages.concat(desc, Messages.get(this, "desc_inactive"));
 			else
-				desc += Messages.get(this, "desc_active");
+				desc = Messages.concat(desc, Messages.get(this, "desc_active"));
 		}
 
 		return desc;

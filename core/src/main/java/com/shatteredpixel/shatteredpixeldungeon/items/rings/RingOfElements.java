@@ -50,8 +50,8 @@ public class RingOfElements extends Ring {
 			String info = Messages.get(this, "stats",
 					Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, soloBuffedBonus()))));
 			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
-				info += "\n\n" + Messages.get(this, "combined_stats",
-						Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, combinedBuffedBonus(Dungeon.hero)))));
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "combined_stats",
+						Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, combinedBuffedBonus(Dungeon.hero)))))));
 			}
 			return info;
 		} else {
@@ -61,7 +61,7 @@ public class RingOfElements extends Ring {
 
 	public String upgradeStat1(int level){
 		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, level+1))) + "%";
+		return Messages.concat(Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, level+1))), Messages.literal("%"));
 	}
 	
 	@Override

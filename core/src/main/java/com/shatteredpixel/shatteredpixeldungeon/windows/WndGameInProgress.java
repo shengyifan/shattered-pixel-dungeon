@@ -62,7 +62,7 @@ public class WndGameInProgress extends Window {
 		
 		IconTitle title = new IconTitle();
 		title.icon( HeroSprite.avatar(info.heroClass, info.armorTier) );
-		title.label((Messages.get(this, "title", info.level, className)).toUpperCase(Locale.ENGLISH));
+		title.label(Messages.upperCase(Messages.get(this, "title", info.level, className), Locale.ENGLISH));
 		title.color(Window.TITLE_COLOR);
 		title.setRect( 0, 0, WIDTH, 0 );
 		add(title);
@@ -89,26 +89,26 @@ public class WndGameInProgress extends Window {
 		pos += GAP;
 
 		int strBonus = info.strBonus;
-		if (strBonus > 0)           statSlot( Messages.get(this, "str"), info.str + " + " + strBonus );
-		else if (strBonus < 0)      statSlot( Messages.get(this, "str"), info.str + " - " + -strBonus );
+		if (strBonus > 0)           statSlot( Messages.get(this, "str"), Messages.concat(Messages.concat(info.str, Messages.literal(" + ")), strBonus) );
+		else if (strBonus < 0)      statSlot( Messages.get(this, "str"), Messages.concat(Messages.concat(info.str, Messages.literal(" - ")), -strBonus) );
 		else                        statSlot( Messages.get(this, "str"), info.str );
-		if (info.shld > 0)  statSlot( Messages.get(this, "health"), info.hp + "+" + info.shld + "/" + info.ht );
-		else                statSlot( Messages.get(this, "health"), (info.hp) + "/" + info.ht );
-		statSlot( Messages.get(this, "exp"), info.exp + "/" + Hero.maxExp(info.level) );
+		if (info.shld > 0)  statSlot( Messages.get(this, "health"), Messages.concat(Messages.concat(Messages.concat(Messages.concat(info.hp, Messages.literal("+")), info.shld), Messages.literal("/")), info.ht) );
+		else                statSlot( Messages.get(this, "health"), Messages.concat(Messages.concat((info.hp), Messages.literal("/")), info.ht) );
+		statSlot( Messages.get(this, "exp"), Messages.concat(Messages.concat(info.exp, Messages.literal("/")), Hero.maxExp(info.level)) );
 		
 		pos += GAP;
 		statSlot( Messages.get(this, "gold"), info.goldCollected );
 		statSlot( Messages.get(this, "depth"), info.maxDepth );
 		if (info.daily) {
 			if (info.dailyReplay) {
-				statSlot(Messages.get(this, "replay_for"), "_" + info.customSeed + "_");
+				statSlot(Messages.get(this, "replay_for"), Messages.concat(Messages.concat(Messages.literal("_"), info.customSeed), Messages.literal("_")));
 			} else {
-				statSlot(Messages.get(this, "daily_for"), "_" + info.customSeed + "_");
+				statSlot(Messages.get(this, "daily_for"), Messages.concat(Messages.concat(Messages.literal("_"), info.customSeed), Messages.literal("_")));
 			}
 		} else if (!info.customSeed.isEmpty()){
-			statSlot( Messages.get(this, "custom_seed"), "_" + info.customSeed + "_" );
+			statSlot( Messages.get(this, "custom_seed"), Messages.concat(Messages.concat(Messages.literal("_"), Messages.userText(info.customSeed)), Messages.literal("_")) );
 		} else {
-			statSlot( Messages.get(this, "dungeon_seed"), DungeonSeed.convertToCode(info.seed) );
+			statSlot( Messages.get(this, "dungeon_seed"), DungeonSeed.displayCode(info.seed) );
 		}
 		
 		pos += GAP;

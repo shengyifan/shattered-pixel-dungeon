@@ -67,9 +67,9 @@ public class HolyWeapon extends ClericSpell {
 	public String desc(){
 		String desc = Messages.get(this, "desc");
 		if (Dungeon.hero.subClass == HeroSubClass.PALADIN){
-			desc += "\n\n" + Messages.get(this, "desc_paladin");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_paladin")));
 		}
-		return desc + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.concat(Messages.concat(desc, Messages.literal("\n\n")), Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero)));
 	}
 
 	public static class HolyWepBuff extends FlavourBuff {

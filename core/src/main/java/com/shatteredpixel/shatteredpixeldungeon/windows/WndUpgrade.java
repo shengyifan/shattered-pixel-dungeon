@@ -91,7 +91,7 @@ public class WndUpgrade extends Window {
 
 		String mainText = Messages.get(this, "desc");
 		if (quantity > 1){
-			mainText += "\n" + Messages.get(this, "remaining", quantity);
+			mainText = Messages.concat(mainText, Messages.concat(Messages.literal("\n"), Messages.get(this, "remaining", quantity)));
 		}
 
 		RenderedTextBlock message = PixelScene.renderTextBlock( 6 );
@@ -164,12 +164,12 @@ public class WndUpgrade extends Window {
 		BitmapText t2 = new BitmapText(PixelScene.pixelFont);
 		if (toUpgrade.isIdentified()){
 			if (levelFrom > 0){
-				t1.text("+" + levelFrom);
+				t1.text(Messages.concat(Messages.literal("+"), levelFrom));
 			} else {
 				t1.text("");
 			}
 			t1.hardlight(ItemSlot.UPGRADED);
-			t2.text("+" + levelTo);
+			t2.text(Messages.concat(Messages.literal("+"), levelTo));
 			t2.hardlight(ItemSlot.UPGRADED);
 
 			if (curseInfused){
@@ -200,23 +200,23 @@ public class WndUpgrade extends Window {
 		if (toUpgrade instanceof Weapon){
 			Weapon.Augment aug = ((Weapon) toUpgrade).augment;
 			bottom = fillFields(Messages.get(this, "damage"),
-					aug.damageFactor(((Weapon) toUpgrade).min(levelFrom)) + "-" + aug.damageFactor(((Weapon) toUpgrade).max(levelFrom)),
-					aug.damageFactor(((Weapon) toUpgrade).min(levelTo)) + "-" + aug.damageFactor(((Weapon) toUpgrade).max(levelTo)),
+					Messages.concat(Messages.concat(aug.damageFactor(((Weapon) toUpgrade).min(levelFrom)), Messages.literal("-")), aug.damageFactor(((Weapon) toUpgrade).max(levelFrom))),
+					Messages.concat(Messages.concat(aug.damageFactor(((Weapon) toUpgrade).min(levelTo)), Messages.literal("-")), aug.damageFactor(((Weapon) toUpgrade).max(levelTo))),
 					bottom);
 		}
 
 		if (toUpgrade instanceof Crossbow){
 			bottom = fillFields(Messages.get(this, "dart_damage"),
-					((Crossbow) toUpgrade).dartMin(levelFrom) + "-" + ((Crossbow) toUpgrade).dartMax(levelFrom),
-					((Crossbow) toUpgrade).dartMin(levelTo) + "-" + ((Crossbow) toUpgrade).dartMax(levelTo),
+					Messages.concat(Messages.concat(((Crossbow) toUpgrade).dartMin(levelFrom), Messages.literal("-")), ((Crossbow) toUpgrade).dartMax(levelFrom)),
+					Messages.concat(Messages.concat(((Crossbow) toUpgrade).dartMin(levelTo), Messages.literal("-")), ((Crossbow) toUpgrade).dartMax(levelTo)),
 					bottom);
 		}
 
 		//bleeding (tomahawk)
 		if (toUpgrade instanceof Tomahawk){
 			bottom = fillFields(Messages.get(this, "bleeding"),
-					Math.round(((Tomahawk) toUpgrade).minBleed(levelFrom)) + "-" + Math.round(((Tomahawk) toUpgrade).maxBleed(levelFrom)),
-					Math.round(((Tomahawk) toUpgrade).minBleed(levelTo)) + "-" + Math.round(((Tomahawk) toUpgrade).maxBleed(levelTo)),
+					Messages.concat(Messages.concat(Math.round(((Tomahawk) toUpgrade).minBleed(levelFrom)), Messages.literal("-")), Math.round(((Tomahawk) toUpgrade).maxBleed(levelFrom))),
+					Messages.concat(Messages.concat(Math.round(((Tomahawk) toUpgrade).minBleed(levelTo)), Messages.literal("-")), Math.round(((Tomahawk) toUpgrade).maxBleed(levelTo))),
 					bottom);
 		}
 
@@ -232,18 +232,18 @@ public class WndUpgrade extends Window {
 		if (toUpgrade instanceof Armor){
 			Armor.Augment aug = ((Armor) toUpgrade).augment;
 			bottom = fillFields(Messages.get(this, "blocking"),
-					((Armor) toUpgrade).DRMin(levelFrom) + "-" + (((Armor) toUpgrade).DRMax(levelFrom)),
-					((Armor) toUpgrade).DRMin(levelTo) + "-" +  (((Armor) toUpgrade).DRMax(levelTo)),
+					Messages.concat(Messages.concat(((Armor) toUpgrade).DRMin(levelFrom), Messages.literal("-")), (((Armor) toUpgrade).DRMax(levelFrom))),
+					Messages.concat(Messages.concat(((Armor) toUpgrade).DRMin(levelTo), Messages.literal("-")), (((Armor) toUpgrade).DRMax(levelTo))),
 					bottom);
 		} else if (toUpgrade instanceof RoundShield){
 			bottom = fillFields(Messages.get(this, "blocking"),
-					0 + "-" + ((RoundShield) toUpgrade).DRMax(levelFrom),
-					0 + "-" + ((RoundShield) toUpgrade).DRMax(levelTo),
+					Messages.concat(Messages.concat(0, Messages.literal("-")), ((RoundShield) toUpgrade).DRMax(levelFrom)),
+					Messages.concat(Messages.concat(0, Messages.literal("-")), ((RoundShield) toUpgrade).DRMax(levelTo)),
 					bottom);
 		} else if (toUpgrade instanceof Greatshield){
 			bottom = fillFields(Messages.get(this, "blocking"),
-					0 + "-" + ((Greatshield) toUpgrade).DRMax(levelFrom),
-					0 + "-" + ((Greatshield) toUpgrade).DRMax(levelTo),
+					Messages.concat(Messages.concat(0, Messages.literal("-")), ((Greatshield) toUpgrade).DRMax(levelFrom)),
+					Messages.concat(Messages.concat(0, Messages.literal("-")), ((Greatshield) toUpgrade).DRMax(levelTo)),
 					bottom);
 		}
 
@@ -522,8 +522,8 @@ public class WndUpgrade extends Window {
 
 		//the ~ symbol is more commonly used in Chinese
 		if (Messages.lang() == Languages.CHI_SMPL || Messages.lang() == Languages.CHI_TRAD){
-			msg1 = msg1.replace('-', '~');
-			msg2 = msg2.replace('-', '~');
+			msg1 = Messages.replace(msg1, '-', '~');
+			msg2 = Messages.replace(msg2, '-', '~');
 		}
 
 		RenderedTextBlock ttl = PixelScene.renderTextBlock(6);

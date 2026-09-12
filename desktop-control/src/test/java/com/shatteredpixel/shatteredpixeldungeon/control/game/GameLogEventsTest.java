@@ -20,9 +20,9 @@ public class GameLogEventsTest {
     @Rule public TemporaryFolder temporary=new TemporaryFolder();
     @Test public void eventsReadDrainsDisplayedSnapshotsBeforeItsResponseAndConsoleRemainsPrivate()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
-            store.ensureScope("run:a","run","a");store.ensureScope("run:old","run","old");store.beginSession("log-test");
+            store.ensureScope("run:a","run","a");store.ensureScope("run:old","run","old");store.beginSession("log-test","fixture-build","CLI.2.0.0",2);
             FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
-            game.logs.add(snapshot("run:old","old visible"));game.logs.add(snapshot("run:a","current visible"));
+            game.logs.add(snapshot("run:old",literal("old visible")));game.logs.add(snapshot("run:a",literal("current visible")));
             OutputStream checked=new OutputStream(){
                 boolean first=true;
                 @Override public void write(int value)throws IOException{
@@ -36,14 +36,14 @@ public class GameLogEventsTest {
             };
             try(MachineSession session=new MachineSession(store,game,new PrintStream(checked,true,"UTF-8"),1000)){
                 session.recordLog("stderr","PRIVATE_CONSOLE_SENTINEL");
-                session.accept(JsonCodec.encode(map("scope_id","run:a","id","logs","op","events.read"))).get(5,TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id","run:a","id","logs","op","events.read"))).get(5,TimeUnit.SECONDS);
                 Map<String,Object> response=last(wire);
                 List<?> events=(List<?>)response.get("result");assertEquals(1,events.size());
                 assertTrue(JsonCodec.encode(events).contains("current visible"));assertFalse(JsonCodec.encode(events).contains("old visible"));
                 assertFalse(wire.toString("UTF-8").contains("PRIVATE_CONSOLE_SENTINEL"));
-                session.accept(JsonCodec.encode(map("scope_id","run:a","id","state","op","state.get"))).get(5,TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id","run:a","id","state","op","state.get"))).get(5,TimeUnit.SECONDS);
                 assertEquals("v1",((Map<?,?>)last(wire).get("result")).get("state_version"));
-                session.accept(JsonCodec.encode(map("scope_id","run:old","id","old","op","events.read"))).get(5,TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id","run:old","id","old","op","events.read"))).get(5,TimeUnit.SECONDS);
                 assertTrue(JsonCodec.encode(last(wire).get("result")).contains("old visible"));
                 assertEquals(3,wire.toString("UTF-8").lines().count());
                 assertEquals(1,store.events("run:a",0,100).size());
@@ -54,11 +54,11 @@ public class GameLogEventsTest {
 
     @Test public void handshakePublishesBuildSessionAndAuditSchemaMetadata()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
-            String sessionId=store.beginSession("handshake-test");ByteArrayOutputStream wire=new ByteArrayOutputStream();
+            String sessionId=store.beginSession("handshake-test","fixture-build","CLI.2.0.0",2);ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,new FakeGame(),new PrintStream(wire,true,"UTF-8"),1000)){
-                session.accept(JsonCodec.encode(map("id","hello","op","protocol.info"))).get(5,TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "id","hello","op","protocol.info"))).get(5,TimeUnit.SECONDS);
                 Map<?,?> result=(Map<?,?>)last(wire).get("result");
-                assertEquals(sessionId,result.get("session_id"));assertEquals(4,((Number)result.get("audit_schema_version")).intValue());
+                assertEquals(sessionId,result.get("session_id"));assertEquals(5,((Number)result.get("audit_schema_version")).intValue());
                 assertEquals(BuildCatalog.current().get("build_id"),result.get("build_id"));assertNotNull(result.get("build_id"));
             }
         }
@@ -67,33 +67,36 @@ public class GameLogEventsTest {
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,new FakeGame(),new PrintStream(wire,true,"UTF-8"),1000)){
-                session.accept(JsonCodec.encode(map("id","hello","op","protocol.info"))).get(5,TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "id","hello","op","protocol.info"))).get(5,TimeUnit.SECONDS);
                 Map<?,?> result=(Map<?,?>)last(wire).get("result");assertTrue(result.containsKey("session_id"));assertNull(result.get("session_id"));
             }
         }
     }
-    @Test public void consecutiveUntranslatableDisplaysPreserveTheOriginalRequestFailureAndBothPrivateBatches()throws Exception{
+    @Test public void consecutiveSourcelessDisplaysRemainPartialEventsWithoutClosingTheSession()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())) {
-            store.ensureScope("run:a","run","a");store.beginSession("translation-failure");
+            store.ensureScope("run:a","run","a");store.beginSession("translation-failure","fixture-build","CLI.2.0.0",2);
             FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             game.logs.add(snapshot("run:a","未收录的第一条实际显示甲"));
             game.logs.add(snapshot("run:a","未收录的第二条实际显示乙"));
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {
-                session.accept(JsonCodec.encode(map("scope_id","run:a","id","display-query","op","events.read"))).get(5,TimeUnit.SECONDS);
-                assertEquals("PUBLIC_TEXT_UNAVAILABLE",((Map<?,?>)last(wire).get("error")).get("code"));
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id","run:a","id","display-query","op","events.read"))).get(5,TimeUnit.SECONDS);
+                assertEquals(Boolean.TRUE,last(wire).get("ok"));
+                assertEquals("partial",((Map<?,?>)last(wire).get("presentation")).get("status"));
                 assertEquals(1,wire.toString("UTF-8").lines().count());
                 assertFalse(wire.toString("UTF-8").contains("未收录"));
-                assertEquals("REJECTED",store.getRequest("run:a","display-query").get("status"));
-                assertTrue(game.exits>0); // The second display failure still closes the session.
-                try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+store.internalDatabase());Statement s=db.createStatement()) {
-                    try(ResultSet rows=s.executeQuery("SELECT COUNT(*) FROM logs WHERE channel='displayed_text_untranslated'")) {
+                assertEquals("COMPLETED",store.getRequest("run:a","display-query").get("status"));
+                assertEquals(0,game.exits);assertFalse(session.failed());
+                assertEquals(2,store.events("run:a",0,100).size());
+                session.accept(JsonCodec.encode(map("protocol_version",2,"scope_id","run:a","id","after-display","op","state.get"))).get(5,TimeUnit.SECONDS);
+                assertEquals(Boolean.TRUE,last(wire).get("ok"));
+                try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+store.internalDatabase());Statement statement=db.createStatement()) {
+                    try(ResultSet rows=statement.executeQuery("SELECT COUNT(*) FROM logs WHERE channel='displayed_text_original'")) {
                         assertTrue(rows.next());assertEquals(2,rows.getInt(1));
                     }
-                    try(ResultSet rows=s.executeQuery("SELECT COUNT(*) FROM exceptions WHERE exception_class LIKE '%PublicTextUnavailableException'")) {
-                        assertTrue(rows.next());assertTrue(rows.getInt(1)>=2);
+                    try(ResultSet rows=statement.executeQuery("SELECT COUNT(*) FROM exceptions")) {
+                        assertTrue(rows.next());assertEquals(0,rows.getInt(1));
                     }
                 }
-                assertTrue(store.events("run:a",0,100).isEmpty());
             }
         }
     }
@@ -103,9 +106,9 @@ public class GameLogEventsTest {
             Object identity=new Object(){@Override public String toString(){throw new AssertionError("Private identity must never be serialized");}};
             game.visuals.add(new GameController.VisualSnapshot("a",identity,1,"opaque-map",1,"2026-09-09T01:00:00Z",List.of(new VisualCue("red_target",10))));
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)){
-                session.accept(JsonCodec.encode(map("scope_id","run:a","id","first","op","events.read"))).get(5,TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id","run:a","id","first","op","events.read"))).get(5,TimeUnit.SECONDS);
                 game.visuals.add(new GameController.VisualSnapshot("a",identity,1,"opaque-map",2,"2026-09-09T01:00:01Z",List.of()));
-                session.accept(JsonCodec.encode(map("scope_id","run:a","id","second","op","events.read"))).get(5,TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id","run:a","id","second","op","events.read"))).get(5,TimeUnit.SECONDS);
                 List<?> events=(List<?>)last(wire).get("result");assertEquals(2,events.size());
                 Map<?,?> first=(Map<?,?>)((Map<?,?>)events.get(0)).get("data"),second=(Map<?,?>)((Map<?,?>)events.get(1)).get("data");
                 assertEquals(1,((List<?>)first.get("cues")).size());assertTrue(((List<?>)second.get("cues")).isEmpty());
@@ -114,6 +117,17 @@ public class GameLogEventsTest {
             }
         }
     }
+    @Test public void logCallbackLanguageIsFrozenWithItsPublicAndOriginalDisplayData()throws Exception{
+        String text=literal("Drawn log");
+        List<RuntimeObserver.LogEntry> entries=List.of(new RuntimeObserver.LogEntry(text,0xffffff));
+        GameController.GameLogSnapshot first=new GameController.GameLogSnapshot("run:a","2026-09-13T00:00:00Z",entries,"zh");
+        GameController.GameLogSnapshot later=new GameController.GameLogSnapshot("run:a","2026-09-13T00:00:01Z",entries,"ko");
+        assertEquals("zh",first.data().get("gui_language"));assertEquals("zh",first.originalData().get("gui_language"));
+        assertEquals("ko",later.data().get("gui_language"));assertEquals("ko",later.originalData().get("gui_language"));
+        assertEquals("zh",PublicEnglishProjection.copy(first.data()).get("gui_language"));
+        assertThrows(UnsupportedOperationException.class,()->first.data().put("gui_language","changed"));
+    }
+    private static String literal(String text){return com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance.INSTANCE.onTextOperation("literal",text,text);}
     private static GameController.GameLogSnapshot snapshot(String scope,String text){return new GameController.GameLogSnapshot(scope,"2026-09-09T01:00:00Z",List.of(new RuntimeObserver.LogEntry(text,0xffffff)));}
     private static Map<String,Object> last(ByteArrayOutputStream wire)throws Exception{String[] rows=wire.toString("UTF-8").strip().split("\\R");return JsonCodec.decode(rows[rows.length-1]);}
     private static final class FakeGame implements MachineSession.GamePort{

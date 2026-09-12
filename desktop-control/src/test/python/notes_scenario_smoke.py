@@ -30,6 +30,81 @@ def choose(client, label):
     return act(client, "ui.activate", control=matches[0]["control"])
 
 
+def source_nodes(value):
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from source_nodes(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from source_nodes(child)
+
+
+def note_edit_title_action(state, title):
+    """Recognize only the original known-note three-button workflow, using current public evidence."""
+    actions = controls(state)
+    named = [action for action in actions if action.get("label") == "Edit Title"]
+    if named:
+        assert len(named) == 1, named
+        return named[0], None
+    ui = state["observation"]["ui"]
+    assert state["phase"] == "awaiting_input" and ui["scene"] == "GameScene" and ui["modal"], ui
+    nodes = {node["id"]: node for node in ui["controls"]}
+    assert len(nodes) == len(ui["controls"]), "Duplicate public controls cannot establish a note context"
+    roots = [node for node in nodes.values() if node.get("role") == "window" and not node.get("parent")]
+    assert len(roots) == 1 and sum(node.get("role") == "window" for node in nodes.values()) == 1, roots
+    root = roots[0]["id"]
+    titles = [node for node in nodes.values() if node.get("parent") == root and node.get("role") == "text"
+              and node.get("text") == title and not node.get("clipped")
+              and any(source.get("kind") == "literal" and source.get("origin") == "user" and source.get("value") == title
+                      for source in source_nodes(node.get("text_sources", {}).get("text")))]
+    assert len(titles) == 1, {"known_note_title_not_shown": title}
+    buttons = [node for node in nodes.values() if node.get("role") == "button"]
+    assert len(actions) == len(buttons) == 3, {"note_buttons": buttons, "actions": actions}
+    assert all(action["action"] in {"ui.activate", "ui.back"} for action in state["actions"]), state["actions"]
+    assert all(node.get("parent") == root and node.get("enabled") is True for node in buttons), buttons
+    assert {action["control"] for action in actions} == {node["id"] for node in buttons}, actions
+    names = {action.get("label"): action for action in actions}
+    body = "Add Text" if "Add Text" in names else "Edit Text"
+    assert body in names and "Delete" in names, actions
+    for label, key in ((body, "ui.customnotebutton$customnotewindow." + ("add_text" if body == "Add Text" else "edit_text")),
+                       ("Delete", "ui.customnotebutton$customnotewindow.delete")):
+        action = names[label]
+        assert action.get("text_diagnostics", {}).get("label") is None, action
+        keys = {source["key"] for source in source_nodes(action.get("text_sources", {}).get("label"))
+                if source.get("kind") == "resource"}
+        assert keys == {key}, {"named_note_button_source": action}
+    remaining = [action for action in actions if action["control"] not in {names[body]["control"], names["Delete"]["control"]}]
+    assert len(remaining) == 1, remaining
+    action = remaining[0]
+    button = nodes[action["control"]]
+    assert action.get("text_diagnostics", {}).get("label") == "clipped_text" and action.get("text_sources", {}).get("label") is None, action
+    assert button.get("clipped") is True and button.get("text_diagnostics", {}).get("text") == "clipped_text", button
+    assert button.get("text_sources", {}).get("text") is None and "click" in action.get("gestures", []), button
+    assert not any(source.get("key") == "ui.customnotebutton$customnotewindow.edit_title"
+                   for source in source_nodes({"ui": ui, "actions": actions})), "The clipped full key must remain redacted"
+    return action, {"control": action["control"], "state_version": state["state_version"],
+                    "evidence": "known user note title, two sourced body/delete choices, one remaining clipped button",
+                    "clipped_source_remains_absent": True}
+
+
+def choose_edit_title(client, title):
+    state = client.state()
+    action, structural = note_edit_title_action(state, title)
+    assert client.scope == state["scope_id"] and client.version == state["state_version"], "Use the current advertised note action"
+    response = client.act("ui.activate", control=action["control"])
+    assert response.get("ok") and response.get("status") == "awaiting_input", response
+    edited = response["result"]
+    fields = [node for node in edited["observation"]["ui"]["controls"] if node.get("role") == "text_input"]
+    assert len(fields) == 1 and fields[0].get("max_length") == 50 and fields[0].get("multiline") is False, fields
+    assert fields[0]["value"] == title, fields[0]
+    if structural:
+        if not hasattr(client, "clipped_note_title_choices"):
+            client.clipped_note_title_choices = []
+        client.clipped_note_title_choices.append(structural)
+    return edited
+
+
 def shown(state, text):
     return any(node.get("text") == text or node.get("label") == text for node in state["observation"]["ui"]["controls"])
 
@@ -132,7 +207,7 @@ def open_saved_note(client, title, item_shortcut):
         # under the visible Custom section, before the floor-landmark sections.
         opened = act(client, entries[0]["action"], control=entries[0]["control"])
     assert shown(opened, title), {"expected_note_title": title, "controls": opened["observation"]["ui"]["controls"]}
-    assert any(c.get("label") == "Edit Title" for c in controls(opened))
+    note_edit_title_action(opened, title)
     return opened
 
 
@@ -171,10 +246,10 @@ def workflow(client, profile, case, initial):
     assert shown(created, title)
     assert_note(profile, created, case, title, "", floor)
 
-    choose(client, "Edit Title")
+    choose_edit_title(client, title)
     cancelled = edit_input(client, "Discarded title", False)
     assert_note(profile, cancelled, case, title, "", floor)
-    choose(client, "Edit Title")
+    choose_edit_title(client, title)
     title = "Test route note revised"
     renamed = edit_input(client, title, True)
     assert shown(renamed, title)
@@ -205,7 +280,8 @@ def workflow(client, profile, case, initial):
     return {"floor": floor, "title": title, "body": body, "public_item_appearance": appearance,
             "cancelled_creation_without_record": True, "title_cancel_and_confirm": True,
             "multiline_body_cancel_and_confirm": True, "delete_cancel_preserves_record": True,
-            "note_type_and_specific_item_binding_checked": True, "original_save_receipt": saved.get("persistence")}
+            "note_type_and_specific_item_binding_checked": True, "original_save_receipt": saved.get("persistence"),
+            "clipped_title_choices": getattr(client, "clipped_note_title_choices", [])}
 
 
 def run_one(root, classpath, runtime_id, case):

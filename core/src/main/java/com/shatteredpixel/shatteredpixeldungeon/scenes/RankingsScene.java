@@ -120,7 +120,7 @@ public class RankingsScene extends PixelScene {
 				RenderedTextBlock label = PixelScene.renderTextBlock( 8 );
 				label.hardlight( 0xCCCCCC );
 				label.setHightlighting(true, Window.SHPX_COLOR);
-				label.text( Messages.get(this, "total") + " _" + Rankings.INSTANCE.wonNumber + "_/" + Rankings.INSTANCE.totalNumber );
+				label.text( Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.get(this, "total"), Messages.literal(" _")), Rankings.INSTANCE.wonNumber), Messages.literal("_/")), Rankings.INSTANCE.totalNumber) );
 				add( label );
 				
 				label.setPos(

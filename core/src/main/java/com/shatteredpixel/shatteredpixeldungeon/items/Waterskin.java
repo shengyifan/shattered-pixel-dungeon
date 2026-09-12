@@ -140,13 +140,13 @@ public class Waterskin extends Item {
 		String info = super.info();
 
 		if (volume == 0){
-			info += "\n\n" + Messages.get(this, "desc_water");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_water")));
 		} else {
-			info += "\n\n" + Messages.get(this, "desc_heal");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_heal")));
 		}
 
 		if (isFull()){
-			info += "\n\n" + Messages.get(this, "desc_full");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_full")));
 		}
 
 		return info;
@@ -190,7 +190,7 @@ public class Waterskin extends Item {
 
 	@Override
 	public String status() {
-		return Messages.format( TXT_STATUS, volume, MAX_VOLUME );
+		return Messages.format( Messages.literal(TXT_STATUS), volume, MAX_VOLUME );
 	}
 
 }

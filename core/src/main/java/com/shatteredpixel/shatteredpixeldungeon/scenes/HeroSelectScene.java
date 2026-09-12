@@ -782,7 +782,7 @@ public class HeroSelectScene extends PixelScene {
 
 						if (diff > 0){
 							if (diff > 30*HOUR){
-								text("30:00:00+");
+								text(Messages.literal("30:00:00+"));
 							} else {
 								text(dateFormat.format(new Date(diff)));
 							}

@@ -192,24 +192,24 @@ public class Preparation extends Buff implements ActionIndicator.Action {
 		
 		AttackLevel lvl = AttackLevel.getLvl(turnsInvis);
 
-		desc += "\n\n" + Messages.get(this, "desc_dmg",
+		desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_dmg",
 				(int)(lvl.baseDmgBonus*100),
 				(int)(lvl.KOThreshold()*100),
-				(int)(lvl.KOThreshold()*20));
+				(int)(lvl.KOThreshold()*20))));
 		
 		if (lvl.damageRolls > 1){
-			desc += " " + Messages.get(this, "desc_dmg_likely");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "desc_dmg_likely")));
 		}
 		
 		if (lvl.blinkDistance() > 0){
-			desc += "\n\n" + Messages.get(this, "desc_blink", lvl.blinkDistance());
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_blink", lvl.blinkDistance())));
 		}
 		
-		desc += "\n\n" + Messages.get(this, "desc_invis_time", turnsInvis);
+		desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_invis_time", turnsInvis)));
 		
 		if (lvl.ordinal() != AttackLevel.values().length-1){
 			AttackLevel next = AttackLevel.values()[lvl.ordinal()+1];
-			desc += "\n" + Messages.get(this, "desc_invis_next", next.turnsReq);
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_invis_next", next.turnsReq)));
 		}
 		
 		return desc;

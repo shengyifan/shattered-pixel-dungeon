@@ -45,7 +45,7 @@ class FloatingPresentationAdapterTest {
         }
     }
     @Test void publishedTextComesOnlyFromTheCompletedDrawCacheAndDoesNotRegenerateIt() throws Exception {
-        Scene scene=new Scene();FloatingText floating=floating("private later value",new RenderedTextBlock.VisibleText("闪避",false,true));
+        Scene scene=new Scene();FloatingText floating=floating("private later value",new RenderedTextBlock.VisibleText(ResourceTextFixture.source("actors.char.def_verb"),false,true));
         scene.add(floating);UiBridge bridge=new UiBridge(()->scene);
         Map<?,?> node=nodes(bridge).get(0);assertEquals("floating_text",node.get("presentation"));assertEquals("dodged",node.get("text"));
         for(int i=0;i<10;i++)assertEquals(node,nodes(bridge).get(0));
@@ -67,16 +67,18 @@ class FloatingPresentationAdapterTest {
         }
     }
     @Test void invisibleAndModalCoveredFloatingTextIsNotPublishedEvenWithAnEarlierCache() throws Exception {
-        Scene scene=new Scene();FloatingText floating=floating("闪避",new RenderedTextBlock.VisibleText("闪避",false,true));scene.add(floating);UiBridge bridge=new UiBridge(()->scene);
+        Scene scene=new Scene();FloatingText floating=floating("闪避",new RenderedTextBlock.VisibleText(ResourceTextFixture.source("actors.char.def_verb"),false,true));scene.add(floating);UiBridge bridge=new UiBridge(()->scene);
         floating.visible=false;assertTrue(nodes(bridge).isEmpty());floating.visible=true;
         Window modal=allocate(Window.class);init(modal);scene.add(modal);
         assertTrue(nodes(bridge).stream().noneMatch(n->n.containsKey("presentation")));
         scene.erase(modal);assertEquals("dodged",nodes(bridge).get(0).get("text"));
     }
     @Test void ordinaryStoredTextIsNeverGivenFloatingPresentation() throws Exception {
-        Scene scene=new Scene();RenderedTextBlock ordinary=allocate(RenderedTextBlock.class);init(ordinary);
-        set(ordinary,RenderedTextBlock.class,"text","闪避");scene.add(ordinary);
-        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->new UiBridge(()->scene).describeUi());
+        Scene scene=new Scene();RenderedTextBlock ordinary=ResourceTextFixture.laidOut("闪避");scene.add(ordinary);
+        Map<String,Object> observed=new UiBridge(()->scene).describeUi();
+        assertEquals("partial",PublicEnglishProjection.presentation(observed).get("status"));
+        assertFalse(observed.toString().contains("dodged"));
+        assertFalse(observed.toString().contains("floating_text"));
     }
     @SuppressWarnings("unchecked") private static List<Map<String,Object>> nodes(UiBridge bridge){return (List<Map<String,Object>>)bridge.describeUi().get("controls");}
     private static FloatingText floating(String text,RenderedTextBlock.VisibleText visible)throws Exception {

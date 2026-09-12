@@ -126,11 +126,11 @@ public class SupporterScene extends PixelScene {
 			add(bg);
 
 			String message = Messages.get(SupporterScene.class, "intro");
-			message += "\n\n" + Messages.get(SupporterScene.class, "patreon_msg");
+			message = Messages.concat(message, Messages.concat(Messages.literal("\n\n"), Messages.get(SupporterScene.class, "patreon_msg")));
 			if (Messages.lang() != Languages.ENGLISH) {
-				message += "\n" + Messages.get(SupporterScene.class, "patreon_english");
+				message = Messages.concat(message, Messages.concat(Messages.literal("\n"), Messages.get(SupporterScene.class, "patreon_english")));
 			}
-			message += "\n\n- Evan";
+			message = Messages.concat(message, Messages.literal("\n\n- Evan"));
 
 			text = PixelScene.renderTextBlock(message, 6);
 			add(text);

@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui.changelist;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.watabou.noosa.ColorBlock;
@@ -41,6 +42,9 @@ public class ChangeInfo extends Component {
 	
 	public ChangeInfo( String title, boolean majorTitle, String text){
 		super();
+		// This UI is populated by the code-owned change catalog, never external text.
+		title = Messages.systemCatalogText(title);
+		if (text != null) text = Messages.systemCatalogText(text);
 		
 		if (majorTitle){
 			this.title = PixelScene.renderTextBlock( title, 9 );

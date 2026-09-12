@@ -140,7 +140,7 @@ public class WandOfPrismaticLight extends DamageWand {
 
 	@Override
 	public String upgradeStat2(int level) {
-		return Messages.decimalFormat("#", 100*(1-(3/(float)(5+level)))) + "%";
+		return Messages.concat(Messages.decimalFormat("#", 100*(1-(3/(float)(5+level)))), Messages.literal("%"));
 	}
 
 	@Override

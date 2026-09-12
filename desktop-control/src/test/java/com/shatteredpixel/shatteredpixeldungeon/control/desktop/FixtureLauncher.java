@@ -140,6 +140,7 @@ public final class FixtureLauncher {
         allowed = allowed.toRealPath();
         profile = profile.toAbsolutePath().normalize();
         if (!profile.startsWith(allowed) || profile.equals(allowed)) throw new IllegalArgumentException("Fixture profile must be below desktop-control/build/fixtures");
+        AuditStore.preflight(profile.resolve("audit"));
         Files.createDirectories(profile);
         profile = profile.toRealPath();
         if (!profile.startsWith(allowed)) throw new IllegalArgumentException("Fixture profile resolves outside its test root");
@@ -152,7 +153,13 @@ public final class FixtureLauncher {
         System.setProperty("Specification-Version", "3.3.8");
         System.setProperty("Implementation-Version", "896");
         try (ProfileLock lock = new ProfileLock(profile); AuditStore store = new AuditStore(profile.resolve("audit"))) {
+            store.recoverInterrupted();
+            store.beginSession(java.util.UUID.randomUUID().toString(),
+                    (String)com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
+                    (String)com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("cli_version"),
+                    com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest.PROTOCOL_VERSION);
             configureTestUi(profile);
+            java.util.concurrent.atomic.AtomicBoolean runtimeFailed=new java.util.concurrent.atomic.AtomicBoolean();
             AtomicReference<MachineSession> reference = new AtomicReference<>();
             GameController game = new GameController(profile, store.menuScope(), error -> { if (reference.get() != null) reference.get().recordException(error); });
             try (MachineSession session = new MachineSession(store, game, protocol)) {
@@ -162,12 +169,25 @@ public final class FixtureLauncher {
                 System.setErr(new PrintStream(new LogOutput(session, "fixture_stderr"), true, StandardCharsets.UTF_8));
                 Thread reader = new Thread(() -> session.read(System.in), "Fixture Machine Input");
                 reader.setDaemon(true); reader.start();
-                try { DesktopLauncher.launch(new String[0], profile, (thread, error) -> { session.recordException(error); game.exitNow(); }, true); }
+                try { DesktopLauncher.launch(new String[0], profile, (thread, error) -> { runtimeFailed.set(true); session.recordException(error); game.exitNow(); }, true); }
+                catch(Throwable error){
+                    runtimeFailed.set(true);session.recordRuntimeFailure(error);game.runtimeFailed(error);
+                    throw error;
+                }
                 finally { Game.observer = RuntimeObserver.NONE; }
+            } finally {
+                MachineSession completed=reference.get();
+                store.endSession(completed==null||completed.failed()||runtimeFailed.get()||Files.exists(profile.resolve("fixture-failure.json"))
+                        ?"FAILED":"CLOSED","fixture_launcher_finished");
             }
         }
     }
 
+    private static Languages testLanguage() {
+        String code=System.getenv().getOrDefault("SPDCTL_TEST_LANGUAGE","zh");
+        for(Languages language:Languages.values())if(language.code().equals(code))return language;
+        throw new IllegalArgumentException("Unregistered test language");
+    }
     private static void configureTestUi(Path profile)throws IOException {
         // Native startup reads these before the first frame. All paths were already restricted
         // to the isolated fixture root and the profile lock is held before touching preferences.
@@ -175,10 +195,15 @@ public final class FixtureLauncher {
         if(Files.isSymbolicLink(file))throw new IOException("Fixture settings must not be a symbolic link");
         Properties settings=new Properties();
         if(Files.isRegularFile(file))try(InputStream input=Files.newInputStream(file)){settings.loadFromXML(input);}
-        if(Languages.CHI_SMPL.code().equals(settings.getProperty(SPDSettings.KEY_LANG))
-                &&"false".equals(settings.getProperty(SPDSettings.KEY_FULLSCREEN)))return;
-        settings.setProperty(SPDSettings.KEY_LANG,Languages.CHI_SMPL.code());
+        if(testLanguage().code().equals(settings.getProperty(SPDSettings.KEY_LANG))
+                &&"false".equals(settings.getProperty(SPDSettings.KEY_FULLSCREEN))
+                &&"false".equals(settings.getProperty(SPDSettings.KEY_NEWS))
+                &&"false".equals(settings.getProperty(SPDSettings.KEY_UPDATES)))return;
+        settings.setProperty(SPDSettings.KEY_LANG,testLanguage().code());
         settings.setProperty(SPDSettings.KEY_FULLSCREEN,"false");
+        // Fixture assertions must not race unrelated network-driven menu updates.
+        settings.setProperty(SPDSettings.KEY_NEWS,"false");
+        settings.setProperty(SPDSettings.KEY_UPDATES,"false");
         try(OutputStream output=Files.newOutputStream(file)){settings.storeToXML(output,"Isolated fixture UI preferences","UTF-8");}
     }
 
@@ -204,7 +229,7 @@ public final class FixtureLauncher {
                     Badges.loadGlobal();
                     for (Badges.Badge badge : Badges.Badge.values()) if (badge.name().startsWith("UNLOCK_")) Badges.unlock(badge);
                     if(fixture.kind.equals("menu"))MenuScenarioFixtures.prepare(fixture.name);
-                    SPDSettings.language(Languages.CHI_SMPL); Messages.setup(Languages.CHI_SMPL);
+                    SPDSettings.language(testLanguage()); Messages.setup(testLanguage());
                     SPDSettings.fullscreen(false);
                     Gdx.graphics.setTitle("CLI 场景测试 · " + fixture.id);
                     SPDSettings.intro(false);

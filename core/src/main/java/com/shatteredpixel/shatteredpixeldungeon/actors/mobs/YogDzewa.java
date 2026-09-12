@@ -575,7 +575,7 @@ public class YogDzewa extends Mob {
 		String desc = super.description();
 
 		if (Statistics.spawnersAlive > 0){
-			desc += "\n\n" + Messages.get(this, "desc_spawners");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_spawners")));
 		}
 
 		return desc;

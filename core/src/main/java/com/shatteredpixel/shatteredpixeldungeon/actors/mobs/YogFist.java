@@ -196,7 +196,7 @@ public abstract class YogFist extends Mob {
 
 	@Override
 	public String description() {
-		return Messages.get(YogFist.class, "desc") + "\n\n" + Messages.get(this, "desc");
+		return Messages.concat(Messages.concat(Messages.get(YogFist.class, "desc"), Messages.literal("\n\n")), Messages.get(this, "desc"));
 	}
 
 	public static final String RANGED_COOLDOWN = "ranged_cooldown";
@@ -418,7 +418,7 @@ public abstract class YogFist extends Mob {
 				b.announced = false;
 				b.set(dmg*.6f);
 				b.attachTo(this);
-				sprite.showStatus(CharSprite.WARNING, Messages.titleCase(b.name()) + " " + (int)b.level());
+				sprite.showStatus(CharSprite.WARNING, Messages.concat(Messages.concat(Messages.titleCase(b.name()), Messages.literal(" ")), (int)b.level()));
 			} else{
 				super.damage(dmg, src);
 			}

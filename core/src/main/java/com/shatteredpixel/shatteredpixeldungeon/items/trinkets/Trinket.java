@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.trinkets;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
@@ -62,7 +64,7 @@ public abstract class Trinket extends Item {
 	@Override
 	public String info() {
 		String info = super.info();
-		info += "\n\n" + statsDesc();
+		info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), statsDesc()));
 		return info;
 	}
 

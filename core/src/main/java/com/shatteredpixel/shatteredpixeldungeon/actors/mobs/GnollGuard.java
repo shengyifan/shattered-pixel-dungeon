@@ -118,7 +118,7 @@ public class GnollGuard extends Mob {
 	@Override
 	public String description() {
 		if (hasSapper()){
-			return super.description() + "\n\n" + Messages.get(this, "desc_armor");
+			return Messages.concat(Messages.concat(super.description(), Messages.literal("\n\n")), Messages.get(this, "desc_armor"));
 		} else {
 			return super.description();
 		}

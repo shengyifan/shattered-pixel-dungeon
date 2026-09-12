@@ -49,7 +49,7 @@ public class WndInfoTalent extends Window {
 		titlebar.icon( new TalentIcon( talent ) );
 		String title = Messages.titleCase(talent.title());
 		if (points > 0){
-			title += " +" + points;
+			title = Messages.concat(title, Messages.concat(Messages.literal(" +"), points));
 		}
 		titlebar.label( title, Window.TITLE_COLOR );
 		titlebar.setRect( 0, 0, width, 0 );

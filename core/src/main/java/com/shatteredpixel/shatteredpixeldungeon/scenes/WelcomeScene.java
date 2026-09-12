@@ -208,14 +208,14 @@ public class WelcomeScene extends PixelScene {
 		} else if (previousVersion <= ShatteredPixelDungeon.versionCode) {
 			if (previousVersion < LATEST_UPDATE){
 				message = Messages.get(this, "update_intro");
-				message += "\n\n" + Messages.get(this, "update_msg");
+				message = Messages.concat(message, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "update_msg")));
 			} else {
 				//TODO: change the messages here in accordance with the type of patch.
 				message = Messages.get(this, "patch_intro");
-				message += "\n";
+				message = Messages.concat(message, Messages.literal("\n"));
 				//message += "\n" + Messages.get(this, "patch_balance");
-				message += "\n" + Messages.get(this, "patch_bugfixes");
-				message += "\n" + Messages.get(this, "patch_translations");
+				message = Messages.concat(message, Messages.concat(Messages.literal("\n"), Messages.get(this, "patch_bugfixes")));
+				message = Messages.concat(message, Messages.concat(Messages.literal("\n"), Messages.get(this, "patch_translations")));
 
 			}
 		} else {

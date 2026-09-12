@@ -258,7 +258,7 @@ public class WndClericSpells extends Window {
 
 		@Override
 		protected String hoverText() {
-			return "_" + Messages.titleCase(spell.name()) + "_\n" + spell.shortDesc();
+			return Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(spell.name())), Messages.literal("_\n")), spell.shortDesc());
 		}
 	}
 

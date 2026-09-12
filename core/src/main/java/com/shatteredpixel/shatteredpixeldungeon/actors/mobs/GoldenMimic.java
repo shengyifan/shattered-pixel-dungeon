@@ -62,7 +62,7 @@ public class GoldenMimic extends Mimic {
 			if (MimicTooth.stealthyMimics()){
 				return Messages.get(Heap.class, "locked_chest_desc");
 			} else {
-				return Messages.get(Heap.class, "locked_chest_desc") + "\n\n" + Messages.get(this, "hidden_hint");
+				return Messages.concat(Messages.concat(Messages.get(Heap.class, "locked_chest_desc"), Messages.literal("\n\n")), Messages.get(this, "hidden_hint"));
 			}
 		} else {
 			return super.description();

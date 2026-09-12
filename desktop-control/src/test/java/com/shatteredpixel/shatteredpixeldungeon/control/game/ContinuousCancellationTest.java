@@ -240,10 +240,10 @@ public class ContinuousCancellationTest {
             action(id, version, map("action", "action.cancel", "target_id", target));
         }
         void action(String id, String version, Map<String, Object> args) throws Exception {
-            accept(map("id", id, "scope_id", SCOPE, "op", "action.execute", "state_version", version, "args", args));
+            accept(map("protocol_version", 2, "id", id, "scope_id", SCOPE, "op", "action.execute", "state_version", version, "args", args));
         }
         void query(String id, String op, Map<String, Object> args) throws Exception {
-            accept(map("id", id, "scope_id", SCOPE, "op", op, "args", args));
+            accept(map("protocol_version", 2, "id", id, "scope_id", SCOPE, "op", op, "args", args));
         }
         void accept(Map<String, Object> request) throws Exception {
             session.accept(JsonCodec.encode(request)).get(2, TimeUnit.SECONDS);

@@ -42,8 +42,12 @@ public class ChangeButton extends Component {
 		this.icon = icon;
 		add(this.icon);
 		
-		this.title = Messages.titleCase(title);
-		this.messages = messages;
+		// Preserve resource provenance inside the otherwise fixed English change catalog.
+		this.title = Messages.titleCase(Messages.systemCatalogText(title));
+		this.messages = messages.clone();
+		for (int i = 0; i < this.messages.length; i++) {
+			this.messages[i] = Messages.systemCatalogText(this.messages[i]);
+		}
 		
 		layout();
 	}

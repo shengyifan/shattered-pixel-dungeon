@@ -96,7 +96,6 @@ class GameSnapshotterTest {
                     if (method.getReturnType() == Preferences.class) return proxy;
                     return primitiveDefault(method.getReturnType());
                 });
-        GameSettings.set(preferences);
         Path assets = Path.of("../core/src/main/assets").toAbsolutePath().normalize();
         Gdx.files = (Files) Proxy.newProxyInstance(Files.class.getClassLoader(), new Class<?>[]{Files.class},
                 (proxy, method, args) -> {
@@ -110,6 +109,7 @@ class GameSnapshotterTest {
                     if (method.getName().equals("getType")) return Application.ApplicationType.Desktop;
                     return primitiveDefault(method.getReturnType());
                 });
+        GameSettings.set(preferences);
         Messages.setup(Languages.ENGLISH);
     }
 
@@ -354,6 +354,7 @@ class GameSnapshotterTest {
 
     @Test
     void repeatedUiItemHoverDescriptionsDoNotPopulateThePastyHolidayCache() throws Exception {
+        try(TextObservationFixture ignored=new TextObservationFixture()) {
         Pasty food = new Pasty();
         ItemSlot slot = allocateFixture(ItemSlot.class);
         slot.exists = slot.alive = slot.active = slot.visible = true;
@@ -368,6 +369,7 @@ class GameSnapshotterTest {
             assertTrue(JsonCodec.encode(bridge.describeUi()).contains(expected));
             bridge.describeActions();
             assertNull(SnapshotFields.read(Holiday.class, "cached"));
+        }
         }
     }
 

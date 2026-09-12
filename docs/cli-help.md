@@ -26,7 +26,15 @@ SQLite library; it does not require a separately installed Java runtime.
 Machine mode starts the game window and a persistent stdin/stdout connection in
 one process. Gameplay control uses JSON messages over that connection. A controller
 does not need screenshots, window focus, OS keyboard input, or mouse simulation.
-The GUI can use Chinese while public CLI descriptions and errors use English.
+The GUI can use any registered language while public CLI system descriptions and
+errors use official English. Text fields carry parallel `text_sources` entries with
+resource keys and frozen arguments, or an explicit user/external origin. Keys aid
+interpretation; actions still use current controls, locators and state versions.
+
+CLI.2.0.0 uses protocol 2 and audit schema 5. Its default profile is
+`~/Library/Application Support/Shattered Pixel Dungeon CLI v2/`. An existing older
+audit schema is rejected before profile writes; it is never migrated or deleted.
+Select a new directory to start a v2 session.
 
 Send one complete UTF-8 JSON object per line and flush stdin. Read exactly one JSON
 response line before sending the next request. Keep this same process and pipe open
@@ -41,6 +49,7 @@ creating a profile. Their output is not the machine-session NDJSON protocol.
 
 | Request field | Meaning |
 | --- | --- |
+| `protocol_version` | Required integer `2` on every request, including `protocol.info`. |
 | `id` | Required for every query and action. Generate a new UUID for each request. |
 | `scope_id` | The current menu or game identity. Required except for initial `protocol.info`. |
 | `op` | One of the seven protocol operations listed below. |
@@ -57,7 +66,15 @@ its state version is stale. Reusing an ID in the same scope returns
 `DUPLICATE_REQUEST_ID`, with no repeat execution or replay of the old response.
 Use a fresh ID and `request.get` to retrieve the original result.
 
-Successful responses contain `id`, `scope_id`, `ok: true`, `status`, and `result`.
+Successful responses contain `protocol_version`, `id`, `scope_id`, `ok: true`,
+`status`, `presentation`, and `result`. `presentation.status` is `complete` or
+`partial`, with field diagnostics. A safe missing resource renders as a key; unsafe
+or clipped text renders an English placeholder without hidden keys or arguments.
+Rounded or truncated arguments expose only their displayed precision or fragments,
+not hidden original values. Presentation is independent of action completion: do not replay a completed action
+because text is partial. Callback, stable-boundary, snapshot and audit failures still
+retain the execution-uncertainty protections below. Historical responses are returned
+as recorded, without translating them again or requiring a fresh live observation.
 Rejected or failed responses contain `ok: false` and `error.code`. Inspect `ok`
 before using the result; a process that is still running does not imply success.
 
@@ -86,13 +103,13 @@ Restarting the process invalidates all old state versions.
 Start with a handshake:
 
 ```json
-{"id":"q-info","op":"protocol.info"}
+{"protocol_version":2,"id":"q-info","op":"protocol.info"}
 ```
 
 Save `result.scope_id`, then request the current state:
 
 ```json
-{"id":"q-state","scope_id":"<SCOPE>","op":"state.get"}
+{"protocol_version":2,"id":"q-state","scope_id":"<SCOPE>","op":"state.get"}
 ```
 
 For a stable state, inspect these fields under `result`:
@@ -107,7 +124,7 @@ For a stable state, inspect these fields under `result`:
 You can request just the action list separately:
 
 ```json
-{"id":"q-actions","scope_id":"<SCOPE>","op":"actions.list"}
+{"protocol_version":2,"id":"q-actions","scope_id":"<SCOPE>","op":"actions.list"}
 ```
 
 Actions are discovered at runtime. Do not invent control IDs, object references,
@@ -137,7 +154,7 @@ To click a menu or window button, copy its `control` from an advertised
 `ui.activate` action and send:
 
 ```json
-{"id":"a-menu","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.activate","control":"<CONTROL>","gesture":"click"}}
+{"protocol_version":2,"id":"a-menu","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.activate","control":"<CONTROL>","gesture":"click"}}
 ```
 
 Selecting a hero and pressing Start are separate requests. Reusing the first
@@ -160,7 +177,7 @@ Cells use integer map indices. For map width `w`, a coordinate `(x, y)` has inde
 Use `move.step` for a single directional input:
 
 ```json
-{"id":"a-step","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"move.step","direction":"north"}}
+{"protocol_version":2,"id":"a-step","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"move.step","direction":"north"}}
 ```
 
 Directions are `north`, `northeast`, `east`, `southeast`, `south`, `southwest`,
@@ -173,7 +190,7 @@ stairs, use `cell.select`. Here `123` is an illustrative target, not a fixed gam
 location:
 
 ```json
-{"id":"a-cell","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"cell.select","cell":123,"mode":"act"}}
+{"protocol_version":2,"id":"a-cell","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"cell.select","cell":123,"mode":"act"}}
 ```
 
 `act` follows the current original cell-selection behavior. It can start travel
@@ -193,7 +210,7 @@ Useful turn and rest actions, when advertised:
 For example:
 
 ```json
-{"id":"a-search","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"search"}}
+{"protocol_version":2,"id":"a-search","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"search"}}
 ```
 
 Read the new observation and public events after every action. The absence of a
@@ -206,7 +223,7 @@ and whether each item is currently available. To open one item's normal action
 menu, copy that item's current locator:
 
 ```json
-{"id":"a-item","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"inventory.open","locator":"<ITEM_LOCATOR>"}}
+{"protocol_version":2,"id":"a-item","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"inventory.open","locator":"<ITEM_LOCATOR>"}}
 ```
 
 `inventory.open` requires a locator and opens the selected item's use menu. To
@@ -229,7 +246,7 @@ After opening the item menu:
 For example, cancelling a current cell-target prompt is its own action:
 
 ```json
-{"id":"a-target-cancel","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"cell.cancel"}}
+{"protocol_version":2,"id":"a-target-cancel","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"cell.cancel"}}
 ```
 
 A potion, scroll, reward, spell, or resurrection may require several requests.
@@ -268,7 +285,7 @@ examples. Read the descriptor for the current control before choosing parameters
 For example, replace the text of an advertised text field:
 
 ```json
-{"id":"a-text","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.text","control":"<TEXT_CONTROL>","text":"example note","submit":false}}
+{"protocol_version":2,"id":"a-text","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.text","control":"<TEXT_CONTROL>","text":"example note","submit":false}}
 ```
 
 Observe the updated form, then activate its actual confirmation control. Respect
@@ -276,7 +293,7 @@ Observe the updated form, then activate its actual confirmation control. Respect
 For a described radial menu, choose its current zero-based option index:
 
 ```json
-{"id":"a-option","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.choose","control":"<RADIAL_CONTROL>","option":0,"alternate":false}}
+{"protocol_version":2,"id":"a-option","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.choose","control":"<RADIAL_CONTROL>","option":0,"alternate":false}}
 ```
 
 Binding actions configure the game's own key bindings; they do not send OS key
@@ -293,7 +310,7 @@ undiscovered spell, or skips its normal targeting and costs.
 To return through the current window's original Back behavior:
 
 ```json
-{"id":"a-back","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.back"}}
+{"protocol_version":2,"id":"a-back","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"ui.back"}}
 ```
 
 Back can itself produce another confirmation. Read the returned prompt instead
@@ -307,7 +324,7 @@ This is not a request to retry the operation. Keep its original scope and ID.
 Query it using a new request ID:
 
 ```json
-{"id":"q-progress","scope_id":"<ORIGINAL_SCOPE>","op":"request.get","args":{"target_id":"<ORIGINAL_ACTION_ID>"}}
+{"protocol_version":2,"id":"q-progress","scope_id":"<ORIGINAL_SCOPE>","op":"request.get","args":{"target_id":"<ORIGINAL_ACTION_ID>"}}
 ```
 
 The query's own outer status describes the query, not completion of the original
@@ -326,7 +343,7 @@ At an interruptible travel or rest boundary, the live state can instead have
 activity version and `target_id`:
 
 ```json
-{"id":"a-stop","scope_id":"<SCOPE>","op":"action.execute","state_version":"<ACTIVITY_STATE_VERSION>","args":{"action":"action.cancel","target_id":"<ORIGINAL_ACTION_ID>"}}
+{"protocol_version":2,"id":"a-stop","scope_id":"<SCOPE>","op":"action.execute","state_version":"<ACTIVITY_STATE_VERSION>","args":{"action":"action.cancel","target_id":"<ORIGINAL_ACTION_ID>"}}
 ```
 
 This is different from cancelling a cell selector or closing a window. If no
@@ -342,13 +359,13 @@ for the next request. A new ID does not make an old state version valid.
 Read new public events:
 
 ```json
-{"id":"q-events","scope_id":"<SCOPE>","op":"events.read","args":{"after":0,"limit":50}}
+{"protocol_version":2,"id":"q-events","scope_id":"<SCOPE>","op":"events.read","args":{"after":0,"limit":50}}
 ```
 
 Read request/exchange metadata:
 
 ```json
-{"id":"q-history","scope_id":"<SCOPE>","op":"history.list","args":{"after":0,"limit":50}}
+{"protocol_version":2,"id":"q-history","scope_id":"<SCOPE>","op":"history.list","args":{"after":0,"limit":50}}
 ```
 
 Both operations return an array in `result`. `after` is an exclusive sequence
@@ -368,7 +385,7 @@ Historical snapshots must not replace the current scope or state version.
 | `SCOPE_MISMATCH`, `UNKNOWN_SCOPE` | Discover the active scope with `protocol.info`; retain old scopes only for history. |
 | `BUSY` | Query the pending request or use an advertised activity cancellation. |
 | `ACTION_UNAVAILABLE`, `INVALID_ARGUMENT` | Check current actions, parameter types, and prompt context. |
-| `PUBLIC_TEXT_UNAVAILABLE` | The current displayed text cannot be safely exposed in English; inspect the public error and stop that operation. |
+| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Send the explicit integer `protocol_version: 2`; older protocol envelopes are rejected before game observation or dispatch. |
 | `EXECUTION_UNKNOWN`, `EXECUTION_UNCERTAIN` | Do not assume success or replay the action. Inspect its recorded result and reobserve after recovery. |
 | `AUDIT_UNAVAILABLE` | The audit store failed; the session stops accepting game operations. |
 
@@ -382,7 +399,7 @@ hidden information from internal files.
 At a ready dungeon boundary, save with `game.save`:
 
 ```json
-{"id":"a-save","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"game.save"}}
+{"protocol_version":2,"id":"a-save","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"game.save"}}
 ```
 
 Use the action response's `result.persistence.saves_during_request` to inspect
@@ -394,7 +411,7 @@ To exit, first resolve open prompts through their original controls until
 `app.quit` is available, then send:
 
 ```json
-{"id":"a-quit","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"app.quit"}}
+{"protocol_version":2,"id":"a-quit","scope_id":"<SCOPE>","op":"action.execute","state_version":"<STATE_VERSION>","args":{"action":"app.quit"}}
 ```
 
 Read its response and wait for process exit. Closing stdin requests lifecycle
@@ -460,7 +477,7 @@ process = subprocess.Popen(
 )
 
 def request(op, *, scope=None, version=None, args=None):
-    message = {"id": str(uuid.uuid4()), "op": op}
+    message = {"protocol_version":2,"id": str(uuid.uuid4()), "op": op}
     if scope is not None:
         message["scope_id"] = scope
     if version is not None:

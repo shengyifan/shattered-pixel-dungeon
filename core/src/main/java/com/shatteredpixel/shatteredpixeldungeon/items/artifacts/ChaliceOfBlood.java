@@ -215,15 +215,15 @@ public class ChaliceOfBlood extends Artifact {
 		String desc = super.desc();
 
 		if (isEquipped (Dungeon.hero)){
-			desc += "\n\n";
+			desc = Messages.concat(desc, Messages.literal("\n\n"));
 			if (cursed)
-				desc += Messages.get(this, "desc_cursed");
+				desc = Messages.concat(desc, Messages.get(this, "desc_cursed"));
 			else if (level() == 0)
-				desc += Messages.get(this, "desc_1");
+				desc = Messages.concat(desc, Messages.get(this, "desc_1"));
 			else if (level() < levelCap)
-				desc += Messages.get(this, "desc_2");
+				desc = Messages.concat(desc, Messages.get(this, "desc_2"));
 			else
-				desc += Messages.get(this, "desc_3");
+				desc = Messages.concat(desc, Messages.get(this, "desc_3"));
 		}
 
 		return desc;

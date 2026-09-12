@@ -53,7 +53,7 @@ public class WndMonkAbilities extends Window {
 		pos = title.bottom() + 3*MARGIN;
 
 		for (MonkEnergy.MonkAbility abil : MonkEnergy.MonkAbility.abilities) {
-			String text = "_" + Messages.titleCase(abil.name()) + " " + Messages.get(this, "energycost", abil.energyCost()) + ":_ " + abil.desc();
+			String text = Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(abil.name())), Messages.literal(" ")), Messages.get(this, "energycost", abil.energyCost())), Messages.literal(":_ ")), abil.desc());
 			RedButton moveBtn = new RedButton(text, 6){
 				@Override
 				protected void onClick() {

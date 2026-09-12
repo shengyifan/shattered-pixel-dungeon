@@ -315,7 +315,7 @@ public class Dart extends MissileWeapon {
 			
 			GameScene.show(new WndOptions( new ItemSprite(item),
 					Messages.titleCase(item.name()),
-					Messages.get(Dart.class, "tip_desc", tipResult.name()) + "\n\n" + tipResult.desc(),
+					Messages.concat(Messages.concat(Messages.get(Dart.class, "tip_desc", tipResult.name()), Messages.literal("\n\n")), tipResult.desc()),
 					options){
 				
 				@Override

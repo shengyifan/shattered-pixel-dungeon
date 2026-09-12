@@ -485,12 +485,12 @@ public class Notes {
 
 		@Override
 		public String title() {
-			return title;
+			return Messages.userText(title);
 		}
 
 		@Override
 		public String desc() {
-			return body;
+			return Messages.userText(body);
 		}
 
 		@Override

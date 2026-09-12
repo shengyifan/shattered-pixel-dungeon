@@ -40,6 +40,7 @@ public class Gizmo {
 	}
 	
 	public void destroy() {
+		Game.observer.onTextReleased(this);
 		parent = null;
 	}
 	
@@ -53,6 +54,7 @@ public class Gizmo {
 	}
 	
 	public void kill() {
+		Game.observer.onTextReleased(this);
 		alive = false;
 		exists = false;
 	}

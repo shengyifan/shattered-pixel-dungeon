@@ -82,9 +82,8 @@ public final class PlayerObservation {
                                 "custom_terrain_descriptions", map("action", "cell.select", "mode", "examine")),
                         "inspection_policy", "Use current ui controls and their action descriptors; details are read from displayed windows"));
         if (hero == null || !"game".equals(scene)) return out;
-        // Only this pure projection is localized. Never carry the override into original
-        // input callbacks, actor work, UI construction or the internal model capture.
-        return Messages.withLanguage(Languages.ENGLISH, () -> {
+        // Preserve the GUI's selected display branch. Frozen sources are rendered later.
+        {
             out.put("hero", hero(hero));
             out.put("inventory", inventory(hero));
             if (level != null && level.map != null) {
@@ -92,7 +91,7 @@ public final class PlayerObservation {
                 out.put("visible_entities", entities(hero, level));
             }
             return out;
-        });
+        }
     }
 
     private static Map<String, Object> hero(Hero hero) {
@@ -192,7 +191,7 @@ public final class PlayerObservation {
     }
 
     public static Map<String, Object> item(Item item, String locator, boolean equipped) {
-        return Messages.withLanguage(Languages.ENGLISH, () -> itemInCurrentLanguage(item, locator, equipped));
+        return itemInCurrentLanguage(item, locator, equipped);
     }
 
     /** Minimal knowledge about the description already composed by an item-info window. */
@@ -233,7 +232,7 @@ public final class PlayerObservation {
 
     /** Shared with the UI bridge for item hover labels that must not populate game caches. */
     public static String displayItemName(Item item) {
-        return Messages.withLanguage(Languages.ENGLISH, () -> itemNameInCurrentLanguage(item));
+        return itemNameInCurrentLanguage(item);
     }
 
     private static String itemNameInCurrentLanguage(Item item) {

@@ -50,7 +50,7 @@ public class LifeLinkSpell extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", 4 + 2*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK), 30 + 5*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK)) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.concat(Messages.concat(Messages.get(this, "desc", 4 + 2*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK), 30 + 5*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK)), Messages.literal("\n\n")), Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero)));
 	}
 
 	@Override

@@ -259,11 +259,11 @@ public class AlchemyScene extends PixelScene {
 							}
 							String info = "";
 							if (ControllerHandler.controllerActive){
-								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + ": " + Messages.get(Toolbar.class, "container_select") + "\n";
-								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + ": " + Messages.get(Toolbar.class, "container_cancel");
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "container_select")), Messages.literal("\n")));
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "container_cancel")));
 							} else {
-								info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + ": " + Messages.get(Toolbar.class, "container_select") + "\n";
-								info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + ": " + Messages.get(Toolbar.class, "container_cancel");
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()), Messages.literal(": ")), Messages.get(Toolbar.class, "container_select")), Messages.literal("\n")));
+								info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false))), Messages.literal(": ")), Messages.get(Toolbar.class, "container_cancel")));
 							}
 
 							Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, "container_prompt"), info, names, images){
@@ -292,11 +292,11 @@ public class AlchemyScene extends PixelScene {
 
 									String info = "";
 									if (ControllerHandler.controllerActive){
-										info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true)) + ": " + Messages.get(Toolbar.class, "item_select") + "\n";
-										info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true)) + ": " + Messages.get(Toolbar.class, "item_cancel");
+										info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.LEFT_CLICK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "item_select")), Messages.literal("\n")));
+										info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, true))), Messages.literal(": ")), Messages.get(Toolbar.class, "item_cancel")));
 									} else {
-										info += Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()) + ": " + Messages.get(Toolbar.class, "item_select") + "\n";
-										info += KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false)) + ": " + Messages.get(Toolbar.class, "item_cancel");
+										info = Messages.concat(info, Messages.concat(Messages.concat(Messages.concat(Messages.get(WndKeyBindings.class, SPDAction.LEFT_CLICK.name()), Messages.literal(": ")), Messages.get(Toolbar.class, "item_select")), Messages.literal("\n")));
+										info = Messages.concat(info, Messages.concat(Messages.concat(Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(GameAction.BACK, false))), Messages.literal(": ")), Messages.get(Toolbar.class, "item_cancel")));
 									}
 
 									Game.scene().addToFront(new RadialMenu(Messages.get(Toolbar.class, "item_prompt"), info, itemNames, itemIcons){
@@ -426,9 +426,9 @@ public class AlchemyScene extends PixelScene {
 				Math.max(0, h-pos));
 		lowerBubbles.pour(Speck.factory( Speck.BUBBLE ), 0.1f );
 
-		String energyText = Messages.get(AlchemyScene.class, "energy") + " " + Dungeon.energy;
+		String energyText = Messages.concat(Messages.concat(Messages.get(AlchemyScene.class, "energy"), Messages.literal(" ")), Dungeon.energy);
 		if (toolkit != null){
-			energyText += "+" + toolkit.availableEnergy();
+			energyText = Messages.concat(energyText, Messages.concat(Messages.literal("+"), toolkit.availableEnergy()));
 		}
 
 		energyLeft = PixelScene.renderTextBlock(energyText, 9);
@@ -699,9 +699,9 @@ public class AlchemyScene extends PixelScene {
 			Catalog.countUses(EnergyCrystal.class, cost);
 			Dungeon.energy -= cost;
 
-			String energyText = Messages.get(AlchemyScene.class, "energy") + " " + Dungeon.energy;
+			String energyText = Messages.concat(Messages.concat(Messages.get(AlchemyScene.class, "energy"), Messages.literal(" ")), Dungeon.energy);
 			if (toolkit != null){
-				energyText += "+" + toolkit.availableEnergy();
+				energyText = Messages.concat(energyText, Messages.concat(Messages.literal("+"), toolkit.availableEnergy()));
 			}
 			energyLeft.text(energyText);
 			energyLeft.setPos(
@@ -875,9 +875,9 @@ public class AlchemyScene extends PixelScene {
 	}
 
 	public void createEnergy(){
-		String energyText = Messages.get(AlchemyScene.class, "energy") + " " + Dungeon.energy;
+		String energyText = Messages.concat(Messages.concat(Messages.get(AlchemyScene.class, "energy"), Messages.literal(" ")), Dungeon.energy);
 		if (toolkit != null){
-			energyText += "+" + toolkit.availableEnergy();
+			energyText = Messages.concat(energyText, Messages.concat(Messages.literal("+"), toolkit.availableEnergy()));
 		}
 		energyLeft.text(energyText);
 		energyLeft.setPos(
@@ -1151,7 +1151,7 @@ public class AlchemyScene extends PixelScene {
 				costText.visible = false;
 			} else {
 				costText.visible = true;
-				costText.text(Messages.get(AlchemyScene.class, "energy") + " " + cost);
+				costText.text(Messages.concat(Messages.concat(Messages.get(AlchemyScene.class, "energy"), Messages.literal(" ")), cost));
 			}
 
 			layout();

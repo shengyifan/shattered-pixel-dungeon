@@ -80,7 +80,7 @@ def run_case(root,classpath,agent,template,runtime_id,stage):
         scope=client.scope
         request_id="crash-"+uuid.uuid4().hex
         before_files={str(p.relative_to(profile)):p.read_bytes() for p in profile.glob("game*/*.dat")}
-        request={"id":request_id,"scope_id":scope,"op":"action.execute","state_version":state["state_version"],"args":action}
+        request={"protocol_version": 2, "id":request_id,"scope_id":scope,"op":"action.execute","state_version":state["state_version"],"args":action}
         write_json(profile/"target-request.json",request)
         (profile/"barrier.armed").write_text(request_id)
         target_result={}

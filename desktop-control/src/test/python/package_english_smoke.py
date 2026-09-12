@@ -18,6 +18,7 @@ import zipfile
 
 from english_protocol_smoke import activate, assert_english, checked_state, english_inventory, execute, public_events, stop
 from machine_smoke import Client, reach_game, finish_tutorial
+from language_matrix_smoke import validate as validate_sources
 from package_smoke import receive
 from test_ui import configure_test_ui
 
@@ -62,7 +63,7 @@ def verify_bundle(bundle, expected_cli):
     plist = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
     assert plist["CFBundleExecutable"] == "Shattered Pixel Dungeon", plist
     catalogs = []
-    forbidden = ("FixtureLauncher", "UiSceneAssertions", "EnglishCorpusProbe", "TransitionScenarioFixtures",
+    forbidden = ("DisplayedTextEnglish", "PublicDialogSignatures", "FixtureLauncher", "UiSceneAssertions", "EnglishCorpusProbe", "TransitionScenarioFixtures",
                  "PerformanceLauncher", "EngineBoundaryAgent", "GameLogFixtureAgent", "ResurrectionResumeAgent")
     for jar in (bundle / "Contents/app").rglob("*.jar"):
         with zipfile.ZipFile(jar) as archive:
@@ -114,13 +115,13 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             result = receive(process)
             assert_english(result)
             return result
-        hello = exchange(b'{"id":"package-info","op":"protocol.info"}\r\n')
+        hello = exchange(b'{"protocol_version":2,"id":"package-info","op":"protocol.info"}\r\n')
         assert hello["ok"] and hello["result"]["build_id"] == expected_build
         assert hello["result"]["cli_version"] == expected_cli
         scope = hello["result"]["scope_id"]
-        invalid = exchange(b'{"id":"package-invalid-encoding","op":"state.get","x":"\xff"}\n')
+        invalid = exchange(b'{"protocol_version":2,"id":"package-invalid-encoding","op":"state.get","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = json.dumps({"id": "package-state", "scope_id": scope, "op": "state.get"}).encode() + b"\n"
+        query = json.dumps({"protocol_version": 2, "id": "package-state", "scope_id": scope, "op": "state.get"}).encode() + b"\n"
         observed = exchange(query)
         assert observed["ok"], observed
         mode = display(observed["result"])
@@ -137,7 +138,7 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             process.terminate()
             process.wait(timeout=10)
         stderr.close()
-    final = json.dumps({"id": "package-final-frame", "scope_id": scope, "op": "state.get"}).encode()
+    final = json.dumps({"protocol_version": 2, "id": "package-final-frame", "scope_id": scope, "op": "state.get"}).encode()
     restarted = subprocess.run(command, input=final, capture_output=True, env=env, timeout=45)
     lines = restarted.stdout.splitlines()
     assert restarted.returncode == 0 and len(lines) == 1, (restarted.returncode, restarted.stderr, lines)
@@ -188,6 +189,9 @@ class PackageClient(Client):
         self.trace.write(json.dumps({"test_fixture": True, "op": op, "args": args, "response": response}, ensure_ascii=False) + "\n")
         self.trace.flush()
         assert_english(response)
+        if response.get("ok"):
+            failures=validate_sources(response.get("result"))
+            assert not failures, {"source_failures":failures[:20],"op":op}
         self.responses.append((op, response))
         state = response.get("result", {})
         if response.get("ok") and isinstance(state, dict) and "observation" in state:

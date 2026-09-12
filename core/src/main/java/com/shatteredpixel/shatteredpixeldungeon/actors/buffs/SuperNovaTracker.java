@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -75,7 +77,7 @@ public class SuperNovaTracker extends Buff {
 
 		if (turnsLeft > 0){
 
-			FloatingText.show(p.x, p.y, pos, turnsLeft + "...", CharSprite.WARNING);
+			FloatingText.show(p.x, p.y, pos, Messages.concat(turnsLeft, Messages.literal("...")), CharSprite.WARNING);
 			halo.radius(5 + 2*(10-turnsLeft));
 			halo.alpha(1.25f - 0.075f*turnsLeft);
 			halo.point(p.x, p.y);

@@ -145,13 +145,13 @@ public class SummonElemental extends Spell {
 	public String desc() {
 		String desc = super.desc();
 
-		desc += "\n\n";
+		desc = Messages.concat(desc, Messages.literal("\n\n"));
 
-		if (summonClass == Elemental.AllyNewBornElemental.class)    desc += Messages.get(this, "desc_newborn");
-		if (summonClass == Elemental.FireElemental.class)           desc += Messages.get(this, "desc_fire");
-		if (summonClass == Elemental.FrostElemental.class)          desc += Messages.get(this, "desc_frost");
-		if (summonClass == Elemental.ShockElemental.class)          desc += Messages.get(this, "desc_shock");
-		if (summonClass == Elemental.ChaosElemental.class)          desc += Messages.get(this, "desc_chaos");
+		if (summonClass == Elemental.AllyNewBornElemental.class)    desc = Messages.concat(desc, Messages.get(this, "desc_newborn"));
+		if (summonClass == Elemental.FireElemental.class)           desc = Messages.concat(desc, Messages.get(this, "desc_fire"));
+		if (summonClass == Elemental.FrostElemental.class)          desc = Messages.concat(desc, Messages.get(this, "desc_frost"));
+		if (summonClass == Elemental.ShockElemental.class)          desc = Messages.concat(desc, Messages.get(this, "desc_shock"));
+		if (summonClass == Elemental.ChaosElemental.class)          desc = Messages.concat(desc, Messages.get(this, "desc_chaos"));
 
 		return desc;
 	}

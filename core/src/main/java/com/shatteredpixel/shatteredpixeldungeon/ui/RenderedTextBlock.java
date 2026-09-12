@@ -68,6 +68,7 @@ public class RenderedTextBlock extends Component {
 
 	public void text(String text){
 		this.text = text;
+		Game.observer.onTextBound(this, text);
 
 		if (text != null && !text.equals("")) {
 			
@@ -79,11 +80,12 @@ public class RenderedTextBlock extends Component {
 
 	//for manual text block splitting, a space between each word is assumed
 	public void tokens(String... words){
-		StringBuilder fullText = new StringBuilder();
+		String fullText = "";
 		for (String word : words) {
-			fullText.append(word);
+			fullText = Messages.concat(fullText, word);
 		}
-		text = fullText.toString();
+		text = fullText;
+		Game.observer.onTextBound(this, text);
 
 		tokens = words;
 		build();
@@ -116,12 +118,17 @@ public class RenderedTextBlock extends Component {
 			boolean shown = true;
 			Camera camera = null;
 			for (Gizmo current = word; current != null; current = current.parent) {
-				if (!current.exists || !current.alive || !current.visible || !current.active) shown = false;
+				// Group.draw ignores update/interaction activity: disabled labels are still drawn.
+				if (!current.exists || !current.visible) shown = false;
 				if (camera == null && current.camera != null) camera = current.camera;
 			}
 			// Calling Visual.isVisible()/camera() here would populate camera caches during a query.
 			float width = word.width(), height = word.height();
-			boolean intersects = shown && camera != null && camera.scroll != null && width > 0 && height > 0
+			float alpha = word.am + word.aa;
+			// A positive layout rectangle alone does not draw letters: RenderedText.draw
+			// needs a font, and zero effective shader opacity cannot expose its contents.
+			boolean paintable = word.hasRenderableText() && Float.isFinite(alpha) && alpha > 0;
+			boolean intersects = shown && paintable && camera != null && camera.scroll != null && width > 0 && height > 0
 					&& word.angle == 0 && word.origin.x == 0 && word.origin.y == 0
 					&& word.x < camera.scroll.x + camera.width && word.x + width > camera.scroll.x
 					&& word.y < camera.scroll.y + camera.height && word.y + height > camera.scroll.y;
@@ -140,6 +147,8 @@ public class RenderedTextBlock extends Component {
 		}
 		// GameLog disables markup; preserve its original spacing when every rendered word fits.
 		String shownText = !clipped && !highlightingEnabled && text != null ? text : result.toString();
+		if (!clipped && text != null && shownText != text)
+			shownText = Game.observer.onTextOperation("displayed", shownText, text, highlightingEnabled);
 		return new VisibleText(shownText, clipped, visible);
 	}
 

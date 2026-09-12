@@ -70,6 +70,6 @@ public class Shortsword extends MeleeWeapon {
 
 	public String upgradeAbilityStat(int level){
 		int dmgBoost = 4 + level;
-		return augment.damageFactor(min(level)+dmgBoost) + "-" + augment.damageFactor(max(level)+dmgBoost);
+		return Messages.concat(Messages.concat(augment.damageFactor(min(level)+dmgBoost), Messages.literal("-")), augment.damageFactor(max(level)+dmgBoost));
 	}
 }

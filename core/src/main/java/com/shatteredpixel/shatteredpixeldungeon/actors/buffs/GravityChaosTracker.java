@@ -151,9 +151,9 @@ public class GravityChaosTracker extends Buff {
 	public String desc() {
 		String desc = Messages.get(this, "desc_intro");
 		if (positiveOnly){
-			desc += " " + Messages.get(this, "desc_positive");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "desc_positive")));
 		}
-		desc += "\n\n" + Messages.get(this, "desc_duration");
+		desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_duration")));
 		return desc;
 	}
 

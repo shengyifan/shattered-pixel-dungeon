@@ -278,15 +278,15 @@ public class WndKeyBindings extends Window {
 			origKey2 = key2 = keys.isEmpty() ? 0 : keys.remove(0);
 			origKey3 = key3 = keys.isEmpty() ? 0 : keys.remove(0);
 
-			key1Name = PixelScene.renderTextBlock( KeyBindings.getKeyName(key1), 6 );
+			key1Name = PixelScene.renderTextBlock( Messages.externalText(KeyBindings.getKeyName(key1)), 6 );
 			if (key1 == 0) key1Name.hardlight(UNBOUND);
 			add(key1Name);
 
-			key2Name = PixelScene.renderTextBlock( KeyBindings.getKeyName(key2), 6 );
+			key2Name = PixelScene.renderTextBlock( Messages.externalText(KeyBindings.getKeyName(key2)), 6 );
 			if (key2 == 0) key2Name.hardlight(UNBOUND);
 			add(key2Name);
 
-			key3Name = PixelScene.renderTextBlock( KeyBindings.getKeyName(key3), 6 );
+			key3Name = PixelScene.renderTextBlock( Messages.externalText(KeyBindings.getKeyName(key3)), 6 );
 			if (key3 == 0) key3Name.hardlight(UNBOUND);
 			add(key3Name);
 
@@ -317,15 +317,15 @@ public class WndKeyBindings extends Window {
 			key2 = second;
 			key3 = third;
 
-			key1Name.text(KeyBindings.getKeyName(key1));
+			key1Name.text(Messages.externalText(KeyBindings.getKeyName(key1)));
 			if (key1 != origKey1) key1Name.hardlight( key1 == 0 ? UNBOUND_CHANGED : CHANGED);
 			else                  key1Name.hardlight( key1 == 0 ? UNBOUND : DEFAULT);
 
-			key2Name.text(KeyBindings.getKeyName(key2));
+			key2Name.text(Messages.externalText(KeyBindings.getKeyName(key2)));
 			if (key2 != origKey2) key2Name.hardlight( key2 == 0 ? UNBOUND_CHANGED : CHANGED);
 			else                  key2Name.hardlight( key2 == 0 ? UNBOUND : DEFAULT);
 
-			key3Name.text(KeyBindings.getKeyName(key3));
+			key3Name.text(Messages.externalText(KeyBindings.getKeyName(key3)));
 			if (key3 != origKey3) key3Name.hardlight( key3 == 0 ? UNBOUND_CHANGED : CHANGED);
 			else                  key3Name.hardlight( key3 == 0 ? UNBOUND : DEFAULT);
 
@@ -421,13 +421,13 @@ public class WndKeyBindings extends Window {
 			else if (keyAssigning == 3) descKey = "desc_third";
 			RenderedTextBlock desc = PixelScene.renderTextBlock( Messages.get(this, descKey,
 						Messages.get(WndKeyBindings.class, action.name()),
-						KeyBindings.getKeyName(curKeyCode)), 6 );
+						Messages.externalText(KeyBindings.getKeyName(curKeyCode))), 6 );
 			desc.maxWidth(WIDTH);
 			desc.setRect(0, 0, WIDTH, desc.height());
 			add(desc);
 
 			RenderedTextBlock curBind;
-			curBind = PixelScene.renderTextBlock(Messages.get(this, "desc_current", KeyBindings.getKeyName(curKeyCode)), 6);
+			curBind = PixelScene.renderTextBlock(Messages.get(this, "desc_current", Messages.externalText(KeyBindings.getKeyName(curKeyCode))), 6);
 			curBind.maxWidth(WIDTH);
 			curBind.setRect((WIDTH - curBind.width())/2, desc.bottom()+6, WIDTH, curBind.height());
 			add(curBind);
@@ -555,7 +555,7 @@ public class WndKeyBindings extends Window {
 		}
 
 		private void proposeKey(int code) {
-				changedKey.text(Messages.get(this, "changed_bind", KeyBindings.getKeyName(code)));
+				changedKey.text(Messages.get(this, "changed_bind", Messages.externalText(KeyBindings.getKeyName(code))));
 				changedKey.setPos((WIDTH - changedKey.width())/2, changedKey.top());
 
 				changedKeyCode = code;

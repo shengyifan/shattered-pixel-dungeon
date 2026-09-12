@@ -73,14 +73,14 @@ class FixtureSmokeRunnerTest(unittest.TestCase):
     def test_gui_postcondition_is_actual_same_version_language_and_window_mode(self):
         with tempfile.TemporaryDirectory() as directory:
             profile = Path(directory)
-            state = {"scope_id": "run:test", "state_version": "v1", "observation": {"scene": "game"}}
+            state = {"scope_id": "run:test", "state_version": "v1", "observation": {"scene": "game", "ui": {"display": {"language": "zh", "fullscreen": False}}}}
             response = {"id": "q2", "ok": True, "result": state}
-            for language, fullscreen, accepted in [("CHI_SMPL", False, True), ("ENGLISH", False, False), ("CHI_SMPL", True, False)]:
+            for language, code, fullscreen, accepted in [("CHI_SMPL", "zh", False, True), ("ENGLISH", "en", False, False), ("CHI_SMPL", "zh", True, False)]:
                 with self.subTest(language=language, fullscreen=fullscreen):
                     (profile / "ui-assertions.jsonl").write_text(json.dumps({"scope_id": "run:test", "state_version": "v1",
-                                                                         "language": language, "fullscreen": fullscreen}) + "\n")
+                                                                         "language": language, "language_code": code, "fullscreen": fullscreen}) + "\n")
                     client = self.client(profile, verify_gui=True)
-                    with patch.object(runner.Client, "request", return_value=response):
+                    with patch.dict(runner.os.environ, {"SPDCTL_TEST_LANGUAGE": "zh"}), patch.object(runner.Client, "request", return_value=response):
                         if accepted:
                             self.assertEqual(response, client.request("state.get"))
                             self.assertEqual(1, client.gui_postconditions_checked)

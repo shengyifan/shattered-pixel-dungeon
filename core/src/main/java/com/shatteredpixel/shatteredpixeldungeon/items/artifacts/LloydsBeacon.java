@@ -301,7 +301,7 @@ public class LloydsBeacon extends Artifact {
 	public String desc() {
 		String desc = super.desc();
 		if (returnDepth != -1){
-			desc += "\n\n" + Messages.get(this, "desc_set", returnDepth);
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_set", returnDepth)));
 		}
 		return desc;
 	}

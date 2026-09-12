@@ -228,10 +228,10 @@ public class SaveReceiptSessionTest {
             assertFalse(h.last().containsKey("result"));
             assertEquals(starts, h.game.starts);
             assertEquals(observations, h.game.observations);
-            h.send(map("id", "bad-args", "scope_id", SCOPE, "op", "action.execute", "state_version", "v1", "args", Collections.emptyList()));
+            h.send(map("protocol_version", 2, "id", "bad-args", "scope_id", SCOPE, "op", "action.execute", "state_version", "v1", "args", Collections.emptyList()));
             assertEquals("INVALID_REQUEST", error(h.last()));
             assertFalse(h.last().containsKey("result"));
-            h.send(map("id", "stale-before-dispatch", "scope_id", SCOPE, "op", "action.execute", "state_version", "old-version", "args", map("action", "wait")));
+            h.send(map("protocol_version", 2, "id", "stale-before-dispatch", "scope_id", SCOPE, "op", "action.execute", "state_version", "old-version", "args", map("action", "wait")));
             assertEquals("STALE_STATE", error(h.last()));
             assertFalse(h.last().containsKey("result"));
             h.game.onStart = ignored -> {};
@@ -245,7 +245,7 @@ public class SaveReceiptSessionTest {
     @Test public void currentSessionAttributionDoesNotPullPriorSessionReceiptsIntoANewAction() throws Exception {
         Path profile = temporary.newFolder().toPath();
         try (AuditStore old = new AuditStore(profile)) {
-            old.beginSession(UUID.randomUUID().toString());
+            old.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.2.0.0",2);
             old.ensureScope(SCOPE, "run", "receipt-fixture");
             old.recordSave("previous-session-save", SCOPE, 1, true, TIME, SCOPE, "future-id", null);
             old.endSession("CLOSED", "fixture complete");
@@ -353,13 +353,13 @@ public class SaveReceiptSessionTest {
         final MachineSession session;
         Harness(Path path) throws Exception {
             store = new AuditStore(path);
-            store.beginSession(UUID.randomUUID().toString());
+            store.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.2.0.0",2);
             store.ensureScope(SCOPE, "run", "receipt-fixture");
             session = new MachineSession(store, game, new PrintStream(output, true, "UTF-8"), 30);
         }
         void action(String id, String action) throws Exception { query(id, "action.execute", map("action", action)); }
         void query(String id, String op, Map<String, Object> args) throws Exception {
-            send(map("scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args));
+            send(map("protocol_version", 2, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args));
         }
         void send(Map<String, Object> request) throws Exception { session.accept(JsonCodec.encode(request)).get(5, TimeUnit.SECONDS); }
         List<String> lines() { List<String> lines = new ArrayList<>(); for (String line : output.text().split("\\R")) if (!line.isEmpty()) lines.add(line); return lines; }

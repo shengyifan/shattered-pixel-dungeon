@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditStore;
+import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditException;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.GameController;
 import com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher;
 import com.shatteredpixel.shatteredpixeldungeon.desktop.ProfileLock;
@@ -28,12 +29,13 @@ public final class SpdctlLauncher {
             return;
         }
         if(args.length==1&&args[0].equals("--version")){
-            protocol.println("CLI.1.0.1 (protocol 1, game 3.3.8)");return;
+            protocol.println("CLI.2.0.0 (protocol 2, game 3.3.8)");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
-                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI")
+                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v2")
                 :Paths.get(System.getenv("SPDCTL_PROFILE"));
         int exitCode=0;
+        boolean profileAccepted=false;
         try{
             boolean machine=false;
             if(args.length==0||!args[0].equals("run"))throw new IllegalArgumentException("Expected run --machine");
@@ -43,14 +45,21 @@ public final class SpdctlLauncher {
                 else throw new IllegalArgumentException("Unknown launcher argument");
             }
             if(!machine||!profile.isAbsolute())throw new IllegalArgumentException("Machine mode and absolute profile path required");
+            // Refuse old or incomplete audit pairs before a profile lock or emergency file can touch them.
+            AuditStore.preflight(profile.resolve("audit"));
             Files.createDirectories(profile);profile=profile.toRealPath();
             System.setProperty("Specification-Title","Shattered Pixel Dungeon");
             System.setProperty("Implementation-Title","com.shatteredpixel.shatteredpixeldungeon");
             System.setProperty("Specification-Version","3.3.8");
             System.setProperty("Implementation-Version","896");
             try(ProfileLock lock=new ProfileLock(profile);AuditStore store=new AuditStore(profile.resolve("audit"))){
+                profileAccepted=true;
+                Files.createDirectories(profile.resolve("audit").resolve("emergency"));
                 store.recoverInterrupted();
-                store.beginSession(java.util.UUID.randomUUID().toString());
+                store.beginSession(java.util.UUID.randomUUID().toString(),
+                        (String)com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
+                        (String)com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("cli_version"),
+                        com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest.PROTOCOL_VERSION);
                 AtomicReference<MachineSession> ref=new AtomicReference<>();
                 java.util.concurrent.atomic.AtomicBoolean uncaughtRuntimeFailure=new java.util.concurrent.atomic.AtomicBoolean();
                 boolean loopReturned=false;
@@ -71,7 +80,7 @@ public final class SpdctlLauncher {
                     System.setErr(new PrintStream(new DiagnosticOutput(session,"stderr"),true,StandardCharsets.UTF_8));
                     Thread reader=new Thread(()->session.read(System.in),"SPD Machine Input");reader.setDaemon(true);reader.start();
                     try{DesktopLauncher.launch(new String[0],profile,(thread,error)->{uncaughtRuntimeFailure.set(true);session.recordException(error);game.exitNow();},true);loopReturned=true;}
-                    catch(Throwable error){session.recordException(error);throw error;}
+                    catch(Throwable error){session.recordRuntimeFailure(error);game.runtimeFailed(error);throw error;}
                     finally{Game.observer=com.watabou.noosa.RuntimeObserver.NONE;}
                 }
                 } catch(Throwable failure) {
@@ -85,11 +94,13 @@ public final class SpdctlLauncher {
                 }
             }
         }catch(Throwable failure){
-            try{
+            if(profileAccepted)try{
                 Path emergency=profile.resolve("audit").resolve("emergency");Files.createDirectories(emergency);
                 try(PrintWriter writer=new PrintWriter(Files.newBufferedWriter(emergency.resolve("startup-"+System.currentTimeMillis()+".log"),StandardCharsets.UTF_8))){failure.printStackTrace(writer);}
             }catch(Throwable ignored){}
-            diagnostics.println("spdctl: STARTUP_FAILED (details recorded in the profile when possible)");
+            diagnostics.println(failure instanceof AuditException
+                    ? "spdctl: " + ((AuditException)failure).code + " (" + failure.getMessage() + ")"
+                    : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI 2 profile)");
             System.exit(1);
         }
         if(exitCode!=0)System.exit(exitCode);

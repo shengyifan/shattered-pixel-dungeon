@@ -485,10 +485,10 @@ public class Item implements Bundlable {
 		String name = name();
 
 		if (visiblyUpgraded() != 0)
-			name = Messages.format( TXT_TO_STRING_LVL, name, visiblyUpgraded()  );
+			name = Messages.format( Messages.literal(TXT_TO_STRING_LVL), name, visiblyUpgraded()  );
 
 		if (quantity > 1)
-			name = Messages.format( TXT_TO_STRING_X, name, quantity );
+			name = Messages.format( Messages.literal(TXT_TO_STRING_X), name, quantity );
 
 		return name;
 
@@ -518,12 +518,12 @@ public class Item implements Bundlable {
 			Notes.CustomRecord note = Notes.findCustomRecord(customNoteID);
 			if (note != null) {
 				//we swap underscore(0x5F) with low macron(0x2CD) here to avoid highlighting in the item window
-				return Messages.get(this, "custom_note", note.title().replace('_', 'ˍ')) + "\n\n" + desc();
+				return Messages.concat(Messages.concat(Messages.get(this, "custom_note", Messages.replace(note.title(), '_', 'ˍ')), Messages.literal("\n\n")), desc());
 			} else {
 				note = Notes.findCustomRecord(getClass());
 				if (note != null) {
 					//we swap underscore(0x5F) with low macron(0x2CD) here to avoid highlighting in the item window
-					return Messages.get(this, "custom_note_type", note.title().replace('_', 'ˍ')) + "\n\n" + desc();
+					return Messages.concat(Messages.concat(Messages.get(this, "custom_note_type", Messages.replace(note.title(), '_', 'ˍ')), Messages.literal("\n\n")), desc());
 				}
 			}
 		}

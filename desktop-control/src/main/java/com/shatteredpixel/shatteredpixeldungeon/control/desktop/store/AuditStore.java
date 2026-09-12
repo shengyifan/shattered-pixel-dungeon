@@ -29,6 +29,7 @@ import java.util.UUID;
  * The caller must hold the profile's exclusive process lock for this store's entire lifetime.
  */
 public final class AuditStore implements AutoCloseable {
+    public static final int SCHEMA_VERSION = 5;
     private final Path publicPath;
     private final Path internalPath;
     private Connection writer;
@@ -62,11 +63,8 @@ public final class AuditStore implements AutoCloseable {
         publicPath = directory.resolve("public.sqlite3");
         internalPath = directory.resolve("internal.sqlite3");
         try {
+            preflight(directory);
             Files.createDirectories(directory);
-            // Refuse a half-restored pair; creating the missing half would destroy the audit boundary.
-            if (Files.exists(publicPath) != Files.exists(internalPath)) {
-                throw new AuditException("AUDIT_PAIR_MISSING", "The audit database pair is incomplete", null);
-            }
             Class.forName("org.sqlite.JDBC");
             writer = DriverManager.getConnection("jdbc:sqlite:" + publicPath);
             try (PreparedStatement attach = writer.prepareStatement("ATTACH DATABASE ? AS internal")) {
@@ -85,6 +83,52 @@ public final class AuditStore implements AutoCloseable {
             closeQuietly(writer);
             if (failure instanceof AuditException) throw (AuditException) failure;
             throw failure("AUDIT_OPEN_FAILED", failure);
+        }
+    }
+
+    /** Checks an existing pair before locks, journals, migration or emergency logs can write to it. */
+    public static void preflight(Path root) {
+        Path directory = root.toAbsolutePath().normalize();
+        Path publicFile = directory.resolve("public.sqlite3"), internalFile = directory.resolve("internal.sqlite3");
+        if (Files.exists(publicFile) != Files.exists(internalFile))
+            throw new AuditException("AUDIT_PAIR_MISSING", "The audit database pair is incomplete", null);
+        if (!Files.exists(publicFile)) return;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            String publicProfile = inspectSchema(publicFile), internalProfile = inspectSchema(internalFile);
+            if (!publicProfile.equals(internalProfile))
+                throw new AuditException("AUDIT_PAIR_MISMATCH", "The audit database identities differ", null);
+        } catch (AuditException error) { throw error; }
+        catch (Exception error) {
+            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 2 requires an intact schema-5 audit pair; use a new profile", error);
+        }
+    }
+
+    private static String inspectSchema(Path file) throws SQLException {
+        // Immutable read-only SQLite never opens recovery journals or creates WAL sidecars.
+        try (Connection reader = DriverManager.getConnection("jdbc:sqlite:" + file.toUri().toASCIIString() + "?mode=ro&immutable=1");
+             Statement statement = reader.createStatement();
+             ResultSet rows = statement.executeQuery("SELECT key,value FROM metadata WHERE key IN ('schema_version','profile_id')")) {
+            String version = null, profile = null;
+            while (rows.next()) {
+                if ("schema_version".equals(rows.getString(1))) version = rows.getString(2);
+                if ("profile_id".equals(rows.getString(1))) profile = rows.getString(2);
+            }
+            if (!Integer.toString(SCHEMA_VERSION).equals(version) || profile == null || profile.isEmpty())
+                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 2 requires schema 5 and never migrates older audit databases; use a new profile", null);
+            // A version marker cannot authorize silently rebuilding missing audit tables.
+            try (Statement shape = reader.createStatement()) {
+                for (String sql : new String[]{
+                        "SELECT presentation_status,session_id,started_at,settled_at FROM requests LIMIT 0",
+                        "SELECT presentation_status,raw_bytes,raw_format,session_id,processing_started_at FROM exchanges LIMIT 0",
+                        "SELECT presentation_status,session_id FROM events LIMIT 0",
+                        "SELECT content_id FROM snapshots LIMIT 0", "SELECT content_id FROM snapshot_blobs LIMIT 0",
+                        "SELECT session_id,build_id,cli_version,protocol_version FROM sessions LIMIT 0", "SELECT scope_id FROM runs LIMIT 0",
+                        "SELECT scope_id FROM run_slots LIMIT 0", "SELECT receipt_id FROM save_checkpoints LIMIT 0"}) {
+                    try (ResultSet ignored = shape.executeQuery(sql)) { }
+                }
+            }
+            return profile;
         }
     }
 
@@ -124,15 +168,15 @@ public final class AuditStore implements AutoCloseable {
                     s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".scopes (scope_id TEXT PRIMARY KEY, kind TEXT NOT NULL, run_id TEXT, created_at TEXT NOT NULL)");
                     s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".snapshots (snapshot_id TEXT PRIMARY KEY, encoding TEXT NOT NULL, body BLOB NOT NULL, content_id TEXT, created_at TEXT NOT NULL)");
                     s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".snapshot_blobs (content_id TEXT PRIMARY KEY, encoding TEXT NOT NULL, body BLOB NOT NULL)");
-                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".requests (scope_id TEXT NOT NULL, id TEXT NOT NULL, op TEXT, raw_request TEXT NOT NULL, status TEXT NOT NULL, state_version TEXT, target_scope TEXT, before_snapshot TEXT, after_snapshot TEXT, response_json TEXT, first_exchange INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(scope_id,id))");
-                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".exchanges (sequence INTEGER PRIMARY KEY AUTOINCREMENT, scope_id TEXT, id TEXT, raw_request TEXT NOT NULL, duplicate INTEGER NOT NULL, registered INTEGER NOT NULL, received_at TEXT NOT NULL, response_json TEXT, responded_at TEXT, before_snapshot TEXT, after_snapshot TEXT, output_attempted INTEGER NOT NULL DEFAULT 0, output_succeeded INTEGER, output_attempted_at TEXT)");
-                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".events (sequence INTEGER PRIMARY KEY AUTOINCREMENT, scope_id TEXT, kind TEXT NOT NULL, data_json TEXT NOT NULL, created_at TEXT NOT NULL)");
+                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".requests (scope_id TEXT NOT NULL, id TEXT NOT NULL, op TEXT, raw_request TEXT NOT NULL, status TEXT NOT NULL, presentation_status TEXT, session_id TEXT, started_at TEXT, settled_at TEXT, state_version TEXT, target_scope TEXT, before_snapshot TEXT, after_snapshot TEXT, response_json TEXT, first_exchange INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(scope_id,id))");
+                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".exchanges (sequence INTEGER PRIMARY KEY AUTOINCREMENT, scope_id TEXT, id TEXT, raw_request TEXT NOT NULL, raw_bytes BLOB, raw_format TEXT NOT NULL DEFAULT 'logical-utf8', session_id TEXT, processing_started_at TEXT, presentation_status TEXT, duplicate INTEGER NOT NULL, registered INTEGER NOT NULL, received_at TEXT NOT NULL, response_json TEXT, responded_at TEXT, before_snapshot TEXT, after_snapshot TEXT, output_attempted INTEGER NOT NULL DEFAULT 0, output_succeeded INTEGER, output_attempted_at TEXT)");
+                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".events (sequence INTEGER PRIMARY KEY AUTOINCREMENT, scope_id TEXT, kind TEXT NOT NULL, data_json TEXT NOT NULL, presentation_status TEXT NOT NULL, session_id TEXT, created_at TEXT NOT NULL)");
                     s.execute("CREATE INDEX IF NOT EXISTS " + schema + ".exchange_scope_sequence ON exchanges(scope_id,sequence)");
                 }
             }
             try (Statement s = writer.createStatement()) {
-                s.execute("CREATE TABLE IF NOT EXISTS internal.exceptions (sequence INTEGER PRIMARY KEY AUTOINCREMENT, exchange_id INTEGER, scope_id TEXT, id TEXT, exception_class TEXT NOT NULL, message TEXT, stack_trace TEXT NOT NULL, thread_name TEXT NOT NULL, created_at TEXT NOT NULL)");
-                s.execute("CREATE TABLE IF NOT EXISTS internal.logs (sequence INTEGER PRIMARY KEY AUTOINCREMENT, channel TEXT NOT NULL, text TEXT NOT NULL, created_at TEXT NOT NULL)");
+                s.execute("CREATE TABLE IF NOT EXISTS internal.exceptions (sequence INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, save_receipt_id TEXT, exchange_id INTEGER, scope_id TEXT, id TEXT, exception_class TEXT NOT NULL, message TEXT, stack_trace TEXT NOT NULL, thread_name TEXT NOT NULL, created_at TEXT NOT NULL)");
+                s.execute("CREATE TABLE IF NOT EXISTS internal.logs (sequence INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, channel TEXT NOT NULL, text TEXT NOT NULL, created_at TEXT NOT NULL)");
             }
             String publicProfile = metadata("main", "profile_id");
             String privateProfile = metadata("internal", "profile_id");
@@ -140,65 +184,53 @@ public final class AuditStore implements AutoCloseable {
                 publicProfile = UUID.randomUUID().toString();
                 for (String schema : schemas()) {
                     putMetadata(schema, "profile_id", publicProfile);
-                    putMetadata(schema, "schema_version", "4");
+                    putMetadata(schema, "schema_version", Integer.toString(SCHEMA_VERSION));
                 }
             } else if (publicProfile == null || !publicProfile.equals(privateProfile)) {
                 throw new SQLException("The public and internal audit database identities differ");
             }
             String version = metadata("main", "schema_version");
             if (!java.util.Objects.equals(version, metadata("internal", "schema_version"))) throw new SQLException("Paired audit schema mismatch");
-            if ("1".equals(version)) { migrateVersionOne();version="2"; }
-            if ("2".equals(version)||"3".equals(version)) { migrateWireBytes();version="3"; }
-            if ("3".equals(version)||"4".equals(version)) migrateLifecycle();
-            else throw new SQLException("Unsupported audit schema");
+            if (!Integer.toString(SCHEMA_VERSION).equals(version)) throw new SQLException("Unsupported audit schema");
+            initializeLifecycle();
             menuScope = "menu:" + publicProfile;
             insertScope(menuScope, "menu", null);
             return null;
         });
     }
 
-    /** Old rows retain unknown provenance; migration must not invent historical sessions or receipts. */
-    private void migrateLifecycle()throws SQLException {
+    private void initializeLifecycle()throws SQLException {
         for(String schema:schemas()){
-            // Fresh databases also need the version-3 wire columns.
-            addColumnIfMissing(schema,"exchanges","raw_bytes","BLOB");
-            addColumnIfMissing(schema,"exchanges","raw_format","TEXT NOT NULL DEFAULT 'legacy-text'");
-            addColumnIfMissing(schema,"exchanges","session_id","TEXT");
-            addColumnIfMissing(schema,"exchanges","processing_started_at","TEXT");
-            addColumnIfMissing(schema,"requests","session_id","TEXT");
-            addColumnIfMissing(schema,"requests","started_at","TEXT");
-            addColumnIfMissing(schema,"requests","settled_at","TEXT");
-            addColumnIfMissing(schema,"events","session_id","TEXT");
-            if(schema.equals("internal")){
-                addColumnIfMissing(schema,"exceptions","session_id","TEXT");
-                addColumnIfMissing(schema,"exceptions","save_receipt_id","TEXT");
-                addColumnIfMissing(schema,"logs","session_id","TEXT");
-            }
             try(Statement s=writer.createStatement()){
-                s.execute("CREATE TABLE IF NOT EXISTS "+schema+".sessions(session_id TEXT PRIMARY KEY,profile_id TEXT NOT NULL,boot_id TEXT,started_at TEXT NOT NULL,ended_at TEXT,recovered_at TEXT,status TEXT NOT NULL,end_reason TEXT)");
+                s.execute("CREATE TABLE IF NOT EXISTS "+schema+".sessions(session_id TEXT PRIMARY KEY,profile_id TEXT NOT NULL,boot_id TEXT,build_id TEXT NOT NULL,cli_version TEXT NOT NULL,protocol_version INTEGER NOT NULL,started_at TEXT NOT NULL,ended_at TEXT,recovered_at TEXT,status TEXT NOT NULL,end_reason TEXT)");
+                s.execute("CREATE TRIGGER IF NOT EXISTS "+schema+".immutable_session_build BEFORE UPDATE OF build_id,cli_version,protocol_version ON sessions "
+                        +"WHEN OLD.build_id IS NOT NEW.build_id OR OLD.cli_version IS NOT NEW.cli_version OR OLD.protocol_version IS NOT NEW.protocol_version "
+                        +"BEGIN SELECT RAISE(ABORT,'Session build metadata is immutable'); END");
                 s.execute("CREATE TABLE IF NOT EXISTS "+schema+".runs(scope_id TEXT PRIMARY KEY,run_id TEXT NOT NULL,hero_class TEXT,first_observed_at TEXT NOT NULL,ended_at TEXT,outcome TEXT,lifecycle TEXT NOT NULL,last_slot INTEGER)");
                 s.execute("CREATE TABLE IF NOT EXISTS "+schema+".run_slots(scope_id TEXT NOT NULL,slot INTEGER NOT NULL,first_observed_at TEXT NOT NULL,last_saved_at TEXT,PRIMARY KEY(scope_id,slot))");
                 s.execute("CREATE TABLE IF NOT EXISTS "+schema+".save_checkpoints(sequence INTEGER PRIMARY KEY AUTOINCREMENT,receipt_id TEXT NOT NULL UNIQUE,session_id TEXT,scope_id TEXT NOT NULL,slot INTEGER NOT NULL,success INTEGER NOT NULL,occurred_at TEXT NOT NULL,recorded_at TEXT NOT NULL,origin_scope_id TEXT,origin_request_id TEXT,following_snapshot TEXT)");
                 s.execute("CREATE INDEX IF NOT EXISTS "+schema+".save_scope_sequence ON save_checkpoints(scope_id,sequence)");
                 s.execute("CREATE INDEX IF NOT EXISTS "+schema+".save_origin ON save_checkpoints(session_id,origin_scope_id,origin_request_id)");
-                s.execute("UPDATE "+schema+".metadata SET value='4' WHERE key='schema_version'");
             }
         }
     }
 
-    public synchronized String beginSession(String bootId){
+    public synchronized String beginSession(String bootId,String buildId,String cliVersion,int protocolVersion){
         if(activeSession!=null)throw new IllegalStateException("A session is already active");
+        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=2)
+            throw new IllegalArgumentException("Session build, CLI version and protocol 2 metadata are required");
         String id=UUID.randomUUID().toString(),started=now();
         transaction(()->{
             for(String schema:schemas()){
                 try(PreparedStatement s=writer.prepareStatement("UPDATE "+schema+".sessions SET status='INTERRUPTED',recovered_at=?,end_reason='previous_process_did_not_close' WHERE status='ACTIVE'")){
                     s.setString(1,started);s.executeUpdate();
                 }
-                try(PreparedStatement s=writer.prepareStatement("INSERT INTO "+schema+".sessions(session_id,profile_id,boot_id,started_at,status) VALUES(?,?,?,?,'ACTIVE')")){
-                    s.setString(1,id);s.setString(2,menuScope.substring(5));s.setString(3,bootId);s.setString(4,started);s.executeUpdate();
+                try(PreparedStatement s=writer.prepareStatement("INSERT INTO "+schema+".sessions(session_id,profile_id,boot_id,started_at,build_id,cli_version,protocol_version,status) VALUES(?,?,?,?,?,?,?,'ACTIVE')")){
+                    s.setString(1,id);s.setString(2,menuScope.substring(5));s.setString(3,bootId);s.setString(4,started);
+                    s.setString(5,buildId);s.setString(6,cliVersion);s.setInt(7,protocolVersion);s.executeUpdate();
                 }
             }
-            insertEvent(menuScope,"session.started",JsonCodec.encode(Values.map("session_id",id,"started_at",started)),id);
+            insertEvent(menuScope,"session.started",JsonCodec.encode(Values.map("session_id",id,"started_at",started,"build_id",buildId,"cli_version",cliVersion,"protocol_version",protocolVersion)),id);
             return null;
         });
         activeSession=id;return id;
@@ -220,63 +252,6 @@ public final class AuditStore implements AutoCloseable {
     }
 
     public synchronized String sessionId(){return activeSession;}
-
-    /** Migration is part of the same attached transaction: an interrupted upgrade retains both old files. */
-    private void migrateWireBytes()throws SQLException{
-        for(String schema:schemas()){
-            addColumnIfMissing(schema,"exchanges","raw_bytes","BLOB");
-            addColumnIfMissing(schema,"exchanges","raw_format","TEXT NOT NULL DEFAULT 'legacy-text'");
-            try(PreparedStatement s=writer.prepareStatement("UPDATE "+schema+".metadata SET value='3' WHERE key='schema_version'")){s.executeUpdate();}
-        }
-    }
-
-    private void migrateVersionOne() throws SQLException {
-        for (String schema : schemas()) {
-            addColumnIfMissing(schema, "snapshots", "content_id", "TEXT");
-            addColumnIfMissing(schema, "requests", "target_scope", "TEXT");
-            addColumnIfMissing(schema, "exchanges", "output_attempted", "INTEGER NOT NULL DEFAULT 0");
-            addColumnIfMissing(schema, "exchanges", "output_succeeded", "INTEGER");
-            addColumnIfMissing(schema, "exchanges", "output_attempted_at", "TEXT");
-        }
-        List<String> ids = new ArrayList<>();
-        try (Statement s = writer.createStatement(); ResultSet rs = s.executeQuery("SELECT snapshot_id FROM main.snapshots WHERE content_id IS NULL")) {
-            while (rs.next()) ids.add(rs.getString(1));
-        }
-        for (String id : ids) {
-            Map<String, Object> publicValue = legacySnapshot("main", id);
-            Map<String, Object> privateValue = legacySnapshot("internal", id);
-            SnapshotCodec.Encoded encoded = SnapshotCodec.encodePair(publicValue, privateValue);
-            insertEncodedBlocks(encoded);
-            int side = 0;
-            for (String schema : schemas()) {
-                try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".snapshots SET encoding=?,body=?,content_id=? WHERE snapshot_id=?")) {
-                    s.setString(1, side == 0 ? SnapshotCodec.ENCODING : SnapshotCodec.INTERNAL_ENCODING);
-                    s.setBytes(2, new byte[0]); s.setString(3, side++ == 0 ? encoded.publicContentId : encoded.internalContentId); s.setString(4, id);
-                    if (s.executeUpdate() != 1) throw new SQLException("Paired legacy snapshot is missing");
-                }
-            }
-        }
-        for (String schema : schemas()) {
-            try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".metadata SET value='2' WHERE key='schema_version'")) { s.executeUpdate(); }
-        }
-    }
-
-    private void addColumnIfMissing(String schema, String table, String name, String type) throws SQLException {
-        try (Statement s = writer.createStatement(); ResultSet rs = s.executeQuery("PRAGMA " + schema + ".table_info(" + table + ")")) {
-            while (rs.next()) if (name.equals(rs.getString("name"))) return;
-        }
-        try (Statement s = writer.createStatement()) { s.execute("ALTER TABLE " + schema + "." + table + " ADD COLUMN " + name + " " + type); }
-    }
-
-    private Map<String, Object> legacySnapshot(String schema, String id) throws SQLException {
-        try (PreparedStatement s = writer.prepareStatement("SELECT encoding,body FROM " + schema + ".snapshots WHERE snapshot_id=?")) {
-            s.setString(1, id);
-            try (ResultSet rs = s.executeQuery()) {
-                if (!rs.next() || !"json-utf8".equals(rs.getString(1))) throw new SQLException("Unsupported legacy snapshot encoding");
-                return JsonCodec.decode(new String(rs.getBytes(2), StandardCharsets.UTF_8));
-            }
-        }
-    }
 
     public synchronized void ensureScope(String scopeId, String kind, String runId) {
         if (scopeId == null || kind == null) throw new IllegalArgumentException("Scope and kind are required");
@@ -396,15 +371,15 @@ public final class AuditStore implements AutoCloseable {
     private long insertEvent(String scopeId,String kind,String json,String sessionId)throws SQLException{
         String created = now();
         long sequence;
-        try (PreparedStatement s = writer.prepareStatement("INSERT INTO main.events(scope_id,kind,data_json,created_at,session_id) VALUES(?,?,?,?,?)")) {
-            s.setString(1, scopeId); s.setString(2, kind); s.setString(3, json); s.setString(4, created);s.setString(5,sessionId); s.executeUpdate();
+        try (PreparedStatement s = writer.prepareStatement("INSERT INTO main.events(scope_id,kind,data_json,created_at,session_id,presentation_status) VALUES(?,?,?,?,?,?)")) {
+            s.setString(1, scopeId); s.setString(2, kind); s.setString(3, json); s.setString(4, created);s.setString(5,sessionId);s.setString(6,presentationStatus(JsonCodec.decode(json))); s.executeUpdate();
         }
         try (Statement s = writer.createStatement(); ResultSet rs = s.executeQuery("SELECT last_insert_rowid()")) {
             if (!rs.next()) throw new SQLException("Missing event identity");
             sequence = rs.getLong(1);
         }
-        try (PreparedStatement s = writer.prepareStatement("INSERT INTO internal.events(sequence,scope_id,kind,data_json,created_at,session_id) VALUES(?,?,?,?,?,?)")) {
-            s.setLong(1, sequence); s.setString(2, scopeId); s.setString(3, kind); s.setString(4, json); s.setString(5, created);s.setString(6,sessionId); s.executeUpdate();
+        try (PreparedStatement s = writer.prepareStatement("INSERT INTO internal.events(sequence,scope_id,kind,data_json,created_at,session_id,presentation_status) VALUES(?,?,?,?,?,?,?)")) {
+            s.setLong(1, sequence); s.setString(2, scopeId); s.setString(3, kind); s.setString(4, json); s.setString(5, created);s.setString(6,sessionId);s.setString(7,presentationStatus(JsonCodec.decode(json))); s.executeUpdate();
         }
         return sequence;
     }
@@ -536,15 +511,15 @@ public final class AuditStore implements AutoCloseable {
             String afterId = insertSnapshots(snapshots);
             String completed = now();
             for (String schema : schemas()) {
-                try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".exchanges SET response_json=?,responded_at=?,after_snapshot=?,before_snapshot=COALESCE(before_snapshot,?) WHERE sequence=? AND response_json IS NULL")) {
+                try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".exchanges SET response_json=?,responded_at=?,after_snapshot=?,before_snapshot=COALESCE(before_snapshot,?),presentation_status=? WHERE sequence=? AND response_json IS NULL")) {
                     s.setString(1, encodedResponse); s.setString(2, completed); s.setString(3, afterId); s.setString(4, afterId);
-                    s.setLong(5, attempt.exchangeId);
+                    s.setString(5, presentationStatus(response)); s.setLong(6, attempt.exchangeId);
                     if (s.executeUpdate() != 1) throw new SQLException("Exchange already has a response");
                 }
                 if (attempt.registered) {
-                    try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,after_snapshot=?,before_snapshot=COALESCE(before_snapshot,?),updated_at=?,settled_at=? WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
+                    try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,after_snapshot=?,before_snapshot=COALESCE(before_snapshot,?),updated_at=?,settled_at=?,presentation_status=? WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
                         s.setString(1, terminal); s.setString(2, encodedResponse); s.setString(3, afterId); s.setString(4, afterId);
-                        s.setString(5, completed);s.setString(6,settled); s.setString(7, attempt.scopeId); s.setString(8, attempt.id);
+                        s.setString(5, completed);s.setString(6,settled); s.setString(7,presentationStatus(response)); s.setString(8, attempt.scopeId); s.setString(9, attempt.id);
                         if (s.executeUpdate() != 1) throw new SQLException("Request already has a terminal result");
                     }
                 }
@@ -592,8 +567,8 @@ public final class AuditStore implements AutoCloseable {
                         if (!rs.next() || !"EXECUTING".equals(rs.getString(1))) throw new SQLException("Only an executing request may respond pending");
                     }
                 }
-                try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".exchanges SET response_json=?,responded_at=?,after_snapshot=? WHERE sequence=? AND response_json IS NULL")) {
-                    s.setString(1, json); s.setString(2, prepared); s.setString(3, snapshotId); s.setLong(4, attempt.exchangeId);
+                try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".exchanges SET response_json=?,responded_at=?,after_snapshot=?,presentation_status=? WHERE sequence=? AND response_json IS NULL")) {
+                    s.setString(1, json); s.setString(2, prepared); s.setString(3, snapshotId); s.setString(4,presentationStatus(response)); s.setLong(5, attempt.exchangeId);
                     if (s.executeUpdate() != 1) throw new SQLException("Exchange already has a response");
                 }
             }
@@ -615,9 +590,9 @@ public final class AuditStore implements AutoCloseable {
         transaction(() -> {
             String snapshotId = insertSnapshots(snapshots);
             for (String schema : schemas()) {
-                try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,after_snapshot=?,updated_at=?,settled_at=? WHERE scope_id=? AND id=? AND status='EXECUTING'")) {
+                try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,after_snapshot=?,updated_at=?,settled_at=?,presentation_status=? WHERE scope_id=? AND id=? AND status='EXECUTING'")) {
                     s.setString(1, status.toUpperCase(Locale.ROOT)); s.setString(2, json); s.setString(3, snapshotId); s.setString(4, settled);
-                    s.setString(5,settled);s.setString(6, attempt.scopeId); s.setString(7, attempt.id);
+                    s.setString(5,settled);s.setString(6,presentationStatus(finalResult));s.setString(7, attempt.scopeId); s.setString(8, attempt.id);
                     if (s.executeUpdate() != 1) throw new SQLException("Only an executing request may settle");
                 }
             }
@@ -666,12 +641,6 @@ public final class AuditStore implements AutoCloseable {
     private void insertException(Attempt attempt, Throwable error) throws SQLException {
         StringWriter stack = new StringWriter();
         error.printStackTrace(new PrintWriter(stack));
-        if(error instanceof com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish.PublicTextUnavailableException) {
-            com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish.PublicTextUnavailableException textError=
-                    (com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish.PublicTextUnavailableException)error;
-            stack.append("\nPrivate displayed text: ").append(textError.diagnosticOriginalText())
-                    .append("\nTranslation diagnostic: ").append(textError.diagnosticReason());
-        }
         try (PreparedStatement s = writer.prepareStatement("INSERT INTO internal.exceptions(exchange_id,scope_id,id,exception_class,message,stack_trace,thread_name,created_at,session_id) VALUES(?,?,?,?,?,?,?,?,?)")) {
             if (attempt == null) s.setNull(1, java.sql.Types.INTEGER); else s.setLong(1, attempt.exchangeId);
             s.setString(2, attempt == null ? null : attempt.scopeId); s.setString(3, attempt == null ? null : attempt.id);
@@ -690,12 +659,12 @@ public final class AuditStore implements AutoCloseable {
             for (String[] request : unfinished) {
                 String recovered=now();
                 String status = "EXECUTING".equals(request[2]) ? "UNKNOWN" : "NOT_EXECUTED";
-                String response = JsonCodec.encode(Values.map("id", request[1], "scope_id", request[0], "ok", false,
-                        "error", Values.map("code", status, "message", "UNKNOWN".equals(status)
+                String response = JsonCodec.encode(Values.map("protocol_version", 2, "id", request[1], "scope_id", request[0], "ok", false,
+                        "presentation", Values.map("status", "complete", "diagnostics", java.util.Collections.emptyList()), "error", Values.map("code", status, "message", "UNKNOWN".equals(status)
                                 ? "The process stopped before the execution result was recorded; this request will not be replayed"
                                 : "The process stopped before dispatch; this request will not be replayed")));
                 for (String schema : schemas()) {
-                    try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,updated_at=? WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
+                    try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,updated_at=?,presentation_status='complete' WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
                         s.setString(1, status); s.setString(2, response); s.setString(3, recovered);
                         s.setString(4, request[0]); s.setString(5, request[1]);
                         if (s.executeUpdate() != 1) throw new SQLException("Paired audit recovery mismatch");
@@ -715,7 +684,7 @@ public final class AuditStore implements AutoCloseable {
             try (ResultSet rs = s.executeQuery()) {
                 if (!rs.next()) return null;
                 return Values.map("scope_id", rs.getString("scope_id"), "id", rs.getString("id"), "op", rs.getString("op"),
-                        "status", rs.getString("status"), "state_version", rs.getString("state_version"), "target_scope", rs.getString("target_scope"),"session_id",rs.getString("session_id"),
+                        "status", rs.getString("status"), "presentation_status",rs.getString("presentation_status"), "state_version", rs.getString("state_version"), "target_scope", rs.getString("target_scope"),"session_id",rs.getString("session_id"),"session_build",sessionBuild(rs.getString("session_id")),
                         "raw_request", rs.getString("raw_request"), "response", decodeNullable(rs.getString("response_json")),
                         "before_snapshot", readSnapshot(rs.getString("before_snapshot")),
                         "after_snapshot", readSnapshot(rs.getString("after_snapshot")),
@@ -729,12 +698,12 @@ public final class AuditStore implements AutoCloseable {
         requireOpen();
         if (afterSequence < 0 || limit < 1 || limit > 1000) throw new IllegalArgumentException("Invalid history bounds");
         List<Map<String, Object>> result = new ArrayList<>();
-        try (PreparedStatement s = publicReader.prepareStatement("SELECT e.sequence,e.scope_id,e.id,e.duplicate,e.registered,e.received_at,e.responded_at,e.output_attempted,e.output_succeeded,e.session_id,r.op,r.status FROM exchanges e LEFT JOIN requests r ON r.scope_id=e.scope_id AND r.id=e.id WHERE e.scope_id=? AND e.sequence>? ORDER BY e.sequence LIMIT ?")) {
+        try (PreparedStatement s = publicReader.prepareStatement("SELECT e.sequence,e.scope_id,e.id,e.duplicate,e.registered,e.received_at,e.responded_at,e.output_attempted,e.output_succeeded,e.session_id,e.presentation_status,r.op,r.status FROM exchanges e LEFT JOIN requests r ON r.scope_id=e.scope_id AND r.id=e.id WHERE e.scope_id=? AND e.sequence>? ORDER BY e.sequence LIMIT ?")) {
             s.setString(1, scopeId); s.setLong(2, afterSequence); s.setInt(3, limit);
             try (ResultSet rs = s.executeQuery()) {
                 while (rs.next()) result.add(Values.map("sequence", rs.getLong("sequence"), "scope_id", rs.getString("scope_id"),
                         "id", rs.getString("id"), "duplicate", rs.getInt("duplicate") != 0, "registered", rs.getInt("registered") != 0,
-                        "op", rs.getString("op"), "request_status", rs.getString("status"),"session_id",rs.getString("session_id"),
+                        "op", rs.getString("op"), "request_status", rs.getString("status"),"presentation_status",rs.getString("presentation_status"),"session_id",rs.getString("session_id"),
                         "received_at", rs.getString("received_at"), "response_recorded_at", rs.getString("responded_at"),
                         "output_attempted", rs.getInt("output_attempted") != 0,
                         "output_succeeded", rs.getObject("output_succeeded") == null ? null : rs.getInt("output_succeeded") != 0));
@@ -747,11 +716,11 @@ public final class AuditStore implements AutoCloseable {
         requireOpen();
         if (afterSequence < 0 || limit < 1 || limit > 1000) throw new IllegalArgumentException("Invalid event bounds");
         List<Map<String, Object>> result = new ArrayList<>();
-        try (PreparedStatement s = publicReader.prepareStatement("SELECT sequence,scope_id,kind,data_json,created_at,session_id FROM events WHERE scope_id=? AND sequence>? ORDER BY sequence LIMIT ?")) {
+        try (PreparedStatement s = publicReader.prepareStatement("SELECT sequence,scope_id,kind,data_json,created_at,session_id,presentation_status FROM events WHERE scope_id=? AND sequence>? ORDER BY sequence LIMIT ?")) {
             s.setString(1, scopeId); s.setLong(2, afterSequence); s.setInt(3, limit);
             try (ResultSet rs = s.executeQuery()) {
                 while (rs.next()) result.add(Values.map("sequence", rs.getLong(1), "scope_id", rs.getString(2), "kind", rs.getString(3),
-                        "data", JsonCodec.decode(rs.getString(4)), "created_at", rs.getString(5),"session_id",rs.getString(6)));
+                        "data", JsonCodec.decode(rs.getString(4)), "created_at", rs.getString(5),"session_id",rs.getString(6),"presentation_status",rs.getString(7)));
             }
             return result;
         } catch (SQLException error) { throw failure("AUDIT_READ_FAILED", error); }
@@ -768,6 +737,25 @@ public final class AuditStore implements AutoCloseable {
                 return SnapshotCodec.decode(body);
             }
         }
+    }
+
+    private Map<String,Object> sessionBuild(String sessionId) throws SQLException {
+        if(sessionId==null)return null;
+        try(PreparedStatement query=publicReader.prepareStatement("SELECT build_id,cli_version,protocol_version FROM sessions WHERE session_id=?")) {
+            query.setString(1,sessionId);
+            try(ResultSet row=query.executeQuery()) {
+                if(!row.next())throw new SQLException("Recorded session metadata is missing");
+                return Values.map("build_id",row.getString(1),"cli_version",row.getString(2),"protocol_version",row.getInt(3));
+            }
+        }
+    }
+
+    private static String presentationStatus(Map<String, Object> value) {
+        Object presentation = value.get("presentation");
+        Object status = presentation instanceof Map ? ((Map<?,?>) presentation).get("status") : null;
+        if (status == null) return "complete";
+        if (!"complete".equals(status) && !"partial".equals(status)) throw new IllegalArgumentException("Invalid presentation status");
+        return (String) status;
     }
 
     private Map<String, Object> decodeNullable(String value) { return value == null ? null : JsonCodec.decode(value); }

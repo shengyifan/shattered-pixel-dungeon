@@ -91,6 +91,20 @@ class RenderedBoundaryTest {
         assertTrue(ready(),"A later natural flicker is not a new initial-presentation wait");
     }
 
+    @Test void newlyCreatedMenusNeedASubsequentFrameBeforeTheirControlsAreCertified()throws Exception {
+        new TestGame(new Scene());
+        field(GameController.class,"frame").setLong(controller,10);
+        assertFalse(ready());assertFalse(ready(),"A second query is not another completed draw");
+        field(GameController.class,"frame").setLong(controller,11);
+        assertTrue(ready());
+        new TestGame(new Scene());
+        assertFalse(ready(),"The previous menu draw cannot certify a replacement scene");
+        field(GameController.class,"frame").setLong(controller,12);
+        assertTrue(ready());
+        invoke("resetRenderedBoundary");assertFalse(ready());
+        field(GameController.class,"frame").setLong(controller,13);assertTrue(ready());
+    }
+
     private void draw(List<VisualCue> cues){controller.onVisualCues("a",level,1,cues);}
     private boolean ready()throws Exception{return (Boolean)invoke("renderedBoundaryReady");}
     @SuppressWarnings("unchecked") private Map<String,Object> visualState()throws Exception{return (Map<String,Object>)invoke("visualState");}

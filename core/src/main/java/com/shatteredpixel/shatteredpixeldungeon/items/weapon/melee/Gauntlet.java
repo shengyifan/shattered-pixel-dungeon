@@ -66,7 +66,7 @@ public class Gauntlet extends MeleeWeapon {
 	}
 
 	public String upgradeAbilityStat(int level){
-		return "+" + augment.damageFactor(5 + level);
+		return Messages.concat(Messages.literal("+"), augment.damageFactor(5 + level));
 	}
 
 }

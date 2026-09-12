@@ -210,10 +210,10 @@ public class TimekeepersHourglass extends Artifact {
 		if (isEquipped( Dungeon.hero )){
 			if (!cursed) {
 				if (level() < levelCap )
-					desc += "\n\n" + Messages.get(this, "desc_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_hint")));
 
 			} else
-				desc += "\n\n" + Messages.get(this, "desc_cursed");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_cursed")));
 		}
 		return desc;
 	}

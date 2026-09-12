@@ -79,9 +79,9 @@ public class StoneOfIntuition extends InventoryStone {
 		String text = super.desc();
 		if (Dungeon.hero != null){
 			if (Dungeon.hero.buff(IntuitionUseTracker.class) == null){
-				text += "\n\n" + Messages.get(this, "break_info");
+				text = Messages.concat(text, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "break_info")));
 			} else {
-				text += "\n\n" + Messages.get(this, "break_warn");
+				text = Messages.concat(text, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "break_warn")));
 			}
 		}
 		return text;

@@ -126,14 +126,14 @@ public class WndInfoCell extends Window {
 		if (customTile != null){
 			String customDesc = customTile.desc(x, y);
 			if (customDesc != null) {
-				desc += customDesc;
+				desc = Messages.concat(desc, customDesc);
 			} else {
-				desc += Dungeon.level.tileDesc(Dungeon.level.map[cell]);
+				desc = Messages.concat(desc, Dungeon.level.tileDesc(Dungeon.level.map[cell]));
 			}
 
 		} else {
 
-			desc += Dungeon.level.tileDesc(Dungeon.level.map[cell]);
+			desc = Messages.concat(desc, Dungeon.level.tileDesc(Dungeon.level.map[cell]));
 		}
 		titlebar.setRect(0, 0, WIDTH, 0);
 		add(titlebar);
@@ -145,9 +145,9 @@ public class WndInfoCell extends Window {
 			for (Blob blob : Dungeon.level.blobs.values()) {
 				if (blob.volume > 0 && blob.cur[cell] > 0 && blob.tileDesc() != null) {
 					if (desc.length() > 0) {
-						desc += "\n\n";
+						desc = Messages.concat(desc, Messages.literal("\n\n"));
 					}
-					desc += blob.tileDesc();
+					desc = Messages.concat(desc, blob.tileDesc());
 				}
 			}
 		}

@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.NinePatch;
 import com.watabou.noosa.audio.Sample;
 
@@ -50,6 +51,7 @@ public class StyledButton extends Button {
 		
 		text = PixelScene.renderTextBlock( size );
 		text.text( label );
+		Game.observer.onTextBound(this, label);
 		add( text );
 	}
 	
@@ -118,6 +120,7 @@ public class StyledButton extends Button {
 	
 	public void text( String value ) {
 		text.text( value );
+		Game.observer.onTextBound(this, value);
 		layout();
 	}
 

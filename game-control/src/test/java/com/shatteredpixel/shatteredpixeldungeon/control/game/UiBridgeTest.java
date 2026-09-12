@@ -11,6 +11,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UiBridgeTest {
+    @org.junit.jupiter.api.BeforeAll static void resources(){GameSnapshotterTest.resourceOnlyRuntime();}
     private static class TestBindingRow extends TestButton implements com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings.BindingRow {
         int callbacks;
         @Override public void chooseBindingSlot(int slot) {callbacks++;}
@@ -33,7 +34,7 @@ class UiBridgeTest {
         String label = "Visible choice";
         @SuppressWarnings("unused") private final String hiddenValue = "DO_NOT_DISCLOSE";
         @Override protected void createChildren() { }
-        @Override protected String hoverText() { return label; }
+        @Override protected String hoverText() { return ResourceTextFixture.literal(label); }
         @Override protected void onClick() { clicks++; }
         @Override protected void onRightClick() { rightClicks++; }
         @Override protected boolean onLongClick() { longClicks++; return true; }
@@ -149,6 +150,16 @@ class UiBridgeTest {
         scene.add(replacement);
         assertNotEquals(changed, bridge.contextSignature());
         assertEquals(0, button.clicks + replacement.clicks);
+    }
+
+    @Test void unclassifiedVisibleChoiceStillInvalidatesItsOldIntent() {
+        TestScene scene=new TestScene();
+        TestButton button=new TestButton(){@Override protected String hoverText(){return label;}};
+        scene.add(button); UiBridge bridge=new UiBridge(()->scene);
+        String initial=bridge.intentSignature();
+        assertEquals("partial",PublicEnglishProjection.presentation(bridge.describeUi()).get("status"));
+        button.label="A different unclassified choice";
+        assertNotEquals(initial,bridge.intentSignature());
     }
 
     @Test void intentSignatureRetainsRealControlAvailabilityAndIdentity() {

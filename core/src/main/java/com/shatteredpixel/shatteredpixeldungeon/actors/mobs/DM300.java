@@ -665,7 +665,7 @@ public class DM300 extends Mob {
 	public String description() {
 		String desc = super.description();
 		if (supercharged) {
-			desc += "\n\n" + Messages.get(this, "desc_supercharged");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_supercharged")));
 		}
 		return desc;
 	}

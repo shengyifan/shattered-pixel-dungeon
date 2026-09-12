@@ -289,7 +289,7 @@ public class WandOfRegrowth extends Wand {
 		String desc = Messages.get(this, "stats_desc", chargesPerCast());
 		if (isIdentified()){
 			int chargeLeft = chargeLimit(Dungeon.hero.lvl) - totChrgUsed;
-			if (chargeLeft < 10000) desc += " " + Messages.get(this, "degradation", Math.max(chargeLeft, 0));
+			if (chargeLeft < 10000) desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "degradation", Math.max(chargeLeft, 0))));
 		}
 		return desc;
 	}
@@ -489,7 +489,7 @@ public class WandOfRegrowth extends Wand {
 			String desc = Messages.get(this, "desc");
 			if (Actor.chars().contains(this)) {
 				int preservation = Math.round(seedPreservation()*100);
-				desc += "\n\n" + Messages.get(this, "wand_info", wandLvl, preservation, preservation);
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "wand_info", wandLvl, preservation, preservation)));
 			}
 			return desc;
 		}

@@ -59,7 +59,7 @@ public class Stasis extends ClericSpell {
 
 	@Override
 	public String desc() {
-		return Messages.get(this, "desc", 30 + 30*Dungeon.hero.pointsInTalent(Talent.STASIS)) + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.concat(Messages.concat(Messages.get(this, "desc", 30 + 30*Dungeon.hero.pointsInTalent(Talent.STASIS)), Messages.literal("\n\n")), Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero)));
 	}
 
 	@Override

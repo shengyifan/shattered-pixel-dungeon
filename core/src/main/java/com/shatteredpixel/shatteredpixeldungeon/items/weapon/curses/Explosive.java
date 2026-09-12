@@ -132,11 +132,11 @@ public class Explosive extends Weapon.Enchantment {
 	public String desc() {
 		String desc = super.desc();
 		if (durability > 50){
-			desc += " " + Messages.get(this, "desc_cool");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "desc_cool")));
 		} else if (durability > 10){
-			desc += " " + Messages.get(this, "desc_warm");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "desc_warm")));
 		} else {
-			desc += " _" + Messages.get(this, "desc_hot") + "_";
+			desc = Messages.concat(desc, Messages.concat(Messages.concat(Messages.literal(" _"), Messages.get(this, "desc_hot")), Messages.literal("_")));
 		}
 		return desc;
 	}

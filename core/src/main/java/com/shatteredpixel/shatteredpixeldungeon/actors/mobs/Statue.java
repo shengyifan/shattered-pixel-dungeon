@@ -186,7 +186,7 @@ public class Statue extends Mob {
 	public String description() {
 		String desc = Messages.get(this, "desc");
 		if (weapon != null){
-			desc += "\n\n" + Messages.get(this, "desc_weapon", weapon.name());
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_weapon", weapon.name())));
 		}
 		return desc;
 	}

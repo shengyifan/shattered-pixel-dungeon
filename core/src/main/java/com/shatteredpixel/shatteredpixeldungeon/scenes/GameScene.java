@@ -1291,7 +1291,7 @@ public class GameScene extends PixelScene {
 					if (SPDSettings.interfaceSize() == 0) {
 						GLog.p(Messages.get(Guidebook.class, "hint_mobile"));
 					} else {
-						GLog.p(Messages.get(Guidebook.class, "hint_desktop", KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.JOURNAL, ControllerHandler.isControllerConnected()))));
+						GLog.p(Messages.get(Guidebook.class, "hint_desktop", Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.JOURNAL, ControllerHandler.isControllerConnected())))));
 					}
 				}
 				Dungeon.hero.sprite.showStatus(CharSprite.POSITIVE, Messages.get(Guidebook.class, "hint_status"));
@@ -1335,8 +1335,8 @@ public class GameScene extends PixelScene {
 				GLog.p(Messages.get(GameScene.class, "tutorial_ui_mobile"));
 			} else {
 				GLog.p(Messages.get(GameScene.class, "tutorial_ui_desktop",
-						KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.HERO_INFO, ControllerHandler.isControllerConnected())),
-						KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.INVENTORY, ControllerHandler.isControllerConnected()))));
+						Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.HERO_INFO, ControllerHandler.isControllerConnected()))),
+						Messages.externalText(KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.INVENTORY, ControllerHandler.isControllerConnected())))));
 			}
 
 			//clear hidden doors, it's floor 1 so there are only the entrance ones
@@ -1783,7 +1783,7 @@ public class GameScene extends PixelScene {
 	private static ArrayList<String> getObjectNames( ArrayList<Object> objects ){
 		ArrayList<String> names = new ArrayList<>();
 		for (Object obj : objects){
-			if (obj instanceof Hero)        names.add(((Hero) obj).className().toUpperCase(Locale.ENGLISH));
+			if (obj instanceof Hero)        names.add(Messages.upperCase(((Hero) obj).className(), Locale.ENGLISH));
 			else if (obj instanceof Mob)    names.add(Messages.titleCase( ((Mob)obj).name() ));
 			else if (obj instanceof Heap)   names.add(Messages.titleCase( ((Heap)obj).title() ));
 			else if (obj instanceof Plant)  names.add(Messages.titleCase( ((Plant) obj).name() ));
@@ -1893,13 +1893,13 @@ public class GameScene extends PixelScene {
 
 			//final text formatting
 			if (objects.size() > 1){
-				textLines.add(0, "_" + textLines.remove(0) + ":_ " + textLines.get(0));
+				textLines.add(0, Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), textLines.remove(0)), Messages.literal(":_ ")), textLines.get(0)));
 				for (int i = 1; i < textLines.size(); i++){
-					textLines.add(i, "_" + Messages.get(GameScene.class, "examine") + ":_ " + textLines.remove(i));
+					textLines.add(i, Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(GameScene.class, "examine")), Messages.literal(":_ ")), textLines.remove(i)));
 				}
 			} else {
-				textLines.add(0, "_" + textLines.remove(0) + "_");
-				textLines.add(1, "_" + Messages.get(GameScene.class, "examine") + "_");
+				textLines.add(0, Messages.concat(Messages.concat(Messages.literal("_"), textLines.remove(0)), Messages.literal("_")));
+				textLines.add(1, Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(GameScene.class, "examine")), Messages.literal("_")));
 			}
 
 			RightClickMenu menu = new RightClickMenu(image,

@@ -145,7 +145,7 @@ public abstract class Shaman extends Mob {
 	
 	@Override
 	public String description() {
-		return super.description() + "\n\n" + Messages.get(this, "spell_desc");
+		return Messages.concat(Messages.concat(super.description(), Messages.literal("\n\n")), Messages.get(this, "spell_desc"));
 	}
 	
 	public static class RedShaman extends Shaman {

@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.watabou.input.ControllerHandler;
 import com.watabou.input.GameAction;
@@ -98,7 +100,7 @@ public class Button extends Component {
 					}
 
 					if (key != 0){
-						text += " _(" + KeyBindings.getKeyName(key) + ")_";
+						text = Messages.concat(text, Messages.concat(Messages.concat(Messages.literal(" _("), Messages.externalText(KeyBindings.getKeyName(key))), Messages.literal(")_")));
 					}
 					hoverTip = new Tooltip(Button.this, text, 80);
 					Button.this.parent.addToFront(hoverTip);

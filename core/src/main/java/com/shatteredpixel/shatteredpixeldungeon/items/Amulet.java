@@ -135,9 +135,9 @@ public class Amulet extends Item {
 		String desc = super.desc();
 
 		if (Dungeon.hero == null || Dungeon.hero.buff(AscensionChallenge.class) == null){
-			desc += "\n\n" + Messages.get(this, "desc_origins");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_origins")));
 		} else {
-			desc += "\n\n" + Messages.get(this, "desc_ascent");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_ascent")));
 		}
 
 		return desc;

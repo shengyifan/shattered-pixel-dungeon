@@ -40,14 +40,19 @@ SNEAK_WEAPONS = {"Dagger", "Dirk", "AssassinsBlade"}
 GAME_PROSE_FIELDS = {"name", "class_name", "subclass_name", "label", "text", "description",
                      "prompt", "cell_prompt", "item_prompt", "options", "message", "title",
                      "hint", "tooltip", "disabled_reason"}
-RAW_FIELDS = {"raw_request", "raw_response", "raw_bytes", "raw_format", "raw_json"}
+RAW_FIELDS = {"raw_request", "raw_response", "raw_bytes", "raw_format", "raw_json", "text_sources", "text_diagnostics", "node"}
 
 
 def game_prose_values(value, path=(), prose=False):
     """Same prose/raw distinction as english_protocol_smoke; opaque data stays literal."""
     if isinstance(value, dict):
         for key, child in value.items():
-            if key not in RAW_FIELDS:
+            origin = value.get("text_sources", {}).get(key)
+            def has_original(node):
+                if isinstance(node, dict):
+                    return node.get("origin") in {"user", "external"} or any(has_original(item) for item in node.values())
+                return isinstance(node, list) and any(has_original(item) for item in node)
+            if key not in RAW_FIELDS and not has_original(origin):
                 yield from game_prose_values(child, path + (key,), key in GAME_PROSE_FIELDS)
     elif isinstance(value, list):
         for index, child in enumerate(value):
@@ -229,9 +234,10 @@ def assert_gui_environment(profile, state):
                 row = json.loads(line)
                 if row["state_version"] == state["state_version"]:
                     assert row["scope_id"] == state["scope_id"], row
-                    assert row["language"] == "CHI_SMPL", row
-                    assert row["fullscreen"] is False, row
-                    return {"gui_language": row["language"], "fullscreen": row["fullscreen"],
+                    display = state["observation"]["ui"]["display"]
+                    assert row["language_code"] == display["language"] == os.environ.get("SPDCTL_TEST_LANGUAGE", "zh"), row
+                    assert row["fullscreen"] is False and display["fullscreen"] is False, row
+                    return {"gui_language": row["language"], "language_code": row["language_code"], "fullscreen": row["fullscreen"],
                             "asserted_state_version": row["state_version"]}
         time.sleep(0.02)
     raise AssertionError("Missing original GUI language/window assertion for completed public response")

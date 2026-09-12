@@ -494,13 +494,13 @@ public class InterlevelScene extends PixelScene {
 			dots = (int)Math.ceil(waitingTime / ((2*fadeTime)/3f))%3;
 			switch (dots){
 				case 1: default:
-					loadingText.text(text + ".");
+					loadingText.text(Messages.concat(text, Messages.literal(".")));
 					break;
 				case 2:
-					loadingText.text(text + "..");
+					loadingText.text(Messages.concat(text, Messages.literal("..")));
 					break;
 				case 0:
-					loadingText.text(text + "...");
+					loadingText.text(Messages.concat(text, Messages.literal("...")));
 					break;
 			}
 		}

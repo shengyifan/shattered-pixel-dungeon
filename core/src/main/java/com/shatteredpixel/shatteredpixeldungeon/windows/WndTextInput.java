@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -79,6 +81,11 @@ public class WndTextInput extends Window {
 
 		int textSize = (int)PixelScene.uiCamera.zoom * (multiLine ? 6 : 9);
 		textBox = new TextInput(Chrome.get(Chrome.Type.TOAST_WHITE), multiLine, textSize){
+			@Override
+			public String getText() {
+				return Messages.userText(super.getText());
+			}
+
 			@Override
 			public void enterPressed() {
 				//triggers positive action on enter pressed, only with non-multiline though.

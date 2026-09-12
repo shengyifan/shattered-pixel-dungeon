@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.utils;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.watabou.utils.Random;
 
 import java.util.Locale;
@@ -104,6 +105,15 @@ public class DungeonSeed {
 		result.insert(7, '-');
 
 		return result.toString();
+	}
+
+	/** The displayed code retains scalar character sources without changing the pure encoder. */
+	public static String displayCode(long seed) {
+		String code = convertToCode(seed);
+		return Messages.format(Messages.literal("%c%c%c-%c%c%c-%c%c%c"),
+				code.charAt(0), code.charAt(1), code.charAt(2),
+				code.charAt(4), code.charAt(5), code.charAt(6),
+				code.charAt(8), code.charAt(9), code.charAt(10));
 	}
 
 	//Creates a seed from arbitrary user text input

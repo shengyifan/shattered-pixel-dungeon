@@ -141,14 +141,14 @@ public class Blandfruit extends Food {
 		if (potionAttrib== null) {
 			return super.desc();
 		} else {
-			String desc = Messages.get(this, "desc_cooked") + "\n\n";
+			String desc = Messages.concat(Messages.get(this, "desc_cooked"), Messages.literal("\n\n"));
 			if (potionAttrib instanceof PotionOfFrost
 				|| potionAttrib instanceof PotionOfLiquidFlame
 				|| potionAttrib instanceof PotionOfToxicGas
 				|| potionAttrib instanceof PotionOfParalyticGas) {
-				desc += Messages.get(this, "desc_throw");
+				desc = Messages.concat(desc, Messages.get(this, "desc_throw"));
 			} else {
-				desc += Messages.get(this, "desc_eat");
+				desc = Messages.concat(desc, Messages.get(this, "desc_eat"));
 			}
 			return desc;
 		}

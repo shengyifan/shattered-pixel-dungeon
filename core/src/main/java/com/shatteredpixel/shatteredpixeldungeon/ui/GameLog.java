@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -79,26 +80,26 @@ public class GameLog extends Component implements Signal.Listener<String> {
 
 					int color = CharSprite.DEFAULT;
 					if (text.startsWith( GLog.POSITIVE )) {
-						text = text.substring( GLog.POSITIVE.length() );
+						text = Messages.stripPrefix(text, GLog.POSITIVE);
 						color = CharSprite.POSITIVE;
 					} else
 					if (text.startsWith( GLog.NEGATIVE )) {
-						text = text.substring( GLog.NEGATIVE.length() );
+						text = Messages.stripPrefix(text, GLog.NEGATIVE);
 						color = CharSprite.NEGATIVE;
 					} else
 					if (text.startsWith( GLog.WARNING )) {
-						text = text.substring( GLog.WARNING.length() );
+						text = Messages.stripPrefix(text, GLog.WARNING);
 						color = CharSprite.WARNING;
 					} else
 					if (text.startsWith( GLog.HIGHLIGHT )) {
-						text = text.substring( GLog.HIGHLIGHT.length() );
+						text = Messages.stripPrefix(text, GLog.HIGHLIGHT);
 						color = CharSprite.NEUTRAL;
 					}
 
 					if (lastEntry != null && color == lastColor && lastEntry.nLines < maxLines) {
 
 						String lastMessage = lastEntry.text();
-						lastEntry.text( lastMessage.length() == 0 ? text : lastMessage + " " + text );
+						lastEntry.text( lastMessage.length() == 0 ? text : Messages.concat(Messages.concat(lastMessage, " "), text) );
 
 						entries.get( entries.size() - 1 ).text = lastEntry.text();
 

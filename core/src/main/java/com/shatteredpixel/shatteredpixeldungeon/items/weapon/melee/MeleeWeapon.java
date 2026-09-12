@@ -308,61 +308,61 @@ public class MeleeWeapon extends Weapon {
 		String info = super.info();
 
 		if (levelKnown) {
-			info += "\n\n" + Messages.get(MeleeWeapon.class, "stats_known", tier, augment.damageFactor(min()), augment.damageFactor(max()), STRReq());
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(MeleeWeapon.class, "stats_known", tier, augment.damageFactor(min()), augment.damageFactor(max()), STRReq())));
 			if (Dungeon.hero != null) {
 				if (STRReq() > Dungeon.hero.STR()) {
-					info += " " + Messages.get(Weapon.class, "too_heavy");
+					info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "too_heavy")));
 				} else if (Dungeon.hero.STR() > STRReq()) {
-					info += " " + Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq());
+					info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq())));
 				}
 			}
 		} else {
-			info += "\n\n" + Messages.get(MeleeWeapon.class, "stats_unknown", tier, min(0), max(0), STRReq(0));
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(MeleeWeapon.class, "stats_unknown", tier, min(0), max(0), STRReq(0))));
 			if (Dungeon.hero != null && STRReq(0) > Dungeon.hero.STR()) {
-				info += " " + Messages.get(MeleeWeapon.class, "probably_too_heavy");
+				info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(MeleeWeapon.class, "probably_too_heavy")));
 			}
 		}
 
 		String statsInfo = statsInfo();
-		if (!statsInfo.equals("")) info += "\n\n" + statsInfo;
+		if (!statsInfo.equals("")) info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), statsInfo));
 
 		switch (augment) {
 			case SPEED:
-				info += " " + Messages.get(Weapon.class, "faster");
+				info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "faster")));
 				break;
 			case DAMAGE:
-				info += " " + Messages.get(Weapon.class, "stronger");
+				info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "stronger")));
 				break;
 			case NONE:
 		}
 
 		if (isEquipped(Dungeon.hero) && !hasCurseEnchant() && Dungeon.hero.buff(HolyWeapon.HolyWepBuff.class) != null
 				&& (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)){
-			info += "\n\n" + Messages.capitalize(Messages.get(Weapon.class, "enchanted", Messages.get(HolyWeapon.class, "ench_name", Messages.get(Enchantment.class, "enchant"))));
-			info += " " + Messages.get(HolyWeapon.class, "ench_desc");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.capitalize(Messages.get(Weapon.class, "enchanted", Messages.get(HolyWeapon.class, "ench_name", Messages.get(Enchantment.class, "enchant"))))));
+			info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(HolyWeapon.class, "ench_desc")));
 		} else if (enchantment != null && (cursedKnown || !enchantment.curse())){
-			info += "\n\n" + Messages.capitalize(Messages.get(Weapon.class, "enchanted", enchantment.name()));
-			if (enchantHardened) info += " " + Messages.get(Weapon.class, "enchant_hardened");
-			info += " " + enchantment.desc();
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.capitalize(Messages.get(Weapon.class, "enchanted", enchantment.name()))));
+			if (enchantHardened) info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "enchant_hardened")));
+			info = Messages.concat(info, Messages.concat(Messages.literal(" "), enchantment.desc()));
 		} else if (enchantHardened){
-			info += "\n\n" + Messages.get(Weapon.class, "hardened_no_enchant");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "hardened_no_enchant")));
 		}
 
 		if (cursed && isEquipped( Dungeon.hero )) {
-			info += "\n\n" + Messages.get(Weapon.class, "cursed_worn");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "cursed_worn")));
 		} else if (cursedKnown && cursed) {
-			info += "\n\n" + Messages.get(Weapon.class, "cursed");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "cursed")));
 		} else if (!isIdentified() && cursedKnown){
 			if (enchantment != null && enchantment.curse()) {
-				info += "\n\n" + Messages.get(Weapon.class, "weak_cursed");
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "weak_cursed")));
 			} else {
-				info += "\n\n" + Messages.get(Weapon.class, "not_cursed");
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "not_cursed")));
 			}
 		}
 
 		//the mage's staff has no ability as it can only be gained by the mage
 		if (Dungeon.hero != null && Dungeon.hero.heroClass == HeroClass.DUELIST && !(this instanceof MagesStaff)){
-			info += "\n\n" + abilityInfo();
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), abilityInfo()));
 		}
 		
 		return info;
@@ -385,7 +385,7 @@ public class MeleeWeapon extends Weapon {
 		if (isEquipped(Dungeon.hero)
 				&& Dungeon.hero.buff(Charger.class) != null) {
 			Charger buff = Dungeon.hero.buff(Charger.class);
-			return buff.charges + "/" + buff.chargeCap();
+			return Messages.concat(Messages.concat(buff.charges, Messages.literal("/")), buff.chargeCap());
 		} else {
 			return super.status();
 		}

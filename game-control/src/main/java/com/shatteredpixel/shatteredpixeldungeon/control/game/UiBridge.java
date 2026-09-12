@@ -42,6 +42,7 @@ import com.watabou.noosa.TextInput;
 import com.watabou.noosa.ui.Component;
 import com.watabou.input.PointerEvent;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,6 +65,9 @@ public final class UiBridge {
     private final IdentityHashMap<Gizmo, ScrollPane> entries = new IdentityHashMap<>();
     private final List<Map<String, Object>> nodes = new ArrayList<>();
     private final List<Map<String, Object>> actions = new ArrayList<>();
+    // Visible GUI values also protect choices whose provenance is temporarily unavailable.
+    // This process-local signature input is never exported as public text or a resource token.
+    private final Map<String,Map<String,Object>> visibleTextSignature = new LinkedHashMap<>();
     private Scene scene;
     private Gizmo scope;
     private CellSelector cellSelector;
@@ -76,13 +80,17 @@ public final class UiBridge {
 
     public List<Map<String, Object>> describeActions() {
         refresh();
-        return PublicEnglishProjection.copyWithUi(new ArrayList<>(actions),map(
-                "scene",scene==null?"none":scene.getClass().getSimpleName(),
-                "modal",scope instanceof Window||scope instanceof RightClickMenu,"controls",new ArrayList<>(nodes),
-                "inspected_item",inspectedItemKnowledge()));
+        return PublicEnglishProjection.copy(new ArrayList<>(actions));
     }
 
-    public Map<String, Object> describeUi() {
+    public List<Map<String,Object>> frozenActions() {
+        refresh();
+        return PublicEnglishProjection.freeze(new ArrayList<>(actions));
+    }
+
+    public Map<String,Object> describeUi() { return PublicEnglishProjection.copy(frozenUi()); }
+
+    public Map<String, Object> frozenUi() {
         refresh();
         Map<String, Object> result = map("scene", scene == null ? "none" : scene.getClass().getSimpleName(),
                 "modal", scope instanceof Window || scope instanceof RightClickMenu, "controls", new ArrayList<>(nodes),
@@ -92,14 +100,14 @@ public final class UiBridge {
             result.put("display",map("language",selected==null?null:selected.code(),"fullscreen",Gdx.graphics.isFullscreen()));
         }
         if (cellSelector != null && scope == scene && cellSelector.listener != null) {
-            String prompt = englishRead(() -> cellSelector.listener.prompt());
+            String prompt = cellSelector.listener.prompt();
             result.put("cell_prompt", prompt);
             result.put("cell_input", cellAvailable());
         }
         if (scope instanceof InventoryPane) {
-            result.put("item_prompt", englishRead(() -> ((InventoryPane) scope).getSelector().textPrompt()));
+            result.put("item_prompt", ((InventoryPane) scope).getSelector().textPrompt());
         }
-        return PublicEnglishProjection.copy(result);
+        return PublicEnglishProjection.freeze(result);
     }
 
     private Map<String,Object> inspectedItemKnowledge() {
@@ -112,7 +120,7 @@ public final class UiBridge {
 
     /** A process-local signature of public control state and live callback lifetimes. */
     public String contextSignature() {
-        return signature(describeUi());
+        return signature(frozenUi());
     }
 
     /**
@@ -123,7 +131,7 @@ public final class UiBridge {
      * not also hash the unfiltered public UI into the same intent version.
      */
     public String intentSignature() {
-        Map<String, Object> ui = describeUi();
+        Map<String, Object> ui = new LinkedHashMap<>(frozenUi());
         List<Map<String, Object>> retained = new ArrayList<>();
         for (Map<String, Object> node : nodes) {
             Gizmo control=controls.get(node.get("id"));
@@ -134,10 +142,15 @@ public final class UiBridge {
     }
 
     private String signature(Map<String, Object> ui) {
+        Map<String,Object> visibleValues=new LinkedHashMap<>();
+        for(Object value:(List<?>)ui.get("controls"))if(value instanceof Map) {
+            Object id=((Map<?,?>)value).get("id");
+            if(visibleTextSignature.containsKey(id))visibleValues.put((String)id,visibleTextSignature.get(id));
+        }
         return (scene == null ? "none" : id(scene)) + ":" + (scope == null ? "none" : id(scope))
                 + ":" + callbackId(cellSelector == null ? null : cellSelector.listener)
                 + ":" + callbackId(scope instanceof InventoryPane ? ((InventoryPane) scope).getSelector() : null)
-                + ":" + ui;
+                + ":" + PublicEnglishProjection.semantics(ui) + ":" + visibleValues;
     }
 
     /** All preflight checks are read-only: no control callback, scrolling, or hidden target probing. */
@@ -368,13 +381,7 @@ public final class UiBridge {
     }
 
     private void refresh() {
-        englishRead(() -> { refreshControls(); return null; });
-    }
-
-    /** Only description getters run here; perform and its original callbacks run after finally restores the GUI language. */
-    private static <T> T englishRead(Supplier<T> read) {
-        if (!Boolean.TRUE.equals(new ClassInitializationProbe().initialized(Messages.class))) return read.get();
-        return Messages.withLanguage(Languages.ENGLISH, read);
+        refreshControls();
     }
 
     private void refreshControls() {
@@ -388,6 +395,7 @@ public final class UiBridge {
         entries.clear();
         nodes.clear();
         actions.clear();
+        visibleTextSignature.clear();
         cellSelector = null;
         scope = scene;
         if (scene == null) return;
@@ -427,9 +435,9 @@ public final class UiBridge {
     private static Gizmo topWindow(Gizmo gizmo) {
         if (!shown(gizmo)) return null;
         Gizmo result = gizmo instanceof Window || gizmo instanceof RightClickMenu ? gizmo : null;
-        // Log words are rendered leaves, never windows. Do not invoke Visual.isVisible on them:
-        // that getter caches cameras and would make reading a log mutate its renderer state.
-        if (isGameLogText(gizmo)) return result;
+        // Laid-out text contains rendered leaves, not controls or windows. Calling
+        // Visual.isVisible on words would populate camera caches during observation.
+        if (gizmo instanceof RenderedTextBlock) return result;
         if (gizmo instanceof Group) {
             for (Gizmo child : ((Group) gizmo).childrenSnapshot()) {
                 Gizmo next = topWindow(child);
@@ -442,7 +450,7 @@ public final class UiBridge {
     private static InventoryPane selectingInventory(Gizmo gizmo) {
         if (!shown(gizmo)) return null;
         if (gizmo instanceof InventoryPane && ((InventoryPane) gizmo).isSelecting()) return (InventoryPane) gizmo;
-        if (isGameLogText(gizmo)) return null;
+        if (gizmo instanceof RenderedTextBlock) return null;
         if (gizmo instanceof Group) {
             for (Gizmo child : ((Group) gizmo).childrenSnapshot()) {
                 InventoryPane found = selectingInventory(child);
@@ -456,7 +464,8 @@ public final class UiBridge {
         if (!shown(gizmo)) return;
         RenderedTextBlock.VisibleText floatingFragment=floatingFragment(gizmo);
         if(gizmo instanceof FloatingText&&floatingFragment==null)return;
-        RenderedTextBlock.VisibleText logFragment = gameLogFragment(gizmo);
+        RenderedTextBlock.VisibleText logFragment = gizmo instanceof RenderedTextBlock && !(gizmo instanceof FloatingText)
+                ? ((RenderedTextBlock)gizmo).visibleTextFragment() : null;
         if (logFragment != null && !logFragment.visible) return;
         boolean ui = inUi || gizmo instanceof Component || gizmo instanceof Window || gizmo instanceof ActionArea;
         String role = role(gizmo, pane);
@@ -466,8 +475,14 @@ public final class UiBridge {
             controls.put(nodeId, gizmo);
             Map<String, Object> node = map("id", nodeId, "role", role, "enabled", gizmo.isActive());
             if (parentId != null) node.put("parent", parentId);
+            Map<String,Object> visibleValues=new LinkedHashMap<>();
+            visibleTextSignature.put(nodeId,visibleValues);
             String text = floatingFragment!=null?floatingFragment.text:logFragment == null ? visibleText(gizmo) : logFragment.text;
-            if (text != null && !text.isEmpty()) node.put("text", text);
+            boolean clipped=floatingFragment != null && floatingFragment.clipped
+                    || logFragment != null && logFragment.clipped || clippedDirectText(gizmo);
+            if(text!=null)visibleValues.put("text",gizmo instanceof BitmapText && clipped ? "clipped_bitmap" : text);
+            if (text != null && (!text.isEmpty()||clipped)) node.put("text", TextProvenance.INSTANCE.capture(gizmo,text,clipped));
+            if(clipped)node.put("clipped",true);
             if(floatingFragment!=null&&!floatingFragment.clipped)
                 node.put("presentation","floating_text");
             if(floatingFragment!=null&&floatingFragment.clipped)node.put("clipped",true);
@@ -493,7 +508,7 @@ public final class UiBridge {
                 if (gizmo.isActive()) addAction("ui.activate", nodeId, node, "gestures", Collections.singletonList("click"));
             } else if (gizmo instanceof TextInput) {
                 TextInput input = (TextInput) gizmo;
-                node.put("value", input.getText());
+                node.put("value", TextProvenance.INSTANCE.capture(null, Messages.userText(input.getText()), false));
                 node.put("max_length", input.maximumLength());
                 node.put("multiline", input.multiline());
                 if (gizmo.isActive()) addAction("ui.text", nodeId, node, "submit_supported", !input.multiline());
@@ -546,6 +561,7 @@ public final class UiBridge {
                     node.put("cell", ((TargetHealthIndicator) gizmo).target().pos);
                 }
             }
+            for(String field:Arrays.asList("label","options"))if(node.containsKey(field))visibleValues.put(field,node.get(field));
             nodes.add(node);
         }
         // A text block already carries its original complete rendered string.
@@ -589,24 +605,41 @@ public final class UiBridge {
         }
         RenderedTextBlock.VisibleText logFragment = gameLogFragment(gizmo);
         if (logFragment != null) return logFragment.visible ? logFragment.text : null;
-        if (gizmo instanceof RenderedTextBlock) return ((RenderedTextBlock) gizmo).text();
-        if (gizmo instanceof BitmapText) return ((BitmapText) gizmo).text();
-        if (gizmo instanceof StyledButton) return ((StyledButton) gizmo).text();
+        if (gizmo instanceof RenderedTextBlock) {
+            RenderedTextBlock.VisibleText fragment=((RenderedTextBlock)gizmo).visibleTextFragment();
+            return fragment.visible ? fragment.text : null;
+        }
+        if (gizmo instanceof BitmapText) return clippedDirectText(gizmo) ? "" : ((BitmapText) gizmo).text();
         if (gizmo instanceof TextInput) return null;
-        StringBuilder result = new StringBuilder();
+        String result = Messages.literal("");
         if (gizmo instanceof Group) {
             for (Gizmo child : ((Group) gizmo).childrenSnapshot()) {
                 if (!shown(child)) continue;
                 if (child instanceof RenderedTextBlock || child instanceof BitmapText) {
                     String text = visibleText(child);
                     if (text != null && !text.isEmpty()) {
-                        if (result.length() > 0) result.append('\n');
-                        result.append(text);
+                        if (result.length() > 0) result = Messages.concat(result, '\n');
+                        result = Messages.concat(result, text);
                     }
                 }
             }
         }
-        return result.toString();
+        return result;
+    }
+
+    private static boolean clippedDirectText(Gizmo gizmo) {
+        if(gizmo instanceof RenderedTextBlock)return ((RenderedTextBlock)gizmo).visibleTextFragment().clipped;
+        if(gizmo instanceof BitmapText) {
+            BitmapText text=(BitmapText)gizmo;
+            com.watabou.noosa.Camera camera=null;
+            for(Gizmo node=gizmo;node!=null&&camera==null;node=node.parent)camera=node.camera;
+            return camera==null||camera.scroll==null||text.angle!=0||text.origin.x!=0||text.origin.y!=0
+                    ||text.x<camera.scroll.x||text.y<camera.scroll.y
+                    ||text.x+text.width()>camera.scroll.x+camera.width||text.y+text.height()>camera.scroll.y+camera.height;
+        }
+        if(gizmo instanceof Group)for(Gizmo child:((Group)gizmo).childrenSnapshot())
+            if(shown(child)&&(child instanceof RenderedTextBlock||child instanceof BitmapText)&&clippedDirectText(child))return true;
+        return false;
     }
 
     private static RenderedTextBlock.VisibleText floatingFragment(Gizmo gizmo) {
@@ -687,6 +720,10 @@ public final class UiBridge {
     }
 
     private static boolean shown(Gizmo gizmo) {
+        if(gizmo instanceof BitmapText) {
+            BitmapText text=(BitmapText)gizmo;
+            if(!Float.isFinite(text.am+text.aa)||text.am+text.aa<=0)return false;
+        }
         return gizmo instanceof ActionArea ? ((ActionArea) gizmo).semanticVisible()
                 : gizmo != null && gizmo.exists && gizmo.isVisible();
     }

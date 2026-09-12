@@ -126,9 +126,9 @@ public class Imp extends NPC {
 			}
 			
 		} else {
-			tell( Messages.get(this, "intro") + "\n\n" + (Quest.alternative ?
+			tell( Messages.concat(Messages.concat(Messages.get(this, "intro"), Messages.literal("\n\n")), (Quest.alternative ?
 					Messages.get(this, "monks_1", Messages.titleCase(Dungeon.hero.name()))
-					: Messages.get(this, "golems_1", Messages.titleCase(Dungeon.hero.name()))) );
+					: Messages.get(this, "golems_1", Messages.titleCase(Dungeon.hero.name())))) );
 			Quest.given = true;
 			Quest.completed = false;
 		}

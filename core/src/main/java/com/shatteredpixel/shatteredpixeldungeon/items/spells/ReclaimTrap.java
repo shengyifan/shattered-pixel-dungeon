@@ -118,9 +118,9 @@ public class ReclaimTrap extends TargetedSpell {
 	public String desc() {
 		String desc = super.desc();
 		if (storedTrap != null){
-			desc += "\n\n" + Messages.get(this, "desc_trap", Messages.get(storedTrap, "name"));
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_trap", Messages.get(storedTrap, "name"))));
 		} else if (Dungeon.hero != null && Dungeon.hero.belongings.contains(this) && Dungeon.hero.buff(ReclaimedTrap.class) != null){
-			desc += "\n\n" + Messages.get(this, "desc_trap", Messages.get(Dungeon.hero.buff(ReclaimedTrap.class).trap, "name"));
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_trap", Messages.get(Dungeon.hero.buff(ReclaimedTrap.class).trap, "name"))));
 		}
 		return desc;
 	}

@@ -47,11 +47,13 @@ class ScopedLanguageTest {
     @BeforeAll
     static void resources() { GameSnapshotterTest.resourceOnlyRuntime(); }
 
+    private TextObservationFixture textObserver;
     @BeforeEach
-    void chineseGui() { Messages.setup(Languages.CHI_SMPL); }
+    void chineseGui() { textObserver=new TextObservationFixture(); Messages.setup(Languages.CHI_SMPL); }
 
     @AfterEach
     void restoreFixture() {
+        textObserver.close();
         Messages.setup(Languages.ENGLISH);
         Dungeon.hero = null;
         Dungeon.level = null;
@@ -280,9 +282,9 @@ class ScopedLanguageTest {
         byte[] rng = Random.exportState();
         String before = JsonCodec.encode(new InternalGraphSnapshotter().capture(map("hero", hero)));
         for (int i = 0; i < 25; i++) {
-            Map<String, Object> observation = PlayerObservation.capture(hero, null, "game");
+            Map<String, Object> observation = PublicEnglishProjection.copy(PlayerObservation.capture(hero, null, "game"));
             assertEquals("warrior", ((Map<?, ?>) observation.get("hero")).get("class_name"));
-            assertEquals("crimson potion", PlayerObservation.item(unknown, "backpack.0", false).get("name"));
+            assertEquals("crimson potion", PublicEnglishProjection.copy(PlayerObservation.item(unknown, "backpack.0", false)).get("name"));
             assertEquals(Languages.CHI_SMPL, Messages.lang());
         }
         assertEquals(chineseName, HeroClass.WARRIOR.title());
@@ -295,8 +297,8 @@ class ScopedLanguageTest {
 
     @Test
     void unknownIdentitiesRemainIndistinguishableInEnglishWithChineseGui() throws Exception {
-        Map<String, Object> healing = PlayerObservation.item(potion(PotionOfHealing.class), "backpack.0", false);
-        Map<String, Object> frost = PlayerObservation.item(potion(PotionOfFrost.class), "backpack.0", false);
+        Map<String, Object> healing = PublicEnglishProjection.copy(PlayerObservation.item(potion(PotionOfHealing.class), "backpack.0", false));
+        Map<String, Object> frost = PublicEnglishProjection.copy(PlayerObservation.item(potion(PotionOfFrost.class), "backpack.0", false));
         assertEquals(healing, frost);
         assertEquals("crimson potion", healing.get("name"));
         assertEquals("This flask contains a swirling colorful liquid. Who knows what it will do when drunk or thrown?",

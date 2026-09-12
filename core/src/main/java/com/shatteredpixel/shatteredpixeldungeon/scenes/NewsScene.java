@@ -186,13 +186,13 @@ public class NewsScene extends PixelScene {
 			String message = "";
 
 			if (Messages.lang() != Languages.ENGLISH){
-				message += Messages.get(this, "english_warn");
+				message = Messages.concat(message, Messages.get(this, "english_warn"));
 			}
 			
 			if (!News.articlesAvailable()){
 				if (SPDSettings.news()) {
 					if (SPDSettings.WiFi() && !Game.platform.connectedToUnmeteredNetwork()) {
-						message += "\n\n" + Messages.get(this, "metered_network");
+						message = Messages.concat(message, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "metered_network")));
 
 						button = new RedButton(Messages.get(this, "enable_data")) {
 							@Override
@@ -205,10 +205,10 @@ public class NewsScene extends PixelScene {
 						};
 						add(button);
 					} else {
-						message += "\n\n" + Messages.get(this, "no_internet");
+						message = Messages.concat(message, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "no_internet")));
 					}
 				} else {
-					message += "\n\n" + Messages.get(this, "news_disabled");
+					message = Messages.concat(message, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "news_disabled")));
 
 					button = new RedButton(Messages.get(this, "enable_news")) {
 						@Override
@@ -223,7 +223,7 @@ public class NewsScene extends PixelScene {
 				}
 			}
 
-			if (message.startsWith("\n\n")) message = message.replaceFirst("\n\n", "");
+			if (message.startsWith("\n\n")) message = Messages.stripPrefix(message, "\n\n");
 			
 			text = PixelScene.renderTextBlock(message, 6);
 			text.hardlight(CharSprite.WARNING);
@@ -263,7 +263,7 @@ public class NewsScene extends PixelScene {
 		BitmapText date;
 
 		public ArticleButton(NewsArticle article) {
-			super(Chrome.Type.GREY_BUTTON_TR, article.title, 6);
+			super(Chrome.Type.GREY_BUTTON_TR, Messages.externalText(article.title), 6);
 			this.article = article;
 
 			icon(News.parseArticleIcon(article));
@@ -308,7 +308,7 @@ public class NewsScene extends PixelScene {
 	private static class WndArticle extends WndTitledMessage {
 
 		public WndArticle(NewsArticle article ) {
-			super(News.parseArticleIcon(article), article.title, article.summary);
+			super(News.parseArticleIcon(article), Messages.externalText(article.title), Messages.externalText(article.summary));
 
 			RedButton link = new RedButton(Messages.get(NewsScene.class, "read_more")){
 				@Override

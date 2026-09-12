@@ -205,9 +205,9 @@ public class WandOfLivingEarth extends DamageWand {
 	@Override
 	public String upgradeStat3(int level) {
 		if (Dungeon.isChallenged(Challenges.NO_ARMOR)){
-			return level + "-" + (2+level);
+			return Messages.concat(Messages.concat(level, Messages.literal("-")), (2+level));
 		} else {
-			return level + "-" + (3+(3*level));
+			return Messages.concat(Messages.concat(level, Messages.literal("-")), (3+(3*level)));
 		}
 	}
 
@@ -335,7 +335,7 @@ public class WandOfLivingEarth extends DamageWand {
 		public String desc() {
 			String desc = Messages.get( this, "desc", armor, armorToGuardian());
 			if (isEmpowered()){
-				desc += "\n\n" + Messages.get(this, "desc_many", (int)powerOfManyTurns);
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_many", (int)powerOfManyTurns)));
 			}
 			return desc;
 		}
@@ -429,9 +429,9 @@ public class WandOfLivingEarth extends DamageWand {
 
 			if (Actor.chars().contains(this)) {
 				if (Dungeon.isChallenged(Challenges.NO_ARMOR)) {
-					desc += "\n\n" + Messages.get(this, "wand_info", wandLevel, 2 + wandLevel);
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "wand_info", wandLevel, 2 + wandLevel)));
 				} else {
-					desc += "\n\n" + Messages.get(this, "wand_info", wandLevel, 3 + 3 * wandLevel);
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "wand_info", wandLevel, 3 + 3 * wandLevel)));
 				}
 			}
 

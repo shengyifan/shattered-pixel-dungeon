@@ -1,6 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
-import com.shatteredpixel.shatteredpixeldungeon.control.game.DisplayedTextEnglish;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 
@@ -72,6 +71,7 @@ public final class EnglishCorpusProbe {
             Map<String, Object> metadata = metadata(object);
             for (Map.Entry<?, ?> entry : object.entrySet()) {
                 String key = (String) entry.getKey();
+                if (Arrays.asList("text_sources","text_diagnostics","presentation","response","response_json","raw_request","raw_bytes","original_payload").contains(key)) continue;
                 String suffix = "/" + key.replace("~", "~0").replace("/", "~1");
                 walk(entry.getValue(), key, scene, context, metadata,
                         key.equals("text") && Boolean.TRUE.equals(object.get("clipped")),
@@ -91,13 +91,8 @@ public final class EnglishCorpusProbe {
                                Map<String, Object> metadata, boolean clipped,
                                String path, String pattern, Map<String, Object> sample) {
         strings++;
-        // Context policies only affect non-Latin letters. Reuse successful English/opaque
-        // leaves across frames while still delegating their first translation to production.
-        boolean contextSensitive = original.codePoints().anyMatch(code -> Character.isLetter(code)
-                && Character.UnicodeScript.of(code) != Character.UnicodeScript.LATIN
-                && Character.UnicodeScript.of(code) != Character.UnicodeScript.COMMON);
-        List<Object> key = Arrays.asList(scene, field, clipped, original,
-                contextSensitive ? metadata : null, contextSensitive && ui != null ? ui.key : null);
+        // Source identity, rather than matching surface text or its script, controls rendering.
+        List<Object> key = Arrays.asList(scene, field, clipped, original, metadata);
         Outcome outcome = cache.computeIfAbsent(key, ignored -> translate(original, field, scene, ui, metadata, clipped));
         if (outcome.changed) translated++;
         if (outcome.status.equals("ok")) return;
@@ -126,22 +121,19 @@ public final class EnglishCorpusProbe {
         Map<String, Object> leaf = new LinkedHashMap<>(metadata);
         leaf.put(field, original);
         if (clipped) leaf.put("clipped", true);
-        try {
-            Map<String, Object> result = project(leaf, scene, ui);
-            if ("partial".equals(result.get("translation_status"))) {
-                String reason = "clipped_visible_text_fallback";
-                // Obtain the diagnostic under the SAME actual public context, without
-                // the clipped fallback. Do not fall back to the old context-free lookup.
-                Map<String, Object> complete = new LinkedHashMap<>(leaf);
-                complete.put("clipped", false);
-                try { project(complete, scene, ui); }
-                catch (DisplayedTextEnglish.PublicTextUnavailableException failure) { reason = failure.diagnosticReason(); }
-                return new Outcome("partial", reason, true);
-            }
-            return new Outcome("ok", null, !Objects.equals(original, result.get(field)));
-        } catch (DisplayedTextEnglish.PublicTextUnavailableException failure) {
-            return new Outcome("unavailable", failure.diagnosticReason(), false);
+        // Frozen protocol-2 output already has a source or a recorded per-field diagnostic.
+        // Inspect this leaf without borrowing any neighboring field's provenance.
+        for(String sidecar:Arrays.asList("text_sources","text_diagnostics")) {
+            Object entries=metadata.get(sidecar);
+            if(entries instanceof Map && ((Map<?,?>)entries).containsKey(field))
+                leaf.put(sidecar,map(field,((Map<?,?>)entries).get(field)));
+            else leaf.remove(sidecar);
         }
+        Map<String,Object> result=project(leaf,scene,ui);
+        Object diagnostics=result.get("text_diagnostics");
+        Object reason=diagnostics instanceof Map?((Map<?,?>)diagnostics).get(field):null;
+        if(reason!=null)return new Outcome(clipped?"partial":"unavailable",reason.toString(),!Objects.equals(original,result.get(field)));
+        return new Outcome("ok",null,!Objects.equals(original,result.get(field)));
     }
 
     private static Map<String, Object> project(Map<String, Object> leaf, String scene, UiContext ui) {
@@ -156,6 +148,8 @@ public final class EnglishCorpusProbe {
             if (owner.containsKey(key) && (value == null || value instanceof String
                     || value instanceof Number || value instanceof Boolean)) result.put(key, value);
         }
+        for(String sidecar:Arrays.asList("text_sources","text_diagnostics"))
+            if(owner.get(sidecar) instanceof Map)result.put(sidecar,owner.get(sidecar));
         return result;
     }
 

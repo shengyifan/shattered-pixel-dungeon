@@ -222,7 +222,7 @@ public class AuditStoreTest {
         }
     }
 
-    @Test public void migratesPairedVersionOneSnapshotsWithoutChangingTheirMeaning() throws Exception {
+    @Test public void rejectsVersionOneSnapshotsWithoutChangingEitherFile() throws Exception {
         Path root = temporary.newFolder().toPath();
         String id;
         try (AuditStore store = new AuditStore(root)) {
@@ -242,14 +242,7 @@ public class AuditStoreTest {
                 s.execute("UPDATE metadata SET value='1' WHERE key='schema_version'");
             }
         }
-        try (AuditStore store = new AuditStore(root)) {
-            assertEquals(23L, ((Map<?, ?>) store.getRequest("run:a", "old").get("after_snapshot")).get("hp"));
-            assertTrue(store.begin("run:a", "old", "state.get", "{}").duplicate);
-            try (Connection db = connect(store.internalDatabase()); Statement s = db.createStatement();
-                 ResultSet rs = s.executeQuery("SELECT b.body FROM snapshots s JOIN snapshot_blobs b ON b.content_id=s.content_id")) {
-                assertTrue(rs.next()); assertEquals(Values.map("secret", "legacy"), SnapshotCodec.decodeInternal(rs.getBytes(1), key -> internalBlock(db, key)));
-            }
-        }
+        AuditSchemaFiveTest.assertRejectedWithoutChanges(root);
     }
 
     @Test public void realProcessCrashAfterAnExternalEffectIsUnknownAndNeverReplayable() throws Exception {

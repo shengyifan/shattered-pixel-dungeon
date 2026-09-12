@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.services.news;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
@@ -125,9 +127,7 @@ public class News {
 	public static String parseArticleDate(NewsArticle article){
 		Calendar cal = GregorianCalendar.getInstance();
 		cal.setTime(article.date);
-		return cal.get(Calendar.YEAR)
-				+ "-" + String.format("%02d", cal.get(Calendar.MONTH)+1)
-				+ "-" + String.format("%02d", cal.get(Calendar.DAY_OF_MONTH));
+		return Messages.concat(Messages.concat(Messages.concat(Messages.concat(cal.get(Calendar.YEAR), Messages.literal("-")), String.format("%02d", cal.get(Calendar.MONTH)+1)), Messages.literal("-")), String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
 	}
 
 }

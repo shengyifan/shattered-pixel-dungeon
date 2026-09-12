@@ -65,12 +65,12 @@ def main():
             process.stdin.write(frame)
             process.stdin.flush()
             return receive(process)
-        first = exchange(b'{"id":"package-info","op":"protocol.info"}\r\n')
+        first = exchange(b'{"protocol_version":2,"id":"package-info","op":"protocol.info"}\r\n')
         assert first["ok"], first
         scope = first["result"]["scope_id"]
-        invalid = exchange(b'{"id":"invalid-encoding","op":"state.get","x":"\xff"}\n')
+        invalid = exchange(b'{"protocol_version":2,"id":"invalid-encoding","op":"state.get","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = json.dumps({"id": "中文-query", "scope_id": scope, "op": "state.get"}, ensure_ascii=False).encode() + b"\n"
+        query = json.dumps({"protocol_version": 2, "id": "中文-query", "scope_id": scope, "op": "state.get"}, ensure_ascii=False).encode() + b"\n"
         observed = exchange(query)
         assert observed["ok"], observed
         duplicate = exchange(query)
@@ -88,7 +88,7 @@ def main():
             process.kill()
             process.wait()
         stderr.close()
-    final_frame=json.dumps({"id":"package-eof-frame","scope_id":scope,"op":"state.get"}).encode()
+    final_frame=json.dumps({"protocol_version": 2, "id":"package-eof-frame","scope_id":scope,"op":"state.get"}).encode()
     restarted=subprocess.run(command,input=final_frame,capture_output=True,env=env,timeout=40)
     assert restarted.returncode==0,(restarted.returncode,restarted.stderr)
     delivered=restarted.stdout.splitlines()

@@ -256,7 +256,7 @@ public class ItemSlot extends Button {
 
 			if (item.levelKnown){
 				int str = item instanceof Weapon ? ((Weapon)item).STRReq() : ((Armor)item).STRReq();
-				extra.text( Messages.format( TXT_STRENGTH, str ) );
+				extra.text( Messages.format( Messages.literal(TXT_STRENGTH), str ) );
 				if (Dungeon.hero != null && str > Dungeon.hero.STR()) {
 					extra.hardlight( DEGRADED );
 				} else if (item instanceof Weapon && ((Weapon) item).masteryPotionBonus){
@@ -268,7 +268,7 @@ public class ItemSlot extends Button {
 				}
 			} else {
 				int str = item instanceof Weapon ? ((Weapon)item).STRReq(0) : ((Armor)item).STRReq(0);
-				extra.text( Messages.format( TXT_TYPICAL_STR, str ) );
+				extra.text( Messages.format( Messages.literal(TXT_TYPICAL_STR), str ) );
 				extra.hardlight( WARNING );
 			}
 			extra.measure();
@@ -283,7 +283,7 @@ public class ItemSlot extends Button {
 		int buffedLvl = item.buffedVisiblyUpgraded();
 
 		if (trueLvl != 0 || buffedLvl != 0) {
-			level.text( Messages.format( TXT_LEVEL, buffedLvl ) );
+			level.text( Messages.format( Messages.literal(TXT_LEVEL), buffedLvl ) );
 			level.measure();
 			if (trueLvl == buffedLvl || buffedLvl <= 0) {
 				if (buffedLvl > 0){

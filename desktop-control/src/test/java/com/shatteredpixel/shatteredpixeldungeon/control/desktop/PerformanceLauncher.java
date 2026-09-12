@@ -47,6 +47,7 @@ public final class PerformanceLauncher {
         Path allowed=Path.of("desktop-control/build/fixtures").toAbsolutePath().normalize();Files.createDirectories(allowed);
         profile=profile.toAbsolutePath().normalize();
         if(!profile.startsWith(allowed)||profile.equals(allowed))throw new IllegalArgumentException("Use an isolated fixture profile");
+        AuditStore.preflight(profile.resolve("audit"));
         Files.createDirectories(profile);profile=profile.toRealPath();
         if(!profile.startsWith(allowed.toRealPath()))throw new IllegalArgumentException("Profile resolves outside fixture root");
         write(profile.resolve("test_fixture.json"),map("test_fixture",true,"counts_as_win",false,"scenario",scenario));
@@ -55,6 +56,12 @@ public final class PerformanceLauncher {
         System.setProperty("Implementation-Title","com.shatteredpixel.shatteredpixeldungeon");
         System.setProperty("Specification-Version","3.3.8");System.setProperty("Implementation-Version","896");
         try(ProfileLock ignored=new ProfileLock(profile);AuditStore store=new AuditStore(profile.resolve("audit"))) {
+            store.recoverInterrupted();
+            store.beginSession(java.util.UUID.randomUUID().toString(),
+                    (String)com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
+                    (String)com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("cli_version"),
+                    com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest.PROTOCOL_VERSION);
+            java.util.concurrent.atomic.AtomicBoolean runtimeFailed=new java.util.concurrent.atomic.AtomicBoolean();
             AtomicReference<MachineSession> sessionRef=new AtomicReference<>();
             GameController game=new GameController(profile,store.menuScope(),error->{if(sessionRef.get()!=null)sessionRef.get().recordException(error);});
             try(MachineSession session=new MachineSession(store,game,wire)) {
@@ -67,8 +74,15 @@ public final class PerformanceLauncher {
                 System.setOut(new PrintStream(new DiagnosticOutput(session,"benchmark_stdout"),true,StandardCharsets.UTF_8));
                 System.setErr(new PrintStream(new DiagnosticOutput(session,"benchmark_stderr"),true,StandardCharsets.UTF_8));
                 Thread input=new Thread(()->session.read(System.in),"Benchmark Machine Input");input.setDaemon(true);input.start();
-                try{DesktopLauncher.launch(new String[0],profile,(thread,error)->{session.recordException(error);game.exitNow();},true);}
+                try{DesktopLauncher.launch(new String[0],profile,(thread,error)->{runtimeFailed.set(true);session.recordException(error);game.exitNow();},true);}
+                catch(Throwable error){
+                    runtimeFailed.set(true);session.recordRuntimeFailure(error);game.runtimeFailed(error);
+                    throw error;
+                }
                 finally{Game.observer=RuntimeObserver.NONE;}
+            } finally {
+                MachineSession completed=sessionRef.get();
+                store.endSession(completed==null||completed.failed()||runtimeFailed.get()?"FAILED":"CLOSED","benchmark_launcher_finished");
             }
         }
     }

@@ -28,7 +28,10 @@ final class UiSceneAssertions {
                 "test_fixture", true, "internal_assertion_only", true,
                 "state_version", state.version, "scope_id", state.scopeId,
                 "scene", Game.scene() == null ? null : Game.scene().getClass().getName(),
-                "window_classes", windows, "language", Messages.lang().name(),
+                "window_classes", windows, "language", Messages.selectedLanguage().name(),
+                "language_code", Messages.selectedLanguage().code(),
+                "input_generation", Game.inputHandler==null?0:Game.inputHandler.interactionGeneration(),
+                "public_ui", com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection.copy(state.publicState.get("ui")),
                 "fullscreen", Gdx.graphics.isFullscreen())) + "\n", StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }

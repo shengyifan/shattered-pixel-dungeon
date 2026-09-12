@@ -198,24 +198,24 @@ public class SandalsOfNature extends Artifact {
 		String desc = Messages.get(this, "desc_" + (level()+1));
 
 		if ( isEquipped ( Dungeon.hero ) ) {
-			desc += "\n\n";
+			desc = Messages.concat(desc, Messages.literal("\n\n"));
 
 			if (!cursed) {
-				desc += Messages.get(this, "desc_hint");
+				desc = Messages.concat(desc, Messages.get(this, "desc_hint"));
 			} else {
-				desc += Messages.get(this, "desc_cursed");
+				desc = Messages.concat(desc, Messages.get(this, "desc_cursed"));
 			}
 
 		}
 
 		if (curSeedEffect != null){
-				desc += "\n\n" + Messages.get(this, "desc_ability",
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_ability",
 					Messages.titleCase(Messages.get(curSeedEffect, "name")),
-					seedChargeReqs.get(curSeedEffect));
+					seedChargeReqs.get(curSeedEffect))));
 		}
 
 		if (!seeds.isEmpty()){
-			desc += "\n\n" + Messages.get(this, "desc_seeds", seeds.size());
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_seeds", seeds.size())));
 		}
 
 		return desc;

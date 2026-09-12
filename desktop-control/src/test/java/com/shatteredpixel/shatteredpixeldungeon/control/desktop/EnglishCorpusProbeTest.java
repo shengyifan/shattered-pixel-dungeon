@@ -1,6 +1,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -8,7 +10,6 @@ import org.junit.rules.TemporaryFolder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -48,55 +49,48 @@ public class EnglishCorpusProbeTest {
         assertEquals("partial", issue.get("status"));
     }
 
-    @Test public void publicParentAndActionControlContextResolveBackAndSliderOff() {
-        Map<String, Object> ui = map("scene", "GameScene", "modal", true, "controls", Arrays.asList(
-                map("id", "slider", "role", "slider", "minimum", 0, "maximum", 2, "value", 0),
-                map("id", "off", "role", "text", "parent", "slider", "text", "关闭", "clipped", true),
-                map("id", "back", "role", "button", "shortcut_action", "back", "label", "返回")));
-        Map<String, Object> response = map("result", map("observation", map("ui", ui), "actions", Arrays.asList(
-                map("action", "ui.activate", "control", "back", "label", "返回"))));
-        String before = JsonCodec.encode(response);
-        EnglishCorpusProbe probe = new EnglishCorpusProbe();
-        probe.inspect(response, map());
-        assertEquals(0L, probe.report().get("unavailable_occurrences"));
-        assertEquals(0L, probe.report().get("partial_occurrences"));
-        assertEquals(before, JsonCodec.encode(response));
-
-        Map<?, ?> off = (Map<?, ?>) ((List<?>) ui.get("controls")).get(1);
-        @SuppressWarnings("unchecked") Map<String, Object> mutableOff = (Map<String, Object>) off;
-        mutableOff.put("parent", "absent-parent");
-        probe.inspect(response, map());
-        assertEquals(1L, probe.report().get("partial_occurrences"));
-        assertEquals(0L, probe.report().get("unavailable_occurrences"));
+    @Test public void frozenOriginsTranslateLabelsWhileClippedContentAlwaysStaysPartial() {
+        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
+        String off=TextProvenance.INSTANCE.onTextResource("关闭","windows.wndsettings$displaytab.off","zh",new Object[0]);
+        Map<String,Object> response=PublicEnglishProjection.copy(map("result",List.of(
+                map("role","button","label",back),map("role","text","text",off,"clipped",true))));
+        String before=JsonCodec.encode(response);
+        EnglishCorpusProbe probe=new EnglishCorpusProbe();probe.inspect(response,map());
+        assertEquals(0L,probe.report().get("unavailable_occurrences"));
+        assertEquals(1L,probe.report().get("partial_occurrences"));
+        assertEquals(before,JsonCodec.encode(response));
     }
 
-    @Test public void saveEraseNeedsFullPublicSignatureAndCacheCannotReuseOldContext() {
-        List<Object> controls = new ArrayList<>(Arrays.asList(
-                map("id", "continue", "role", "button", "text", "继续"),
-                map("id", "erase", "role", "button", "text", "删除"),
-                map("role", "text", "text", "力量"), map("role", "text", "text", "生命"),
-                map("role", "text", "text", "金币收集数"), map("role", "text", "text", "最高层数")));
-        Map<String, Object> ui = map("scene", "StartScene", "modal", true, "controls", controls);
-        Map<String, Object> response = map("result", map("observation", map("ui", ui), "actions", Arrays.asList(
-                map("action", "ui.activate", "control", "erase", "label", "删除"))));
-        EnglishCorpusProbe probe = new EnglishCorpusProbe();
-        probe.inspect(response, map());
-        assertEquals(0L, occurrences(probe, "删除"));
-        controls.remove(3); // Removing one public signature item must invalidate this disambiguation.
-        probe.inspect(response, map());
-        assertEquals(2L, occurrences(probe, "删除"));
+    @Test public void cacheCannotReuseAFormerOriginForTheSameSurfaceText() {
+        String erase=TextProvenance.INSTANCE.onTextResource("删除","windows.wndgameinprogress.erase","zh",new Object[0]);
+        Map<String,Object> complete=PublicEnglishProjection.copy(map("role","button","text",erase));
+        String displayed=(String)complete.get("text");
+        EnglishCorpusProbe probe=new EnglishCorpusProbe();
+        probe.inspect(map("result",complete),map());
+        assertEquals(0L,occurrences(probe,displayed));
+        probe.inspect(map("result",map("role","button","text",new String(displayed))),map());
+        assertEquals(1L,occurrences(probe,displayed));
     }
 
-    @Test public void actionWithoutCorrespondingPublicUiCannotBorrowAnotherResponsesControls() {
-        Map<String, Object> ui = map("scene", "TitleScene", "controls", Arrays.asList(
-                map("id", "back", "role", "button", "shortcut_action", "back", "label", "返回")));
-        EnglishCorpusProbe probe = new EnglishCorpusProbe();
-        probe.inspect(map("result", map("observation", map("ui", ui))), map());
-        assertEquals(0L, occurrences(probe, "返回"));
-        probe.inspect(map("result", Arrays.asList(map("action", "ui.activate", "control", "back", "label", "返回"))), map());
-        assertEquals(1L, occurrences(probe, "返回"));
-        Map<?, ?> issue = (Map<?, ?>) ((List<?>) probe.report().get("issues")).get(0);
+    @Test public void actionTextWithoutItsOwnSourceCannotBorrowAnotherResponsesControls() {
+        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
+        Map<String,Object> action=PublicEnglishProjection.copy(map("action","ui.activate","control","back","label",back));
+        EnglishCorpusProbe probe=new EnglishCorpusProbe();
+        probe.inspect(map("result",action),map());
+        assertEquals(0L,probe.report().get("unavailable_occurrences"));
+        probe.inspect(map("result",map("action","ui.activate","control","back","label","返回")),map());
+        assertEquals(1L,occurrences(probe,"返回"));
+        Map<?,?> issue=(Map<?,?>)((List<?>)probe.report().get("issues")).get(0);
         assertNull(issue.get("scene"));
+    }
+
+    @Test public void neighboringPartialFieldsDoNotContaminateACompleteFieldDiagnostic() {
+        String label=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
+        Map<String,Object> rendered=PublicEnglishProjection.copy(map("label",label,"description","无来源的新说明"));
+        EnglishCorpusProbe probe=new EnglishCorpusProbe();probe.inspect(map("result",rendered),map());
+        assertEquals(1L,probe.report().get("unavailable_occurrences"));
+        Map<?,?> issue=(Map<?,?>)((List<?>)probe.report().get("issues")).get(0);
+        assertEquals("description",issue.get("field"));
     }
 
     private static long occurrences(EnglishCorpusProbe probe, String original) {

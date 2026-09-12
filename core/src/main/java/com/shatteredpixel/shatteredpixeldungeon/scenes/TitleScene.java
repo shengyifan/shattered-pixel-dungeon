@@ -242,7 +242,7 @@ public class TitleScene extends PixelScene {
 			btnAbout.setRect(btnSettings.right()+2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
 		}
 
-		version = new BitmapText( "v" + Game.version, pixelFont);
+		version = new BitmapText( Messages.concat(Messages.literal("v"), Messages.literal(Game.version)), pixelFont);
 		version.measure();
 		version.hardlight( 0x888888 );
 		version.x = insets.left + w - version.width() - (DeviceCompat.isDesktop() ? 4 : 8);
@@ -377,7 +377,7 @@ public class TitleScene extends PixelScene {
 					unreadCount = News.unreadArticles(new Date(SPDSettings.newsLastRead()));
 					if (unreadCount > 0) {
 						unreadCount = Math.min(unreadCount, 9);
-						text(text() + "(" + unreadCount + ")");
+						text(Messages.concat(Messages.concat(Messages.concat(text(), Messages.literal("(")), unreadCount), Messages.literal(")")));
 					}
 				}
 			}
@@ -424,8 +424,8 @@ public class TitleScene extends PixelScene {
 
 				ShatteredPixelDungeon.scene().addToFront( new WndOptions(
 						Icons.get(Icons.CHANGES),
-						update.versionName == null ? Messages.get(this,"title") : Messages.get(this,"versioned_title", update.versionName),
-						update.desc == null ? Messages.get(this,"desc") : update.desc,
+						update.versionName == null ? Messages.get(this,"title") : Messages.get(this,"versioned_title", Messages.externalText(update.versionName)),
+						update.desc == null ? Messages.get(this,"desc") : Messages.externalText(update.desc),
 						Messages.get(this,"update"),
 						Messages.get(this,"changes")
 				) {

@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -55,7 +57,7 @@ public class WndBadge extends Window {
 		String unlock = Badges.showCompletionProgress(badge);
 
 		if (unlock != null){
-			desc += unlock;
+			desc = Messages.concat(desc, unlock);
 		}
 
 		RenderedTextBlock info = PixelScene.renderTextBlock( desc, 6 );

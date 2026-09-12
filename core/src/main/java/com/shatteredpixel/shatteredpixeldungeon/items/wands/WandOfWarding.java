@@ -218,7 +218,7 @@ public class WandOfWarding extends Wand {
 
 	@Override
 	public String upgradeStat1(int level) {
-		return 2+level + "-" + (8+4*level);
+		return Messages.concat(Messages.concat(2+level, Messages.literal("-")), (8+4*level));
 	}
 
 	@Override

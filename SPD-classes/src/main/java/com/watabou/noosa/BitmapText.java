@@ -57,6 +57,7 @@ public class BitmapText extends Visual {
 		
 		this.text = text;
 		this.font = font;
+		Game.observer.onTextBound(this, text);
 	}
 	
 	@Override
@@ -210,9 +211,13 @@ public class BitmapText extends Visual {
 	}
 
 	public synchronized void text( String str ) {
+		Game.observer.onTextBound(this, str);
 		if (str == null || !str.equals(text)) {
 			text = str;
 			dirty = true;
+		} else if (Game.observer != RuntimeObserver.NONE) {
+			// Equal displayed values can have distinct immutable message origins.
+			text = str;
 		}
 	}
 	

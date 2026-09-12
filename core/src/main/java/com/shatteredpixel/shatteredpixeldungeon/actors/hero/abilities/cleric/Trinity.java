@@ -118,9 +118,8 @@ public class Trinity extends ArmorAbility {
 				RedButton btnBody = null;
 				if (bodyForm instanceof Weapon.Enchantment){
 
-					btnBody = new RedButton(Messages.get(WndUseTrinity.class, "body",
-							Messages.titleCase(((Weapon.Enchantment)bodyForm).name()))
-							+ " " + trinityItemUseText(bodyForm.getClass()), 6){
+					btnBody = new RedButton(Messages.concat(Messages.concat(Messages.get(WndUseTrinity.class, "body",
+							Messages.titleCase(((Weapon.Enchantment)bodyForm).name())), Messages.literal(" ")), trinityItemUseText(bodyForm.getClass())), 6){
 						@Override
 						protected void onClick() {
 							if (Dungeon.hero.belongings.weapon() != null &&
@@ -152,9 +151,8 @@ public class Trinity extends ArmorAbility {
 						btnBody.icon(new ItemSprite(ItemSpriteSheet.WORN_SHORTSWORD, ((Weapon.Enchantment) bodyForm).glowing()));
 					}
 				} else if (bodyForm instanceof Armor.Glyph){
-					btnBody = new RedButton(Messages.get(WndUseTrinity.class, "body",
-							Messages.titleCase(((Armor.Glyph)bodyForm).name()))
-							+ " " + trinityItemUseText(bodyForm.getClass()), 6){
+					btnBody = new RedButton(Messages.concat(Messages.concat(Messages.get(WndUseTrinity.class, "body",
+							Messages.titleCase(((Armor.Glyph)bodyForm).name())), Messages.literal(" ")), trinityItemUseText(bodyForm.getClass())), 6){
 						@Override
 						protected void onClick() {
 							if (Dungeon.hero.belongings.armor() != null &&
@@ -196,9 +194,8 @@ public class Trinity extends ArmorAbility {
 			}
 
 			if (mindForm != null){
-				RedButton btnMind = new RedButton(Messages.get(WndUseTrinity.class, "mind",
-						Messages.titleCase(((Item)mindForm).name()))
-						+ " " + trinityItemUseText(mindForm.getClass()), 6){
+				RedButton btnMind = new RedButton(Messages.concat(Messages.concat(Messages.get(WndUseTrinity.class, "mind",
+						Messages.titleCase(((Item)mindForm).name())), Messages.literal(" ")), trinityItemUseText(mindForm.getClass())), 6){
 					@Override
 					protected void onClick() {
 						hide();
@@ -228,9 +225,8 @@ public class Trinity extends ArmorAbility {
 			}
 
 			if (spiritForm != null){
-				RedButton btnSpirit = new RedButton(Messages.get(WndUseTrinity.class, "spirit",
-						Messages.titleCase(((Item)spiritForm).name()))
-						+ " " + trinityItemUseText(spiritForm.getClass()), 6){
+				RedButton btnSpirit = new RedButton(Messages.concat(Messages.concat(Messages.get(WndUseTrinity.class, "spirit",
+						Messages.titleCase(((Item)spiritForm).name())), Messages.literal(" ")), trinityItemUseText(spiritForm.getClass())), 6){
 					@Override
 					protected void onClick() {
 						if ((Dungeon.hero.belongings.ring() != null && Dungeon.hero.belongings.ring().getClass().equals(spiritForm.getClass()))
@@ -479,11 +475,11 @@ public class Trinity extends ArmorAbility {
 
 		private static String getText(Item item){
 			if (item instanceof MeleeWeapon){
-				return ((MeleeWeapon) item).enchantment.desc() + "\n\n" + trinityItemUseText(((MeleeWeapon) item).enchantment.getClass());
+				return Messages.concat(Messages.concat(((MeleeWeapon) item).enchantment.desc(), Messages.literal("\n\n")), trinityItemUseText(((MeleeWeapon) item).enchantment.getClass()));
 			} else if (item instanceof Armor){
-				return ((Armor) item).glyph.desc() + "\n\n" + trinityItemUseText(((Armor) item).glyph.getClass());
+				return Messages.concat(Messages.concat(((Armor) item).glyph.desc(), Messages.literal("\n\n")), trinityItemUseText(((Armor) item).glyph.getClass()));
 			} else {
-				return item.desc() + "\n\n" + trinityItemUseText(item.getClass());
+				return Messages.concat(Messages.concat(item.desc(), Messages.literal("\n\n")), trinityItemUseText(item.getClass()));
 			}
 		}
 

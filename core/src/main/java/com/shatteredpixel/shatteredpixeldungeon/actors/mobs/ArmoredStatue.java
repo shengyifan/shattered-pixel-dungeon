@@ -121,7 +121,7 @@ public class ArmoredStatue extends Statue {
 	public String description() {
 		String desc = Messages.get(this, "desc");
 		if (weapon != null && armor != null){
-			desc += "\n\n" + Messages.get(this, "desc_arm_wep", weapon.name(), armor.name());
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_arm_wep", weapon.name(), armor.name())));
 		}
 		return desc;
 	}

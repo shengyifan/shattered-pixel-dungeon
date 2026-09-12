@@ -147,7 +147,7 @@ public class AlchemistsToolkit extends Artifact {
 	@Override
 	public String status() {
 		if (isEquipped(Dungeon.hero) && warmUpDelay > 0 && !cursed){
-			return Messages.format( "%d%%", Math.max(0, 100 - (int)warmUpDelay) );
+			return Messages.format( Messages.literal("%d%%"), Math.max(0, 100 - (int)warmUpDelay) );
 		} else {
 			return super.status();
 		}
@@ -185,9 +185,9 @@ public class AlchemistsToolkit extends Artifact {
 		String result = Messages.get(this, "desc");
 
 		if (isEquipped(Dungeon.hero)) {
-			if (cursed)                 result += "\n\n" + Messages.get(this, "desc_cursed");
-			else if (warmUpDelay > 0)   result += "\n\n" + Messages.get(this, "desc_warming");
-			else                        result += "\n\n" + Messages.get(this, "desc_hint");
+			if (cursed)                 result = Messages.concat(result, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_cursed")));
+			else if (warmUpDelay > 0)   result = Messages.concat(result, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_warming")));
+			else                        result = Messages.concat(result, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_hint")));
 		}
 		
 		return result;

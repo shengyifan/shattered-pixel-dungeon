@@ -4,7 +4,7 @@ project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$project_dir"
 ./gradlew :desktop-control:writeRuntimeClasspath --console=plain >&2
 classpath=$(cat desktop-control/build/runtime-classpath.txt)
-profile_dir="$HOME/Library/Application Support/Shattered Pixel Dungeon CLI"
+profile_dir="$HOME/Library/Application Support/Shattered Pixel Dungeon CLI v2"
 expect_profile=0
 for argument do
   if [ "$expect_profile" = 1 ]; then profile_dir="$argument"; expect_profile=0
@@ -12,7 +12,6 @@ for argument do
   fi
 done
 case "$profile_dir" in /*) ;; *) echo 'spdctl: ABSOLUTE_PROFILE_REQUIRED' >&2; exit 64 ;; esac
-if [ "${1:-}" = 'run' ]; then mkdir -p "$profile_dir/audit/emergency"; fi
 export SPDCTL_PROFILE="$profile_dir"
 exec java -XstartOnFirstThread --enable-native-access=ALL-UNNAMED \
   --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED \

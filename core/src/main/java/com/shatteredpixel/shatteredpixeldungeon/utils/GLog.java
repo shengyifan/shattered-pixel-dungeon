@@ -53,18 +53,18 @@ public class GLog {
 	}
 	
 	public static void p( String text, Object... args ) {
-		i( POSITIVE + text, args );
+		i( Messages.concat(POSITIVE, text), args );
 	}
 	
 	public static void n( String text, Object... args ) {
-		i( NEGATIVE + text, args );
+		i( Messages.concat(NEGATIVE, text), args );
 	}
 	
 	public static void w( String text, Object... args ) {
-		i( WARNING + text, args );
+		i( Messages.concat(WARNING, text), args );
 	}
 	
 	public static void h( String text, Object... args ) {
-		i( HIGHLIGHT + text, args );
+		i( Messages.concat(HIGHLIGHT, text), args );
 	}
 }

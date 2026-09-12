@@ -180,10 +180,11 @@ public class Messages {
 		} else
 			key = k;
 
-		String value = getFromBundle(key.toLowerCase(Locale.ENGLISH));
+		key = key.toLowerCase(Locale.ENGLISH);
+		String value = getFromBundle(key);
 		if (value != null){
-			if (args.length > 0) return format(value, args);
-			else return value;
+			String rendered = args.length > 0 ? format(value, args) : value;
+			return com.watabou.noosa.Game.observer.onTextResource(rendered, key, lang().code(), args, value);
 		} else {
 			//this is so child classes can inherit properties from their parents.
 			//in cases where text is commonly grabbed as a utility from classes that aren't mean to be instantiated
@@ -216,12 +217,14 @@ public class Messages {
 	 */
 
 	public static String format( String format, Object...args ) {
+		String rendered;
 		try {
-			return String.format(locale(), format, args);
+			rendered = String.format(locale(), format, args);
 		} catch (IllegalFormatException e) {
 			ShatteredPixelDungeon.reportException( new Exception("formatting error for the string: " + format, e) );
-			return format;
+			return com.watabou.noosa.Game.observer.onTextOperation("format_failed", format, format, args);
 		}
+		return com.watabou.noosa.Game.observer.onTextOperation("format", rendered, format, args);
 	}
 
 	private static HashMap<String, DecimalFormat> formatters;
@@ -232,12 +235,13 @@ public class Messages {
 		if (!activeFormatters.containsKey(format)){
 			activeFormatters.put(format, new DecimalFormat(format, DecimalFormatSymbols.getInstance(locale())));
 		}
-		return activeFormatters.get(format).format(number);
+		String rendered = activeFormatters.get(format).format(number);
+		return com.watabou.noosa.Game.observer.onTextOperation("decimal_format", rendered, format, number);
 	}
 
 	public static String capitalize( String str ){
-		if (str.length() == 0)  return str;
-		else                    return str.substring( 0, 1 ).toUpperCase(locale()) + str.substring( 1 );
+		String rendered = str.length() == 0 ? str : str.substring( 0, 1 ).toUpperCase(locale()) + str.substring( 1 );
+		return com.watabou.noosa.Game.observer.onTextOperation("capitalize", rendered, str);
 	}
 
 	//Words which should not be capitalized in title case, mostly prepositions which appear ingame
@@ -259,18 +263,78 @@ public class Messages {
 				}
 			}
 			//first character is always capitalized.
-			return capitalize(result);
+			return com.watabou.noosa.Game.observer.onTextOperation("title_case", capitalize(result), str);
 		}
 
 		//Otherwise, use sentence case
-		return capitalize(str);
+		return com.watabou.noosa.Game.observer.onTextOperation("title_case", capitalize(str), str);
 	}
 
 	public static String upperCase( String str ){
-		return str.toUpperCase(locale());
+		return com.watabou.noosa.Game.observer.onTextOperation("upper_case", str.toUpperCase(locale()), str);
 	}
 
 	public static String lowerCase( String str ){
-		return str.toLowerCase(locale());
+		return com.watabou.noosa.Game.observer.onTextOperation("lower_case", str.toLowerCase(locale()), str);
+	}
+
+	/** Explicit composition: each supplied object's original conversion occurs once. */
+	public static String concat(Object left, Object right) {
+		String first = String.valueOf(left), second = String.valueOf(right);
+		return com.watabou.noosa.Game.observer.onTextOperation("concat", first + second,
+				frozenConcatOperand(left, first), frozenConcatOperand(right, second));
+	}
+
+	private static Object frozenConcatOperand(Object original, String materialized) {
+		return original == null || original instanceof Boolean || original instanceof Character
+				|| original instanceof Byte || original instanceof Short || original instanceof Integer
+				|| original instanceof Long || original instanceof Float || original instanceof Double ? original : materialized;
+	}
+
+	public static String literal(String text) {
+		return com.watabou.noosa.Game.observer.onTextOperation("literal", text, text);
+	}
+
+	public static String userText(String text) {
+		return com.watabou.noosa.Game.observer.onTextOperation("user", text, text);
+	}
+
+	public static String externalText(String text) {
+		return com.watabou.noosa.Game.observer.onTextOperation("external", text, text);
+	}
+
+	/** Only for reviewed fixed code catalogs; existing resource/user origins are preserved. */
+	public static String systemCatalogText(String text) {
+		return com.watabou.noosa.Game.observer.onTextOperation("system_catalog", text, text);
+	}
+
+	/** A known non-localized prefix, never an arbitrary slice of a resource. */
+	public static String stripPrefix(String text, String prefix) {
+		return com.watabou.noosa.Game.observer.onTextOperation("strip_prefix", text.substring(prefix.length()), text, prefix);
+	}
+
+	public static String substring(String text, int begin) {
+		return substring(text, begin, text.length());
+	}
+
+	public static String substring(String text, int begin, int end) {
+		return com.watabou.noosa.Game.observer.onTextOperation("slice", text.substring(begin, end), text, begin, end);
+	}
+
+	public static String replace(String text, char oldValue, char newValue) {
+		return com.watabou.noosa.Game.observer.onTextOperation("replace", text.replace(oldValue, newValue), text,
+				String.valueOf(oldValue), String.valueOf(newValue));
+	}
+
+	public static String replace(String text, String oldValue, String newValue) {
+		return com.watabou.noosa.Game.observer.onTextOperation("replace", text.replace(oldValue, newValue), text, oldValue, newValue);
+	}
+
+	public static String upperCase(String text, Locale locale) {
+		return com.watabou.noosa.Game.observer.onTextOperation("upper_case", text.toUpperCase(locale), text);
+	}
+
+	public static String lowerCase(String text, Locale locale) {
+		return com.watabou.noosa.Game.observer.onTextOperation("lower_case", text.toLowerCase(locale), text);
 	}
 }

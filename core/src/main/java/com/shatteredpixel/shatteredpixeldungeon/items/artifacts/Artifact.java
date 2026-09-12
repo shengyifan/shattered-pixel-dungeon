@@ -174,10 +174,10 @@ public class Artifact extends KindofMisc {
 	@Override
 	public String info() {
 		if (cursed && cursedKnown && !isEquipped( Dungeon.hero )) {
-			return super.info() + "\n\n" + Messages.get(Artifact.class, "curse_known");
+			return Messages.concat(Messages.concat(super.info(), Messages.literal("\n\n")), Messages.get(Artifact.class, "curse_known"));
 			
 		} else if (!isIdentified() && cursedKnown && !isEquipped( Dungeon.hero)) {
-			return super.info() + "\n\n" + Messages.get(Artifact.class, "not_cursed");
+			return Messages.concat(Messages.concat(super.info(), Messages.literal("\n\n")), Messages.get(Artifact.class, "not_cursed"));
 			
 		} else {
 			return super.info();
@@ -195,20 +195,20 @@ public class Artifact extends KindofMisc {
 
 		//display the current cooldown
 		if (cooldown != 0)
-			return Messages.format( "%d", cooldown );
+			return Messages.format( Messages.literal("%d"), cooldown );
 
 		//display as percent
 		if (chargeCap == 100)
-			return Messages.format( "%d%%", charge );
+			return Messages.format( Messages.literal("%d%%"), charge );
 
 		//display as #/#
 		if (chargeCap > 0)
-			return Messages.format( "%d/%d", charge, chargeCap );
+			return Messages.format( Messages.literal("%d/%d"), charge, chargeCap );
 
 		//if there's no cap -
 		//- but there is charge anyway, display that charge
 		if (charge != 0)
-			return Messages.format( "%d", charge );
+			return Messages.format( Messages.literal("%d"), charge );
 
 		//otherwise, if there's no charge, return null.
 		return null;

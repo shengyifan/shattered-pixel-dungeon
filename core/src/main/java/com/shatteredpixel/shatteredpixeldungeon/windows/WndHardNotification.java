@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
@@ -45,7 +47,7 @@ public class WndHardNotification extends WndTitledMessage{
 		timeLeft = time;
 		this.btnMessage = btnMessage;
 
-		btnOkay = new RedButton(btnMessage + " (" + time +")"){
+		btnOkay = new RedButton(Messages.concat(Messages.concat(Messages.concat(btnMessage, Messages.literal(" (")), time), Messages.literal(")"))){
 			@Override
 			protected void onClick() {
 				hide();
@@ -71,7 +73,7 @@ public class WndHardNotification extends WndTitledMessage{
 		} else if (timeLeft > 0 && incTime >= 1) {
 			timeLeft -= incTime;
 			incTime = 0;
-			btnOkay.text(btnMessage + " (" + (int)Math.ceil(timeLeft) + ")");
+			btnOkay.text(Messages.concat(Messages.concat(Messages.concat(btnMessage, Messages.literal(" (")), (int)Math.ceil(timeLeft)), Messages.literal(")")));
 			btnOkay.enable(false);
 		}
 

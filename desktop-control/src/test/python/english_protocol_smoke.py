@@ -2,78 +2,35 @@
 """Draft real-engine check: Chinese windowed GUI, English public game prose.
 
 No game choices use the private UiSceneAssertions or audit database. Private data
-from isolated profiles is read only after a chosen operation, for assertions. Old
-audit coverage copies an actual closed Chinese fixture and never edits its rows.
+from isolated profiles is read only after a chosen operation, for assertions.
+CLI 2 uses fresh schema-5 profiles; old protocol/audit migration is unsupported.
 """
 import argparse
-import fcntl
 import json
 from pathlib import Path
 import re
-import shutil
-import sqlite3
 import time
 import unicodedata
 import uuid
 
-from fixture_smoke import FixtureClient, freeze_runtime
+from fixture_smoke import FixtureClient, freeze_runtime, GAME_PROSE_FIELDS, RAW_FIELDS, game_prose_values
 from legacy_save_smoke import launch_command, metadata, safe_profile, write_json
 
 
 CJK = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
-PROSE = {"name", "class_name", "subclass_name", "label", "text", "description",
-         "prompt", "cell_prompt", "item_prompt", "options", "message", "title", "hint", "tooltip", "disabled_reason"}
-RAW = {"raw_request", "raw_response", "raw_bytes", "raw_format", "raw_json"}
-KNOWN_TRANSLATIONS = {"进入地牢": "enter the dungeon", "继续": "continue", "关于": "about",
-                      "改动": "changes", "日志": "journal", "排行榜": "rankings",
-                      "战士": "warrior", "破旧的短剑": "worn shortsword", "布甲": "cloth armor"}
+PROSE = GAME_PROSE_FIELDS
+RAW = RAW_FIELDS
 
 
 def prose_values(value, path=(), prose=False):
-    """Only game prose; raw requests, identifiers, filenames and user data are not translation targets."""
-    if isinstance(value, dict):
-        for key, child in value.items():
-            if key not in RAW:
-                yield from prose_values(child, path + (key,), key in PROSE)
-    elif isinstance(value, list):
-        for index, child in enumerate(value):
-            yield from prose_values(child, path + (index,), prose)
-    elif prose and isinstance(value, str):
-        yield path, value
+    """Share protocol-2 source-aware prose rules with every fixture client."""
+    yield from game_prose_values(value, path, prose)
 
 
 def assert_english(value):
     bad = [(path, text) for path, text in prose_values(value)
            if any(char.isalpha() and "LATIN" not in unicodedata.name(char, "") for char in text)]
     assert not bad, {"non_english_game_prose": bad[:10]}
-
-
-def at_path(value, path):
-    for part in path:
-        value = value[part]
-    return value
-
-
-def shape_preserved(before, after, path=()):
-    """Presentation may add metadata; it must not remove old fields, entries, or text blocks."""
-    if isinstance(before, dict):
-        assert isinstance(after, dict) and before.keys() <= after.keys(), {"lost_fields": path}
-        for key, value in before.items():
-            if key not in RAW:
-                shape_preserved(value, after[key], path + (key,))
-            else:
-                assert value == after[key], {"raw_audit_value_changed": path + (key,)}
-    elif isinstance(before, list):
-        assert isinstance(after, list) and len(before) == len(after), {"changed_array_shape": path}
-        for index, value in enumerate(before):
-            shape_preserved(value, after[index], path + (index,))
-    elif before is not None:
-        assert type(before) is type(after), {"changed_value_type": path}
-        field = next((part for part in reversed(path) if isinstance(part, str)), None)
-        if field not in PROSE:
-            assert before == after, {"non_prose_value_changed": path}
-    else:
-        assert after is None, {"null_value_filled_by_translation": path}
 
 
 class EnglishClient(FixtureClient):
@@ -344,139 +301,12 @@ def live_case(root, classpath, runtime_id):
             stop(client, failure_cleanup=True)
 
 
-def original_rows(profile):
-    result = {}
-    for side in ["public", "internal"]:
-        with sqlite3.connect((profile / "audit" / (side + ".sqlite3")).as_uri() + "?mode=ro", uri=True) as db:
-            result[side] = {}
-            for table in ["requests", "exchanges", "events", "snapshots", "snapshot_blobs"]:
-                query = db.execute("SELECT * FROM " + table)
-                columns = [column[0] for column in query.description]
-                result[side][table] = [dict(zip(columns, row)) for row in query.fetchall()]
-    return result
-
-
-def immutable_original_rows(profile, before):
-    after = original_rows(profile)
-    for side, tables in before.items():
-        for table, original in tables.items():
-            # New rows/columns may be added; all original columns, including raw blobs,
-            # snapshots, timestamps and output receipts, must retain their exact values.
-            keys = {"requests": ("scope_id", "id"), "exchanges": ("sequence",), "events": ("sequence",),
-                    "snapshots": ("snapshot_id",), "snapshot_blobs": ("content_id",)}[table]
-            index = {tuple(row[key] for key in keys): row for row in after[side][table]}
-            for row in original:
-                key = tuple(row[field] for field in keys)
-                for column, value in row.items():
-                    assert index[key][column] == value, {"historical_row_rewritten": [side, table, key, column]}
-
-
-def dungeon_intro_pair(root):
-    key = "journal.document.intros.dungeon.body="
-    directory = root / "core/src/main/assets/messages/journal"
-    values = []
-    for filename in ["journal_zh.properties", "journal.properties"]:
-        line = next(line for line in (directory / filename).read_text().splitlines() if line.startswith(key))
-        value = line[len(key):]
-        assert "%" not in value, "This exact static-prose assertion must not invent formatting arguments"
-        values.append(value.replace(r"\n", "\n").replace(r"\t", "\t"))
-    return tuple(values)
-
-
-def migration_case(root, classpath, runtime_id, legacy):
-    allowed = (root / "desktop-control/build/fixtures").resolve()
-    legacy = legacy.resolve()
-    assert legacy.is_relative_to(allowed) and legacy != allowed
-    marker = json.loads((legacy / "test_fixture.json").read_text())
-    assert marker.get("test_fixture") is True and marker.get("counts_as_win") is False
-    profile = safe_profile(root, "english-migration")
-    for source in legacy.rglob("*"):
-        assert not source.is_symlink(), "Legacy fixture copy must not follow external files"
-    # Interoperate with Java FileChannel's POSIX record lock. Keep the source locked
-    # during copying; opening/closing a second fd to that inode would release lockf,
-    # so the transient instance lock itself is deliberately not copied.
-    with (legacy / ".instance.lock").open("r+b") as guard:
-        fcntl.lockf(guard, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        shutil.copytree(legacy, profile, dirs_exist_ok=True,
-                        ignore=lambda directory, names: {".instance.lock"} if Path(directory) == legacy else set())
-    metadata(profile, "english-migration", runtime_id, copied_from=str(legacy.relative_to(root)))
-    before = original_rows(profile)
-    samples = []
-    original_intro, english_intro = dungeon_intro_pair(root)
-    intro_sample = None
-    for row in before["public"]["requests"]:
-        scope, request_id, raw_request, raw = (row[key] for key in ("scope_id", "id", "raw_request", "response_json"))
-        if not raw:
-            continue
-        response = json.loads(raw)
-        fields = [(path, text) for path, text in prose_values(response) if CJK.search(text)]
-        if len(samples) < 8 and any(text in KNOWN_TRANSLATIONS for _, text in fields):
-            samples.append((scope, request_id, raw_request, response, fields))
-        if intro_sample is None and any(text == original_intro for _, text in fields):
-            intro_sample = (scope, request_id, raw_request, response, fields)
-    assert samples, "A real Chinese historical response is required; an empty database cannot pass"
-    assert intro_sample is not None, "The closed baseline must contain its real full dungeon introduction"
-    if not any(sample[:2] == intro_sample[:2] for sample in samples):
-        samples.append(intro_sample)
-    client = EnglishClient(launch_command(classpath, fixture=True), profile)
-    translated = 0
-    try:
-        assert client.request("protocol.info")["ok"]
-        # Capture fresh GUI evidence without using it to select a historical request.
-        fresh = checked_state(client)
-        fresh_scene = fresh["observation"]["ui"]["scene"]
-        gui_assertions(profile, {fresh_scene}, fresh["state_version"])
-        for scope, request_id, raw_request, original, fields in samples:
-            response = client.request("request.get", {"target_id": request_id}, scope=scope)
-            assert response["ok"], response
-            assert response["result"]["raw_request"] == raw_request
-            presented = response["result"]["response"]
-            shape_preserved(original, presented)
-            for path, text in fields:
-                english = at_path(presented, path)
-                assert english.strip() and re.search(r"[A-Za-z]", english), {"text_deleted_instead_of_translated": path}
-                old_parent = at_path(original, path[:-1])
-                new_parent = at_path(presented, path[:-1])
-                clipped = isinstance(old_parent, dict) and old_parent.get("clipped") is True
-                if not clipped:
-                    assert english not in {"Partially displayed text", "Unavailable"}, {"full_text_replaced_by_placeholder": path}
-                    assert not isinstance(new_parent, dict) or new_parent.get("translation_status") != "partial"
-                if text in KNOWN_TRANSLATIONS:
-                    assert english.casefold() == KNOWN_TRANSLATIONS[text], {"wrong_english_text": [path, text, english]}
-                if text == original_intro:
-                    assert english == english_intro, "The complete original introduction must match its actual English resource"
-                translated += 1
-            assert client.request("history.list", {"after": 0, "limit": 100}, scope=scope)["ok"]
-            public_events(client, scope)
-        stop(client)
-        immutable_original_rows(profile, before)
-        report = {"case_id": "language.legacy_chinese_audit_presentation", "verified": True, "test_fixture": True,
-                  "counts_as_win": False, "profile": str(profile.relative_to(root)), "runtime_id": runtime_id,
-                  "source_profile": str(legacy.relative_to(root)), "historical_requests_checked": len(samples),
-                  "translated_game_prose_fields_checked": translated, "original_fields_and_arrays_preserved": True,
-                  "public_and_internal_original_rows_and_snapshot_blobs_unchanged": True,
-                  "full_static_intro_matches_original_english_resource": True,
-                  "raw_request_is_not_a_translation_target": True}
-        write_json(profile / "english-migration-result.json", report)
-        return report
-    except Exception as error:
-        write_json(profile / "english-migration-failure.json", {"verified": False, "test_fixture": True,
-                   "counts_as_win": False, "case_id": "language.legacy_chinese_audit_presentation",
-                   "profile": str(profile.relative_to(root)), "runtime_id": runtime_id,
-                   "error_type": type(error).__name__, "error": str(error)[:4000]})
-        raise
-    finally:
-        if client.process.poll() is None:
-            stop(client, failure_cleanup=True)
-
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--legacy-profile", default="desktop-control/build/fixtures/menu-scenes-d6a2a70396224dbd80ec09e5fb0cc0d1")
-    args = parser.parse_args()
+    parser.parse_args()
     root = Path(__file__).resolve().parents[4]
     classpath, runtime_id = freeze_runtime(root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip())
-    reports = [live_case(root, classpath, runtime_id), migration_case(root, classpath, runtime_id, root / args.legacy_profile)]
+    reports = [live_case(root, classpath, runtime_id)]
     write_json(root / "desktop-control/build/fixtures" / runtime_id / "english-protocol-results.json", reports)
     print(json.dumps(reports, ensure_ascii=False), flush=True)
 

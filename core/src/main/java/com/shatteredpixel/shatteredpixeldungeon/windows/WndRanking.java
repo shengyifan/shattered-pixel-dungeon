@@ -169,7 +169,7 @@ public class WndRanking extends WndTabbed {
 			
 			IconTitle title = new IconTitle();
 			title.icon( HeroSprite.avatar( record.heroClass, record.armorTier ) );
-			title.label( Messages.get(this, "title", record.herolevel, heroClass ).toUpperCase( Locale.ENGLISH ) );
+			title.label( Messages.upperCase(Messages.get(this, "title", record.herolevel, heroClass ), Locale.ENGLISH) );
 			title.color(Window.TITLE_COLOR);
 			title.setRect( 0, 0, WIDTH, 0 );
 			add( title );
@@ -185,7 +185,7 @@ public class WndRanking extends WndTabbed {
 			date.setPos(0, pos);
 			add(date);
 
-			RenderedTextBlock version = PixelScene.renderTextBlock(record.version, 7);
+			RenderedTextBlock version = PixelScene.renderTextBlock(Messages.literal(record.version), 7);
 			version.hardlight(0xCCCCCC);
 			version.setPos(WIDTH-version.width(), pos);
 			add(version);
@@ -226,9 +226,9 @@ public class WndRanking extends WndTabbed {
 
 				int strBonus = Dungeon.hero.STR() - Dungeon.hero.STR;
 				if (strBonus > 0)
-					pos = statSlot(this, Messages.get(this, "str"), Dungeon.hero.STR + " + " + strBonus, pos);
+					pos = statSlot(this, Messages.get(this, "str"), Messages.concat(Messages.concat(Dungeon.hero.STR, Messages.literal(" + ")), strBonus), pos);
 				else if (strBonus < 0)
-					pos = statSlot(this, Messages.get(this, "str"), Dungeon.hero.STR + " - " + -strBonus, pos);
+					pos = statSlot(this, Messages.get(this, "str"), Messages.concat(Messages.concat(Dungeon.hero.STR, Messages.literal(" - ")), -strBonus), pos);
 				else
 					pos = statSlot(this, Messages.get(this, "str"), Integer.toString(Dungeon.hero.STR), pos);
 				pos = statSlot(this, Messages.get(this, "duration"), num.format((int) Statistics.duration), pos);
@@ -240,14 +240,14 @@ public class WndRanking extends WndTabbed {
 				if (Dungeon.seed != -1) {
 					if (Dungeon.daily) {
 						if (Dungeon.dailyReplay) {
-							pos = statSlot(this, Messages.get(this, "replay_for"), "_" + Dungeon.customSeedText + "_", pos);
+							pos = statSlot(this, Messages.get(this, "replay_for"), Messages.concat(Messages.concat(Messages.literal("_"), Dungeon.customSeedText), Messages.literal("_")), pos);
 						} else {
-							pos = statSlot(this, Messages.get(this, "daily_for"), "_" + Dungeon.customSeedText + "_", pos);
+							pos = statSlot(this, Messages.get(this, "daily_for"), Messages.concat(Messages.concat(Messages.literal("_"), Dungeon.customSeedText), Messages.literal("_")), pos);
 						}
 					} else if (!Dungeon.customSeedText.isEmpty()) {
-						pos = statSlot(this, Messages.get(this, "custom_seed"), "_" + Dungeon.customSeedText + "_", pos);
+						pos = statSlot(this, Messages.get(this, "custom_seed"), Messages.concat(Messages.concat(Messages.literal("_"), Messages.userText(Dungeon.customSeedText)), Messages.literal("_")), pos);
 					} else {
-						pos = statSlot(this, Messages.get(this, "seed"), DungeonSeed.convertToCode(Dungeon.seed), pos);
+						pos = statSlot(this, Messages.get(this, "seed"), DungeonSeed.displayCode(Dungeon.seed), pos);
 					}
 				} else {
 					pos += GAP + 5;

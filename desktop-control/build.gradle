@@ -60,7 +60,7 @@ tasks.register('generateBuildCatalog') {
         def output = new File(catalogDirectory.get().asFile, 'control-build.json')
         output.parentFile.mkdirs()
         output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName,
-            cli_version: 'CLI.1.0.1', java_source: '11', build_java: System.getProperty('java.version'),
+            cli_version: 'CLI.2.0.0', java_source: '11', build_java: System.getProperty('java.version'),
             sqlite_jdbc: '3.53.4.0', entries: entries])
     }
 }

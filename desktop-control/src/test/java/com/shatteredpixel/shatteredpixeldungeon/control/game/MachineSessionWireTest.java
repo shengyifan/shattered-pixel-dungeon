@@ -19,7 +19,7 @@ public class MachineSessionWireTest {
 
     @Test public void invalidUtf8HasNoInventedIdAndDoesNotDesynchronizeTheNextRequest()throws Exception{
         byte[] invalid={(byte)0xc3,(byte)0x28,(byte)'\n'};
-        byte[] valid="{\"id\":\"wire-ok\",\"op\":\"protocol.info\"}\r\n".getBytes(StandardCharsets.UTF_8);
+        byte[] valid="{\"protocol_version\":2,\"id\":\"wire-ok\",\"op\":\"protocol.info\"}\r\n".getBytes(StandardCharsets.UTF_8);
         ByteArrayOutputStream input=new ByteArrayOutputStream();input.write(invalid);input.write(valid);
         ByteArrayOutputStream output=new ByteArrayOutputStream();
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){

@@ -31,14 +31,14 @@ public class AuditLifecycleTest {
     @Test public void sessionHistoryDistinguishesCleanCloseInterruptionAndDuplicateArrival()throws Exception{
         Path root=temporary.newFolder().toPath();String first,second,scope;
         try(AuditStore store=new AuditStore(root)){
-            scope=store.menuScope();first=store.beginSession("boot-1");
+            scope=store.menuScope();first=store.beginSession("boot-1","fixture-build","CLI.2.0.0",2);
             AuditStore.Attempt a=store.begin(scope,"used","state.get","{}");store.complete(a,"COMPLETED",map("ok",true),map(),map(),null);
-            store.endSession("CLOSED","normal_eof");second=store.beginSession("boot-2");
+            store.endSession("CLOSED","normal_eof");second=store.beginSession("boot-2","fixture-build","CLI.2.0.0",2);
             assertTrue(store.begin(scope,"used","state.get","{}").duplicate);
             // Simulate a process that never wrote its normal session end.
         }
         try(AuditStore store=new AuditStore(root)){
-            store.recoverInterrupted();String third=store.beginSession("boot-3");
+            store.recoverInterrupted();String third=store.beginSession("boot-3","fixture-build","CLI.2.0.0",2);
             for(String name:new String[]{"public","internal"})try(Connection c=open(root,name)){
                 assertEquals("CLOSED",scalar(c,"SELECT status FROM sessions WHERE session_id='"+first+"'"));
                 assertEquals("INTERRUPTED",scalar(c,"SELECT status FROM sessions WHERE session_id='"+second+"'"));
@@ -54,10 +54,52 @@ public class AuditLifecycleTest {
         }
     }
 
+    @Test public void everySessionFreezesItsBuildMetadataAcrossCloseRestartAndHistoryReads()throws Exception{
+        Path root=temporary.newFolder().toPath();String first,scope;
+        try(AuditStore store=new AuditStore(root)){
+            scope=store.menuScope();first=store.beginSession("first-boot","build-first","CLI.2.0.0",2);
+            AuditStore.Attempt attempt=store.begin(scope,"recorded","state.get","{}");
+            store.complete(attempt,"COMPLETED",map("ok",true),map(),map(),null);
+            store.endSession("CLOSED","finished");
+        }
+        try(AuditStore store=new AuditStore(root)){
+            String second=store.beginSession("second-boot","build-second","CLI.2.1.0",2);
+            assertEquals(map("build_id","build-first","cli_version","CLI.2.0.0","protocol_version",2),
+                    store.getRequest(scope,"recorded").get("session_build"));
+            for(String side:new String[]{"public","internal"})try(Connection db=open(root,side);Statement statement=db.createStatement()){
+                assertEquals("build-first",scalar(db,"SELECT build_id FROM sessions WHERE session_id='"+first+"'"));
+                assertEquals("build-second",scalar(db,"SELECT build_id FROM sessions WHERE session_id='"+second+"'"));
+                assertEquals("CLI.2.0.0",scalar(db,"SELECT cli_version FROM sessions WHERE session_id='"+first+"'"));
+                assertEquals(2,((Number)scalar(db,"SELECT protocol_version FROM sessions WHERE session_id='"+first+"'")).intValue());
+                assertThrows(SQLException.class,()->statement.execute("UPDATE sessions SET build_id='rewritten' WHERE session_id='"+first+"'"));
+                assertThrows(SQLException.class,()->statement.execute("UPDATE sessions SET cli_version='CLI.9.0.0' WHERE session_id='"+first+"'"));
+                assertThrows(SQLException.class,()->statement.execute("UPDATE sessions SET protocol_version=9 WHERE session_id='"+first+"'"));
+            }
+            java.util.List<java.util.Map<String,Object>> events=store.events(scope,0,100);
+            assertEquals("build-first",((java.util.Map<?,?>)events.get(0).get("data")).get("build_id"));
+            store.endSession("CLOSED","finished");
+            assertEquals(sharedTable(root,"public","sessions"),sharedTable(root,"internal","sessions"));
+        }
+    }
+
+    @Test public void missingBuildMetadataCannotStartOrRecoverASession()throws Exception{
+        Path root=temporary.newFolder().toPath();
+        try(AuditStore store=new AuditStore(root)){
+            assertThrows(IllegalArgumentException.class,()->store.beginSession("boot",null,"CLI.2.0.0",2));
+            assertThrows(IllegalArgumentException.class,()->store.beginSession("boot","build",null,2));
+            assertThrows(IllegalArgumentException.class,()->store.beginSession("boot","build","CLI.2.0.0",1));
+            assertNull(store.sessionId());
+            for(String side:new String[]{"public","internal"})try(Connection db=open(root,side)){
+                assertEquals(0,((Number)scalar(db,"SELECT count(*) FROM sessions")).intValue());
+                assertEquals(0,((Number)scalar(db,"SELECT count(*) FROM events")).intValue());
+            }
+        }
+    }
+
     @Test public void saveReceiptsKeepSuccessFailureScopeAndFollowingObservationWithoutLeakingException()throws Exception{
         Path root=temporary.newFolder().toPath();
         try(AuditStore store=new AuditStore(root)){
-            store.beginSession("boot");String menu=store.menuScope(),run="run:example";
+            store.beginSession("boot","fixture-build","CLI.2.0.0",2);String menu=store.menuScope(),run="run:example";
             store.ensureScope(run,"planned","example");
             AuditStore.Attempt start=store.begin(menu,"same","action.execute","{}");store.markExecuting(start,"v1",map(),map());
             store.recordSave("save-ok",run,1,true,TIME,menu,"same",null);
@@ -99,7 +141,7 @@ public class AuditLifecycleTest {
         }
     }
 
-    @Test public void schemaThreeMigrationPreservesWireAndDoesNotInventOldSessionsOrSaveReceipts()throws Exception{
+    @Test public void schemaThreeIsRejectedWithoutInventingSessionsOrChangingWireBytes()throws Exception{
         Path root=temporary.newFolder().toPath();String scope;
         try(AuditStore store=new AuditStore(root)){
             scope=store.menuScope();AuditStore.Attempt a=store.begin(scope,"old","state.get","{}",new byte[]{123,125,13,10},"utf8-lf");
@@ -111,14 +153,7 @@ public class AuditLifecycleTest {
             if(name.equals("internal")){s.execute("ALTER TABLE exceptions DROP COLUMN session_id");s.execute("ALTER TABLE exceptions DROP COLUMN save_receipt_id");s.execute("ALTER TABLE logs DROP COLUMN session_id");}
             s.execute("UPDATE metadata SET value='3' WHERE key='schema_version'");
         }
-        try(AuditStore store=new AuditStore(root)){
-            assertEquals("COMPLETED",store.getRequest(scope,"old").get("status"));assertNull(store.latestSave(scope));
-            for(String name:new String[]{"public","internal"})try(Connection c=open(root,name);Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT raw_bytes,session_id FROM exchanges")){
-                assertTrue(r.next());assertArrayEquals(new byte[]{123,125,13,10},r.getBytes(1));assertNull(r.getString(2));
-                assertEquals("4",scalar(c,"SELECT value FROM metadata WHERE key='schema_version'"));
-                assertEquals(0,((Number)scalar(c,"SELECT count(*) FROM sessions")).intValue());
-            }
-        }
+        AuditSchemaFiveTest.assertRejectedWithoutChanges(root);
     }
 
     @Test public void failedInternalReceiptInsertRollsBackPublicReceiptScopePromotionAndEvent()throws Exception{

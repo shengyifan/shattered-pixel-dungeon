@@ -503,9 +503,9 @@ public class GnollGeomancer extends Mob {
 			String desc = super.description();
 			if (buff(RockArmor.class) != null){
 				if (hasSapper()){
-					desc += "\n\n" + Messages.get(this, "desc_armor_sapper");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_armor_sapper")));
 				} else {
-					desc += "\n\n" + Messages.get(this, "desc_armor");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_armor")));
 				}
 			}
 			return desc;

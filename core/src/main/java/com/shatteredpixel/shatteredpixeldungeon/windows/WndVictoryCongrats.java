@@ -105,7 +105,7 @@ public class WndVictoryCongrats extends Window {
 
 		height += Math.max(dailyImg.height(), dailyTxt.height()) + 6;
 
-		RenderedTextBlock finalTxt = PixelScene.renderTextBlock(Messages.get(this, "thank_you") + " "  + Messages.get(this, "support_prompt"), 6);
+		RenderedTextBlock finalTxt = PixelScene.renderTextBlock(Messages.concat(Messages.concat(Messages.get(this, "thank_you"), Messages.literal(" ")), Messages.get(this, "support_prompt")), 6);
 		finalTxt.maxWidth(width);
 		finalTxt.setPos(0, height);
 		add(finalTxt);

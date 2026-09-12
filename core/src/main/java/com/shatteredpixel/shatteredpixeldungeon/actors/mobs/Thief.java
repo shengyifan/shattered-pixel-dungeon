@@ -173,7 +173,7 @@ public class Thief extends Mob {
 		String desc = super.description();
 
 		if (item != null) {
-			desc += Messages.get(this, "carries", item.name() );
+			desc = Messages.concat(desc, Messages.get(this, "carries", item.name() ));
 		}
 
 		return desc;

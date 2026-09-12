@@ -250,9 +250,9 @@ public class Bomb extends Item {
 		int depth = Dungeon.hero == null ? 1 : Dungeon.scalingDepth();
 		String desc = Messages.get(this, "desc", 4+depth, 12+3*depth);
 		if (fuse == null) {
-			return desc + "\n\n" + Messages.get(this, "desc_fuse");
+			return Messages.concat(Messages.concat(desc, Messages.literal("\n\n")), Messages.get(this, "desc_fuse"));
 		} else {
-			return desc + "\n\n" + Messages.get(this, "desc_burning");
+			return Messages.concat(Messages.concat(desc, Messages.literal("\n\n")), Messages.get(this, "desc_burning"));
 		}
 	}
 
@@ -344,7 +344,7 @@ public class Bomb extends Item {
 			if (bomb.doPickUp(hero, pos)) {
 				//isaaaaac.... (don't bother doing this when not in english)
 				if (SPDSettings.language() == Languages.ENGLISH)
-					hero.sprite.showStatus(CharSprite.NEUTRAL, "1+1 free!");
+					hero.sprite.showStatus(CharSprite.NEUTRAL, Messages.literal("1+1 free!"));
 				return true;
 			}
 			return false;

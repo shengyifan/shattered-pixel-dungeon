@@ -157,9 +157,9 @@ public class WndHero extends WndTabbed {
 			IconTitle title = new IconTitle();
 			title.icon( HeroSprite.avatar(hero) );
 			if (hero.name().equals(hero.className()))
-				title.label( Messages.get(this, "title", hero.lvl, hero.className() ).toUpperCase( Locale.ENGLISH ) );
+				title.label( Messages.upperCase(Messages.get(this, "title", hero.lvl, hero.className() ), Locale.ENGLISH) );
 			else
-				title.label((hero.name() + "\n" + Messages.get(this, "title", hero.lvl, hero.className())).toUpperCase(Locale.ENGLISH));
+				title.label(Messages.upperCase(Messages.concat(Messages.concat(hero.name(), Messages.literal("\n")), Messages.get(this, "title", hero.lvl, hero.className())), Locale.ENGLISH));
 			title.color(Window.TITLE_COLOR);
 			title.setRect( 0, 0, WIDTH-16, 0 );
 			add(title);
@@ -187,12 +187,12 @@ public class WndHero extends WndTabbed {
 			pos = title.bottom() + 2*GAP;
 
 			int strBonus = hero.STR() - hero.STR;
-			if (strBonus > 0)           statSlot( Messages.get(this, "str"), hero.STR + " + " + strBonus );
-			else if (strBonus < 0)      statSlot( Messages.get(this, "str"), hero.STR + " - " + -strBonus );
+			if (strBonus > 0)           statSlot( Messages.get(this, "str"), Messages.concat(Messages.concat(hero.STR, Messages.literal(" + ")), strBonus) );
+			else if (strBonus < 0)      statSlot( Messages.get(this, "str"), Messages.concat(Messages.concat(hero.STR, Messages.literal(" - ")), -strBonus) );
 			else                        statSlot( Messages.get(this, "str"), hero.STR() );
-			if (hero.shielding() > 0)   statSlot( Messages.get(this, "health"), hero.HP + "+" + hero.shielding() + "/" + hero.HT );
-			else                        statSlot( Messages.get(this, "health"), (hero.HP) + "/" + hero.HT );
-			statSlot( Messages.get(this, "exp"), hero.exp + "/" + hero.maxExp() );
+			if (hero.shielding() > 0)   statSlot( Messages.get(this, "health"), Messages.concat(Messages.concat(Messages.concat(Messages.concat(hero.HP, Messages.literal("+")), hero.shielding()), Messages.literal("/")), hero.HT) );
+			else                        statSlot( Messages.get(this, "health"), Messages.concat(Messages.concat((hero.HP), Messages.literal("/")), hero.HT) );
+			statSlot( Messages.get(this, "exp"), Messages.concat(Messages.concat(hero.exp, Messages.literal("/")), hero.maxExp()) );
 
 			pos += GAP;
 
@@ -200,14 +200,14 @@ public class WndHero extends WndTabbed {
 			statSlot( Messages.get(this, "depth"), Statistics.deepestFloor );
 			if (Dungeon.daily){
 				if (!Dungeon.dailyReplay) {
-					statSlot(Messages.get(this, "daily_for"), "_" + Dungeon.customSeedText + "_");
+					statSlot(Messages.get(this, "daily_for"), Messages.concat(Messages.concat(Messages.literal("_"), Dungeon.customSeedText), Messages.literal("_")));
 				} else {
-					statSlot(Messages.get(this, "replay_for"), "_" + Dungeon.customSeedText + "_");
+					statSlot(Messages.get(this, "replay_for"), Messages.concat(Messages.concat(Messages.literal("_"), Dungeon.customSeedText), Messages.literal("_")));
 				}
 			} else if (!Dungeon.customSeedText.isEmpty()){
-				statSlot( Messages.get(this, "custom_seed"), "_" + Dungeon.customSeedText + "_" );
+				statSlot( Messages.get(this, "custom_seed"), Messages.concat(Messages.concat(Messages.literal("_"), Messages.userText(Dungeon.customSeedText)), Messages.literal("_")) );
 			} else {
-				statSlot( Messages.get(this, "dungeon_seed"), DungeonSeed.convertToCode(Dungeon.seed) );
+				statSlot( Messages.get(this, "dungeon_seed"), DungeonSeed.displayCode(Dungeon.seed) );
 			}
 
 			pos += GAP;

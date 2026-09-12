@@ -9,6 +9,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfIdentify;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfDivination;
 import com.shatteredpixel.shatteredpixeldungeon.items.stones.StoneOfAugmentation;
@@ -29,7 +30,7 @@ final class ItemWindowFixtures {
     private static ScrollOfUpgrade upgradeSource;
     static boolean supports(String name){return name.equals("augment-weapon")||name.equals("augment-armor")
             ||name.equals("divination-unknown")||name.equals("divination-known")
-            ||name.equals("upgrade-known")||name.equals("upgrade-unknown");}
+            ||name.equals("upgrade-known")||name.equals("upgrade-known-identify")||name.equals("upgrade-unknown");}
     static void prepare(String name,Hero hero) {
         if(!supports(name))throw new IllegalArgumentException("Unknown item window fixture");
         ContainerScenarioFixtures.quietPocket(hero);
@@ -44,10 +45,15 @@ final class ItemWindowFixtures {
             upgradeSource=new ScrollOfUpgrade();
             if(upgradeSource.isKnown()||!hero.belongings.getAllItems(Scroll.class).isEmpty())
                 throw new IllegalStateException("Upgrade fixture requires one initially unknown source scroll");
-            // The known branch identifies through the original Intuition UI before READ.
-            // Neither branch overrides scroll knowledge or replaces the starting armor.
+            // The tested Upgrade remains unknown. Only the auxiliary identification
+            // item is prepared; the public client performs its original identification UI.
             if(name.equals("upgrade-known")&&!new StoneOfIntuition().collect(hero.belongings.backpack))
                 throw new IllegalStateException("Fixture intuition inventory is full");
+            if(name.equals("upgrade-known-identify")) {
+                ScrollOfIdentify identify=new ScrollOfIdentify();identify.setKnown();
+                if(!identify.collect(hero.belongings.backpack)||upgradeSource.isKnown())
+                    throw new IllegalStateException("Fixture identification source must not identify the Upgrade scroll");
+            }
             source=upgradeSource;
         } else if(divination) {
             // Only starting knowledge is prepared. The original READ chooses its own

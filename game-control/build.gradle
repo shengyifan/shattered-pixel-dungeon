@@ -23,3 +23,19 @@ tasks.register('generateUiCoverage', JavaExec) {
     mainClass = 'com.shatteredpixel.shatteredpixeldungeon.control.game.UiCoverageInventory'
     args rootProject.projectDir.absolutePath
 }
+
+// A new String-producing display operation must be reviewed before tests can pass.
+tasks.register('checkTextSources', Exec) {
+    dependsOn classes
+    def classpathFile = layout.buildDirectory.file('text-provenance/source-classpath.txt')
+    def reportFile = layout.buildDirectory.file('text-provenance/composition-coverage.json')
+    doFirst {
+        classpathFile.get().asFile.parentFile.mkdirs()
+        classpathFile.get().asFile.text = sourceSets.main.runtimeClasspath.asPath
+        commandLine 'python3', file('src/test/python/text_composition_inventory.py').absolutePath,
+                '--root', rootProject.projectDir.absolutePath,
+                '--classpath-file', classpathFile.get().asFile.absolutePath,
+                '--output', reportFile.get().asFile.absolutePath
+    }
+}
+test.dependsOn tasks.named('checkTextSources')

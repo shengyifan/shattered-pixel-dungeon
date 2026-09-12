@@ -559,14 +559,14 @@ public class ElementalStrike extends ArmorAbility {
 		if (Game.scene() instanceof GameScene){
 			KindOfWeapon w = Dungeon.hero.belongings.weapon();
 			if (w instanceof MeleeWeapon && ((MeleeWeapon) w).enchantment != null){
-				desc += "\n\n" + Messages.get(((MeleeWeapon) w).enchantment, "elestrike_desc");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(((MeleeWeapon) w).enchantment, "elestrike_desc")));
 			} else {
-				desc += "\n\n" + Messages.get(this, "generic_desc");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "generic_desc")));
 			}
 		} else {
-			desc += "\n\n" + Messages.get(this, "generic_desc");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "generic_desc")));
 		}
-		desc += "\n\n" + Messages.get(this, "cost", (int)baseChargeUse);
+		desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "cost", (int)baseChargeUse)));
 		return desc;
 	}
 

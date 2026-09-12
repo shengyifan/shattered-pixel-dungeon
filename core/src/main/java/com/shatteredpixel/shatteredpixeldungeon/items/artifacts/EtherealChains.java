@@ -303,11 +303,11 @@ public class EtherealChains extends Artifact {
 		String desc = super.desc();
 
 		if (isEquipped( Dungeon.hero )){
-			desc += "\n\n";
+			desc = Messages.concat(desc, Messages.literal("\n\n"));
 			if (cursed)
-				desc += Messages.get(this, "desc_cursed");
+				desc = Messages.concat(desc, Messages.get(this, "desc_cursed"));
 			else
-				desc += Messages.get(this, "desc_equipped");
+				desc = Messages.concat(desc, Messages.get(this, "desc_equipped"));
 		}
 		return desc;
 	}

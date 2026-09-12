@@ -106,6 +106,6 @@ public class Whip extends MeleeWeapon {
 	}
 
 	public String upgradeAbilityStat(int level){
-		return augment.damageFactor(min(level)) + "-" + augment.damageFactor(max(level));
+		return Messages.concat(Messages.concat(augment.damageFactor(min(level)), Messages.literal("-")), augment.damageFactor(max(level)));
 	}
 }

@@ -362,9 +362,9 @@ public class ChangesScene extends PixelScene {
 
 			String message = "";
 			for (int i = 0; i < messages.length; i++){
-				message += messages[i];
+				message = Messages.concat(message, messages[i]);
 				if (i != messages.length-1){
-					message += "\n\n";
+					message = Messages.concat(message, Messages.literal("\n\n"));
 				}
 			}
 			changeBody.text(message);

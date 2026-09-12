@@ -249,9 +249,9 @@ public class MasterThievesArmband extends Artifact {
 
 		if ( isEquipped (Dungeon.hero) ){
 			if (cursed){
-				desc += "\n\n" + Messages.get(this, "desc_cursed");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_cursed")));
 			} else {
-				desc += "\n\n" + Messages.get(this, "desc_worn");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_worn")));
 			}
 		}
 

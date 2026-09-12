@@ -120,9 +120,9 @@ public class GuidingLight extends TargetedClericSpell {
 	public String desc(){
 		String desc = Messages.get(this, "desc");
 		if (Dungeon.hero.subClass == HeroSubClass.PRIEST){
-			desc += "\n\n" + Messages.get(this, "desc_priest");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_priest")));
 		}
-		return desc + "\n\n" + Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero));
+		return Messages.concat(Messages.concat(desc, Messages.literal("\n\n")), Messages.get(this, "charge_cost", (int)chargeUse(Dungeon.hero)));
 	}
 
 	public static class GuidingLightPriestCooldown extends FlavourBuff {
@@ -168,9 +168,9 @@ public class GuidingLight extends TargetedClericSpell {
 			String desc = super.desc();
 
 			if (Dungeon.hero.subClass == HeroSubClass.PRIEST){
-				desc += "\n\n" + Messages.get(this, "desc_priest");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_priest")));
 			} else if (Dungeon.hero.heroClass != HeroClass.CLERIC){
-				desc += "\n\n" + Messages.get(this, "desc_generic");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_generic")));
 			}
 
 			return desc;

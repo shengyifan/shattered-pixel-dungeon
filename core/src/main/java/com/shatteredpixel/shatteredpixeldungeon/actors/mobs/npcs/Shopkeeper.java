@@ -249,7 +249,7 @@ public class Shopkeeper extends NPC {
 				options[i++] = Messages.get(Shopkeeper.this, "talk");
 				for (Item item : buybackItems){
 					options[i] = Messages.get(Heap.class, "for_sale", item.value(), Messages.titleCase(item.title()));
-					if (options[i].length() > maxLen) options[i] = options[i].substring(0, maxLen-3) + "...";
+					if (options[i].length() > maxLen) options[i] = Messages.concat(Messages.substring(options[i], 0, maxLen-3), Messages.literal("..."));
 					i++;
 				}
 				CurrencyIndicator.showGold = true;
@@ -314,7 +314,7 @@ public class Shopkeeper extends NPC {
 		}
 		switch (Dungeon.depth){
 			case 6: default:
-				return Messages.get(this, "talk_prison_intro") + "\n\n" + Messages.get(this, "talk_prison_" + Dungeon.hero.heroClass.name());
+				return Messages.concat(Messages.concat(Messages.get(this, "talk_prison_intro"), Messages.literal("\n\n")), Messages.get(this, "talk_prison_" + Dungeon.hero.heroClass.name()));
 			case 11:
 				return Messages.get(this, "talk_caves");
 			case 16:

@@ -52,8 +52,8 @@ abstract public class KindOfWeapon extends EquipableItem {
 			usesTargeting = false;
 			String primaryName = Messages.titleCase(hero.belongings.weapon != null ? hero.belongings.weapon.trueName() : Messages.get(KindOfWeapon.class, "empty"));
 			String secondaryName = Messages.titleCase(hero.belongings.secondWep != null ? hero.belongings.secondWep.trueName() : Messages.get(KindOfWeapon.class, "empty"));
-			if (primaryName.length() > 18) primaryName = primaryName.substring(0, 15) + "...";
-			if (secondaryName.length() > 18) secondaryName = secondaryName.substring(0, 15) + "...";
+			if (primaryName.length() > 18) primaryName = Messages.concat(Messages.substring(primaryName, 0, 15), Messages.literal("..."));
+			if (secondaryName.length() > 18) secondaryName = Messages.concat(Messages.substring(secondaryName, 0, 15), Messages.literal("..."));
 			GameScene.show(new WndOptions(
 					new ItemSprite(this),
 					Messages.titleCase(name()),

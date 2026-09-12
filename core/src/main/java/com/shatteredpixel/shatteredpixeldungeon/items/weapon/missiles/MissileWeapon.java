@@ -625,63 +625,63 @@ abstract public class MissileWeapon extends Weapon {
 		String info = super.info();
 
 		if (levelKnown) {
-			info += "\n\n" + Messages.get(MissileWeapon.class, "stats_known", tier, augment.damageFactor(min()), augment.damageFactor(max()), STRReq());
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(MissileWeapon.class, "stats_known", tier, augment.damageFactor(min()), augment.damageFactor(max()), STRReq())));
 			if (Dungeon.hero != null) {
 				if (STRReq() > Dungeon.hero.STR()) {
-					info += " " + Messages.get(Weapon.class, "too_heavy");
+					info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "too_heavy")));
 				} else if (Dungeon.hero.STR() > STRReq()) {
-					info += " " + Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq());
+					info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq())));
 				}
 			}
 		} else {
-			info += "\n\n" + Messages.get(MissileWeapon.class, "stats_unknown", tier, min(0), max(0), STRReq(0));
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(MissileWeapon.class, "stats_unknown", tier, min(0), max(0), STRReq(0))));
 			if (Dungeon.hero != null && STRReq(0) > Dungeon.hero.STR()) {
-				info += " " + Messages.get(MissileWeapon.class, "probably_too_heavy");
+				info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(MissileWeapon.class, "probably_too_heavy")));
 			}
 		}
 
 		if (enchantment != null && (cursedKnown || !enchantment.curse())){
-			info += "\n\n" + Messages.capitalize(Messages.get(Weapon.class, "enchanted", enchantment.name()));
-			if (enchantHardened) info += " " + Messages.get(Weapon.class, "enchant_hardened");
-			info += " " + enchantment.desc();
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.capitalize(Messages.get(Weapon.class, "enchanted", enchantment.name()))));
+			if (enchantHardened) info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "enchant_hardened")));
+			info = Messages.concat(info, Messages.concat(Messages.literal(" "), enchantment.desc()));
 		} else if (enchantHardened){
-			info += "\n\n" + Messages.get(Weapon.class, "hardened_no_enchant");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "hardened_no_enchant")));
 		}
 
 		if (cursedKnown && cursed) {
-			info += "\n\n" + Messages.get(Weapon.class, "cursed");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "cursed")));
 		} else if (!isIdentified() && cursedKnown){
-			info += "\n\n" + Messages.get(Weapon.class, "not_cursed");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(Weapon.class, "not_cursed")));
 		}
 
-		info += "\n\n";
+		info = Messages.concat(info, Messages.literal("\n\n"));
 		String statsInfo = statsInfo();
-		if (!statsInfo.equals("")) info += statsInfo + " ";
-		info += Messages.get(MissileWeapon.class, "distance");
+		if (!statsInfo.equals("")) info = Messages.concat(info, Messages.concat(statsInfo, Messages.literal(" ")));
+		info = Messages.concat(info, Messages.get(MissileWeapon.class, "distance"));
 
 		switch (augment) {
 			case SPEED:
-				info += " " + Messages.get(Weapon.class, "faster");
+				info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "faster")));
 				break;
 			case DAMAGE:
-				info += " " + Messages.get(Weapon.class, "stronger");
+				info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(Weapon.class, "stronger")));
 				break;
 			case NONE:
 		}
 
 		if (levelKnown) {
 			if (durabilityPerUse() > 0) {
-				info += "\n\n" + Messages.get(this, "uses_left",
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "uses_left",
 						(int) Math.ceil(durability / durabilityPerUse()),
-						(int) Math.ceil(MAX_DURABILITY / durabilityPerUse()));
+						(int) Math.ceil(MAX_DURABILITY / durabilityPerUse()))));
 			} else {
-				info += "\n\n" + Messages.get(this, "unlimited_uses");
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "unlimited_uses")));
 			}
 		}  else {
 			if (durabilityPerUse(0) > 0) {
-				info += "\n\n" + Messages.get(this, "unknown_uses", (int) Math.ceil(MAX_DURABILITY / durabilityPerUse(0)));
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "unknown_uses", (int) Math.ceil(MAX_DURABILITY / durabilityPerUse(0)))));
 			} else {
-				info += "\n\n" + Messages.get(this, "unlimited_uses");
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "unlimited_uses")));
 			}
 		}
 		

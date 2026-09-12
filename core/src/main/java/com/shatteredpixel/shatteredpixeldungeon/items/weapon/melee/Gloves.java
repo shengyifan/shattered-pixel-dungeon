@@ -68,7 +68,7 @@ public class Gloves extends MeleeWeapon {
 	}
 
 	public String upgradeAbilityStat(int level){
-		return "+" + augment.damageFactor(3 + level);
+		return Messages.concat(Messages.literal("+"), augment.damageFactor(3 + level));
 	}
 
 }

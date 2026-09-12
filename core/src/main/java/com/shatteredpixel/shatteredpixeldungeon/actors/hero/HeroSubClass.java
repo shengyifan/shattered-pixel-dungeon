@@ -71,8 +71,8 @@ public enum HeroSubClass {
 			if (Game.scene() instanceof GameScene){
 				MagesStaff staff = Dungeon.hero.belongings.getItem(MagesStaff.class);
 				if (staff != null && staff.wandClass() != null){
-					desc += "\n\n" + Messages.get(staff.wandClass(), "bmage_desc");
-					desc = desc.replaceAll("_", "");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(staff.wandClass(), "bmage_desc")));
+					desc = Messages.replace(desc, "_", "");
 				}
 			}
 			return desc;

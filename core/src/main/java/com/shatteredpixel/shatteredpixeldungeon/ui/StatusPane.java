@@ -321,9 +321,9 @@ public class StatusPane extends Component {
 
 		if (oldHP != health || oldShield != shield || oldMax != max){
 			if (shield <= 0) {
-				hpText.text(health + "/" + max);
+				hpText.text(Messages.concat(Messages.concat(health, Messages.literal("/")), max));
 			} else {
-				hpText.text(health + "+" + shield + "/" + max);
+				hpText.text(Messages.concat(Messages.concat(Messages.concat(Messages.concat(health, Messages.literal("+")), shield), Messages.literal("/")), max));
 			}
 			oldHP = health;
 			oldShield = shield;
@@ -336,13 +336,13 @@ public class StatusPane extends Component {
 			hpText.measure();
 			hpText.x = hp.x + (128 - hpText.width())/2f;
 
-			expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
+			expText.text(Messages.concat(Messages.concat(Dungeon.hero.exp, Messages.literal("/")), Dungeon.hero.maxExp()));
 			expText.measure();
 			expText.x = hp.x + (128 - expText.width())/2f;
 
 		} else {
 			exp.scale.x = ((17 + heroPaneExtraWidth) / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
-			expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
+			expText.text(Messages.concat(Messages.concat(Dungeon.hero.exp, Messages.literal("/")), Dungeon.hero.maxExp()));
 		}
 
 		if (Dungeon.hero.lvl != lastLvl) {
@@ -354,7 +354,7 @@ public class StatusPane extends Component {
 			lastLvl = Dungeon.hero.lvl;
 
 			if (large){
-				level.text( "lv. " + lastLvl );
+				level.text( Messages.concat(Messages.literal("lv. "), lastLvl) );
 				level.measure();
 				level.x = x + (30f - level.width()) / 2f;
 				level.y = y + 33f - level.baseLine() / 2f;

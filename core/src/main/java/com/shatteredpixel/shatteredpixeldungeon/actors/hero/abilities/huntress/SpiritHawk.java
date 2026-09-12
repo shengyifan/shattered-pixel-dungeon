@@ -266,9 +266,9 @@ public class SpiritHawk extends ArmorAbility {
 		public String description() {
 			String message = Messages.get(this, "desc", (int)timeRemaining);
 			if (Actor.chars().contains(this)){
-				message += "\n\n" + Messages.get(this, "desc_remaining", (int)timeRemaining);
+				message = Messages.concat(message, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_remaining", (int)timeRemaining)));
 				if (dodgesUsed < 2*Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT)){
-					message += "\n" + Messages.get(this, "desc_dodges", (2*Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT) - dodgesUsed));
+					message = Messages.concat(message, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_dodges", (2*Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT) - dodgesUsed))));
 				}
 			}
 			return message;

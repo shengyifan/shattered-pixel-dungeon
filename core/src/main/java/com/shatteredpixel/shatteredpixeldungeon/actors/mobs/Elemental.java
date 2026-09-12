@@ -440,9 +440,9 @@ public abstract class Elemental extends Mob {
 			String desc = super.description();
 
 			if (summonedALly){
-				desc += " " + Messages.get(this, "desc_ally");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "desc_ally")));
 			} else {
-				desc += " " + Messages.get(this, "desc_boss");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "desc_boss")));
 			}
 
 			return desc;

@@ -42,15 +42,15 @@ public class JsonCodecTest {
     }
 
     @Test public void parsesOnlyTheRequestEnvelopeWithoutDemandingActiveScope() {
-        ControlRequest request = ControlRequest.parse("{\"id\":\"query-1\",\"op\":\"protocol.info\"}");
+        ControlRequest request = ControlRequest.parse("{\"protocol_version\":2,\"id\":\"query-1\",\"op\":\"protocol.info\"}");
         assertEquals("query-1", request.id);
         assertNull(request.scopeId);
         assertNull(request.stateVersion);
         assertTrue(request.args.isEmpty());
-        ControlRequest move = ControlRequest.parse("{\"scope_id\":\"run:uuid\",\"id\":\"a\",\"op\":\"move\",\"state_version\":\"boot:7\",\"args\":{\"direction\":\"north\"}}");
+        ControlRequest move = ControlRequest.parse("{\"protocol_version\":2,\"scope_id\":\"run:uuid\",\"id\":\"a\",\"op\":\"move\",\"state_version\":\"boot:7\",\"args\":{\"direction\":\"north\"}}");
         assertEquals("boot:7", move.stateVersion);
         assertEquals("north", move.args.get("direction"));
-        assertThrows(ProtocolException.class, () -> ControlRequest.parse("{\"op\":\"state.get\"}"));
-        assertThrows(ProtocolException.class, () -> ControlRequest.parse("{\"id\":\"a\",\"op\":\"move\",\"args\":[]}"));
+        assertThrows(ProtocolException.class, () -> ControlRequest.parse("{\"protocol_version\":2,\"op\":\"state.get\"}"));
+        assertThrows(ProtocolException.class, () -> ControlRequest.parse("{\"protocol_version\":2,\"id\":\"a\",\"op\":\"move\",\"args\":[]}"));
     }
 }

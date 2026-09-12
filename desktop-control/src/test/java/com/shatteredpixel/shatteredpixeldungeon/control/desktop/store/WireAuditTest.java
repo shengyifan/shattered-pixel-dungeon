@@ -34,7 +34,7 @@ public class WireAuditTest {
             assertTrue(valid.registered);assertFalse(valid.duplicate);
         }
     }
-    @Test public void upgradesLegacyTextRecordsWithoutPretendingTheyAreExactWireBytes()throws Exception{
+    @Test public void rejectsLegacyTextRecordsWithoutChangingTheirWireProvenance()throws Exception{
         Path root=temporary.newFolder().toPath();String scope;
         try(AuditStore store=new AuditStore(root)){
             scope=store.menuScope();AuditStore.Attempt a=store.begin(scope,"old","state.get","{\"id\":\"old\"}");
@@ -44,11 +44,6 @@ public class WireAuditTest {
             s.execute("ALTER TABLE exchanges DROP COLUMN raw_bytes");s.execute("ALTER TABLE exchanges DROP COLUMN raw_format");
             s.execute("UPDATE metadata SET value='2' WHERE key='schema_version'");
         }
-        try(AuditStore store=new AuditStore(root)){
-            assertEquals("COMPLETED",store.getRequest(scope,"old").get("status"));
-            try(Connection c=DriverManager.getConnection("jdbc:sqlite:"+root.resolve("public.sqlite3"));Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT raw_bytes,raw_format FROM exchanges")){
-                assertTrue(r.next());assertNull(r.getBytes(1));assertEquals("legacy-text",r.getString(2));
-            }
-        }
+        AuditSchemaFiveTest.assertRejectedWithoutChanges(root);
     }
 }

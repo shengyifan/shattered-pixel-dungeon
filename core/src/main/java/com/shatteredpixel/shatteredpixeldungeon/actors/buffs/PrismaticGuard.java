@@ -160,7 +160,7 @@ public class PrismaticGuard extends Buff {
 	public String desc() {
 		String desc = Messages.get(this, "desc", (int)HP, maxHP());
 		if (isEmpowered()){
-			desc += "\n\n" + Messages.get(this, "desc_many", (int)powerOfManyTurns);
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_many", (int)powerOfManyTurns)));
 		}
 		return desc;
 	}

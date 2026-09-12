@@ -2,6 +2,7 @@
 """Original death/restart and Amulet/Ascension callbacks; no terminal scene injection."""
 import argparse
 import json
+import os
 from pathlib import Path
 import time
 
@@ -16,7 +17,10 @@ def ui_assertion(profile,state,window=None):
         rows=[json.loads(line) for line in (profile/"ui-assertions.jsonl").read_text().splitlines()]
         row=next((row for row in reversed(rows) if row["state_version"]==state["state_version"]),None)
         if row is not None:
-            assert row["language"]=="CHI_SMPL" and row["fullscreen"] is False,row
+            display=state["observation"]["ui"]["display"]
+            assert row["scope_id"]==state["scope_id"],row
+            assert row["language_code"]==display["language"]==os.environ.get("SPDCTL_TEST_LANGUAGE","zh"),row
+            assert row["fullscreen"] is False and display["fullscreen"] is False,row
             if window:assert window in row["window_classes"],row
             return row
         time.sleep(.02)
@@ -221,7 +225,7 @@ def run_one(root,classpath,runtime_id,name):
             details.update(original_poison_death=True,run_ended_event=event)
         result={"verified":True,"test_fixture":True,"counts_as_win":False,"runtime_id":runtime_id,
                 "profile":str(profile.relative_to(root)),"build_id":hello["result"]["build_id"],
-                "gui_language":"CHI_SMPL","cli_language":"en","fullscreen":False,
+                "gui_language":os.environ.get("SPDCTL_TEST_LANGUAGE","zh"),"cli_language":"en","fullscreen":False,
                 "old_scope_id":initial["scope_id"],
                 "gui_postconditions_checked":client.gui_postconditions_checked,**details}
         stop(client)

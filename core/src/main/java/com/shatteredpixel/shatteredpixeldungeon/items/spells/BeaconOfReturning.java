@@ -228,9 +228,9 @@ public class BeaconOfReturning extends Spell {
 		if (Dungeon.hero != null) {
 			BeaconTracker tracker = Dungeon.hero.buff(BeaconTracker.class);
 			if (tracker != null){
-				desc += "\n\n" + Messages.get(this, "desc_set", tracker.returnDepth);
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_set", tracker.returnDepth)));
 			} else if (returnDepth != -1) {
-				desc += "\n\n" + Messages.get(this, "desc_set", returnDepth);
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_set", returnDepth)));
 			}
 		}
 		return desc;

@@ -2,6 +2,10 @@ package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
@@ -37,13 +41,22 @@ class GameLogDisplayTest {
         previousSceneClass=field(Game.class,"sceneClass").get(null);
         field(GameLog.class,"entries").set(null,new ArrayList<>());field(GameLog.class,"textsToAdd").set(null,new ArrayList<>());
         GLog.update=new Signal<>();Dungeon.runId="a";scene=new Scene();new TestGame(scene);
-        Game.observer=new RuntimeObserver(){@Override public void onGameLog(String context,List<LogEntry> values){contexts.add(context);snapshots.add(values);}};
+        TextProvenance.INSTANCE.clear();Messages.setup(Languages.ENGLISH);
+        Game.observer=new RuntimeObserver(){
+            @Override public String onTextResource(String text,String key,String language,Object[] args){return TextProvenance.INSTANCE.onTextResource(text,key,language,args);}
+            @Override public String onTextResource(String text,String key,String language,Object[] args,String guiTemplate){return TextProvenance.INSTANCE.onTextResource(text,key,language,args,guiTemplate);}
+            @Override public String onTextOperation(String operation,String text,Object...operands){return TextProvenance.INSTANCE.onTextOperation(operation,text,operands);}
+            @Override public void onTextBound(Object owner,String text){TextProvenance.INSTANCE.onTextBound(owner,text);}
+            @Override public void onTextReleased(Object owner){TextProvenance.INSTANCE.onTextReleased(owner);}
+            @Override public void onGameLog(String context,List<LogEntry> values){contexts.add(context);snapshots.add(values);}
+        };
         log=new GameLog();scene.add(log);log.setRect(0,100,100,0);
     }
     @AfterEach void restore()throws Exception{
         Game.instance=previousGame;Game.observer=previousObserver;Dungeon.runId=previousRun;GLog.update=previousSignal;
         field(GameLog.class,"entries").set(null,previousEntries);field(GameLog.class,"textsToAdd").set(null,previousPending);
         field(Game.class,"sceneClass").set(null,previousSceneClass);
+        TextProvenance.INSTANCE.clear();
     }
 
     @Test void onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw()throws Exception{
@@ -97,7 +110,8 @@ class GameLogDisplayTest {
         assertEquals("VISIBLE\nNEXT",fragment.text);assertTrue(fragment.clipped);assertTrue(fragment.visible);
         assertNull(top.camera);assertNull(visible.camera);assertNull(edge.camera);assertNull(block.camera);
         String publicUi=new UiBridge(()->scene).describeUi().toString();
-        assertTrue(publicUi.contains("VISIBLE"));assertTrue(publicUi.contains("clipped=true"));
+        assertTrue(publicUi.contains("Partially displayed text"));assertTrue(publicUi.contains("clipped=true"));
+        assertFalse(publicUi.contains("VISIBLE"),"Partial source text is not guessed or mixed into English output");
         assertFalse(publicUi.contains("OFFSCREEN_TOP_SECRET"));assertFalse(publicUi.contains("PARTIAL_WORD_SECRET"));
         assertTrue(block.text().contains("OFFSCREEN_TOP_SECRET"));assertNull(visible.camera);
         log.draw();
@@ -111,10 +125,16 @@ class GameLogDisplayTest {
         log.draw();assertTrue(snapshots.get(0).isEmpty());
     }
 
-    @Test void nonLogInspectionTextRetainsExistingFullTextSemantics(){
-        LaidOutBlock detail=new LaidOutBlock("FULL_INSPECTION_TEXT",new FakeWord("FULL_INSPECTION_TEXT",0,-30,90,10));
+    @Test void nonLogInspectionTextUsesTheSameVisibilityGateWithoutCachingCamera(){
+        scene.camera=new Camera(0,0,100,60,1);
+        String source=Messages.get(WndUpgrade.class,"title");
+        FakeWord word=new FakeWord(source,0,-30,90,10);
+        LaidOutBlock detail=new LaidOutBlock(source,word);
         scene.add(detail);
-        assertTrue(new UiBridge(()->scene).describeUi().toString().contains("FULL_INSPECTION_TEXT"));
+        assertTrue(((List<?>)new UiBridge(()->scene).describeUi().get("controls")).isEmpty());
+        word.y=10;
+        assertTrue(new UiBridge(()->scene).describeUi().toString().contains("Upgrade an Item"));
+        assertNull(word.camera);assertNull(detail.camera);
     }
 
     @Test void invisiblePrefixLengthEntryCountAndColorsDoNotChangePublicShapeOrIds()throws Exception{
@@ -139,11 +159,11 @@ class GameLogDisplayTest {
     }
 
     @Test void logDisplayChangesDoNotExpireIntentButOtherUiTextRemainsProtected()throws Exception{
-        FakeText block=add("old log",1);UiBridge bridge=new UiBridge(()->scene);
-        String before=bridge.intentSignature();block.text("new log");
-        assertEquals(before,bridge.intentSignature());assertTrue(bridge.describeUi().toString().contains("new log"));
-        LaidOutBlock prompt=new LaidOutBlock("Choose the first option");scene.add(prompt);
-        String promptBefore=bridge.intentSignature();field(RenderedTextBlock.class,"text").set(prompt,"Choose the second option");
+        FakeText block=add(Messages.get(WndUpgrade.class,"title"),1);UiBridge bridge=new UiBridge(()->scene);
+        String before=bridge.intentSignature();block.text(Messages.get(WndUpgrade.class,"desc"));
+        assertEquals(before,bridge.intentSignature());assertTrue(bridge.describeUi().toString().contains("Upgrading an item permanently improves it:"));
+        FakeText prompt=new FakeText(Messages.get(WndUpgrade.class,"upgrade"),1);scene.add(prompt);
+        String promptBefore=bridge.intentSignature();prompt.text(Messages.get(WndUpgrade.class,"back"));
         assertNotEquals(promptBefore,bridge.intentSignature());
     }
 
@@ -161,8 +181,8 @@ class GameLogDisplayTest {
     private static List<String> texts(List<RuntimeObserver.LogEntry> entries){List<String> result=new ArrayList<>();for(RuntimeObserver.LogEntry e:entries)result.add(e.text);return result;}
     private static Field field(Class<?> type,String name)throws Exception{Field f=type.getDeclaredField(name);f.setAccessible(true);return f;}
     private static final class FakeText extends RenderedTextBlock{
-        FakeText(String value,int lines){super(6);text=value;nLines=lines;height=6*lines;}
-        @Override public void text(String value){text=value;}
+        FakeText(String value,int lines){super(6);text=value;nLines=lines;height=6*lines;Game.observer.onTextBound(this,value);}
+        @Override public void text(String value){text=value;Game.observer.onTextBound(this,value);}
         @Override public void maxWidth(int width){}
         @Override public synchronized void setHightlighting(boolean enabled){}
         @Override public synchronized VisibleText visibleTextFragment(){return new VisibleText(text,false,true);}
@@ -173,10 +193,11 @@ class GameLogDisplayTest {
         final String label;
         FakeWord(String label,float x,float y,float width,float height){super();this.label=label;this.x=x;this.y=y;this.width=width;this.height=height;}
         @Override public String text(){return label;}
+        @Override public boolean hasRenderableText(){return label!=null&&!label.isEmpty();}
         @Override public void draw(){}
     }
     private static final class LaidOutBlock extends RenderedTextBlock{
-        LaidOutBlock(String source,RenderedText...tokens){super(6);text=source;for(RenderedText token:tokens){words.add(token);add(token);}}
+        LaidOutBlock(String source,RenderedText...tokens){super(6);text=source;Game.observer.onTextBound(this,source);for(RenderedText token:tokens){words.add(token);add(token);}}
         @Override protected void layout(){}
     }
     private static final class TestGame extends Game{TestGame(Scene current){super(Scene.class,Game.platform);scene=current;requestedReset=false;}}

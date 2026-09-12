@@ -1185,7 +1185,7 @@ public class Badges {
 			
 			unlock(badge);
 			
-			GLog.h( Messages.get(Badges.class, "new", badge.title() + " (" + badge.desc() + ")") );
+			GLog.h( Messages.get(Badges.class, "new", Messages.concat(Messages.concat(Messages.concat(badge.title(), Messages.literal(" (")), badge.desc()), Messages.literal(")"))) );
 			GLog.newLine();
 			PixelScene.showBadge( badge );
 		}
@@ -1363,9 +1363,9 @@ public class Badges {
 
 		if (badge == Badge.BOSS_SLAIN_1_ALL_CLASSES){
 			for (HeroClass cls : HeroClass.values()){
-				result += "\n";
-				if (isUnlocked(firstBossClassBadges.get(cls)))  result += "_" + Messages.titleCase(cls.title()) + "_";
-				else                                            result += Messages.titleCase(cls.title());
+				result = Messages.concat(result, Messages.literal("\n"));
+				if (isUnlocked(firstBossClassBadges.get(cls)))  result = Messages.concat(result, Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(cls.title())), Messages.literal("_")));
+				else                                            result = Messages.concat(result, Messages.titleCase(cls.title()));
 			}
 
 			return result;
@@ -1373,9 +1373,9 @@ public class Badges {
 		} else if (badge == Badge.VICTORY_ALL_CLASSES) {
 
 			for (HeroClass cls : HeroClass.values()){
-				result += "\n";
-				if (isUnlocked(victoryClassBadges.get(cls)))    result += "_" + Messages.titleCase(cls.title()) + "_";
-				else                                            result += Messages.titleCase(cls.title());
+				result = Messages.concat(result, Messages.literal("\n"));
+				if (isUnlocked(victoryClassBadges.get(cls)))    result = Messages.concat(result, Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(cls.title())), Messages.literal("_")));
+				else                                            result = Messages.concat(result, Messages.titleCase(cls.title()));
 			}
 
 			return result;
@@ -1384,9 +1384,9 @@ public class Badges {
 
 			for (HeroSubClass cls : HeroSubClass.values()){
 				if (cls == HeroSubClass.NONE) continue;
-				result += "\n";
-				if (isUnlocked(thirdBossSubclassBadges.get(cls)))   result += "_" + Messages.titleCase(cls.title()) + "_";
-				else                                                result += Messages.titleCase(cls.title()) ;
+				result = Messages.concat(result, Messages.literal("\n"));
+				if (isUnlocked(thirdBossSubclassBadges.get(cls)))   result = Messages.concat(result, Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(cls.title())), Messages.literal("_")));
+				else                                                result = Messages.concat(result, Messages.titleCase(cls.title())) ;
 			}
 
 			return result;

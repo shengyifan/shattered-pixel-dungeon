@@ -7,7 +7,9 @@ request or callback is retried. Prepared runs do not count as victory evidence.
 """
 import argparse
 import json
+import os
 from pathlib import Path
+import re
 import traceback
 import uuid
 import xml.etree.ElementTree as ET
@@ -101,10 +103,12 @@ def scrolls(state):
     return [item for item in state["observation"]["inventory"] if "scroll" in item["name"].casefold()]
 
 
-def verify(client, state, level, count, known, mode):
+def verify(client, state, level, count, known, mode, identify_count=0):
     assert state["observation"]["hero"]["level"] == 1
     assert armor(state)["level_known"] and armor(state)["level"] == level, armor(state)
-    assert sum(item["quantity"] for item in scrolls(state)) == count, scrolls(state)
+    assert sum(item["quantity"] for item in scrolls(state)) == count + identify_count, scrolls(state)
+    helpers = [item for item in scrolls(state) if item.get("type_known") is True and item["name"].casefold() == "scroll of identify"]
+    assert sum(item["quantity"] for item in helpers) == identify_count, helpers
     observed = checkpoint(client.profile, state["state_version"])["item_window"]["upgrade"]
     assert observed == {"armor_level": level, "seal_level": level, "scroll_count": count,
                         "scroll_known": known, "upgrades_used": level, "interface_size": mode}, observed
@@ -147,6 +151,19 @@ def identify_with_intuition(client, mode):
     raise AssertionError("Intuition did not expose an upgrade-scroll confirmation")
 
 
+def identify_with_identify_scroll(client, mode):
+    open_item(client, lambda item: item.get("type_known") is True and item["name"].casefold() == "scroll of identify")
+    selected = choose(client, "READ")
+    unknown = [item for item in scrolls(selected) if item.get("type_known") is False]
+    assert len(unknown) == 1, unknown
+    verify(client, selected, 0, 1, False, mode, identify_count=1)
+    identified = choose(client, unknown[0]["name"])
+    verify(client, identified, 0, 1, True, mode)
+    assert len(scrolls(identified)) == 1 and scrolls(identified)[0]["name"].casefold() == "scroll of upgrade"
+    return {"source": "known Scroll of Identify", "original_read_and_public_unknown_selection": True,
+            "identify_scroll_consumed_once": True, "upgrade_scroll_preserved_before_upgrade": True}
+
+
 def verify_selector(client, state, mode):
     assert state["phase"] == "awaiting_input", state
     if mode == 2:
@@ -168,15 +185,73 @@ def read_scroll(client, mode, known):
     return selected
 
 
+def source_entries(value):
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from source_entries(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from source_entries(child)
+
+
+def numeric_source_text(source):
+    """Use only the already-public numeric source, including privacy-reduced literal values."""
+    assert isinstance(source, dict), {"missing_numeric_source": source}
+    kind = source.get("kind")
+    if kind == "displayed":
+        return numeric_source_text(source.get("value"))
+    if kind == "literal":
+        assert source.get("origin") in {"symbol", "literal"} and isinstance(source.get("value"), str), source
+        return source["value"]
+    if kind == "scalar":
+        value = source.get("value")
+        assert isinstance(value, int) and not isinstance(value, bool), source
+        return str(value)
+    if kind == "concat":
+        assert isinstance(source.get("parts"), list), source
+        return "".join(numeric_source_text(part) for part in source["parts"])
+    if kind == "replace":
+        assert source.get("old") == "-" and source.get("new") == "~", source
+        return numeric_source_text(source.get("value")).replace("-", "~")
+    if kind == "formatted_fragment":
+        assert isinstance(source.get("text"), str), source
+        return source["text"]
+    raise AssertionError({"unsupported_numeric_source": source})
+
+
+def assert_preview_fields(state):
+    controls = ui(state)["controls"]
+    texts = [node.get("text", "") for node in controls]
+    language = ui(state)["display"]["language"]
+    # WndUpgrade.fillFields uses this original GUI-specific punctuation branch.
+    delimiter = "~" if language in {"zh", "zh-hant"} else "-"
+    expected = "\nBlocking\n0" + delimiter + "2\n1" + delimiter + "3\nWeight\n10\n9"
+    assert "Blocking" in texts and "Weight" in texts, texts
+    assert any(expected in text for text in texts), texts
+    for label, key in (("Blocking", "windows.wndupgrade.blocking"), ("Weight", "windows.wndupgrade.weight")):
+        nodes = [node for node in controls if node.get("text") == label and node.get("role") == "text"]
+        assert len(nodes) == 1, nodes
+        assert any(entry.get("kind") == "resource" and entry.get("key") == key
+                   for entry in source_entries(nodes[0].get("text_sources", {}).get("text"))), nodes[0]
+    for text, numbers in (("0" + delimiter + "2", [0, 2]), ("1" + delimiter + "3", [1, 3]), ("10", [10]), ("9", [9])):
+        nodes = [node for node in controls if node.get("text") == text and node.get("role") == "text"]
+        assert len(nodes) == 1, {"expected_displayed_number": text, "nodes": nodes}
+        frozen_text = numeric_source_text(nodes[0].get("text_sources", {}).get("text"))
+        assert frozen_text == text, {"displayed": text, "frozen_source_text": frozen_text}
+        assert all(re.fullmatch(r"\d+", number) for number in frozen_text.split(delimiter)), frozen_text
+        frozen = [int(number) for number in frozen_text.split(delimiter)]
+        assert frozen == numbers, {"displayed": text, "frozen_source_numbers": frozen, "expected": numbers}
+    return delimiter
+
+
 def preview(client, mode, count):
     before = current(client)
     result = choose(client, "Cloth Armor")
     assert result["state_version"] != before["state_version"]
     assert result["phase"] == "awaiting_input" and ui(result)["modal"]
     ui_assertion(client.profile, result, WND_UPGRADE)
-    texts = [node.get("text", "") for node in ui(result)["controls"]]
-    assert "Blocking" in texts and "Weight" in texts, texts
-    assert any("\nBlocking\n0~2\n1~3\nWeight\n10\n9" in text for text in texts), texts
+    assert_preview_fields(result)
     assert {"Upgrade", "Back"} <= {entry.get("label") for entry in result["actions"]}
     verify(client, result, 0, count, True, mode)
     observed = current(client)
@@ -189,9 +264,13 @@ def exercise(client, case, report):
     known = case.startswith("known-")
     mode = 2 if case.endswith("pane") else 1
     initial = reach_game(client)
-    verify(client, initial, 0, 1, False, mode)
+    identify_scroll = known and report.get("known_preparation") == "identify-scroll"
+    verify(client, initial, 0, 1, False, mode, identify_count=1 if identify_scroll else 0)
     if known:
-        report["intuition_candidates_preselected"] = identify_with_intuition(client, mode)
+        if identify_scroll:
+            report["identification_preparation"] = identify_with_identify_scroll(client, mode)
+        else:
+            report["intuition_candidates_preselected"] = identify_with_intuition(client, mode)
     selected = read_scroll(client, mode, known)
     report["read_state_version"] = selected["state_version"]
     count = 1 if known else 0
@@ -256,18 +335,22 @@ def configure_mode(profile, mode):
     target.write_bytes(header + ET.tostring(document, encoding="utf-8"))
 
 
-def run_case(root, classpath, runtime_id, case):
+def run_case(root, classpath, runtime_id, case, preparation="intuition"):
+    assert preparation in {"intuition", "identify-scroll"}, preparation
     profile = root / "desktop-control/build/fixtures" / ("upgrade-preview-" + case + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
     configure_mode(profile, 2 if case.endswith("pane") else 1)
     fixture = "itemui:upgrade-known" if case.startswith("known-") else "itemui:upgrade-unknown"
+    if case.startswith("known-") and preparation == "identify-scroll":
+        fixture = "itemui:upgrade-known-identify"
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
                "com.shatteredpixel.shatteredpixeldungeon.control.desktop.FixtureLauncher", "--fixture", fixture]
     client = FixtureClient(command, profile, verify_gui=True)
     report = {"test_fixture": True, "counts_as_win": False, "fixture": fixture, "case": case,
               "profile": str(profile.relative_to(root)), "runtime_id": runtime_id,
-              "cli_language": "en", "gui_language": "zh", "automatic_stale_retries": 0}
+              "cli_language": "en", "gui_language": os.environ.get("SPDCTL_TEST_LANGUAGE", "zh"), "automatic_stale_retries": 0,
+              "known_preparation": preparation if case.startswith("known-") else "not_applicable"}
     try:
         hello = client.request("protocol.info")
         assert hello.get("ok"), hello
@@ -300,12 +383,14 @@ def run_case(root, classpath, runtime_id, case):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cases", default=",".join(CASES))
-    cases = parser.parse_args().cases.split(",")
+    parser.add_argument("--known-preparation", choices=("intuition", "identify-scroll"), default="intuition")
+    args = parser.parse_args()
+    cases = args.cases.split(",")
     assert cases and all(case in CASES for case in cases), cases
     root = Path(__file__).resolve().parents[4]
     classpath, runtime_id = freeze_runtime(root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip())
     print(json.dumps({"started_runtime": runtime_id, "cases": cases}), flush=True)
-    reports = [run_case(root, classpath, runtime_id, case) for case in cases]
+    reports = [run_case(root, classpath, runtime_id, case, preparation=args.known_preparation) for case in cases]
     target = root / "desktop-control/build/fixtures" / runtime_id / "upgrade-preview-results.json"
     target.write_text(json.dumps(reports, ensure_ascii=False, indent=2) + "\n")
     if not all(report.get("ok") for report in reports):

@@ -490,14 +490,14 @@ public class WndJournal extends WndTabbed {
 		
 		private void updateList(){
 
-			grid.addHeader("_" + Messages.get(this, "title") + "_", 9, true);
+			grid.addHeader(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(this, "title")), Messages.literal("_")), 9, true);
 
 			grid.addHeader(Messages.get(this, "desc"), 6, true);
 
 			ArrayList<Notes.CustomRecord> customRecs = Notes.getRecords(Notes.CustomRecord.class);
 
 			if (!customRecs.isEmpty()){
-				grid.addHeader("_" + Messages.get(this, "custom_notes") + "_ (" + customRecs.size() + "/" + Notes.customRecordLimit() + ")");
+				grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(this, "custom_notes")), Messages.literal("_ (")), customRecs.size()), Messages.literal("/")), Notes.customRecordLimit()), Messages.literal(")")));
 
 				for (Notes.CustomRecord rec : customRecs){
 					ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(rec.icon()){
@@ -526,7 +526,7 @@ public class WndJournal extends WndTabbed {
 				ArrayList<Notes.Record> recs = Notes.getRecords(i);
 
 				if (i == Dungeon.depth) {
-					grid.addHeader("_" + Messages.get(this, "floor_header", i) + "_");
+					grid.addHeader(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(this, "floor_header", i)), Messages.literal("_")));
 				} else {
 					grid.addHeader(Messages.get(this, "floor_header", i));
 				}
@@ -651,10 +651,10 @@ public class WndJournal extends WndTabbed {
 					totalItems += catalog.totalItems();
 					totalSeen += catalog.totalSeen();
 				}
-				grid.addHeader("_" + Messages.get(this, "title_equipment") + "_ (" + totalSeen + "/" + totalItems + ")", 9, true);
+				grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(this, "title_equipment")), Messages.literal("_ (")), totalSeen), Messages.literal("/")), totalItems), Messages.literal(")")), 9, true);
 
 				for (Catalog catalog : Catalog.equipmentCatalogs){
-					grid.addHeader("_" + Messages.titleCase(catalog.title()) + "_ (" + catalog.totalSeen() + "/" + catalog.totalItems() + "):");
+					grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(catalog.title())), Messages.literal("_ (")), catalog.totalSeen()), Messages.literal("/")), catalog.totalItems()), Messages.literal("):")));
 					addGridItems(grid, catalog.items());
 				}
 
@@ -665,10 +665,10 @@ public class WndJournal extends WndTabbed {
 					totalItems += catalog.totalItems();
 					totalSeen += catalog.totalSeen();
 				}
-				grid.addHeader("_" + Messages.get(this, "title_consumables") + "_ (" + totalSeen + "/" + totalItems + ")", 9, true);
+				grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(this, "title_consumables")), Messages.literal("_ (")), totalSeen), Messages.literal("/")), totalItems), Messages.literal(")")), 9, true);
 
 				for (Catalog catalog : Catalog.consumableCatalogs){
-					grid.addHeader("_" + Messages.titleCase(catalog.title()) + "_ (" + catalog.totalSeen() + "/" + catalog.totalItems() + "):");
+					grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(catalog.title())), Messages.literal("_ (")), catalog.totalSeen()), Messages.literal("/")), catalog.totalItems()), Messages.literal("):")));
 					addGridItems(grid, catalog.items());
 				}
 
@@ -679,10 +679,10 @@ public class WndJournal extends WndTabbed {
 					totalItems += bestiary.totalEntities();
 					totalSeen += bestiary.totalSeen();
 				}
-				grid.addHeader("_" + Messages.get(this, "title_bestiary") + "_ (" + totalSeen + "/" + totalItems + ")", 9, true);
+				grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(this, "title_bestiary")), Messages.literal("_ (")), totalSeen), Messages.literal("/")), totalItems), Messages.literal(")")), 9, true);
 
 				for (Bestiary bestiary : Bestiary.values()){
-					grid.addHeader("_" + Messages.titleCase(bestiary.title()) + "_ (" + bestiary.totalSeen() + "/" + bestiary.totalEntities() + "):");
+					grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(bestiary.title())), Messages.literal("_ (")), bestiary.totalSeen()), Messages.literal("/")), bestiary.totalEntities()), Messages.literal("):")));
 					addGridEntities(grid, bestiary.entities());
 				}
 
@@ -700,7 +700,7 @@ public class WndJournal extends WndTabbed {
 						}
 					}
 				}
-				grid.addHeader("_" + Messages.get(this, "title_lore") + "_ (" + totalSeen + "/" + totalItems + ")", 9, true);
+				grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.get(this, "title_lore")), Messages.literal("_ (")), totalSeen), Messages.literal("/")), totalItems), Messages.literal(")")), 9, true);
 
 				for (Document doc : Document.values()){
 					if (!doc.isLoreDoc()){
@@ -726,9 +726,9 @@ public class WndJournal extends WndTabbed {
 						}
 					}
 					if (!doc.anyPagesFound()){
-						grid.addHeader("_???_ (" + totalSeen + "/" + totalItems + "):");
+						grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_???_ ("), totalSeen), Messages.literal("/")), totalItems), Messages.literal("):")));
 					} else {
-						grid.addHeader("_" + Messages.titleCase(doc.title()) + "_ (" + totalSeen + "/" + totalItems + "):");
+						grid.addHeader(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.concat(Messages.literal("_"), Messages.titleCase(doc.title())), Messages.literal("_ (")), totalSeen), Messages.literal("/")), totalItems), Messages.literal("):")));
 					}
 					addGridDocuments(grid, doc);
 				}
@@ -774,27 +774,27 @@ public class WndJournal extends WndTabbed {
 					sprite.lightness(0);
 					title = "???";
 					desc = Messages.get(CatalogTab.class, "not_seen_item");
-					desc += "\n\n" + Messages.get(item, "discover_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(item, "discover_hint")));
 				} else {
 					title = Messages.titleCase( item.name() );
 					//some items don't include direct stats, generally when they're not applicable
 					if (item instanceof ClassArmor || item instanceof SpiritBow){
-						desc += item.desc();
+						desc = Messages.concat(desc, item.desc());
 					} else {
-						desc += item.info();
+						desc = Messages.concat(desc, item.info());
 					}
 
 					if (Catalog.useCount(itemClass) > 1) {
 						if (item.isUpgradable() || item instanceof Artifact) {
-							desc += "\n\n" + Messages.get(CatalogTab.class, "upgrade_count", Catalog.useCount(itemClass));
+							desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "upgrade_count", Catalog.useCount(itemClass))));
 						} else if (item instanceof Trinket) {
-							desc += "\n\n" + Messages.get(CatalogTab.class, "trinket_count", Catalog.useCount(itemClass));
+							desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "trinket_count", Catalog.useCount(itemClass))));
 						} else if (item instanceof Gold) {
-							desc += "\n\n" + Messages.get(CatalogTab.class, "gold_count", Catalog.useCount(itemClass));
+							desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "gold_count", Catalog.useCount(itemClass))));
 						} else if (item instanceof EnergyCrystal) {
-							desc += "\n\n" + Messages.get(CatalogTab.class, "energy_count", Catalog.useCount(itemClass));
+							desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "energy_count", Catalog.useCount(itemClass))));
 						} else {
-							desc += "\n\n" + Messages.get(CatalogTab.class, "use_count", Catalog.useCount(itemClass));
+							desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "use_count", Catalog.useCount(itemClass))));
 						}
 					}
 
@@ -824,7 +824,7 @@ public class WndJournal extends WndTabbed {
 					sprite.lightness(0f);
 					title = "???";
 					desc = Messages.get(CatalogTab.class, "not_seen_enchantment");
-					desc += "\n\n" + Messages.get(ench, "discover_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(ench, "discover_hint")));
 				}
 
 			} else if (Armor.Glyph.class.isAssignableFrom(itemClass)){
@@ -840,7 +840,7 @@ public class WndJournal extends WndTabbed {
 					sprite.lightness(0f);
 					title = "???";
 					desc = Messages.get(CatalogTab.class, "not_seen_glyph");
-					desc += "\n\n" + Messages.get(glyph, "discover_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(glyph, "discover_hint")));
 				}
 
 			}
@@ -909,7 +909,7 @@ public class WndJournal extends WndTabbed {
 					title = Messages.titleCase(mob.name());
 					desc = mob.description();
 					if (Bestiary.encounterCount(entityCls) > 1){
-						desc += "\n\n" + Messages.get(CatalogTab.class, "enemy_count", Bestiary.encounterCount(entityCls));
+						desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "enemy_count", Bestiary.encounterCount(entityCls))));
 					}
 				} else {
 					icon.lightness(0f);
@@ -921,7 +921,7 @@ public class WndJournal extends WndTabbed {
 					} else {
 						desc = Messages.get(CatalogTab.class, "not_seen_ally");
 					}
-					desc += "\n\n" + Messages.get(mob, "discover_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(mob, "discover_hint")));
 				}
 
 				//we have to clip the bounds of the sprite if it's too large
@@ -949,13 +949,13 @@ public class WndJournal extends WndTabbed {
 					title = Messages.titleCase(trap.name());
 					desc = trap.desc();
 					if (Bestiary.encounterCount(entityCls) > 1){
-						desc += "\n\n" + Messages.get(CatalogTab.class, "trap_count", Bestiary.encounterCount(entityCls));
+						desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "trap_count", Bestiary.encounterCount(entityCls))));
 					}
 				} else {
 					icon.lightness(0f);
 					title = "???";
 					desc = Messages.get(CatalogTab.class, "not_seen_trap");
-					desc += "\n\n" + Messages.get(trap, "discover_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(trap, "discover_hint")));
 				}
 
 			} else if (Plant.class.isAssignableFrom(entityCls)){
@@ -967,13 +967,13 @@ public class WndJournal extends WndTabbed {
 					title = Messages.titleCase(plant.name());
 					desc = plant.desc();
 					if (Bestiary.encounterCount(entityCls) > 1){
-						desc += "\n\n" + Messages.get(CatalogTab.class, "plant_count", Bestiary.encounterCount(entityCls));
+						desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(CatalogTab.class, "plant_count", Bestiary.encounterCount(entityCls))));
 					}
 				} else {
 					icon.lightness(0f);
 					title = "???";
 					desc = Messages.get(CatalogTab.class, "not_seen_plant");
-					desc += "\n\n" + Messages.get(plant, "discover_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(plant, "discover_hint")));
 				}
 
 			}
@@ -1040,10 +1040,10 @@ public class WndJournal extends WndTabbed {
 						} else {
 							if (ShatteredPixelDungeon.scene() instanceof GameScene){
 								GameScene.show(new WndJournalItem(sprite, "???",
-										Messages.get(CatalogTab.class, "not_seen_lore") + "\n\n" + doc.discoverHint()));
+										Messages.concat(Messages.concat(Messages.get(CatalogTab.class, "not_seen_lore"), Messages.literal("\n\n")), doc.discoverHint())));
 							} else {
 								ShatteredPixelDungeon.scene().addToFront(new WndJournalItem(sprite, "???",
-										Messages.get(CatalogTab.class, "not_seen_lore") + "\n\n" + doc.discoverHint()));
+										Messages.concat(Messages.concat(Messages.get(CatalogTab.class, "not_seen_lore"), Messages.literal("\n\n")), doc.discoverHint())));
 							}
 
 						}

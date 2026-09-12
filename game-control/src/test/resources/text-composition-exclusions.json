@@ -1,0 +1,1312 @@
+{
+  "schema_version": 1,
+  "scope": "Exact retained String additions, accumulations, builders, lossy String API calls, and pure seed encoder calls in current core sources. No file-wide exclusions.",
+  "trusted_catalog_boundary": {
+    "constructors": [
+      "ui.changelist.ChangeInfo",
+      "ui.changelist.ChangeButton"
+    ],
+    "callers": "Only code-owned ui/changelist/v*_Changes.java and ChangesScene.",
+    "inputs": "String constants, fixed resource keys without dynamic format args, fixed hero enum titles, and trueName from newly constructed code-owned items. No user or service text inputs.",
+    "enforcement": "TextCompositionInventory.verifyCatalogConstructor attributes every constructor call and fails on unreviewed callers or nonconstant text inputs.",
+    "item_overload": "The Item overload accepts only locally constructed catalog examples, with fixed constructor and upgrade/identify arguments; live inventory items are rejected by the source guard."
+  },
+  "entries": [
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Badges.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \".title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Badges.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \".desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Dungeon.java",
+      "method": "deleteGame",
+      "kind": "PLUS",
+      "expression": "folder + \"/\" + file",
+      "reason": "Profile filename or directory construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Dungeon.java",
+      "method": "deleteGame",
+      "kind": "PLUS",
+      "expression": "folder + \"/\"",
+      "reason": "Profile filename or directory construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/GamesInProgress.java",
+      "method": "gameFile",
+      "kind": "PLUS",
+      "expression": "gameFolder(slot) + \"/\" + GAME_FILE",
+      "reason": "Profile filename or directory construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/GamesInProgress.java",
+      "method": "gameFile",
+      "kind": "PLUS",
+      "expression": "gameFolder(slot) + \"/\"",
+      "reason": "Profile filename or directory construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/GamesInProgress.java",
+      "method": "depthFile",
+      "kind": "PLUS",
+      "expression": "gameFolder(slot) + \"/\" + Messages.format(DEPTH_FILE, depth)",
+      "reason": "Profile filename or directory construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/GamesInProgress.java",
+      "method": "depthFile",
+      "kind": "PLUS",
+      "expression": "gameFolder(slot) + \"/\"",
+      "reason": "Profile filename or directory construction.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/GamesInProgress.java",
+      "method": "depthFile",
+      "kind": "PLUS",
+      "expression": "gameFolder(slot) + \"/\" + Messages.format(DEPTH_BRANCH_FILE, depth, branch)",
+      "reason": "Profile filename or directory construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Statistics.java",
+      "method": "storeInBundle",
+      "kind": "PLUS",
+      "expression": "FLR_EXPL + i",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Statistics.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "FLR_EXPL + i",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Statistics.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "\"flr_expl\" + i",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Combo.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \".name\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Combo.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \".empower_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 5
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Combo.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \".desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 5
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroClass.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \"_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroClass.java",
+      "method": "shortDesc",
+      "kind": "PLUS",
+      "expression": "name() + \"_desc_short\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroClass.java",
+      "method": "unlockMsg",
+      "kind": "PLUS",
+      "expression": "name() + \"_unlock\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroSubClass.java",
+      "method": "shortDesc",
+      "kind": "PLUS",
+      "expression": "name() + \"_short_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroSubClass.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \"_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \".rat_title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \".title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \".meta_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \".desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java",
+      "method": "onScrollUsed",
+      "kind": "PLUS",
+      "expression": "RECALL_INSCRIPTION.name() + \".refunded\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java",
+      "method": "onRunestoneUsed",
+      "kind": "PLUS",
+      "expression": "RECALL_INSCRIPTION.name() + \".refunded\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/abilities/cleric/Trinity.java",
+      "method": "trinityItemUseText",
+      "kind": "PLUS",
+      "expression": "cls.getSimpleName() + \"_use\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/CrystalSpire.java",
+      "method": "storeInBundle",
+      "kind": "PLUS",
+      "expression": "TARGETED_CELLS + i",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/CrystalSpire.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "TARGETED_CELLS + i",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/DwarfKing.java",
+      "method": "lifeLinkSubject",
+      "kind": "PLUS",
+      "expression": "\"lifelink_\" + Random.IntRange(1, 2)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/DwarfKing.java",
+      "method": "teleportSubject",
+      "kind": "PLUS",
+      "expression": "\"teleport_\" + Random.IntRange(1, 2)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/npcs/Shopkeeper.java",
+      "method": "chatText",
+      "kind": "PLUS",
+      "expression": "\"talk_prison_\" + Dungeon.hero.heroClass.name()",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/npcs/VaultSentry.java",
+      "method": "storeInBundle",
+      "kind": "PLUS",
+      "expression": "SCAN_DIRS + i",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/npcs/VaultSentry.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "SCAN_DIRS + i",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "floatingTextDrawn",
+      "kind": "PLUS",
+      "expression": "kind + \":\" + cell",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "floatingTextDrawn",
+      "kind": "PLUS",
+      "expression": "kind + \":\"",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "offer",
+      "kind": "PLUS",
+      "expression": "kind + \":\" + cell",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "offer",
+      "kind": "PLUS",
+      "expression": "kind + \":\"",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "finishDraw",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\" + cue.cell",
+      "reason": "Internal visual cue lookup key.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "finishDraw",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\"",
+      "reason": "Internal visual cue lookup key.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "storeInBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_PROBS",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "storeInBundle",
+      "kind": "METHOD_INVOCATION",
+      "expression": "cat.name().toLowerCase()",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 4
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "storeInBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_USING_PROBS2",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "storeInBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_SEED",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "storeInBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_DROPPED",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_PROBS",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "restoreFromBundle",
+      "kind": "METHOD_INVOCATION",
+      "expression": "cat.name().toLowerCase()",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 7
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_USING_PROBS2",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_SEED",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
+      "method": "restoreFromBundle",
+      "kind": "PLUS",
+      "expression": "cat.name().toLowerCase() + CATEGORY_DROPPED",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Item.java",
+      "method": "actionName",
+      "kind": "PLUS",
+      "expression": "\"ac_\" + action",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "save",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_LABEL",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "save",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_KNOWN",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "saveSelectively",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_LABEL",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "saveSelectively",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_KNOWN",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "saveClassesSelectively",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_LABEL",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "saveClassesSelectively",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_KNOWN",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "restore",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_LABEL",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/ItemStatusHandler.java",
+      "method": "restore",
+      "kind": "PLUS",
+      "expression": "itemName + PFX_KNOWN",
+      "reason": "Save bundle key construction or normalization.",
+      "count": 3
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "defendPos",
+      "kind": "PLUS",
+      "expression": "\"directed_position_\" + Random.IntRange(1, 5)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "followHero",
+      "kind": "PLUS",
+      "expression": "\"directed_follow_\" + Random.IntRange(1, 5)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "targetChar",
+      "kind": "PLUS",
+      "expression": "\"directed_attack_\" + Random.IntRange(1, 5)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayAppeared",
+      "kind": "PLUS",
+      "expression": "\"dialogue_ascension_\" + Random.IntRange(1, 6)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayAppeared",
+      "kind": "PLUS",
+      "expression": "\"dialogue_sewers_\" + variant",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayAppeared",
+      "kind": "PLUS",
+      "expression": "\"dialogue_prison_\" + variant",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayAppeared",
+      "kind": "PLUS",
+      "expression": "\"dialogue_caves_\" + variant",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayAppeared",
+      "kind": "PLUS",
+      "expression": "\"dialogue_city_\" + variant",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayAppeared",
+      "kind": "PLUS",
+      "expression": "\"dialogue_halls_\" + variant",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayBoss",
+      "kind": "PLUS",
+      "expression": "\"seen_goo_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayBoss",
+      "kind": "PLUS",
+      "expression": "\"seen_tengu_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayBoss",
+      "kind": "PLUS",
+      "expression": "\"seen_dm300_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayBoss",
+      "kind": "PLUS",
+      "expression": "\"seen_king_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayBoss",
+      "kind": "PLUS",
+      "expression": "\"seen_yog_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayDefeated",
+      "kind": "PLUS",
+      "expression": "\"defeated_by_boss_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayDefeated",
+      "kind": "PLUS",
+      "expression": "\"defeated_by_enemy_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayHeroKilled",
+      "kind": "PLUS",
+      "expression": "\"player_killed_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/DriedRose.java",
+      "method": "sayAnhk",
+      "kind": "PLUS",
+      "expression": "\"blessed_ankh_\" + Random.IntRange(1, 3)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/SandalsOfNature.java",
+      "method": "name",
+      "kind": "PLUS",
+      "expression": "\"name_\" + level()",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/SandalsOfNature.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "\"desc_\" + (level() + 1)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/wands/WandOfWarding.java",
+      "method": "name",
+      "kind": "PLUS",
+      "expression": "\"name_\" + tier",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/wands/WandOfWarding.java",
+      "method": "description",
+      "kind": "PLUS",
+      "expression": "\"desc_\" + tier",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/curses/Annoying.java",
+      "method": "proc",
+      "kind": "PLUS",
+      "expression": "\"msg_\" + Random.IntRange(1, 10)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/curses/Annoying.java",
+      "method": "proc",
+      "kind": "PLUS",
+      "expression": "\"msg_\" + Random.IntRange(11, 13)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Bestiary.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \".title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Catalog.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \".title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \".title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "discoverHint",
+      "kind": "PLUS",
+      "expression": "name() + \".discover_hint\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "pageTitle",
+      "kind": "PLUS",
+      "expression": "name() + \".\" + page + \".title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "pageTitle",
+      "kind": "PLUS",
+      "expression": "name() + \".\" + page",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "pageTitle",
+      "kind": "PLUS",
+      "expression": "name() + \".\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "pageBody",
+      "kind": "PLUS",
+      "expression": "name() + \".\" + page + \".body\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "pageBody",
+      "kind": "PLUS",
+      "expression": "name() + \".\" + page",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "method": "pageBody",
+      "kind": "PLUS",
+      "expression": "name() + \".\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/Level.java",
+      "method": "title",
+      "kind": "PLUS",
+      "expression": "name() + \"_title\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/Level.java",
+      "method": "desc",
+      "kind": "PLUS",
+      "expression": "name() + \"_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "paint",
+      "kind": "PLUS",
+      "expression": "\"Painting a room with no connections! Room:\" + r.getClass().getSimpleName() + \" Seed:\" + Dungeon.seed + \" Depth:\" + Dungeon.depth",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "paint",
+      "kind": "PLUS",
+      "expression": "\"Painting a room with no connections! Room:\" + r.getClass().getSimpleName() + \" Seed:\" + Dungeon.seed + \" Depth:\"",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "paint",
+      "kind": "PLUS",
+      "expression": "\"Painting a room with no connections! Room:\" + r.getClass().getSimpleName() + \" Seed:\" + Dungeon.seed",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "paint",
+      "kind": "PLUS",
+      "expression": "\"Painting a room with no connections! Room:\" + r.getClass().getSimpleName() + \" Seed:\"",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "paint",
+      "kind": "PLUS",
+      "expression": "\"Painting a room with no connections! Room:\" + r.getClass().getSimpleName()",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "placeDoors",
+      "kind": "PLUS",
+      "expression": "\"Could not place a door! r=\" + r.getClass().getSimpleName() + \" n=\" + n.getClass().getSimpleName()",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "placeDoors",
+      "kind": "PLUS",
+      "expression": "\"Could not place a door! r=\" + r.getClass().getSimpleName() + \" n=\"",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
+      "method": "placeDoors",
+      "kind": "PLUS",
+      "expression": "\"Could not place a door! r=\" + r.getClass().getSimpleName()",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "loadBundles",
+      "kind": "PLUS",
+      "expression": "file + \"_in\"",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "get",
+      "kind": "METHOD_INVOCATION",
+      "expression": "c.getName().replace(\"com.shatteredpixel.shatteredpixeldungeon.\", \"\")",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "get",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "key += \".\" + k",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "get",
+      "kind": "PLUS",
+      "expression": "\".\" + k",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "get",
+      "kind": "METHOD_INVOCATION",
+      "expression": "key.toLowerCase(Locale.ENGLISH)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "format",
+      "kind": "METHOD_INVOCATION",
+      "expression": "String.format(locale(), format, args)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "format",
+      "kind": "PLUS",
+      "expression": "\"formatting error for the string: \" + format",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "capitalize",
+      "kind": "PLUS",
+      "expression": "str.substring(0, 1).toUpperCase(locale()) + str.substring(1)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "capitalize",
+      "kind": "METHOD_INVOCATION",
+      "expression": "str.substring(0, 1).toUpperCase(locale())",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "capitalize",
+      "kind": "METHOD_INVOCATION",
+      "expression": "str.substring(0, 1)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "capitalize",
+      "kind": "METHOD_INVOCATION",
+      "expression": "str.substring(1)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "titleCase",
+      "kind": "METHOD_INVOCATION",
+      "expression": "word.trim().toLowerCase(Locale.ENGLISH).replaceAll(\":|[0-9]\", \"\")",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "titleCase",
+      "kind": "METHOD_INVOCATION",
+      "expression": "word.trim().toLowerCase(Locale.ENGLISH)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "titleCase",
+      "kind": "METHOD_INVOCATION",
+      "expression": "word.trim()",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "titleCase",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "result += word",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "titleCase",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "result += capitalize(word)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "upperCase",
+      "kind": "METHOD_INVOCATION",
+      "expression": "str.toUpperCase(locale())",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "lowerCase",
+      "kind": "METHOD_INVOCATION",
+      "expression": "str.toLowerCase(locale())",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "concat",
+      "kind": "PLUS",
+      "expression": "first + second",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "stripPrefix",
+      "kind": "METHOD_INVOCATION",
+      "expression": "text.substring(prefix.length())",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "substring",
+      "kind": "METHOD_INVOCATION",
+      "expression": "text.substring(begin, end)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "replace",
+      "kind": "METHOD_INVOCATION",
+      "expression": "text.replace(oldValue, newValue)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "upperCase",
+      "kind": "METHOD_INVOCATION",
+      "expression": "text.toUpperCase(locale)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java",
+      "method": "lowerCase",
+      "kind": "METHOD_INVOCATION",
+      "expression": "text.toLowerCase(locale)",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"fatal error occurred while moving between floors. Seed:\" + Dungeon.seed + \" depth:\" + Dungeon.depth",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"fatal error occurred while moving between floors. Seed:\" + Dungeon.seed + \" depth:\"",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"fatal error occurred while moving between floors. Seed:\" + Dungeon.seed",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "s += \"\\n\"",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "s += t.toString()",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"waited more than 10 seconds on levelgen. Seed:\" + Dungeon.seed + \" depth:\" + Dungeon.depth + \" trace:\" + s",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"waited more than 10 seconds on levelgen. Seed:\" + Dungeon.seed + \" depth:\" + Dungeon.depth + \" trace:\"",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"waited more than 10 seconds on levelgen. Seed:\" + Dungeon.seed + \" depth:\" + Dungeon.depth",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"waited more than 10 seconds on levelgen. Seed:\" + Dungeon.seed + \" depth:\"",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java",
+      "method": "update",
+      "kind": "PLUS",
+      "expression": "\"waited more than 10 seconds on levelgen. Seed:\" + Dungeon.seed",
+      "reason": "Private engine exception diagnostic, not player display text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SupporterScene.java",
+      "method": "onClick",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "link += \"?utm_source=shatteredpd\"",
+      "reason": "Outgoing URL parameter construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SupporterScene.java",
+      "method": "onClick",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "link += \"&utm_medium=supporter_page\"",
+      "reason": "Outgoing URL parameter construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/SupporterScene.java",
+      "method": "onClick",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "link += \"&utm_campaign=ingame_link\"",
+      "reason": "Outgoing URL parameter construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/news/News.java",
+      "method": "parseArticleIcon",
+      "kind": "METHOD_INVOCATION",
+      "expression": "article.icon.replace(\"ICON: \", \"\")",
+      "reason": "External icon metadata parser, not displayed article text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/news/News.java",
+      "method": "parseArticleIcon",
+      "kind": "METHOD_INVOCATION",
+      "expression": "article.icon.replace(\"ITEM: \", \"\")",
+      "reason": "External icon metadata parser, not displayed article text.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/news/News.java",
+      "method": "parseArticleDate",
+      "kind": "METHOD_INVOCATION",
+      "expression": "String.format(\"%02d\", cal.get(Calendar.MONTH) + 1)",
+      "reason": "Numeric calendar serialization using the original default-locale formatter; no resource input.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/news/News.java",
+      "method": "parseArticleDate",
+      "kind": "METHOD_INVOCATION",
+      "expression": "String.format(\"%02d\", cal.get(Calendar.DAY_OF_MONTH))",
+      "reason": "Numeric calendar serialization using the original default-locale formatter; no resource input.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/tiles/FogOfWar.java",
+      "method": "<init>",
+      "kind": "PLUS",
+      "expression": "\"FogOfWar\" + width2 + \"x\" + height2",
+      "reason": "Internal texture cache key.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/tiles/FogOfWar.java",
+      "method": "<init>",
+      "kind": "PLUS",
+      "expression": "\"FogOfWar\" + width2 + \"x\"",
+      "reason": "Internal texture cache key.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/tiles/FogOfWar.java",
+      "method": "<init>",
+      "kind": "PLUS",
+      "expression": "\"FogOfWar\" + width2",
+      "reason": "Internal texture cache key.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/QuickSlotButton.java",
+      "method": "hoverText",
+      "kind": "PLUS",
+      "expression": "\"quickslot_\" + (slotNum + 1)",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "visibleTextFragment",
+      "kind": "NEW_CLASS",
+      "expression": "new StringBuilder()",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
+      "method": "convertFromCode",
+      "kind": "METHOD_INVOCATION",
+      "expression": "code.toUpperCase(Locale.ROOT)",
+      "reason": "Seed code encoder or parser; no resource text is accepted by this operation.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
+      "method": "convertFromCode",
+      "kind": "METHOD_INVOCATION",
+      "expression": "code.replaceAll(\"[-\\\\s]\", \"\")",
+      "reason": "Seed code encoder or parser; no resource text is accepted by this operation.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
+      "method": "convertToCode",
+      "kind": "NEW_CLASS",
+      "expression": "new StringBuilder()",
+      "reason": "Seed code encoder or parser; no resource text is accepted by this operation.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
+      "method": "convertFromText",
+      "kind": "METHOD_INVOCATION",
+      "expression": "inputText.replaceAll(\"\\\\s\", \"\")",
+      "reason": "Seed code encoder or parser; no resource text is accepted by this operation.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndChallenges.java",
+      "method": "onClick",
+      "kind": "PLUS",
+      "expression": "challenge + \"_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndRanking.java",
+      "method": "onClick",
+      "kind": "PLUS",
+      "expression": "challenge + \"_desc\"",
+      "reason": "Resource key construction, not a displayed value.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndSupportPrompt.java",
+      "method": "onClick",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "link += \"?utm_source=shatteredpd\"",
+      "reason": "Outgoing URL parameter construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndSupportPrompt.java",
+      "method": "onClick",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "link += \"&utm_medium=supporter_prompt\"",
+      "reason": "Outgoing URL parameter construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndSupportPrompt.java",
+      "method": "onClick",
+      "kind": "PLUS_ASSIGNMENT",
+      "expression": "link += \"&utm_campaign=ingame_link\"",
+      "reason": "Outgoing URL parameter construction.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
+      "method": "randomSeed",
+      "kind": "METHOD_INVOCATION",
+      "expression": "convertToCode(seed)",
+      "reason": "Pure candidate seed selection; no display is produced here.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
+      "method": "displayCode",
+      "kind": "METHOD_INVOCATION",
+      "expression": "convertToCode(seed)",
+      "reason": "The following explicit fixed character format records every generated seed character before display.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
+      "method": "formatText",
+      "kind": "METHOD_INVOCATION",
+      "expression": "convertToCode(convertFromCode(inputText))",
+      "reason": "Seed input normalization; display consumers use explicit user or generated-code boundaries.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndRanking.java",
+      "method": "onSelect",
+      "kind": "METHOD_INVOCATION",
+      "expression": "DungeonSeed.convertToCode(Dungeon.seed)",
+      "reason": "Stores the selected replay seed in settings; this expression does not display text.",
+      "count": 1
+    }
+  ]
+}

@@ -90,20 +90,20 @@ public class Blacksmith extends NPC {
 			String msg2 = "";
 
 			switch (Dungeon.hero.heroClass){
-				case WARRIOR:   msg1 += Messages.get(Blacksmith.this, "intro_quest_warrior"); break;
-				case MAGE:      msg1 += Messages.get(Blacksmith.this, "intro_quest_mage"); break;
-				case ROGUE:     msg1 += Messages.get(Blacksmith.this, "intro_quest_rogue"); break;
-				case HUNTRESS:  msg1 += Messages.get(Blacksmith.this, "intro_quest_huntress"); break;
-				case DUELIST:   msg1 += Messages.get(Blacksmith.this, "intro_quest_duelist"); break;
-				case CLERIC:    msg1 += Messages.get(Blacksmith.this, "intro_quest_cleric"); break;
+				case WARRIOR:   msg1 = Messages.concat(msg1, Messages.get(Blacksmith.this, "intro_quest_warrior")); break;
+				case MAGE:      msg1 = Messages.concat(msg1, Messages.get(Blacksmith.this, "intro_quest_mage")); break;
+				case ROGUE:     msg1 = Messages.concat(msg1, Messages.get(Blacksmith.this, "intro_quest_rogue")); break;
+				case HUNTRESS:  msg1 = Messages.concat(msg1, Messages.get(Blacksmith.this, "intro_quest_huntress")); break;
+				case DUELIST:   msg1 = Messages.concat(msg1, Messages.get(Blacksmith.this, "intro_quest_duelist")); break;
+				case CLERIC:    msg1 = Messages.concat(msg1, Messages.get(Blacksmith.this, "intro_quest_cleric")); break;
 			}
 
-			msg1 += "\n\n" + Messages.get(Blacksmith.this, "intro_quest_start");
+			msg1 = Messages.concat(msg1, Messages.concat(Messages.literal("\n\n"), Messages.get(Blacksmith.this, "intro_quest_start")));
 
 			switch (Quest.type){
-				case Quest.CRYSTAL: msg2 += Messages.get(Blacksmith.this, "intro_quest_crystal"); break;
-				case Quest.GNOLL:   msg2 += Messages.get(Blacksmith.this, "intro_quest_gnoll"); break;
-				case Quest.FUNGI:   msg2 += Messages.get(Blacksmith.this, "intro_quest_fungi"); break;
+				case Quest.CRYSTAL: msg2 = Messages.concat(msg2, Messages.get(Blacksmith.this, "intro_quest_crystal")); break;
+				case Quest.GNOLL:   msg2 = Messages.concat(msg2, Messages.get(Blacksmith.this, "intro_quest_gnoll")); break;
+				case Quest.FUNGI:   msg2 = Messages.concat(msg2, Messages.get(Blacksmith.this, "intro_quest_fungi")); break;
 			}
 
 			final String msg1Final = msg1;
@@ -137,11 +137,11 @@ public class Blacksmith extends NPC {
 			
 		} else if (!Quest.completed) {
 
-			String msg = Messages.get(this, "reminder") + "\n\n";
+			String msg = Messages.concat(Messages.get(this, "reminder"), Messages.literal("\n\n"));
 			switch (Quest.type){
-				case Quest.CRYSTAL: msg += Messages.get(Blacksmith.this, "reminder_crystal"); break;
-				case Quest.GNOLL:   msg += Messages.get(Blacksmith.this, "reminder_gnoll"); break;
-				case Quest.FUNGI:   msg += Messages.get(Blacksmith.this, "reminder_fungi"); break;
+				case Quest.CRYSTAL: msg = Messages.concat(msg, Messages.get(Blacksmith.this, "reminder_crystal")); break;
+				case Quest.GNOLL:   msg = Messages.concat(msg, Messages.get(Blacksmith.this, "reminder_gnoll")); break;
+				case Quest.FUNGI:   msg = Messages.concat(msg, Messages.get(Blacksmith.this, "reminder_fungi")); break;
 			}
 			tell(msg);
 

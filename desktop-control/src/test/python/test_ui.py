@@ -1,5 +1,6 @@
 """The user's test presentation policy, restricted to disposable build profiles."""
 from pathlib import Path
+import os
 import xml.etree.ElementTree as ET
 
 
@@ -15,7 +16,7 @@ def configure_test_ui(profile):
     document=ET.parse(target).getroot() if target.exists() else ET.Element("properties")
     if document.tag!="properties":raise ValueError("Unexpected test preference format")
     existing={entry.get("key"):entry for entry in document.findall("entry")}
-    desired={"language":"zh","fullscreen":"false"}
+    desired={"language":os.environ.get("SPDCTL_TEST_LANGUAGE","zh"),"fullscreen":"false","news":"false","updates":"false"}
     changed=False
     for key,value in desired.items():
         entry=existing.get(key)

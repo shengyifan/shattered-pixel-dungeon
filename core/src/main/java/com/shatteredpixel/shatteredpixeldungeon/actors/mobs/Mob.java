@@ -1045,7 +1045,7 @@ public abstract class Mob extends Char {
 		String desc = description();
 
 		for (Buff b : buffs(ChampionEnemy.class)){
-			desc += "\n\n_" + Messages.titleCase(b.name()) + "_\n" + b.desc();
+			desc = Messages.concat(desc, Messages.concat(Messages.concat(Messages.concat(Messages.literal("\n\n_"), Messages.titleCase(b.name())), Messages.literal("_\n")), b.desc()));
 		}
 
 		return desc;
@@ -1057,7 +1057,7 @@ public abstract class Mob extends Char {
 	
 	public void yell( String str ) {
 		GLog.newLine();
-		GLog.n( "%s: \"%s\" ", Messages.titleCase(name()), str );
+		GLog.n( Messages.literal("%s: \"%s\" "), Messages.titleCase(name()), str );
 	}
 
 	//some mobs have an associated landmark entry, which is added when the hero sees them

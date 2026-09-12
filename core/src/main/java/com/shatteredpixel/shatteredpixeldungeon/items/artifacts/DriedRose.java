@@ -247,25 +247,25 @@ public class DriedRose extends Artifact {
 			if (!cursed){
 
 				if (level() < levelCap)
-					desc+= "\n\n" + Messages.get(this, "desc_hint");
+					desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_hint")));
 
 			} else {
-				desc += "\n\n" + Messages.get(this, "desc_cursed");
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "desc_cursed")));
 			}
 		}
 
 		if (weapon != null || armor != null) {
-			desc += "\n";
+			desc = Messages.concat(desc, Messages.literal("\n"));
 
 			if (weapon != null) {
-				desc += "\n" + Messages.get(this, "desc_weapon", Messages.titleCase(weapon.title()));
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_weapon", Messages.titleCase(weapon.title()))));
 			}
 
 			if (armor != null) {
-				desc += "\n" + Messages.get(this, "desc_armor", Messages.titleCase(armor.title()));
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_armor", Messages.titleCase(armor.title()))));
 			}
 
-			desc += "\n" + Messages.get(this, "desc_strength", ghostStrength());
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n"), Messages.get(this, "desc_strength", ghostStrength())));
 
 		}
 		
@@ -296,7 +296,7 @@ public class DriedRose extends Artifact {
 		if (ghost == null){
 			return super.status();
 		} else {
-			return ((ghost.HP*100) / ghost.HT) + "%";
+			return Messages.concat(((ghost.HP*100) / ghost.HT), Messages.literal("%"));
 		}
 	}
 	
@@ -482,7 +482,7 @@ public class DriedRose extends Artifact {
 		
 		@Override
 		public String prompt() {
-			return  "\"" + Messages.get(GhostHero.class, "direct_prompt") + "\"";
+			return  Messages.concat(Messages.concat(Messages.literal("\""), Messages.get(GhostHero.class, "direct_prompt")), Messages.literal("\""));
 		}
 	};
 

@@ -291,22 +291,22 @@ public abstract class Wand extends Item {
 	public String info() {
 		String desc = super.info();
 
-		desc += "\n\n" + statsDesc();
+		desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), statsDesc()));
 
 		if (resinBonus == 1){
-			desc += "\n\n" + Messages.get(Wand.class, "resin_one");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(Wand.class, "resin_one")));
 		} else if (resinBonus > 1){
-			desc += "\n\n" + Messages.get(Wand.class, "resin_many", resinBonus);
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(Wand.class, "resin_many", resinBonus)));
 		}
 
 		if (cursed && cursedKnown) {
-			desc += "\n\n" + Messages.get(Wand.class, "cursed");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(Wand.class, "cursed")));
 		} else if (!isIdentified() && cursedKnown){
-			desc += "\n\n" + Messages.get(Wand.class, "not_cursed");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(Wand.class, "not_cursed")));
 		}
 
 		if (Dungeon.hero != null && Dungeon.hero.subClass == HeroSubClass.BATTLEMAGE){
-			desc += "\n\n" + Messages.get(this, "bmage_desc");
+			desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "bmage_desc")));
 		}
 
 		return desc;
@@ -336,7 +336,7 @@ public abstract class Wand extends Item {
 	@Override
 	public String status() {
 		if (levelKnown) {
-			return (curChargeKnown ? curCharges : "?") + "/" + maxCharges;
+			return Messages.concat(Messages.concat((curChargeKnown ? curCharges : "?"), Messages.literal("/")), maxCharges);
 		} else {
 			return null;
 		}

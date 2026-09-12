@@ -349,12 +349,12 @@ public class MagesStaff extends MeleeWeapon {
 		String info = super.info();
 
 		if (wand != null){
-			info += "\n\n" + Messages.get(this, "has_wand", Messages.get(wand, "name"));
-			if ((!cursed && !hasCurseEnchant()) || !cursedKnown)    info += " " + wand.statsDesc();
-			else                                                    info += " " + Messages.get(this, "cursed_wand");
+			info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(this, "has_wand", Messages.get(wand, "name"))));
+			if ((!cursed && !hasCurseEnchant()) || !cursedKnown)    info = Messages.concat(info, Messages.concat(Messages.literal(" "), wand.statsDesc()));
+			else                                                    info = Messages.concat(info, Messages.concat(Messages.literal(" "), Messages.get(this, "cursed_wand")));
 
 			if (Dungeon.hero.subClass == HeroSubClass.BATTLEMAGE){
-				info += "\n\n" + Messages.get(wand, "bmage_desc");
+				info = Messages.concat(info, Messages.concat(Messages.literal("\n\n"), Messages.get(wand, "bmage_desc")));
 			}
 		}
 
@@ -437,20 +437,20 @@ public class MagesStaff extends MeleeWeapon {
 
 					String bodyText = Messages.get(MagesStaff.class, "imbue_desc");
 					if (item.isIdentified()){
-						bodyText += "\n\n" + Messages.get(MagesStaff.class, "imbue_level", newLevel);
+						bodyText = Messages.concat(bodyText, Messages.concat(Messages.literal("\n\n"), Messages.get(MagesStaff.class, "imbue_level", newLevel)));
 					} else {
-						bodyText += "\n\n" + Messages.get(MagesStaff.class, "imbue_unknown", trueLevel());
+						bodyText = Messages.concat(bodyText, Messages.concat(Messages.literal("\n\n"), Messages.get(MagesStaff.class, "imbue_unknown", trueLevel())));
 					}
 
 					if (!item.cursedKnown || item.cursed){
-						bodyText += "\n\n" + Messages.get(MagesStaff.class, "imbue_cursed");
+						bodyText = Messages.concat(bodyText, Messages.concat(Messages.literal("\n\n"), Messages.get(MagesStaff.class, "imbue_cursed")));
 					}
 
 					if (Dungeon.hero.hasTalent(Talent.WAND_PRESERVATION)
 						&& Dungeon.hero.buff(Talent.WandPreservationCounter.class) == null){
-						bodyText += "\n\n" + Messages.get(MagesStaff.class, "imbue_talent");
+						bodyText = Messages.concat(bodyText, Messages.concat(Messages.literal("\n\n"), Messages.get(MagesStaff.class, "imbue_talent")));
 					} else {
-						bodyText += "\n\n" + Messages.get(MagesStaff.class, "imbue_lost");
+						bodyText = Messages.concat(bodyText, Messages.concat(Messages.literal("\n\n"), Messages.get(MagesStaff.class, "imbue_lost")));
 					}
 
 					GameScene.show(

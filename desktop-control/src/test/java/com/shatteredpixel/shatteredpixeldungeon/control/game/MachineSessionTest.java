@@ -35,7 +35,7 @@ public class MachineSessionTest {
 
     @Test public void malformedArgumentsConsumeTheIdBeforeAnyRuntimeCall() throws Exception {
         try (Harness h = harness()) {
-            h.accept("{\"scope_id\":\"run:a\",\"id\":\"bad\",\"op\":\"action.execute\",\"args\":[]}");
+            h.accept("{\"protocol_version\":2,\"scope_id\":\"run:a\",\"id\":\"bad\",\"op\":\"action.execute\",\"args\":[]}");
             assertEquals("INVALID_REQUEST", error(h.last()));
             assertEquals("REJECTED", h.store.getRequest("run:a", "bad").get("status"));
             int observations = h.game.observations;
@@ -139,7 +139,7 @@ public class MachineSessionTest {
             AuditStore.Attempt old = h.store.begin("run:old", "old", "state.get", "{}");
             h.store.complete(old, "COMPLETED", map("old", true), map("known", "old run"), map("private", "old"), null);
             h.game.state = state("run:a", "v1", "player_ready", "OTHER_RUN_PUBLIC_SENTINEL");
-            h.accept(JsonCodec.encode(map("scope_id", "run:old", "id", "history", "op", "history.list")));
+            h.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", "run:old", "id", "history", "op", "history.list")));
             assertFalse(h.output.toString("UTF-8").contains("OTHER_RUN_PUBLIC_SENTINEL"));
             String audit = JsonCodec.encode(h.store.getRequest("run:old", "history"));
             assertFalse(audit.contains("OTHER_RUN_PUBLIC_SENTINEL"));
@@ -241,7 +241,7 @@ public class MachineSessionTest {
             assertEquals(1, h.responses().size());
             assertEquals("EXECUTING", h.store.getRequest("run:a", "slow").get("status"));
             assertThrows(java.util.concurrent.ExecutionException.class,
-                    () -> h.session.accept(JsonCodec.encode(map("scope_id", "run:a", "id", "next", "op", "action.execute", "args", map("action", "wait")))).get());
+                    () -> h.session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", "run:a", "id", "next", "op", "action.execute", "args", map("action", "wait")))).get());
             assertEquals(1, h.game.executions);
         }
     }
@@ -260,7 +260,7 @@ public class MachineSessionTest {
             store.ensureScope("run:a", "run", "a");
             FakeGame game = new FakeGame();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(broken, true, "UTF-8"), 30)) {
-                session.accept(JsonCodec.encode(map("scope_id", "run:a", "id", "query", "op", "state.get"))).get(5, TimeUnit.SECONDS);
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", "run:a", "id", "query", "op", "state.get"))).get(5, TimeUnit.SECONDS);
                 assertEquals(1, attempts[0]);
                 assertEquals("COMPLETED", store.getRequest("run:a", "query").get("status"));
                 assertEquals(Boolean.FALSE, store.history("run:a", 0, 10).get(0).get("output_succeeded"));
@@ -320,7 +320,7 @@ public class MachineSessionTest {
         }
         void accept(String raw) throws Exception { session.accept(raw).get(5, TimeUnit.SECONDS); }
         void send(String id, String op, Map<String, Object> args) throws Exception {
-            accept(JsonCodec.encode(map("scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args)));
+            accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args)));
         }
         List<Map<String, Object>> responses() throws Exception {
             List<Map<String, Object>> result = new ArrayList<>();

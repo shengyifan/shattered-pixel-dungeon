@@ -181,7 +181,7 @@ abstract public class ClassArmor extends Armor {
 
 	@Override
 	public String status() {
-		return Messages.format( "%.0f%%", Math.floor(charge) );
+		return Messages.format( Messages.literal("%.0f%%"), Math.floor(charge) );
 	}
 
 	@Override
@@ -299,14 +299,14 @@ abstract public class ClassArmor extends Armor {
 		if (Dungeon.hero != null && Dungeon.hero.belongings.contains(this)) {
 			ArmorAbility ability = Dungeon.hero.armorAbility;
 			if (ability != null) {
-				desc += "\n\n" + ability.shortDesc();
+				desc = Messages.concat(desc, Messages.concat(Messages.literal("\n\n"), ability.shortDesc()));
 				float chargeUse = ability.chargeUse(Dungeon.hero);
 				//trinity has variable charge cost
 				if (!(ability instanceof Trinity)) {
-					desc += " " + Messages.get(this, "charge_use", Messages.decimalFormat("#.##", chargeUse));
+					desc = Messages.concat(desc, Messages.concat(Messages.literal(" "), Messages.get(this, "charge_use", Messages.decimalFormat("#.##", chargeUse))));
 				}
 			} else {
-				desc += "\n\n" + "_" + Messages.get(this, "no_ability") + "_";
+				desc = Messages.concat(desc, Messages.concat(Messages.concat(Messages.literal("\n\n" + "_"), Messages.get(this, "no_ability")), Messages.literal("_")));
 			}
 		}
 

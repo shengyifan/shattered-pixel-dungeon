@@ -158,40 +158,40 @@ public class Wandmaker extends NPC {
 			String msg2 = "";
 			switch(Dungeon.hero.heroClass){
 				case WARRIOR:
-					msg1 += Messages.get(this, "intro_warrior");
+					msg1 = Messages.concat(msg1, Messages.get(this, "intro_warrior"));
 					break;
 				case ROGUE:
-					msg1 += Messages.get(this, "intro_rogue");
+					msg1 = Messages.concat(msg1, Messages.get(this, "intro_rogue"));
 					break;
 				case MAGE:
-					msg1 += Messages.get(this, "intro_mage", Messages.titleCase(Dungeon.hero.name()));
+					msg1 = Messages.concat(msg1, Messages.get(this, "intro_mage", Messages.titleCase(Dungeon.hero.name())));
 					break;
 				case HUNTRESS:
-					msg1 += Messages.get(this, "intro_huntress");
+					msg1 = Messages.concat(msg1, Messages.get(this, "intro_huntress"));
 					break;
 				case DUELIST:
-					msg1 += Messages.get(this, "intro_duelist");
+					msg1 = Messages.concat(msg1, Messages.get(this, "intro_duelist"));
 					break;
 				case CLERIC:
-					msg1 += Messages.get(this, "intro_cleric");
+					msg1 = Messages.concat(msg1, Messages.get(this, "intro_cleric"));
 					break;
 			}
 
-			msg1 += Messages.get(this, "intro_1");
+			msg1 = Messages.concat(msg1, Messages.get(this, "intro_1"));
 
 			switch (Quest.type){
 				case 1:
-					msg2 += Messages.get(this, "intro_dust");
+					msg2 = Messages.concat(msg2, Messages.get(this, "intro_dust"));
 					break;
 				case 2:
-					msg2 += Messages.get(this, "intro_ember");
+					msg2 = Messages.concat(msg2, Messages.get(this, "intro_ember"));
 					break;
 				case 3:
-					msg2 += Messages.get(this, "intro_berry");
+					msg2 = Messages.concat(msg2, Messages.get(this, "intro_berry"));
 					break;
 			}
 
-			msg2 += Messages.get(this, "intro_2");
+			msg2 = Messages.concat(msg2, Messages.get(this, "intro_2"));
 			final String msg1Final = msg1;
 			final String msg2Final = msg2;
 			

@@ -114,7 +114,7 @@ public class RunicBlade extends MeleeWeapon {
 
 	@Override
 	public String upgradeAbilityStat(int level) {
-		return "+" + (300+50*level) + "%";
+		return Messages.concat(Messages.concat(Messages.literal("+"), (300+50*level)), Messages.literal("%"));
 	}
 
 
