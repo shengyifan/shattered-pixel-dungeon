@@ -1,6 +1,19 @@
 # CLI 实施与验收
 
-本文件是实现状态记录。2026-09-09 用户进一步要求先停止正式实战，改为直接构造中间状态覆盖全部场景；当时战士已正常保存退出。2026-09-12用户进一步授权清空全部本地运行数据，旧战士profile现已删除，随后要求直接升级至CLI.1.0.0并重新构建，取代先前CLI.0.9.0计划。最终实战目标是仅使用包内 `spdctl run --machine` 从主菜单控制战士通关，并覆盖完整返程到地表。用户于 2026-09-09 将六职业分别通关的验收缩减为战士一局；全角色功能和专项覆盖要求继续保留。本次版本升级不修改游戏规则、协议版本或审计schema。
+本文件是实现状态记录。2026-09-09 用户进一步要求先停止正式实战，改为直接构造中间状态覆盖全部场景；当时战士已正常保存退出。2026-09-12用户进一步授权清空全部本地运行数据，旧战士profile现已删除，随后要求直接升级至CLI.1.0.0并重新构建，取代先前CLI.0.9.0计划，并明确只需macOS版本。最终实战目标是仅使用包内 `spdctl run --machine` 从主菜单控制战士通关，并覆盖完整返程到地表。用户于 2026-09-09 将六职业分别通关的验收缩减为战士一局；全角色功能和专项覆盖要求继续保留。本次版本升级不修改游戏规则、协议版本或审计schema。
+
+## CLI.1.0.0 macOS 构建验证
+
+2026-09-12使用原生ARM64 Temurin 25.0.4从clean重建；本次交付范围为macOS，未生成Android安装包或iOS IPA。初次根构建因无Android SDK停止后，排除Android完成构建和`:desktop-control:packageMacArm64`。生产版本提交为`2edd28393`；后续提交只更新验证文档。
+
+- 应用：`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`，包含普通GUI、`spdctl`和内部`spdctl-jvm`启动器，均为ARM64；内置JVM和SQLite JDBC 3.53.4.0。
+- `--version`、`protocol.info`和包内`control-build.json`均为CLI.1.0.0；基础游戏3.3.8、协议1、审计schema 4。构建ID为`0b5333b87afabdcf9eefdef15b2141978f56dc128f115152b57c6ba9904c05b9`。
+- JUnit共374项通过：协议8、游戏控制270、桌面控制96，零失败、零跳过；Python辅助工具20项通过。
+- `package_english_smoke.py --expected-cli CLI.1.0.0`使用实际包和全新隔离profile通过：英文协议、中文窗口、原始帧和非法UTF-8、重复ID、目录锁、EOF、内置运行时、物品投掷取消、真实显示日志、保存回执和重启继续同一局。
+- 两库完整性和`codesign --verify --deep --strict`通过。2,838个项目生产类均为Java 11字节码，包内没有测试类或注入代理。当前仅验证Apple Silicon本机，不将本地签名等同于Apple公证；原生CLI入口最低编译目标为macOS 12。
+- 构建日志：`desktop-control/build/release-validation/CLI.1.0.0/`；本次包测试及审计：`desktop-control/build/package-check/english-8e9d06f1cd364aa8bf2d1614056b926f/`。这些是新构建数据，未进入Git；旧数据仍已删除。所有测试进程已退出，默认个人profile未使用。
+
+本轮属于版本升级和包验证，不计正式战士通关，也不替代所有场景的专项验收。
 
 ## 开发测试产物清理
 
@@ -44,7 +57,7 @@
 | P5 | 玩家知识与双世界测试 | 已有针对性双世界/副作用回归；持续补交互边界 |
 | P6 | 通用玩法与复杂交互 | 新英文22个具名低频场景均有通过证据（原14+确认5+对白3），见 cli-p6-english-completion.md；容器、菜单、笔记、结局与更多物品/门交互仍按独立清单继续覆盖 |
 | P7 | 六职业、十二子职、十九护甲能力与完整 UI | 新英文188个具名矩阵场景已有通过证据（原148+40补验），各构建分开记录，见 cli-p7-english-validation.md。六职业说明四页及嵌套详情通过；其余UI场景和组合继续验证 |
-| P8 | 故障、保存、断流、包与性能 | 保存/恢复/强杀/未捕获异常/布局及性能各有分项证据；CLI.0.8.12历史ARM64包验收范围见cli-package-english-validation.md。CLI.1.0.0构建验证单独记录，不复用旧结论 |
+| P8 | 故障、保存、断流、包与性能 | 保存/恢复/强杀/未捕获异常/布局及性能各有分项证据；CLI.0.8.12历史ARM64包验收范围见cli-package-english-validation.md。CLI.1.0.0本轮macOS重建和包验证通过，范围见本页独立记录 |
 | P9 | 战士纯 CLI 通关，并覆盖完整返程 | 0/1。旧实战profile已按用户要求清空，后续使用CLI.1.0.0和新profile开展新局实战；本次升级与重建不计通关 |
 
 ## 覆盖门槛
