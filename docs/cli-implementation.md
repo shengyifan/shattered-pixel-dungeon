@@ -2,6 +2,18 @@
 
 本文件是实现状态记录。2026-09-09 用户进一步要求先停止正式实战，改为直接构造中间状态覆盖全部场景；当时战士已正常保存退出。2026-09-12用户进一步授权清空全部本地运行数据，旧战士profile现已删除，随后要求直接升级至CLI.1.0.0并重新构建，取代先前CLI.0.9.0计划，并明确只需macOS版本。最终实战目标是仅使用包内 `spdctl run --machine` 从主菜单控制战士通关，并覆盖完整返程到地表。用户于 2026-09-09 将六职业分别通关的验收缩减为战士一局；全角色功能和专项覆盖要求继续保留。本次版本升级不修改游戏规则、协议版本或审计schema。
 
+## 当前macOS清理重建
+
+2026-09-12按用户要求，删除13个旧build目录、项目`.gradle`缓存和生成的`ios/robovm.properties`，共约975 MB，包含此前所有测试应用副本、存档、审计和报告。源码基于`b444e8e94`，使用以下明确限定的任务从空构建目录重新编译：
+
+```sh
+./gradlew :control-protocol:test :game-control:test :desktop-control:test :desktop-control:packageMacArm64 --no-build-cache --rerun-tasks --console=plain
+```
+
+30个任务全部执行；374项JUnit通过（8+270+96），无失败或跳过。实际包的`--version`为CLI.1.0.0（协议1、游戏3.3.8），仓库外运行`--help`与495行英文Markdown逐字节一致；ARM64入口、内置JVM、plist和本地签名检查通过。本次不启动游戏，不创建新游戏存档；JUnit产生的12个账本故障夹具及24个SQLite文件已清理，生成的iOS配置也再次移除。
+
+仓库只剩一份`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`，没有测试SQLite或旧runtime-images。当前生产内容未改动，构建ID仍为`04aa7e744fdb197b7623e0b74ed028a29ffbbf1ce1cac83a3f6f0a5a3bcbc742`；相同标识表示内容一致，不代表复用了旧产物。新清理清单、构建日志和验证结果位于`desktop-control/build/rebuild-validation/`。下方较早验证中的build原始路径均已清空，文字结论保留为历史记录。
+
 ## CLI.1.0.0 英文帮助补充
 
 新增`docs/cli-help.md`作为`--help`唯一内容来源：495行英文手册，覆盖七个协议入口、22类动作、18个JSON请求示例、主菜单到开局、多步交互、持续取消、历史和保存退出，并附Python管道示例。构建时将原文打入JAR资源并计入构建标识，不依赖运行时工作目录或源码文件。
