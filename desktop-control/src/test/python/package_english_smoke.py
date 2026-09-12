@@ -318,7 +318,7 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path, required=True)
-    parser.add_argument("--expected-cli", default="CLI.0.7.2")
+    parser.add_argument("--expected-cli", required=True, help="Exact CLI version expected in the application bundle")
     parser.add_argument("--reuse-raw-result", type=Path,
                         help="Reuse an unchanged-build successful raw case; preserves its original profile and report")
     args = parser.parse_args()

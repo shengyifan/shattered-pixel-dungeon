@@ -1,10 +1,10 @@
 # 实际 ARM64 app 包的英文协议验收
 
-2026-09-09，实际 **CLI.0.7.2 ARM64 app 包完整验收通过**。独立脚本 `desktop-control/src/test/python/package_english_smoke.py` 直接启动包内原生入口，完成全新游戏的原首次教程、英文库存操作与取消、原食物日志、正常保存及第二个包内 JVM 的同局恢复。GUI 保持中文、窗口化。CLI.0.7.1 首轮发现的问题及随后两处测试胶水错误仍保留在下文。
+2026-09-12，实际 **CLI.0.8.12 ARM64应用包验收通过**。直接运行包内原生spdctl，在受限PATH且无外部Java/classpath/agent下重新执行原始管道与完整新局/保存重启两项，不复用旧版raw结果。GUI为简体中文、窗口化，公开CLI游戏文案为英语。
 
-已验证的源包为 `desktop-control/build/fixture-runtime/CLI.0.7.2-305930ce1d3b/Shattered Pixel Dungeon.app`，公开 build ID 为 `305930ce1d3bcc092ff4dc60057aead5657ba62d0bb77e1224f3803feece5b92`。
+当前源包：`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`。构建标识为 `0843377cce445854462f092faef076ab24c6669cdd85a261ef1d965b3542a031`，与本轮真实浮字pan回归一致。
 
-完整原报告位于 `desktop-control/build/package-check/english-5d5dcb736f044bc4b713029047a94cff/result.json`，可提交副本见 [cli-package-english-validation.json](cli-package-english-validation.json)。游戏用例使用该输出目录中的新中文 profile；raw pipe 用例明确复用**同一冻结 CLI.0.7.2 包**在 `english-b41396be5858429a9571f29b97e081c5` 下已通过并落盘的独立结果，没有改写旧报告或把别的版本混入。
+本轮完整报告：`desktop-control/build/package-check/english-dfcdae533f584239a6a71b1083b6c65c/result.json`，提交索引见 [验证记录](cli-package-english-validation.json)。本轮应用副本、两份隔离profile及其完整审计均保留。此前0.7.x旧应用和原始测试目录已按用户9月12日指令清理；下文旧版本部分是历史说明，不代表那些原路径仍可打开。
 
 ## 执行边界
 
@@ -27,9 +27,9 @@
 
 本次实际加载的 JVM 为包内 Java 25.0.4，三个采样进程的 libjvm 路径都属于各自的 app 副本；同时记录了实际加载的 SQLite JDBC 原生库。所有原生入口和 JVM 动态库均为 arm64，签名在完整游戏流程结束后再次通过 `codesign --verify --deep --strict`。public/internal 数据库完整性均为 `ok`。
 
-食物事件 `sequence=7` 在 scope `run:a11725d7-dbbb-4243-9937-55fa916e40ab` 中，公开英文为 `That food tasted delicious!`，同序号、同显示时间的原实际中文为“吃起来不错！”。这是包内原食物行为的显示证据，没有注入日志文本。
+食物事件 `sequence=7` 在 scope `run:f902b148-a28b-4cd7-9c8a-d17c2b19d48a` 中，公开英文为 `That food tasted delicious!`，同序号、同显示时间的原实际中文为“吃起来不错！”。这是包内原食物行为的显示证据，没有注入日志文本。
 
-## 保留的失败与测试修正
+## 历史失败与测试修正（原始目录已按用户要求清理）
 
 ### CLI.0.7.1 首轮
 
@@ -56,7 +56,7 @@
 ```sh
 python3 desktop-control/src/test/python/package_english_smoke.py \
   --bundle '/absolute/path/Shattered Pixel Dungeon.app' \
-  --expected-cli CLI.0.7.2
+  --expected-cli CLI.0.8.12
 ```
 
 参数版本必须与待验收的实际包相符。默认重新执行两个用例；仅在确认仍是同一未改变的冻结包时，才可用 `--reuse-raw-result` 引用其已成功的 raw-pipe-result.json，脚本同时要求 build ID 一致并在结果中保留来源路径。本验收不声称真实 Intel 硬件、Gatekeeper 公证或全部游戏场景均已覆盖。

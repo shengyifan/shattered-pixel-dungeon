@@ -20671,5 +20671,17 @@
       ],
       "note": "Actual SewerBoss original WornKey exit/support prompt and SkeletonKey-created lock workflow passed. First support translation failure remains preserved. Only WndSupportPrompt newly becomes partial; no whole class pass."
     }
-  ]
+  ],
+  "artifact_retention": {
+    "updated_at": "2026-09-12",
+    "reason": "User explicitly requested removal of old test applications and data",
+    "cleanup_report": "docs/cli-test-cleanup-20260912.json",
+    "historical_raw_build_paths_may_be_absent": true,
+    "historical_validation_results_preserved": true,
+    "current_retained_reports": [
+      "docs/cli-floating-visibility-validation.json",
+      "docs/cli-package-english-validation.json"
+    ],
+    "formal_playthrough_profile_preserved": true
+  }
 }
