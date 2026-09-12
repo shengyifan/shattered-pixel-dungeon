@@ -21,3 +21,6 @@ local.properties
 
 # macOS Finder metadata
 .DS_Store
+
+# Local spdctl incident traces; commit the accompanying Markdown reports.
+/docs/cli-issues/*-public-evidence.json

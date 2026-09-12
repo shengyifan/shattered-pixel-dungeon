@@ -1305,6 +1305,13 @@ public class GameScene extends PixelScene {
 			SPDSettings.intro(false);
 			scene.add(new Tweener(scene, 2f){
 				@Override
+				public boolean hasPendingCallback() {
+					// The second half enables more controls, so this is a finite
+					// interaction continuation as well as a visual fade.
+					return exists && active;
+				}
+
+				@Override
 				protected void updateValues(float progress) {
 					if (progress <= 0.5f) {
 						scene.status.alpha(2*progress);

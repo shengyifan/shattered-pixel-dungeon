@@ -9,6 +9,7 @@
 - [实现与验收状态](cli-implementation.md)：模块、规则边界及版本说明。
 - [场景工作计划](cli-scenario-coverage.md)：35个计划场景、11个场景族和146成员的范围/检查方法，不携带旧结果指针。
 - [静态UI覆盖说明](cli-ui-coverage.md)：测试清单的生成方式与使用边界。
+- [CLI.1.0.1 实战异常修复](cli-issues/2026-09-13-fixes-and-validation.md)：教程稳定边界、升级预览和隔离验证结果。
 - [桌面构建说明](getting-started-desktop.md)。
 
 ## 测试输入和输出
@@ -16,6 +17,8 @@
 静态源码基线保存在 [game-control/src/test/resources/cli-ui-coverage.json](../game-control/src/test/resources/cli-ui-coverage.json)，由Java清单生成器、回归检查和Python职业矩阵读取。它描述源代码输入入口，不是游戏存档或某次运行结果；基线内容本次没有改变。
 
 新测试的原始JSON/NDJSON、profile、数据库和结构化报告应写入被忽略的build输出目录，不再作为历史结果JSON平铺提交到docs。需要提交的验证结论使用简洁Markdown，明确版本、范围、结果和限制。已有专项Markdown保留为历史说明，配套旧JSON引用已解除。
+
+`docs/cli-issues/` 中只提交 Markdown 问题说明与修复结论；已有的 `*-public-evidence.json` 是本地实战证据，由 `.gitignore` 排除，保留在原位置供本机后续排查。
 
 英文语料工具只接受显式指定的当前公开trace或已有输入清单，不再依赖已删除的历史报告。
 

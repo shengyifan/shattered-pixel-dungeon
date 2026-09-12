@@ -48,6 +48,50 @@ class AdditionalPublicMenuEnglishTest {
         description.put("text",description.get("text")+"未知尾文");
         assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,()->action(ui,"返回"));
     }
+    @SuppressWarnings("unchecked")
+    @Test void armorUpgradeTranslatesBothTheBlockingStatAndTheCompleteWindowText() {
+        Map<String,Object> ui=upgrade();List<Map<String,Object>> nodes=(List<Map<String,Object>>)ui.get("controls");
+        String displayed="升级这件物品会永久提升其如下属性：\n+1\n防御\n0~2\n1~3\n重量\n10\n9";
+        nodes.get(0).put("text",displayed);
+        nodes.add(node("blocking","text","防御"));
+        nodes.add(node("weight","text","重量"));
+        Map<String,Object> translated=PublicEnglishProjection.copy(ui);
+        List<Map<String,Object>> english=(List<Map<String,Object>>)translated.get("controls");
+        assertEquals("Upgrading an item permanently improves it:\n+1\nBlocking\n0~2\n1~3\nWeight\n10\n9",english.get(0).get("text"));
+        assertEquals("Blocking",english.get(5).get("text"));
+        assertEquals("Weight",english.get(6).get("text"));
+        assertEquals(displayed,nodes.get(0).get("text"));
+        assertEquals("防御",nodes.get(5).get("text"));
+        assertEquals(translated,PublicEnglishProjection.copy(translated));
+    }
+    @SuppressWarnings("unchecked")
+    @Test void blockingRequiresTheCompleteUpgradeSignatureAndAWindowOrTextNode() {
+        Map<String,Object> label=node("blocking","text","防御");
+        for(int i=1;i<5;i++) {
+            Map<String,Object> ui=upgrade();((List<?>)ui.get("controls")).remove(i);
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                    ()->PublicEnglishProjection.copyWithUi(label,ui));
+        }
+        Map<String,Object> ui=upgrade();ui.put("modal",false);
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                ()->PublicEnglishProjection.copyWithUi(label,ui));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                ()->PublicEnglishProjection.copyWithUi(node("blocking","button","防御"),upgrade()));
+        for(String unsafe:List.of("防御未知尾文","防御\n未知尾文","未知前文\n防御"))
+            assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                    ()->PublicEnglishProjection.copyWithUi(node("blocking","text",unsafe),upgrade()));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                ()->PublicEnglishProjection.copy(label));
+    }
+    @Test void armorAugmentationKeepsDefenseAndCannotBorrowUpgradeBlockingContext() {
+        Map<String,Object> augmentation=ui(List.of(node("prompt","text","你想强化哪个属性？"),
+                node("evasion","button","闪避"),node("choice","button","防御"),node("cancel","button","算了")));
+        assertEquals("Defense",action(augmentation,"防御"));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                ()->PublicEnglishProjection.copyWithUi(node("blocking","text","防御"),augmentation));
+        assertThrows(DisplayedTextEnglish.PublicTextUnavailableException.class,
+                ()->PublicEnglishProjection.copyWithUi(node("blocking","text","防御"),ui(List.of())));
+    }
     private static Map<String,Object> scroll(){return ui(List.of(node("warning","text","你真的想终止这张卷轴的施放？这张卷轴之前未被鉴定，因此它仍会被消耗掉。"),node("choice","button","是的，我确定"),node("no","button","不，我改变主意了")));}
     @Test void inventoryScrollCancelRequiresTheExactWarningAndBothChoices() {
         assertEquals("Yes, I'm positive",action(scroll(),"是的，我确定"));

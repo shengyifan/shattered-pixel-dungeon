@@ -114,6 +114,9 @@ public final class DisplayedTextEnglish {
         if(("gamescene".equals(scope)||"heroselectscene".equals(scope))&&Boolean.TRUE.equals(context.get("modal"))
                 &&context.get("visible_window_texts") instanceof List
                 &&(resolved=describedName(displayed,(List<?>)context.get("visible_window_texts")))!=null)return resolved;
+        if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("upgrade_preview"))
+                &&("window".equals(context.get("role"))||"text".equals(context.get("role")))
+                &&(resolved=upgradeBlockingText(displayed,context))!=null)return resolved;
         if("gamescene".equals(scope)&&Boolean.TRUE.equals(context.get("button"))
                 &&context.get("inspected_item_level_known") instanceof Boolean) {
             if(Boolean.TRUE.equals(context.get("cloak_item_menu"))
@@ -242,6 +245,23 @@ public final class DisplayedTextEnglish {
     private String policyResource(String displayed,String key) {
         ResourcePair resource=dictionary.policyResources.get(key);
         return resource!=null&&resource.chinese.equals(displayed)&&!containsNonLatinText(resource.english)?resource.english:null;
+    }
+
+    /** UiBridge also publishes a window's direct text children joined with newlines. */
+    private String upgradeBlockingText(String displayed,Map<String,Object> context) {
+        String[] lines=displayed.split("\n",-1);
+        boolean hasBlocking=false;
+        for(String line:lines)if(policyResource(line,"windows.wndupgrade.blocking")!=null)hasBlocking=true;
+        if(!hasBlocking)return null;
+        StringBuilder translated=new StringBuilder();
+        for(int i=0;i<lines.length;i++) {
+            if(i>0)translated.append('\n');
+            String blocking=policyResource(lines[i],"windows.wndupgrade.blocking");
+            // Only the complete displayed stat label is disambiguated; every other
+            // supplied line must still have its own safe translation.
+            translated.append(blocking==null?translateInContext(lines[i],context):blocking);
+        }
+        return translated.toString();
     }
 
     /** Original complete WndSupportPrompt composition, using only bundled text and public nodes. */
@@ -797,7 +817,8 @@ public final class DisplayedTextEnglish {
                         ||key.equals("items.artifacts.cloakofshadows.ac_stealth")||key.equals("items.weapon.melee.dagger.ability_name")
                         ||key.equals("items.weapon.melee.gloves.ability_name")||key.equals("actors.hero.abilities.rogue.shadowclone.name")
                         ||key.equals("actors.hero.abilities.rogue.deathmark.name")
-                        ||key.equals("windows.wndupgrade.back")||key.equals("items.scrolls.inventoryscroll.yes")||key.equals("items.scrolls.inventoryscroll.no"))
+                        ||key.equals("windows.wndupgrade.back")||key.equals("windows.wndupgrade.blocking")
+                        ||key.equals("items.scrolls.inventoryscroll.yes")||key.equals("items.scrolls.inventoryscroll.no"))
                     policies.put(key,new ResourcePair(source,target));
                 if(key.equals("actors.char.def_verb")||key.equals("windows.wndtradeitem.steal_warn_yes")||key.equals("windows.wndtradeitem.steal_warn_no")
                         ||key.equals("actors.hero.abilities.rogue.deathmark$deathmarktracker.name")
