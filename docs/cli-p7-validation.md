@@ -1,10 +1,12 @@
 # P7 真实引擎专项验证
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 2026-09-09 完成的完整批次为 **188 / 188 通过**。测试使用独立 test source-set 的 `FixtureLauncher`，在新建隔离 profile 中布置条件，之后通过生产 `MachineSession`、`GameController`、`UiBridge` 和原生游戏窗口执行公开 NDJSON 操作。没有截图、OS 键鼠输入或 Computer Use。
 
 这些 profile 设置了测试用属性、资源、装备、天赋或场景条件。全部标记 `test_fixture=true`、`counts_as_win=false`，不计作正常通关，也不能替代六职业从主界面开始的完整胜利验收。
 
-完整的逐例结果和证据字段保存在 [cli-p7-validation.json](cli-p7-validation.json)。文件只包含测试夹具结果和仓库相对路径，不包含存档、内部诊断数据库或个人 profile。原始运行输出位于 `desktop-control/build/fixtures/`，未纳入源码。
+完整的逐例结果和证据字段保存在 cli-p7-validation.json（历史 JSON 已删除，可查 Git 历史）。文件只包含测试夹具结果和仓库相对路径，不包含存档、内部诊断数据库或个人 profile。原始运行输出位于 `desktop-control/build/fixtures/`，未纳入源码。
 
 ## 已运行的矩阵
 
@@ -21,7 +23,7 @@
 
 资源不足用例遵循原生 UI 行为。牧师法术按钮会变暗但仍可点击，因此验证的是已有控件的 `dimmed` 表现、原生拒绝、无目标选择及无扣费；没有把它们错误地要求为 disabled。
 
-法术、武器和武僧招式用例由当前 [静态输入清单](cli-ui-coverage.json) 的具体类型生成。抽象基类、继承空实现的类型不冒充可施放能力。完整清单的静态覆盖与本次运行结果分别记录。
+法术、武器和武僧招式用例由当前 [静态输入清单](../game-control/src/test/resources/cli-ui-coverage.json) 的具体类型生成。抽象基类、继承空实现的类型不冒充可施放能力。完整清单的静态覆盖与本次运行结果分别记录。
 
 ## 操作完成的断言
 

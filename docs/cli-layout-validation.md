@@ -1,8 +1,10 @@
 # 真实设置、布局与窗口验证
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 `layout_smoke.py` 使用公开 NDJSON 验证游戏现有的界面设置、背包呈现、控件重建和地图视图操作。没有截图、OS 键鼠输入、Computer Use 或固定屏幕坐标；没有改动生产代码。
 
-冻结源码运行时与 **ARM64 包内 CLI.0.3.0 的相同流程均已通过**。逐项结果见 [cli-layout-validation.json](cli-layout-validation.json)。
+冻结源码运行时与 **ARM64 包内 CLI.0.3.0 的相同流程均已通过**。逐项结果见 cli-layout-validation.json（历史 JSON 已删除，可查 Git 历史）。
 
 - 源码批次：`runtime-7edb48cb0a8742709ef58792d1351e33`；profile 为 `desktop-control/build/fixtures/layout-a3a068fd4ed94063b7b09d61812887f2`。
 - 包内入口：`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl`；profile 为 `desktop-control/build/fixtures/layout-1c409475f57c4d5690d3844cecac886d`。握手明确检查 `cli_version=CLI.0.3.0`，包在本次测试期间保持冻结。

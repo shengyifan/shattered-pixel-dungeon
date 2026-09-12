@@ -1,5 +1,7 @@
 # 天狗炸弹：实际绘制提示
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 这一小组在既有 `visual_cues` / `game.visual` 管线上增加四个 `kind`，不改 `RuntimeObserver`、`GameController` 或 `MachineSession` 协议。所有格子都经过当前 scene/run/level、附着关系、FOV、完整格子视口和 UI 遮挡检查。
 
 | kind | 只表示什么 | 来源 |
@@ -31,7 +33,7 @@
 | 隐藏原生 BombAbility 夹具 | 在墙后准备原生炸弹 buff，真实 wait 约 0.318 秒完成；烟雾和数字均未进入当前 cue 或事件历史，也没有因隐藏首粒子而等待。此例是可见性对抗夹具，不是一次合法玩家投弹的证明。 |
 | 粘咕通用观察器回归 | 真实扩圈警告仍在原 wait 最终响应中，菜单遮挡/恢复正常。攻击结束后保留实际黑色尾粒子，随后正常渲染自然清除。 |
 
-炸弹两例使用 `runtime-d0c0dfa701a34937b2342ad1611cd65b`，生产构建 `cc0aea3ba61e9ac8a4d4870ea83601d6f8856ffddbbf7c5dbdb2ae0e4f7bacd0`。粘咕回归使用 `runtime-130a2c9d50344730917e3a80d422b46e`，构建 `2a10e28123af207570a7e2f4bad19ed7193ca38d593f0936d50c9a5d9d7eadb0`。逐例公开 trace、profile 与机器结果记录在 [cli-tengu-bomb-validation.json](cli-tengu-bomb-validation.json)。旧粘咕测试的“攻击后立即清空”断言失败证据保留，没有改写成通过；验收已按真实尾粒子语义调整后重新实测。
+炸弹两例使用 `runtime-d0c0dfa701a34937b2342ad1611cd65b`，生产构建 `cc0aea3ba61e9ac8a4d4870ea83601d6f8856ffddbbf7c5dbdb2ae0e4f7bacd0`。粘咕回归使用 `runtime-130a2c9d50344730917e3a80d422b46e`，构建 `2a10e28123af207570a7e2f4bad19ed7193ca38d593f0936d50c9a5d9d7eadb0`。逐例公开 trace、profile 与机器结果记录在 cli-tengu-bomb-validation.json（历史 JSON 已删除，可查 Git 历史）。旧粘咕测试的“攻击后立即清空”断言失败证据保留，没有改写成通过；验收已按真实尾粒子语义调整后重新实测。
 
 **历史覆盖范围更正：** 上表的隐藏、视口和遮挡断言只检查 `observation.visual_cues` 及 `game.visual` 事件，不能证明整个 `ui.controls` 都经过相同过滤。后续只读复核发现，旧隐藏夹具的公开 trace 在请求 `2bbc24fce5bc-15`、`-17`、`-18`、`-19` 中仍含 `ui-128` 的完整 `text="3..."`，同时 cue 为空。原始报告保留；这里不再把旧断言概括为整个 CLI 没有数字。原引擎的浮字层位于 fog 之上，单凭 FOV 外也不能断言屏幕完全没画。通用 UI 浮字的未绘制、视口裁剪及后续 HUD 遮挡边界，需要独立的实际绘制缓存与公开 pan 夹具验收。
 

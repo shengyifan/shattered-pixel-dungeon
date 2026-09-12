@@ -1,5 +1,7 @@
 # 开局选项的中间状态测试
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 两个独立profile构造既有进度：`menu:locked`未获得胜利，`menu:unlocked`具有此前已确认的胜利徽章。准备代码只存在于test source-set；该徽章不被算作正式通关，全部实际选项、文字输入、确认和取消使用原CLI控件。
 
 中文GUI、窗口化、英文CLI的两组共7条路径通过：
@@ -10,7 +12,7 @@
 - Randomize打开原配置窗口，原Cancel关闭，挑战设置保持0。
 - Daily Run显示原确认问题，原No返回且未创建每日游戏。
 
-最新通过目录为`menu-options-locked-dd4f5dd29e274511963dba2b0cb39945`及`menu-options-unlocked-4f801384dd1f45ae87a1dc34af0250e0`，完整构建与逐步证据见[精简JSON](cli-menu-options-validation.json)。测试进程均已退出。
+最新通过目录为`menu-options-locked-dd4f5dd29e274511963dba2b0cb39945`及`menu-options-unlocked-4f801384dd1f45ae87a1dc34af0250e0`，完整构建与逐步证据见精简JSON（历史 JSON 已删除，可查 Git 历史）。测试进程均已退出。
 
 首两轮测试准备曾分别误用大写Warrior标签、遗漏原Game Options入口；公开返回明确指出实际小写warrior和Game Options，修正测试后才得到本次通过。它们不是CLI生产缺陷，也没有被算入成功路径。
 

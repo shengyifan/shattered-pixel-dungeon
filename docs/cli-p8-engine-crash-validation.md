@@ -1,10 +1,12 @@
 # P8 真实游戏进程精确强杀
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 2026-09-09 的完整批次 **11 / 11 通过**。每个场景启动实际 `SpdctlLauncher`、GUI、Actor 与生产 `MachineSession`，通过公开 NDJSON 操作游戏，在指定代码边界停住后由父进程发出 SIGKILL。重启使用未安装测试 agent 的生产入口，通过公开 `request.get` 检查结果和重复 ID。
 
 这些场景使用隔离的测试存档，均标记 `test_fixture=true`、`counts_as_win=false`。没有从正式游玩 profile 读取数据，没有截图、键鼠模拟或 Computer Use。它们补充 [先前 P8 保存与账本测试](cli-p8-failure-validation.md) 中明确留下的真实游戏强杀缺口；并非把原来的 fake-effect 文件改名成游戏证据。
 
-完整逐例报告见 [cli-p8-engine-crash-validation.json](cli-p8-engine-crash-validation.json)，固定运行时为 `runtime-0ea261b4cf3345e0b0f417e0aedf1c07`。每例保留原请求、真实 barrier 调用栈、公开记录、两库和恢复结果。
+完整逐例报告见 cli-p8-engine-crash-validation.json（历史 JSON 已删除，可查 Git 历史），固定运行时为 `runtime-0ea261b4cf3345e0b0f417e0aedf1c07`。每例保留原请求、真实 barrier 调用栈、公开记录、两库和恢复结果。
 
 ## 精确暂停如何实现
 

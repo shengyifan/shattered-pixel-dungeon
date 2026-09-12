@@ -15,19 +15,6 @@ import uuid
 from fixture_smoke import freeze_runtime
 
 
-REPORTS = [
-    "docs/cli-menu-validation.json",
-    "docs/cli-king-visual-validation.json",
-    "docs/cli-tengu-traps-validation.json",
-    "docs/cli-transition-scenarios-validation.json",
-    "docs/cli-game-log-validation.json",
-    "docs/cli-visual-cues-validation.json",
-    "docs/cli-tengu-bomb-validation.json",
-    "docs/cli-p6-low-frequency.json",
-    "docs/cli-p7-validation.json",
-]
-
-
 def no_symlinks(root, candidate):
     current = root
     for part in candidate.relative_to(root).parts:
@@ -49,31 +36,11 @@ def checked_trace(root, value):
     return path
 
 
-def profiles(value):
-    if isinstance(value, dict):
-        if isinstance(value.get("profile"), str):
-            yield value["profile"]
-        for child in value.values():
-            yield from profiles(child)
-    elif isinstance(value, list):
-        for child in value:
-            yield from profiles(child)
-
-
-def collect(root, without_p7=False, extra_traces=()):
+def collect(root, extra_traces=()):
+    # Select only explicitly supplied current traces. Historical docs reports are
+    # not a data source and no unrelated fixture directory is scanned.
     candidates = set(extra_traces)
     skipped = []
-    for relative in REPORTS:
-        if without_p7 and relative.endswith("cli-p7-validation.json"):
-            continue
-        report = root / relative
-        if report.is_file():
-            no_symlinks(root, report)
-            for profile in profiles(json.loads(report.read_text())):
-                candidates.add(str(Path(profile) / "public-trace.jsonl"))
-    # Preserve earlier closed menu attempts, including the original Chinese six-scene batch.
-    for report in (root / "desktop-control/build/fixtures").glob("menu-scenes-*/menu-scenario-result.json"):
-        candidates.add(str(report.parent / "public-trace.jsonl"))
     traces = []
     for value in sorted(candidates):
         try:
@@ -85,9 +52,8 @@ def collect(root, without_p7=False, extra_traces=()):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--without-p7", action="store_true", help="Scan the priority Chinese corpus without the older 188-case matrix")
     parser.add_argument("--no-build", action="store_true", help="Use the current compiled test classpath without rebuilding")
-    parser.add_argument("--trace", action="append", default=[], help="Additional closed build/fixtures/.../public-trace.jsonl")
+    parser.add_argument("--trace", action="append", default=[], help="Explicit closed build/fixtures/.../public-trace.jsonl; repeat to select a corpus")
     parser.add_argument("--baseline-inputs", help="Reuse an earlier build/english-corpus/.../inputs.json corpus exactly; never overwrite that report")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
@@ -100,10 +66,10 @@ def main():
         selected = json.loads(baseline.read_text())
         traces = [str(checked_trace(root, trace).relative_to(root)) for trace in selected["traces"]]
         skipped = []
-        if args.trace or args.without_p7:
-            raise ValueError("An exact baseline cannot be combined with new traces or exclusions")
+        if args.trace:
+            raise ValueError("An exact baseline cannot be combined with new traces")
     else:
-        traces, skipped = collect(root, args.without_p7, args.trace)
+        traces, skipped = collect(root, args.trace)
     if not traces:
         raise SystemExit("No eligible closed fixture public traces")
     if not args.no_build:

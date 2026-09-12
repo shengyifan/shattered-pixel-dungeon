@@ -22,7 +22,7 @@ class UiCoverageInventoryTest {
     }
 
     @Test void checkedInventoryMatchesCurrentDeclarationsAndMethodBodies() throws Exception {
-        Map<String, Object> baseline = JsonCodec.decode(Files.readString(UiCoverageInventory.repositoryRoot().resolve("docs/cli-ui-coverage.json")));
+        Map<String, Object> baseline = JsonCodec.decode(Files.readString(UiCoverageInventory.baselinePath(UiCoverageInventory.repositoryRoot())));
         assertEquals(JsonCodec.encode(baseline), JsonCodec.encode(manifest),
                 "UI source changed: run :game-control:generateUiCoverage and review the inventory diff; this is not runtime acceptance");
     }

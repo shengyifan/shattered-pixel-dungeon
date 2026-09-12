@@ -1,8 +1,10 @@
 # 低频场景：中文界面与英文 CLI 复验
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 本轮完整执行了既有 22 项低频夹具：**14 项通过，8 项失败**。通过项共完成 376 次原 GUI 的同版本断言；连同失败前已完成的观察，合计 545 次。所有进程均已退出，失败清理没有发生额外异常。整个矩阵返回非零退出码，不能把本轮记为全通过。
 
-使用冻结运行时 `runtime-492eab0194ec44ba900b788f10016cf7`，公开握手版本 `CLI.0.8.5`，构建 ID `fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4`。运行时中的 `python-source` 同时保留了本次执行的 runner 和共享 helper 源码。详细结果、每项 profile、原始响应与失败请求 ID 见 [JSON 证据](cli-p6-english-validation.json)。
+使用冻结运行时 `runtime-492eab0194ec44ba900b788f10016cf7`，公开握手版本 `CLI.0.8.5`，构建 ID `fe86ecae80bce2ef1ffbfe0ab5b32d5c8c7b7d0aa8eab5b60dd92d769e162de4`。运行时中的 `python-source` 同时保留了本次执行的 runner 和共享 helper 源码。详细结果、每项 profile、原始响应与失败请求 ID 见 JSON 证据（历史 JSON 已删除，可查 Git 历史）。
 
 既有 [低频基线](cli-p6-low-frequency.md) 及其 JSON 保持原样。本轮只更改测试 runner，没有修改生产翻译、游戏规则或初态夹具。所有 profile 都在 `desktop-control/build/fixtures/p6-…`；没有访问或启动正式实战存档。护符结局属于构造状态测试，不计作正常通关。
 

@@ -1,5 +1,7 @@
 # 欢迎与更新提示的实际场景测试
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 四项隔离初态通过生产`SpdctlLauncher`真实运行，CLI文案英文、GUI中文且窗口化；没有测试状态注入器、截图或OS输入。
 
 | 初态 | 原路径和结果 |
@@ -11,7 +13,7 @@
 
 初态仅写入自建测试profile的界面偏好/版本，最后一种额外准备无效临时保存文件，不涉及正式存档。它验证原警告与无效文件清理，不冒充有效存档恢复或真实断电的数据完整性测试。GUI的语言与实际窗口模式由公开`ui.display`核验。
 
-具体profile、冻结构建与结果见[精简JSON](cli-welcome-scenarios-validation.json)。未来版本首轮曾因测试期望“newer version”而非原资源“future version”失败，修正测试文字后新profile通过；没有修改原消息或回写旧失败。所有测试进程正常退出。
+具体profile、冻结构建与结果见精简JSON（历史 JSON 已删除，可查 Git 历史）。未来版本首轮曾因测试期望“newer version”而非原资源“future version”失败，修正测试文字后新profile通过；没有修改原消息或回写旧失败。所有测试进程正常退出。
 
 ```sh
 ./gradlew :desktop-control:writeTestRuntimeClasspath

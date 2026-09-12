@@ -661,19 +661,19 @@ def main():
             elif family == "ui":
                 cases += ["ui:" + n for n in ("identify", "upgrade", "cancel-confirm", "alchemy")]
             elif family == "spell":
-                manifest = json.loads((root / "docs/cli-ui-coverage.json").read_text())
+                manifest = json.loads((root / "game-control/src/test/resources/cli-ui-coverage.json").read_text())
                 names = [Path(r["source"]).stem for r in manifest["records"] if r["category"] == "cleric_spell"
                          and Path(r["source"]).stem not in {"ClericSpell", "InventoryClericSpell", "TargetedClericSpell"}]
                 assert len(set(names)) == len(names) == 27
                 cases += ["spell:" + n for n in sorted(names)]
             elif family == "weapon":
-                manifest = json.loads((root / "docs/cli-ui-coverage.json").read_text())
+                manifest = json.loads((root / "game-control/src/test/resources/cli-ui-coverage.json").read_text())
                 names = [Path(r["source"]).stem for r in manifest["records"] if r["category"] == "input_method"
                          and ".duelistAbility(" in r["id"] and Path(r["source"]).stem != "MeleeWeapon"]
                 assert len(names) == 32  # 31 in weapon/melee plus the quest Pickaxe.
                 cases += ["weapon:" + n for n in names]
             elif family == "monk":
-                manifest = json.loads((root / "docs/cli-ui-coverage.json").read_text())
+                manifest = json.loads((root / "game-control/src/test/resources/cli-ui-coverage.json").read_text())
                 names = [r["id"].split("$")[-1] for r in manifest["records"] if r["category"] == "monk_ability" and not r["id"].endswith("$MonkAbility")]
                 assert len(names) == 5
                 cases += ["monk:" + n for n in names]

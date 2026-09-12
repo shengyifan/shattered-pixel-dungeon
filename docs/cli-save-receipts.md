@@ -1,5 +1,7 @@
 # 保存回执与动作完成
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 动作响应的 `status` 表示该动作的内存执行状态。`result.persistence` 单独说明原生保存流程是否在该请求执行期间发出了确认。两者必须分别判断；没有保存回执时，CLI 不确认保存。
 
 成功或进行中的 `action.execute` 响应在 `result` 中包含：
@@ -55,7 +57,7 @@ EOF 是系统生命周期事件，不产生伪造请求或主动 stdout 消息�
 
 ## 验证
 
-真实进程结果与本机证据索引见 [cli-save-receipts-validation.json](cli-save-receipts-validation.json)。
+真实进程结果与本机证据索引见 cli-save-receipts-validation.json（历史 JSON 已删除，可查 Git 历史）。
 
 - `SaveReceiptSessionTest`：11 项 fake runtime + 真实 SQLite 回归，包括写入先于响应、跨 menu/run 关联、进行中与历史响应不可修改、多次回调、失败与会话过滤，以及回执 SQL 写入失败。
 - `EofSaveRetryTest`：一次 GUI 意图变化导致的过期拒绝会重新观察并最终产生持久保存回执；不重试未知执行，不操作不可用提示，不输出主动响应。

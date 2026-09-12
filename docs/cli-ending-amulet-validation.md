@@ -1,8 +1,10 @@
 # 护符、地表结束与首次 Ascension 验证
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 2026-09-09，两个独立 trigger-before 实机用例全部通过。CLI 游戏文案为英文，GUI 为中文、窗口化，合计 52 次 GUI 环境断言。测试只准备触发之前的初态；之后的拾取、选择、转层、buff、胜负与窗口均由原 CLI 操作触发。
 
-完整结果见 [cli-ending-amulet-validation.json](cli-ending-amulet-validation.json)。两个用例的生产 build ID 相同：`b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e`。
+完整结果见 cli-ending-amulet-validation.json（历史 JSON 已删除，可查 Git 历史）。两个用例的生产 build ID 相同：`b59ec2d8fb195dfcd6088ae40d226eb41e79ee4a841cd63c781b7c5836d6003e`。
 
 | case_id | 实际原流程 | 结果 |
 | --- | --- | --- |

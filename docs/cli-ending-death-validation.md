@@ -1,8 +1,10 @@
 # 永久死亡与原菜单重开验证
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 2026-09-09，两个独立实机用例通过。公开 CLI 游戏文案为英文，GUI 为中文、窗口化，共完成 47 次 GUI 环境断言。本组只构造死亡之前的初态，之后全部通过原 CLI 控件执行，没有调用测试版 die/fail、创建终局窗口或读写正式 profile；不计正式通关。
 
-完整结果见 [cli-ending-death-validation.json](cli-ending-death-validation.json)。
+完整结果见 cli-ending-death-validation.json（历史 JSON 已删除，可查 Git 历史）。
 
 | case_id | 实际通过的原流程 | GUI 断言 |
 | --- | --- | --- |

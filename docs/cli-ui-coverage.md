@@ -2,7 +2,7 @@
 
 清单通过 `./gradlew :game-control:generateUiCoverage` 用 javac AST 解析当前 `core/src/main/java` 与 `SPD-classes/src/main/java`。它扫描命名类、匿名类、嵌套窗口、继承关系、输入回调、物品 actions/execute、职业动作、护甲能力与法术；不加载、初始化或构造任何游戏类。
 
-完整条目、源码位置、语义路线与输入方法的源码校验标识保存在 [cli-ui-coverage.json](cli-ui-coverage.json)。每项明确标为 `static_only`，汇总字段 `runtime_verified_by_inventory` 永远为 `false`。**找到静态路线不等于实际操作验证，更不等于通关。**
+完整条目、源码位置、语义路线与输入方法的源码校验标识保存在 [cli-ui-coverage.json](../game-control/src/test/resources/cli-ui-coverage.json)。每项明确标为 `static_only`，汇总字段 `runtime_verified_by_inventory` 永远为 `false`。**找到静态路线不等于实际操作验证，更不等于通关。**
 
 ## 生成、检查与更新
 

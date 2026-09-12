@@ -53,10 +53,14 @@ public final class UiCoverageInventory {
         if (path == null) throw new IllegalStateException("Cannot locate repository root");
         return path;
     }
+    public static Path baselinePath(Path root) {
+        return root.resolve("game-control/src/test/resources/cli-ui-coverage.json");
+    }
     public static void main(String[] args) throws Exception {
         Path root = args.length == 0 ? repositoryRoot() : Path.of(args[0]).toAbsolutePath();
         Map<String, Object> manifest = generate(root);
-        Files.createDirectories(root.resolve("docs"));
+        Path output = baselinePath(root);
+        Files.createDirectories(output.getParent());
         Map<String, Object> header = new LinkedHashMap<>(manifest);
         Object records = header.remove("records");
         String prefix = JsonCodec.encode(header);
@@ -68,7 +72,7 @@ public final class UiCoverageInventory {
             json.append(JsonCodec.encode(record));
         }
         json.append("\n]}\n");
-        Files.writeString(root.resolve("docs/cli-ui-coverage.json"), json.toString(), StandardCharsets.UTF_8);
+        Files.writeString(output, json.toString(), StandardCharsets.UTF_8);
         System.out.println(JsonCodec.encode(manifest.get("summary")));
     }
 

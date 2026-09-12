@@ -1,12 +1,14 @@
 # 实际 ARM64 app 包的英文协议验收
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 > 后续状态：用户随后授权清空全部本地生成数据，本文当时保留的应用/运行数据现也已移除；Git中的验证结果保留。参见[数据重置记录](cli-runtime-reset-20260912.md)。
 
 2026-09-12，实际 **CLI.0.8.12 ARM64应用包验收通过**。直接运行包内原生spdctl，在受限PATH且无外部Java/classpath/agent下重新执行原始管道与完整新局/保存重启两项，不复用旧版raw结果。GUI为简体中文、窗口化，公开CLI游戏文案为英语。
 
 当前源包：`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`。构建标识为 `0843377cce445854462f092faef076ab24c6669cdd85a261ef1d965b3542a031`，与本轮真实浮字pan回归一致。
 
-本轮完整报告：`desktop-control/build/package-check/english-dfcdae533f584239a6a71b1083b6c65c/result.json`，提交索引见 [验证记录](cli-package-english-validation.json)。本轮应用副本、两份隔离profile及其完整审计均保留。此前0.7.x旧应用和原始测试目录已按用户9月12日指令清理；下文旧版本部分是历史说明，不代表那些原路径仍可打开。
+本轮完整报告：`desktop-control/build/package-check/english-dfcdae533f584239a6a71b1083b6c65c/result.json`，提交索引见 验证记录（历史 JSON 已删除，可查 Git 历史）。本轮应用副本、两份隔离profile及其完整审计均保留。此前0.7.x旧应用和原始测试目录已按用户9月12日指令清理；下文旧版本部分是历史说明，不代表那些原路径仍可打开。
 
 ## 执行边界
 

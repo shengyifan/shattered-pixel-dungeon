@@ -1,8 +1,10 @@
 # 中文 GUI 与英文 CLI 的独立验证
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 2026-09-09，第五轮两个独立实机用例完整通过。GUI 始终为中文、窗口化；公开游戏文案为英文；同一局正常重启后原响应和已显示日志仍可用英文读取。真实旧中文审计副本的英文查询没有回写旧记录。前四轮发现的问题保留在下文，旧中文实测记录没有改写为英文证据。
 
-本次冻结运行时为 `runtime-f3db7a7224104683bcd95fea61bdfd61`，公开 build ID 为 `299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86`。逐项证据见 [cli-english-protocol-validation.json](cli-english-protocol-validation.json)。
+本次冻结运行时为 `runtime-f3db7a7224104683bcd95fea61bdfd61`，公开 build ID 为 `299fbe9a52df08b8a61b4ebbf8b603621ee61b4e4014cecfa92e0e979a947a86`。逐项证据见 cli-english-protocol-validation.json（历史 JSON 已删除，可查 Git 历史）。
 
 | 用例 | 完整结果 |
 | --- | --- |

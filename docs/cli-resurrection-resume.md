@@ -1,5 +1,7 @@
 # 待复活存档在新 JVM 中继续游戏
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 2026-09-09，已通过隔离的中文、窗口化实机测试复现并修复。测试只构造初始条件，不计为正式通关；未读取或改写正式游戏存档，未使用截图、键盘、鼠标或 computer use。
 
 ## 实际故障
@@ -37,7 +39,7 @@
 - 点击原“保留这些物品”后，在同一 scope 中通过原生复活流程恢复 HP，并消耗 Ankh。
 - 复活后的正常保存得到本请求的成功保存回执，随后正常退出。
 
-通过证据位于 `desktop-control/build/fixtures/resurrection-resume-216942ffc188497ebc15852e4f8e031e`，冻结运行时 `runtime-83972fbe6b3c4590baeb4673e1d5bfd1`，公开 build ID `2a10e28123af207570a7e2f4bad19ed7193ca38d593f0936d50c9a5d9d7eadb0`。可提交的精简前后结果见 [cli-resurrection-resume-validation.json](cli-resurrection-resume-validation.json)。
+通过证据位于 `desktop-control/build/fixtures/resurrection-resume-216942ffc188497ebc15852e4f8e031e`，冻结运行时 `runtime-83972fbe6b3c4590baeb4673e1d5bfd1`，公开 build ID `2a10e28123af207570a7e2f4bad19ed7193ca38d593f0936d50c9a5d9d7eadb0`。可提交的精简前后结果见 cli-resurrection-resume-validation.json（历史 JSON 已删除，可查 Git 历史）。
 
 新增 5 项 `UnstartedActorBoundaryTest` 分别验证：死亡且线程从未创建时可安全读取、活英雄仍需原调度器、存在 current actor 时拒绝、线程对象已创建但尚未启动时拒绝、线程已终止时拒绝。既有绘制确认、退出限制、连续行动取消、请求审计与保存回执测试一并回归。
 

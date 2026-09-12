@@ -1,6 +1,8 @@
 # CLI 历史公开文本的离线英语投影验证
 
-2026-09-09，当前英语投影对固定历史语料的第三轮扫描通过：**238 个已关闭 fixture 目录、5,874 个公开响应，完整文本拒绝 0 次，截断文本保守回退 0 次，跳过输入 0 个。** 精简结果见 [cli-english-corpus-validation.json](cli-english-corpus-validation.json)。
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
+2026-09-09，当前英语投影对固定历史语料的第三轮扫描通过：**238 个已关闭 fixture 目录、5,874 个公开响应，完整文本拒绝 0 次，截断文本保守回退 0 次，跳过输入 0 个。** 精简结果见 cli-english-corpus-validation.json（历史 JSON 已删除，可查 Git 历史）。
 
 这项验证只把历史公开 JSON 输入当前文本投影器。它没有启动游戏引擎或窗口，没有执行游戏动作，也没有构造 Hero、Level、Item 或 Window。**238 是输入目录数，不是“238 个场景在当前引擎全部通过”。** 该结果也不代表正式通关、所有游戏机制覆盖或所有潜在语言资源歧义已解决。
 
@@ -27,13 +29,13 @@
 
 [EnglishCorpusProbeTest.java](../desktop-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/desktop/EnglishCorpusProbeTest.java) 的 6 项隔离测试通过，覆盖同帧多个失败、频次聚合、输入不变、clipped 分流、路径与符号链接拒绝、公开父节点/Back/滑条的正反例、完整存档签名及缓存失效，以及不跨响应借用 UI。Python 语法检查和 `git diff --check` 也通过。
 
-本地复现最终同语料扫描：
+对新生成的已结束测试轨迹执行扫描（旧固定语料已删除，不能直接复现旧输入集）：
 
 ```sh
 ./gradlew :desktop-control:test --tests '*EnglishCorpusProbeTest' :desktop-control:writeTestRuntimeClasspath --console=plain
-python3 desktop-control/src/test/python/english_corpus_probe.py --no-build --baseline-inputs desktop-control/build/english-corpus/64a7f2ffe2de4083852642f42fa27921/inputs.json
+python3 desktop-control/src/test/python/english_corpus_probe.py --no-build --trace 'desktop-control/build/fixtures/<新测试profile>/public-trace.jsonl'
 ```
 
-不指定 `--baseline-inputs` 时，工具从当前已有测试报告重新选择语料，并创建新的输入清单；这不保证与上表目录数相同。`--without-p7` 可缩小诊断范围，但不能用于声称完整固定语料通过。干净 checkout 不包含被忽略的本地 fixture 产物，需要先产生对应测试日志，不能用空输入替代验收。
+不指定 `--baseline-inputs` 时，必须用一个或多个 `--trace desktop-control/build/fixtures/<profile>/public-trace.jsonl` 显式选择当前已结束测试的公开轨迹。工具不再依赖 docs 历史 JSON，也不自动扫描其他 profile；不提供轨迹时明确退出，不能用空输入替代验收。旧 `--without-p7` 历史批次选项已移除。干净 checkout 不包含被忽略的本地 fixture 产物，需要先产生对应测试日志，不能用空输入替代验收。
 
 最终本地报告位于 `desktop-control/build/english-corpus/f7287a8e24264eac8fe043e67d2926bf/report.json`，冻结运行时为 `runtime-49fea25878f24cc0bba5dca4af4ce3c8`，生产 build ID 为 `41def3e7f71312977931f40c5c51d3efc5edbbbc4b791c15f248c2cebeca2876`。这些引用只绑定本次已执行的编译产物，不自动覆盖后续源码改动。

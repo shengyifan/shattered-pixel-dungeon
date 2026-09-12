@@ -1,5 +1,7 @@
 # 物品正文知识时点与 Spear 英语投影
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 这一组将原生 `WndInfoItem` 正文使用的等级知识位关联到当前公开窗口，解决简体中文 Spear 能力说明中 actual / typical 两条资源完全相同、英文却有无 `typically` 的差别。CLI 不读取隐藏升级值来判断这两种说明。
 
 公开 `ui.inspected_item` 只有 `control` 和 `level_known`。`control` 指向当前顶层窗口；`level_known` 是该窗口调用原始 `item.info()` 或卖品 `heap.info()` 前记录的布尔值。它描述当前缓存正文的知识时点，不代表背包中该物品后来是否已鉴定。这里没有物品类、对象标识、实际等级、伪造的背包 locator 或 equipped 字段。
@@ -33,7 +35,7 @@ python3 desktop-control/src/test/python/inspected_item_smoke.py
 - `inspect:containers-a/b`：六种容器装入不同法杖类别、隐藏等级、诅咒状态，两世界公开详情逐项相同且关联均为 null。
 - `weapon:Spear`、`weapon:Spear:empty`：复用原生能力、目标取消与资源不足路径；实际耗能必须在完成动作自身返回的 state_version 对应断言中成立，不能通过后续 state.get 补等。
 
-最终 8 个分支全部获得通过证据，见 [精简验证记录](cli-inspected-item-validation.json)。第二轮六个 inspection 场景和资源不足共 7 项通过；正常 Spear 在最后一次新运行中完成打开说明、目标取消、重新选择与真实施放，完成响应对应的充能从 8 变为 7.0341883。修复目标提示后没有重复运行其余已通过的七项，JSON 分别保留两次冻结 runtime。
+最终 8 个分支全部获得通过证据，见 精简验证记录（历史 JSON 已删除，可查 Git 历史）。第二轮六个 inspection 场景和资源不足共 7 项通过；正常 Spear 在最后一次新运行中完成打开说明、目标取消、重新选择与真实施放，完成响应对应的充能从 8 变为 7.0341883。修复目标提示后没有重复运行其余已通过的七项，JSON 分别保留两次冻结 runtime。
 
 首轮完整正文组合失败、第二轮正常能力目标提示失败的原始报告均保留。没有将失败局部状态或夹具伪造胜利计为通过。
 

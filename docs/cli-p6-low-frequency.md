@@ -1,8 +1,10 @@
 # P6 低频交互的真实 CLI 验证
 
+> 文档整理说明：配套的历史验收 JSON 已按用户要求删除；原始运行数据也已清空。本页保留当时的验证说明，旧结构化结果可从 Git 历史查阅，不能作为 CLI.0.9.0 的新验收结果。
+
 这一组专项使用 test-only `LowFrequencyFixtures` 准备独立场景，通过正常主菜单选战士进入游戏后，在首次安全边界布置物品、NPC、任务进度和资源。后续操作全部使用公开 NDJSON，复用生产 MachineSession、GameController、UiBridge 和原生窗口。没有截图、键鼠模拟或 Computer Use；没有新增生产命令或修改游戏规则。
 
-最终采用的 **22 个具名场景全部通过**，覆盖商店交易/偷窃、Ghost 与 Wandmaker 奖励、铁匠服务、同伴装备与指挥、炼金能量与合成、死亡复活，以及护符选择和胜利窗口。逐例冻结运行时和结果见 [cli-p6-low-frequency.json](cli-p6-low-frequency.json)。所有 profile、结果均标为 `test_fixture=true`、`counts_as_win=false`。
+最终采用的 **22 个具名场景全部通过**，覆盖商店交易/偷窃、Ghost 与 Wandmaker 奖励、铁匠服务、同伴装备与指挥、炼金能量与合成、死亡复活，以及护符选择和胜利窗口。逐例冻结运行时和结果见 cli-p6-low-frequency.json（历史 JSON 已删除，可查 Git 历史）。所有 profile、结果均标为 `test_fixture=true`、`counts_as_win=false`。
 
 最终证据采用四次冻结运行时中的最新对应用例：`runtime-70a25f85898840c2b81ac4c308322fba` 的 8 项、准备状态校正后的 `runtime-2a04ee19328c475d9c1cb0e0f036e2ce` 的 4 项、新变体 `runtime-e81f17748d24403a9d2265cdd8a08c3b` 的 7 项，以及 `runtime-c6207353f0f042969904af6b52783270` 的 3 项。每项对应的实际运行时都保留在结果中；没有把多次运行称作同一冻结批次。
 
