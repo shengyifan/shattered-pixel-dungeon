@@ -19,7 +19,7 @@ import zipfile
 from english_protocol_smoke import activate, assert_english, checked_state, english_inventory, execute, public_events, stop
 from machine_smoke import Client, reach_game, finish_tutorial
 from language_matrix_smoke import validate as validate_sources
-from package_smoke import receive
+from package_smoke import emergency_snapshot, receive
 from test_ui import configure_test_ui
 
 
@@ -128,8 +128,10 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
         jvm = loaded_jvm(process, bundle)
         repeated = exchange(query)
         assert repeated["error"]["code"] == "DUPLICATE_REQUEST_ID", repeated
+        emergency_before = emergency_snapshot(profile)
         conflict = subprocess.run(command, input=b"", capture_output=True, env=env, timeout=20)
         assert conflict.returncode != 0 and conflict.stdout == b"" and b"STARTUP_FAILED" in conflict.stderr
+        assert emergency_snapshot(profile) == emergency_before, "A rejected competing process changed emergency diagnostics"
         process.stdin.close()
         process.wait(timeout=25)
         assert process.returncode == 0 and process.stdout.read() == b"", "EOF must not push a response"
@@ -156,10 +158,12 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
                 runtime = json.loads(db.execute("SELECT text FROM logs WHERE channel='runtime.environment' ORDER BY sequence LIMIT 1").fetchone()[0])
                 assert runtime["os_arch"] == "aarch64" and runtime["build_id"] == expected_build, runtime
                 assert runtime["error_file"] == str(profile / "audit/emergency/hs_err_pid%p.log")
-                assert db.execute("SELECT count(*) FROM logs WHERE channel='recovered_emergency_base64'").fetchone()[0] >= 1
+                assert db.execute("SELECT count(*) FROM logs WHERE channel='recovered_emergency_base64'").fetchone()[0] == 0, \
+                    "A rejected locked-profile launch must not produce recoverable diagnostics"
     result = {"case_id": "package.english_raw_pipe", "verified": True, "profile": str(profile),
             "gui_display": mode, "jvm": jvm, "exact_frames_checked": len(frames), "runtime": runtime,
             "profile_lock_rejects_second_process": True, "malformed_utf8_recovery": True,
+            "rejected_profile_emergency_unchanged": True, "spurious_emergency_recovery_absent": True,
             "duplicate_id_rejected": True, "eof_has_no_push": True, "final_frame_without_newline": True,
             "database_checks": audit_health(profile)}
     write_json(profile / "raw-pipe-result.json", result)

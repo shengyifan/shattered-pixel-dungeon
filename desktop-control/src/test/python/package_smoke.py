@@ -28,6 +28,16 @@ def receive(process, timeout=40):
     return json.loads(data)
 
 
+def emergency_snapshot(profile):
+    """Capture only this isolated profile's emergency tree, including absence."""
+    emergency = profile / "audit/emergency"
+    if not emergency.exists():
+        return None
+    return tuple((path.relative_to(emergency).as_posix(),
+                  path.read_bytes() if path.is_file() else None)
+                 for path in sorted(emergency.rglob("*")))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path, required=True)
@@ -75,9 +85,11 @@ def main():
         assert observed["ok"], observed
         duplicate = exchange(query)
         assert duplicate["error"]["code"] == "DUPLICATE_REQUEST_ID", duplicate
+        before_conflict = emergency_snapshot(profile)
         conflict = subprocess.run(command, input=b"", capture_output=True, env=env, timeout=20)
         assert conflict.returncode != 0 and conflict.stdout == b"", conflict
         assert b"STARTUP_FAILED" in conflict.stderr, conflict.stderr
+        assert emergency_snapshot(profile) == before_conflict, "A rejected lock contender must not write into the owned profile"
         # EOF itself is lifecycle input. It must not create an unsolicited response.
         process.stdin.close()
         process.wait(timeout=25)
@@ -108,11 +120,11 @@ def main():
         assert runtime["error_file"] == str(profile / "audit/emergency/hs_err_pid%p.log"), runtime
         assert runtime["profile"] == str(profile)
         recovered=db.execute("SELECT count(*) FROM logs WHERE channel='recovered_emergency_base64'").fetchone()[0]
-        assert recovered>=1,"Failed competing launch diagnostics should be imported on restart"
+        assert recovered == 0, "A rejected lock contender must not create an emergency report to recover"
     result = {"result": "passed", "bundle": str(bundle), "profile": str(profile), "architecture": checks,
               "runtime": runtime, "frames": len(frames), "checks": ["unicode_bundle_and_profile", "bundled_jvm",
               "native_sqlite", "exact_wire_bytes", "invalid_utf8_recovery", "duplicate_query", "profile_lock",
-              "EOF_without_push", "final_frame_without_newline", "emergency_import", "codesign", "plist", "database_integrity", "profile_jvm_crash_path"],
+              "EOF_without_push", "final_frame_without_newline", "lock_conflict_preserves_emergency_tree", "codesign", "plist", "database_integrity", "profile_jvm_crash_path"],
               "not_tested": ["forced_JVM_native_crash", "real_Intel_hardware", "Gatekeeper_notarization"]}
     (output / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
     print(json.dumps(result, ensure_ascii=False))

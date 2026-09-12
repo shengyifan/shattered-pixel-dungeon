@@ -21,7 +21,7 @@
 - [x] 仓库客户端、测试与操作手册更新，旧反查生产路径移除。
 - [x] 来源身份、线程、回收、可见性和故障注入回归。
 - [x] 全语言基础矩阵与代表语言高风险矩阵。
-- [ ] 清理构建目录、全量 macOS ARM64 打包与产物核验。
+- [x] 清理构建目录、全量 macOS ARM64 打包与产物核验。
 
 检查项只在相应验证实际通过后更新，不以存在实现代码代替验收。
 
@@ -58,7 +58,7 @@
 
 资源语料检查的已验证批次覆盖 4,830 个官方英文 key × 23 种注册语言，共 111,090 项；其中 111,087 项完整英文，3 项是明确的 key 引用可见性降级，格式/投影缺陷为 0。三项为繁中长鞭的两条能力说明和波兰语矮人国王的激怒对白：原 GUI 省略参数，双世界检查保证改变这些未显示值不会改变公开令牌或输出。
 
-基础真实 GUI 矩阵已在构建 `95267e8915de048f8fac32828d501e6c9a45366ba64ac6728c824aacf5c637f7` 下完成 23/23：原菜单选择战士、新局、物品说明、返回、保存以及正常退出。后续深场景与最终构建结果在最终验收后补记；不把这批较早结果改写为后续构建实测。
+基础真实 GUI 矩阵曾在构建 `95267e8915de048f8fac32828d501e6c9a45366ba64ac6728c824aacf5c637f7` 下完成 23/23：原菜单选择战士、新局、物品说明、返回、保存以及正常退出。后文另记最终构建的完整复测，不把这批较早结果改写为后续构建实测。
 
 
 深场景测试的控件选择也保留可见性边界。俄语备注窗口的 Edit Title 可能在原 GUI 中裁切；测试只在完整公开备注上下文、两个已知邻接动作和唯一剩余可点击控件同时成立时，通过当前 control 选择，并检查原始编辑器后置状态，不恢复被隐藏的标题 key，不修改原 UI 字号或布局。
@@ -87,3 +87,45 @@
 | 原始首次教程两种界面 | 2 / 2，通过下一步动作及旧版本保护 |
 
 所有验收使用独立 profile。实际回调操作通过 CLI 协议完成；没有用私有快照或游戏存档决定动作。构造夹具不计正式战士通关。
+
+## 干净构建与提交
+
+源码阶段签名提交：`cad630e4ce2ef3aeab012ae529caa4f2acefd859`，`feat: implement locale-independent CLI 2.0 text provenance`；`git verify-commit --raw` 验证通过。
+
+提交后核对并删除 13 处旧生成路径，总文件大小 4,054,921,622 字节：根及各模块 build、项目 .gradle、Python __pycache__ 与自动生成的 ios/robovm.properties。所有删除路径均被 Git 忽略、不含跟踪文件、不是仓库外符号链接。两份原 `docs/cli-issues/*-public-evidence.json` 大小及修改时间完全不变；全局依赖缓存保留。验收汇总已记入本文，旧冻结测试进程均退出后才清理。
+
+使用下列离线命令从空目录重建：
+
+```sh
+./gradlew :control-protocol:test :game-control:test :desktop-control:test \
+  :desktop-control:packageMacArm64 :desktop-control:writeRuntimeClasspath \
+  --no-build-cache --rerun-tasks --offline --no-daemon --console=plain
+```
+
+构建在 48 秒完成，**32 个任务全部执行**；12 / 245 / 110 项 Java 测试再次全部通过，没有失败、错误或跳过。实际包内 `spdctl --version` 输出 `CLI.2.0.0 (protocol 2, game 3.3.8)`，25,800 字节 `--help` 与仓库英文手册逐字节相同。包内构建标识仍是 `6834e15f2c6ba0a6949d67af5899bb9813d7006ab04a8e5895fe72d002bdf2c5`，与全语言验证构建一致。
+
+应用位置为 `desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`，机器入口为 `Contents/MacOS/spdctl`。开发入口使用 `desktop-control/build/runtime-classpath.txt` 所指向的新冻结运行时。
+
+包测试的旧锁竞争断言已随 schema 5 契约更新：没有取得 profile 所有权的进程必须以 `STARTUP_FAILED` 拒绝，且不能在该 profile 创建应急报告。两个包测试入口均改为比较竞争前后的应急目录结构及原始字节，正常重启的 `recovered_emergency_base64` 数量必须为零。此前的“锁竞争后必须导入一条应急报告”来自旧版行为，已删除该错误预期，生产代码未因此修改。
+
+真实应急恢复失败路径仍独立保留，并在当前实际包通过 `startup_failure_smoke.py`：预先存在的归档不能被覆盖；启动在创建控制器前失败，进程退出码为 1、标准输出为零条，公开与内部审计的会话均以 `FAILED / launcher_failure` 结束。此项使用新建测试 profile，不影响正式会话。
+
+实际 macOS 包的 `package_english_smoke.py` 已完整通过，没有复用原始管道旧报告。应用复制到含中文及空格的目录，清除外部 Java / classpath 环境并使用 `/usr/bin:/bin` 运行。机器入口、JVM 启动器、普通游戏启动器及 `libjvm.dylib` 四项均为 ARM64；深度严格签名和 plist 检查通过，包中没有测试类或旧反查类。运行时观测确认加载的是包内 Java 25.0.4 JVM 与 SQLite 3.53.4.0 JNI。
+
+- 两个审计库精确保存五个输入帧，覆盖 CRLF、非法 UTF-8、重复请求及无换行的 EOF 最后一帧；EOF 不推送额外响应。
+- 锁竞争拒绝且应急目录不变，正常重启没有虚构恢复记录。
+- 原始新手教程、中文窗口化设置、投掷取消不消耗物品、实际进食日志及显式保存回执均通过。
+- 进食显示对已核实：GUI `吃起来不错！`，公开日志 `That food tasted delicious!`；英文响应同时检查安全来源。
+- 第二个包内 JVM 恢复相同 run，历史请求响应逐值相同；两个独立 profile 的公开及内部数据库完整性均为 `ok`。
+
+验证命令如下；测试用 `caffeinate` 保持显示器唤醒，应用本身没有额外 Java 类或 agent：
+
+```sh
+/usr/bin/caffeinate -u -d python3 desktop-control/src/test/python/package_english_smoke.py \
+  --bundle "desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app" \
+  --expected-cli CLI.2.0.0
+```
+
+两个包测试入口的最终断言改动后，41 项 Python helper 再次通过。包测试驱动退出码为 0，所记录的 JVM PID 及相关测试进程均已退出；临时防休眠进程也已结束。验证后删除新建的 ledger / startup-failure 测试 profile、两份测试复制包及其 profile、Python 缓存和生成的 iOS 配置，共 326,680,622 字节。仓库保留一份当前 ARM64 应用、新开发运行时及构建测试报告；临时测试数据不作为用户存档交付。
+
+最后一笔签名提交只记录上述两个 Python 包测试契约和验收文档，生产源码与已验证包的构建标识保持不变。未推送、打 tag 或发布。
