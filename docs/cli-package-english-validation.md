@@ -1,5 +1,7 @@
 # 实际 ARM64 app 包的英文协议验收
 
+> 后续状态：用户随后授权清空全部本地生成数据，本文当时保留的应用/运行数据现也已移除；Git中的验证结果保留。参见[数据重置记录](cli-runtime-reset-20260912.md)。
+
 2026-09-12，实际 **CLI.0.8.12 ARM64应用包验收通过**。直接运行包内原生spdctl，在受限PATH且无外部Java/classpath/agent下重新执行原始管道与完整新局/保存重启两项，不复用旧版raw结果。GUI为简体中文、窗口化，公开CLI游戏文案为英语。
 
 当前源包：`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`。构建标识为 `0843377cce445854462f092faef076ab24c6669cdd85a261ef1d965b3542a031`，与本轮真实浮字pan回归一致。

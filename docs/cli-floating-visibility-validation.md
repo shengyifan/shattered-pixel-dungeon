@@ -1,5 +1,7 @@
 # 浮字的实际绘制可见性
 
+> 后续状态：用户随后授权清空全部本地生成数据，本文当时保留的应用/运行数据现也已移除；Git中的验证结果保留。参见[数据重置记录](cli-runtime-reset-20260912.md)。
+
 CLI.0.8.12 修复通用UI路径读取未绘制浮字全文的缺口。此前UiBridge只用visibleCueText决定是否添加presentation标记，缺标记的数字或可直接翻译文字仍可能通过原text字段公开；空节点和ID也可能泄漏其存在。
 
 现在FloatingText仅在原draw发生时登记，VisualCueCollector在完整GameScene.draw结束后，以实际视口和后来绘制的UI遮挡区域保存可见文字片段。下一帧开始与对象池revive都会清缓存。UiBridge在分配ID、创建节点和聚合父控件文字之前过滤无可见片段的浮字，查询不绘制、不重新布局、不调用战斗getter或推进RNG。默认未启用观察器时不生成额外的文字快照。
