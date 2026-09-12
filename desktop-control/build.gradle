@@ -24,6 +24,7 @@ tasks.register('crashAgentJar', Jar) {
     from { configurations.crashAgentRuntimeClasspath.collect { zipTree(it) } }
     manifest { attributes('Premain-Class': 'EngineBoundaryAgent') }
 }
+def helpDocument = rootProject.file('docs/cli-help.md')
 def catalogDirectory = layout.buildDirectory.dir('generated/control-catalog')
 tasks.register('generateBuildCatalog') {
     def modules = [project(':SPD-classes'), project(':core'), project(':desktop'), project(':control-protocol'), project(':game-control'), project(':desktop-control')]
@@ -31,6 +32,7 @@ tasks.register('generateBuildCatalog') {
     def compiled = modules.collect { it.layout.buildDirectory.dir('classes/java/main') }
     inputs.files(compiled)
     inputs.files(project(':core').fileTree('src/main/assets'), project(':desktop').fileTree('src/main/assets'))
+    inputs.file(helpDocument)
     outputs.dir(catalogDirectory)
     doLast {
         def entries = []
@@ -52,6 +54,7 @@ tasks.register('generateBuildCatalog') {
         [project(':core').file('src/main/assets'), project(':desktop').file('src/main/assets')].each { base ->
             fileTree(base).files.sort().each { file -> entries.add([path: rootProject.relativePath(file), bytes: file.length(), sha256: digestFile(file)]) }
         }
+        entries.add([path: rootProject.relativePath(helpDocument), bytes: helpDocument.length(), sha256: digestFile(helpDocument)])
         def encoded = groovy.json.JsonOutput.toJson(entries)
         def buildId = java.security.MessageDigest.getInstance('SHA-256').digest(encoded.getBytes('UTF-8')).encodeHex().toString()
         def output = new File(catalogDirectory.get().asFile, 'control-build.json')
@@ -64,6 +67,7 @@ tasks.register('generateBuildCatalog') {
 processResources {
     dependsOn generateBuildCatalog
     from catalogDirectory
+    from helpDocument
     from project(':core').file('src/main/assets')
     from project(':desktop').file('src/main/assets')
 }

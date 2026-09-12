@@ -2,9 +2,17 @@
 
 本文件是实现状态记录。2026-09-09 用户进一步要求先停止正式实战，改为直接构造中间状态覆盖全部场景；当时战士已正常保存退出。2026-09-12用户进一步授权清空全部本地运行数据，旧战士profile现已删除，随后要求直接升级至CLI.1.0.0并重新构建，取代先前CLI.0.9.0计划，并明确只需macOS版本。最终实战目标是仅使用包内 `spdctl run --machine` 从主菜单控制战士通关，并覆盖完整返程到地表。用户于 2026-09-09 将六职业分别通关的验收缩减为战士一局；全角色功能和专项覆盖要求继续保留。本次版本升级不修改游戏规则、协议版本或审计schema。
 
+## CLI.1.0.0 英文帮助补充
+
+新增`docs/cli-help.md`作为`--help`唯一内容来源：495行英文手册，覆盖七个协议入口、22类动作、18个JSON请求示例、主菜单到开局、多步交互、持续取消、历史和保存退出，并附Python管道示例。构建时将原文打入JAR资源并计入构建标识，不依赖运行时工作目录或源码文件。
+
+本批`:desktop-control:test`的96项测试通过，重新生成macOS ARM64应用。实际包在仓库外运行`--help`时，stdout与Markdown的24,027字节完全一致，stderr为空；`--version`保持CLI.1.0.0，未创建默认profile或审计库。包内资源、构建清单指纹和本地签名验证通过。当前构建ID为`04aa7e744fdb197b7623e0b74ed028a29ffbbf1ce1cac83a3f6f0a5a3bcbc742`，验证记录位于`desktop-control/build/help-validation/`。
+
+本批只验证帮助入口和打包，不启动游戏窗口；下方较早的完整游戏包测试保留其原构建身份和范围。
+
 ## CLI.1.0.0 macOS 构建验证
 
-2026-09-12使用原生ARM64 Temurin 25.0.4从clean重建；本次交付范围为macOS，未生成Android安装包或iOS IPA。初次根构建因无Android SDK停止后，排除Android完成构建和`:desktop-control:packageMacArm64`。生产版本提交为`2edd28393`；后续提交只更新验证文档。
+2026-09-12使用原生ARM64 Temurin 25.0.4从clean重建；本次交付范围为macOS，未生成Android安装包或iOS IPA。初次根构建因无Android SDK停止后，排除Android完成构建和`:desktop-control:packageMacArm64`。该批生产版本提交为`2edd28393`，验证文档提交为`244cba999`。
 
 - 应用：`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`，包含普通GUI、`spdctl`和内部`spdctl-jvm`启动器，均为ARM64；内置JVM和SQLite JDBC 3.53.4.0。
 - `--version`、`protocol.info`和包内`control-build.json`均为CLI.1.0.0；基础游戏3.3.8、协议1、审计schema 4。构建ID为`0b5333b87afabdcf9eefdef15b2141978f56dc128f115152b57c6ba9904c05b9`。

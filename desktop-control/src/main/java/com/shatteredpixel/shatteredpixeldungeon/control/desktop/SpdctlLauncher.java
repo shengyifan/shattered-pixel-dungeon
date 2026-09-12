@@ -15,8 +15,20 @@ public final class SpdctlLauncher {
     public static void main(String[] args){
         PrintStream protocol=new PrintStream(new FileOutputStream(FileDescriptor.out),true,StandardCharsets.UTF_8);
         PrintStream diagnostics=new PrintStream(new FileOutputStream(FileDescriptor.err),true,StandardCharsets.UTF_8);
-        if(args.length==1&&(args[0].equals("--help")||args[0].equals("--version"))){
-            protocol.println(args[0].equals("--version")?"CLI.1.0.0 (protocol 1, game 3.3.8)":"spdctl run --machine [--data-dir ABSOLUTE_PROFILE_DIRECTORY]");return;
+        if(args.length==1&&args[0].equals("--help")){
+            try(InputStream help=SpdctlLauncher.class.getResourceAsStream("/cli-help.md")){
+                if(help==null)throw new IOException("Missing bundled help resource");
+                byte[] bytes=help.readAllBytes();
+                protocol.write(bytes,0,bytes.length);
+                if(protocol.checkError())System.exit(1);
+            }catch(IOException failure){
+                diagnostics.println("spdctl: HELP_UNAVAILABLE (bundled cli-help.md could not be read)");
+                System.exit(1);
+            }
+            return;
+        }
+        if(args.length==1&&args[0].equals("--version")){
+            protocol.println("CLI.1.0.0 (protocol 1, game 3.3.8)");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
                 ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI")
