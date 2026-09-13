@@ -87,6 +87,13 @@ public class AttackIndicator extends Tag {
 	}
 	
 	@Override
+	public synchronized boolean hasPendingCallback() {
+		// Hidden indicators still retire their active input after the native delay.
+		// Let observers wait for that finite change without advancing the animation.
+		return exists && active && !bg.visible;
+	}
+
+	@Override
 	public synchronized void update() {
 		super.update();
 

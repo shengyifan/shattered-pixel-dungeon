@@ -1,6 +1,6 @@
 # spdctl 控制接口
 
-本 CLI 基于原版 **Shattered Pixel Dungeon 3.3.8**（上游基线 `7b8b845a7`、游戏版本码 `896`）扩展。当前 CLI 版本为 `CLI.2.1.0`，协议版本 `2`、审计 schema `5`。三个版本独立；完整迁移进度及验收范围见 [CLI 2.0 实施记录](cli2-implementation.md)。
+本 CLI 基于原版 **Shattered Pixel Dungeon 3.3.8**（上游基线 `7b8b845a7`、游戏版本码 `896`）扩展。当前 CLI 版本为 `CLI.2.1.1`，协议版本 `2`、审计 schema `5`。三个版本独立；完整迁移进度及验收范围见 [CLI 2.0 实施记录](cli2-implementation.md)。
 
 CLI 系统文案使用官方英文，GUI 可以选择任意已注册语言。原版 `Messages.get()`、`name()`、`desc()` 等接口继续返回 `String`；中央观测钩子按对象身份记录最终命中 key 和冻结参数，CLI 在玩家可见性筛选后输出英文和相邻的 `text_sources`。不根据中文、英文或其他字符串内容反查资源，不重建窗口或重跑显示分支。用户名字、笔记和外部内容保留原文及来源标记。
 
@@ -29,7 +29,7 @@ CLI 系统文案使用官方英文，GUI 可以选择任意已注册语言。原
 
 CLI 默认 profile 为 `~/Library/Application Support/Shattered Pixel Dungeon CLI v2/`，与普通 GUI 默认目录分开。指定的目录同时保存游戏进度与 `audit/public.sqlite3`、`audit/internal.sqlite3`；相同目录不能由两个游戏实例同时占用。
 
-CLI.2.1.0 默认同时打开独立 Terminal 原文查看器，记录全部 SEND / RECV 字节。关闭查看器不关闭游戏，使用 `spdctl trace open --session /absolute/session` 可以重开；`trace view` 在当前终端跟随。`--no-terminal` 仅关闭自动弹窗，记录继续；`--trace-dir` 指定与 profile 不重叠的记录根。默认记录位于 `~/Library/Logs/Shattered Pixel Dungeon CLI/transport/`，不自动删除。完整格式与故障边界见[传输记录与验收](cli-transport.md)。
+从 CLI.2.1.0 起，默认同时打开独立 Terminal 原文查看器，记录全部 SEND / RECV 字节。关闭查看器不关闭游戏，使用 `spdctl trace open --session /absolute/session` 可以重开；`trace view` 在当前终端跟随。`--no-terminal` 仅关闭自动弹窗，记录继续；`--trace-dir` 指定与 profile 不重叠的记录根。默认记录位于 `~/Library/Logs/Shattered Pixel Dungeon CLI/transport/`，不自动删除。完整格式与故障边界见[传输记录与验收](cli-transport.md)。
 
 只有启动前不存在或为空的 profile 才初始化为窗口化、简体中文、跳过游戏内教程及首次前言。已有目录的任何内容都会保留其原设置和迁移流程；不改已有教程存档，不自动读取指引或授予解锁。之后的 GUI 设置修改会保留。
 
@@ -70,6 +70,10 @@ CLI.2.1.0 默认同时打开独立 Terminal 原文查看器，记录全部 SEND 
 `history.list` 返回分页索引，`events.read` 返回公开事件；不提供通用 SQL、内部状态或诊断导出。每局可以复用另局的 ID，但必须显式指定作用域，不能把旧作用域的请求当成新局操作。
 
 ## 持续行动与退出
+
+`STALE_STATE` 表示原动作在游戏回调前被拒绝。教程渐显、攻击指示器延迟停用等有限交互变化应在稳定响应前完成；真实输入和上下文变化仍会使版本失效。服务端不自动替换版本或重放动作。
+
+允许恢复的客户端可以重新观察，在同一有效 scope、可操作阶段中核对目标、提示、资源及广告动作，重新取得 control/locator，再以新 ID 和新版本提交仍然合适的动作，并设置较小的次数上限。仅标签相同不足以证明动作含义不变。响应丢失先查原请求；成功、进行中或 UNKNOWN 均不能按陈旧拒绝重试。任务若要求出错暂停，应保留证据并停止操作。详见[英文手册中的恢复规则](cli-help.md#recovering-from-a-stale-state)。
 
 `in_progress` 不是失败，不得重发原 ID。用新 ID 查询原请求。当前支持原生休息及已经开始移动的连续路径取消；活动版本、目标原请求 ID 和审计顺序见 [持续取消](cli-runtime-cancellation.md)。每条请求只有一条线上响应，最终结果通过主动查询取得。
 

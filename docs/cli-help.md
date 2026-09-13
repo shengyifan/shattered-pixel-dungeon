@@ -32,7 +32,7 @@ errors use official English. Text fields carry parallel `text_sources` entries w
 resource keys and frozen arguments, or an explicit user/external origin. Keys aid
 interpretation; actions still use current controls, locators and state versions.
 
-CLI.2.1.0 uses protocol 2 and audit schema 5. Its default profile is
+CLI.2.1.1 uses protocol 2 and audit schema 5. Its default profile is
 `~/Library/Application Support/Shattered Pixel Dungeon CLI v2/`. An existing older
 audit schema is rejected before profile writes; it is never migrated or deleted.
 Select a new directory to start a v2 session.
@@ -408,6 +408,31 @@ game mutations are rejected as `BUSY` during pending execution.
 `STALE_STATE` or `STALE_ACTIVITY` means obtain a fresh observation and reconsider
 the choice. Both queries and rejected actions consume their IDs; use a new ID
 for the next request. A new ID does not make an old state version valid.
+
+### Recovering from a stale state
+
+`STALE_STATE` rejects an action before its game callback runs. It is a freshness
+check, not an instruction to repeat the old request with a substituted version.
+Finite UI continuations, including the tutorial reveal and attack-indicator
+retirement, finish before a stable response is returned. Real input, a changed
+prompt, or another decision-state change can still invalidate an older response.
+
+A controller may make a bounded new attempt after a stale rejection when its
+operating policy allows recovery:
+
+1. Obtain `state.get` with a new request ID. If the response was lost or ambiguous,
+   first use `request.get` to establish the original request's outcome.
+2. Check the current scope, phase, target, prompt, resources, and advertised action.
+   Reacquire control IDs and item locators. A matching label alone does not establish
+   that the target or operation still has the same meaning.
+3. Reconsider the intended action against that observation. Send a new request ID
+   and the observed version only if the action is still appropriate. Stop if the
+   context changed, or if a small explicit attempt limit is exhausted.
+
+The server never silently updates a submitted version or replays a rejected game
+action. Do not retry completed actions, `in_progress`, `EXECUTION_UNKNOWN`, or
+`EXECUTION_UNCERTAIN` as though they were stale rejections. If the task requires
+stopping on an error, preserve the request and response and stop game actions.
 
 ## 9. Events, history, and failures
 

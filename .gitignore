@@ -24,3 +24,4 @@ local.properties
 
 # Local spdctl incident traces; commit the accompanying Markdown reports.
 /docs/cli-issues/*-public-evidence.json
+/docs/cli-issues/evidence/

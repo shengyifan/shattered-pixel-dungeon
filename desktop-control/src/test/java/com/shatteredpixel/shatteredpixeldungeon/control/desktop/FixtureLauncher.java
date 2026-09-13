@@ -110,6 +110,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("floating") && FloatingVisibilityFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("boundary") && AttackBoundaryFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("ending") && EndingScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("inspect") && InspectedItemFixtures.supports(name)) {
@@ -322,6 +324,9 @@ public final class FixtureLauncher {
         }
         if (fixture.kind.equals("floating")) {
             FloatingVisibilityFixtures.prepare(hero);return null;
+        }
+        if (fixture.kind.equals("boundary")) {
+            AttackBoundaryFixtures.prepare(fixture.name, hero);return null;
         }
         if(fixture.kind.equals("ending")){EndingScenarioFixtures.prepare(fixture.name,hero);return null;}
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;

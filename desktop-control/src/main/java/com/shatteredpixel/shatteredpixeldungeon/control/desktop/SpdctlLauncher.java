@@ -29,7 +29,7 @@ public final class SpdctlLauncher {
             return;
         }
         if(args.length==1&&args[0].equals("--version")){
-            protocol.println("CLI.2.1.0 (protocol 2, game 3.3.8)");return;
+            protocol.println("CLI.2.1.1 (protocol 2, game 3.3.8)");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
                 ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v2")
