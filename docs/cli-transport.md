@@ -61,3 +61,9 @@ Java 启动器在创建本轮 profile 内容之前判断目录：不存在或为
 先删除 13 处旧生成路径，共 507,418,762 字节；最终 native 边界修正完成后再次清空候选产物并全量重建，避免源码、native 二进制和构建清单错配。最终离线无缓存构建在 48 秒完成，33 个任务全部执行，377 项 Java 测试重新通过。构建清单中的 native 源码、开发入口与构建参数摘要和最终源码一致。
 
 实际包 `--version` 和开发入口均输出 `CLI.2.1.0 (protocol 2, game 3.3.8)`；28,783 字节帮助与仓库手册完全相同。ARM64、深度严格签名、包内 JVM 与 SQLite JNI 通过核验；开发运行时冻结的 native 文件与本次编译结果逐字节一致。两份原实战问题 JSON 的大小和修改时间保持不变。
+
+实际包另行验证旧 schema 1 / 2 / 3 / 4：四项均在启动游戏之前返回 `AUDIT_SCHEMA_UNSUPPORTED`，退出码 1、stdout 为空；各 profile 的文件摘要、修改时间和目录项完全不变，记录仅写入其独立测试根。
+
+真实自动弹窗验证已启动一个新的中文窗口化标题会话；系统 Terminal 自动产生本会话的 native `trace view` 进程，关联真实 `ttys000`。但 Computer Use 工具明确禁止访问 Terminal，无法代点窗口关闭按钮；人工确认在测试等待期内未返回，所以**真实红色关闭按钮的人工 UI 验收未完成**。查看器进程的关闭／重开隔离已由 native 测试及实际游戏被动查看器测试验证，不把这两类证据混写。等待结束后测试游戏通过 CLI 正常退出、原文正常收尾，只终止了本次测试的 native 查看器；没有操控其他 Terminal 窗口。
+
+源码及已验证测试的签名提交为 `11ef57f01`（`feat: add CLI 2.1 wire recording and independent terminal viewer`），`git verify-commit --raw` 返回 GOODSIG / VALIDSIG。之后清除测试 profile、测试复制包、原文测试数据、Python 缓存及生成的 iOS 配置，共 197,191,356 字节，保留一份当前 ARM64 应用、冻结开发运行时和 Java 测试报告。最终记录补充仅改文档，不改变已验证构建。未推送、打 tag 或发布。
