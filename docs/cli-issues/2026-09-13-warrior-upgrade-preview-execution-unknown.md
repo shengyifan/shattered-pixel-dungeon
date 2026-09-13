@@ -158,7 +158,7 @@
 
 ## 附件
 
-- 关键公开请求、读回、事件及完整简要时间线：同目录 `2026-09-13-warrior-upgrade-preview-execution-unknown-public-evidence.json`，仅本地保留，不随 Git 提交。
+- 原本地附件 `2026-09-13-warrior-upgrade-preview-execution-unknown-public-evidence.json` 曾记录关键公开请求、读回、事件及完整简要时间线；2026-09-13 本次 CLI.3.0.0 清理重建已按用户要求删除该附件。
 - [上一轮教程状态版本问题](2026-09-12-warrior-tutorial-stale-state.md)
 
-原始 JSON 附件的游戏数据全部来自 spdctl 公开响应。时间线保留本轮连续编号请求的 ID、动作、版本和摘要，关键步骤保留完整响应；没有复制原始 Codex 会话或内部游戏数据。原始 JSON 不提交 Git，Markdown 问题记录随修复提交。
+原 JSON 附件的游戏数据全部来自 spdctl 公开响应。当时的时间线记录了本轮连续编号请求的 ID、动作、版本和摘要，关键步骤记录了完整响应；没有复制原始 Codex 会话或内部游戏数据。本文继续保留问题分析摘要。

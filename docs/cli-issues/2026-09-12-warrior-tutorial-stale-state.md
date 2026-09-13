@@ -82,7 +82,7 @@
 - 角色仍为 cell=725（地图宽 41，零起点 x=28、y=17），第 1 层，等级 1，HP 20/20，力量 10，经验 0/10，金币 0。
 - 后续第二次 state.get 仍返回 :14、player_ready 和同一位置/生命，没有继续版本变化。
 
-完整请求/响应记录在同目录的 `2026-09-12-warrior-tutorial-stale-state-public-evidence.json`，仅本地保留，不随 Git 提交。其中包含 request.get 通过公开接口返回的历史快照；这些不是直接读取存档或数据库得到的数据。证据中的 received_at 是控制客户端收到并整理完整响应的时刻，游戏侧请求时间以 request.get 记录为准。
+完整请求/响应曾记录在同目录的 `2026-09-12-warrior-tutorial-stale-state-public-evidence.json`；2026-09-13 本次 CLI.3.0.0 清理重建已按用户要求删除该本地附件，本文保留分析摘要。原附件包含 request.get 通过公开接口返回的历史快照；这些不是直接读取存档或数据库得到的数据。原证据中的 received_at 是控制客户端收到并整理完整响应的时刻，游戏侧请求时间以当时的 request.get 记录为准。
 
 ## 源码定位与判断
 

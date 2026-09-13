@@ -7,6 +7,7 @@
 - [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
 - [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
 - [CLI.3.0.0 实现与验收](cli3-implementation.md)：短协议、彩色查看器、完整收发、token 基准与实际包验证。
+- [CLI.3.0.0 当前清理重建](cli-rebuild-3.0.0-20260913.md)：删除旧产物及实战故障 JSON、全量 ARM64 构建和本轮包验证。
 - [历史实施记录](cli-implementation.md)：旧版模块、规则边界及验证说明。
 - [CLI.2.1.1 状态边界修复](cli-issues/2026-09-13-cli-2.1.1-stale-state-fixes.md)：击杀后的延迟停用、原教程复验、陈旧状态恢复规则及包验证。
 - [CLI.2.1.0 传输记录与验收](cli-transport.md)：独立终端原文展示、新 profile 默认设置和实际包验证。
@@ -23,7 +24,7 @@
 
 新测试的原始JSON/NDJSON、profile、数据库和结构化报告应写入被忽略的build输出目录，不再作为历史结果JSON平铺提交到docs。需要提交的验证结论使用简洁Markdown，明确版本、范围、结果和限制。已有专项Markdown保留为历史说明，配套旧JSON引用已解除。
 
-`docs/cli-issues/` 中只提交 Markdown 问题说明与修复结论；已有的 `*-public-evidence.json` 和 `evidence/` 下文件是本地实战证据，由 `.gitignore` 排除，保留在原位置供本机后续排查。
+`docs/cli-issues/` 中只保留 Markdown 问题说明与修复结论。2026-09-13 本次 CLI.3.0.0 清理重建按用户要求删除了旧 build 产物，以及两份 `*-public-evidence.json` 和 `evidence/` 下的一份本地实战故障 JSON；本文及专项说明保留历史结论，附件已不在本地。相关 `.gitignore` 规则继续保留。
 
 英文语料工具只接受显式指定的当前公开trace或已有输入清单，不再依赖已删除的历史报告。
 

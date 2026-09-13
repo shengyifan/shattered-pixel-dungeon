@@ -1,6 +1,6 @@
 # 两次 spdctl 实战异常的修复与验证
 
-> 后续清理说明：2026-09-13 用户要求移除旧 build 并重建当前 macOS CLI。本页列出的旧 build 原始报告、测试 profile 和冻结运行时已清理，验证结论保留为历史事实；docs 中两份本地公开故障 JSON 仍保留。最新产物及新一轮验证见[完整重建记录](../cli-rebuild-20260913.md)。
+> 后续清理说明：2026-09-13 本次 CLI.3.0.0 清理重建已按用户要求删除旧 build 产物及三份本地实战故障 JSON。本页列出的旧原始报告、测试 profile、冻结运行时及附件已不在本地，验证结论保留为历史事实。[CLI.1.0.1 完整重建记录](../cli-rebuild-20260913.md)也仅代表当时批次。
 
 2026-09-13，基于 `feature/mac-cli` 的 `da53ba6c054d084ba138af8f19be7b05e921593b` 整理本批修复。修复先在 CLI.1.0.0 验证，随后按用户约定补升为 CLI.1.0.1；游戏 3.3.8、协议 1、审计 schema 4 不变。本批修复未推送或发布。
 
@@ -98,7 +98,7 @@ python3 desktop-control/src/test/python/upgrade_preview_smoke.py
 ./gradlew :desktop-control:packageMacArm64 --offline --console=plain
 ```
 
-本地原始证据保留在忽略的 build 输出中：
+当时的本地原始证据位于以下被忽略的 build 输出中，现已清理：
 
 - `desktop-control/build/fixtures/upgrade-baseline-a9b9b47d0f3445d39b06b778724146f5/baseline-diagnostic-summary.json`：旧引擎复现及测试异常栈。
 - `desktop-control/build/tutorial-boundary-validation.json`：教程两种界面。
