@@ -19,7 +19,7 @@ public class MachineSessionWireTest {
 
     @Test public void invalidUtf8HasNoInventedIdAndDoesNotDesynchronizeTheNextRequest()throws Exception{
         byte[] invalid={(byte)0xc3,(byte)0x28,(byte)'\n'};
-        byte[] valid="{\"protocol_version\":2,\"id\":\"wire-ok\",\"op\":\"protocol.info\"}\r\n".getBytes(StandardCharsets.UTF_8);
+        byte[] valid="{\"v\":3,\"id\":\"wire-ok\",\"op\":\"info\"}\r\n".getBytes(StandardCharsets.UTF_8);
         ByteArrayOutputStream input=new ByteArrayOutputStream();input.write(invalid);input.write(valid);
         ByteArrayOutputStream output=new ByteArrayOutputStream();
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
@@ -39,8 +39,8 @@ public class MachineSessionWireTest {
             }
             String[] lines=output.toString("UTF-8").strip().split("\\R");assertEquals(2,lines.length);
             Map<String,Object> first=JsonCodec.decode(lines[0]);assertNull(first.get("id"));
-            assertEquals("INVALID_ENCODING",((Map<?,?>)first.get("error")).get("code"));
-            Map<String,Object> second=JsonCodec.decode(lines[1]);assertEquals("wire-ok",second.get("id"));assertEquals(Boolean.TRUE,second.get("ok"));
+            assertEquals("INVALID_ENCODING",first.get("err"));
+            Map<String,Object> second=JsonCodec.decode(lines[1]);assertEquals("wire-ok",second.get("id"));assertFalse(second.containsKey("err"));
             for(java.nio.file.Path database:Arrays.asList(store.publicDatabase(),store.internalDatabase())){
                 try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+database);Statement statement=db.createStatement();
                     ResultSet rows=statement.executeQuery("SELECT id,raw_bytes FROM exchanges ORDER BY sequence")){

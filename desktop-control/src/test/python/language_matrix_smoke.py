@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Protocol 2 provenance matrix on disposable test profiles; no direct save reads."""
+"""Protocol 3 provenance matrix on disposable test profiles; no direct save reads."""
 import argparse
 import json
 import os
@@ -49,14 +49,16 @@ def validate(value, path="$", failures=None):
 class MatrixClient(FixtureClient):
     def act(self, action, **args):
         response = super().act(action, **args)
-        if response.get("ok"):
-            failures = validate(response.get("result"))
-            assert not failures, {"source_failures": failures[:30], "action": action}
+        if response.get("ok") and action != "app.quit":
+            observed = self.state(source=True)
+            assert observed["state_version"] == response["result"]["state_version"], "Source detail must describe the same settled state"
         return response
 
     def request(self, op, args=None, **kwargs):
+        if op == "state.get":
+            args = {**(args or {}), "src": True}
         response = super().request(op, args, **kwargs)
-        if response.get("ok") and isinstance(response.get("result"), dict):
+        if response.get("ok") and op == "state.get":
             failures = validate(response["result"])
             assert not failures, {"source_failures": failures[:30], "op": op}
         return response
@@ -64,7 +66,7 @@ class MatrixClient(FixtureClient):
 
 def exercise(root, classpath, code, fixture="class:WARRIOR"):
     os.environ["SPDCTL_TEST_LANGUAGE"] = code
-    profile = root / "desktop-control/build/fixtures" / ("cli2-language-" + code + "-" + uuid.uuid4().hex)
+    profile = root / "desktop-control/build/fixtures" / ("cli3-language-" + code + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
@@ -74,7 +76,7 @@ def exercise(root, classpath, code, fixture="class:WARRIOR"):
               "test_fixture": True, "counts_as_win": False}
     try:
         hello = client.request("protocol.info")
-        assert hello["result"]["protocol_version"] == 2, hello
+        assert hello["protocol_version"] == 3, hello
         report["build_id"] = hello["result"]["build_id"]
         state = start_warrior(client)
         assert state["observation"]["ui"]["display"]["language"] == code

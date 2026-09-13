@@ -38,7 +38,7 @@ def main():
         assert initial and initial["success"], initial
         assert initial["scope_id"] == run
         assert initial["origin_scope_id"] == menu and initial["origin_request_id"], initial
-        initial_record = client.request("request.get", {"target_id": initial["origin_request_id"]}, scope=menu)
+        initial_record = client.request("request.get", {"target_id": initial["origin_request_id"], "get": ["reply"]}, scope=menu)
         initial_receipts = initial_record["result"]["response"]["result"]["persistence"]["saves_during_request"]
         assert any(r["receipt_id"] == initial["receipt_id"] for r in initial_receipts), initial_record
 
@@ -73,9 +73,9 @@ def main():
         second = client.request("action.execute", {"action": "game.save"}, request_id="later-save")
         assert second.get("ok"), second
         assert second["result"]["persistence"]["last_save"]["receipt_id"] != receipt["receipt_id"]
-        original = client.request("request.get", {"target_id": "explicit-save"})
+        original = client.request("request.get", {"target_id": "explicit-save", "get": ["reply"]})
         assert original["result"]["response"] == saved, original
-        unchanged = client.request("request.get", {"target_id": "unsaved-ui"})
+        unchanged = client.request("request.get", {"target_id": "unsaved-ui", "get": ["reply"]})
         assert unchanged["result"]["response"] == opened, unchanged
         before_eof = client.state()["last_save"]
         client.process.stdin.close()
@@ -90,7 +90,7 @@ def main():
                          and e["data"]["receipt_id"] != before_eof["receipt_id"]
                          and e["data"]["origin_request_id"] is None and e["data"]["success"]]
             assert eof_saves, events
-            record = restarted.request("request.get", {"target_id": "explicit-save"}, scope=run)
+            record = restarted.request("request.get", {"target_id": "explicit-save", "get": ["reply"]}, scope=run)
             assert record["result"]["response"] == saved, record
             restarted.finish()
         finally:

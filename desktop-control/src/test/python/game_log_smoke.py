@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import time
 import uuid
+from protocol3 import pages
 import zipfile
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game, act
 from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
@@ -39,13 +40,10 @@ def stage(client, profile, mode):
 
 
 def events(client, scope):
-    cursor=0;found=[]
-    while True:
-        response=client.request("events.read",{"after":cursor,"limit":100},scope=scope);assert response["ok"],response
-        rows=response["result"]
+    found=[]
+    for rows in pages(client,"events.read",scope=scope):
         found.extend(e for e in rows if e["kind"]=="game.log")
-        if len(rows)<100:return found
-        cursor=rows[-1]["sequence"]
+    return found
 
 
 def rendered(events):

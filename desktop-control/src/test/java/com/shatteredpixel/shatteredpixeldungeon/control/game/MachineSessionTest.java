@@ -35,7 +35,7 @@ public class MachineSessionTest {
 
     @Test public void malformedArgumentsConsumeTheIdBeforeAnyRuntimeCall() throws Exception {
         try (Harness h = harness()) {
-            h.accept("{\"protocol_version\":2,\"scope_id\":\"run:a\",\"id\":\"bad\",\"op\":\"action.execute\",\"args\":[]}");
+            h.accept("{\"v\":3,\"s\":\"run:a\",\"id\":\"bad\",\"op\":\"wait\",\"args\":[]}");
             assertEquals("INVALID_REQUEST", error(h.last()));
             assertEquals("REJECTED", h.store.getRequest("run:a", "bad").get("status"));
             int observations = h.game.observations;
@@ -69,9 +69,9 @@ public class MachineSessionTest {
                 assertNotNull(request.get("target_scope"));
             };
             h.game.executing = ignored -> ordering.add(String.valueOf(h.store.getRequest(menu, "start").get("status")));
-            h.send("start", "action.execute", map("action", "start"));
+            h.send("start", "action.execute", map("action", "ui.activate", "control", "start"));
             assertEquals(java.util.Arrays.asList("EXECUTING", "EXECUTING"), ordering);
-            assertEquals(Boolean.TRUE, h.last().get("ok"));
+            assertFalse(h.last().containsKey("err"));
         }
     }
 
@@ -80,13 +80,13 @@ public class MachineSessionTest {
             CompletableFuture<GameController.State> action = new CompletableFuture<>();
             h.game.next = action;
             h.send("slow", "action.execute", map("action", "wait"));
-            assertEquals("in_progress", h.last().get("status"));
+            assertEquals("in_progress", h.last().get("st"));
             h.send("during", "state.get", map());
-            Map<?, ?> result = (Map<?, ?>) h.last().get("result");
+            Map<?, ?> result = (Map<?, ?>) h.last().get("data");
             assertEquals("resolving", result.get("phase"));
             assertEquals("last_stable", result.get("snapshot_status"));
-            assertNull(result.get("state_version"));
-            assertEquals(Collections.emptyList(), result.get("actions"));
+            assertNull(h.last().get("rev"));
+            assertEquals(Collections.emptyList(), result.get("acts"));
             h.send("blocked", "action.execute", map("action", "wait"));
             assertEquals("BUSY", error(h.last()));
             assertEquals(1, h.game.executions);
@@ -95,8 +95,8 @@ public class MachineSessionTest {
             action.complete(after);
             h.send("result", "request.get", map("target_id", "slow"));
             assertEquals(4, h.responses().size());
-            assertEquals("COMPLETED", ((Map<?, ?>) h.last().get("result")).get("status"));
-            assertEquals("in_progress", recordedResponse(h.store, 1).get("status"));
+            assertEquals("COMPLETED", ((Map<?, ?>) h.last().get("data")).get("st"));
+            assertEquals("in_progress", recordedResponse(h.store, 1).get("st"));
         }
     }
 
@@ -112,7 +112,7 @@ public class MachineSessionTest {
             assertFalse(h.output.toString("UTF-8").contains("PRIVATE_ENGINE_DETAIL"));
             h.game.synchronousFailure = null;
             h.send("observe", "state.get", map());
-            assertEquals("execution_unknown", ((Map<?, ?>) h.last().get("result")).get("phase"));
+            assertEquals("execution_unknown", ((Map<?, ?>) h.last().get("data")).get("phase"));
             h.send("new-action", "action.execute", map("action", "wait"));
             assertEquals("EXECUTION_UNCERTAIN", error(h.last()));
             assertEquals(1, h.game.executions);
@@ -126,10 +126,10 @@ public class MachineSessionTest {
             h.send("late", "action.execute", map("action", "wait"));
             action.completeExceptionally(new IllegalStateException("PRIVATE_LATE_ERROR"));
             h.send("result", "request.get", map("target_id", "late"));
-            assertEquals("UNKNOWN", ((Map<?, ?>) h.last().get("result")).get("status"));
+            assertEquals("UNKNOWN", ((Map<?, ?>) h.last().get("data")).get("st"));
             assertNull(h.store.getRequest("run:a", "late").get("after_snapshot"));
             assertEquals(2, h.responses().size());
-            assertEquals("in_progress", recordedResponse(h.store, 1).get("status"));
+            assertEquals("in_progress", recordedResponse(h.store, 1).get("st"));
         }
     }
 
@@ -139,7 +139,7 @@ public class MachineSessionTest {
             AuditStore.Attempt old = h.store.begin("run:old", "old", "state.get", "{}");
             h.store.complete(old, "COMPLETED", map("old", true), map("known", "old run"), map("private", "old"), null);
             h.game.state = state("run:a", "v1", "player_ready", "OTHER_RUN_PUBLIC_SENTINEL");
-            h.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", "run:old", "id", "history", "op", "history.list")));
+            h.accept(V3Requests.encode(map("protocol_version", 3, "scope_id", "run:old", "id", "history", "op", "history.list")));
             assertFalse(h.output.toString("UTF-8").contains("OTHER_RUN_PUBLIC_SENTINEL"));
             String audit = JsonCodec.encode(h.store.getRequest("run:old", "history"));
             assertFalse(audit.contains("OTHER_RUN_PUBLIC_SENTINEL"));
@@ -155,7 +155,7 @@ public class MachineSessionTest {
             assertEquals("REJECTED", h.store.getRequest("run:a", "stale").get("status"));
             h.game.synchronousFailure = null;
             h.send("fresh", "action.execute", map("action", "wait"));
-            assertEquals(Boolean.TRUE, h.last().get("ok"));
+            assertFalse(h.last().containsKey("err"));
             assertEquals(2, h.game.executions);
         }
     }
@@ -163,7 +163,9 @@ public class MachineSessionTest {
     @Test public void repeatedHistoryQueriesReturnIndexesWithoutRecursivePayloads() throws Exception {
         try (Harness h = harness()) {
             for (int i = 0; i < 8; i++) h.send("history-" + i, "history.list", map());
-            List<?> result = (List<?>) h.last().get("result");
+            Map<?,?> page = (Map<?,?>)h.last().get("data");
+            assertEquals(true, page.get("end")); assertNull(page.get("next"));
+            List<?> result = (List<?>) page.get("items");
             assertEquals(8, result.size());
             for (Object entry : result) {
                 Map<?, ?> row = (Map<?, ?>) entry;
@@ -206,7 +208,7 @@ public class MachineSessionTest {
             h.game.state = new GameController.State("run:a", "won-version", "ended", map("scene", "surface"),
                     map("private", "cause-not-public"), Collections.emptyList(), ended.data());
             h.send("won", "state.get", map());
-            assertEquals("won", ((Map<?, ?>) ((Map<?, ?>) h.last().get("result")).get("run_outcome")).get("result"));
+            assertEquals("won", ((Map<?, ?>) ((Map<?, ?>) h.last().get("data")).get("run_outcome")).get("result"));
             Map<String, Object> event = h.store.events("run:a", 0, 10).get(0);
             assertEquals("run.ended", event.get("kind"));
             assertEquals(ended.data(), event.get("data"));
@@ -241,7 +243,7 @@ public class MachineSessionTest {
             assertEquals(1, h.responses().size());
             assertEquals("EXECUTING", h.store.getRequest("run:a", "slow").get("status"));
             assertThrows(java.util.concurrent.ExecutionException.class,
-                    () -> h.session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", "run:a", "id", "next", "op", "action.execute", "args", map("action", "wait")))).get());
+                    () -> h.session.accept(V3Requests.encode(map("protocol_version", 3, "scope_id", "run:a", "id", "next", "op", "action.execute", "args", map("action", "wait")))).get());
             assertEquals(1, h.game.executions);
         }
     }
@@ -260,7 +262,7 @@ public class MachineSessionTest {
             store.ensureScope("run:a", "run", "a");
             FakeGame game = new FakeGame();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(broken, true, "UTF-8"), 30)) {
-                session.accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", "run:a", "id", "query", "op", "state.get"))).get(5, TimeUnit.SECONDS);
+                session.accept(V3Requests.encode(map("protocol_version", 3, "scope_id", "run:a", "id", "query", "op", "state.get"))).get(5, TimeUnit.SECONDS);
                 assertEquals(1, attempts[0]);
                 assertEquals("COMPLETED", store.getRequest("run:a", "query").get("status"));
                 assertEquals(Boolean.FALSE, store.history("run:a", 0, 10).get(0).get("output_succeeded"));
@@ -270,7 +272,7 @@ public class MachineSessionTest {
     }
 
     private Harness harness() throws Exception { return new Harness(temporary.newFolder().toPath()); }
-    private static String error(Map<String, Object> response) { return String.valueOf(((Map<?, ?>) response.get("error")).get("code")); }
+    private static String error(Map<String, Object> response) { return String.valueOf(response.get("err")); }
     private static Map<String, Object> recordedResponse(AuditStore store, long sequence) throws Exception {
         try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + store.publicDatabase()); Statement statement = db.createStatement();
              java.sql.ResultSet rs = statement.executeQuery("SELECT response_json FROM exchanges WHERE sequence=" + sequence)) {
@@ -320,7 +322,7 @@ public class MachineSessionTest {
         }
         void accept(String raw) throws Exception { session.accept(raw).get(5, TimeUnit.SECONDS); }
         void send(String id, String op, Map<String, Object> args) throws Exception {
-            accept(JsonCodec.encode(map("protocol_version", 2, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args)));
+            accept(V3Requests.encode(map("protocol_version", 3, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args)));
         }
         List<Map<String, Object>> responses() throws Exception {
             List<Map<String, Object>> result = new ArrayList<>();

@@ -242,7 +242,7 @@ public class AuditStoreTest {
                 s.execute("UPDATE metadata SET value='1' WHERE key='schema_version'");
             }
         }
-        AuditSchemaFiveTest.assertRejectedWithoutChanges(root);
+        AuditSchemaSixTest.assertRejectedWithoutChanges(root);
     }
 
     @Test public void realProcessCrashAfterAnExternalEffectIsUnknownAndNeverReplayable() throws Exception {

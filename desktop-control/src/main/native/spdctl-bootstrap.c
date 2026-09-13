@@ -327,20 +327,125 @@ static int read_session_file(int directory, const char *name) {
     }
     return fd;
 }
-typedef struct { unsigned char bytes[4]; size_t count; } TextTail;
-static bool read_range(int fd, uint64_t offset, uint64_t size, TextTail *tail, bool *ends_newline) {
+typedef enum { PLAIN, KEY, STRING, NUMBER, LITERAL, PUNCT, SEND_COLOR, RECV_COLOR, ERROR_COLOR } TextColor;
+static const char *ansi_colors[] = {"\033[0m", "\033[34m", "\033[32m", "\033[33m", "\033[35m", "\033[2m", "\033[36m", "\033[32m", "\033[31m"};
+typedef struct {
+    unsigned char tail[4];
+    size_t tail_count, depth, capacity;
+    char *containers;
+    bool message_open, escaped;
+    TextColor token;
+    uint64_t timestamp, sequence;
+} TextStream;
+typedef struct {
+    TextStream streams[3];
+    bool color, line_start;
+    int last_stream;
+    TextColor active_color;
+} Viewer;
+static bool set_color(Viewer *viewer, TextColor color) {
+    if (viewer->active_color == color) return true;
+    viewer->active_color = color;
+    return !viewer->color || fputs(ansi_colors[color], stdout) != EOF;
+}
+static void reset_json(TextStream *stream) {
+    stream->depth = 0; stream->token = PLAIN; stream->escaped = false;
+}
+/* Store only the nesting grammar and the current token, never a JSON frame or
+ * string. A stack entry is '[' for arrays, '{' while expecting an object key,
+ * and ':' while expecting its value. Invalid JSON remains displayable. */
+static bool token_color(TextStream *stream, unsigned char byte, TextColor *color) {
+    if (stream->token == KEY || stream->token == STRING) {
+        *color = stream->token;
+        if (stream->escaped) stream->escaped = false;
+        else if (byte == '\\') stream->escaped = true;
+        else if (byte == '"') stream->token = PLAIN;
+        return true;
+    }
+    if (stream->token == NUMBER || stream->token == LITERAL) {
+        bool number = (byte >= '0' && byte <= '9') || byte == '.' || byte == '-' || byte == '+' || byte == 'e' || byte == 'E';
+        bool letter = byte >= 'a' && byte <= 'z';
+        if ((stream->token == NUMBER && number) || (stream->token == LITERAL && letter)) {
+            *color = stream->token; return true;
+        }
+        stream->token = PLAIN;
+    }
+    *color = PLAIN;
+    if (byte == '"') {
+        stream->token = stream->depth && stream->containers[stream->depth - 1] == '{' ? KEY : STRING;
+        *color = stream->token;
+    } else if (byte == '{' || byte == '[') {
+        if (stream->depth == stream->capacity) {
+            size_t capacity = stream->capacity ? stream->capacity * 2 : 32;
+            if (capacity < stream->capacity) return false;
+            char *containers = realloc(stream->containers, capacity);
+            if (!containers) return false;
+            stream->containers = containers; stream->capacity = capacity;
+        }
+        stream->containers[stream->depth++] = (char)byte; *color = PUNCT;
+    } else if (byte == '}' || byte == ']') {
+        if (stream->depth) stream->depth--;
+        *color = PUNCT;
+    } else if (byte == ':' || byte == ',') {
+        if (stream->depth && stream->containers[stream->depth - 1] != '[')
+            stream->containers[stream->depth - 1] = byte == ':' ? ':' : '{';
+        *color = PUNCT;
+    } else if ((byte >= '0' && byte <= '9') || byte == '-') {
+        stream->token = *color = NUMBER;
+    } else if (byte == 't' || byte == 'f' || byte == 'n') {
+        stream->token = *color = LITERAL;
+    }
+    return true;
+}
+static bool viewer_header(Viewer *viewer, int direction, uint64_t timestamp, uint64_t sequence, bool continued) {
+    static const char *names[] = {"SEND", "RECV", "ERROR"};
+    static const TextColor colors[] = {SEND_COLOR, RECV_COLOR, ERROR_COLOR};
+    if (!set_color(viewer, PLAIN) || (!viewer->line_start && fputc('\n', stdout) == EOF)
+        || !set_color(viewer, colors[direction])
+        || printf("[%" PRIu64 ".%09" PRIu64 "] #%" PRIu64 " %s%s", timestamp / UINT64_C(1000000000),
+                  timestamp % UINT64_C(1000000000), sequence, names[direction], continued ? " (continued)" : "") < 0
+        || !set_color(viewer, PLAIN) || fputc('\n', stdout) == EOF) return false;
+    viewer->line_start = true; viewer->last_stream = direction;
+    return true;
+}
+static size_t utf8_unit(const unsigned char *data, size_t size) {
+    unsigned char byte = data[0];
+    size_t count = byte >= 0xc2 && byte <= 0xdf ? 2 : byte >= 0xe0 && byte <= 0xef ? 3 : byte >= 0xf0 && byte <= 0xf4 ? 4 : 1;
+    if (count > size) return 1;
+    for (size_t i = 1; i < count; i++) if ((data[i] & 0xc0) != 0x80) return 1;
+    return count;
+}
+static bool render_bytes(Viewer *viewer, int direction, const unsigned char *data, size_t size) {
+    TextStream *stream = &viewer->streams[direction];
+    for (size_t i = 0; i < size; ) {
+        if (!stream->message_open || viewer->last_stream != direction) {
+            if (!viewer_header(viewer, direction, stream->timestamp, stream->sequence, stream->message_open)) return false;
+            stream->message_open = true;
+        }
+        unsigned char byte = data[i];
+        TextColor color = PLAIN;
+        if (direction != 2 && !token_color(stream, byte, &color)) return false;
+        if (byte == '\n') color = PLAIN;
+        size_t count = byte < 0x80 ? 1 : utf8_unit(data + i, size - i);
+        if (!set_color(viewer, color) || !safe_text(data + i, count)) return false;
+        viewer->line_start = byte == '\n';
+        if (byte == '\n') { stream->message_open = false; reset_json(stream); }
+        i += count;
+    }
+    return true;
+}
+static bool read_range(int fd, uint64_t offset, uint64_t size, Viewer *viewer, int direction) {
+    TextStream *stream = &viewer->streams[direction];
     unsigned char data[BUFFER_SIZE + 4];
-    *ends_newline = false;
     while (size) {
-        memcpy(data, tail->bytes, tail->count);
+        memcpy(data, stream->tail, stream->tail_count);
         size_t count = size > BUFFER_SIZE ? BUFFER_SIZE : (size_t)size;
         ssize_t read_count;
-        do { read_count = pread(fd, data + tail->count, count, (off_t)offset); } while (read_count < 0 && errno == EINTR);
+        do { read_count = pread(fd, data + stream->tail_count, count, (off_t)offset); } while (read_count < 0 && errno == EINTR);
         if (read_count <= 0) return false;
         offset += (uint64_t)read_count; size -= (uint64_t)read_count;
-        size_t available = tail->count + (size_t)read_count, display = available;
-        /* A UTF-8 codepoint can cross OS reads and trace events. The at-most-three
-         * byte tail belongs to this direction, not to a particular event. */
+        size_t available = stream->tail_count + (size_t)read_count, display = available;
+        /* A UTF-8 codepoint can cross reads and events, independently per stream. */
         for (size_t back = 1; back <= 3 && back <= available; back++) {
             unsigned char byte = data[available - back];
             if (byte >= 0xc2 && byte <= 0xf4) {
@@ -350,41 +455,50 @@ static bool read_range(int fd, uint64_t offset, uint64_t size, TextTail *tail, b
             }
             if ((byte & 0xc0) != 0x80) break;
         }
-        if (!safe_text(data, display)) return false;
-        if (display) *ends_newline = data[display - 1] == '\n';
-        tail->count = available - display;
-        if (tail->count) memcpy(tail->bytes, data + display, tail->count);
+        if (!render_bytes(viewer, direction, data, display)) return false;
+        stream->tail_count = available - display;
+        if (stream->tail_count) memcpy(stream->tail, data + display, stream->tail_count);
     }
     return true;
 }
-static bool flush_text_tails(TextTail *tails) {
-    static const char *names[] = {"SEND", "RECV", "STDERR"};
-    for (int i = 0; i < 3; i++) if (tails[i].count) {
-        if (printf("\n%s incomplete UTF-8 tail: ", names[i]) < 0
-            || !safe_text(tails[i].bytes, tails[i].count) || fputc('\n', stdout) == EOF) return false;
-        tails[i].count = 0;
+static bool flush_text_tails(Viewer *viewer) {
+    for (int i = 0; i < 3; i++) {
+        TextStream *stream = &viewer->streams[i];
+        if (stream->tail_count && !render_bytes(viewer, i, stream->tail, stream->tail_count)) return false;
+        stream->tail_count = 0;
     }
+    return set_color(viewer, PLAIN);
+}
+static bool viewer_error(Viewer *viewer, uint64_t timestamp, uint64_t sequence, const char *detail) {
+    if (!viewer_header(viewer, 2, timestamp, sequence, false)
+        || !safe_text((const unsigned char *)detail, strlen(detail)) || fputc('\n', stdout) == EOF) return false;
+    viewer->last_stream = -1; viewer->line_start = true;
     return true;
 }
-static int view_session(const char *session) {
+static bool status_is_error(const char *detail) {
+    /* Hide only known successful lifecycle events. New failure statuses remain
+     * visible by default without requiring a viewer update. */
+    return strcmp(detail, "STARTED") && strcmp(detail, "EOF_SENT") && strcmp(detail, "EXITED:0");
+}
+static int view_session(const char *session, bool color) {
     int directory = open(session, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
     if (directory < 0) return fail("spdctl: TRACE_SESSION_UNAVAILABLE\n", 66);
     int index = read_session_file(directory, "events.tsv"), raw[3];
     const char *names[] = {"send.raw", "recv.raw", "stderr.raw"};
     for (int i = 0; i < 3; i++) raw[i] = read_session_file(directory, names[i]);
     FILE *input = index >= 0 ? fdopen(index, "r") : NULL;
+    Viewer viewer = { .color = color, .line_start = true, .last_stream = -1, .active_color = PLAIN };
     int result = 0;
     char line[1024];
     if (!input || raw[0] < 0 || raw[1] < 0 || raw[2] < 0 || !fgets(line, sizeof(line), input) || strcmp(line, TRACE_VERSION)) {
         result = fail("spdctl: TRACE_FORMAT_UNSUPPORTED_OR_INCOMPLETE\n", 65); goto done;
     }
-    if (printf("spdctl transport viewer — SEND: controller → CLI; RECV: CLI → recorder\n"
-               "Raw bytes remain in the session files. DELIVERED means written to the controller pipe.\n") < 0) { result = 1; goto done; }
+    if (printf("spdctl transport viewer — SEND: controller → CLI; RECV: CLI → recorder; ERROR: diagnostics\n"
+               "Raw bytes remain in the session files.\n") < 0) { result = 1; goto done; }
     if (fputs("Session: ", stdout) == EOF || !safe_text((const unsigned char *)session, strlen(session))
         || fputc('\n', stdout) == EOF || fflush(stdout) != 0) { result = 1; goto done; }
     uint64_t expected = 1;
     bool finished = false;
-    TextTail tails[3] = {{{0}, 0}, {{0}, 0}, {{0}, 0}};
     for (;;) {
         off_t position = ftello(input);
         if (fgets(line, sizeof(line), input)) {
@@ -400,17 +514,14 @@ static int view_session(const char *session) {
                     result = fail("spdctl: TRACE_INDEX_INVALID\n", 65); break;
                 }
                 int stream = !strcmp(kind, "SEND") ? 0 : !strcmp(kind, "RECV") ? 1 : !strcmp(kind, "STDERR") ? 2 : -1;
-                if (printf("\n[%" PRIu64 ".%09" PRIu64 "] #%" PRIu64 " ", timestamp / UINT64_C(1000000000), timestamp % UINT64_C(1000000000), sequence) < 0
-                    || !safe_text((unsigned char *)kind, strlen(kind))) { result = 1; break; }
                 if (stream >= 0) {
-                    bool ends_newline;
-                    if (printf(" (%" PRIu64 " bytes)\n", length) < 0 || !read_range(raw[stream], offset, length, &tails[stream], &ends_newline)
-                        || (!ends_newline && fputc('\n', stdout) == EOF)) { result = fail("spdctl: TRACE_DATA_UNAVAILABLE\n", 65); break; }
-                } else {
-                    if (strcmp(kind, "STATUS") && strcmp(kind, "DELIVERED")) { result = fail("spdctl: TRACE_INDEX_INVALID\n", 65); break; }
-                    if (printf(" offset=%" PRIu64 " bytes=%" PRIu64 " ", offset, length) < 0
-                        || !safe_text((unsigned char *)detail, strlen(detail)) || fputc('\n', stdout) == EOF) { result = 1; break; }
-                }
+                    viewer.streams[stream].timestamp = timestamp; viewer.streams[stream].sequence = sequence;
+                    if (!read_range(raw[stream], offset, length, &viewer, stream)) {
+                        result = fail("spdctl: TRACE_DATA_UNAVAILABLE\n", 65); break;
+                    }
+                } else if (!strcmp(kind, "STATUS")) {
+                    if (status_is_error(detail) && !viewer_error(&viewer, timestamp, sequence, detail)) { result = 1; break; }
+                } else if (strcmp(kind, "DELIVERED")) { result = fail("spdctl: TRACE_INDEX_INVALID\n", 65); break; }
                 if (fflush(stdout) != 0) { result = 1; break; }
                 continue;
             }
@@ -420,7 +531,7 @@ static int view_session(const char *session) {
         int marker = read_session_file(directory, ".incomplete");
         if (marker < 0) {
             if (errno != ENOENT) { result = fail("spdctl: TRACE_OWNER_STATUS_UNAVAILABLE\n", 65); break; }
-            if (!flush_text_tails(tails)) result = 1;
+            if (!flush_text_tails(&viewer)) result = 1;
             puts("\nSession ended. This viewer can be reopened at any time."); fflush(stdout); finished = true; break;
         }
         /* The writer's CLOEXEC lock lasts for its lifetime, unlike a PID which
@@ -429,8 +540,9 @@ static int view_session(const char *session) {
         int lock_error = errno;
         close(marker);
         if (locked == 0) {
-            if (!flush_text_tails(tails)) result = 1;
-            puts("\nRecording incomplete: recorder exited without finalizing the trace."); fflush(stdout); finished = true; break;
+            if (!flush_text_tails(&viewer)
+                || !viewer_error(&viewer, now_ns(), expected, "Recording incomplete: recorder exited without finalizing the trace.")) result = 1;
+            fflush(stdout); finished = true; break;
         }
         if (lock_error != EWOULDBLOCK && lock_error != EAGAIN) {
             result = fail("spdctl: TRACE_OWNER_STATUS_UNAVAILABLE\n", 65); break;
@@ -445,6 +557,8 @@ static int view_session(const char *session) {
         }
     }
 done:
+    (void)set_color(&viewer, PLAIN);
+    for (int i = 0; i < 3; i++) free(viewer.streams[i].containers);
     if (input) fclose(input); else close_fd(&index);
     for (int i = 0; i < 3; i++) close_fd(&raw[i]);
     close(directory);
@@ -626,12 +740,26 @@ int main(int argc, char **argv) {
         strcpy(name, "/spdctl-jvm"); default_engine[0] = executable;
     }
     if (argc > first && !strcmp(argv[first], "trace")) {
-        if (argc != first + 4 || (strcmp(argv[first + 1], "view") && strcmp(argv[first + 1], "open"))
-            || strcmp(argv[first + 2], "--session") || argv[first + 3][0] != '/')
-            return fail("spdctl: Expected trace view|open --session ABS\n", 64);
+        if (argc < first + 4 || (strcmp(argv[first + 1], "view") && strcmp(argv[first + 1], "open")))
+            return fail("spdctl: Expected trace view|open --session ABS [--color auto|always|never]\n", 64);
+        bool viewing = !strcmp(argv[first + 1], "view");
+        const char *requested_session = NULL, *color_mode = "auto";
+        bool color_seen = false;
+        for (int i = first + 2; i < argc; i++) {
+            if (!strcmp(argv[i], "--session") && !requested_session && i + 1 < argc) requested_session = argv[++i];
+            else if (viewing && !strcmp(argv[i], "--color") && !color_seen && i + 1 < argc) {
+                color_mode = argv[++i]; color_seen = true;
+            } else return fail("spdctl: INVALID_TRACE_ARGUMENTS\n", 64);
+        }
+        if (!requested_session || requested_session[0] != '/' || (strcmp(color_mode, "auto")
+            && strcmp(color_mode, "always") && strcmp(color_mode, "never")))
+            return fail("spdctl: INVALID_TRACE_ARGUMENTS\n", 64);
+        const char *term = getenv("TERM");
+        bool color = !strcmp(color_mode, "always") || (!strcmp(color_mode, "auto") && isatty(STDOUT_FILENO)
+                     && (!term || strcmp(term, "dumb")) && !getenv("NO_COLOR"));
         char session[PATH_MAX];
-        if (!realpath(argv[first + 3], session)) return fail("spdctl: TRACE_SESSION_UNAVAILABLE\n", 66);
-        if (!strcmp(argv[first + 1], "view")) return view_session(session);
+        if (!realpath(requested_session, session)) return fail("spdctl: TRACE_SESSION_UNAVAILABLE\n", 66);
+        if (viewing) return view_session(session, color);
         int directory = open(session, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
         int index = directory >= 0 ? read_session_file(directory, "events.tsv") : -1;
         char header[sizeof(TRACE_VERSION)] = {0};
@@ -649,7 +777,7 @@ int main(int argc, char **argv) {
     bool run = argc > first && !strcmp(argv[first], "run"), machine = false, terminal = true;
     const char *home = getenv("HOME"), *selected = getenv("SPDCTL_PROFILE"), *trace_root = NULL;
     char default_profile[PATH_MAX], default_trace[PATH_MAX], profile[PATH_MAX];
-    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v2", home) >= PATH_MAX
+    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v3", home) >= PATH_MAX
         || snprintf(default_trace, sizeof(default_trace), "%s/Library/Logs/Shattered Pixel Dungeon CLI/transport", home) >= PATH_MAX)
         return fail("spdctl: HOME_UNAVAILABLE\n", 64);
     if (!selected) selected = default_profile;

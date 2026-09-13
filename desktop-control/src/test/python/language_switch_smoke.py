@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Switch the original GUI language repeatedly in one protocol-2 fixture JVM.
+"""Switch the original GUI language repeatedly in one protocol-3 fixture JVM.
 
 Targets come from public language/code sources, never native-word matching. Only
 same-version UI postconditions read the isolated assertion stream; no save reads.
@@ -74,8 +74,8 @@ class SwitchClient(MatrixClient):
 
     def request(self, op, args=None, **kwargs):
         response = super().request(op, args, **kwargs)
-        assert response.get("protocol_version") == 2, response
-        if response.get("ok"):
+        assert response.get("protocol_version") == 3, response
+        if response.get("ok") and op == "state.get":
             failures = validate(response.get("result"))
             assert not failures, {"op": op, "source_failures": failures[:30]}
             self.source_checks += 1
@@ -89,7 +89,8 @@ def execute(client, state, action, baseline, **args):
     assert client.scope == state["scope_id"] and client.version == state["state_version"], "Use the latest returned context"
     response = client.act(action, **args)
     assert response.get("ok") and response.get("status") in ("completed", "awaiting_input"), response
-    after = response["result"]
+    after = client.state(source=True)
+    assert after["state_version"] == response["result"]["state_version"], "Source inspection changed the settled action state"
     assert hero_inventory(after) == baseline, {"pure_view_changed_hero_or_inventory": semantic(after["observation"])}
     return after, response
 
@@ -138,7 +139,7 @@ def reject_stale(client, before, old_control, current, code, baseline):
     rejected = client.request("action.execute", {"action": "ui.activate", "control": old_control},
                               scope=before["scope_id"], version=before["state_version"])
     assert not rejected.get("ok") and rejected["error"]["code"] == "STALE_STATE", rejected
-    history = client.request("request.get", {"target_id": rejected["id"]}, scope=before["scope_id"])
+    history = client.request("request.get", {"target_id": rejected["id"], "get": ["before", "after"]}, scope=before["scope_id"])
     assert history.get("ok") and history["result"]["status"] == "REJECTED", history
     assert history["result"]["before_snapshot"] == history["result"]["after_snapshot"], history
     observed = client.state()
@@ -150,10 +151,11 @@ def reject_stale(client, before, old_control, current, code, baseline):
 
 
 def assert_recorded_response(client, original):
-    record = client.request("request.get", {"target_id": original["id"]}, scope=original["scope_id"])
+    record = client.request("request.get", {"target_id": original["id"], "get": ["reply"]}, scope=original["scope_id"])
     assert record.get("ok"), record
     assert record["result"]["response"] == original, {"historical_response_rewritten": original["id"]}
-    assert not validate(record["result"]["response"].get("result")), "Recorded terminal text must retain its sources"
+    # The default original response intentionally omitted source trees. Fetching
+    # history must preserve that exact compact reply, rather than enrich it later.
     return original["id"]
 
 
@@ -181,7 +183,7 @@ def run(root, classpath, runtime_id, languages):
         hello = client.request("protocol.info")
         assert hello.get("ok"), hello
         metadata = hello["result"]
-        assert metadata["protocol_version"] == 2 and metadata["audit_schema_version"] == 5 and metadata["text_language"] == "en", metadata
+        assert hello["protocol_version"] == 3 and metadata["audit_schema_version"] == 6 and metadata["text_language"] == "en", metadata
         report.update(build_id=metadata["build_id"], cli_version=metadata["cli_version"], session_id=metadata["session_id"])
         initial = start_warrior(client)
         assert_gui_checkpoint(profile, initial, "zh")
@@ -208,7 +210,8 @@ def run(root, classpath, runtime_id, languages):
         report["final_gui"] = assert_gui_checkpoint(profile, state, languages[-1])
         final_hello = client.request("protocol.info")
         assert final_hello.get("ok"), final_hello
-        for key in ("session_id", "build_id", "cli_version", "protocol_version", "audit_schema_version"):
+        assert final_hello["protocol_version"] == hello["protocol_version"], "Runtime protocol changed"
+        for key in ("session_id", "build_id", "cli_version", "audit_schema_version"):
             assert final_hello["result"][key] == metadata[key], {"runtime_changed": key}
         report["ok"] = True
     except Exception as error:

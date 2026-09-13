@@ -52,7 +52,8 @@ def game_prose_values(value, path=(), prose=False):
                 if isinstance(node, dict):
                     return node.get("origin") in {"user", "external"} or any(has_original(item) for item in node.values())
                 return isinstance(node, list) and any(has_original(item) for item in node)
-            if key not in RAW_FIELDS and not has_original(origin):
+            original = set(value.get("text_origins", {}).get(key, [])) & {"user", "external"}
+            if key not in RAW_FIELDS and not original and not has_original(origin):
                 yield from game_prose_values(child, path + (key,), key in GAME_PROSE_FIELDS)
     elif isinstance(value, list):
         for index, child in enumerate(value):
@@ -85,7 +86,9 @@ class FixtureClient(Client):
         result = super().request(op, args, **kwargs)
         if result.get("ok") and isinstance(result.get("result"), dict) and "observation" in result["result"]:
             self.last_state = result["result"]
-        self.trace.write(json.dumps({"test_fixture": True, "op": op, "args": args, "response": result}, ensure_ascii=False) + "\n")
+        self.trace.write(json.dumps({"test_fixture": True, "op": op, "args": args,
+                                     "request": getattr(self, "last_wire_request", None),
+                                     "response": getattr(self, "last_wire_response", result)}, ensure_ascii=False) + "\n")
         self.trace.flush()
         # Preserve evidence before rejecting a malformed translation. This includes
         # nested request.get/history/events responses; raw audit fields remain opaque.
@@ -112,6 +115,8 @@ def act(client, action, **args):
                     record = client.request("request.get", {"target_id": request_id}, scope=scope)
                     assert record.get("ok"), record
                     if record["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
+                        record = client.request("request.get", {"target_id": request_id, "get": ["reply"]}, scope=scope)
+                        assert record.get("ok"), record
                         result = record["result"]["response"]
                         assert result.get("ok"), result
                         break

@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
+import protocol3
 
 
 class Client:
@@ -25,16 +26,14 @@ class Client:
 
     def request(self, op, args=None, request_id=None, scope=None, version=None):
         self.counter += 1
-        req = {"protocol_version": 2, "id": request_id or f"{self.prefix}-{self.counter}", "op": op}
-        if scope is not None or self.scope is not None:
-            req["scope_id"] = scope or self.scope
-        if args is not None:
-            req["args"] = args
-        if op == "action.execute":
-            req["state_version"] = version or self.version
-        self.process.stdin.write((json.dumps(req, ensure_ascii=False) + "\n").encode())
+        req = protocol3.request(op, args, request_id or f"{self.prefix}-{self.counter}",
+                                scope or self.scope, version or self.version)
+        self.last_wire_request = req
+        self.last_send_bytes = protocol3.wire_bytes(req)
+        assert self.process.stdin.write(self.last_send_bytes) == len(self.last_send_bytes), "Incomplete request write"
         self.process.stdin.flush()
         deadline = time.monotonic() + 45
+        self.buffer = bytearray(self.buffer)
         while b"\n" not in self.buffer:
             if time.monotonic() > deadline:
                 raise TimeoutError(f"No response for {op}; profile={self.profile}")
@@ -43,12 +42,14 @@ class Client:
                 chunk = os.read(self.process.stdout.fileno(), 65536)
                 if not chunk:
                     raise RuntimeError(f"Process ended {self.process.poll()}; profile={self.profile}")
-                self.buffer += chunk
+                self.buffer.extend(chunk)
         line, self.buffer = self.buffer.split(b"\n", 1)
-        result = json.loads(line)
-        assert result.get("id") == req["id"], (req, result)
+        self.last_recv_bytes = bytes(line) + b"\n"
+        self.last_wire_response = json.loads(line)
+        assert self.last_wire_response.get("id") == req["id"], (req, self.last_wire_response)
+        result = protocol3.response(self.last_wire_response, op)
         data = result.get("result", {})
-        if isinstance(data, dict) and result.get("ok") and op in {"protocol.info", "state.get", "actions.list", "action.execute"}:
+        if isinstance(data, dict) and result.get("ok") and protocol3.is_live_operation(op):
             self.scope = data.get("scope_id", self.scope)
             self.version = data.get("state_version") or self.version
         return result
@@ -64,6 +65,9 @@ class Client:
                 assert record["ok"], record
                 request = record["result"]
                 if request.get("status") not in {"EXECUTING", "RECEIVED"}:
+                    record = self.request("request.get", {"target_id": original_id, "get": ["reply"]}, scope=original_scope)
+                    assert record["ok"], record
+                    request = record["result"]
                     result = request["response"]
                     assert result.get("ok"), result
                     data = result.get("result", {})
@@ -74,8 +78,8 @@ class Client:
             raise TimeoutError(f"Action did not settle: {original_id}")
         return result
 
-    def state(self):
-        result = self.request("state.get")
+    def state(self, source=False):
+        result = self.request("state.get", {"src": True} if source else None)
         assert result["ok"], result
         return result["result"]
 

@@ -10,7 +10,7 @@ public final class PublicEnglishProjection {
             "cell_prompt", "item_prompt", "title", "message", "disabled_reason", "options"));
     private static final Set<String> OPAQUE_FIELDS = new HashSet<>(Arrays.asList(
             "text_sources", "text_diagnostics", "presentation", "response", "response_json",
-            "raw_request", "raw_bytes", "request_json", "original_payload"));
+            "raw", "reply", "schema", "raw_request", "raw_bytes", "request_json", "original_payload"));
     private PublicEnglishProjection() { }
 
     /** Capture while String identities and their control bindings are still available. */

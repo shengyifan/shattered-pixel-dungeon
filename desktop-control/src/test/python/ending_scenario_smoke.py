@@ -105,7 +105,7 @@ def restart_case(client,profile,initial,outcome):
     # A query may use the old action ID in the new run; the old run's original action stays terminal.
     fresh_id=client.request("state.get",request_id="death-trigger")
     assert fresh_id["ok"] and fresh_id["result"]["scope_id"]==new["scope_id"],fresh_id
-    old=client.request("request.get",{"target_id":"death-trigger"},scope=initial["scope_id"])
+    old=client.request("request.get",{"target_id":"death-trigger", "get": ["reply"]},scope=initial["scope_id"])
     assert old["ok"] and old["result"]["response"]==outcome,old
     old_events=[event for event in public_events(client,initial["scope_id"]) if event["kind"]=="run.ended"]
     assert len(old_events)==1 and old_events[0]["data"]["result"]=="lost"

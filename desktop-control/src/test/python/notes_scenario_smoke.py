@@ -89,7 +89,7 @@ def note_edit_title_action(state, title):
 
 
 def choose_edit_title(client, title):
-    state = client.state()
+    state = client.state(source=True)
     action, structural = note_edit_title_action(state, title)
     assert client.scope == state["scope_id"] and client.version == state["state_version"], "Use the current advertised note action"
     response = client.act("ui.activate", control=action["control"])

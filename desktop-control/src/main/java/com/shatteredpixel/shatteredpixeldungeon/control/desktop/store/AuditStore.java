@@ -29,7 +29,7 @@ import java.util.UUID;
  * The caller must hold the profile's exclusive process lock for this store's entire lifetime.
  */
 public final class AuditStore implements AutoCloseable {
-    public static final int SCHEMA_VERSION = 5;
+    public static final int SCHEMA_VERSION = 6;
     private final Path publicPath;
     private final Path internalPath;
     private Connection writer;
@@ -100,7 +100,7 @@ public final class AuditStore implements AutoCloseable {
                 throw new AuditException("AUDIT_PAIR_MISMATCH", "The audit database identities differ", null);
         } catch (AuditException error) { throw error; }
         catch (Exception error) {
-            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 2 requires an intact schema-5 audit pair; use a new profile", error);
+            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 3 requires an intact schema-6 audit pair; use a new profile", error);
         }
     }
 
@@ -115,7 +115,7 @@ public final class AuditStore implements AutoCloseable {
                 if ("profile_id".equals(rows.getString(1))) profile = rows.getString(2);
             }
             if (!Integer.toString(SCHEMA_VERSION).equals(version) || profile == null || profile.isEmpty())
-                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 2 requires schema 5 and never migrates older audit databases; use a new profile", null);
+                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 3 requires schema 6 and never migrates older audit databases; use a new profile", null);
             // A version marker cannot authorize silently rebuilding missing audit tables.
             try (Statement shape = reader.createStatement()) {
                 for (String sql : new String[]{
@@ -217,8 +217,8 @@ public final class AuditStore implements AutoCloseable {
 
     public synchronized String beginSession(String bootId,String buildId,String cliVersion,int protocolVersion){
         if(activeSession!=null)throw new IllegalStateException("A session is already active");
-        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=2)
-            throw new IllegalArgumentException("Session build, CLI version and protocol 2 metadata are required");
+        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=3)
+            throw new IllegalArgumentException("Session build, CLI version and protocol 3 metadata are required");
         String id=UUID.randomUUID().toString(),started=now();
         transaction(()->{
             for(String schema:schemas()){
@@ -350,9 +350,12 @@ public final class AuditStore implements AutoCloseable {
     }
 
     public synchronized List<Map<String,Object>> requestSaves(String originScope,String originRequest){
+        return requestSaves(activeSession,originScope,originRequest);
+    }
+    private List<Map<String,Object>> requestSaves(String session,String originScope,String originRequest){
         requireOpen();List<Map<String,Object>> result=new ArrayList<>();
         try(PreparedStatement s=publicReader.prepareStatement("SELECT * FROM save_checkpoints WHERE session_id IS ? AND origin_scope_id=? AND origin_request_id=? ORDER BY sequence")){
-            s.setString(1,activeSession);s.setString(2,originScope);s.setString(3,originRequest);
+            s.setString(1,session);s.setString(2,originScope);s.setString(3,originRequest);
             try(ResultSet rows=s.executeQuery()){while(rows.next())result.add(saveReceipt(rows));}
             return result;
         }catch(SQLException error){throw failure("AUDIT_READ_FAILED",error);}
@@ -498,6 +501,10 @@ public final class AuditStore implements AutoCloseable {
      */
     public synchronized void complete(Attempt attempt, String status, Map<String, Object> response,
                                      Map<String, Object> publicAfter, Map<String, Object> internalAfter, Throwable error) {
+        complete(attempt,status,response,publicAfter,internalAfter,error,null);
+    }
+    public synchronized void complete(Attempt attempt, String status, Map<String, Object> response,
+                                     Map<String, Object> publicAfter, Map<String, Object> internalAfter, Throwable error, String observedScope) {
         requireAttempt(attempt);
         if (response == null) throw new IllegalArgumentException("A response object is required");
         if (status == null || "RECEIVED".equalsIgnoreCase(status) || "EXECUTING".equalsIgnoreCase(status)) {
@@ -525,7 +532,7 @@ public final class AuditStore implements AutoCloseable {
                 }
             }
             linkSaveObservations(attempt,afterId);
-            describeObservedRun(response);
+            describeObservedRun(observedScope,publicAfter);
             if (error != null) insertException(attempt, error);
             return null;
         });
@@ -538,15 +545,12 @@ public final class AuditStore implements AutoCloseable {
         }
     }
 
-    @SuppressWarnings("unchecked") private void describeObservedRun(Map<String,Object> response)throws SQLException {
-        Object result=response.get("result");if(!(result instanceof Map))return;
-        Map<String,Object> data=(Map<String,Object>)result;
-        Object scope=data.get("scope_id"),observation=data.get("observation");
-        if(!(scope instanceof String)||!((String)scope).startsWith("run:")||!(observation instanceof Map))return;
-        Object hero=((Map<?,?>)observation).get("hero");if(!(hero instanceof Map))return;
+    private void describeObservedRun(String scope,Map<String,Object> observation)throws SQLException {
+        if(scope==null||!scope.startsWith("run:")||observation==null)return;
+        Object hero=observation.get("hero");if(!(hero instanceof Map))return;
         Object heroClass=((Map<?,?>)hero).get("class");if(!(heroClass instanceof String))return;
         for(String schema:schemas())try(PreparedStatement s=writer.prepareStatement("UPDATE "+schema+".runs SET hero_class=COALESCE(hero_class,?) WHERE scope_id=?")){
-            s.setString(1,(String)heroClass);s.setString(2,(String)scope);s.executeUpdate();
+            s.setString(1,(String)heroClass);s.setString(2,scope);s.executeUpdate();
         }
     }
 
@@ -579,6 +583,10 @@ public final class AuditStore implements AutoCloseable {
     /** Finishes a pending request without fabricating another response on its old exchange. */
     public synchronized void settle(Attempt attempt, String status, Map<String, Object> finalResult,
                                     Map<String, Object> publicAfter, Map<String, Object> internalAfter, Throwable error) {
+        settle(attempt,status,finalResult,publicAfter,internalAfter,error,null);
+    }
+    public synchronized void settle(Attempt attempt, String status, Map<String, Object> finalResult,
+                                    Map<String, Object> publicAfter, Map<String, Object> internalAfter, Throwable error, String observedScope) {
         requireAttempt(attempt);
         if (!attempt.registered || finalResult == null || status == null
                 || "RECEIVED".equalsIgnoreCase(status) || "EXECUTING".equalsIgnoreCase(status)) {
@@ -597,7 +605,7 @@ public final class AuditStore implements AutoCloseable {
                 }
             }
             linkSaveObservations(attempt,snapshotId);
-            describeObservedRun(finalResult);
+            describeObservedRun(observedScope,publicAfter);
             if (error != null) insertException(attempt, error);
             return null;
         });
@@ -659,10 +667,7 @@ public final class AuditStore implements AutoCloseable {
             for (String[] request : unfinished) {
                 String recovered=now();
                 String status = "EXECUTING".equals(request[2]) ? "UNKNOWN" : "NOT_EXECUTED";
-                String response = JsonCodec.encode(Values.map("protocol_version", 2, "id", request[1], "scope_id", request[0], "ok", false,
-                        "presentation", Values.map("status", "complete", "diagnostics", java.util.Collections.emptyList()), "error", Values.map("code", status, "message", "UNKNOWN".equals(status)
-                                ? "The process stopped before the execution result was recorded; this request will not be replayed"
-                                : "The process stopped before dispatch; this request will not be replayed")));
+                String response = JsonCodec.encode(Values.map("v", 3, "id", request[1], "s", request[0], "err", status));
                 for (String schema : schemas()) {
                     try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,updated_at=?,presentation_status='complete' WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
                         s.setString(1, status); s.setString(2, response); s.setString(3, recovered);
@@ -693,13 +698,68 @@ public final class AuditStore implements AutoCloseable {
         } catch (SQLException error) { throw failure("AUDIT_READ_FAILED", error); }
     }
 
+    /** V3 receipt selection. Unselected snapshots and replies are never expanded. */
+    public synchronized Map<String,Object> getRequest(String scopeId,String id,java.util.Set<String> details){
+        requireOpen();
+        boolean raw=details.contains("raw"),reply=details.contains("reply");
+        String sql="SELECT scope_id,id,op,status,presentation_status,state_version,target_scope,session_id,first_exchange,created_at,updated_at,"
+                +"before_snapshot,after_snapshot,response_json IS NOT NULL AS has_reply,json_extract(response_json,'$.err') AS error_code"
+                +(reply?",response_json":"")+(raw?",raw_request":"")+" FROM requests WHERE scope_id=? AND id=?";
+        try(PreparedStatement query=publicReader.prepareStatement(sql)){
+            query.setString(1,scopeId);query.setString(2,id);
+            try(ResultSet row=query.executeQuery()){
+                if(!row.next())return null;
+                List<String> has=new ArrayList<>();has.add("raw");has.add("meta");
+                if(row.getInt("has_reply")!=0)has.add("reply");
+                if(row.getString("before_snapshot")!=null)has.add("before");
+                if(row.getString("after_snapshot")!=null)has.add("after");
+                Map<String,Object> result=Values.map("id",id,"op",row.getString("op"),"st",row.getString("status"),
+                        "save",requestSaves(row.getString("session_id"),scopeId,id),"has",has);
+                String error=row.getString("error_code");if(error!=null)result.put("err",error);
+                if("partial".equals(row.getString("presentation_status")))result.put("pres",Values.map("st","partial"));
+                if(reply)result.put("reply",decodeNullable(row.getString("response_json")));
+                if(details.contains("before"))result.put("before",readSnapshot(row.getString("before_snapshot")));
+                if(details.contains("after"))result.put("after",readSnapshot(row.getString("after_snapshot")));
+                if(details.contains("meta"))result.put("meta",Values.map("scope_id",scopeId,
+                        "state_version",row.getString("state_version"),"target_scope",row.getString("target_scope"),
+                        "session_id",row.getString("session_id"),"session_build",sessionBuild(row.getString("session_id")),
+                        "first_exchange",row.getLong("first_exchange"),"created_at",row.getString("created_at"),"updated_at",row.getString("updated_at")));
+                if(raw)try(PreparedStatement exchange=publicReader.prepareStatement("SELECT raw_bytes,raw_format,response_json,output_attempted,output_succeeded FROM exchanges WHERE sequence=?")){
+                    exchange.setLong(1,row.getLong("first_exchange"));
+                    try(ResultSet wire=exchange.executeQuery()){
+                        if(!wire.next())throw new SQLException("Recorded request exchange is missing");
+                        byte[] bytes=wire.getBytes("raw_bytes");
+                        result.put("raw",Values.map("request",row.getString("raw_request"),
+                                "bytes_b64",bytes==null?null:java.util.Base64.getEncoder().encodeToString(bytes),
+                                "format",wire.getString("raw_format"),"response",wire.getString("response_json"),
+                                "output_attempted",wire.getInt("output_attempted")!=0,
+                                "output_succeeded",wire.getObject("output_succeeded")==null?null:wire.getInt("output_succeeded")!=0));
+                    }
+                }
+                return result;
+            }
+        }catch(SQLException error){throw failure("AUDIT_READ_FAILED",error);}
+    }
+
+    public synchronized long historyWatermark(String scope){return watermark("exchanges",scope);}
+    public synchronized long eventsWatermark(String scope){return watermark("events",scope);}
+    private long watermark(String table,String scope){
+        requireOpen();
+        try(PreparedStatement query=publicReader.prepareStatement("SELECT COALESCE(MAX(sequence),0) FROM "+table+" WHERE scope_id=?")){
+            query.setString(1,scope);try(ResultSet row=query.executeQuery()){row.next();return row.getLong(1);}
+        }catch(SQLException error){throw failure("AUDIT_READ_FAILED",error);}
+    }
+
     /** Metadata only: embedding past responses here would recursively grow history-query responses. */
     public synchronized List<Map<String, Object>> history(String scopeId, long afterSequence, int limit) {
+        return history(scopeId,afterSequence,limit,Long.MAX_VALUE);
+    }
+    public synchronized List<Map<String, Object>> history(String scopeId, long afterSequence, int limit, long until) {
         requireOpen();
-        if (afterSequence < 0 || limit < 1 || limit > 1000) throw new IllegalArgumentException("Invalid history bounds");
+        if (afterSequence < 0 || until < 0 || limit < 1 || limit > 1000) throw new IllegalArgumentException("Invalid history bounds");
         List<Map<String, Object>> result = new ArrayList<>();
-        try (PreparedStatement s = publicReader.prepareStatement("SELECT e.sequence,e.scope_id,e.id,e.duplicate,e.registered,e.received_at,e.responded_at,e.output_attempted,e.output_succeeded,e.session_id,e.presentation_status,r.op,r.status FROM exchanges e LEFT JOIN requests r ON r.scope_id=e.scope_id AND r.id=e.id WHERE e.scope_id=? AND e.sequence>? ORDER BY e.sequence LIMIT ?")) {
-            s.setString(1, scopeId); s.setLong(2, afterSequence); s.setInt(3, limit);
+        try (PreparedStatement s = publicReader.prepareStatement("SELECT e.sequence,e.scope_id,e.id,e.duplicate,e.registered,e.received_at,e.responded_at,e.output_attempted,e.output_succeeded,e.session_id,e.presentation_status,r.op,r.status FROM exchanges e LEFT JOIN requests r ON r.scope_id=e.scope_id AND r.id=e.id WHERE e.scope_id=? AND e.sequence>? AND e.sequence<=? ORDER BY e.sequence LIMIT ?")) {
+            s.setString(1, scopeId); s.setLong(2, afterSequence); s.setLong(3,until); s.setInt(4, limit);
             try (ResultSet rs = s.executeQuery()) {
                 while (rs.next()) result.add(Values.map("sequence", rs.getLong("sequence"), "scope_id", rs.getString("scope_id"),
                         "id", rs.getString("id"), "duplicate", rs.getInt("duplicate") != 0, "registered", rs.getInt("registered") != 0,
@@ -713,11 +773,14 @@ public final class AuditStore implements AutoCloseable {
     }
 
     public synchronized List<Map<String, Object>> events(String scopeId, long afterSequence, int limit) {
+        return events(scopeId,afterSequence,limit,Long.MAX_VALUE);
+    }
+    public synchronized List<Map<String, Object>> events(String scopeId, long afterSequence, int limit, long until) {
         requireOpen();
-        if (afterSequence < 0 || limit < 1 || limit > 1000) throw new IllegalArgumentException("Invalid event bounds");
+        if (afterSequence < 0 || until < 0 || limit < 1 || limit > 1000) throw new IllegalArgumentException("Invalid event bounds");
         List<Map<String, Object>> result = new ArrayList<>();
-        try (PreparedStatement s = publicReader.prepareStatement("SELECT sequence,scope_id,kind,data_json,created_at,session_id,presentation_status FROM events WHERE scope_id=? AND sequence>? ORDER BY sequence LIMIT ?")) {
-            s.setString(1, scopeId); s.setLong(2, afterSequence); s.setInt(3, limit);
+        try (PreparedStatement s = publicReader.prepareStatement("SELECT sequence,scope_id,kind,data_json,created_at,session_id,presentation_status FROM events WHERE scope_id=? AND sequence>? AND sequence<=? ORDER BY sequence LIMIT ?")) {
+            s.setString(1, scopeId); s.setLong(2, afterSequence); s.setLong(3,until); s.setInt(4, limit);
             try (ResultSet rs = s.executeQuery()) {
                 while (rs.next()) result.add(Values.map("sequence", rs.getLong(1), "scope_id", rs.getString(2), "kind", rs.getString(3),
                         "data", JsonCodec.decode(rs.getString(4)), "created_at", rs.getString(5),"session_id",rs.getString(6),"presentation_status",rs.getString(7)));
@@ -751,8 +814,8 @@ public final class AuditStore implements AutoCloseable {
     }
 
     private static String presentationStatus(Map<String, Object> value) {
-        Object presentation = value.get("presentation");
-        Object status = presentation instanceof Map ? ((Map<?,?>) presentation).get("status") : null;
+        Object presentation = value.get(value.containsKey("v")?"pres":"presentation");
+        Object status = presentation instanceof Map ? ((Map<?,?>) presentation).get(value.containsKey("v")?"st":"status") : null;
         if (status == null) return "complete";
         if (!"complete".equals(status) && !"partial".equals(status)) throw new IllegalArgumentException("Invalid presentation status");
         return (String) status;

@@ -251,7 +251,9 @@ def preview(client, mode, count):
     assert result["state_version"] != before["state_version"]
     assert result["phase"] == "awaiting_input" and ui(result)["modal"]
     ui_assertion(client.profile, result, WND_UPGRADE)
-    assert_preview_fields(result)
+    detailed = client.state(source=True)
+    assert detailed["state_version"] == result["state_version"], "Source inspection changed the preview boundary"
+    assert_preview_fields(detailed)
     assert {"Upgrade", "Back"} <= {entry.get("label") for entry in result["actions"]}
     verify(client, result, 0, count, True, mode)
     observed = current(client)

@@ -14,6 +14,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
+import protocol3
 import zipfile
 
 from english_protocol_smoke import activate, assert_english, checked_state, english_inventory, execute, public_events, stop
@@ -125,13 +126,13 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             result = receive(process)
             assert_english(result)
             return result
-        hello = exchange(b'{"protocol_version":2,"id":"package-info","op":"protocol.info"}\r\n')
+        hello = exchange(b'{"v":3,"id":"package-info","op":"info"}\r\n')
         assert hello["ok"] and hello["result"]["build_id"] == expected_build
         assert hello["result"]["cli_version"] == expected_cli
         scope = hello["result"]["scope_id"]
-        invalid = exchange(b'{"protocol_version":2,"id":"package-invalid-encoding","op":"state.get","x":"\xff"}\n')
+        invalid = exchange(b'{"v":3,"id":"package-invalid-encoding","op":"state","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = json.dumps({"protocol_version": 2, "id": "package-state", "scope_id": scope, "op": "state.get"}).encode() + b"\n"
+        query = protocol3.wire_bytes(protocol3.request("state.get", request_id="package-state", scope=scope))
         observed = exchange(query)
         assert observed["ok"], observed
         mode = display(observed["result"])
@@ -150,11 +151,11 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             process.terminate()
             process.wait(timeout=10)
         stderr.close()
-    final = json.dumps({"protocol_version": 2, "id": "package-final-frame", "scope_id": scope, "op": "state.get"}).encode()
+    final = protocol3.wire_bytes(protocol3.request("state.get", request_id="package-final-frame", scope=scope))[:-1]
     restarted = subprocess.run(command, input=final, capture_output=True, env=env, timeout=45)
     lines = restarted.stdout.splitlines()
     assert restarted.returncode == 0 and len(lines) == 1, (restarted.returncode, restarted.stderr, lines)
-    response = json.loads(lines[0])
+    response = protocol3.response(json.loads(lines[0]))
     assert response["ok"]
     assert_english(response)
     display(response["result"])
@@ -198,13 +199,16 @@ class PackageClient(Client):
         self.prefix = "package-" + uuid.uuid4().hex[:12]
 
     def request(self, op, args=None, **kwargs):
+        if op == "state.get":
+            args = {**(args or {}), "src": True}
         response = super().request(op, args, **kwargs)
         if response.get("error", {}).get("code") in {"EXECUTION_UNKNOWN", "EXECUTION_UNCERTAIN"}:
             self.uncertain = True
-        self.trace.write(json.dumps({"test_fixture": True, "op": op, "args": args, "response": response}, ensure_ascii=False) + "\n")
+        self.trace.write(json.dumps({"test_fixture": True, "request": self.last_wire_request,
+                                     "response": self.last_wire_response}, ensure_ascii=False) + "\n")
         self.trace.flush()
         assert_english(response)
-        if response.get("ok"):
+        if response.get("ok") and op == "state.get":
             failures=validate_sources(response.get("result"))
             assert not failures, {"source_failures":failures[:20],"op":op}
         self.responses.append((op, response))
@@ -292,7 +296,7 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
                 break
             time.sleep(.05)
         assert food_event, "The package must expose its actual drawn food message in English"
-        record = client.request("request.get", {"target_id": eaten["id"]}, scope=scope)
+        record = client.request("request.get", {"target_id": eaten["id"], "get": ["reply"]}, scope=scope)
         assert record["ok"] and record["result"]["response"] == eaten
         assert client.request("actions.list")["ok"]
         saved = execute(client, "game.save")["result"]
@@ -313,7 +317,7 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
             assert [(item["locator"], item["name"], item["quantity"], item["equipped"])
                     for item in after["observation"]["inventory"]] == before_inventory
             restarted_jvm = loaded_jvm(resumed.process, bundle)
-            record = resumed.request("request.get", {"target_id": eaten["id"]}, scope=scope)
+            record = resumed.request("request.get", {"target_id": eaten["id"], "get": ["reply"]}, scope=scope)
             assert record["ok"] and record["result"]["response"] == eaten
             assert any(event["sequence"] == food_event["sequence"] for event in public_events(resumed, scope))
             stop(resumed)
@@ -342,7 +346,7 @@ def main():
                         help="Reuse an unchanged-build successful raw case; preserves its original profile and report")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging2.1" / ("english-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging3.0" / ("english-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录 with spaces" / args.bundle.name
     shutil.copytree(args.bundle.resolve(), bundle, symlinks=True)
@@ -352,7 +356,7 @@ def main():
     try:
         if args.reuse_raw_result:
             source = args.reuse_raw_result.resolve()
-            assert source.is_relative_to((root / "desktop-control/build/fixtures/packaging2.1").resolve())
+            assert source.is_relative_to((root / "desktop-control/build/fixtures/packaging3.0").resolve())
             raw = json.loads(source.read_text())
             assert raw["verified"] is True and raw["case_id"] == "package.english_raw_pipe"
             assert raw["runtime"]["build_id"] == binary["build_id"], "A different production build must rerun the raw case"

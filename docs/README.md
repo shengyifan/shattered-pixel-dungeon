@@ -6,7 +6,8 @@
 
 - [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
 - [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
-- [实现与验收状态](cli-implementation.md)：模块、规则边界及版本说明。
+- [CLI.3.0.0 实现与验收](cli3-implementation.md)：短协议、彩色查看器、完整收发、token 基准与实际包验证。
+- [历史实施记录](cli-implementation.md)：旧版模块、规则边界及验证说明。
 - [CLI.2.1.1 状态边界修复](cli-issues/2026-09-13-cli-2.1.1-stale-state-fixes.md)：击杀后的延迟停用、原教程复验、陈旧状态恢复规则及包验证。
 - [CLI.2.1.0 传输记录与验收](cli-transport.md)：独立终端原文展示、新 profile 默认设置和实际包验证。
 - [CLI.2.0.0 来源改造与验收](cli2-implementation.md)：String 接口、全语言来源与协议 2 / schema 5 的历史验收。

@@ -17,11 +17,11 @@ import java.util.stream.Stream;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.Assert.*;
 
-public class AuditSchemaFiveTest {
+public class AuditSchemaSixTest {
     @Rule public TemporaryFolder temporary = new TemporaryFolder();
 
     @Test public void everyOlderSchemaIsRejectedBeforeAnyDatabaseOrSidecarChanges() throws Exception {
-        for (int version = 1; version <= 4; version++) {
+        for (int version = 1; version <= 5; version++) {
             Path root = temporary.newFolder("schema-" + version).toPath();
             for (String name : new String[]{"public", "internal"}) {
                 try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + root.resolve(name + ".sqlite3"));
@@ -36,13 +36,13 @@ public class AuditSchemaFiveTest {
         }
     }
 
-    @Test public void freshSchemaFiveSeparatesRequestExecutionFromWirePresentation() throws Exception {
+    @Test public void freshSchemaSixSeparatesRequestExecutionFromWirePresentation() throws Exception {
         Path root = temporary.newFolder().toPath();
         try (AuditStore store = new AuditStore(root)) {
             String scope = store.menuScope();
             AuditStore.Attempt attempt = store.begin(scope, "partial", "action.execute", "{}");
             store.markExecuting(attempt, "v1", map("before", true), map("private", "before"));
-            Map<String,Object> partial = map("ok", true, "status", "completed", "presentation", map("status", "partial"));
+            Map<String,Object> partial = map("v", 3L, "st", "completed", "pres", map("st", "partial"));
             store.complete(attempt, "COMPLETED", partial, map("canonical", "unrendered"), map("private", "after"), null);
             store.event(scope, "game.log", map("entries", java.util.Collections.emptyList(), "presentation", map("status", "partial")));
             assertEquals("COMPLETED", store.getRequest(scope, "partial").get("status"));
@@ -52,7 +52,7 @@ public class AuditSchemaFiveTest {
             for (Path file : new Path[]{store.publicDatabase(), store.internalDatabase()}) {
                 try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + file); Statement statement = db.createStatement()) {
                     try (ResultSet rows = statement.executeQuery("SELECT value FROM metadata WHERE key='schema_version'")) {
-                        assertTrue(rows.next()); assertEquals("5", rows.getString(1));
+                        assertTrue(rows.next()); assertEquals("6", rows.getString(1));
                     }
                     for (String table : new String[]{"requests", "exchanges", "events"}) {
                         try (ResultSet rows = statement.executeQuery("SELECT presentation_status FROM " + table)) {
@@ -67,7 +67,7 @@ public class AuditSchemaFiveTest {
         }
     }
 
-    @Test public void aSchemaFiveMarkerCannotRecreateMissingAuditTables() throws Exception {
+    @Test public void aSchemaSixMarkerCannotRecreateMissingAuditTables() throws Exception {
         Path root=temporary.newFolder().toPath();
         try(AuditStore ignored=new AuditStore(root)) { }
         for(String name:new String[]{"public","internal"})
@@ -82,9 +82,9 @@ public class AuditSchemaFiveTest {
             String scope = store.menuScope();
             AuditStore.Attempt attempt = store.begin(scope, "pending", "action.execute", "{}");
             store.markExecuting(attempt, "v1", map(), map());
-            Map<String,Object> first = map("ok", true, "status", "in_progress", "presentation", map("status", "partial"));
+            Map<String,Object> first = map("v", 3L, "st", "in_progress", "pres", map("st", "partial"));
             store.respondPending(attempt, first, map(), map());
-            Map<String,Object> last = map("ok", true, "status", "completed", "presentation", map("status", "complete"));
+            Map<String,Object> last = map("v", 3L, "st", "completed");
             store.settle(attempt, "COMPLETED", last, map(), map(), null);
             assertEquals(last, store.getRequest(scope, "pending").get("response"));
             assertEquals("complete", store.getRequest(scope, "pending").get("presentation_status"));

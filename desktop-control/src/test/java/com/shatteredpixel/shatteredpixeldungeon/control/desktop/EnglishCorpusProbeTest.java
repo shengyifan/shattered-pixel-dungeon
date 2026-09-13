@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.CompactProtocol;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
 import org.junit.Rule;
 import org.junit.Test;
@@ -91,6 +92,55 @@ public class EnglishCorpusProbeTest {
         assertEquals(1L,probe.report().get("unavailable_occurrences"));
         Map<?,?> issue=(Map<?,?>)((List<?>)probe.report().get("issues")).get(0);
         assertEquals("description",issue.get("field"));
+    }
+
+    @Test public void realV3OutputPreservesCompactPathsAndRecordedPartialDiagnosticsWithSourcesOptional() {
+        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
+        String note=TextProvenance.INSTANCE.onTextOperation("user","用户自定义文字","用户自定义文字");
+        Map<String,Object> rendered=PublicEnglishProjection.copy(map("scope_id","run:fixture","state_version","rev:1",
+                "phase","player_ready","observation",map("ui",map("scene","HeroSelectScene","controls",List.of(
+                        map("id","good","role","button","text",back),
+                        map("id","bad","role","button","description","缺失来源的说明"),
+                        map("id","cut","role","text","text","缺失来源的残句","clipped",true),
+                        map("id","note","role","text","text",note))))));
+        for(boolean sources:List.of(false,true)) {
+            Map<String,Object> response=CompactProtocol.success("wire","run:fixture","completed",rendered,true,sources);
+            String before=JsonCodec.encode(response);
+            EnglishCorpusProbe probe=new EnglishCorpusProbe();probe.inspect(response,map("request_id","wire"));
+            assertEquals(1L,probe.report().get("protocol_3_frames"));
+            assertEquals(1L,probe.report().get("unavailable_occurrences"));
+            assertEquals(1L,probe.report().get("partial_occurrences"));
+            assertEquals(0L,occurrences(probe,"用户自定义文字"));
+            List<?> issues=(List<?>)probe.report().get("issues");
+            for(Object value:issues) {
+                Map<?,?> issue=(Map<?,?>)value;
+                assertEquals("HeroSelectScene",issue.get("scene"));
+                assertTrue(issue.get("field_path").toString().startsWith("/response/data/ui/nodes/*/"));
+                Map<?,?> sample=(Map<?,?>)((List<?>)issue.get("samples")).get(0);
+                assertEquals(true,sample.get("complete_public_ui_available"));
+                assertNotNull(((Map<?,?>)sample.get("node_metadata")).get("id"));
+            }
+            assertTrue(issues.stream().anyMatch(value->"desc".equals(((Map<?,?>)value).get("field"))));
+            assertEquals(before,JsonCodec.encode(response));
+        }
+    }
+
+    @Test public void v3DefaultsDoNotInventMissingSourcesAndAggregateDiagnosticsRetainWirePointers() {
+        Map<String,Object> node=map("id","same","role","text","text","Already rendered text");
+        EnglishCorpusProbe probe=new EnglishCorpusProbe();
+        probe.inspect(map("v",3,"data",map("ui",map("scene","TitleScene","nodes",List.of(node)))),map());
+        assertEquals(0L,probe.report().get("unavailable_occurrences"));
+        Map<String,Object> partial=map("v",3,"data",map("ui",map("scene","TitleScene","nodes",List.of(node))),
+                "pres",map("st","partial","diag",List.of(map("field","$.data.ui.nodes[0].text","code","source_missing"))),
+                "raw",map("description","opaque request text"),"reply",map("description","opaque historical reply text"));
+        String before=JsonCodec.encode(partial);
+        probe.inspect(partial,map());
+        assertEquals(1L,probe.report().get("unavailable_occurrences"));
+        Map<?,?> issue=(Map<?,?>)((List<?>)probe.report().get("issues")).get(0);
+        Map<?,?> sample=(Map<?,?>)((List<?>)issue.get("samples")).get(0);
+        assertEquals("/response/data/ui/nodes/0/text",sample.get("json_pointer"));
+        assertEquals("source_missing",issue.get("reason"));
+        assertEquals(before,JsonCodec.encode(partial));
     }
 
     private static long occurrences(EnglishCorpusProbe probe, String original) {

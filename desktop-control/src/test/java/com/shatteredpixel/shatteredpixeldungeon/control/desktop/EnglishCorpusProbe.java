@@ -30,11 +30,13 @@ public final class EnglishCorpusProbe {
     private static final Set<String> NODE_METADATA = new HashSet<>(Arrays.asList(
             "id", "role", "parent", "control", "action", "shortcut_action", "checked",
             "minimum", "maximum", "min", "max", "value", "enabled", "active", "visible",
-            "available", "clipped", "scene"));
+            "available", "clipped", "scene", "ctl", "op", "g", "opt", "alt", "loc"));
     private final Map<List<Object>, Outcome> cache = new HashMap<>();
     private final Map<List<Object>, Map<String, Object>> issues = new LinkedHashMap<>();
     private final Map<String, Long> sceneOccurrences = new LinkedHashMap<>();
-    private long frames, strings, translated, failures, partials;
+    private long frames, strings, translated, failures, partials, compactFrames;
+    private boolean compactFrame;
+    private final Map<String,String> compactDiagnostics = new LinkedHashMap<>();
 
     private static final class UiContext {
         final Map<String, Object> ui;
@@ -56,8 +58,38 @@ public final class EnglishCorpusProbe {
 
     public void inspect(Map<String, Object> response, Map<String, Object> sample) {
         frames++;
+        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 3;
+        compactDiagnostics.clear();
+        if (compactFrame) { compactFrames++; collectCompactDiagnostics(response, "/response"); }
         walk(response, null, null, null, map(), false, "/response", "/response", sample,
                 new IdentityHashMap<>());
+    }
+
+    private void collectCompactDiagnostics(Object value, String path) {
+        if (value instanceof Map) {
+            Map<?,?> object = (Map<?,?>) value;
+            Object presentation = object.get("pres");
+            Object diagnostics = presentation instanceof Map ? ((Map<?,?>)presentation).get("diag") : null;
+            if (diagnostics instanceof List) for (Object item : (List<?>)diagnostics) {
+                if (!(item instanceof Map)) continue;
+                Map<?,?> diagnostic = (Map<?,?>)item;
+                Object field = diagnostic.get("field"), code = diagnostic.get("code");
+                if (!(field instanceof String) || code == null) continue;
+                String recorded = (String)field;
+                String pointer = recorded.startsWith("$") ? "/response" : path;
+                for (String part : recorded.replaceFirst("^\\$\\.?", "").replaceAll("\\[([0-9]+)\\]", ".$1").split("\\."))
+                    if (!part.isEmpty()) pointer += "/" + part.replace("~", "~0").replace("/", "~1");
+                compactDiagnostics.put(pointer, code.toString());
+            }
+            for (Map.Entry<?,?> entry : object.entrySet()) {
+                String key = entry.getKey().toString();
+                if (Arrays.asList("pres", "text_sources", "text_origins", "raw", "reply", "schema").contains(key)) continue;
+                collectCompactDiagnostics(entry.getValue(), path + "/" + key.replace("~", "~0").replace("/", "~1"));
+            }
+        } else if (value instanceof List) {
+            List<?> list = (List<?>)value;
+            for (int i = 0; i < list.size(); i++) collectCompactDiagnostics(list.get(i), path + "/" + i);
+        }
     }
 
     private void walk(Object value, String field, String publicScene, UiContext inheritedUi,
@@ -71,7 +103,7 @@ public final class EnglishCorpusProbe {
             Map<String, Object> metadata = metadata(object);
             for (Map.Entry<?, ?> entry : object.entrySet()) {
                 String key = (String) entry.getKey();
-                if (Arrays.asList("text_sources","text_diagnostics","presentation","response","response_json","raw_request","raw_bytes","original_payload").contains(key)) continue;
+                if (Arrays.asList("text_sources","text_origins","text_diagnostics","presentation","pres","response","reply","raw","schema","response_json","raw_request","raw_bytes","original_payload").contains(key)) continue;
                 String suffix = "/" + key.replace("~", "~0").replace("/", "~1");
                 walk(entry.getValue(), key, scene, context, metadata,
                         key.equals("text") && Boolean.TRUE.equals(object.get("clipped")),
@@ -92,8 +124,14 @@ public final class EnglishCorpusProbe {
                                String path, String pattern, Map<String, Object> sample) {
         strings++;
         // Source identity, rather than matching surface text or its script, controls rendering.
-        List<Object> key = Arrays.asList(scene, field, clipped, original, metadata);
-        Outcome outcome = cache.computeIfAbsent(key, ignored -> translate(original, field, scene, ui, metadata, clipped));
+        String recordedDiagnostic = compactFrame ? compactDiagnostics.get(path) : null;
+        List<Object> key = Arrays.asList(scene, field, clipped, original, metadata, compactFrame, recordedDiagnostic);
+        // Protocol 3 already contains rendered public text. Omitted source trees
+        // are not evidence of missing provenance: only its recorded diagnostics
+        // identify unavailable/partial fields. Never reclassify user text by script.
+        Outcome outcome = cache.computeIfAbsent(key, ignored -> compactFrame
+                ? new Outcome(recordedDiagnostic == null ? "ok" : clipped ? "partial" : "unavailable", recordedDiagnostic, false)
+                : translate(original, field, scene, ui, metadata, clipped));
         if (outcome.changed) translated++;
         if (outcome.status.equals("ok")) return;
         if (outcome.status.equals("unavailable")) failures++;
@@ -155,17 +193,21 @@ public final class EnglishCorpusProbe {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> publicUi(Map<?, ?> source) {
+        Object data = source.get("data");
+        if (data instanceof Map) return publicUi((Map<?,?>)data);
         Object observation = source.get("observation");
         if (observation instanceof Map) return publicUi((Map<?, ?>) observation);
         Object nested = source.get("ui");
         if (nested instanceof Map) return publicUi((Map<?, ?>) nested);
-        return source.get("scene") instanceof String && source.get("controls") instanceof List
+        return source.get("scene") instanceof String && (source.get("controls") instanceof List || source.get("nodes") instanceof List)
                 ? (Map<String, Object>) source : null;
     }
 
     // Match the production DTO context order, using only fields already present in this response.
     // Never borrow a later/current scene to disambiguate historical event text.
     private static String scene(Map<?, ?> value, String inherited) {
+        Object data = value.get("data");
+        if (data instanceof Map) return scene((Map<?,?>)data, inherited);
         Object observation = value.get("observation");
         if (observation instanceof Map) return scene((Map<?, ?>) observation, inherited);
         Object ui = value.get("ui");
@@ -180,11 +222,12 @@ public final class EnglishCorpusProbe {
                 ((Number) value.get("frequency")).longValue()).reversed());
         return map("test_only", true, "source", "closed_fixture_public_responses_only",
                 "projection_context", "complete_public_ui_and_leaf_node_metadata",
-                "frames", frames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
+                "frames", frames, "protocol_3_frames", compactFrames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
                 "translated_occurrences", translated, "unavailable_occurrences", failures,
                 "partial_occurrences", partials, "unique_issues", result.size(),
                 "issue_occurrences_by_scene", sceneOccurrences, "issues", result,
-                "limits", Arrays.asList("Unknown/opaque fields follow PublicEnglishProjection and are not reclassified as prose.",
+                "limits", Arrays.asList("Protocol 3 rendered output is assessed using its recorded per-field presentation diagnostics; omitted source trees are not independently retranslated.",
+                        "Unknown/opaque fields follow PublicEnglishProjection and are not reclassified as prose.",
                         "Each leaf retains public node identity/role/parent/control/shortcut/checkbox/slider metadata; the same response's complete public UI is context only, not recursively translated with the leaf.",
                         "Partial clipped fallback is reported separately from a rejected complete string.",
                         "No current scene is inferred for historical records without a scene in their own public DTO.",

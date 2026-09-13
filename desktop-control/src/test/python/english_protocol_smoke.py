@@ -3,7 +3,7 @@
 
 No game choices use the private UiSceneAssertions or audit database. Private data
 from isolated profiles is read only after a chosen operation, for assertions.
-CLI 2 uses fresh schema-5 profiles; old protocol/audit migration is unsupported.
+CLI 3 uses fresh schema-6 profiles; old protocol/audit migration is unsupported.
 """
 import argparse
 import json
@@ -12,6 +12,7 @@ import re
 import time
 import unicodedata
 import uuid
+from protocol3 import pages
 
 from fixture_smoke import FixtureClient, freeze_runtime, GAME_PROSE_FIELDS, RAW_FIELDS, game_prose_values
 from legacy_save_smoke import launch_command, metadata, safe_profile, write_json
@@ -23,7 +24,7 @@ RAW = RAW_FIELDS
 
 
 def prose_values(value, path=(), prose=False):
-    """Share protocol-2 source-aware prose rules with every fixture client."""
+    """Share protocol-3 source-aware prose rules with every fixture client."""
     yield from game_prose_values(value, path, prose)
 
 
@@ -71,6 +72,8 @@ def execute(client, action, request_id=None, **args):
                 lookup = client.request("request.get", {"target_id": response["id"]}, scope=response["scope_id"])
                 assert lookup["ok"], lookup
                 if lookup["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
+                    lookup = client.request("request.get", {"target_id": response["id"], "get": ["reply"]}, scope=response["scope_id"])
+                    assert lookup["ok"], lookup
                     response = lookup["result"]["response"]
                     assert response["ok"], response
                     break
@@ -172,16 +175,10 @@ def english_inventory(state):
 
 
 def public_events(client, scope):
-    cursor = 0
     found = []
-    while True:
-        response = client.request("events.read", {"after": cursor, "limit": 100}, scope=scope)
-        assert response["ok"], response
-        rows = response["result"]
+    for rows in pages(client, "events.read", scope=scope):
         found.extend(rows)
-        if len(rows) < 100:
-            return found
-        cursor = rows[-1]["sequence"]
+    return found
 
 
 def stop(client, failure_cleanup=False):
@@ -254,7 +251,7 @@ def live_case(root, classpath, runtime_id):
         assert actions["ok"] and any(a.get("label", "").casefold() == "wait" for a in actions["result"]["actions"])
         history = client.request("history.list", {"after": 0, "limit": 100}, scope=scope)
         assert history["ok"] and any(row["id"] == food_id for row in history["result"])
-        record = client.request("request.get", {"target_id": food_id}, scope=scope)
+        record = client.request("request.get", {"target_id": food_id, "get": ["reply"]}, scope=scope)
         assert record["ok"] and record["result"]["response"] == eaten
         checks.append("actions_history_and_original_request_response_english")
         gui = gui_assertions(profile, {"WelcomeScene", "TitleScene", "HeroSelectScene", "GameScene"})
@@ -271,7 +268,7 @@ def live_case(root, classpath, runtime_id):
             assert resumed["scope_id"] == scope
             checks.append("same_scope_resume")
             english_inventory(resumed)
-            historical = restarted.request("request.get", {"target_id": food_id}, scope=scope)
+            historical = restarted.request("request.get", {"target_id": food_id, "get": ["reply"]}, scope=scope)
             assert historical["ok"] and historical["result"]["response"] == eaten
             old_events = public_events(restarted, scope)
             assert any("That food tasted delicious!" in entry["text"] for event in old_events if event["kind"] == "game.log"

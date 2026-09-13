@@ -9,6 +9,7 @@ import sqlite3
 import threading
 import time
 import uuid
+import protocol3
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game as fixture_start
 from machine_smoke import reach_game
 from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
@@ -80,7 +81,7 @@ def run_case(root,classpath,agent,template,runtime_id,stage):
         scope=client.scope
         request_id="crash-"+uuid.uuid4().hex
         before_files={str(p.relative_to(profile)):p.read_bytes() for p in profile.glob("game*/*.dat")}
-        request={"protocol_version": 2, "id":request_id,"scope_id":scope,"op":"action.execute","state_version":state["state_version"],"args":action}
+        request=protocol3.request("action.execute", action, request_id, scope, state["state_version"])
         write_json(profile/"target-request.json",request)
         (profile/"barrier.armed").write_text(request_id)
         target_result={}
@@ -112,14 +113,14 @@ def run_case(root,classpath,agent,template,runtime_id,stage):
         restarted=FixtureClient(launch_command(classpath),profile)
         try:
             assert restarted.request("protocol.info")["ok"]
-            history=restarted.request("request.get",{"target_id":request_id},scope=scope)
+            history=restarted.request("request.get",{"target_id":request_id, "get": ["reply"]},scope=scope)
             if absent:
                 assert not history["ok"] and history["error"]["code"]=="REQUEST_NOT_FOUND",history
             else:
                 assert history["ok"],history
                 terminal="NOT_EXECUTED" if received else "COMPLETED" if completed else "UNKNOWN"
                 assert history["result"]["status"]==terminal,history
-                duplicate=restarted.request("request.get",{"target_id":request_id},request_id=request_id,scope=scope)
+                duplicate=restarted.request("request.get",{"target_id":request_id, "get": ["reply"]},request_id=request_id,scope=scope)
                 assert duplicate["error"]["code"]=="DUPLICATE_REQUEST_ID",duplicate
                 if completed:assert history["result"]["response"]["ok"]
             if stage=="before-new-run-init":

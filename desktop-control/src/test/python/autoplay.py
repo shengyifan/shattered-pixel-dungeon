@@ -16,6 +16,7 @@ import time
 import uuid
 
 from machine_smoke import Client
+import protocol3
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -212,10 +213,10 @@ class PublicClient(Client):
                 raise Checkpoint("maximum_action_requests_reached")
             self.action_count += 1
         request_id = request_id or str(uuid.uuid4())
-        self.log("request", id=request_id, op=op, args=args, scope_id=scope or self.scope,
-                 state_version=version or self.version, action_number=self.action_count, cleanup=self.cleanup)
+        self.log("request", request=protocol3.request(op, args, request_id, scope or self.scope, version or self.version),
+                 action_number=self.action_count, cleanup=self.cleanup)
         response = super().request(op, args, request_id, scope, version)
-        self.log("response", response=response)
+        self.log("response", response=self.last_wire_response)
         if op == "action.execute":
             self.last_operation_response = response
         data = response.get("result")
@@ -253,6 +254,9 @@ class PublicClient(Client):
                 record = self.request("request.get", {"target_id": original_id}, scope=original_scope)
                 request = record.get("result") or {}
                 if request.get("status") not in {"EXECUTING", "RECEIVED"}:
+                    detail = self.request("request.get", {"target_id": original_id, "get": ["reply"]}, scope=original_scope)
+                    assert detail.get("ok"), detail
+                    request = detail["result"]
                     settled = request.get("response") or {}
                     self.last_action_outcome = settled
                     if not settled.get("ok"):
@@ -487,7 +491,9 @@ class Policy:
                     record = json.loads(line)
                     if record.get("kind") != "response":
                         continue
-                    data = record.get("response", {}).get("result", {})
+                    wire_response = record.get("response", {})
+                    decoded = protocol3.response(wire_response) if wire_response.get("v") == 3 else wire_response
+                    data = decoded.get("result", {})
                     if not isinstance(data, dict) or data.get("scope_id") != scope:
                         continue
                     hero = data.get("observation", {}).get("hero")
@@ -511,7 +517,9 @@ class Policy:
                         self.verified_neutral.add(normalized(record["creature"]["name"]))
                         self.reviewed_optional.add(normalized(record["creature"]["name"]))
                         continue
-                    data = record.get("response", {}).get("result", {})
+                    wire_response = record.get("response", {})
+                    decoded = protocol3.response(wire_response) if wire_response.get("v") == 3 else wire_response
+                    data = decoded.get("result", {})
                     if isinstance(data, dict) and "observation" in data:
                         observed_scope = data.get("scope_id")
                     if not isinstance(data, dict) or data.get("scope_id") != scope:

@@ -76,7 +76,7 @@ def save_json(path):
 def audit_schema(profile):
     for name in ("public", "internal"):
         with sqlite3.connect(f"file:{profile / 'audit' / (name + '.sqlite3')}?mode=ro", uri=True) as db:
-            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("4",)
+            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("6",)
             assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
 
 
@@ -97,6 +97,8 @@ def execute(client, action, request_id=None):
                 record = client.request("request.get", {"target_id": chosen_id}, scope=state["scope_id"])
                 assert record["ok"], record
                 if record["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
+                    record = client.request("request.get", {"target_id": chosen_id, "get": ["reply"]}, scope=state["scope_id"])
+                    assert record["ok"], record
                     response = record["result"]["response"]
                     break
                 time.sleep(0.05)
@@ -205,7 +207,7 @@ def save_failure_case(root, template, profile, classpath, runtime_id, second_fil
         assert response.get("error", {}).get("code") == "EXECUTION_UNKNOWN", response
         duplicate = client.request("action.execute", {"action": "game.save"}, request_id=failed_id, version=state["state_version"])
         assert duplicate.get("error", {}).get("code") == "DUPLICATE_REQUEST_ID", duplicate
-        recorded = client.request("request.get", {"target_id": failed_id})
+        recorded = client.request("request.get", {"target_id": failed_id, "get": ["reply"]})
         assert recorded["ok"] and recorded["result"]["status"] == "UNKNOWN", recorded
         assert not recorded["result"]["response"].get("ok"), recorded
         stopped = client.state()
@@ -241,7 +243,7 @@ def save_failure_case(root, template, profile, classpath, runtime_id, second_fil
         restored = resume_game(client, resume=True)
         assert restored["scope_id"] == state["scope_id"]
         assert restored["state_version"] != state["state_version"]
-        historic = client.request("request.get", {"target_id": failed_id})
+        historic = client.request("request.get", {"target_id": failed_id, "get": ["reply"]})
         assert historic["result"]["status"] == "UNKNOWN", historic
         duplicate = client.request("action.execute", {"action": "game.save"}, request_id=failed_id)
         assert duplicate.get("error", {}).get("code") == "DUPLICATE_REQUEST_ID", duplicate

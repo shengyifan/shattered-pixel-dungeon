@@ -10,6 +10,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
+import protocol3
 
 
 def receive(process, timeout=40):
@@ -25,7 +26,7 @@ def receive(process, timeout=40):
             if not chunk:
                 raise AssertionError(("unexpected EOF", process.poll(), bytes(data)))
             data.extend(chunk)
-    return json.loads(data)
+    return protocol3.response(json.loads(data))
 
 
 def emergency_snapshot(profile):
@@ -43,7 +44,7 @@ def main():
     parser.add_argument("--bundle", type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging2.1" / ("raw-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging3.0" / ("raw-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录" / args.bundle.name
     shutil.copytree(args.bundle, bundle, symlinks=True)
@@ -76,12 +77,12 @@ def main():
             process.stdin.write(frame)
             process.stdin.flush()
             return receive(process)
-        first = exchange(b'{"protocol_version":2,"id":"package-info","op":"protocol.info"}\r\n')
+        first = exchange(b'{"v":3,"id":"package-info","op":"info"}\r\n')
         assert first["ok"], first
         scope = first["result"]["scope_id"]
-        invalid = exchange(b'{"protocol_version":2,"id":"invalid-encoding","op":"state.get","x":"\xff"}\n')
+        invalid = exchange(b'{"v":3,"id":"invalid-encoding","op":"state","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = json.dumps({"protocol_version": 2, "id": "中文-query", "scope_id": scope, "op": "state.get"}, ensure_ascii=False).encode() + b"\n"
+        query = protocol3.wire_bytes(protocol3.request("state.get", request_id="中文-query", scope=scope))
         observed = exchange(query)
         assert observed["ok"], observed
         duplicate = exchange(query)
@@ -101,11 +102,11 @@ def main():
             process.kill()
             process.wait()
         stderr.close()
-    final_frame=json.dumps({"protocol_version": 2, "id":"package-eof-frame","scope_id":scope,"op":"state.get"}).encode()
+    final_frame=protocol3.wire_bytes(protocol3.request("state.get", request_id="package-eof-frame", scope=scope))[:-1]
     restarted=subprocess.run(command,input=final_frame,capture_output=True,env=env,timeout=40)
     assert restarted.returncode==0,(restarted.returncode,restarted.stderr)
     delivered=restarted.stdout.splitlines()
-    assert len(delivered)==1 and json.loads(delivered[0])["ok"],delivered
+    assert len(delivered)==1 and protocol3.response(json.loads(delivered[0]))["ok"],delivered
     frames.append(final_frame)
     with sqlite3.connect(profile / "audit/public.sqlite3") as db:
         wire = db.execute("SELECT raw_bytes,raw_format FROM exchanges ORDER BY sequence").fetchall()

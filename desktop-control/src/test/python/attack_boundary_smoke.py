@@ -81,7 +81,7 @@ def run_one(root, classpath, runtime_id, interface_size, remaining, expect_regre
                                       version=boundary["state_version"])
             assert rejected.get("error", {}).get("code") == "STALE_STATE", rejected
             expected_cell = destination
-        record = client.request("request.get", {"target_id": rejected["id"]})
+        record = client.request("request.get", {"target_id": rejected["id"], "get": ["before", "after"]})
         assert record.get("ok") and record["result"]["status"] == "REJECTED", record
         assert record["result"]["before_snapshot"] == record["result"]["after_snapshot"]
         assert client.state()["observation"]["hero"]["cell"] == expected_cell

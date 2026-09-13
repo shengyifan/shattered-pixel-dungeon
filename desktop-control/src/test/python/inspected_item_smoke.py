@@ -71,12 +71,14 @@ def run(root, cp, runtime_id, name):
         state = reach_game(client, "DUELIST")
         if name in {"known", "unknown", "old-body"}:
             opened = act(client, "inventory.open", locator="equipment.weapon")
-            projection, text = inspected(opened, name == "known")
+            detailed = client.state(source=True)
+            assert detailed["state_version"] == opened["state_version"], "Source detail changed the item inspection"
+            projection, text = inspected(detailed, name == "known")
             if name == "known":
                 inventory = next(item for item in opened["observation"]["inventory"] if item["locator"] == "equipment.weapon")
                 assert inventory["level_known"] is True and inventory["curse_known"] is False, inventory
             for _ in range(5):
-                queried = client.state()
+                queried = client.state(source=True)
                 assert inspected(queried, name == "known") == (projection, text)
                 assert client.request("actions.list")["ok"]
             if name == "old-body":

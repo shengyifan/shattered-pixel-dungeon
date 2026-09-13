@@ -24,10 +24,10 @@ public class StartupFailureSessionTest {
 
     @Test public void originalLaunchFailureIsDurableBeforeCloseAndNeverBecomesAStateTimeout()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
-            store.beginSession("startup-test","fixture-build","CLI.2.0.0",2);
+            store.beginSession("startup-test","fixture-build","CLI.3.0.0",3);
             WaitingGame game=new WaitingGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),30_000)){
-                CompletableFuture<Void> request=session.accept(JsonCodec.encode(map("protocol_version",2,"id","first-state",
+                CompletableFuture<Void> request=session.accept(V3Requests.encode(map("protocol_version",3,"id","first-state",
                         "op","state.get","scope_id",store.menuScope())));
                 game.observed.get(2,TimeUnit.SECONDS);
                 NullPointerException startup=new NullPointerException("PRIVATE_STARTUP_SENTINEL");
@@ -42,7 +42,7 @@ public class StartupFailureSessionTest {
                 game.disposed=true;game.observation.completeExceptionally(startup);
                 request.get(2,TimeUnit.SECONDS);
                 Map<String,Object> response=JsonCodec.decode(wire.toString("UTF-8").trim());
-                assertEquals("ENGINE_ERROR",((Map<?,?>)response.get("error")).get("code"));
+                assertEquals("ENGINE_ERROR",response.get("err"));
                 assertFalse(wire.toString("UTF-8").contains("PRIVATE_STARTUP_SENTINEL"));
                 assertFalse(wire.toString("UTF-8").contains("STATE_UNAVAILABLE"));
                 assertEquals("REJECTED",store.getRequest(store.menuScope(),"first-state").get("status"));

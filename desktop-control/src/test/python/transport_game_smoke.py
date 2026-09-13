@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Production CLI 2.1: fresh defaults, passive viewers, exact transport and saved restart.
+"""Production CLI 3: fresh defaults, passive viewers, exact transport and saved restart.
 
 All game input uses the packaged public protocol. Test metadata and captures live
 outside the profile, so an absent/empty profile stays fresh until Java opens it.
@@ -19,6 +19,7 @@ from english_protocol_smoke import (assert_english, checked_state, english_inven
                                     execute, start_or_continue, stop)
 from language_matrix_smoke import validate as validate_sources
 from machine_smoke import Client
+import protocol3
 from package_english_smoke import display, environment, loaded_jvm, verify_bundle, write_json
 
 
@@ -91,14 +92,12 @@ class CapturedClient(Client):
 
     def request(self, op, args=None, request_id=None, scope=None, version=None):
         self.counter += 1
-        request = {"protocol_version": 2, "id": request_id or f"{self.prefix}-{self.counter}", "op": op}
-        if scope is not None or self.scope is not None:
-            request["scope_id"] = scope or self.scope
-        if args is not None:
-            request["args"] = args
-        if op == "action.execute":
-            request["state_version"] = version or self.version
-        wire = (json.dumps(request, ensure_ascii=False) + "\n").encode("utf-8")
+        if op == "state.get":
+            args = {**(args or {}), "src": True}
+        request = protocol3.request(op, args, request_id or f"{self.prefix}-{self.counter}",
+                                    scope or self.scope, version or self.version)
+        wire = protocol3.wire_bytes(request)
+        self.last_wire_request, self.last_send_bytes = request, wire
         assert self.process.stdin.write(wire) == len(wire)
         self.process.stdin.flush()
         self.sent.extend(wire)
@@ -108,6 +107,7 @@ class CapturedClient(Client):
                  "SEND recorded before the client reads a response")
         self.early_send_checks += 1
         deadline = time.monotonic() + 45
+        self.buffer = bytearray(self.buffer)
         while b"\n" not in self.buffer:
             if time.monotonic() >= deadline:
                 raise TimeoutError(f"No response for {op}; profile={self.profile}")
@@ -116,12 +116,14 @@ class CapturedClient(Client):
                 if not chunk:
                     raise AssertionError(("Unexpected EOF", self.process.poll(), op))
                 self.received.extend(chunk)
-                self.buffer += chunk
+                self.buffer.extend(chunk)
         line, self.buffer = self.buffer.split(b"\n", 1)
-        response = json.loads(line)
-        assert response.get("id") == request["id"], (request, response)
+        self.last_recv_bytes = bytes(line) + b"\n"
+        self.last_wire_response = json.loads(line)
+        assert self.last_wire_response.get("id") == request["id"], (request, self.last_wire_response)
+        response = protocol3.response(self.last_wire_response, op)
         assert_english(response)
-        if response.get("ok"):
+        if response.get("ok") and op == "state.get":
             failures = validate_sources(response.get("result"))
             assert not failures, {"op": op, "source_failures": failures[:20]}
             self.source_checks += 1
@@ -129,13 +131,13 @@ class CapturedClient(Client):
             self.uncertain = True
         state = response.get("result", {})
         if isinstance(state, dict) and response.get("ok"):
-            if op in {"protocol.info", "state.get", "actions.list", "action.execute"}:
+            if protocol3.is_live_operation(op):
                 self.scope = state.get("scope_id", self.scope)
                 self.version = state.get("state_version") or self.version
             if "observation" in state:
                 self.last_state = state
                 display(state)
-        self.trace.write(json.dumps({"op": op, "response": response}, ensure_ascii=False) + "\n")
+        self.trace.write(json.dumps({"request": request, "response": self.last_wire_response}, ensure_ascii=False) + "\n")
         self.trace.flush()
         self.responses.append((op, response))
         return response
@@ -228,7 +230,7 @@ def fresh_case(cli, bundle, output, env, initial_kind, expected_build, expected_
         assert resumed.request("protocol.info")["result"]["build_id"] == expected_build
         after, scenes = start_or_continue(resumed, resume=True)
         assert after["scope_id"] == scope and hero_inventory(after) == before
-        history = resumed.request("request.get", {"target_id": saved["id"]}, scope=scope)
+        history = resumed.request("request.get", {"target_id": saved["id"], "get": ["reply"]}, scope=scope)
         assert history["ok"] and history["result"]["response"] == saved
         result.update(restarted_jvm=loaded_jvm(resumed.process, bundle), saved_scope_id=scope,
                       save_request_id=saved["id"], same_run_and_history=True)
@@ -267,7 +269,7 @@ def self_test():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path)
-    parser.add_argument("--expected-cli", default="CLI.2.1.1")
+    parser.add_argument("--expected-cli", default="CLI.3.0.0")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -276,7 +278,7 @@ def main():
     if args.bundle is None:
         parser.error("--bundle is required for the actual package test")
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging2.1" / ("transport-defaults-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging3.0" / ("transport-defaults-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     write_json(output / "test_fixture.json", {"test_fixture": True, "counts_as_win": False,
                "setup": "Production CLI only; profile settings and game state are not prewritten"})

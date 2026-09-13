@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.Assert.*;
 
-/** Protocol-2 failures are separated at dispatch, certified completion and pure presentation boundaries. */
-public class Cli2SessionTest {
+/** Protocol-3 failures are separated at dispatch, certified completion and pure presentation boundaries. */
+public class Cli3SessionTest {
     @Rule public TemporaryFolder temporary = new TemporaryFolder();
 
     @Test public void missingAndOldProtocolCannotObserveOrDispatchEvenTheHandshake() throws Exception {
@@ -38,27 +38,33 @@ public class Cli2SessionTest {
                 send(session, map("protocol_version", 1, "scope_id", "run:a", "id", "old-action", "op", "action.execute",
                         "state_version", "v1", "args", map("action", "wait")));
                 assertEquals("UNSUPPORTED_PROTOCOL", error(last(wire)));
+                send(session, map("v", 2, "id", "version-two", "op", "info"));
+                assertEquals("UNSUPPORTED_PROTOCOL", error(last(wire)));
+                session.accept(JsonCodec.encode(map("protocol_version", 2, "id", "legacy-envelope", "op", "protocol.info"))).get(5, TimeUnit.SECONDS);
+                assertEquals("PROTOCOL_VERSION_REQUIRED", error(last(wire)));
+                send(session, map("v", 3, "id", "legacy-args", "s", "run:a", "op", "wait", "rev", "v1", "args", map("action", "wait")));
+                assertEquals("INVALID_REQUEST", error(last(wire)));
                 assertEquals(0, game.observations); assertEquals(0, game.executions);
-                send(session, map("protocol_version", 2, "id", "new", "op", "protocol.info"));
-                assertEquals(Boolean.TRUE, last(wire).get("ok"));
-                Map<?,?> hello = (Map<?,?>) last(wire).get("result");
-                assertEquals(2L, hello.get("protocol_version")); assertEquals(5L, hello.get("audit_schema_version"));
-                assertEquals("CLI.2.1.1", hello.get("cli_version"));
+                send(session, map("protocol_version", 3, "id", "new", "op", "protocol.info"));
+                assertFalse(last(wire).containsKey("err"));
+                Map<?,?> hello = (Map<?,?>) last(wire).get("data");
+                assertEquals(3L, last(wire).get("v")); assertEquals(6L, hello.get("audit_schema_version"));
+                assertEquals("CLI.3.0.0", hello.get("cli_version"));
             }
         }
     }
 
     @Test public void certifiedActionWithMissingTextKeepsItsSaveLogsAndAllowsTheNextAction() throws Exception {
         try (AuditStore store = new AuditStore(temporary.newFolder().toPath())) {
-            store.ensureScope("run:a", "run", "a"); store.beginSession("cli2-presentation","fixture-build","CLI.2.0.0",2);
+            store.ensureScope("run:a", "run", "a"); store.beginSession("cli3-presentation","fixture-build","CLI.3.0.0",3);
             FakeGame game = new FakeGame(); ByteArrayOutputStream wire = new ByteArrayOutputStream();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(wire, true, "UTF-8"), 1000)) {
                 send(session, request("act", "action.execute", "v1", map("action", "wait")));
                 Map<String,Object> response = last(wire);
-                assertEquals(Boolean.TRUE, response.get("ok")); assertEquals("completed", response.get("status"));
-                assertEquals("partial", ((Map<?,?>)response.get("presentation")).get("status"));
-                Map<?,?> result = (Map<?,?>)response.get("result");
-                assertEquals("v2", result.get("state_version"));
+                assertFalse(response.containsKey("err")); assertEquals("completed", response.get("st"));
+                assertEquals("partial", ((Map<?,?>)response.get("pres")).get("st"));
+                Map<?,?> result = (Map<?,?>)response.get("data");
+                assertEquals("v2", response.get("rev"));
                 Map<?,?> persistence = (Map<?,?>)result.get("persistence");
                 assertEquals(1, ((List<?>)persistence.get("saves_during_request")).size());
                 Map<String,Object> recorded = store.getRequest("run:a", "act");
@@ -67,9 +73,9 @@ public class Cli2SessionTest {
                 assertEquals(1, store.events("run:a", 0, 100).stream().filter(event -> "game.log".equals(event.get("kind"))).count());
                 assertFalse(wire.toString("UTF-8").contains("未标记")); assertFalse(session.failed()); assertEquals(0, game.exits);
                 send(session, request("observe", "state.get", null, null));
-                assertEquals(Boolean.TRUE, last(wire).get("ok"));
+                assertFalse(last(wire).containsKey("err"));
                 send(session, request("next", "action.execute", "v2", map("action", "wait")));
-                assertEquals(Boolean.TRUE, last(wire).get("ok")); assertEquals(2, game.executions);
+                assertFalse(last(wire).containsKey("err")); assertEquals(2, game.executions);
                 assertEquals("COMPLETED", store.getRequest("run:a", "next").get("status"));
             }
         }
@@ -78,19 +84,19 @@ public class Cli2SessionTest {
     @Test public void historyDoesNotObserveTheLiveEngineOrRewriteAnAlreadyRecordedWireResponse() throws Exception {
         try (AuditStore store = new AuditStore(temporary.newFolder().toPath())) {
             store.ensureScope("run:a", "run", "a");
-            Map<String,Object> recorded = map("protocol_version", 2, "ok", true, "status", "completed",
-                    "presentation", map("status", "partial", "diagnostics", List.of(map("path", "/observation/name", "reason", "source_missing"))),
-                    "result", map("name", "already rendered fallback", "text_sources", map("name", map("status", "unavailable"))));
-            AuditStore.Attempt original = store.begin("run:a", "old", "action.execute", "{\"protocol_version\":2}");
+            Map<String,Object> recorded = map("v", 3, "id", "old", "st", "completed",
+                    "pres", map("st", "partial", "diag", List.of(map("field", "$.data.name", "code", "source_missing"))),
+                    "data", map("name", "already rendered fallback", "text_sources", map("name", map("status", "unavailable"))));
+            AuditStore.Attempt original = store.begin("run:a", "old", "wait", "{\"v\":3,\"id\":\"old\",\"op\":\"wait\"}");
             store.complete(original, "COMPLETED", recorded, map("scene", "game"), map("private", true), null);
             Map<String,Object> expected = (Map<String,Object>)store.getRequest("run:a", "old").get("response");
             FakeGame game = new FakeGame(); game.failObservation = true; ByteArrayOutputStream wire = new ByteArrayOutputStream();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(wire, true, "UTF-8"), 1000)) {
-                send(session, request("record", "request.get", null, map("target_id", "old")));
-                assertEquals(Boolean.TRUE, last(wire).get("ok"));
-                assertEquals(expected, ((Map<?,?>)last(wire).get("result")).get("response"));
-                send(session, request("history", "history.list", null, null)); assertEquals(Boolean.TRUE, last(wire).get("ok"));
-                send(session, request("events", "events.read", null, null)); assertEquals(Boolean.TRUE, last(wire).get("ok"));
+                send(session, request("record", "request.get", null, map("target_id", "old", "get", List.of("reply"))));
+                assertFalse(last(wire).containsKey("err"));
+                assertEquals(expected, ((Map<?,?>)last(wire).get("data")).get("reply"));
+                send(session, request("history", "history.list", null, null)); assertFalse(last(wire).containsKey("err"));
+                send(session, request("events", "events.read", null, null)); assertFalse(last(wire).containsKey("err"));
                 assertEquals(0, game.observations); assertEquals(0, game.executions); assertFalse(session.failed());
                 assertEquals(expected, store.getRequest("run:a", "old").get("response"));
             }
@@ -101,7 +107,7 @@ public class Cli2SessionTest {
         java.nio.file.Path profile=temporary.newFolder().toPath();
         Map<String,Object> recorded;
         try(AuditStore store=new AuditStore(profile)) {
-            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.2.0.0",2);
+            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.3.0.0",3);
             com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance provenance=
                     new com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance(key->"Recorded %d");
             String source=provenance.onTextResource("当时显示17","fixture.recorded","zh",new Object[]{17});
@@ -113,15 +119,30 @@ public class Cli2SessionTest {
             store.endSession("CLOSED","finished");
         }
         try(AuditStore store=new AuditStore(profile)) {
-            store.beginSession("new-boot","new-build","CLI.2.1.0",2);
+            store.beginSession("new-boot","new-build","CLI.3.0.0",3);
             FakeGame game=new FakeGame();game.failObservation=true;
             ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {
                 send(session,request("event-history","events.read",null,null));
-                assertEquals(Boolean.TRUE,last(wire).get("ok"));
-                assertEquals("partial",((Map<?,?>)last(wire).get("presentation")).get("status"));
-                List<?> events=(List<?>)last(wire).get("result");assertEquals(1,events.size());
-                assertEquals(recorded,((Map<?,?>)events.get(0)).get("data"));
+                assertFalse(last(wire).containsKey("err"));
+                assertEquals("partial",((Map<?,?>)last(wire).get("pres")).get("st"));
+                List<?> events=(List<?>)((Map<?,?>)last(wire).get("data")).get("items");assertEquals(1,events.size());
+                Map<?,?> eventData=(Map<?,?>)((Map<?,?>)events.get(0)).get("data");
+                assertEquals(recorded.get("gui_language"),eventData.get("gui_language"));
+                List<?> entries=(List<?>)eventData.get("entries");
+                assertEquals(2,entries.size());
+                List<?> frozenEntries=(List<?>)recorded.get("entries");
+                for(int i=0;i<entries.size();i++)
+                    assertEquals(((Map<?,?>)frozenEntries.get(i)).get("text"),((Map<?,?>)entries.get(i)).get("text"));
+                Map<?,?> partialEntry=(Map<?,?>)entries.get(1);
+                assertEquals("partial",((Map<?,?>)partialEntry.get("pres")).get("st"));
+                Object diagnostic=((Map<?,?>)((Map<?,?>)frozenEntries.get(1)).get("text_diagnostics")).get("text");
+                assertNotNull(diagnostic);
+                assertEquals(List.of(map("field","text","code",diagnostic)),((Map<?,?>)partialEntry.get("pres")).get("diag"));
+                assertEquals(List.of(map("field","$.data.items[0].data.entries[1].text","code",diagnostic)),
+                        ((Map<?,?>)last(wire).get("pres")).get("diag"));
+                assertFalse(JsonCodec.encode(eventData).contains("text_sources"));
+                assertFalse(JsonCodec.encode(eventData).contains("private original display"));
                 assertEquals("partial",((Map<?,?>)events.get(0)).get("presentation_status"));
                 assertEquals(recorded,store.events("run:a",0,100).get(0).get("data"));
                 assertEquals(0,game.observations);assertEquals(0,game.executions);
@@ -135,14 +156,14 @@ public class Cli2SessionTest {
             FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {
                 send(session,request("partial","action.execute","v1",map("action","wait")));
-                assertEquals(Boolean.TRUE,last(wire).get("ok"));
+                assertFalse(last(wire).containsKey("err"));
                 game.failExecution=true;
                 send(session,request("broken","action.execute","v2",map("action","wait")));
                 assertEquals("EXECUTION_UNKNOWN",error(last(wire)));
                 assertEquals("UNKNOWN",store.getRequest("run:a","broken").get("status"));
                 assertNull(store.getRequest("run:a","broken").get("after_snapshot"));
                 send(session,request("unknown-observation","state.get",null,null));
-                assertEquals("execution_unknown",((Map<?,?>)last(wire).get("result")).get("phase"));
+                assertEquals("execution_unknown",((Map<?,?>)last(wire).get("data")).get("phase"));
                 send(session,request("blocked","action.execute","v2",map("action","wait")));
                 assertEquals("EXECUTION_UNCERTAIN",error(last(wire)));assertEquals(2,game.executions);
             }
@@ -150,15 +171,15 @@ public class Cli2SessionTest {
     }
 
     private static Map<String,Object> request(String id, String op, String version, Map<String,Object> args) {
-        Map<String,Object> request = map("protocol_version", 2, "scope_id", "run:a", "id", id, "op", op);
+        Map<String,Object> request = map("protocol_version", 3, "scope_id", "run:a", "id", id, "op", op);
         if (version != null) request.put("state_version", version);
         if (args != null) request.put("args", args);
         return request;
     }
     private static void send(MachineSession session, Map<String,Object> request) throws Exception {
-        session.accept(JsonCodec.encode(request)).get(5, TimeUnit.SECONDS);
+        session.accept(V3Requests.encode(request)).get(5, TimeUnit.SECONDS);
     }
-    private static String error(Map<String,Object> response) { return (String)((Map<?,?>)response.get("error")).get("code"); }
+    private static String error(Map<String,Object> response) { return (String)response.get("err"); }
     private static Map<String,Object> last(ByteArrayOutputStream wire) {
         String[] lines = wire.toString(StandardCharsets.UTF_8).trim().split("\n");
         return JsonCodec.decode(lines[lines.length - 1]);

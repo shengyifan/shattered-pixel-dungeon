@@ -48,6 +48,7 @@ def main():
         original = mode + "-" + uuid.uuid4().hex
         started = time.monotonic()
         first = client.request("action.execute", command_args, request_id=original)
+        first_wire = json.loads(client.last_recv_bytes)
         elapsed = time.monotonic() - started
         assert first.get("ok") and first.get("status") == "in_progress", first
         activity = first["result"]
@@ -75,7 +76,7 @@ def main():
             print(json.dumps(report, ensure_ascii=False))
             return
         assert cancelled.get("ok") and cancelled.get("status") == "completed", cancelled
-        record = client.request("request.get", {"target_id": original}, scope=first["scope_id"])
+        record = client.request("request.get", {"target_id": original, "get": ["reply"]}, scope=first["scope_id"])
         assert record["result"]["status"] == "INTERRUPTED", record
         assert record["result"]["response"]["status"] == "interrupted", record
         after = client.state()
@@ -84,7 +85,7 @@ def main():
         assert not any(a["action"] == "action.cancel" for a in after["actions"])
         if target is not None:
             stopped = after["observation"]["hero"]["cell"]
-            cancellation = client.request("request.get", {"target_id": cancel_id}, scope=first["scope_id"])["result"]
+            cancellation = client.request("request.get", {"target_id": cancel_id, "get": ["before"]}, scope=first["scope_id"])["result"]
             prepared = cancellation["before_snapshot"]["hero"]["cell"]
             assert origin < stopped < target, {"origin": origin, "stopped": stopped, "target": target}
             assert stopped == prepared, {"prepared": prepared, "stopped": stopped}
@@ -100,7 +101,7 @@ def main():
         client.finish()
         with sqlite3.connect(profile / "audit/public.sqlite3") as db:
             rows = db.execute("SELECT response_json FROM exchanges WHERE scope_id=? AND id=?", (first["scope_id"], original)).fetchall()
-            assert len(rows) == 1 and json.loads(rows[0][0]) == first, rows
+            assert len(rows) == 1 and json.loads(rows[0][0]) == first_wire, rows
         (profile / "cancellation-result.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
         print(json.dumps(report, ensure_ascii=False))
     finally:

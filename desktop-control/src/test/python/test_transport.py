@@ -5,6 +5,8 @@ No Java runtime, game saves, Terminal.app or production profile is accessed.
 """
 import json
 import os
+import pty
+import re
 from pathlib import Path
 import resource
 import select
@@ -13,6 +15,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 
@@ -24,11 +27,20 @@ mode = sys.argv[1]
 os.write(2, ("ENGINE_PID=%d\n" % os.getpid()).encode())
 if mode == "args":
     os.write(1, json.dumps(sys.argv[2:], ensure_ascii=False).encode() + b"\n")
+elif mode == "profile":
+    os.write(1, json.dumps({"profile": os.environ.get("SPDCTL_PROFILE")}).encode() + b"\n")
 elif mode == "echo":
     while True:
         data = os.read(0, 8191)
         if not data: break
         os.write(1, data)
+elif mode == "slow-echo":
+    while True:
+        data = os.read(0, 32749)
+        if not data: break
+        time.sleep(.0002)
+        while data:
+            data = data[os.write(1, data):]
 elif mode == "gated":
     gate = Path(sys.argv[2])
     while True:
@@ -233,6 +245,207 @@ class NativeTransportTest(unittest.TestCase):
         self.assertTrue((session / "open-viewer.command").is_file())
         return rows
 
+
+    def fixture_session(self, events):
+        """Create only transport records; this fixture never opens a game profile."""
+        session = self.root / "fixture-session"
+        session.mkdir()
+        payloads = {"SEND": bytearray(), "RECV": bytearray(), "STDERR": bytearray()}
+        index = ["SPDCTL_TRACE\t1\n"]
+        for sequence, (kind, value) in enumerate(events, 1):
+            if kind in payloads:
+                offset, length, detail = len(payloads[kind]), len(value), "-"
+                payloads[kind].extend(value)
+            else:
+                offset, length, detail = 0, 0, value
+            index.append(f"{sequence}\t{1700000000000000000 + sequence}\t{kind}\t{offset}\t{length}\t{detail}\n")
+        for kind, name in (("SEND", "send.raw"), ("RECV", "recv.raw"), ("STDERR", "stderr.raw")):
+            (session / name).write_bytes(payloads[kind])
+        (session / "events.tsv").write_text("".join(index))
+        return session
+
+    def view(self, session, color=None, environment=None):
+        command = [str(self.binary), "trace", "view", "--session", str(session)]
+        if color:
+            command.extend(["--color", color])
+        result = subprocess.run(command, stdin=subprocess.DEVNULL, capture_output=True,
+                                env=environment or self.environment, timeout=45)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertFalse(result.stderr)
+        return result.stdout
+
+    def test_viewer_filters_success_events_and_keeps_all_failures(self):
+        failures = ["EXITED:9", "SIGNAL:2", "CHILD_STDIN_BROKEN", "TRACE_IO_FAILED", "FUTURE_FAILURE"]
+        session = self.fixture_session([
+            ("STATUS", "STARTED"), ("SEND", b'{"v":3}\n'), ("DELIVERED", "-"),
+            ("STATUS", "EOF_SENT"), ("RECV", b'{"st":"done"}\n'),
+            ("STDERR", b"engine diagnostic\n"), *[("STATUS", value) for value in failures],
+            ("STATUS", "EXITED:0")])
+        original = {path.name: path.read_bytes() for path in session.iterdir()}
+        rendered = self.view(session)
+        for hidden in (b"DELIVERED", b"STATUS", b"STARTED", b"EOF_SENT", b"EXITED:0", b"STDERR"):
+            self.assertNotIn(hidden, rendered)
+        for failure in failures:
+            self.assertIn(failure.encode(), rendered)
+        self.assertEqual(1, len(re.findall(rb"\] #\d+ SEND\n", rendered)))
+        self.assertEqual(1, len(re.findall(rb"\] #\d+ RECV\n", rendered)))
+        self.assertEqual(len(failures) + 1, len(re.findall(rb"\] #\d+ ERROR\n", rendered)))
+        self.assertEqual(original, {path.name: path.read_bytes() for path in session.iterdir()})
+
+    def test_viewer_keeps_ndjson_frames_contiguous_across_chunks(self):
+        request = b'{"key": "first", "values": [1, true, null]}\n'
+        response = '{"text":"中文🐈"}\n'.encode()
+        session = self.fixture_session([
+            *[("SEND", request[i:i + 1]) for i in range(len(request))],
+            *[("RECV", response[i:i + 1]) for i in range(len(response))],
+            ("RECV", b'{"more":2}\n{"final":3}'), ("STATUS", "EXITED:0")])
+        rendered = self.view(session, "never")
+        self.assertIn(request, rendered)
+        self.assertIn(response, rendered)
+        self.assertIn(b'{"more":2}\n', rendered)
+        self.assertIn(b'{"final":3}\nSession ended.', rendered)
+        self.assertEqual(4, len(re.findall(rb"\] #\d+ (?:SEND|RECV)\n", rendered)))
+        self.assertNotIn(b"continued", rendered)
+
+    def test_color_lexer_survives_interleaving_escapes_and_utf8(self):
+        request = '{"key":"中文🐈 \\"quoted\\"","array":["value",{"nested":-1.5e+2}],"bool":true,"nil":null}\n'.encode()
+        # Split every byte, including escapes and UTF-8. Every RECV interruption
+        # must leave SEND's object/string grammar intact.
+        events = []
+        for index, byte in enumerate(request):
+            events.append(("SEND", bytes([byte])))
+            if index in (9, 15, 32):
+                events.append(("RECV", b'{"reply":"ok"}\n'))
+        session = self.fixture_session(events)
+        colored = self.view(session, "always")
+        plain = self.view(session, "never")
+        self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", colored))
+        self.assertEqual(3, plain.count(b"SEND (continued)"))
+        self.assertIn(b'\x1b[34m"key"', colored)
+        self.assertIn(b'\x1b[32m"value"', colored)
+        self.assertIn(b'\x1b[34m"nested"', colored)
+        self.assertIn(b'\x1b[33m-1.5e+2', colored)
+        self.assertIn(b'\x1b[35mtrue', colored)
+        self.assertIn(b'\x1b[35mnull', colored)
+        self.assertIn(b'\x1b[2m', colored)
+        colored.decode("utf-8", errors="strict")
+        self.assertNotIn(b"\\xE4", colored)
+
+    def test_color_modes_tty_environment_and_explicit_precedence(self):
+        session = self.fixture_session([("SEND", b'{"key":"value"}\n')])
+        self.assertNotIn(b"\x1b", self.view(session))
+        self.assertNotIn(b"\x1b", self.view(session, "auto"))
+        self.assertIn(b"\x1b", self.view(session, "always", {**self.environment, "NO_COLOR": "1", "TERM": "dumb"}))
+        for color, extras, expect_color in [
+                (None, {"TERM": "xterm-256color", "NO_COLOR": None}, True),
+                ("auto", {"TERM": "dumb", "NO_COLOR": None}, False),
+                ("auto", {"TERM": "xterm", "NO_COLOR": "1"}, False),
+                ("never", {"TERM": "xterm", "NO_COLOR": None}, False),
+                ("always", {"TERM": "dumb", "NO_COLOR": "1"}, True)]:
+            with self.subTest(color=color, extras=extras):
+                environment = self.environment.copy()
+                for key, value in extras.items():
+                    if value is None:
+                        environment.pop(key, None)
+                    else:
+                        environment[key] = value
+                master, slave = pty.openpty()
+                try:
+                    command = [str(self.binary), "trace", "view", "--session", str(session)]
+                    if color:
+                        command.extend(["--color", color])
+                    process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=slave,
+                                               stderr=subprocess.PIPE, env=environment)
+                    self.processes.append(process)
+                    os.close(slave)
+                    slave = -1
+                    chunks = []
+                    while True:
+                        ready, _, _ = select.select([master], [], [], 5)
+                        self.assertTrue(ready, "TTY viewer did not finish")
+                        try:
+                            chunk = os.read(master, 65536)
+                        except OSError:
+                            break
+                        if not chunk:
+                            break
+                        chunks.append(chunk)
+                    process.wait(timeout=5)
+                    self.assertEqual(0, process.returncode)
+                    self.assertEqual(expect_color, b"\x1b" in b"".join(chunks))
+                finally:
+                    os.close(master)
+                    if slave >= 0:
+                        os.close(slave)
+        rejected = subprocess.run([str(self.binary), "trace", "view", "--session", str(session),
+                                   "--color", "rainbow"], capture_output=True, env=self.environment)
+        self.assertEqual(64, rejected.returncode)
+
+    def test_colored_malformed_json_and_incomplete_unicode_are_safe(self):
+        body = b'{"key":"raw\x1b[2J\x07", !!! ["value", -3]\n' + b'"incomplete:\xf0\x9f'
+        session = self.fixture_session([("SEND", body[:12]), ("SEND", body[12:])])
+        rendered = self.view(session, "always")
+        plain = re.sub(rb"\x1b\[[0-9;]*m", b"", rendered)
+        self.assertNotIn(b"\x1b", plain)
+        self.assertNotIn(b"\x07", plain)
+        self.assertIn(b"\\x1B[2J\\x07", plain)
+        self.assertIn(b'"incomplete:\\xF0\\x9F', plain)
+        plain.decode("utf-8", errors="strict")
+
+    def test_single_16_and_64_mib_json_are_lossless_with_slow_consumers_and_viewer(self):
+        for mib, final_lf in ((16, True), (64, False)):
+            with self.subTest(mib=mib, final_lf=final_lf):
+                self.trace = self.root / f"large-{mib}"
+                prefix = '{"text":"中文🐈'.encode()
+                suffix = b'"}' + (b"\n" if final_lf else b"")
+                payload = prefix + b"x" * (mib * 1024 * 1024 - len(prefix) - len(suffix)) + suffix
+                process = self.start("slow-echo")
+                write_errors = []
+                def write_input():
+                    try:
+                        process.stdin.write(payload)
+                        process.stdin.close()
+                    except Exception as error:
+                        write_errors.append(error)
+                writer = threading.Thread(target=write_input)
+                writer.start()
+                response = bytearray()
+                while True:
+                    chunk = process.stdout.read(65521)
+                    if not chunk:
+                        break
+                    response.extend(chunk)
+                    time.sleep(.0003)
+                writer.join(timeout=10)
+                self.assertFalse(writer.is_alive())
+                self.assertFalse(write_errors)
+                process.wait(timeout=10)
+                self.assertEqual(0, process.returncode, process.stderr.read())
+                self.assertTrue(payload == response, "Native response differs from the full input JSON")
+                del response
+                session = self.session()
+                self.assertTrue(payload == (session / "send.raw").read_bytes(), "SEND raw is truncated or changed")
+                self.assertTrue(payload == (session / "recv.raw").read_bytes(), "RECV raw is truncated or changed")
+                rows = self.assert_complete(session)
+                self.assertEqual(len(payload), sum(row[4] for row in rows if row[2] == "DELIVERED"))
+                rendered = self.view(session, "never")
+                # Direction changes insert display-only line breaks; reconstruct
+                # the single frame in each direction and compare every body byte.
+                recovered = {b"SEND": bytearray(), b"RECV": bytearray()}
+                direction = None
+                for line in rendered.splitlines():
+                    match = re.fullmatch(rb"\[\d+\.\d+\] #\d+ (SEND|RECV|ERROR)(?: \(continued\))?", line)
+                    if match:
+                        direction = match[1]
+                    elif line.startswith(b"Session ended."):
+                        direction = None
+                    elif direction in recovered:
+                        recovered[direction].extend(line)
+                for direction, body in recovered.items():
+                    self.assertTrue(payload.rstrip(b"\n") == body, f"{direction.decode()} viewer body was truncated or changed")
+                self.assertNotIn(b"DELIVERED", rendered)
+                self.assertNotIn(b" STATUS", rendered)
+
     def test_exact_binary_transport_and_raw_event_offsets(self):
         payload = ('{"text":"中文、emoji 🐈","spaces": [1, 2]}\r\n'.encode()
                    + b'  {"invalid":"\xff\xfe"}\r\n'
@@ -249,6 +462,23 @@ class NativeTransportTest(unittest.TestCase):
         delivered = [row for row in rows if row[2] == "DELIVERED"]
         self.assertEqual(len(payload), sum(row[4] for row in delivered))
         self.assertIn("EOF_SENT", [row[5] for row in rows if row[2] == "STATUS"])
+
+    def test_default_profile_uses_v3_without_accessing_v2(self):
+        old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v2"
+        old_profile.mkdir(parents=True)
+        sentinel = old_profile / "do-not-read-or-change"
+        sentinel.write_bytes(b"previous profile")
+        command = self.command("profile")
+        index = command.index("--data-dir")
+        del command[index:index + 2]
+        result = subprocess.run(command, input=b"", capture_output=True, env=self.environment, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
+        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v3"
+        self.assertEqual(str(expected), json.loads(result.stdout)["profile"])
+        self.assertFalse(expected.exists(), "Native profile resolution unexpectedly created game data")
+        self.assertEqual(b"previous profile", sentinel.read_bytes())
+        self.assertEqual([sentinel], list(old_profile.iterdir()))
+        self.assert_complete(self.session())
 
     def test_engine_argument_boundaries_and_trace_flags_are_not_forwarded(self):
         literal = "spaces ' quotes ; $(touch should-not-exist) 中文"
