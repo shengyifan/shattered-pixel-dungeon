@@ -1,6 +1,6 @@
 # spdctl 控制接口
 
-本 CLI 基于原版 **Shattered Pixel Dungeon 3.3.8**（上游基线 `7b8b845a7`、游戏版本码 `896`）扩展。当前 CLI 版本为 `CLI.2.0.0`，协议版本 `2`、审计 schema `5`。三个版本独立；完整迁移进度及验收范围见 [CLI 2.0 实施记录](cli2-implementation.md)。
+本 CLI 基于原版 **Shattered Pixel Dungeon 3.3.8**（上游基线 `7b8b845a7`、游戏版本码 `896`）扩展。当前 CLI 版本为 `CLI.2.1.0`，协议版本 `2`、审计 schema `5`。三个版本独立；完整迁移进度及验收范围见 [CLI 2.0 实施记录](cli2-implementation.md)。
 
 CLI 系统文案使用官方英文，GUI 可以选择任意已注册语言。原版 `Messages.get()`、`name()`、`desc()` 等接口继续返回 `String`；中央观测钩子按对象身份记录最终命中 key 和冻结参数，CLI 在玩家可见性筛选后输出英文和相邻的 `text_sources`。不根据中文、英文或其他字符串内容反查资源，不重建窗口或重跑显示分支。用户名字、笔记和外部内容保留原文及来源标记。
 
@@ -28,6 +28,10 @@ CLI 系统文案使用官方英文，GUI 可以选择任意已注册语言。原
 ```
 
 CLI 默认 profile 为 `~/Library/Application Support/Shattered Pixel Dungeon CLI v2/`，与普通 GUI 默认目录分开。指定的目录同时保存游戏进度与 `audit/public.sqlite3`、`audit/internal.sqlite3`；相同目录不能由两个游戏实例同时占用。
+
+CLI.2.1.0 默认同时打开独立 Terminal 原文查看器，记录全部 SEND / RECV 字节。关闭查看器不关闭游戏，使用 `spdctl trace open --session /absolute/session` 可以重开；`trace view` 在当前终端跟随。`--no-terminal` 仅关闭自动弹窗，记录继续；`--trace-dir` 指定与 profile 不重叠的记录根。默认记录位于 `~/Library/Logs/Shattered Pixel Dungeon CLI/transport/`，不自动删除。完整格式与故障边界见[传输记录与验收](cli-transport.md)。
+
+只有启动前不存在或为空的 profile 才初始化为窗口化、简体中文、跳过游戏内教程及首次前言。已有目录的任何内容都会保留其原设置和迁移流程；不改已有教程存档，不自动读取指引或授予解锁。之后的 GUI 设置修改会保留。
 
 普通 `.app` 入口仍启动普通 GUI；包内 `spdctl` 入口才保持机器 stdin/stdout。仅 stdio 不支持接管另一个 Finder 已启动的实例。
 

@@ -29,7 +29,7 @@ public final class SpdctlLauncher {
             return;
         }
         if(args.length==1&&args[0].equals("--version")){
-            protocol.println("CLI.2.0.0 (protocol 2, game 3.3.8)");return;
+            protocol.println("CLI.2.1.0 (protocol 2, game 3.3.8)");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
                 ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v2")
@@ -45,6 +45,8 @@ public final class SpdctlLauncher {
                 else throw new IllegalArgumentException("Unknown launcher argument");
             }
             if(!machine||!profile.isAbsolute())throw new IllegalArgumentException("Machine mode and absolute profile path required");
+            // Remember freshness before this launch creates its lock, audit, or other profile files.
+            Runnable initializeDefaults=CliProfileDefaults.prepare(profile);
             // Refuse old or incomplete audit pairs before a profile lock or emergency file can touch them.
             AuditStore.preflight(profile.resolve("audit"));
             Files.createDirectories(profile);profile=profile.toRealPath();
@@ -79,7 +81,7 @@ public final class SpdctlLauncher {
                     System.setOut(new PrintStream(new DiagnosticOutput(session,"stdout"),true,StandardCharsets.UTF_8));
                     System.setErr(new PrintStream(new DiagnosticOutput(session,"stderr"),true,StandardCharsets.UTF_8));
                     Thread reader=new Thread(()->session.read(System.in),"SPD Machine Input");reader.setDaemon(true);reader.start();
-                    try{DesktopLauncher.launch(new String[0],profile,(thread,error)->{uncaughtRuntimeFailure.set(true);session.recordException(error);game.exitNow();},true);loopReturned=true;}
+                    try{DesktopLauncher.launch(new String[0],profile,(thread,error)->{uncaughtRuntimeFailure.set(true);session.recordException(error);game.exitNow();},true,initializeDefaults);loopReturned=true;}
                     catch(Throwable error){session.recordRuntimeFailure(error);game.runtimeFailed(error);throw error;}
                     finally{Game.observer=com.watabou.noosa.RuntimeObserver.NONE;}
                 }

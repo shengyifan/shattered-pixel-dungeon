@@ -7,7 +7,8 @@
 - [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
 - [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
 - [实现与验收状态](cli-implementation.md)：模块、规则边界及版本说明。
-- [CLI.2.0.0 来源改造与验收](cli2-implementation.md)：String 接口、全语言来源、协议 2 / schema 5 与当前构建。
+- [CLI.2.1.0 传输记录与验收](cli-transport.md)：独立终端原文展示、新 profile 默认设置和实际包验证。
+- [CLI.2.0.0 来源改造与验收](cli2-implementation.md)：String 接口、全语言来源与协议 2 / schema 5 的历史验收。
 - [CLI.1.0.1 历史完整重建](cli-rebuild-20260913.md)：该版本的清理范围、全量构建和产物核验。
 - [场景工作计划](cli-scenario-coverage.md)：35个计划场景、11个场景族和146成员的范围/检查方法，不携带旧结果指针。
 - [静态UI覆盖说明](cli-ui-coverage.md)：测试清单的生成方式与使用边界。

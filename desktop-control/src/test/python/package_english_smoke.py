@@ -79,12 +79,21 @@ def verify_bundle(bundle, expected_cli):
 
 def loaded_jvm(process, bundle):
     expected = bundle / "Contents/runtime/Contents/Home/lib/server/libjvm.dylib"
-    output = subprocess.check_output(["/usr/sbin/lsof", "-n", "-P", "-p", str(process.pid), "-Fn"], text=True)
-    candidates = [line[1:] for line in output.splitlines() if line.startswith("n") and line.endswith("libjvm.dylib")]
+    # The native relay owns the pipes; its direct child owns the packaged JVM.
+    children = subprocess.check_output(["/usr/bin/pgrep", "-P", str(process.pid)], text=True).split()
+    loaded = []
+    for child in children:
+        result = subprocess.run(["/usr/sbin/lsof", "-n", "-P", "-p", child, "-Fn"], capture_output=True, text=True)
+        candidates = [line[1:] for line in result.stdout.splitlines()
+                      if line.startswith("n") and line.endswith("libjvm.dylib")]
+        if candidates:
+            loaded.append((int(child), result.stdout, candidates))
+    assert len(loaded) == 1, {"relay_pid": process.pid, "children": children, "loaded_jvms": loaded}
+    child_pid, output, candidates = loaded[0]
     assert candidates and all(os.path.samefile(path, expected) for path in candidates), candidates
     sqlite = [line[1:] for line in output.splitlines() if line.startswith("n") and "libsqlitejdbc" in line]
     assert sqlite, "The package must have loaded its native SQLite JDBC library"
-    return {"pid": process.pid, "loaded_libjvm": candidates[0], "loaded_sqlite_jni": sqlite}
+    return {"relay_pid": process.pid, "pid": child_pid, "loaded_libjvm": candidates[0], "loaded_sqlite_jni": sqlite}
 
 
 def audit_health(profile):
@@ -103,7 +112,8 @@ def audit_health(profile):
 
 def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
     profile = new_profile(output, "原始管道 中文目录 with spaces")
-    command = [str(cli), "run", "--machine", "--data-dir", str(profile)]
+    command = [str(cli), "run", "--machine", "--data-dir", str(profile),
+               "--no-terminal", "--trace-dir", str(output / "transport")]
     frames = []
     stderr = (profile / "native-stderr.log").open("ab")
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr, env=env)
@@ -179,7 +189,8 @@ class PackageClient(Client):
         self.last_state = None
         self.trace = (profile / "public-trace.jsonl").open("a")
         self.stderr = (profile / "native-stderr.log").open("ab")
-        self.process = subprocess.Popen([str(cli), "run", "--machine", "--data-dir", str(profile)],
+        self.process = subprocess.Popen([str(cli), "run", "--machine", "--data-dir", str(profile),
+                                         "--no-terminal", "--trace-dir", str(profile.parent / "transport")],
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.stderr, env=env)
         self.scope = self.version = None
         self.buffer = b""
@@ -331,7 +342,7 @@ def main():
                         help="Reuse an unchanged-build successful raw case; preserves its original profile and report")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/package-check" / ("english-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging2.1" / ("english-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录 with spaces" / args.bundle.name
     shutil.copytree(args.bundle.resolve(), bundle, symlinks=True)
@@ -341,7 +352,7 @@ def main():
     try:
         if args.reuse_raw_result:
             source = args.reuse_raw_result.resolve()
-            assert source.is_relative_to((root / "desktop-control/build/package-check").resolve())
+            assert source.is_relative_to((root / "desktop-control/build/fixtures/packaging2.1").resolve())
             raw = json.loads(source.read_text())
             assert raw["verified"] is True and raw["case_id"] == "package.english_raw_pipe"
             assert raw["runtime"]["build_id"] == binary["build_id"], "A different production build must rerun the raw case"

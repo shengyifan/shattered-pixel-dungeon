@@ -11,7 +11,8 @@ import uuid
 def main():
     parser=argparse.ArgumentParser();parser.add_argument("--launcher",type=Path,required=True);args=parser.parse_args()
     root=Path(__file__).resolve().parents[4]
-    profile=root/"desktop-control/build/fixtures"/("startup-failure-"+uuid.uuid4().hex)
+    output=root/"desktop-control/build/fixtures/packaging2.1"/("startup-failure-"+uuid.uuid4().hex)
+    profile=output/"profile"
     emergency=profile/"audit/emergency";emergency.mkdir(parents=True)
     from test_ui import configure_test_ui
     configure_test_ui(profile)
@@ -19,7 +20,8 @@ def main():
     # The importer must preserve an existing archived file, making Files.move fail before GameController exists.
     (emergency/"fixture.log").write_bytes(b"fixture diagnostic bytes\xff")
     (emergency/"fixture.log.imported").write_text("pre-existing archive must remain")
-    process=subprocess.run([str(args.launcher.resolve()),"run","--machine","--data-dir",str(profile)],
+    process=subprocess.run([str(args.launcher.resolve()),"run","--machine","--data-dir",str(profile),
+                            "--no-terminal","--trace-dir",str(output/"transport")],
                            input=b"",capture_output=True,timeout=30)
     assert process.returncode==1,(process.returncode,process.stderr)
     assert process.stdout==b"",process.stdout

@@ -43,7 +43,7 @@ def main():
     parser.add_argument("--bundle", type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/package-check" / uuid.uuid4().hex
+    output = root / "desktop-control/build/fixtures/packaging2.1" / ("raw-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录" / args.bundle.name
     shutil.copytree(args.bundle, bundle, symlinks=True)
@@ -65,7 +65,8 @@ def main():
     env.pop("JAVA_HOME", None)
     # No external Java/SQLite/Python executable is needed by the bundled app.
     env["PATH"] = "/usr/bin:/bin"
-    command = [str(cli), "run", "--machine", "--data-dir", str(profile)]
+    command = [str(cli), "run", "--machine", "--data-dir", str(profile),
+               "--no-terminal", "--trace-dir", str(output / "transport")]
     stderr = (output / "native-stderr.log").open("wb")
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr, env=env)
     frames = []

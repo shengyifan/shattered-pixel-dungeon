@@ -63,6 +63,13 @@ public class DesktopLauncher {
 
 	public static void launch(String[] args, java.nio.file.Path dataDirectory,
 			Thread.UncaughtExceptionHandler exceptionHandler, boolean profileAlreadyLocked) {
+		launch(args, dataDirectory, exceptionHandler, profileAlreadyLocked, () -> {});
+	}
+
+	/** Runs the optional settings hook before any display preferences are consumed. */
+	public static void launch(String[] args, java.nio.file.Path dataDirectory,
+			Thread.UncaughtExceptionHandler exceptionHandler, boolean profileAlreadyLocked,
+			Runnable preferencesReady) {
 
 		if (exceptionHandler != null && SharedLibraryLoader.os == Os.MacOsX
 				&& !"1".equals(System.getenv("JAVA_STARTED_ON_FIRST_THREAD_"
@@ -196,8 +203,7 @@ public class DesktopLauncher {
 				? java.nio.file.Paths.get(basePath) : java.nio.file.Paths.get(System.getProperty("user.home"), basePath);
 		try (ProfileLock profileLock = profileAlreadyLocked ? null : new ProfileLock(profilePath)) {
 		config.setPreferencesConfig( basePath, baseFileType );
-		SPDSettings.set( new Lwjgl3Preferences( new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType) ));
-		FileUtils.setDefaultFileProperties( baseFileType, basePath );
+		loadPreferences(basePath, baseFileType, preferencesReady);
 		
 		config.setWindowSizeLimits( 720, 400, -1, -1 );
 		Point p = SPDSettings.windowResolution();
@@ -218,5 +224,11 @@ public class DesktopLauncher {
 
 		new Lwjgl3Application(new ShatteredPixelDungeon(new DesktopPlatformSupport()), config);
 		} catch (java.io.IOException e) { throw new IllegalStateException("PROFILE_UNAVAILABLE", e); }
+	}
+
+	static void loadPreferences(String basePath, Files.FileType baseFileType, Runnable preferencesReady) {
+		SPDSettings.set( new Lwjgl3Preferences( new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType) ));
+		FileUtils.setDefaultFileProperties( baseFileType, basePath );
+		preferencesReady.run();
 	}
 }

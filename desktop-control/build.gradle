@@ -14,6 +14,7 @@ dependencies {
     implementation project(':core')
     implementation 'org.xerial:sqlite-jdbc:3.53.4.0'
     testImplementation 'junit:junit:4.13.2'
+    testImplementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
     crashAgentImplementation 'org.ow2.asm:asm:9.10.1'
 }
 tasks.register('crashAgentJar', Jar) {
@@ -25,6 +26,21 @@ tasks.register('crashAgentJar', Jar) {
     manifest { attributes('Premain-Class': 'EngineBoundaryAgent') }
 }
 def helpDocument = rootProject.file('docs/cli-help.md')
+def transportSource = file('src/main/native/spdctl-bootstrap.c')
+def transportInputs = [transportSource, rootProject.file('bin/spdctl'), file('build.gradle')]
+def nativeTransport = layout.buildDirectory.file('native/spdctl')
+tasks.register('buildNativeTransport', Exec) {
+    inputs.file(transportSource)
+    inputs.property('target', 'arm64-macos12.0-Os-Wall-Wextra-Werror')
+    outputs.file(nativeTransport)
+    doFirst {
+        if (!System.getProperty('os.name').toLowerCase().contains('mac') || System.getProperty('os.arch') != 'aarch64')
+            throw new GradleException('Native Apple Silicon JDK required')
+        nativeTransport.get().asFile.parentFile.mkdirs()
+        commandLine 'xcrun', 'clang', '-arch', 'arm64', '-mmacosx-version-min=12.0',
+                '-Os', '-Wall', '-Wextra', '-Werror', transportSource, '-o', nativeTransport.get().asFile
+    }
+}
 def catalogDirectory = layout.buildDirectory.dir('generated/control-catalog')
 tasks.register('generateBuildCatalog') {
     def modules = [project(':SPD-classes'), project(':core'), project(':desktop'), project(':control-protocol'), project(':game-control'), project(':desktop-control')]
@@ -33,6 +49,7 @@ tasks.register('generateBuildCatalog') {
     inputs.files(compiled)
     inputs.files(project(':core').fileTree('src/main/assets'), project(':desktop').fileTree('src/main/assets'))
     inputs.file(helpDocument)
+    inputs.files(transportInputs)
     outputs.dir(catalogDirectory)
     doLast {
         def entries = []
@@ -55,12 +72,15 @@ tasks.register('generateBuildCatalog') {
             fileTree(base).files.sort().each { file -> entries.add([path: rootProject.relativePath(file), bytes: file.length(), sha256: digestFile(file)]) }
         }
         entries.add([path: rootProject.relativePath(helpDocument), bytes: helpDocument.length(), sha256: digestFile(helpDocument)])
+        transportInputs.each { source ->
+            entries.add([path: rootProject.relativePath(source), bytes: source.length(), sha256: digestFile(source)])
+        }
         def encoded = groovy.json.JsonOutput.toJson(entries)
         def buildId = java.security.MessageDigest.getInstance('SHA-256').digest(encoded.getBytes('UTF-8')).encodeHex().toString()
         def output = new File(catalogDirectory.get().asFile, 'control-build.json')
         output.parentFile.mkdirs()
         output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName,
-            cli_version: 'CLI.2.0.0', java_source: '11', build_java: System.getProperty('java.version'),
+            cli_version: 'CLI.2.1.0', java_source: '11', build_java: System.getProperty('java.version'),
             sqlite_jdbc: '3.53.4.0', entries: entries])
     }
 }
@@ -80,10 +100,14 @@ tasks.named('run', JavaExec) {
 }
 tasks.register('writeRuntimeClasspath') {
     dependsOn classes
+    dependsOn buildNativeTransport
     dependsOn configurations.runtimeClasspath
     def output = layout.buildDirectory.file('runtime-classpath.txt')
+    def transportOutput = layout.buildDirectory.file('runtime-transport.txt')
     inputs.files(sourceSets.main.runtimeClasspath)
+    inputs.file(nativeTransport)
     outputs.file(output)
+    outputs.file(transportOutput)
     doLast {
         // A running JVM must not read project JARs while another build replaces them.
         def image = layout.buildDirectory.dir("runtime-images/${UUID.randomUUID()}").get().asFile
@@ -98,6 +122,10 @@ tasks.register('writeRuntimeClasspath') {
             } else entries.add(entry.absolutePath)
         }
         output.get().asFile.text = entries.join(File.pathSeparator)
+        copy { from nativeTransport; into image }
+        def frozenTransport = new File(image, 'spdctl')
+        frozenTransport.setExecutable(true, false)
+        transportOutput.get().asFile.text = frozenTransport.absolutePath
     }
 }
 tasks.register('writeTestRuntimeClasspath') {
@@ -126,6 +154,7 @@ tasks.register('release', Jar) {
 }
 tasks.register('packageMacArm64', Exec) {
     dependsOn release
+    dependsOn buildNativeTransport
     def dest = layout.buildDirectory.dir('app-macos-arm64')
     doFirst {
         if (!System.getProperty('os.name').toLowerCase().contains('mac') || System.getProperty('os.arch') != 'aarch64')
@@ -150,8 +179,8 @@ tasks.register('packageMacArm64', Exec) {
     doLast {
         def bundle = new File(dest.get().asFile, appName + '.app')
         def launcher = new File(bundle, 'Contents/MacOS/spdctl')
-        providers.exec { commandLine 'xcrun', 'clang', '-arch', 'arm64', '-mmacosx-version-min=12.0',
-                '-Os', '-Wall', '-Wextra', '-Werror', file('src/main/native/spdctl-bootstrap.c'), '-o', launcher }.result.get().assertNormalExitValue()
+        copy { from nativeTransport; into launcher.parentFile }
+        launcher.setExecutable(true, false)
         providers.exec { commandLine 'codesign', '--force', '--deep', '--sign', '-', bundle }.result.get().assertNormalExitValue()
     }
 }

@@ -10,6 +10,7 @@ spdctl --help
 spdctl --version
 spdctl run --machine
 spdctl run --machine --data-dir "/absolute/path/to/profile"
+spdctl run --machine --no-terminal --trace-dir "/absolute/path/to/transport-records"
 ```
 
 In a packaged macOS application, the executable is
@@ -24,14 +25,14 @@ runtime before launching it. The packaged executable includes its own JVM and
 SQLite library; it does not require a separately installed Java runtime.
 
 Machine mode starts the game window and a persistent stdin/stdout connection in
-one process. Gameplay control uses JSON messages over that connection. A controller
+one game JVM, with a native transport recorder relaying the connection. Gameplay control uses JSON messages over that connection. A controller
 does not need screenshots, window focus, OS keyboard input, or mouse simulation.
 The GUI can use any registered language while public CLI system descriptions and
 errors use official English. Text fields carry parallel `text_sources` entries with
 resource keys and frozen arguments, or an explicit user/external origin. Keys aid
 interpretation; actions still use current controls, locators and state versions.
 
-CLI.2.0.0 uses protocol 2 and audit schema 5. Its default profile is
+CLI.2.1.0 uses protocol 2 and audit schema 5. Its default profile is
 `~/Library/Application Support/Shattered Pixel Dungeon CLI v2/`. An existing older
 audit schema is rejected before profile writes; it is never migrated or deleted.
 Select a new directory to start a v2 session.
@@ -44,6 +45,60 @@ does not attach to a separately running instance.
 
 `--help` and `--version` print information and exit without starting a game or
 creating a profile. Their output is not the machine-session NDJSON protocol.
+
+### Transport records and the independent terminal
+
+Machine mode records the exact SEND and RECV bytes and automatically opens a
+Terminal viewer. SEND means bytes successfully written to the game JVM's stdin;
+RECV means bytes read from that JVM's stdout. Delivery records separately describe
+writes toward the caller; they do not prove that the caller consumed the response.
+The viewer does not send requests or read game saves or audit databases.
+
+Use `--no-terminal` to keep recording without opening the viewer. `--trace-dir`
+selects an absolute record root; it must not overlap the game profile, including
+through symbolic links. The default root is:
+
+```text
+~/Library/Logs/Shattered Pixel Dungeon CLI/transport/
+```
+
+Each launch creates a separate session directory and prints its path to stderr.
+The directory contains `send.raw`, `recv.raw`, `stderr.raw`, a versioned
+`events.tsv` index, and `open-viewer.command`. Original bytes are never parsed and
+reserialized as a substitute for the wire. Diagnostic stderr is separate from the
+protocol. Records are retained until you explicitly remove them.
+
+Close the viewer at any time without closing the game or stopping recording.
+Reopen an existing session in Terminal, or follow it in your current terminal:
+
+```sh
+spdctl trace open --session "/absolute/path/to/transport-session"
+spdctl trace view --session "/absolute/path/to/transport-session"
+```
+
+The viewer displays timestamps, directions, complete content, and session status.
+It does not pretty-print, summarize, or truncate JSON. Control characters and
+invalid UTF-8 are visibly escaped in the terminal; the `.raw` files retain the
+original bytes. A remaining `.incomplete` marker means finalization was not
+confirmed, including after an abrupt termination.
+
+If the viewer cannot open, recording continues and stderr reports the error and
+a reopen command. If recording itself fails, `TRACE_IO_FAILED` stops new requests,
+closes the JVM's stdin to request ordinary EOF shutdown, and returns a nonzero
+exit status. Already triggered responses are still forwarded when possible.
+No game action is retried and no synthetic protocol response is inserted.
+
+### Defaults for a completely new profile
+
+A profile is new only when its directory does not exist or is empty before the
+launcher creates any session files. It starts windowed, in Simplified Chinese,
+with the in-game tutorial disabled and the first welcome introduction skipped.
+Select a class and start a game normally from the title menu. Guidebook progress,
+achievements, and class unlocks are not granted by these defaults.
+
+Any existing directory content makes it an existing profile. Existing settings,
+tutorial progress, and game-version migration remain unchanged. Later GUI changes
+are retained. The ordinary application launcher keeps its original defaults.
 
 ## 2. Request identity and responses
 
@@ -433,7 +488,7 @@ command to force a win.
 The macOS default profile is:
 
 ```text
-~/Library/Application Support/Shattered Pixel Dungeon CLI/
+~/Library/Application Support/Shattered Pixel Dungeon CLI v2/
 ```
 
 With `--data-dir`, all profile data goes under the absolute directory you supply:

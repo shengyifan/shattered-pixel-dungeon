@@ -43,7 +43,7 @@ public class Cli2SessionTest {
                 assertEquals(Boolean.TRUE, last(wire).get("ok"));
                 Map<?,?> hello = (Map<?,?>) last(wire).get("result");
                 assertEquals(2L, hello.get("protocol_version")); assertEquals(5L, hello.get("audit_schema_version"));
-                assertEquals("CLI.2.0.0", hello.get("cli_version"));
+                assertEquals("CLI.2.1.0", hello.get("cli_version"));
             }
         }
     }
