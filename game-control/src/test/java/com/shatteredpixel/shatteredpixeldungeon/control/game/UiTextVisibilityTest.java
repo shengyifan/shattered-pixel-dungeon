@@ -10,6 +10,45 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UiTextVisibilityTest {
     @org.junit.jupiter.api.BeforeAll static void resources(){GameSnapshotterTest.resourceOnlyRuntime();}
+
+    @Test void emptyBitmapInitializationDoesNotInventAnInvisibleIntentChange() {
+        try(TextObservationFixture ignored=new TextObservationFixture()) {
+            Scene scene=new Scene();
+            BitmapText text=bitmap(null);scene.add(text);
+            UiBridge ui=new UiBridge(()->scene);
+            Map<String,Object> emptyUi=ui.describeUi();
+            String emptyIntent=ui.intentSignature();
+            String emptyContext=ui.contextSignature();
+            text.text("");
+            assertEquals(emptyUi,ui.describeUi(),"Null and empty both publish a node without text");
+            assertEquals(emptyIntent,ui.intentSignature(),"An undrawn initialization must not stale the next input");
+            assertEquals(emptyContext,ui.contextSignature());
+            text.text(null);
+            assertEquals(emptyIntent,ui.intentSignature());
+
+            text.text(ResourceTextFixture.literal("Visible notice"));
+            assertTrue(ui.describeUi().toString().contains("Visible notice"));
+            String shownIntent=ui.intentSignature();
+            assertNotEquals(emptyIntent,shownIntent,"Actual text appearance still changes the decision context");
+            text.text("");
+            assertNotEquals(shownIntent,ui.intentSignature(),"Actual text disappearance is still significant");
+            assertEquals(emptyIntent,ui.intentSignature());
+        }
+    }
+
+    @Test void nonemptyUnboundTextStillInvalidatesIntentWhenItsTranslationIsUnavailable() {
+        try(TextObservationFixture ignored=new TextObservationFixture()) {
+            Scene scene=new Scene();
+            BitmapText text=bitmap("未绑定的第一条提示");scene.add(text);
+            UiBridge ui=new UiBridge(()->scene);
+            assertEquals("partial",PublicEnglishProjection.presentation(ui.describeUi()).get("status"));
+            String first=ui.intentSignature();
+            text.text("未绑定的第二条提示");
+            assertEquals("partial",PublicEnglishProjection.presentation(ui.describeUi()).get("status"));
+            assertNotEquals(first,ui.intentSignature(),"Nonempty original text must remain in the private comparison signature");
+        }
+    }
+
     @Test void clippedBitmapCannotExposeItsSourceOrInvalidateIntentThroughItsHiddenSuffix() {
         try(TextObservationFixture ignored=new TextObservationFixture()) {
         Scene scene=new Scene();
@@ -60,5 +99,10 @@ class UiTextVisibilityTest {
     }
     private static void field(Object target,Class<?> type,String name,Object value)throws Exception {
         Field field=type.getDeclaredField(name);field.setAccessible(true);field.set(target,value);
+    }
+    private static BitmapText bitmap(String value) {
+        BitmapText text=new BitmapText(value,null);
+        text.camera=new Camera(0,0,100,100,1);text.x=10;text.y=10;text.width=70;text.height=10;
+        return text;
     }
 }

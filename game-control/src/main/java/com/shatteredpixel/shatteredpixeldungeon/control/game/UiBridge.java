@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.OptionSlider;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CurrencyIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RadialMenu;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RightClickMenu;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
@@ -124,8 +125,8 @@ public final class UiBridge {
     }
 
     /**
-     * Conservative intent signature. Floating combat/loot text remains in every observation,
-     * but its cosmetic appearance/expiry does not change which input can be performed.
+     * Conservative intent signature. Floating combat/loot text and passive currency notices
+     * remain in every observation, but their appearance/expiry does not change available input.
      * Keep all other data, including health bars and enabled flags, until independently audited.
      * The coordinator must combine this with world state and real input generations, and must
      * not also hash the unfiltered public UI into the same intent version.
@@ -135,7 +136,11 @@ public final class UiBridge {
         List<Map<String, Object>> retained = new ArrayList<>();
         for (Map<String, Object> node : nodes) {
             Gizmo control=controls.get(node.get("id"));
-            if (!(control instanceof FloatingText)&&!isGameLogText(control)) retained.add(node);
+            // CurrencyIndicator's two direct bitmap children only display the current totals.
+            // World gold/energy remain protected by the coordinator's decision-state signature.
+            // Do not exempt the Inventory button, other numeric text, or nested input controls.
+            boolean currencyNotice=control instanceof BitmapText&&control.parent instanceof CurrencyIndicator;
+            if (!(control instanceof FloatingText)&&!isGameLogText(control)&&!currencyNotice) retained.add(node);
         }
         ui.put("controls", retained);
         return signature(ui);
@@ -480,7 +485,9 @@ public final class UiBridge {
             String text = floatingFragment!=null?floatingFragment.text:logFragment == null ? visibleText(gizmo) : logFragment.text;
             boolean clipped=floatingFragment != null && floatingFragment.clipped
                     || logFragment != null && logFragment.clipped || clippedDirectText(gizmo);
-            if(text!=null)visibleValues.put("text",gizmo instanceof BitmapText && clipped ? "clipped_bitmap" : text);
+            // Match the public text boundary: null and an unclipped empty string both
+            // mean no visible text. Native label initialization must not expire intent.
+            if(text!=null&&(!text.isEmpty()||clipped))visibleValues.put("text",gizmo instanceof BitmapText && clipped ? "clipped_bitmap" : text);
             if (text != null && (!text.isEmpty()||clipped)) node.put("text", TextProvenance.INSTANCE.capture(gizmo,text,clipped));
             if(clipped)node.put("clipped",true);
             if(floatingFragment!=null&&!floatingFragment.clipped)

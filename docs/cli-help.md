@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 3)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.3.0.0, protocol 3, and base game 3.3.8.
+`spdctl --version` reports CLI.3.0.1, protocol 3, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 

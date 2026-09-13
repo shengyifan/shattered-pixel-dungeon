@@ -1,9 +1,13 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.CurrencyIndicator;
+import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Scene;
 import com.watabou.noosa.VisualCue;
@@ -69,6 +73,64 @@ class RenderedBoundaryTest {
         assertNotEquals(first.publicState.get("visual_cues"),second.publicState.get("visual_cues"));
         assertNull(controller.latest().publicState.get("occurred_at"));
         assertEquals(20,Dungeon.hero.HP);
+    }
+
+    @Test void currencyFadePreservesRevisionButActualGoldAndEnergyStillInvalidateIt()throws Exception{
+        int previousSlot=GamesInProgress.curSlot,previousGold=Dungeon.gold,previousEnergy=Dungeon.energy;
+        float previousElapsed=Game.elapsed;
+        boolean previousShowGold=CurrencyIndicator.showGold;
+        try(TextObservationFixture ignored=new TextObservationFixture()) {
+            GamesInProgress.curSlot=1;
+            Dungeon.gold=478;Dungeon.energy=3;CurrencyIndicator.showGold=false;
+            CurrencyIndicatorIntentTest.NativeIndicator indicator=new CurrencyIndicatorIntentTest.NativeIndicator();
+            Game.scene().add(indicator);
+            Game.elapsed=0;indicator.update();
+            GameController.State shown=capture();
+            assertEquals(478,((Map<?,?>)shown.publicState.get("hero")).get("gold"));
+            assertEquals(3,((Map<?,?>)shown.publicState.get("hero")).get("energy"));
+
+            Game.elapsed=2f;indicator.update();
+            GameController.State faded=capture();
+            assertNotEquals(shown.publicState.get("ui"),faded.publicState.get("ui"));
+            assertEquals(shown.version,faded.version,"A passive currency fade is not a new player decision");
+
+            Dungeon.gold++;
+            GameController.State goldChanged=capture();
+            assertNotEquals(faded.version,goldChanged.version,"World gold changes remain part of the revision");
+            assertEquals(479,((Map<?,?>)goldChanged.publicState.get("hero")).get("gold"));
+            Dungeon.energy++;
+            GameController.State energyChanged=capture();
+            assertNotEquals(goldChanged.version,energyChanged.version,"World energy changes remain part of the revision");
+            assertEquals(4,((Map<?,?>)energyChanged.publicState.get("hero")).get("energy"));
+        } finally {
+            GamesInProgress.curSlot=previousSlot;Dungeon.gold=previousGold;Dungeon.energy=previousEnergy;
+            Game.elapsed=previousElapsed;CurrencyIndicator.showGold=previousShowGold;
+        }
+    }
+
+    @Test void emptyTextInitializationPreservesRevisionButVisibleTextChangesStillInvalidateIt()throws Exception{
+        try(TextObservationFixture ignored=new TextObservationFixture()) {
+            BitmapText text=new BitmapText((String)null,null);
+            text.camera=new Camera(0,0,100,100,1);text.x=10;text.y=10;text.width=70;text.height=10;
+            Game.scene().add(text);
+            GameController.State absent=capture();
+            text.text("");
+            GameController.State empty=capture();
+            assertEquals(absent.publicState.get("ui"),empty.publicState.get("ui"));
+            assertEquals(absent.version,empty.version,"An unchanged empty label cannot invalidate a returned revision");
+
+            text.text(ResourceTextFixture.literal("Visible notice"));
+            GameController.State shown=capture();
+            assertNotEquals(empty.version,shown.version);
+            text.text("");
+            GameController.State cleared=capture();
+            assertNotEquals(shown.version,cleared.version);
+            text.text("未绑定的第一条提示");
+            GameController.State firstUnbound=capture();
+            assertNotEquals(cleared.version,firstUnbound.version);
+            text.text("未绑定的第二条提示");
+            assertNotEquals(firstUnbound.version,capture().version,"Untranslated visible changes still invalidate intent");
+        }
     }
 
     @Test void semanticCueSnapshotsAreCanonicalAndDetachedFromMutableInput(){
