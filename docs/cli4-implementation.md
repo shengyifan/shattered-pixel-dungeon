@@ -2,6 +2,8 @@
 
 2026-09-14，基于 `aa4b222d5` 实施。基础游戏仍为 3.3.8；CLI 升级为 4.0.0，协议为 4，审计 schema 为 7。完整英文接口见 [help](cli-help.md)，项目操作约定见根目录 `AGENTS.md`。
 
+同日后续按用户要求清理了此前全部 build 产物及实战故障 JSON。本文保留 CLI.4.0.0 实施时的验证结论和复算方法，旧 build 输出、测试依赖及验证附件已清理；当前包的重建结果见 [CLI.4.0.1 清理重建记录](cli-rebuild-4.0.1-20260914.md)。
+
 ## 协议与数据边界
 
 - 新请求只接受 `v:4`，不提供 v3 输入兼容；默认使用独立的 `~/Library/Application Support/Shattered Pixel Dungeon CLI v4/`。
@@ -55,7 +57,7 @@ help 的完整示例和根目录 AGENTS.md 同步说明这一流程。普通场�
 
 达到地图部分减少至少 70%、调用流程与默认回复组合减少至少 50% 的门槛。这些仅为原始协议文本预算，不是实际模型计费、缓存命中或新一轮通关数据。
 
-可复算命令（显式输入这次保留的原始日志）：
+可复算命令（显式输入保留的原始日志，重新生成已清理的 build 输出及测试依赖）：
 
 ```sh
 mkdir -p desktop-control/build/cli4-validation
@@ -72,11 +74,11 @@ desktop-control/build/cli4-validation/token-venv/bin/python \
   --output desktop-control/build/cli4-validation/tokens
 ```
 
-历史解码器只供这个离线基准使用，没有进入应用或新客户端。tiktoken 仍为 build 目录内的测试依赖。`tokens/report.json` 和逐消息结果记录输入 SHA-256；原始 send/recv 字节未变化。
+历史解码器只供这个离线基准使用，没有进入应用或新客户端。tiktoken 只安装在 build 目录内作为测试依赖。当时生成的 `tokens/report.json` 和逐消息结果记录了输入 SHA-256；这些输出及测试依赖已清理，重新执行上述命令才会生成新结果。用户日志目录中的原始 send/recv 字节没有删除或改变。
 
 ## 验证与产物
 
-验证日志集中于 `desktop-control/build/cli4-validation/`，最终运行清单位于 `delivery/suite.json`。
+当时验证日志写入 `desktop-control/build/cli4-validation/`，最终运行清单为其中的 `delivery/suite.json`，后续已随 build 清理。
 
 | 检查 | 通过 | 失败／错误／跳过 |
 | --- | ---: | ---: |
@@ -89,16 +91,16 @@ autoplay 离线自测通过，包括同步摘要不重复完整观察、有限�
 
 最终真实引擎回归共 18 例：金币／能量／交易淡出六例、两界面击杀四例、持续移动和休息取消两例、已知／未知卷轴升级四例、炼金一例、保存回执及重启一例。均通过，采用独立测试目录；没有恢复正式战士存档，也不计通关。
 
-一次较早的重跑在 WelcomeScene 被 STALE_STATE 拒绝。保留的测试 UI 记录显示原生输入代次从 0 变为 7，而 public_ui、语言和场景完全相同；请求正确使用之前的控件和旧版本，拒绝符合输入保护。记录不能识别事件种类或操作者。这次被干扰的实例未冒充成功，未重放被拒动作；重新创建独立实例后的最终全组通过。证据在 `engine-final/currency.log` 及其对应 fixture 中。
+一次较早的重跑在 WelcomeScene 被 STALE_STATE 拒绝。当时的测试 UI 记录显示原生输入代次从 0 变为 7，而 public_ui、语言和场景完全相同；请求正确使用之前的控件和旧版本，拒绝符合输入保护。记录不能识别事件种类或操作者。这次被干扰的实例未冒充成功，未重放被拒动作；重新创建独立实例后的最终全组通过。证据当时写入 `engine-final/currency.log` 及其对应 fixture，后续已随 build 清理；本报告保留被干扰实例与最终成功实例的区别。
 
-原路径 ARM64 应用已重建。最终 build_id：
+实施时原路径 ARM64 应用已重建。该历史产物的最终 build_id：
 
 ```text
 3ddbbdcbd203b42633d5defd979ab12b9b7fe4082fdd60545d1ea9ebb330bd0d
 ```
 
-实际包报告 `CLI.4.0.0 (protocol 4, game 3.3.8)`；27,292 字节帮助与当前 Markdown、包内资源一致，help/version stderr 为空。构建清单显式记录 protocol 4、schema 7；3,301 个清单条目与编译输入的大小/SHA-256 匹配，2,836 个项目生产类与包内类逐字节一致，测试类没有进入应用。ARM64、plist 和 `codesign --verify --deep --strict` 通过。
+当时实际包报告 `CLI.4.0.0 (protocol 4, game 3.3.8)`；27,292 字节帮助与当时 Markdown、包内资源一致，help/version stderr 为空。构建清单显式记录 protocol 4、schema 7；3,301 个清单条目与编译输入的大小/SHA-256 匹配，2,836 个项目生产类与包内类逐字节一致，测试类没有进入应用。ARM64、plist 和 `codesign --verify --deep --strict` 通过。
 
 实际包管道、非法输入、重复 ID、profile 锁、EOF、中文及空格路径验证通过。缺失／空目录两种新 profile 的正常开局及保存重启共四次 JVM 会话，55 次请求、25 次来源检查通过，SEND/RECV/DELIVERED 原文逐字节一致；被动查看器关闭不改变游戏。schema 1–6 的旧目录拒绝测试全部通过，目录字节保持不变。
 
-最后一次强制 Java/ARM64 构建执行 34 个任务并通过；客户端和 help 收尾后再次构建、运行全部 Python 和最终引擎／实际包检查。既有 deprecated/unchecked、LWJGL Unsafe 提示及 Python 测试连接 ResourceWarning 保留在日志中，未将它们算作新增功能失败。未推送、打 tag、发布或进行 Apple 公证。
+最后一次强制 Java/ARM64 构建执行 34 个任务并通过；客户端和 help 收尾后再次构建、运行全部 Python 和最终引擎／实际包检查。既有 deprecated/unchecked、LWJGL Unsafe 提示及 Python 测试连接 ResourceWarning 当时记录在日志中，未将它们算作新增功能失败。该实施批次未推送、打 tag、发布或进行 Apple 公证。
