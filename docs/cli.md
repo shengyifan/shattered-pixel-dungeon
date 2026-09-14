@@ -1,6 +1,6 @@
 # spdctl 控制接口
 
-当前版本 **CLI.4.0.0**，基础游戏 **3.3.8**，协议 **4**，审计 schema **7**。完整接口以随包提供的[英文操作手册](cli-help.md)为准；本次实现与验收见 [CLI 4.0 记录](cli4-implementation.md)。历史版本文档不作为新版请求格式。
+当前版本 **CLI.4.0.1**，基础游戏 **3.3.8**，协议 **4**，审计 schema **7**。完整接口以随包提供的[英文操作手册](cli-help.md)为准；本次补丁见[独立终端颜色修复](cli-issues/2026-09-14-cli-4.0.1-terminal-color.md)，主版本实现见 [CLI 4.0 记录](cli4-implementation.md)。历史版本文档不作为新版请求格式。
 
 ## 启动与目录
 
@@ -50,7 +50,7 @@ CLI 系统文字为官方英文；用户和外部文字保留原文及 `text_ori
 
 ## Terminal 查看器与长度
 
-默认打开独立 Terminal 查看器；关闭查看器不关闭游戏或记录。`--no-terminal` 仅关闭自动弹窗，`--trace-dir` 指定不与 profile 重叠的记录目录。
+默认打开独立 Terminal 查看器，专用窗口显式启用彩色；关闭查看器不关闭游戏或记录。`--no-terminal` 仅关闭自动弹窗，`--trace-dir` 指定不与 profile 重叠的记录目录。
 
 ```sh
 spdctl trace open --session /absolute/session

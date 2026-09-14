@@ -170,7 +170,8 @@ static bool create_viewer_command(const char *session) {
     int fd = create_private(session, "open-viewer.command");
     if (fd < 0) return false;
     static const char header[] = "#!/bin/sh\nexec ";
-    static const char arguments[] = " trace view --session ";
+    /* Dedicated Terminal windows request ANSI explicitly; controller auto-color settings are unrelated. */
+    static const char arguments[] = " trace view --color always --session ";
     bool ok = write_all(fd, header, sizeof(header) - 1) == 0 && shell_word(fd, executable)
         && write_all(fd, arguments, sizeof(arguments) - 1) == 0 && shell_word(fd, session)
         && write_all(fd, "\n", 1) == 0 && fchmod(fd, 0700) == 0;
@@ -190,7 +191,8 @@ static bool temporary_viewer_command(const char *session, char *directory, char 
     static const char first[] = "#!/bin/sh\n/bin/rm -f -- ";
     static const char second[] = "\n/bin/rmdir -- ";
     static const char third[] = "\nexec ";
-    static const char arguments[] = " trace view --session ";
+    /* Keep automatic opening and trace open consistent with the saved Terminal command. */
+    static const char arguments[] = " trace view --color always --session ";
     bool ok = self_path(executable) && write_all(fd, first, sizeof(first) - 1) == 0
         && shell_word(fd, command) && write_all(fd, second, sizeof(second) - 1) == 0
         && shell_word(fd, directory) && write_all(fd, third, sizeof(third) - 1) == 0

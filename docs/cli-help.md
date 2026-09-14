@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 4)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.4.0.0, protocol 4, and base game 3.3.8.
+`spdctl --version` reports CLI.4.0.1, protocol 4, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -409,6 +409,12 @@ show continuation headings when necessary. Original JSON layout is retained.
 
 `--color auto|always|never` applies to `trace view`. Auto enables ANSI colors for a
 TTY unless TERM is dumb or NO_COLOR is set; explicit modes override the environment.
+The dedicated Terminal commands opened automatically or through `trace open`, and
+newly generated `open-viewer.command` files, explicitly use `--color always`.
+Their display therefore remains colored even when a controller environment disables
+auto color. Direct `trace view` still defaults to auto; use `--color never` for a
+plain-text view. Old generated command files retain their original arguments;
+`trace open` always generates a fresh command from the current executable.
 SEND is cyan, RECV green, ERROR red; JSON keys blue, string values green, numbers
 yellow, booleans/null magenta and punctuation dim. Invalid JSON still displays safely.
 UTF-8, strings and escapes can cross arbitrary chunks. Input escape/control bytes

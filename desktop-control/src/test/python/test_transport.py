@@ -15,6 +15,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import termios
 import threading
 import time
 import unittest
@@ -93,6 +94,7 @@ else:
 
 OPEN_SHIM = r"""
 #include <errno.h>
+#include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -121,6 +123,19 @@ int spdctl_test_spawn(pid_t *pid, const char *path,
     fclose(script); fclose(record);
     if (behavior && strcmp(behavior, "fail") == 0) return ENOENT;
     char *shell[] = {"/bin/sh", argv[3], NULL};
+    const char *viewer_tty = getenv("SPDCTL_TEST_VIEWER_TTY");
+    if (viewer_tty) {
+        /* Simulate Terminal's independent TTY, not the launcher's game pipes. */
+        posix_spawn_file_actions_t viewer_actions;
+        int error = posix_spawn_file_actions_init(&viewer_actions);
+        if (error) return error;
+        error = posix_spawn_file_actions_addopen(&viewer_actions, 0, "/dev/null", O_RDONLY, 0);
+        if (!error) error = posix_spawn_file_actions_addopen(&viewer_actions, 1, viewer_tty, O_WRONLY, 0);
+        if (!error) error = posix_spawn_file_actions_addopen(&viewer_actions, 2, "/dev/null", O_WRONLY, 0);
+        if (!error) error = posix_spawn(pid, shell[0], &viewer_actions, attributes, shell, environment);
+        posix_spawn_file_actions_destroy(&viewer_actions);
+        return error;
+    }
     return posix_spawn(pid, shell[0], actions, attributes, shell, environment);
 }
 """
@@ -273,6 +288,41 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertFalse(result.stderr)
         return result.stdout
+
+    def viewer_in_pty(self, command, environment, through_open=False):
+        master, slave = pty.openpty()
+        try:
+            attributes = termios.tcgetattr(slave)
+            attributes[1] &= ~termios.OPOST  # Keep LF bytes comparable with pipe output.
+            termios.tcsetattr(slave, termios.TCSANOW, attributes)
+            environment = environment.copy()
+            if through_open:
+                environment["SPDCTL_TEST_VIEWER_TTY"] = os.ttyname(slave)
+            process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=slave,
+                                       stderr=subprocess.PIPE, env=environment, cwd=self.root)
+            self.processes.append(process)
+            os.close(slave)
+            slave = -1
+            chunks = []
+            while True:
+                ready, _, _ = select.select([master], [], [], 5)
+                self.assertTrue(ready, "Generated viewer did not finish on its TTY")
+                try:
+                    chunk = os.read(master, 65536)
+                except OSError:
+                    break
+                if not chunk:
+                    break
+                chunks.append(chunk)
+            process.wait(timeout=5)
+            diagnostics = process.stderr.read()
+            self.assertEqual(0, process.returncode, diagnostics)
+            self.assertFalse(diagnostics)
+            return b"".join(chunks)
+        finally:
+            os.close(master)
+            if slave >= 0:
+                os.close(slave)
 
     def test_viewer_filters_success_events_and_keeps_all_failures(self):
         failures = ["EXITED:9", "SIGNAL:2", "CHILD_STDIN_BROKEN", "TRACE_IO_FAILED", "FUTURE_FAILURE"]
@@ -551,9 +601,32 @@ class NativeTransportTest(unittest.TestCase):
         except subprocess.TimeoutExpired:
             viewer.terminate()
             rendered, diagnostics = viewer.communicate(timeout=5)
-        self.assertIn(b"original", rendered)
+        self.assertIn(b"original", re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
         self.assertFalse((self.root / "INJECTED").exists())
         self.assertFalse(diagnostics, diagnostics)
+
+    def test_generated_reopen_script_keeps_color_with_hostile_environment(self):
+        self.trace = self.root / "trace space ' $(touch INJECTED)"
+        payload = b'{"key":"value","number":12,"flag":true,"empty":null}\n'
+        process = self.start()
+        output, errors = process.communicate(payload, timeout=10)
+        self.assertEqual(0, process.returncode, errors)
+        self.assertEqual(payload, output)
+        session = self.session()
+        records = {name: (session / name).read_bytes()
+                   for name in ("send.raw", "recv.raw", "stderr.raw", "events.tsv")}
+        plain = self.view(session, "never")
+        script = session / "open-viewer.command"
+        for no_color in ("1", ""):
+            with self.subTest(no_color=no_color):
+                environment = {**self.environment, "TERM": "dumb", "NO_COLOR": no_color}
+                rendered = self.viewer_in_pty(["/bin/sh", str(script)], environment)
+                self.assertIn(b'\x1b[34m"key"', rendered)
+                self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
+                self.assertFalse((self.root / "INJECTED").exists())
+                self.assertTrue(script.is_file(), "Persistent reopen command was removed")
+                for name, original in records.items():
+                    self.assertEqual(original, (session / name).read_bytes(), name)
 
     def test_finished_incomplete_session_ignores_reused_or_invalid_pid_metadata(self):
         process = self.start()
@@ -591,11 +664,45 @@ class NativeTransportTest(unittest.TestCase):
         command, mode, generated_script = capture.read_text().split("\n", 2)
         self.assertEqual("700", mode)
         self.assertIn(str(self.open_binary), generated_script)
-        self.assertIn(" trace view --session ", generated_script)
+        self.assertIn(" trace view --color always --session ", generated_script)
         self.assertIn(str(session), generated_script)
         self.assertNotEqual(session / "open-viewer.command", Path(command))
         self.assertFalse(Path(command).exists(), "Temporary Terminal command was not removed")
         self.assertFalse(Path(command).parent.exists(), "Temporary Terminal directory was not removed")
+
+    def test_generated_trace_open_keeps_color_with_hostile_environment(self):
+        self.trace = self.root / "trace space ' $(touch INJECTED)"
+        payload = b'{"key":"value","number":12,"flag":true,"empty":null}\n'
+        process = self.start()
+        output, errors = process.communicate(payload, timeout=10)
+        self.assertEqual(0, process.returncode, errors)
+        self.assertEqual(payload, output)
+        session = self.session()
+        records = {name: (session / name).read_bytes()
+                   for name in ("send.raw", "recv.raw", "stderr.raw", "events.tsv")}
+        plain = self.view(session, "never")
+        marker = self.root / "UNTRUSTED_SCRIPT_EXECUTED"
+        (session / "open-viewer.command").write_text("#!/bin/sh\ntouch '" + str(marker) + "'\n")
+        capture = self.root / "intercepted-open.txt"
+        for no_color in ("1", ""):
+            with self.subTest(no_color=no_color):
+                environment = {**self.environment, "TERM": "dumb", "NO_COLOR": no_color,
+                               "SPDCTL_TEST_OPEN_CAPTURE": str(capture)}
+                rendered = self.viewer_in_pty(
+                    [str(self.open_binary), "trace", "open", "--session", str(session)],
+                    environment, through_open=True)
+                command, mode, generated_script = capture.read_text().split("\n", 2)
+                self.assertEqual("700", mode)
+                self.assertIn(str(self.open_binary), generated_script)
+                self.assertNotEqual(session / "open-viewer.command", Path(command))
+                self.assertFalse(Path(command).exists(), "Temporary Terminal command was not removed")
+                self.assertFalse(Path(command).parent.exists(), "Temporary Terminal directory was not removed")
+                self.assertFalse(marker.exists())
+                self.assertFalse((self.root / "INJECTED").exists())
+                self.assertIn(b'\x1b[34m"key"', rendered)
+                self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
+                for name, original in records.items():
+                    self.assertEqual(original, (session / name).read_bytes(), name)
 
     def test_terminal_open_failure_keeps_recording_and_engine_operation(self):
         capture = self.root / "failed-open.txt"

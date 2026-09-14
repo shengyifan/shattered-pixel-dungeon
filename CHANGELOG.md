@@ -4,6 +4,11 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.4.0.1
+
+- 独立 Terminal 查看器的自动打开、`trace open` 和新生成的 `open-viewer.command` 显式使用 `--color always`，避免颜色被查看器继承的 `NO_COLOR`／`TERM=dumb` 自动判定关闭；直接 `trace view` 的 auto/always/never 语义保持。
+- 新增两种实际生成脚本的 PTY 回归，覆盖 `NO_COLOR=1` 和空值、正文去色一致性、原文不变、路径安全与临时脚本自清理。详见 [独立终端颜色修复](docs/cli-issues/2026-09-14-cli-4.0.1-terminal-color.md)。
+
 ## CLI.4.0.0
 
 - 协议升级为 4、审计 schema 升为 7，默认使用独立 CLI v4 目录；拒绝旧协议请求，旧审计格式在写入前拒绝，保留旧目录与原始历史。
