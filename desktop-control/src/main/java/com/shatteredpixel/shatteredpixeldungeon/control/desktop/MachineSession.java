@@ -153,7 +153,7 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("cli_version","CLI.3.0.1","game_version","3.3.8",
+                    result=map("cli_version","CLI.4.0.0","game_version","3.3.8",
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
                             "session_id",store.sessionId(),"audit_schema_version",AuditStore.SCHEMA_VERSION,"text_language","en","text_format","resource-v1",
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
@@ -243,7 +243,7 @@ public final class MachineSession implements AutoCloseable {
             drainSaves();
             if("action.execute".equals(op))result=withPersistence(attempt,result,state==null?scope:state.scopeId);
             else if("state.get".equals(op)||"actions.list".equals(op))result=withLastSave(result,scope);
-            Map<String,Object> response=CompactProtocol.success(id,scope,status,PublicEnglishProjection.copy(result),!HISTORY.contains(op),request.sources);
+            Map<String,Object> response=CompactProtocol.success(id,scope,status,PublicEnglishProjection.copy(result),!HISTORY.contains(op),request.sources,request.fullView);
             Map<String,Object>[] snapshots=dispatchAttempted&&currentCertified?directSnapshots(state):auditSnapshots(scope,state,currentCertified);
             store.complete(attempt,status.toUpperCase(Locale.ROOT),response,snapshots[0],snapshots[1],null,currentCertified&&state!=null?state.scopeId:null);responseStage.committed=true;
             send(attempt,response,responseStage);if(game.exiting())game.exitNow();

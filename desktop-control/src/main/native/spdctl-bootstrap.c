@@ -777,7 +777,7 @@ int main(int argc, char **argv) {
     bool run = argc > first && !strcmp(argv[first], "run"), machine = false, terminal = true;
     const char *home = getenv("HOME"), *selected = getenv("SPDCTL_PROFILE"), *trace_root = NULL;
     char default_profile[PATH_MAX], default_trace[PATH_MAX], profile[PATH_MAX];
-    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v3", home) >= PATH_MAX
+    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v4", home) >= PATH_MAX
         || snprintf(default_trace, sizeof(default_trace), "%s/Library/Logs/Shattered Pixel Dungeon CLI/transport", home) >= PATH_MAX)
         return fail("spdctl: HOME_UNAVAILABLE\n", 64);
     if (!selected) selected = default_profile;

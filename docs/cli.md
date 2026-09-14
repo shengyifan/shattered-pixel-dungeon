@@ -1,6 +1,6 @@
 # spdctl 控制接口
 
-当前版本 **CLI.3.0.1**，基础游戏 **3.3.8**，协议 **3**，审计 schema **6**。完整接口以随包提供的[英文操作手册](cli-help.md)为准；本次补丁见[金币提示与空文本状态修复](cli-issues/2026-09-14-cli-3.0.1-currency-stale-state.md)，协议 3 的完整实现见 [CLI 3.0 记录](cli3-implementation.md)。历史版本文档不作为新版请求格式。
+当前版本 **CLI.4.0.0**，基础游戏 **3.3.8**，协议 **4**，审计 schema **7**。完整接口以随包提供的[英文操作手册](cli-help.md)为准；本次实现与验收见 [CLI 4.0 记录](cli4-implementation.md)。历史版本文档不作为新版请求格式。
 
 ## 启动与目录
 
@@ -9,20 +9,20 @@
 "desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl" run --machine
 ```
 
-默认使用 `~/Library/Application Support/Shattered Pixel Dungeon CLI v3/`，保留原 v2 目录不动。显式指定旧审计目录时会在写入前拒绝，不迁移、不清空。新目录默认中文窗口、跳过教程和首次前言；已有目录的设置与游戏规则保留。
+默认使用 `~/Library/Application Support/Shattered Pixel Dungeon CLI v4/`，保留原 v3 及更早目录不动。显式指定旧审计目录时会在写入前拒绝，不迁移、不清空。新目录默认中文窗口、跳过教程和首次前言；已有目录的设置与游戏规则保留。
 
 机器入口在同一 JVM 启动 GUI 和串行 stdin/stdout 管道；始终保持原连接。它不能接管另一个普通 GUI 进程。所有游戏决策使用公开协议，不需要截图或 OS 键鼠输入。
 
 ## 短命令
 
 ```json
-{"v":3,"id":"q1","op":"info"}
-{"v":3,"id":"q2","s":"<返回的作用域>","op":"state"}
-{"v":3,"id":"a1","s":"<当前作用域>","rev":"<当前版本>","op":"move","dir":"N"}
-{"v":3,"id":"a2","s":"<当前作用域>","rev":"<当前版本>","op":"click","ctl":"<当前控件>"}
+{"v":4,"id":"q1","op":"info"}
+{"v":4,"id":"q2","s":"<返回的作用域>","op":"state"}
+{"v":4,"id":"a1","s":"<当前作用域>","rev":"<当前版本>","op":"move","dir":"N"}
+{"v":4,"id":"a2","s":"<当前作用域>","rev":"<当前版本>","op":"click","ctl":"<当前控件>"}
 ```
 
-每帧需要 `v:3` 和新的 `id`；除首次 `info` 外还需要 `s`，动作需要 `rev`。参数直接放在顶层。旧请求名、旧 envelope 和 `args` 均拒绝。短 ID 仍须在整个 scope 内唯一，含存档重启后的历史；scope/rev 仍是不透明令牌。
+每帧需要 `v:4` 和新的 `id`；除首次 `info` 外还需要 `s`，动作需要 `rev`。参数直接放在顶层。旧请求名、旧 envelope 和 `args` 均拒绝。短 ID 仍须在整个 scope 内唯一，含存档重启后的历史；scope/rev 仍是不透明令牌。
 
 成功返回 `v/id/s/rev/st/data`，没有 `ok`、`result.observation` 和重复的作用域。失败使用 `err`。`st` 表示请求执行状态，`data.phase` 表示游戏阶段，不能互相替代。开局等实时结果以返回的新 `s` 为准；历史查询不提供顶层实时 `rev`。
 
@@ -30,11 +30,11 @@
 
 ## 精简观察与详情
 
-默认仍返回完整的当前决策状态，不是差量。背包为 `inv`，可见实体为 `entities`，视觉线索为 `cues`；保留英雄、未知物品属性、所有独立文本/控件、父子关系、禁用和变暗状态。
+默认 `play` 为自包含观察，不是差量；`state/actions view:"full"` 返回完整诊断视图，普通动作返回 play。背包为 `inv`，可见实体为 `entities`，视觉线索为 `cues`；只按明确规则省略默认值、空文字叶和普通物品长说明，保留有意义文本/控件、父子关系、禁用、变暗和额外库存状态。物品 level/cursed 缺失表示不适用，null 表示未知，显式 0/false 表示已知值。
 
-地图使用 `w/h/types/cols/cells/env`，每行 `[cell,tile,vis]`，tile 指向本次地形字典。vis 的 v/s/m 分别为可见/已探索/已探明；x/y 由 cell 和 w 精确计算。只转换玩家已知地图，未知格仍省略。
+地图使用完整的 `w/h/types/rows/env`，每段 `[y,x_start,tiles,visibility]`。tiles 用 64 字符序列索引本次完整地形字典；超过 64 种时整张图改用整数数组。visibility 的 v/s/m 分别为可见/已探索/已探明；cell=`y*w+x_start+offset`。未知间隙保持省略，env 缺失表示当前为空，不依赖任何旧地图。
 
-CLI 系统文字为官方英文；用户和外部文字保留原文及 `text_origins` 标记。完整来源树默认省略，使用 `state` 的 `src:true` 获取同一冻结观察的来源。`pres`、裁剪和部分呈现诊断仍保留，不得因为文案降级重放已经完成的动作。裁剪来源详情也不能暴露未显示的文字或参数。
+CLI 系统文字为官方英文；用户和外部文字保留原文及 `text_origins` 标记。完整来源树默认省略，`state src:true` 自动使用 full，获取该次冻结观察的来源。`pres`、裁剪和部分呈现诊断仍保留，不得因为文案降级重放已经完成的动作。裁剪来源详情也不能暴露未显示的文字或参数。
 
 `req` 默认只返回原请求执行状态、错误、保存回执和可选详情。`get:["raw","reply","before","after","meta"]` 显式选取；before/after 来自冻结公开快照，reply 是保存的最终逻辑结果，raw 是首个实际交换的原文及输出尝试记录。它们不触发新的引擎观察，不反推丢失信息。
 
@@ -42,7 +42,7 @@ CLI 系统文字为官方英文；用户和外部文字保留原文及 `text_ori
 
 ## 执行保护与持久化
 
-进行中的动作通过 `req` 查询，终态后显式获取 reply，再读实时状态。原生持续移动/休息可通过当前广告的 `cancel` 取消；`untarget` 只取消选格。成功、进行中和 UNKNOWN 都不能按陈旧拒绝重试。
+进行中的动作通过小 `req` 回执查询；COMPLETED/AWAITING_INPUT/INTERRUPTED 后读一次实时 state，正常成功不取历史 reply。同步成功回复已经是当前观察，无需强制再查询；quit 成功后只等待退出。原动作 outcome/save 与当前 observation 分开，错误和 UNKNOWN 不能被后续成功查询覆盖。原生持续移动/休息仍可用当前广告的 `cancel` 取消；`untarget` 只取消选格。
 
 `STALE_STATE` 表示游戏回调前拒绝；允许恢复的客户端应重新观察、核对目标/资源/控件后以新 ID、新 rev 重新决策，并设有限次数。服务端不替换版本重放。任务规定遇错暂停时，记录证据并停止操作。教程和攻击指示器的有限更新仍纳入稳定边界。
 

@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.Assert.*;
 
-/** Protocol-3 failures are separated at dispatch, certified completion and pure presentation boundaries. */
-public class Cli3SessionTest {
+/** Protocol-4 failures are separated at dispatch, certified completion and pure presentation boundaries. */
+public class Cli4SessionTest {
     @Rule public TemporaryFolder temporary = new TemporaryFolder();
 
     @Test public void missingAndOldProtocolCannotObserveOrDispatchEvenTheHandshake() throws Exception {
@@ -40,23 +40,25 @@ public class Cli3SessionTest {
                 assertEquals("UNSUPPORTED_PROTOCOL", error(last(wire)));
                 send(session, map("v", 2, "id", "version-two", "op", "info"));
                 assertEquals("UNSUPPORTED_PROTOCOL", error(last(wire)));
+                send(session, map("v", 3, "id", "version-three", "op", "info"));
+                assertEquals("UNSUPPORTED_PROTOCOL", error(last(wire)));
                 session.accept(JsonCodec.encode(map("protocol_version", 2, "id", "legacy-envelope", "op", "protocol.info"))).get(5, TimeUnit.SECONDS);
                 assertEquals("PROTOCOL_VERSION_REQUIRED", error(last(wire)));
-                send(session, map("v", 3, "id", "legacy-args", "s", "run:a", "op", "wait", "rev", "v1", "args", map("action", "wait")));
+                send(session, map("v", 4, "id", "legacy-args", "s", "run:a", "op", "wait", "rev", "v1", "args", map("action", "wait")));
                 assertEquals("INVALID_REQUEST", error(last(wire)));
                 assertEquals(0, game.observations); assertEquals(0, game.executions);
-                send(session, map("protocol_version", 3, "id", "new", "op", "protocol.info"));
+                send(session, map("protocol_version", 4, "id", "new", "op", "protocol.info"));
                 assertFalse(last(wire).containsKey("err"));
                 Map<?,?> hello = (Map<?,?>) last(wire).get("data");
-                assertEquals(3L, last(wire).get("v")); assertEquals(6L, hello.get("audit_schema_version"));
-                assertEquals("CLI.3.0.1", hello.get("cli_version"));
+                assertEquals(4L, last(wire).get("v")); assertEquals(7L, hello.get("audit_schema_version"));
+                assertEquals("CLI.4.0.0", hello.get("cli_version"));
             }
         }
     }
 
     @Test public void certifiedActionWithMissingTextKeepsItsSaveLogsAndAllowsTheNextAction() throws Exception {
         try (AuditStore store = new AuditStore(temporary.newFolder().toPath())) {
-            store.ensureScope("run:a", "run", "a"); store.beginSession("cli3-presentation","fixture-build","CLI.3.0.0",3);
+            store.ensureScope("run:a", "run", "a"); store.beginSession("cli4-presentation","fixture-build","CLI.4.0.0",4);
             FakeGame game = new FakeGame(); ByteArrayOutputStream wire = new ByteArrayOutputStream();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(wire, true, "UTF-8"), 1000)) {
                 send(session, request("act", "action.execute", "v1", map("action", "wait")));
@@ -84,10 +86,10 @@ public class Cli3SessionTest {
     @Test public void historyDoesNotObserveTheLiveEngineOrRewriteAnAlreadyRecordedWireResponse() throws Exception {
         try (AuditStore store = new AuditStore(temporary.newFolder().toPath())) {
             store.ensureScope("run:a", "run", "a");
-            Map<String,Object> recorded = map("v", 3, "id", "old", "st", "completed",
+            Map<String,Object> recorded = map("v", 4, "id", "old", "st", "completed",
                     "pres", map("st", "partial", "diag", List.of(map("field", "$.data.name", "code", "source_missing"))),
                     "data", map("name", "already rendered fallback", "text_sources", map("name", map("status", "unavailable"))));
-            AuditStore.Attempt original = store.begin("run:a", "old", "wait", "{\"v\":3,\"id\":\"old\",\"op\":\"wait\"}");
+            AuditStore.Attempt original = store.begin("run:a", "old", "wait", "{\"v\":4,\"id\":\"old\",\"op\":\"wait\"}");
             store.complete(original, "COMPLETED", recorded, map("scene", "game"), map("private", true), null);
             Map<String,Object> expected = (Map<String,Object>)store.getRequest("run:a", "old").get("response");
             FakeGame game = new FakeGame(); game.failObservation = true; ByteArrayOutputStream wire = new ByteArrayOutputStream();
@@ -107,7 +109,7 @@ public class Cli3SessionTest {
         java.nio.file.Path profile=temporary.newFolder().toPath();
         Map<String,Object> recorded;
         try(AuditStore store=new AuditStore(profile)) {
-            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.3.0.0",3);
+            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.4.0.0",4);
             com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance provenance=
                     new com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance(key->"Recorded %d");
             String source=provenance.onTextResource("当时显示17","fixture.recorded","zh",new Object[]{17});
@@ -119,7 +121,7 @@ public class Cli3SessionTest {
             store.endSession("CLOSED","finished");
         }
         try(AuditStore store=new AuditStore(profile)) {
-            store.beginSession("new-boot","new-build","CLI.3.0.0",3);
+            store.beginSession("new-boot","new-build","CLI.4.0.0",4);
             FakeGame game=new FakeGame();game.failObservation=true;
             ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {
@@ -171,13 +173,13 @@ public class Cli3SessionTest {
     }
 
     private static Map<String,Object> request(String id, String op, String version, Map<String,Object> args) {
-        Map<String,Object> request = map("protocol_version", 3, "scope_id", "run:a", "id", id, "op", op);
+        Map<String,Object> request = map("protocol_version", 4, "scope_id", "run:a", "id", id, "op", op);
         if (version != null) request.put("state_version", version);
         if (args != null) request.put("args", args);
         return request;
     }
     private static void send(MachineSession session, Map<String,Object> request) throws Exception {
-        session.accept(V3Requests.encode(request)).get(5, TimeUnit.SECONDS);
+        session.accept(V4Requests.encode(request)).get(5, TimeUnit.SECONDS);
     }
     private static String error(Map<String,Object> response) { return (String)response.get("err"); }
     private static Map<String,Object> last(ByteArrayOutputStream wire) {

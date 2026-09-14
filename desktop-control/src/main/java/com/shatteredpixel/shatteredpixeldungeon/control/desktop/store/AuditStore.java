@@ -29,7 +29,7 @@ import java.util.UUID;
  * The caller must hold the profile's exclusive process lock for this store's entire lifetime.
  */
 public final class AuditStore implements AutoCloseable {
-    public static final int SCHEMA_VERSION = 6;
+    public static final int SCHEMA_VERSION = 7;
     private final Path publicPath;
     private final Path internalPath;
     private Connection writer;
@@ -100,7 +100,7 @@ public final class AuditStore implements AutoCloseable {
                 throw new AuditException("AUDIT_PAIR_MISMATCH", "The audit database identities differ", null);
         } catch (AuditException error) { throw error; }
         catch (Exception error) {
-            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 3 requires an intact schema-6 audit pair; use a new profile", error);
+            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 4 requires an intact schema-7 audit pair; use a new profile", error);
         }
     }
 
@@ -115,7 +115,7 @@ public final class AuditStore implements AutoCloseable {
                 if ("profile_id".equals(rows.getString(1))) profile = rows.getString(2);
             }
             if (!Integer.toString(SCHEMA_VERSION).equals(version) || profile == null || profile.isEmpty())
-                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 3 requires schema 6 and never migrates older audit databases; use a new profile", null);
+                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 4 requires schema 7 and never migrates older audit databases; use a new profile", null);
             // A version marker cannot authorize silently rebuilding missing audit tables.
             try (Statement shape = reader.createStatement()) {
                 for (String sql : new String[]{
@@ -217,8 +217,8 @@ public final class AuditStore implements AutoCloseable {
 
     public synchronized String beginSession(String bootId,String buildId,String cliVersion,int protocolVersion){
         if(activeSession!=null)throw new IllegalStateException("A session is already active");
-        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=3)
-            throw new IllegalArgumentException("Session build, CLI version and protocol 3 metadata are required");
+        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=4)
+            throw new IllegalArgumentException("Session build, CLI version and protocol 4 metadata are required");
         String id=UUID.randomUUID().toString(),started=now();
         transaction(()->{
             for(String schema:schemas()){
@@ -667,7 +667,7 @@ public final class AuditStore implements AutoCloseable {
             for (String[] request : unfinished) {
                 String recovered=now();
                 String status = "EXECUTING".equals(request[2]) ? "UNKNOWN" : "NOT_EXECUTED";
-                String response = JsonCodec.encode(Values.map("v", 3, "id", request[1], "s", request[0], "err", status));
+                String response = JsonCodec.encode(Values.map("v", 4, "id", request[1], "s", request[0], "err", status));
                 for (String schema : schemas()) {
                     try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,updated_at=?,presentation_status='complete' WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
                         s.setString(1, status); s.setString(2, response); s.setString(3, recovered);

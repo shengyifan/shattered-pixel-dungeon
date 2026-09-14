@@ -93,8 +93,8 @@ def choose_edit_title(client, title):
     action, structural = note_edit_title_action(state, title)
     assert client.scope == state["scope_id"] and client.version == state["state_version"], "Use the current advertised note action"
     response = client.act("ui.activate", control=action["control"])
-    assert response.get("ok") and response.get("status") == "awaiting_input", response
-    edited = response["result"]
+    assert response.ok and response.status == "awaiting_input", response
+    edited = response.observation
     fields = [node for node in edited["observation"]["ui"]["controls"] if node.get("role") == "text_input"]
     assert len(fields) == 1 and fields[0].get("max_length") == 50 and fields[0].get("multiline") is False, fields
     assert fields[0]["value"] == title, fields[0]

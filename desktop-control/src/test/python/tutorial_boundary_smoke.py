@@ -15,8 +15,8 @@ from test_ui import configure_test_ui
 def act(client, action, **args):
     # Client.act only polls this request's terminal result; it never retries STALE_STATE.
     response = client.act(action, **args)
-    assert response.get("ok") and response.get("status") in ("completed", "awaiting_input"), response
-    state = response["result"]
+    assert response.ok and response.status in ("completed", "awaiting_input"), response
+    state = response.observation
     client.last_state = state
     return state
 

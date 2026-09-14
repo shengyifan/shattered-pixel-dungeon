@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deep protocol-3 text cases in independent processes and disposable profiles.
+"""Deep protocol-4 text cases in independent processes and disposable profiles.
 
 The parent freezes one runtime. Each Python worker gets its own GUI-language
 environment and reuses the original scenario assertions with MatrixClient source
@@ -69,7 +69,7 @@ def client_type(evidence):
             evidence.actions += int(op == "action.execute")
             try:
                 response = super().request(op, args, **kwargs)
-                assert response.get("protocol_version") == 3, response
+                assert response.get("protocol_version") == 4, response
                 assert response.get("ok"), response
                 result = response.get("result")
                 # Root MatrixClient checks dict results; events.read also returns a list.
@@ -78,8 +78,8 @@ def client_type(evidence):
                     evidence.source_checks += 1
                     assert not failures, {"op": op, "source_failures": failures[:30]}
                 if op == "protocol.info":
-                    assert response["protocol_version"] == 3 and result["audit_schema_version"] == 6, result
-                    assert result["cli_version"] == "CLI.3.0.1" and result["text_language"] == "en", result
+                    assert response["protocol_version"] == 4 and result["audit_schema_version"] == 7, result
+                    assert result["cli_version"] == "CLI.4.0.0" and result["text_language"] == "en", result
                     assert result.get("build_id") and result.get("session_id"), result
                     metadata = {key: result[key] for key in ("build_id", "cli_version", "audit_schema_version", "text_language", "session_id")}
                     metadata["protocol_version"] = response["protocol_version"]
@@ -135,7 +135,7 @@ def run_worker(job_path):
         report["profile"] = original.get("profile")
         assert original.get("ok"), {"scenario_failed": original.get("error"), "cleanup_error": original.get("cleanup_error")}
         assert evidence.failure is None, evidence.failure
-        assert evidence.handshakes and evidence.source_checks > 0, "No protocol-3 source evidence was recorded"
+        assert evidence.handshakes and evidence.source_checks > 0, "No protocol-4 source evidence was recorded"
         assert evidence.gui_languages == {job["language"]}, "No matching live GUI-language observation was recorded"
         assert all(client.process.poll() == 0 for client in evidence.clients), "A scenario process did not exit cleanly"
         report["ok"] = True

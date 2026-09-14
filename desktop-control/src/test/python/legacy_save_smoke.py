@@ -10,6 +10,7 @@ import gzip
 import json
 import os
 from pathlib import Path
+from client_result import settle_action
 import shutil
 import sqlite3
 import time
@@ -76,12 +77,12 @@ def save_json(path):
 def audit_schema(profile):
     for name in ("public", "internal"):
         with sqlite3.connect(f"file:{profile / 'audit' / (name + '.sqlite3')}?mode=ro", uri=True) as db:
-            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("6",)
+            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("7",)
             assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
 
 
 def execute(client, action, request_id=None):
-    """Retry only pre-dispatch STALE, always under a new id and freshly observed version."""
+    """Explicit save/failure audit verification, including original reply details."""
     for attempt in range(8):
         state = client.state()
         assert any(a.get("action") == action for a in state["actions"]), state["actions"]
@@ -90,20 +91,20 @@ def execute(client, action, request_id=None):
         if response.get("error", {}).get("code") == "STALE_STATE":
             request_id = None
             continue
-        # game.save and wait are bounded here, but retain the production pending-response path.
+        settled = settle_action(client, response, action)
         if response.get("status") == "in_progress":
-            deadline = time.monotonic() + 40
-            while time.monotonic() < deadline:
-                record = client.request("request.get", {"target_id": chosen_id}, scope=state["scope_id"])
-                assert record["ok"], record
-                if record["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
-                    record = client.request("request.get", {"target_id": chosen_id, "get": ["reply"]}, scope=state["scope_id"])
-                    assert record["ok"], record
-                    response = record["result"]["response"]
-                    break
-                time.sleep(0.05)
-            else:
-                raise TimeoutError("P8 save/wait action did not settle")
+            # These scenarios assert exact historical save/failure payloads.
+            # General clients use settled.outcome plus settled.observation instead.
+            terminal_failure = (settled.receipt_response is not None
+                                and settled.receipt_response.get("ok")
+                                and settled.outcome.get("status") in {"REJECTED", "UNKNOWN"})
+            if not settled.ok and not terminal_failure:
+                settled.require_success()
+            record = client.request("request.get", {"target_id": chosen_id, "get": ["reply"]}, scope=settled.scope_id)
+            assert record["ok"], record
+            response = record["result"]["response"]
+            if terminal_failure:
+                assert not response.get("ok"), {"terminal_failure_changed_to_success": settled, "response": response}
         return state, chosen_id, response
     raise AssertionError("P8 action never reached a fresh stable version")
 

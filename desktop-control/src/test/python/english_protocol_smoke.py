@@ -3,7 +3,7 @@
 
 No game choices use the private UiSceneAssertions or audit database. Private data
 from isolated profiles is read only after a chosen operation, for assertions.
-CLI 3 uses fresh schema-6 profiles; old protocol/audit migration is unsupported.
+CLI 4 uses fresh schema-7 profiles; old protocol/audit migration is unsupported.
 """
 import argparse
 import json
@@ -12,7 +12,8 @@ import re
 import time
 import unicodedata
 import uuid
-from protocol3 import pages
+from protocol4 import pages
+from client_result import settle_action
 
 from fixture_smoke import FixtureClient, freeze_runtime, GAME_PROSE_FIELDS, RAW_FIELDS, game_prose_values
 from legacy_save_smoke import launch_command, metadata, safe_profile, write_json
@@ -24,7 +25,7 @@ RAW = RAW_FIELDS
 
 
 def prose_values(value, path=(), prose=False):
-    """Share protocol-3 source-aware prose rules with every fixture client."""
+    """Share protocol-4 source-aware prose rules with every fixture client."""
     yield from game_prose_values(value, path, prose)
 
 
@@ -60,48 +61,29 @@ def checked_state(client):
 
 def execute(client, action, request_id=None, **args):
     for _ in range(6):
-        checked_state(client)
         response = client.request("action.execute", {"action": action, **args}, request_id=request_id)
         if response.get("error", {}).get("code") == "STALE_STATE":
+            checked_state(client)
             request_id = None
             continue
-        assert response["ok"], response
-        if response.get("status") == "in_progress":
-            deadline = time.monotonic() + 40
-            while time.monotonic() < deadline:
-                lookup = client.request("request.get", {"target_id": response["id"]}, scope=response["scope_id"])
-                assert lookup["ok"], lookup
-                if lookup["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
-                    lookup = client.request("request.get", {"target_id": response["id"], "get": ["reply"]}, scope=response["scope_id"])
-                    assert lookup["ok"], lookup
-                    response = lookup["result"]["response"]
-                    assert response["ok"], response
-                    break
-                time.sleep(.05)
-            else:
-                raise TimeoutError("English fixture action did not settle")
-        result = response["result"]
-        if "observation" in result:
-            client.scope = result["scope_id"]
-            client.version = result["state_version"]
-            client.last_state = result
-        return response
+        return settle_action(client, response, action).require_success()
+
     raise AssertionError("English fixture could not obtain a fresh action version")
 
 
 def activate(client, *labels):
     desired = {label.casefold() for label in labels}
+    state = client.last_state or checked_state(client)
     for _ in range(6):
-        state = checked_state(client)
         candidates = [a for a in state["actions"] if a["action"] == "ui.activate"
                       and a.get("label", "").casefold() in desired]
         assert len(candidates) == 1, {"expected_english_labels": labels,
                                       "observed": [a.get("label") for a in state["actions"]]}
         response = client.request("action.execute", {"action": "ui.activate", "control": candidates[0]["control"]})
         if response.get("error", {}).get("code") == "STALE_STATE":
+            state = checked_state(client)
             continue
-        assert response["ok"] and response.get("status") != "in_progress", response
-        return response
+        return settle_action(client, response, "ui.activate").require_success()
     raise AssertionError("English control repeatedly changed before dispatch")
 
 
@@ -218,21 +200,21 @@ def live_case(root, classpath, runtime_id):
         checks.append("welcome_title_hero_game_english")
         scope = state["scope_id"]
         sword = execute(client, "inventory.open", locator="equipment.weapon")
-        text = " ".join(value for _, value in prose_values(sword))
+        text = " ".join(value for _, value in prose_values(sword.observation))
         assert "worn shortsword" in text.casefold() and "quite short sword" in text.casefold(), text
         checks.append("original_sword_description_english")
         execute(client, "ui.back")
         stone = next(item for item in items if item["name"].casefold() == "throwing stone")
         execute(client, "inventory.open", locator=stone["locator"])
-        aiming = activate(client, "THROW")["result"]
+        aiming = activate(client, "THROW").observation
         assert any(a["action"] == "cell.cancel" for a in aiming["actions"])
-        cancelled = execute(client, "cell.cancel")["result"]
+        cancelled = execute(client, "cell.cancel").observation
         unchanged = next(item for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "throwing stone")
         assert unchanged["quantity"] == stone["quantity"], "Cancelling must not consume the item"
         checks.append("original_throw_cancel_preserves_quantity")
         food = next(item for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "ration of food")
         execute(client, "inventory.open", locator=food["locator"])
-        eaten = activate(client, "EAT")
+        eaten = activate(client, "EAT").initial_response
         food_id = eaten["id"]
         # Only a native displayed message proves event-language projection; no test text injection.
         deadline = time.monotonic() + 10

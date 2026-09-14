@@ -21,7 +21,7 @@ public class EofSaveRetryTest {
     @Test public void oneGuiIntentChangeIsReobservedThenNativeSaveReceiptIsDurable()throws Exception{
         FakeGame game=new FakeGame();game.firstFailure=new GameController.NotExecuted("STALE_STATE",null);
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
-            store.ensureScope("run:a","run","a");store.beginSession("test-eof","fixture-build","CLI.3.0.0",3);
+            store.ensureScope("run:a","run","a");store.beginSession("test-eof","fixture-build","CLI.4.0.0",4);
             ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire),1000)){
                 session.read(new ByteArrayInputStream(new byte[0]));

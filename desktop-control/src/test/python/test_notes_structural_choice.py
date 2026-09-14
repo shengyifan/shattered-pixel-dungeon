@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import Mock
 
 import notes_scenario_smoke as notes
+from client_result import ActionResult
 
 
 class NotesStructuralChoiceTest(unittest.TestCase):
@@ -62,7 +63,8 @@ class NotesStructuralChoiceTest(unittest.TestCase):
         editor = {"observation": {"ui": {"controls": [{"role": "text_input", "max_length": 50, "multiline": False, "value": "Known note"}]}}}
         client = Mock(scope="run:test", version="v1")
         client.state.return_value = state
-        client.act.return_value = {"ok": True, "status": "awaiting_input", "result": editor}
+        reply = {"ok": True, "status": "awaiting_input", "result": editor}
+        client.act.return_value = ActionResult(reply, observation_response=reply)
         client.clipped_note_title_choices = []
         self.assertEqual(editor, notes.choose_edit_title(client, "Known note"))
         client.act.assert_called_once_with("ui.activate", control="clipped")

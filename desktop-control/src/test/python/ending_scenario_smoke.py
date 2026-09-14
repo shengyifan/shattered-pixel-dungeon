@@ -32,7 +32,7 @@ def original_death(client,profile):
     assert initial["observation"]["hero"]["hp"]==1
     assert all("ankh" not in item["name"].lower() for item in initial["observation"]["inventory"])
     outcome=execute(client,"wait",request_id="death-trigger")
-    dead=outcome["result"]
+    dead=outcome.observation
     assert dead["phase"]=="ended" and dead["observation"]["hero"]["hp"]==0,dead
     assert dead["scope_id"]==initial["scope_id"]
     assert dead["run_outcome"]=={"scope_id":initial["scope_id"],"result":"lost"},dead["run_outcome"]
@@ -41,7 +41,10 @@ def original_death(client,profile):
     assert len(ended)==1 and ended[0]["data"]["result"]=="lost",ended
     private=checkpoint(profile,dead["state_version"])["ending"]
     assert private["ankh_count"]==0 and private["ranking_records"]==1 and private["games_won"]==0,private
-    return initial,dead,outcome,ended[0]
+    # This scenario specifically verifies historical ending persistence.
+    recorded = client.request("request.get", {"target_id": outcome.request_id, "get": ["reply"]}, scope=outcome.scope_id)
+    assert recorded["ok"], recorded
+    return initial,dead,recorded["result"]["response"],ended[0]
 
 
 def death_menu(client,profile):
@@ -53,7 +56,7 @@ def death_menu(client,profile):
     # Either is an original visible entry to WndGame; select one advertised control,
     # then verify the dead-only contents instead of assuming labels are globally unique.
     control=next(action["control"] for action in state["actions"] if action["action"]=="ui.activate" and action.get("label")==label)
-    menu=execute(client,"ui.activate",control=control)["result"]
+    menu=execute(client,"ui.activate",control=control).observation
     ui_assertion(profile,menu,"com.shatteredpixel.shatteredpixeldungeon.windows.WndGame")
     assert {"Settings","Start New Game","Rankings","Main Menu"}<={action.get("label") for action in menu["actions"]}
     return menu
@@ -61,20 +64,20 @@ def death_menu(client,profile):
 
 def ranking_case(client,profile,dead):
     death_menu(client,profile)
-    ranked=activate(client,"Rankings")["result"]
+    ranked=activate(client,"Rankings").observation
     assert ranked["observation"]["ui"]["scene"]=="RankingsScene"
     assert ranked["scope_id"].startswith("menu:")
     rows=[action for action in ranked["actions"] if action["action"]=="ui.activate"
           and "succumbed to poison" in action.get("label","").lower()]
     assert len(rows)==1,ranked["actions"]
-    detail=execute(client,"ui.activate",control=rows[0]["control"])["result"]
+    detail=execute(client,"ui.activate",control=rows[0]["control"]).observation
     proof=ui_assertion(profile,detail,"com.shatteredpixel.shatteredpixeldungeon.windows.WndRanking")
     texts=" ".join(str(node.get("text","")) for node in detail["observation"]["ui"]["controls"])
     assert "Maximum Depth" in texts and "Strength" in texts and "Game Duration" in texts,texts
     assert "Unable to load additional information" not in texts,texts
-    back=execute(client,"ui.back")["result"]
+    back=execute(client,"ui.back").observation
     assert back["observation"]["ui"]["scene"]=="RankingsScene" and not back["observation"]["ui"]["modal"]
-    title=execute(client,"ui.back")["result"]
+    title=execute(client,"ui.back").observation
     assert title["observation"]["ui"]["scene"]=="TitleScene"
     assert title["scope_id"]==ranked["scope_id"]
     return {"case_id":"ending.permanent_death","original_death_menu":True,
@@ -84,18 +87,18 @@ def ranking_case(client,profile,dead):
 
 def restart_case(client,profile,initial,outcome):
     death_menu(client,profile)
-    selected=activate(client,"Start New Game")["result"]
+    selected=activate(client,"Start New Game").observation
     assert selected["observation"]["ui"]["scene"]=="HeroSelectScene"
     # The original dead-run menu already selects this hero class. Selecting the
     # class again opens the separate Hero Info window; Start is the actual next step.
     assert not selected["observation"]["ui"]["modal"]
     assert any(action.get("label")=="Start" for action in selected["actions"])
-    new=activate(client,"Start")["result"]
+    new=activate(client,"Start").observation
     for _ in range(5):
         if new["observation"]["scene"]=="game":break
         assert new["observation"]["ui"]["scene"]=="InterlevelScene",new
         assert any(action.get("label")=="Continue" for action in new["actions"]),new["actions"]
-        new=activate(client,"Continue")["result"]
+        new=activate(client,"Continue").observation
     assert new["observation"]["scene"]=="game",new
     assert new["scope_id"].startswith("run:") and new["scope_id"]!=initial["scope_id"]
     assert new["observation"]["hero"]["hp"]==new["observation"]["hero"]["max_hp"]>0
@@ -124,11 +127,11 @@ def entrance(client,expected_depth):
     choices=[cell for cell in state["observation"]["map"]["cells"] if cell["name"]=="Depth entrance"]
     assert choices,state["observation"]["map"]
     target=min(choices,key=lambda cell:max(abs(cell["cell"]%width-hero["cell"]%width),abs(cell["cell"]//width-hero["cell"]//width)))["cell"]
-    result=execute(client,"cell.select",cell=target,mode="act")["result"]
+    result=execute(client,"cell.select",cell=target,mode="act").observation
     # If the native input only walked onto the stairs, the next original click activates them.
     if result["observation"].get("scene")=="game" and result["observation"]["hero"]["depth"]==expected_depth and result["phase"]=="player_ready":
         assert result["observation"]["hero"]["cell"]==target,result
-        result=execute(client,"cell.select",cell=target,mode="act")["result"]
+        result=execute(client,"cell.select",cell=target,mode="act").observation
     return result
 
 
@@ -138,14 +141,14 @@ def amulet_surface(client,profile,initial):
     assert not any(item["name"].lower()=="amulet of yendor" for item in initial["observation"]["inventory"])
     heap=next(entity for entity in initial["observation"]["visible_entities"]
               if entity.get("item",{}).get("name","").lower()=="amulet of yendor")
-    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act")["result"]
+    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act").observation
     assert acquired["observation"]["ui"]["scene"]=="AmuletScene",acquired
     ui_assertion(profile,acquired)
     text=" ".join(str(node.get("text","")) for node in acquired["observation"]["ui"]["controls"])
     assert "You finally hold it in your hands, the Amulet of Yendor!" in text,text
     assert {"Let's call it a day","I'm not done yet"}<={action.get("label") for action in acquired["actions"]}
     assert not [event for event in public_events(client,scope) if event["kind"]=="run.ended"]
-    stayed=activate(client,"I'm not done yet")["result"]
+    stayed=activate(client,"I'm not done yet").observation
     assert stayed["scope_id"]==scope and stayed["observation"]["scene"]=="game" and stayed["observation"]["hero"]["depth"]==2
     assert any(item["name"].lower()=="amulet of yendor" for item in stayed["observation"]["inventory"])
     first=entrance(client,2)
@@ -159,12 +162,12 @@ def amulet_surface(client,profile,initial):
     assert private["ascended"] and private["amulet_obtained"] and private["games_won"]==1,private
     ended=[event for event in public_events(client,scope) if event["kind"]=="run.ended"]
     assert len(ended)==1 and ended[0]["data"]["result"]=="won",ended
-    ranked=activate(client,"Game Over")["result"]
+    ranked=activate(client,"Game Over").observation
     assert ranked["observation"]["ui"]["scene"]=="RankingsScene"
     victory=ui_assertion(profile,ranked,"com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats")
-    blocked=execute(client,"ui.back")["result"]
+    blocked=execute(client,"ui.back").observation
     ui_assertion(profile,blocked,"com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats")
-    closed=activate(client,"Close")["result"]
+    closed=activate(client,"Close").observation
     assert closed["observation"]["ui"]["scene"]=="RankingsScene" and not closed["observation"]["ui"]["modal"]
     return {"case_id":"ending.amulet_pickup_surface","source_scope_id":scope,
             "original_ground_pickup_and_acquisition_story":True,"original_stay_keeps_amulet_and_scope":True,
@@ -181,9 +184,9 @@ def ascension_start(client,profile,initial):
     assert not before["ascension_active"] and not before["amulet_obtained"]
     heap=next(entity for entity in initial["observation"]["visible_entities"]
               if entity.get("item",{}).get("name","").lower()=="amulet of yendor")
-    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act")["result"]
+    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act").observation
     assert acquired["observation"]["ui"]["scene"]=="AmuletScene"
-    stayed=activate(client,"I'm not done yet")["result"]
+    stayed=activate(client,"I'm not done yet").observation
     assert stayed["scope_id"]==scope and stayed["observation"]["hero"]["depth"]==25
     prompt=entrance(client,25)
     assert prompt["phase"]=="awaiting_input" and {"Continue!","Stop for Now"}<={action.get("label") for action in prompt["actions"]}
@@ -191,10 +194,10 @@ def ascension_start(client,profile,initial):
     assert "You begin to feel Yog-Dzewa's great and terrible power radiating from the amulet." in shown
     prompt_proof=ui_assertion(profile,prompt)
     assert any(name.startswith("com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel$") for name in prompt_proof["window_classes"])
-    cancelled=activate(client,"Stop for Now")["result"]
+    cancelled=activate(client,"Stop for Now").observation
     assert cancelled["observation"]["hero"]["depth"]==25 and not checkpoint(profile,cancelled["state_version"])["ending"]["ascension_active"]
     entrance(client,25)
-    ascended=activate(client,"Continue!")["result"]
+    ascended=activate(client,"Continue!").observation
     assert ascended["scope_id"]==scope and ascended["phase"]=="player_ready" and ascended["observation"]["hero"]["depth"]==24,ascended
     after=checkpoint(profile,ascended["state_version"])["ending"]
     assert after["level_class"]=="HallsLevel" and after["highest_ascent"]==24 and after["ascension_active"]

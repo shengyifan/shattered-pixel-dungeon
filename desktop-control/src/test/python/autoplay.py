@@ -16,7 +16,8 @@ import time
 import uuid
 
 from machine_smoke import Client
-import protocol3
+from client_result import ActionResult, settle_action
+import protocol4
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -213,14 +214,14 @@ class PublicClient(Client):
                 raise Checkpoint("maximum_action_requests_reached")
             self.action_count += 1
         request_id = request_id or str(uuid.uuid4())
-        self.log("request", request=protocol3.request(op, args, request_id, scope or self.scope, version or self.version),
+        self.log("request", request=protocol4.request(op, args, request_id, scope or self.scope, version or self.version),
                  action_number=self.action_count, cleanup=self.cleanup)
         response = super().request(op, args, request_id, scope, version)
         self.log("response", response=self.last_wire_response)
         if op == "action.execute":
             self.last_operation_response = response
         data = response.get("result")
-        if response.get("ok") and isinstance(data, dict) and "observation" in data:
+        if protocol4.is_live_operation(op) and response.get("ok") and isinstance(data, dict) and "observation" in data:
             self.last_state = data
             current_file = self.profile / "current-state-public.json"
             staged = self.profile / "current-state-public.json.tmp"
@@ -235,66 +236,46 @@ class PublicClient(Client):
                  observed_hero=state.get("observation", {}).get("hero"))
         self.last_action_executed = False
         result = self.request("action.execute", {"action": action, **args})
-        self.last_action_outcome = result
-        if not result.get("ok"):
-            code = result.get("error", {}).get("code")
-            if code == "STALE_STATE":
-                return self.state()
-            raise Checkpoint("action_rejected:" + str(code))
+        previous_hp = state.get("observation", {}).get("hero", {}).get("hp")
+        activity_loss = 0
+        started = time.monotonic()
+
+        def observe_pending(pending):
+            nonlocal previous_hp, activity_loss
+            progress = self.state()
+            observed = progress.get("observation", {})
+            current_hero = observed.get("hero") or {}
+            if current_hero and previous_hp is not None:
+                activity_loss = max(activity_loss, max(0, previous_hp - current_hero["hp"]))
+                previous_hp = current_hero["hp"]
+            self.log("activity_progress", target_id=pending.request_id, phase=progress.get("phase"),
+                     hero=current_hero, actions=progress.get("actions", []))
+            threats = [e for e in observed.get("visible_entities", []) if e.get("kind") == "character"
+                       and creature_kind(e) != "known_friendly"]
+            buffs = " ".join(b.get("name", "") for b in current_hero.get("buffs", []))
+            unsafe = activity_loss > 0 or threats or contains(buffs, DAMAGE_DEBUFFS + ("starving", "极度饥饿"))
+            overdue = time.monotonic() - started > 8
+            if progress.get("phase") == "continuous_activity" and (unsafe or overdue):
+                cancel = next((a for a in progress.get("actions", []) if a.get("action") == "action.cancel"
+                               and a.get("target_id") == pending.request_id), None)
+                if not cancel:
+                    raise Checkpoint("continuous_activity_has_no_advertised_cancel")
+                self.log("decision", reason="cancel_continuous_action_after_public_risk_or_time_bound",
+                         target_id=pending.request_id, unsafe=bool(unsafe), overdue=overdue)
+                cancellation = self.request("action.execute", {"action": "action.cancel", "target_id": pending.request_id},
+                                            scope=progress.get("scope_id"), version=progress.get("state_version"))
+                if not cancellation.get("ok"):
+                    raise Checkpoint("advertised_activity_cancel_rejected")
+
+        settled = settle_action(self, result, action, timeout=40, poll_interval=.1, on_pending=observe_pending)
+        self.last_action_outcome = settled
+        if not settled.ok:
+            raise Checkpoint("operation_settlement_failed:" + str(settled.failure or settled.outcome))
         self.last_action_executed = True
         if action == "app.quit":
-            # Successful quit closes the pipe; another state.get would falsely report a shutdown failure.
-            return result.get("result") or state
-        if result.get("status") == "in_progress":
-            original_id, original_scope = result["id"], result["scope_id"]
-            previous_hp = state.get("observation", {}).get("hero", {}).get("hp")
-            activity_loss = 0
-            started = time.monotonic()
-            for _ in range(150):
-                record = self.request("request.get", {"target_id": original_id}, scope=original_scope)
-                request = record.get("result") or {}
-                if request.get("status") not in {"EXECUTING", "RECEIVED"}:
-                    detail = self.request("request.get", {"target_id": original_id, "get": ["reply"]}, scope=original_scope)
-                    assert detail.get("ok"), detail
-                    request = detail["result"]
-                    settled = request.get("response") or {}
-                    self.last_action_outcome = settled
-                    if not settled.get("ok"):
-                        raise Checkpoint("operation_settlement_failed")
-                    break
-                progress = self.state()
-                observed = progress.get("observation", {})
-                current_hero = observed.get("hero") or {}
-                if current_hero and previous_hp is not None:
-                    activity_loss = max(activity_loss, max(0, previous_hp - current_hero["hp"]))
-                    previous_hp = current_hero["hp"]
-                self.log("activity_progress", target_id=original_id, phase=progress.get("phase"),
-                         hero=current_hero, actions=progress.get("actions", []))
-                threats = [e for e in observed.get("visible_entities", []) if e.get("kind") == "character"
-                           and creature_kind(e) != "known_friendly"]
-                buffs = " ".join(b.get("name", "") for b in current_hero.get("buffs", []))
-                unsafe = activity_loss > 0 or threats or contains(buffs, DAMAGE_DEBUFFS + ("starving", "极度饥饿"))
-                overdue = time.monotonic() - started > 8
-                if progress.get("phase") == "continuous_activity" and (unsafe or overdue):
-                    cancel = next((a for a in progress.get("actions", []) if a.get("action") == "action.cancel"
-                                   and a.get("target_id") == original_id), None)
-                    if not cancel:
-                        raise Checkpoint("continuous_activity_has_no_advertised_cancel")
-                    self.log("decision", reason="cancel_continuous_action_after_public_risk_or_time_bound",
-                             target_id=original_id, unsafe=bool(unsafe), overdue=overdue)
-                    cancellation = self.request("action.execute", {"action": "action.cancel", "target_id": original_id},
-                                                scope=original_scope, version=progress.get("state_version"))
-                    if not cancellation.get("ok"):
-                        terminal = self.request("request.get", {"target_id": original_id}, scope=original_scope)
-                        if terminal.get("result", {}).get("status") in {"EXECUTING", "RECEIVED"}:
-                            raise Checkpoint("advertised_activity_cancel_rejected")
-                time.sleep(0.1)
-            else:
-                raise Checkpoint("finite_action_did_not_settle")
-            self.last_health_loss = activity_loss
-        else:
-            self.last_health_loss = 0
-        after = self.state()
+            return settled.observation or state
+        self.last_health_loss = activity_loss
+        after = settled.observation
         before_hero = state.get("observation", {}).get("hero") or {}
         after_hero = after.get("observation", {}).get("hero") or {}
         if before_hero and after_hero and state.get("scope_id") == after.get("scope_id"):
@@ -492,7 +473,7 @@ class Policy:
                     if record.get("kind") != "response":
                         continue
                     wire_response = record.get("response", {})
-                    decoded = protocol3.response(wire_response) if wire_response.get("v") == 3 else wire_response
+                    decoded = protocol4.response(wire_response) if wire_response.get("v") == 4 else wire_response
                     data = decoded.get("result", {})
                     if not isinstance(data, dict) or data.get("scope_id") != scope:
                         continue
@@ -518,7 +499,7 @@ class Policy:
                         self.reviewed_optional.add(normalized(record["creature"]["name"]))
                         continue
                     wire_response = record.get("response", {})
-                    decoded = protocol3.response(wire_response) if wire_response.get("v") == 3 else wire_response
+                    decoded = protocol4.response(wire_response) if wire_response.get("v") == 4 else wire_response
                     data = decoded.get("result", {})
                     if isinstance(data, dict) and "observation" in data:
                         observed_scope = data.get("scope_id")
@@ -1097,6 +1078,33 @@ def checkpoint(client, attempt, state, reason):
     print(json.dumps({k: v for k, v in record.items() if k not in {"state", "strategy_state"}}, ensure_ascii=False), flush=True)
 
 
+def operation_summary(operation, initial_response=None):
+    """Summarize outcome evidence without printing a second complete observation."""
+    derived = isinstance(operation, ActionResult)
+    outcome = operation.outcome if derived else (initial_response or {})
+    summary = {"derived_client_result": True,
+               "id": operation.request_id if derived else outcome.get("id"),
+               "ok": operation.ok if derived else outcome.get("ok"),
+               "status": operation.status if derived else outcome.get("status")}
+    error = outcome.get("error") or outcome.get("err")
+    if error is not None:
+        summary["error"] = error
+    presentation = outcome.get("presentation") or outcome.get("pres")
+    if presentation is not None:
+        summary["presentation"] = presentation
+    if derived and operation.receipt_response is not None:
+        saves = outcome.get("save", [])
+    else:
+        saves = (outcome.get("result") or {}).get("persistence", {}).get("saves_during_request", [])
+    if saves:
+        summary["save"] = saves
+    if derived and operation.failure is not None:
+        failure = operation.failure
+        summary["failure"] = ({"id": failure.get("id"), "error": failure.get("error") or failure.get("err")}
+                              if isinstance(failure, dict) else str(failure))
+    return summary
+
+
 def interactive_public_session(client, attempt, state, reason="interactive_public_control", commands=None):
     """Keep the machine pipe alive while an operator resolves an actual public choice.
 
@@ -1106,7 +1114,8 @@ def interactive_public_session(client, attempt, state, reason="interactive_publi
     commands = commands or sys.stdin
     def display():
         observation = state.get("observation", {})
-        operation = getattr(client, "last_action_outcome", None) or getattr(client, "last_operation_response", None) or {}
+        operation = getattr(client, "last_action_outcome", None)
+        summary = operation_summary(operation, getattr(client, "last_operation_response", None))
         print(json.dumps({"interactive": True, "scope_id": state.get("scope_id"),
                           "state_version": state.get("state_version"), "phase": state.get("phase"),
                           "run_outcome": state.get("run_outcome"),
@@ -1114,9 +1123,7 @@ def interactive_public_session(client, attempt, state, reason="interactive_publi
                           "visible_entities": observation.get("visible_entities"),
                           "ui": observation.get("ui"), "actions": state.get("actions"),
                           "last_save": state.get("last_save"),
-                          "last_operation": {"id": operation.get("id"), "ok": operation.get("ok"),
-                                             "status": operation.get("status"), "error": operation.get("error"),
-                                             "persistence": (operation.get("result") or {}).get("persistence")},
+                          "last_operation": summary,
                           "action_requests": client.action_count}, ensure_ascii=False), flush=True)
     display()
     input_ended_reported = False
@@ -1524,13 +1531,25 @@ def self_test():
         if op == "request.get":
             return {"ok": True, "result": {"status": "INTERRUPTED" if cancelled[0] else "EXECUTING",
                     "response": {"ok": True, "status": "interrupted", "result": ready}}}
+        if op == "state.get":
+            return {"ok": True, "status": "completed", "result": ready}
         raise AssertionError((op, args))
     progress_client.request = protocol_request
     progress_client.state = lambda: ready if cancelled[0] else activity
     progress_client.bounded_action(state, "test_rest_progress", "rest")
     assert cancelled[0] and progress_client.last_health_loss == 1
-    assert progress_client.last_action_outcome["status"] == "interrupted"
+    assert progress_client.last_action_outcome.status == "interrupted"
     assert [call[1]["action"] for call in calls if call[0] == "action.execute"] == ["rest", "action.cancel"]
+    saved_reply = {"id": "saved", "ok": True, "status": "completed", "result": {
+        **ready, "persistence": {"saves_during_request": [{"receipt_id": "save-proof"}]}}}
+    saved_result = ActionResult(saved_reply, observation_response=saved_reply)
+    before_summary = json.dumps(saved_reply, sort_keys=True)
+    for summary in (operation_summary(saved_result), operation_summary(None, saved_reply)):
+        assert summary["id"] == "saved" and summary["status"] == "completed"
+        assert summary["save"] == [{"receipt_id": "save-proof"}]
+        assert not any(key in summary for key in ("outcome", "result", "initial_response", "observation", "hero", "inventory", "ui"))
+        assert "observation" not in json.dumps(summary)
+    assert json.dumps(saved_reply, sort_keys=True) == before_summary
     print("public-policy self-test passed")
 
 

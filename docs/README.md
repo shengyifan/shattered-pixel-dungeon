@@ -6,6 +6,7 @@
 
 - [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
 - [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
+- [CLI.4.0.0 实现与验收](cli4-implementation.md)：自包含 play/full 回复、行地图、轻量回执流程与严格 v4 目录隔离。
 - [CLI.3.0.1 状态版本修复](cli-issues/2026-09-14-cli-3.0.1-currency-stale-state.md)：两次实战金币提示淡出误拒、空文本签名、旧版复现及回归验证。
 - [CLI.3.0.0 实现与验收](cli3-implementation.md)：短协议、彩色查看器、完整收发、token 基准与实际包验证。
 - [CLI.3.0.0 清理重建记录](cli-rebuild-3.0.0-20260913.md)：该批次删除旧产物及实战故障 JSON、全量 ARM64 构建和包验证。

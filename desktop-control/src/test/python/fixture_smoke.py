@@ -16,6 +16,8 @@ import unicodedata
 import uuid
 import zipfile
 from machine_smoke import Client
+from client_result import settle_action
+from protocol4 import is_live_operation
 
 CLASSES = ["WARRIOR", "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"]
 SUBCLASSES = {
@@ -84,7 +86,7 @@ class FixtureClient(Client):
 
     def request(self, op, args=None, **kwargs):
         result = super().request(op, args, **kwargs)
-        if result.get("ok") and isinstance(result.get("result"), dict) and "observation" in result["result"]:
+        if is_live_operation(op) and result.get("ok") and isinstance(result.get("result"), dict) and "observation" in result["result"]:
             self.last_state = result["result"]
         self.trace.write(json.dumps({"test_fixture": True, "op": op, "args": args,
                                      "request": getattr(self, "last_wire_request", None),
@@ -108,26 +110,10 @@ def act(client, action, **args):
     for _ in range(4):
         result = client.request("action.execute", {"action": action, **args})
         if result.get("ok"):
-            if result.get("status") == "in_progress":
-                request_id, scope = result["id"], result["scope_id"]
-                deadline = time.monotonic() + 40
-                while time.monotonic() < deadline:
-                    record = client.request("request.get", {"target_id": request_id}, scope=scope)
-                    assert record.get("ok"), record
-                    if record["result"]["status"] not in {"RECEIVED", "EXECUTING"}:
-                        record = client.request("request.get", {"target_id": request_id, "get": ["reply"]}, scope=scope)
-                        assert record.get("ok"), record
-                        result = record["result"]["response"]
-                        assert result.get("ok"), result
-                        break
-                    time.sleep(0.05)
-                else:
-                    raise TimeoutError("Fixture action did not reach its own terminal response")
-                if client.verify_gui and action != "app.quit":
-                    assert_gui_environment(client.profile, result["result"])
-                    client.gui_postconditions_checked += 1
-            data = result["result"]
-            client.scope, client.version, client.last_state = data["scope_id"], data["state_version"], data
+            settled = settle_action(client, result, action).require_success()
+            data = settled.observation
+            if data is not None:
+                client.last_state = data
             return data
         if result.get("error", {}).get("code") != "STALE_STATE":
             raise AssertionError(result)

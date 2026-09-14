@@ -84,7 +84,7 @@ def main():
     manifest_path = output_dir / "inputs.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     output = output_dir / "report.json"
-    # This main inspects protocol-3 source/diagnostic sidecars, never a launcher or old-language reverse dictionary.
+    # This main inspects protocol-4 source/diagnostic sidecars, never a launcher or old-language reverse dictionary.
     subprocess.run(["java", "-Xmx1g", "-cp", classpath,
                     "com.shatteredpixel.shatteredpixeldungeon.control.desktop.EnglishCorpusProbe",
                     str(root), str(manifest_path), str(output)], cwd=root, check=True)

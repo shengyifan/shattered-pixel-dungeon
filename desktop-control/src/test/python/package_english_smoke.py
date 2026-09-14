@@ -14,7 +14,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
-import protocol3
+import protocol4
 import zipfile
 
 from english_protocol_smoke import activate, assert_english, checked_state, english_inventory, execute, public_events, stop
@@ -126,13 +126,13 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             result = receive(process)
             assert_english(result)
             return result
-        hello = exchange(b'{"v":3,"id":"package-info","op":"info"}\r\n')
+        hello = exchange(b'{"v":4,"id":"package-info","op":"info"}\r\n')
         assert hello["ok"] and hello["result"]["build_id"] == expected_build
         assert hello["result"]["cli_version"] == expected_cli
         scope = hello["result"]["scope_id"]
-        invalid = exchange(b'{"v":3,"id":"package-invalid-encoding","op":"state","x":"\xff"}\n')
+        invalid = exchange(b'{"v":4,"id":"package-invalid-encoding","op":"state","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = protocol3.wire_bytes(protocol3.request("state.get", request_id="package-state", scope=scope))
+        query = protocol4.wire_bytes(protocol4.request("state.get", request_id="package-state", scope=scope))
         observed = exchange(query)
         assert observed["ok"], observed
         mode = display(observed["result"])
@@ -151,11 +151,11 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             process.terminate()
             process.wait(timeout=10)
         stderr.close()
-    final = protocol3.wire_bytes(protocol3.request("state.get", request_id="package-final-frame", scope=scope))[:-1]
+    final = protocol4.wire_bytes(protocol4.request("state.get", request_id="package-final-frame", scope=scope))[:-1]
     restarted = subprocess.run(command, input=final, capture_output=True, env=env, timeout=45)
     lines = restarted.stdout.splitlines()
     assert restarted.returncode == 0 and len(lines) == 1, (restarted.returncode, restarted.stderr, lines)
-    response = protocol3.response(json.loads(lines[0]))
+    response = protocol4.response(json.loads(lines[0]))
     assert response["ok"]
     assert_english(response)
     display(response["result"])
@@ -221,7 +221,7 @@ class PackageClient(Client):
 
 def settings_confirmation(client):
     activate(client, "Menu")
-    opened = activate(client, "Settings")["result"]
+    opened = activate(client, "Settings").observation
     # Icon tabs are unlabeled original controls. Discover the actual displayed panel,
     # without assuming a hidden tab index or using an OS pointer coordinate.
     candidates = [a["control"] for a in opened["actions"] if a["action"] == "ui.activate" and not a.get("label")]
@@ -276,14 +276,14 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
         checks.append("actual_selected_chinese_and_windowed_settings_confirmed")
         stone = next(item for item in items if item["name"].casefold() == "throwing stone")
         execute(client, "inventory.open", locator=stone["locator"])
-        aiming = activate(client, "THROW")["result"]
+        aiming = activate(client, "THROW").observation
         assert any(a["action"] == "cell.cancel" for a in aiming["actions"])
-        cancelled = execute(client, "cell.cancel")["result"]
+        cancelled = execute(client, "cell.cancel").observation
         assert next(item["quantity"] for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "throwing stone") == stone["quantity"]
         checks.append("original_inventory_throw_cancel_preserves_quantity")
         food = next(item for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "ration of food")
         execute(client, "inventory.open", locator=food["locator"])
-        eaten = activate(client, "EAT")
+        eaten = activate(client, "EAT").initial_response
         deadline = time.monotonic() + 10
         food_event = None
         while time.monotonic() < deadline:
@@ -299,7 +299,7 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
         record = client.request("request.get", {"target_id": eaten["id"], "get": ["reply"]}, scope=scope)
         assert record["ok"] and record["result"]["response"] == eaten
         assert client.request("actions.list")["ok"]
-        saved = execute(client, "game.save")["result"]
+        saved = execute(client, "game.save").initial_response["result"]
         assert any(receipt["success"] for receipt in saved["persistence"]["saves_during_request"])
         before_hero = {key: saved["observation"]["hero"][key] for key in ("class", "cell", "depth", "hp", "level", "gold")}
         before_inventory = [(item["locator"], item["name"], item["quantity"], item["equipped"])
@@ -346,7 +346,7 @@ def main():
                         help="Reuse an unchanged-build successful raw case; preserves its original profile and report")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging3.0" / ("english-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging4.0" / ("english-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录 with spaces" / args.bundle.name
     shutil.copytree(args.bundle.resolve(), bundle, symlinks=True)
@@ -356,7 +356,7 @@ def main():
     try:
         if args.reuse_raw_result:
             source = args.reuse_raw_result.resolve()
-            assert source.is_relative_to((root / "desktop-control/build/fixtures/packaging3.0").resolve())
+            assert source.is_relative_to((root / "desktop-control/build/fixtures/packaging4.0").resolve())
             raw = json.loads(source.read_text())
             assert raw["verified"] is True and raw["case_id"] == "package.english_raw_pipe"
             assert raw["runtime"]["build_id"] == binary["build_id"], "A different production build must rerun the raw case"

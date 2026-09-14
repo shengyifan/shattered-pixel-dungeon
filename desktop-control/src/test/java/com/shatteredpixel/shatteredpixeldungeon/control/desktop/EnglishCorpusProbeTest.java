@@ -94,7 +94,7 @@ public class EnglishCorpusProbeTest {
         assertEquals("description",issue.get("field"));
     }
 
-    @Test public void realV3OutputPreservesCompactPathsAndRecordedPartialDiagnosticsWithSourcesOptional() {
+    @Test public void realV4OutputPreservesCompactPathsAndRecordedPartialDiagnosticsWithSourcesOptional() {
         String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
         String note=TextProvenance.INSTANCE.onTextOperation("user","用户自定义文字","用户自定义文字");
         Map<String,Object> rendered=PublicEnglishProjection.copy(map("scope_id","run:fixture","state_version","rev:1",
@@ -107,7 +107,7 @@ public class EnglishCorpusProbeTest {
             Map<String,Object> response=CompactProtocol.success("wire","run:fixture","completed",rendered,true,sources);
             String before=JsonCodec.encode(response);
             EnglishCorpusProbe probe=new EnglishCorpusProbe();probe.inspect(response,map("request_id","wire"));
-            assertEquals(1L,probe.report().get("protocol_3_frames"));
+            assertEquals(1L,probe.report().get("protocol_4_frames"));
             assertEquals(1L,probe.report().get("unavailable_occurrences"));
             assertEquals(1L,probe.report().get("partial_occurrences"));
             assertEquals(0L,occurrences(probe,"用户自定义文字"));
@@ -125,12 +125,12 @@ public class EnglishCorpusProbeTest {
         }
     }
 
-    @Test public void v3DefaultsDoNotInventMissingSourcesAndAggregateDiagnosticsRetainWirePointers() {
+    @Test public void v4DefaultsDoNotInventMissingSourcesAndAggregateDiagnosticsRetainWirePointers() {
         Map<String,Object> node=map("id","same","role","text","text","Already rendered text");
         EnglishCorpusProbe probe=new EnglishCorpusProbe();
-        probe.inspect(map("v",3,"data",map("ui",map("scene","TitleScene","nodes",List.of(node)))),map());
+        probe.inspect(map("v",4,"data",map("ui",map("scene","TitleScene","nodes",List.of(node)))),map());
         assertEquals(0L,probe.report().get("unavailable_occurrences"));
-        Map<String,Object> partial=map("v",3,"data",map("ui",map("scene","TitleScene","nodes",List.of(node))),
+        Map<String,Object> partial=map("v",4,"data",map("ui",map("scene","TitleScene","nodes",List.of(node))),
                 "pres",map("st","partial","diag",List.of(map("field","$.data.ui.nodes[0].text","code","source_missing"))),
                 "raw",map("description","opaque request text"),"reply",map("description","opaque historical reply text"));
         String before=JsonCodec.encode(partial);

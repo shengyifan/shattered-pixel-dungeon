@@ -24,6 +24,6 @@ public class NdjsonReaderTest {
     @Test public void rejectsIdentifiersThatWouldBecomeQuestionMarksInUtf8(){
         assertFalse(Identifiers.valid("\ud800",128));assertFalse(Identifiers.valid("\udfff",128));
         assertTrue(Identifiers.valid("玩家🎮",128));assertTrue(Identifiers.valid("?",128));
-        assertThrows(ProtocolException.class,()->ControlRequest.parse("{\"v\":3,\"id\":\"\\ud800\",\"op\":\"state\"}"));
+        assertThrows(ProtocolException.class,()->ControlRequest.parse("{\"v\":4,\"id\":\"\\ud800\",\"op\":\"state\"}"));
     }
 }

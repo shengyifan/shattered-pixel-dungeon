@@ -1,7 +1,7 @@
-# spdctl: compact game control (protocol 3)
+# spdctl: compact game control (protocol 4)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.3.0.1, protocol 3, and base game 3.3.8.
+`spdctl --version` reports CLI.4.0.0, protocol 4, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -23,14 +23,14 @@ There is no network endpoint, background response stream, or attachment to anoth
 Finder-launched instance. Screenshots, window focus and simulated OS input are not
 needed to operate this connection.
 
-Protocol 3 accepts only the short, flat format below. Older request envelopes,
+Protocol 4 accepts only the short, flat format below. Older request envelopes,
 operation names and `args` are rejected. The default profile is now:
 
 ```text
-~/Library/Application Support/Shattered Pixel Dungeon CLI v3/
+~/Library/Application Support/Shattered Pixel Dungeon CLI v4/
 ```
 
-CLI 3 requires an intact schema-6 audit pair. Existing older audit directories are
+CLI 4 requires an intact schema-7 audit pair. Existing older audit directories are
 rejected before profile writes; they are not migrated or deleted. Use a new profile.
 Only genuinely absent or empty profiles receive the windowed Simplified-Chinese,
 skip-introduction/tutorial defaults. Existing settings and ordinary GUI defaults
@@ -42,15 +42,15 @@ remain unchanged; class unlocks, achievements and guidebook progress are not gra
 Start with a unique request ID:
 
 ```json
-{"v":3,"id":"q1","op":"info"}
+{"v":4,"id":"q1","op":"info"}
 ```
 
 `info` reports versions, build identity, current scope/revision, capabilities and a
-static `schema` of commands, directions, map columns and inspection rules. Copy the
+static `schema` of commands, directions, row-map encoding and inspection rules. Copy the
 returned `s`, then query the current state:
 
 ```json
-{"v":3,"id":"q2","s":"<S>","op":"state"}
+{"v":4,"id":"q2","s":"<S>","op":"state"}
 ```
 
 Replace placeholders and illustrative IDs with values for your own connection.
@@ -59,7 +59,7 @@ must remain unique within their scope, including across restarts of the same run
 
 | Field | Meaning |
 | --- | --- |
-| `v` | Required integer `3` on every request. |
+| `v` | Required integer `4` on every request. |
 | `id` | Required, caller-generated request identity. Queries also consume IDs. |
 | `s` | Required scope, except initial `info`. |
 | `rev` | Required for game actions; copy the latest live revision exactly. |
@@ -78,18 +78,33 @@ The execution status `st` is separate from `data.phase`. A state query can compl
 while the game is resolving, awaiting a choice, or holding an uncertain outcome.
 Never treat a completed query as proof that the original action completed.
 
-## 3. Read compact, complete observations
+## 3. Read self-contained play and full observations
 
-The default response contains the complete current public decision state, not a
-delta. It retains `hero`, `inv`, `map`, `entities`, `ui`, `cues`, current `acts`, and
-other applicable game fields. Some fields do not apply outside the dungeon.
+The default `play` response is self-contained, never a delta or a reference to an
+older map. It includes applicable hero, inventory, map, entities, meaningful UI,
+visual cues, phase, actions and persistence. Decode each reply independently.
+Fields may be absent outside the dungeon; an alchemy/transition response need not
+contain hero, inventory or map. Do not carry missing scene fields forward as live.
 
-Names, descriptions, logs and prompts use official English while the GUI may use
-any registered language. Player/external text keeps its original content, with
-field-level `text_origins` markers. Unidentified properties remain unknown; do not
-interpret an unknown/null level or curse as a known zero or false value.
+`state` and `actions` accept `view:"play"` (default) or `view:"full"`:
 
-The field aliases are:
+```json
+{"v":4,"id":"q3","s":"<S>","op":"state","view":"full"}
+{"v":4,"id":"q4","s":"<S>","op":"actions","view":"play"}
+```
+
+`full` returns default-valued fields, empty UI nodes, ordinary item descriptions and
+the complete talent directory. It still uses protocol-4 row maps and knowledge
+semantics; it is not an older protocol. Normal action replies use `play`.
+`state src:true` automatically selects `full`, even if `view:"play"` is supplied.
+Historical `before/after` details use full projection; `raw/reply` are immutable.
+
+Names, prompts and descriptions use official English while the GUI may use any
+registered language. Player/external text retains its original content and origin
+markers. Fields with partial/clipped or protected source metadata are retained
+conservatively rather than silently discarded by a default-value rule.
+
+The field aliases remain:
 
 | Canonical concept | Wire name |
 | --- | --- |
@@ -101,43 +116,101 @@ The field aliases are:
 | controls / global actions | `nodes` / `acts` |
 | description / quantity / minimum / maximum | `desc` / `qty` / `min` / `max` |
 
-Unlisted fields keep their names. Actual game text and error codes are not abbreviated.
+Unlisted fields keep their names. Actual game text and errors are not abbreviated.
 
 ### Map
 
-`map` contains `w`, `h`, `types`, `cols`, `cells`, and `env`. Each cell row follows
-`cols: ["cell","tile","vis"]`. `tile` indexes the local `types` array, whose entries
-retain the public terrain code, name and applicable text markers. `vis` is `v`
-(visible), `s` (visited) or `m` (mapped). Coordinates are `x=cell%w`, `y=cell/w` using
-integer division. Nonempty public environment effects are indexed by cell in `env`.
-Unknown cells remain omitted, and are not implicitly safe floor. This representation
-is produced only from the existing public observation, never from hidden map data.
+Every map has `w`, `h`, `types` and `rows`; absent `env` means no current environment
+effects. Each row is `[y,x_start,tiles,visibility]`, one contiguous known segment.
+Rows are sorted by y/x. Unknown gaps are omitted and must never be filled as walls
+or safe floor. Multiple segments can occur on the same row.
+
+For at most 64 types, `tiles` is a string indexing this message's `types` with:
+
+```text
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_
+```
+
+When the map contains more than 64 types, every row's `tiles` is an integer array.
+Its length equals the visibility string length. Visibility characters are `v`
+(visible), `s` (visited) or `m` (mapped). For offset i, the exact cell is
+`y*w+x_start+i`. Types retain each complete public terrain descriptor and text
+markers. The dictionary is local to this reply and may be reordered next time.
+
+Example segment (the enclosing map supplies dimensions and its complete legend):
+
+```json
+[25,11,"0111122220","vvvvvvvvvv"]
+```
+
+`env` is cell-indexed and complete for this reply, including fire, gas and other
+visible effects. A missing entry means the effect is not currently observed.
+No map baselines, references or patches are used. The encoder receives only the
+existing public map projection, never hidden level terrain.
+Exceptional whole-cell/coordinate source annotations that cannot be faithfully
+relocated to rows or the type legend retain their original public evidence in
+`map.preserved_cells`, with diagnostic paths rebased there. This is a diagnostic
+block, not another map or a baseline: only `rows` defines the current known cells.
+
+### Item knowledge and scoped defaults
+
+For item records in `inv` or visible floor entities:
+
+| Field | Absent | null | Explicit value |
+| --- | --- | --- | --- |
+| `level` | Not applicable | Player does not know | Known integer, including 0 |
+| `cursed` | Not applicable | Player does not know | Known boolean; false means known uncursed |
+
+The redundant item `level_known/curse_known` flags are removed. The independent
+`ui.inspected_item.level_known` flag remains: it describes the already rendered
+item-info branch and does not reveal an otherwise unknown numeric level.
+If a knowledge pair itself has protected source/partial metadata, its original
+value and explicit knowledge flag are retained together as a diagnostic exception.
+Honor that explicit flag instead of inferring knowledge from the value alone.
+Wand charge `current:null` remains unknown; an explicit 0 remains known empty.
+Never delete null positions from a fixed-column array.
+
+In play item records only, absent `qty` means 1, `equipped` means false,
+`available` and `type_known` mean true. These defaults are not general rules for
+unrelated JSON objects; use explicit inspection routes where they are advertised.
+The explicit false/zero values that convey knowledge or availability are retained.
+
+Play omits ordinary inventory/floor-item descriptions. Open the original item or
+cell examination window, or request full state, when that detail is needed.
+Container/mimic warnings, trap/environment descriptions and current window text
+remain available automatically. No risk is inferred from description keywords.
+
+`hero.talents` in play lists invested talents only. `talent_points_available`
+contains current available points for tiers 1 through the hero's tier count in
+order, normally four integers. This uses the original GUI rule, including bonus
+points and subclass/armor gates. Full state retains zero-point talent entries;
+the original talent window still shows its current choices in play mode.
 
 ### Controls and action discovery
 
-`ui.nodes` retains distinct controls and text nodes, their IDs, parent relationships,
-labels/text, `enabled`, and applicable `dimmed`, clipping and dynamic parameters.
-Each actionable node carries `ops`. An operation may inherit an identical label,
-gestures, range or binding slots from its node rather than repeating them.
-`acts` describes operations not bound to a control. Do not guess a control from its
-text, infer a hidden action, or equate a dimmed appearance with a disabled callback.
+Only `ops` advertises executable node actions. `{"op":"click"}` means the single
+click gesture; multiple gestures are listed on that operation. Ordinary duplicate
+node-level gestures are omitted. Retained metadata-bearing gesture fields do not
+make a node actionable without an actual op. `acts` contains non-node operations.
 
-To request the current controls and actions without repeating the world map:
+Absent `enabled` on a play UI node means true; absent `dimmed` means false.
+Disabled options with informative text, actionable icons without text, item water
+counts/strength estimates, health/status information and clipped/origin/partial
+markers are retained. Only empty, noninteractive text leaves without extra state
+or metadata are removed. Meaningful parent relationships remain intact.
 
-```json
-{"v":3,"id":"q3","s":"<S>","op":"actions"}
-```
-
-Fixed parameter rules are in `info.schema`; current nodes/ops/acts supply availability
-and dynamic constraints. Reobserve after an action or UI transition before choosing
-another action. The latest successful live action response is itself an observation.
+Do not treat a dimmed control as disabled, infer hidden actions, or identify an
+item permanently by its slot/control ID. Locators and node bindings can change
+after a purchase, pickup, sort or UI transition. Use the current observation.
+`actions` returns current UI/actions without repeating the world map. Parameter
+rules are in `info.schema`; current ops supply availability and dynamic constraints.
 
 ### Text sources and presentation limits
 
 Full text-source trees are omitted by default. Request them explicitly:
 
 ```json
-{"v":3,"id":"q4","s":"<S>","op":"state","src":true}
+{"v":4,"id":"q4","s":"<S>","op":"state","src":true}
 ```
 
 This returns the sources for that observation's own `rev`, not for an earlier state.
@@ -180,11 +253,11 @@ are top-level. Only execute currently advertised operations and targets.
 Examples:
 
 ```json
-{"v":3,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
-{"v":3,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
-{"v":3,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
-{"v":3,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
-{"v":3,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
+{"v":4,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
+{"v":4,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
+{"v":4,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
+{"v":4,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
+{"v":4,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
 ```
 
 `123` is illustrative, not a predetermined destination. Movement can attack,
@@ -210,21 +283,35 @@ An `in_progress` response is the sole response to that request on the pipe. Do n
 repeat it. Poll its receipt with fresh query IDs:
 
 ```json
-{"v":3,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
+{"v":4,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
 ```
 
 Inspect `data.st`, not the query's outer `st`. `RECEIVED` and `EXECUTING` mean the
-original request remains pending. After a terminal status, request its final logical
-reply, which may never have been sent as a second wire response:
+original action remains pending. Normal terminal success is `COMPLETED`,
+`AWAITING_INPUT` or `INTERRUPTED`. Retain that receipt, its original ID/scope and
+its `save` receipts, then obtain one fresh live state:
 
 ```json
-{"v":3,"id":"q6","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>","get":["reply"]}
+{"v":4,"id":"q6","s":"<CURRENT_SCOPE>","op":"state"}
 ```
 
-Inspect `data.reply`, then obtain a fresh live state. Historical replies never
-replace the current revision. During resolving/unknown execution, a missing live
-`rev` and `last_stable_state` describe the absence of a new actionable boundary.
-Do not act using the revision inside that old snapshot.
+Do not request historical `get:["reply"]` on the normal successful path. Reserve
+it for explicit diagnostics, uncertain outcomes and immutable-history tests.
+Keep the original action outcome and current observation separate: never fabricate
+an original action reply from the fresh state query, or let history replace live
+scope/revision. `REJECTED`, `UNKNOWN`, `err`, timeout and lost/invalid replies are
+not success and cannot be cleared by a subsequent successful state query.
+For a finite operation initially reported as `resolving` or `cancelling`, the old
+scope may no longer be current after completion. After its successful terminal
+receipt, discover the current scope with `info` once before requesting state.
+Any discovery error remains an error. Ordinary `continuous_activity` needs no
+extra discovery query, and neither branch obtains historical reply text.
+
+A synchronous action reply is itself a current observation; it does not require an
+extra state query. After a successful `quit`, await process exit without another
+state request. During resolving/unknown execution, missing live `rev` and
+`last_stable_state` indicate that no new actionable boundary was certified.
+Never act using the revision inside that old snapshot.
 
 At an interruptible travel/rest boundary, `data.phase` is `continuous_activity`
 and `cancel` is advertised. Use its actual activity revision and original `rid`.
@@ -237,7 +324,7 @@ rejected as `BUSY` while execution is pending.
 | `STALE_STATE`, `STALE_ACTIVITY` | The revision is no longer current; reobserve and reconsider. |
 | `SCOPE_MISMATCH`, `UNKNOWN_SCOPE` | Discover the active scope with `info`; keep past scopes for history only. |
 | `ACTION_UNAVAILABLE`, `INVALID_ARGUMENT`, `INVALID_REQUEST` | Inspect current availability and parameter rules. |
-| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every frame requires integer `v:3`; old envelopes are unsupported. |
+| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every frame requires integer `v:4`; old envelopes are unsupported. |
 | `EXECUTION_UNKNOWN`, `EXECUTION_UNCERTAIN` | Do not assume failure or replay; preserve uncertainty and inspect the original result. |
 | `AUDIT_UNAVAILABLE` | The audit store failed; new game operations stop. |
 
@@ -255,11 +342,12 @@ on error, preserve evidence and stop game actions.
 
 `req` defaults to a small receipt: original `id/op/st`, applicable `err`, `save`
 receipts and `has` detail selectors. It does not expand snapshots or the full reply.
-Use `get` to select `raw`, `reply`, `before`, `after`, or `meta`; `src:true` may be
+For explicit diagnosis or verification, use `get` to select `raw`, `reply`,
+`before`, `after`, or `meta`; `src:true` may be
 used with frozen snapshot details. Example:
 
 ```json
-{"v":3,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
+{"v":4,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
 ```
 
 `before/after` are frozen public snapshots, not a fresh engine observation. `reply`
@@ -271,8 +359,8 @@ wire response or old snapshot is rewritten to match the current game.
 Read paginated metadata and public events:
 
 ```json
-{"v":3,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
-{"v":3,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
+{"v":4,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
+{"v":4,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
 ```
 
 `data` contains `items`, `next` (next `after`, or null), `end`, and a fixed `until`
@@ -288,7 +376,7 @@ report `last_save` when available. In-memory action completion and persistence a
 separate facts. Close prompts before `quit`; read its response and await process exit.
 EOF requests ordinary lifecycle shutdown but cannot accept unresolved choices.
 
-Restart with the same v3 profile, perform a new handshake and continue the displayed
+Restart with the same v4 profile, perform a new handshake and continue the displayed
 saved game. Scope and request-ID history persist, but old process revisions do not.
 Do not replay successful actions to make a restored save catch up with history.
 Audit transactions do not include game save files. Public and internal SQLite stores
@@ -351,10 +439,11 @@ loop while keeping the same process and pipes open.
 ```python
 import json
 import subprocess
+import time
 import uuid
 
 launcher = "/absolute/path/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl"
-profile = "/absolute/path/to/new-v3-profile"
+profile = "/absolute/path/to/new-v4-profile"
 process = subprocess.Popen(
     [launcher, "run", "--machine", "--data-dir", profile],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -365,7 +454,7 @@ counter = 0
 def request(op, *, scope=None, rev=None, **params):
     global counter
     counter += 1
-    message = {"v": 3, "id": f"{prefix}-{counter}", "op": op, **params}
+    message = {"v": 4, "id": f"{prefix}-{counter}", "op": op, **params}
     if scope is not None:
         message["s"] = scope
     if rev is not None:
@@ -380,6 +469,43 @@ def request(op, *, scope=None, rev=None, **params):
         raise RuntimeError("Unexpected response ID")
     return response
 
+def observe_after_action(initial, original_scope, action_name):
+    # This is a local derived result, never an original protocol response.
+    result = {"initial": initial, "receipt": None, "discovery": None, "observation": None}
+    if "err" in initial:
+        raise RuntimeError(result)
+    if initial.get("st") != "in_progress":
+        result["observation"] = initial
+        return result
+    deadline = time.monotonic() + 40
+    while time.monotonic() < deadline:
+        receipt = request("req", scope=original_scope, rid=initial["id"])
+        result["receipt"] = receipt
+        if "err" in receipt:
+            raise RuntimeError(result)
+        outcome = receipt["data"]
+        if "err" in outcome:
+            raise RuntimeError(result)
+        status = outcome["st"]
+        if status in ("COMPLETED", "AWAITING_INPUT", "INTERRUPTED"):
+            if action_name != "quit":
+                live_scope = initial["s"]
+                if initial.get("data", {}).get("phase") in ("resolving", "cancelling"):
+                    discovery = request("info")
+                    result["discovery"] = discovery
+                    if "err" in discovery:
+                        raise RuntimeError(result)
+                    live_scope = discovery["s"]
+                current = request("state", scope=live_scope)
+                result["observation"] = current
+                if "err" in current:
+                    raise RuntimeError(result)
+            return result
+        if status not in ("RECEIVED", "EXECUTING"):
+            raise RuntimeError(result)
+        time.sleep(0.05)  # Only the pending-receipt poll cadence.
+    raise TimeoutError(result)  # Preserve the ID; never replay the action.
+
 try:
     hello = request("info")
     if "err" in hello:
@@ -390,7 +516,14 @@ try:
     print(json.dumps({"s": state["s"], "rev": state.get("rev"),
                       "phase": state["data"].get("phase"),
                       "hero": state["data"].get("hero")}, ensure_ascii=False))
-    # Keep the process open here: observe -> decide -> action -> inspect result.
+    # Keep this connection open for observe -> decide -> action -> inspect result.
+    # Capture original_scope before dispatch. A reply can carry a new live scope.
+    # For an advertised action:
+    # original_scope = state["s"]
+    # initial = request(action_name, scope=original_scope, rev=state["rev"], **args)
+    # derived = observe_after_action(initial, original_scope, action_name)
+    # Sync outcome/save receipts are in initial; async ones are in receipt.
+    # Use derived["observation"] for the next decision, never a historical reply.
 finally:
     process.stdin.close()
     process.wait(timeout=40)

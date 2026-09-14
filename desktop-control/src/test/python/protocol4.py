@@ -1,4 +1,4 @@
-"""Protocol 3 wire client and explicit test-only canonical assertion projection.
+"""Protocol 4 wire client and explicit test-only canonical assertion projection.
 
 The engine accepts only the compact protocol. Existing scenario assertions use
 canonical names locally; this module never sends their old envelopes or invents
@@ -28,11 +28,11 @@ def is_live_operation(op):
 
 
 def request(op, args=None, request_id=None, scope=None, version=None):
-    """Encode a scenario request as an actual flat protocol-3 request."""
+    """Encode a scenario request as an actual flat protocol-4 request."""
     params = dict(args or {})
     action = params.pop("action", None) if op == "action.execute" else None
     wire_op = TO_OP.get(action if action is not None else op, action or op)
-    wire = {"v": 3, "id": request_id, "op": wire_op}
+    wire = {"v": 4, "id": request_id, "op": wire_op}
     if scope is not None:
         wire["s"] = scope
     if action is not None or wire_op in OPS.keys() - QUERY_OPS:
@@ -53,13 +53,15 @@ def _value(value):
         return [_value(item) for item in value]
     if not isinstance(value, dict):
         return value
-    if "cols" in value and "types" in value and "cells" in value:
+    if "rows" in value and "types" in value and "w" in value:
         return _map(value)
     result = {}
     for key, child in value.items():
         if key in {"text_sources", "text_diagnostics"}:
             result[key] = {FIELDS.get(field, field): copy.deepcopy(details) for field, details in child.items()}
-        elif key == "raw":
+        elif key in {"raw", "preserved_cells"}:
+            # Diagnostic cell annotations are disclosed evidence, not an
+            # alternate row encoding or a baseline to merge into the live map.
             result[key] = copy.deepcopy(child)
         elif key == "text_origins":
             result[key] = {FIELDS.get(field, field): copy.deepcopy(origins) for field, origins in child.items()}
@@ -79,20 +81,43 @@ def _value(value):
 
 
 def _map(value):
-    if not isinstance(value, dict) or "cols" not in value:
+    if not isinstance(value, dict) or "rows" not in value:
         return value
     width, height = value["w"], value["h"]
     environment = value.get("env", {})
     cells = []
-    for row in value["cells"]:
-        fields = dict(zip(value["cols"], row))
-        cell = fields["cell"]
-        tile = _value(value["types"][fields["tile"]])
-        tile.update(cell=cell, x=cell % width, y=cell // width,
-                    visibility={"v": "visible", "s": "visited", "m": "mapped"}[fields["vis"]])
-        tile["environment"] = _value(environment.get(str(cell), []))
-        cells.append(tile)
-    return {"width": width, "height": height, "cells": cells, "unknown": "omitted"}
+    alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
+    integer_rows = len(value["types"]) > len(alphabet)
+    previous = -1
+    for y, start, encoded, visibility in value["rows"]:
+        assert isinstance(encoded, list) if integer_rows else isinstance(encoded, str), value
+        indices = encoded if integer_rows else [alphabet.index(char) for char in encoded]
+        assert len(indices) == len(visibility) and 0 <= y < height and 0 <= start < width
+        assert start + len(indices) <= width
+        for offset, (index, vis) in enumerate(zip(indices, visibility)):
+            cell = y * width + start + offset
+            assert cell > previous and 0 <= index < len(value["types"]), value
+            previous = cell
+            tile = _value(value["types"][index])
+            tile.update(cell=cell, x=cell % width, y=cell // width,
+                        visibility={"v": "visible", "s": "visited", "m": "mapped"}[vis])
+            tile["environment"] = _value(environment.get(str(cell), []))
+            cells.append(tile)
+    result = {"width": width, "height": height, "cells": cells, "unknown": "omitted"}
+    result.update({key: copy.deepcopy(child) if key == "preserved_cells" else _value(child)
+                   for key, child in value.items()
+                   if key not in {"w", "h", "types", "rows", "env"}})
+    return result
+
+
+def _item_defaults(item):
+    """Expand documented v4 defaults, retaining unknown versus inapplicable."""
+    for field, default in (("quantity", 1), ("equipped", False), ("available", True), ("type_known", True)):
+        item.setdefault(field, default)
+    for field, known in (("level", "level_known"), ("cursed", "curse_known")):
+        # The normal wire uses three states. Protected source/partial metadata
+        # may retain the original property/knowledge pair as diagnostic evidence.
+        item.setdefault(known, None if field not in item else item[field] is not None)
 
 
 def state(value, scope=None, version=None):
@@ -113,12 +138,22 @@ def state(value, scope=None, version=None):
         observation["run_outcome"] = copy.deepcopy(result["run_outcome"])
     if "map" in observation:
         observation["map"] = _map(value["map"])
+    for item in observation.get("inventory", []):
+        _item_defaults(item)
+    for entity in observation.get("visible_entities", []):
+        if isinstance(entity.get("item"), dict):
+            _item_defaults(entity["item"])
     actions = result.setdefault("actions", [])
     for node in observation.get("ui", {}).get("controls", []):
+        node.setdefault("enabled", True)
+        node.setdefault("dimmed", False)
         for descriptor in node.pop("ops", []):
             entry = {key: copy.deepcopy(child) for key, child in node.items()
                      if key in {"gestures", "options", "minimum", "maximum", "step", "max_length", "multiline", "slots", "keys", "binding"}}
             entry.update(descriptor)
+            if entry.get("action") == "ui.activate":
+                entry.setdefault("gestures", ["click"])
+                node.setdefault("gestures", []).extend(entry["gestures"])
             entry["control"] = node["id"]
             if "binding_slots" in node:
                 entry.setdefault("slots", copy.deepcopy(node["binding_slots"]))
@@ -136,10 +171,10 @@ def state(value, scope=None, version=None):
 
 
 def response(wire, op=None):
-    """Decode real v3 bytes into a test-only assertion view, never a wire log."""
-    if wire.get("v") != 3:
-        raise AssertionError({"expected_protocol_3": wire})
-    result = {"protocol_version": 3, "id": wire.get("id"), "scope_id": wire.get("s"),
+    """Decode real v4 bytes into a test-only assertion view, never a wire log."""
+    if wire.get("v") != 4:
+        raise AssertionError({"expected_protocol_4": wire})
+    result = {"protocol_version": 4, "id": wire.get("id"), "scope_id": wire.get("s"),
               "ok": "err" not in wire}
     if "st" in wire:
         result["status"] = wire["st"]

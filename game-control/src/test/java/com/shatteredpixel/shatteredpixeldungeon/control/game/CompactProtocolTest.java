@@ -11,7 +11,7 @@ public class CompactProtocolTest {
                 "observation",map("scene","GameScene","hero",map("hp",20),"inventory",Collections.emptyList()),
                 "actions",Arrays.asList(map("action","move.step","parameters",map("direction",Arrays.asList("north","east")))));
         Map<String,Object> reply=CompactProtocol.success("a","menu:old","completed",state,true,false);
-        assertEquals("run:new",reply.get("s"));assertEquals("run:new:1",reply.get("rev"));assertEquals(3,reply.get("v"));
+        assertEquals("run:new",reply.get("s"));assertEquals("run:new:1",reply.get("rev"));assertEquals(4,reply.get("v"));
         Map<String,Object> data=object(reply.get("data"));assertEquals("player_ready",data.get("phase"));
         assertTrue(data.containsKey("hero"));assertTrue(data.containsKey("inv"));
         for(String redundant:Arrays.asList("s","rev","observation","scope_id","state_version"))assertFalse(data.containsKey(redundant));
@@ -22,12 +22,12 @@ public class CompactProtocolTest {
                 tile(1,"visible",4,"Wall",Collections.emptyList()),tile(2,"visited",4,"Wall",Collections.emptyList()),
                 tile(6,"mapped",1,"Floor",Arrays.asList(map("type","fire","description","Flames")))));
         Map<String,Object> compact=object(CompactProtocol.project(original,false));
-        assertEquals(Arrays.asList("cell","tile","vis"),compact.get("cols"));
+        assertFalse(compact.containsKey("cols"));assertFalse(compact.containsKey("cells"));
         assertEquals(Arrays.asList(map("terrain",4,"name","Wall"),map("terrain",1,"name","Floor")),compact.get("types"));
-        assertEquals(Arrays.asList(Arrays.asList(1,0,"v"),Arrays.asList(2,0,"s"),Arrays.asList(6,1,"m")),compact.get("cells"));
+        assertEquals(Arrays.asList(Arrays.asList(0,1,"00","vs"),Arrays.asList(1,2,"1","m")),compact.get("rows"));
         assertEquals(map("6",Arrays.asList(map("type","fire","desc","Flames"))),compact.get("env"));
         assertEquals(4,compact.get("w"));assertEquals(3,compact.get("h"));
-        assertEquals(2,((Number)((List<?>)((List<?>)compact.get("cells")).get(2)).get(0)).intValue()%4);
+        assertEquals(2,((Number)((List<?>)((List<?>)compact.get("rows")).get(1)).get(1)).intValue());
     }
     @Test public void eachControlOwnsOnlyItsActionsWithoutLosingTextParentsOrDimming() {
         Map<String,Object> original=map("observation",map("ui",map("controls",Arrays.asList(
@@ -39,7 +39,8 @@ public class CompactProtocolTest {
                 map("action","ui.value","control","c","range",Arrays.asList(1,10)),map("action","ui.back")));
         Map<String,Object> result=object(CompactProtocol.project(original,false));
         List<?> nodes=(List<?>)object(result.get("ui")).get("nodes");assertEquals(4,nodes.size());
-        assertEquals(Arrays.asList(map("op","click")),object(nodes.get(0)).get("ops"));
+        assertEquals(Arrays.asList(map("op","click","gestures",Arrays.asList("click","long"))),object(nodes.get(0)).get("ops"));
+        assertFalse(object(nodes.get(0)).containsKey("gestures"));assertFalse(object(nodes.get(0)).containsKey("enabled"));
         assertEquals(true,object(nodes.get(0)).get("dimmed"));assertEquals("a",object(nodes.get(1)).get("parent"));
         assertEquals(Arrays.asList(map("op","value")),object(nodes.get(2)).get("ops"));
         assertEquals(false,object(nodes.get(3)).get("enabled"));assertFalse(object(nodes.get(3)).containsKey("ops"));
@@ -62,7 +63,7 @@ public class CompactProtocolTest {
         assertEquals("$.data.inv[0].name",object(diagnostics.get(0)).get("field"));
     }
     @Test public void historyNeverPublishesCurrentRevisionAndLeavesOriginalReplyOpaque() {
-        Map<String,Object> recorded=map("v",3,"s","run:past","rev","past:7","st","completed","data",map("name","Original untrusted text"));
+        Map<String,Object> recorded=map("v",4,"s","run:past","rev","past:7","st","completed","data",map("name","Original untrusted text"));
         Map<String,Object> raw=map("request_json","{\"op\":\"move\"}");
         Map<String,Object> receipt=map("id","a","st","COMPLETED","reply",recorded,"raw",raw,
                 "after",map("inventory",Arrays.asList(map("name","Sword","quantity",1,"text_sources",map("name",map("kind","literal","origin","catalog","value","Sword"))))));
@@ -75,10 +76,11 @@ public class CompactProtocolTest {
         assertEquals(Arrays.asList(map("name","Sword","qty",1)),object(data.get("after")).get("inv"));
     }
     @Test public void unknownItemPropertiesAndActualErrorsRemainExplicit() {
-        Map<String,Object> item=map("locator","bag:0","quantity",1,"level",map("known",false,"value",null),"cursed",null);
+        Map<String,Object> item=map("locator","bag:0","quantity",1,"level_known",false,"curse_known",false,"level",null,"cursed",null);
         Map<String,Object> compact=object(CompactProtocol.project(item,false));assertEquals("bag:0",compact.get("loc"));
-        assertEquals(map("known",false,"value",null),compact.get("level"));assertTrue(compact.containsKey("cursed"));
-        assertEquals(map("v",3,"id","bad","s","run:1","err","STALE_STATE"),CompactProtocol.failure("bad","run:1","STALE_STATE"));
+        assertTrue(compact.containsKey("level"));assertNull(compact.get("level"));assertTrue(compact.containsKey("cursed"));
+        assertFalse(compact.containsKey("level_known"));assertFalse(compact.containsKey("curse_known"));
+        assertEquals(map("v",4,"id","bad","s","run:1","err","STALE_STATE"),CompactProtocol.failure("bad","run:1","STALE_STATE"));
         assertTrue(object(CompactProtocol.info().get("commands")).containsKey("untarget"));
         assertFalse(CompactProtocol.failure("bad","run:1","EXECUTION_UNKNOWN").containsKey("st"));
         Map<String,Object> schema=CompactProtocol.info();
@@ -138,7 +140,7 @@ public class CompactProtocolTest {
         assertEquals(Arrays.asList(map("field","$.data.items[0].data.desc","code","legacy_diagnostic")),object(reply.get("pres")).get("diag"));
         for(String op:Arrays.asList("history","events")) {
             com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest query=
-                    com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest.parse("{\"v\":3,\"id\":\"q\",\"s\":\"run:1\",\"op\":\""+op+"\",\"until\":9}");
+                    com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest.parse("{\"v\":4,\"id\":\"q\",\"s\":\"run:1\",\"op\":\""+op+"\",\"until\":9}");
             assertEquals(9L,query.args.get("until"));
         }
         assertTrue(object(object(CompactProtocol.info().get("rules")).get("pagination")).containsKey("until"));

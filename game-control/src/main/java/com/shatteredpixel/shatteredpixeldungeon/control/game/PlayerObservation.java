@@ -96,7 +96,10 @@ public final class PlayerObservation {
 
     private static Map<String, Object> hero(Hero hero) {
         List<Object> talents = new ArrayList<>();
+        List<Integer> availableTalentPoints = new ArrayList<>();
         for (int tier = 0; tier < hero.talents.size(); tier++) {
+            // Use the same read-only rule as the talent window, including bonuses and gates.
+            availableTalentPoints.add(hero.talentPointsAvailable(tier + 1));
             for (Map.Entry<Talent, Integer> talent : hero.talents.get(tier).entrySet()) {
                 talents.add(map("tier", tier + 1, "name", talent.getKey().title(),
                         "points", talent.getValue()));
@@ -108,7 +111,7 @@ public final class PlayerObservation {
                 "max_experience", hero.maxExp(), "hp", hero.HP, "max_hp", hero.HT,
                 "shield", displayedShield(hero), "base_strength", hero.STR, "strength", hero.STR(), "ready", hero.ready,
                 "gold", Dungeon.gold, "energy", Dungeon.energy, "depth", Dungeon.depth,
-                "talents", talents, "buffs", buffs(hero));
+                "talents", talents, "talent_points_available", availableTalentPoints, "buffs", buffs(hero));
     }
 
     /** Pure equivalent of the displayed shield total, including subclass validity conditions. */

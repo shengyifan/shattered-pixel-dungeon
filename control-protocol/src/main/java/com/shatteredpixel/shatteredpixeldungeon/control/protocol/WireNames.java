@@ -2,7 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.protocol;
 
 import java.util.*;
 
-/** Protocol 3 names live only at the wire boundary. Engine and audit names remain canonical. */
+/** Protocol 4 names live only at the wire boundary. Engine and audit names remain canonical. */
 public final class WireNames {
     private static final Map<String,String> OPERATIONS;
     private static final Map<String,String> FIELDS;
@@ -27,7 +27,7 @@ public final class WireNames {
         FIELDS = Collections.unmodifiableMap(fields);
         Map<String,Set<String>> parameters = new LinkedHashMap<>();
         for(String op:operations.keySet()) parameters.put(op, Collections.emptySet());
-        parameters.put("state", set("src")); parameters.put("req", set("rid","get","src"));
+        parameters.put("state", set("src","view")); parameters.put("actions",set("view")); parameters.put("req", set("rid","get","src"));
         parameters.put("history", set("after","limit","until")); parameters.put("events",set("after","limit","until"));
         parameters.put("move",set("dir")); parameters.put("cell",set("cell","mode")); parameters.put("item",set("loc"));
         parameters.put("cancel",set("rid")); parameters.put("click",set("ctl","g")); parameters.put("choose",set("ctl","opt","alt"));

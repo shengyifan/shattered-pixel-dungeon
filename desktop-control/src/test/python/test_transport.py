@@ -277,7 +277,7 @@ class NativeTransportTest(unittest.TestCase):
     def test_viewer_filters_success_events_and_keeps_all_failures(self):
         failures = ["EXITED:9", "SIGNAL:2", "CHILD_STDIN_BROKEN", "TRACE_IO_FAILED", "FUTURE_FAILURE"]
         session = self.fixture_session([
-            ("STATUS", "STARTED"), ("SEND", b'{"v":3}\n'), ("DELIVERED", "-"),
+            ("STATUS", "STARTED"), ("SEND", b'{"v":4}\n'), ("DELIVERED", "-"),
             ("STATUS", "EOF_SENT"), ("RECV", b'{"st":"done"}\n'),
             ("STDERR", b"engine diagnostic\n"), *[("STATUS", value) for value in failures],
             ("STATUS", "EXITED:0")])
@@ -463,8 +463,8 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(len(payload), sum(row[4] for row in delivered))
         self.assertIn("EOF_SENT", [row[5] for row in rows if row[2] == "STATUS"])
 
-    def test_default_profile_uses_v3_without_accessing_v2(self):
-        old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v2"
+    def test_default_profile_uses_v4_without_accessing_v3(self):
+        old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v3"
         old_profile.mkdir(parents=True)
         sentinel = old_profile / "do-not-read-or-change"
         sentinel.write_bytes(b"previous profile")
@@ -473,7 +473,7 @@ class NativeTransportTest(unittest.TestCase):
         del command[index:index + 2]
         result = subprocess.run(command, input=b"", capture_output=True, env=self.environment, timeout=10)
         self.assertEqual(0, result.returncode, result.stderr)
-        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v3"
+        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v4"
         self.assertEqual(str(expected), json.loads(result.stdout)["profile"])
         self.assertFalse(expected.exists(), "Native profile resolution unexpectedly created game data")
         self.assertEqual(b"previous profile", sentinel.read_bytes())

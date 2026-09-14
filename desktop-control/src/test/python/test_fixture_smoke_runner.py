@@ -7,6 +7,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+from machine_smoke import Client
 
 import fixture_smoke as runner
 
@@ -20,16 +21,15 @@ class FixtureSmokeRunnerTest(unittest.TestCase):
             {"id":"original-action","scope_id":"run:original","ok":True,"status":"in_progress","result":{}},
             {"ok":True,"result":{"status":"EXECUTING"}},
             {"ok":True,"result":{"status":"COMPLETED"}},
-            {"ok":True,"result":{"status":"COMPLETED","response":{"ok":True,"status":"completed","result":final}}}]
+            {"ok":True,"status":"completed","result":final}]
         with patch.object(runner.time,"sleep"):
             self.assertEqual(final,runner.act(client,"wait"))
-        self.assertEqual(["action.execute","request.get","request.get","request.get"],[call.args[0] for call in client.request.call_args_list])
+        self.assertEqual(["action.execute","request.get","request.get","state.get"],[call.args[0] for call in client.request.call_args_list])
         for call in client.request.call_args_list[1:3]:
             self.assertEqual({"target_id":"original-action"},call.args[1])
             self.assertEqual("run:original",call.kwargs["scope"])
-        self.assertEqual({"target_id":"original-action","get":["reply"]},client.request.call_args_list[-1].args[1])
+        self.assertEqual("state.get",client.request.call_args_list[-1].args[0])
         client.state.assert_not_called()
-        self.assertEqual("settled",client.version)
         self.assertEqual(final,client.last_state)
 
     def test_failed_original_result_cannot_become_a_successful_later_observation(self):
@@ -41,7 +41,7 @@ class FixtureSmokeRunnerTest(unittest.TestCase):
             {"ok":True,"result":{"status":"UNKNOWN","response":{"ok":False,"error":{"code":"EXECUTION_UNKNOWN"}}}}]
         with self.assertRaises(AssertionError):runner.act(client,"wait")
         client.state.assert_not_called()
-        self.assertEqual(3,client.request.call_count)
+        self.assertEqual(2,client.request.call_count)
 
     def test_prose_policy_matches_english_protocol_and_preserves_raw_identity(self):
         import english_protocol_smoke as protocol

@@ -3,9 +3,9 @@ package com.shatteredpixel.shatteredpixeldungeon.control.protocol;
 import java.math.BigInteger;
 import java.util.*;
 
-/** Strict protocol 3 envelope parsing; gameplay availability and argument semantics belong to the coordinator. */
+/** Strict protocol 4 envelope parsing; gameplay availability and argument semantics belong to the coordinator. */
 public final class ControlRequest {
-    public static final int PROTOCOL_VERSION = 3;
+    public static final int PROTOCOL_VERSION = 4;
     private static final Set<String> ENVELOPE = new HashSet<>(Arrays.asList("v","id","s","rev","op"));
     private static final Set<String> DETAILS = new HashSet<>(Arrays.asList("raw","reply","before","after","meta"));
 
@@ -17,9 +17,11 @@ public final class ControlRequest {
     public final String wireOp;
     public final String stateVersion;
     public final Map<String, Object> args;
-    /** Original, unmodified protocol 3 request for durable audit. */
+    /** Original, unmodified protocol 4 request for durable audit. */
     public final Map<String, Object> raw;
     public final boolean sources;
+    /** Presentation only; never forwarded as an engine argument. */
+    public final boolean fullView;
     public final Set<String> details;
 
     private ControlRequest(Map<String, Object> raw) {
@@ -30,7 +32,7 @@ public final class ControlRequest {
         wireOp = string(raw, "op", true, 128);
         stateVersion = string(raw, "rev", false, 256);
         String canonical = WireNames.canonicalOperation(wireOp);
-        if(canonical==null) throw new ProtocolException("UNKNOWN_OPERATION", "Unknown protocol 3 operation: " + wireOp);
+        if(canonical==null) throw new ProtocolException("UNKNOWN_OPERATION", "Unknown protocol 4 operation: " + wireOp);
         op = WireNames.isQuery(wireOp) ? canonical : "action.execute";
         Map<String,Object> arguments = new LinkedHashMap<>();
         if(!WireNames.isQuery(wireOp)) arguments.put("action", canonical);
@@ -39,12 +41,15 @@ public final class ControlRequest {
             if(ENVELOPE.contains(key)) continue;
             if(!WireNames.parameters(wireOp).contains(key))
                 throw new ProtocolException("INVALID_REQUEST", "Unsupported field for " + wireOp + ": " + key);
-            if(!"src".equals(key) && !"get".equals(key))
+            if(!"src".equals(key) && !"get".equals(key) && !"view".equals(key))
                 arguments.put(WireNames.canonicalField(key),"dir".equals(key)?WireNames.canonicalDirection(entry.getValue()):entry.getValue());
         }
         if(raw.containsKey("src") && !(raw.get("src") instanceof Boolean))
             throw new ProtocolException("INVALID_REQUEST", "src must be a boolean");
         sources=Boolean.TRUE.equals(raw.get("src"));
+        if(raw.containsKey("view") && !Arrays.asList("play","full").contains(raw.get("view")))
+            throw new ProtocolException("INVALID_REQUEST", "view must be play or full");
+        fullView=sources || "full".equals(raw.get("view"));
         Set<String> requestedDetails=new LinkedHashSet<>();
         if(raw.containsKey("get")) {
             if(!(raw.get("get") instanceof List)) throw new ProtocolException("INVALID_REQUEST", "get must be an array");
@@ -66,7 +71,7 @@ public final class ControlRequest {
         if (!(value instanceof Long) && !(value instanceof BigInteger))
             throw new ProtocolException("INVALID_PROTOCOL_VERSION", "v must be a JSON integer");
         if (!Long.valueOf(PROTOCOL_VERSION).equals(value))
-            throw new ProtocolException("UNSUPPORTED_PROTOCOL", "Only v 3 is supported");
+            throw new ProtocolException("UNSUPPORTED_PROTOCOL", "Only v 4 is supported");
         return PROTOCOL_VERSION;
     }
 
