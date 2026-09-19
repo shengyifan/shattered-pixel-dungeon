@@ -41,7 +41,7 @@ def scene_case(client, label, expected):
     start = return_to_title(client)
     opened = choose(client, label)
     assert ui(opened)["scene"] == expected, ui(opened)
-    assert opened["scope_id"] == start["scope_id"] and opened["scope_id"].startswith("menu:")
+    assert opened["scope_id"] and opened["scope_id"] == start["scope_id"] and ui(start)["scene"] == "TitleScene"
     assert any(n.get("text") for n in ui(opened)["controls"]), "Scene must publish displayed text"
     result = {"label": label, "scene": expected, "same_menu_scope": True,
               "actions": [(a["action"], a.get("label")) for a in opened["actions"]],

@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -29,7 +32,7 @@ import java.util.UUID;
  * The caller must hold the profile's exclusive process lock for this store's entire lifetime.
  */
 public final class AuditStore implements AutoCloseable {
-    public static final int SCHEMA_VERSION = 8;
+    public static final int SCHEMA_VERSION = 9;
     private final Path publicPath;
     private final Path internalPath;
     private Connection writer;
@@ -100,7 +103,7 @@ public final class AuditStore implements AutoCloseable {
                 throw new AuditException("AUDIT_PAIR_MISMATCH", "The audit database identities differ", null);
         } catch (AuditException error) { throw error; }
         catch (Exception error) {
-            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 5 requires an intact schema-8 audit pair; use a new profile", error);
+            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 6 requires an intact schema-9 audit pair; use a new profile", error);
         }
     }
 
@@ -115,7 +118,7 @@ public final class AuditStore implements AutoCloseable {
                 if ("profile_id".equals(rows.getString(1))) profile = rows.getString(2);
             }
             if (!Integer.toString(SCHEMA_VERSION).equals(version) || profile == null || profile.isEmpty())
-                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 5 requires schema 8 and never migrates older audit databases; use a new profile", null);
+                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 6 requires schema 9 and never migrates older audit databases; use a new profile", null);
             // A version marker cannot authorize silently rebuilding missing audit tables.
             try (Statement shape = reader.createStatement()) {
                 for (String sql : new String[]{
@@ -124,7 +127,9 @@ public final class AuditStore implements AutoCloseable {
                         "SELECT presentation_status,session_id FROM events LIMIT 0",
                         "SELECT content_id FROM snapshots LIMIT 0", "SELECT content_id FROM snapshot_blobs LIMIT 0",
                         "SELECT session_id,build_id,cli_version,protocol_version FROM sessions LIMIT 0", "SELECT scope_id FROM runs LIMIT 0",
-                        "SELECT scope_id FROM run_slots LIMIT 0", "SELECT receipt_id FROM save_checkpoints LIMIT 0"}) {
+                        "SELECT scope_id FROM run_slots LIMIT 0", "SELECT receipt_id FROM save_checkpoints LIMIT 0",
+                        "SELECT kind,canonical,handle FROM public_handles LIMIT 0",
+                        "SELECT kind,next_value FROM handle_counters LIMIT 0"}) {
                     try (ResultSet ignored = shape.executeQuery(sql)) { }
                 }
             }
@@ -172,6 +177,8 @@ public final class AuditStore implements AutoCloseable {
                     s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".exchanges (sequence INTEGER PRIMARY KEY AUTOINCREMENT, scope_id TEXT, id TEXT, raw_request TEXT NOT NULL, raw_bytes BLOB, raw_format TEXT NOT NULL DEFAULT 'logical-utf8', session_id TEXT, processing_started_at TEXT, presentation_status TEXT, duplicate INTEGER NOT NULL, registered INTEGER NOT NULL, received_at TEXT NOT NULL, response_json TEXT, responded_at TEXT, before_snapshot TEXT, after_snapshot TEXT, output_attempted INTEGER NOT NULL DEFAULT 0, output_succeeded INTEGER, output_attempted_at TEXT)");
                     s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".events (sequence INTEGER PRIMARY KEY AUTOINCREMENT, scope_id TEXT, kind TEXT NOT NULL, data_json TEXT NOT NULL, presentation_status TEXT NOT NULL, session_id TEXT, created_at TEXT NOT NULL)");
                     s.execute("CREATE INDEX IF NOT EXISTS " + schema + ".exchange_scope_sequence ON exchanges(scope_id,sequence)");
+                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".public_handles(kind TEXT NOT NULL,canonical TEXT NOT NULL,handle TEXT NOT NULL UNIQUE,PRIMARY KEY(kind,canonical))");
+                    s.execute("CREATE TABLE IF NOT EXISTS " + schema + ".handle_counters(kind TEXT PRIMARY KEY,next_value INTEGER NOT NULL CHECK(next_value>0))");
                 }
             }
             try (Statement s = writer.createStatement()) {
@@ -217,8 +224,8 @@ public final class AuditStore implements AutoCloseable {
 
     public synchronized String beginSession(String bootId,String buildId,String cliVersion,int protocolVersion){
         if(activeSession!=null)throw new IllegalStateException("A session is already active");
-        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=5)
-            throw new IllegalArgumentException("Session build, CLI version and protocol 5 metadata are required");
+        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=6)
+            throw new IllegalArgumentException("Session build, CLI version and protocol 6 metadata are required");
         String id=UUID.randomUUID().toString(),started=now();
         transaction(()->{
             for(String schema:schemas()){
@@ -252,6 +259,84 @@ public final class AuditStore implements AutoCloseable {
     }
 
     public synchronized String sessionId(){return activeSession;}
+
+    /** Registry keys are internal only; neither separator nor canonical identity is a wire token. */
+    public static String handleKey(String kind,String canonical){return kind+"\u0000"+canonical;}
+
+    private static String handlePrefix(String kind){
+        switch(kind){
+            case "scope":return "s";case "revision":return "r";case "activity":return "a";
+            case "session":return "t";case "save":return "p";case "map":return "m";
+            default:throw new IllegalArgumentException("Unknown public identity kind");
+        }
+    }
+
+    /** Allocate a whole response's identities durably in one paired transaction before publication. */
+    public synchronized Map<String,String> publicHandles(Map<String,Set<String>> requested){
+        requireOpen();
+        Map<String,String> result=new LinkedHashMap<>();
+        Map<String,Set<String>> missing=new LinkedHashMap<>();
+        try{
+            for(Map.Entry<String,Set<String>> entry:requested.entrySet()){
+                handlePrefix(entry.getKey());
+                for(String canonical:entry.getValue()){
+                    if(!Identifiers.valid(canonical,256))throw new IllegalArgumentException("Invalid canonical public identity");
+                    String existing=readHandle("main",entry.getKey(),canonical,false);
+                    if(!java.util.Objects.equals(existing,readHandle("internal",entry.getKey(),canonical,false)))
+                        throw new SQLException("Paired public identity mismatch");
+                    if(existing!=null)result.put(handleKey(entry.getKey(),canonical),existing);
+                    else missing.computeIfAbsent(entry.getKey(),ignored->new java.util.LinkedHashSet<>()).add(canonical);
+                }
+            }
+        }catch(SQLException error){throw failure("AUDIT_READ_FAILED",error);}
+        if(missing.isEmpty())return result;
+        return transaction(()->{
+            for(Map.Entry<String,Set<String>> entry:missing.entrySet())for(String canonical:entry.getValue()){
+                String kind=entry.getKey();long next=nextHandleNumber("main",kind);
+                if(next!=nextHandleNumber("internal",kind))throw new SQLException("Paired public identity counter mismatch");
+                if(next==Long.MAX_VALUE)throw new SQLException("Public identity counter exhausted");
+                String handle=handlePrefix(kind)+Long.toString(next,36);
+                for(String schema:schemas()){
+                    try(PreparedStatement insert=writer.prepareStatement("INSERT INTO "+schema+".public_handles(kind,canonical,handle) VALUES(?,?,?)")){
+                        insert.setString(1,kind);insert.setString(2,canonical);insert.setString(3,handle);insert.executeUpdate();
+                    }
+                    try(PreparedStatement update=writer.prepareStatement("INSERT INTO "+schema+".handle_counters(kind,next_value) VALUES(?,?) ON CONFLICT(kind) DO UPDATE SET next_value=excluded.next_value")){
+                        update.setString(1,kind);update.setLong(2,next+1);update.executeUpdate();
+                    }
+                }
+                result.put(handleKey(kind,canonical),handle);
+            }
+            return result;
+        });
+    }
+
+    public synchronized String publicHandle(String kind,String canonical){
+        if(canonical==null)return null;
+        return publicHandles(Collections.singletonMap(kind,Collections.singleton(canonical))).get(handleKey(kind,canonical));
+    }
+
+    /** Unknown or wrong-kind handles never fall back to canonical/older wire identities. */
+    public synchronized String resolveHandle(String kind,String handle){
+        requireOpen();
+        if(handle==null||!handle.matches(handlePrefix(kind)+"[1-9a-z][0-9a-z]*"))return null;
+        try{
+            String value=readHandle("main",kind,handle,true);
+            if(!java.util.Objects.equals(value,readHandle("internal",kind,handle,true)))throw new SQLException("Paired public identity mismatch");
+            return value;
+        }catch(SQLException error){throw failure("AUDIT_READ_FAILED",error);}
+    }
+
+    private String readHandle(String schema,String kind,String value,boolean reverse)throws SQLException{
+        try(PreparedStatement query=writer.prepareStatement("SELECT "+(reverse?"canonical":"handle")+" FROM "+schema+".public_handles WHERE kind=? AND "+(reverse?"handle":"canonical")+"=?")){
+            query.setString(1,kind);query.setString(2,value);
+            try(ResultSet row=query.executeQuery()){return row.next()?row.getString(1):null;}
+        }
+    }
+    private long nextHandleNumber(String schema,String kind)throws SQLException{
+        try(PreparedStatement query=writer.prepareStatement("SELECT next_value FROM "+schema+".handle_counters WHERE kind=?")){
+            query.setString(1,kind);try(ResultSet row=query.executeQuery()){return row.next()?row.getLong(1):1;}
+        }
+    }
 
     public synchronized void ensureScope(String scopeId, String kind, String runId) {
         if (scopeId == null || kind == null) throw new IllegalArgumentException("Scope and kind are required");
@@ -659,15 +744,21 @@ public final class AuditStore implements AutoCloseable {
 
     /** Called once after taking the profile lock, before accepting any newly arrived requests. Never replays work. */
     public synchronized int recoverInterrupted() {
-        return transaction(() -> {
-            List<String[]> unfinished = new ArrayList<>();
-            try (Statement s = writer.createStatement(); ResultSet rs = s.executeQuery("SELECT scope_id,id,status FROM main.requests WHERE status IN ('RECEIVED','EXECUTING')")) {
-                while (rs.next()) unfinished.add(new String[]{rs.getString(1), rs.getString(2), rs.getString(3)});
+        requireOpen();
+        List<String[]> unfinished = new ArrayList<>();
+        Map<String,Set<String>> identities=new LinkedHashMap<>();
+        try (Statement s = writer.createStatement(); ResultSet rs = s.executeQuery("SELECT scope_id,id,status FROM main.requests WHERE status IN ('RECEIVED','EXECUTING')")) {
+            while (rs.next()) {
+                unfinished.add(new String[]{rs.getString(1),rs.getString(2),rs.getString(3)});
+                identities.computeIfAbsent("scope",ignored->new java.util.LinkedHashSet<>()).add(rs.getString(1));
             }
+        }catch(SQLException error){throw failure("AUDIT_READ_FAILED",error);}
+        Map<String,String> aliases=publicHandles(identities);
+        return transaction(() -> {
             for (String[] request : unfinished) {
                 String recovered=now();
                 String status = "EXECUTING".equals(request[2]) ? "UNKNOWN" : "NOT_EXECUTED";
-                String response = JsonCodec.encode(Values.map("v", 5, "id", request[1], "s", request[0], "err", status));
+                String response = JsonCodec.encode(Values.map("v", 6, "id", request[1], "s", aliases.get(handleKey("scope",request[0])), "err", status));
                 for (String schema : schemas()) {
                     try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,updated_at=?,presentation_status='complete' WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
                         s.setString(1, status); s.setString(2, response); s.setString(3, recovered);

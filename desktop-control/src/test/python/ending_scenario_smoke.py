@@ -9,16 +9,17 @@ import time
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game, checkpoint
 from english_protocol_smoke import activate, checked_state, execute, public_events
 from legacy_save_smoke import launch_command, metadata, safe_profile, write_json, stop
+from fixture_identity import fixture_context_matches, fixture_identity_matches
 
 
 def ui_assertion(profile,state,window=None):
     deadline=time.monotonic()+5
     while time.monotonic()<deadline:
         rows=[json.loads(line) for line in (profile/"ui-assertions.jsonl").read_text().splitlines()]
-        row=next((row for row in reversed(rows) if row["state_version"]==state["state_version"]),None)
+        row=next((row for row in reversed(rows) if fixture_identity_matches(profile,"revision",row["state_version"],state["state_version"])),None)
         if row is not None:
             display=state["observation"]["ui"]["display"]
-            assert row["scope_id"]==state["scope_id"],row
+            assert fixture_context_matches(profile,row,state),row
             assert row["language_code"]==display["language"]==os.environ.get("SPDCTL_TEST_LANGUAGE","zh"),row
             assert row["fullscreen"] is False and display["fullscreen"] is False,row
             if window:assert window in row["window_classes"],row
@@ -66,7 +67,7 @@ def ranking_case(client,profile,dead):
     death_menu(client,profile)
     ranked=activate(client,"Rankings").observation
     assert ranked["observation"]["ui"]["scene"]=="RankingsScene"
-    assert ranked["scope_id"].startswith("menu:")
+    assert ranked["scope_id"] and ranked["scope_id"]!=dead["scope_id"] and "hero" not in ranked["observation"]
     rows=[action for action in ranked["actions"] if action["action"]=="ui.activate"
           and "succumbed to poison" in action.get("label","").lower()]
     assert len(rows)==1,ranked["actions"]
@@ -100,7 +101,7 @@ def restart_case(client,profile,initial,outcome):
         assert any(action.get("label")=="Continue" for action in new["actions"]),new["actions"]
         new=activate(client,"Continue").observation
     assert new["observation"]["scene"]=="game",new
-    assert new["scope_id"].startswith("run:") and new["scope_id"]!=initial["scope_id"]
+    assert new["scope_id"] and new["scope_id"]!=initial["scope_id"] and new["observation"]["ui"]["scene"]=="GameScene"
     assert new["observation"]["hero"]["hp"]==new["observation"]["hero"]["max_hp"]>0
     assert new["observation"]["hero"]["level"]==1
     assert not new.get("run_outcome"),new.get("run_outcome")

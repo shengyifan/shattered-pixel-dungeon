@@ -92,9 +92,9 @@ public class CompactProtocolMapAndKnowledgeTest {
         Map<String,Object> original=map("ui",map("controls",controls),"actions",Arrays.asList(
                 map("action","ui.activate","control","clickable","gestures",Collections.singletonList("click")),
                 map("action","ui.activate","control","icon","gestures",Collections.singletonList("click"))));
-        Map<String,Object> play=object(CompactProtocol.project(original,false));List<?> nodes=(List<?>)object(play.get("ui")).get("nodes");
+        Map<String,Object> play=object(CompactProtocol.expandStructures(CompactProtocol.project(original,false)));List<?> nodes=(List<?>)object(play.get("ui")).get("nodes");
         List<Object> ids=new ArrayList<>();for(Object node:nodes)ids.add(object(node).get("id"));
-        assertEquals(Arrays.asList("parent","child","clickable","disabled","clipped","special","icon"),ids);
+        assertEquals(Arrays.asList("parent",null,"clickable",null,"clipped","special","icon"),ids);
         assertEquals(Collections.singletonList(map("op","click")),object(nodes.get(2)).get("ops"));
         assertFalse(object(nodes.get(6)).containsKey("gestures"));
         assertEquals(8,((List<?>)object(object(CompactProtocol.project(original,false,true)).get("ui")).get("nodes")).size());

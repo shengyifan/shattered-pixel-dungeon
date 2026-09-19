@@ -41,7 +41,8 @@ public class ContinuousCancellationTest {
             assertEquals("in_progress", h.last().get("st"));
             Map<?, ?> result = (Map<?, ?>) h.last().get("data");
             assertTrue(JsonCodec.encode(result).contains("continuous_activity"));
-            assertTrue(JsonCodec.encode(result).contains(ACTIVITY));
+            assertEquals(ACTIVITY, h.store.resolveHandle("activity", (String)h.last().get("rev")));
+            assertFalse(JsonCodec.encode(result).contains(ACTIVITY));
             assertTrue(JsonCodec.encode(result).contains("\"op\":\"cancel\""));
             assertTrue(h.game.execution.acknowledged());
             assertEquals("EXECUTING", h.store.getRequest(SCOPE, "rest-1").get("status"));
@@ -240,13 +241,13 @@ public class ContinuousCancellationTest {
             action(id, version, map("action", "action.cancel", "target_id", target));
         }
         void action(String id, String version, Map<String, Object> args) throws Exception {
-            accept(map("protocol_version", 5, "id", id, "scope_id", SCOPE, "op", "action.execute", "state_version", version, "args", args));
+            accept(map("protocol_version", 6, "id", id, "scope_id", SCOPE, "op", "action.execute", "state_version", version, "args", args));
         }
         void query(String id, String op, Map<String, Object> args) throws Exception {
-            accept(map("protocol_version", 5, "id", id, "scope_id", SCOPE, "op", op, "args", args));
+            accept(map("protocol_version", 6, "id", id, "scope_id", SCOPE, "op", op, "args", args));
         }
         void accept(Map<String, Object> request) throws Exception {
-            session.accept(V5Requests.encode(request)).get(2, TimeUnit.SECONDS);
+            session.accept(V6Requests.encode(store, request)).get(2, TimeUnit.SECONDS);
         }
         List<String> lines() throws Exception {
             List<String> result = new ArrayList<>();

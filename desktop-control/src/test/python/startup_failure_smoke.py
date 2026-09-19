@@ -11,7 +11,7 @@ import uuid
 def main():
     parser=argparse.ArgumentParser();parser.add_argument("--launcher",type=Path,required=True);args=parser.parse_args()
     root=Path(__file__).resolve().parents[4]
-    output=root/"desktop-control/build/fixtures/packaging5.0"/("startup-failure-"+uuid.uuid4().hex)
+    output=root/"desktop-control/build/fixtures/packaging6.0"/("startup-failure-"+uuid.uuid4().hex)
     profile=output/"profile"
     emergency=profile/"audit/emergency";emergency.mkdir(parents=True)
     from test_ui import configure_test_ui

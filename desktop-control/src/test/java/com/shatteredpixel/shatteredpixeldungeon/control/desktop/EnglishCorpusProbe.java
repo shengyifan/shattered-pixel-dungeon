@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.CompactProtocol;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 
 import java.io.BufferedReader;
@@ -56,9 +57,11 @@ public final class EnglishCorpusProbe {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void inspect(Map<String, Object> response, Map<String, Object> sample) {
         frames++;
-        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 5;
+        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 6;
+        if (compactFrame) response=(Map<String,Object>)CompactProtocol.expandStructures(response);
         compactDiagnostics.clear();
         if (compactFrame) { compactFrames++; collectCompactDiagnostics(response, "/response"); }
         walk(response, null, null, null, map(), false, "/response", "/response", sample,
@@ -222,7 +225,7 @@ public final class EnglishCorpusProbe {
                 ((Number) value.get("frequency")).longValue()).reversed());
         return map("test_only", true, "source", "closed_fixture_public_responses_only",
                 "projection_context", "complete_public_ui_and_leaf_node_metadata",
-                "frames", frames, "protocol_4_frames", compactFrames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
+                "frames", frames, "protocol_6_frames", compactFrames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
                 "translated_occurrences", translated, "unavailable_occurrences", failures,
                 "partial_occurrences", partials, "unique_issues", result.size(),
                 "issue_occurrences_by_scene", sceneOccurrences, "issues", result,

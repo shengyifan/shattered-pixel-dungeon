@@ -39,6 +39,12 @@ public class InventorySlot extends ItemSlot {
 
 	private ColorBlock bg;
 
+	@Override
+	protected boolean emptyPlaceholderDecoration(com.watabou.noosa.Gizmo child) {
+		// Identity matters: another ColorBlock can carry independent custom state.
+		return child == bg;
+	}
+
 	public InventorySlot( Item item ) {
 
 		super( item );

@@ -34,7 +34,7 @@ def slider(state, title):
 
 
 def slider_value(state, control):
-    return next(n["value"] for n in nodes(state) if n["id"] == control)
+    return next(n["value"] for n in nodes(state) if n.get("id") == control)
 
 
 def open_interface_settings(client):

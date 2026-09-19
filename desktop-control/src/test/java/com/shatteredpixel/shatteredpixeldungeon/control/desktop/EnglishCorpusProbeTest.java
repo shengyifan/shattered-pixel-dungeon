@@ -94,7 +94,7 @@ public class EnglishCorpusProbeTest {
         assertEquals("description",issue.get("field"));
     }
 
-    @Test public void realV5OutputPreservesCompactPathsAndRecordedPartialDiagnosticsWithSourcesOptional() {
+    @Test public void realV6OutputPreservesCompactPathsAndRecordedPartialDiagnosticsWithSourcesOptional() {
         String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
         String note=TextProvenance.INSTANCE.onTextOperation("user","用户自定义文字","用户自定义文字");
         Map<String,Object> rendered=PublicEnglishProjection.copy(map("scope_id","run:fixture","state_version","rev:1",
@@ -107,7 +107,7 @@ public class EnglishCorpusProbeTest {
             Map<String,Object> response=CompactProtocol.success("wire","run:fixture","completed",rendered,true,sources);
             String before=JsonCodec.encode(response);
             EnglishCorpusProbe probe=new EnglishCorpusProbe();probe.inspect(response,map("request_id","wire"));
-            assertEquals(1L,probe.report().get("protocol_4_frames"));
+            assertEquals(1L,probe.report().get("protocol_6_frames"));
             assertEquals(1L,probe.report().get("unavailable_occurrences"));
             assertEquals(1L,probe.report().get("partial_occurrences"));
             assertEquals(0L,occurrences(probe,"用户自定义文字"));
@@ -125,12 +125,12 @@ public class EnglishCorpusProbeTest {
         }
     }
 
-    @Test public void v5DefaultsDoNotInventMissingSourcesAndAggregateDiagnosticsRetainWirePointers() {
+    @Test public void v6DefaultsDoNotInventMissingSourcesAndAggregateDiagnosticsRetainWirePointers() {
         Map<String,Object> node=map("id","same","role","text","text","Already rendered text");
         EnglishCorpusProbe probe=new EnglishCorpusProbe();
-        probe.inspect(map("v",5,"data",map("ui",map("scene","TitleScene","nodes",List.of(node)))),map());
+        probe.inspect(map("v",6,"data",map("ui",map("scene","TitleScene","nodes",List.of(node)))),map());
         assertEquals(0L,probe.report().get("unavailable_occurrences"));
-        Map<String,Object> partial=map("v",5,"data",map("ui",map("scene","TitleScene","nodes",List.of(node))),
+        Map<String,Object> partial=map("v",6,"data",map("ui",map("scene","TitleScene","nodes",List.of(node))),
                 "pres",map("st","partial","diag",List.of(map("field","$.data.ui.nodes[0].text","code","source_missing"))),
                 "raw",map("description","opaque request text"),"reply",map("description","opaque historical reply text"));
         String before=JsonCodec.encode(partial);
@@ -141,6 +141,20 @@ public class EnglishCorpusProbeTest {
         assertEquals("/response/data/ui/nodes/0/text",sample.get("json_pointer"));
         assertEquals("source_missing",issue.get("reason"));
         assertEquals(before,JsonCodec.encode(partial));
+    }
+
+    @Test public void v6StructureTablesExposeTheSamePublicTextWithoutMutatingWire() {
+        Map<String,Object> expanded=map("v",6,"data",map("ui",map("scene","TitleScene","nodes",List.of(
+                map("id","c1","role","button","label","Visible choice","ops",List.of(map("op","click")))))));
+        Map<String,Object> compressed=map("v",6,"data",map("ui",map("scene","TitleScene",
+                "node_shapes",List.of(List.of("id","role","label","ops")),
+                "op_defs",List.of(List.of(map("op","click"))),
+                "nodes",List.of(List.of(0,"c1","button","Visible choice",0)))));
+        String bytes=JsonCodec.encode(compressed);
+        EnglishCorpusProbe expected=new EnglishCorpusProbe(),actual=new EnglishCorpusProbe();
+        expected.inspect(expanded,map()); actual.inspect(compressed,map());
+        assertEquals(expected.report(),actual.report());
+        assertEquals(bytes,JsonCodec.encode(compressed));
     }
 
     private static long occurrences(EnglishCorpusProbe probe, String original) {

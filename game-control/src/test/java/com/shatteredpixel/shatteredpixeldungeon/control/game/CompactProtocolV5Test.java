@@ -30,7 +30,7 @@ public class CompactProtocolV5Test {
         assertEquals(Arrays.asList("external"),object(output.get("text_origins")).get("item_info.ht"));
         assertEquals(Arrays.asList(map("field","sub_name","code","display_warning")),object(output.get("pres")).get("diag"));
         for(String field:Arrays.asList("schema","raw","reply","original_payload"))assertSame(input.get(field),output.get(field));
-        assertEquals(5,CompactProtocol.failure("q","s","FAILURE").get("v"));
+        assertEquals(6,CompactProtocol.failure("q","s","FAILURE").get("v"));
         assertEquals(WireNames.fields(),CompactProtocol.info().get("aliases"));
     }
 
@@ -180,7 +180,7 @@ public class CompactProtocolV5Test {
         Map<String,Object> ui=new UiProjectionHints(hints).attach(map("controls",nodes));
         Map<String,Object> input=map("ui",ui,"actions",Arrays.asList(map("action","ui.activate","control","icon"),map("action","ui.back")));
         Map<String,Object> play=object(CompactProtocol.project(input,false));
-        assertEquals(Arrays.asList("plain","icon","info","parent","independent","bar"),ids(play));
+        assertEquals(Arrays.asList("plain","icon","info","parent",null,"bar"),ids(play));
         assertEquals(Arrays.asList(map("op","back")),play.get("acts"));
         assertEquals(Collections.singletonList(map("op","click")),node(play,"icon").get("ops"));
         assertEquals(25,node(play,"bar").get("health_and_shield_pixels"));
@@ -198,7 +198,7 @@ public class CompactProtocolV5Test {
         Map<String,Object> input=map("inventory",Arrays.asList(inventory),"ui",ui,"actions",Arrays.asList(map("action","ui.activate","control","item","gestures",Arrays.asList("click","long"))));
         Map<String,Object> reply=CompactProtocol.success("q","s","completed",input,true,false),play=object(reply.get("data"));
         assertEquals(Arrays.asList("item"),ids(play));Map<String,Object> projected=node(play,"item");
-        assertEquals("inventory:1",projected.get("loc"));assertFalse(projected.containsKey("label"));assertFalse(projected.containsKey("text"));
+        assertEquals("inventory:1",projected.get("loc"));assertEquals("Waterskin",projected.get("label"));assertFalse(projected.containsKey("text"));
         Map<String,Object> fields=object(projected.get("display"));assertEquals("4/20",fields.get("status"));assertEquals("14?",fields.get("extra"));
         assertEquals(map("extra",Arrays.asList("external")),fields.get("text_origins"));
         assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].display.extra","code","display_warning")),object(reply.get("pres")).get("diag"));
@@ -213,7 +213,7 @@ public class CompactProtocolV5Test {
                 map("id","disabled","parent","p","role","text","text","Apply","enabled",false),
                 map("id","origin","parent","p","role","text","text","Apply","text_sources",map("text",map("kind","literal","origin","user","value","Apply"))),
                 map("id","state","parent","p","role","text","text","Apply","extra",1))));
-        assertEquals(Arrays.asList("p","substring","disabled","origin","state"),ids(object(CompactProtocol.project(input,false))));
+        assertEquals(Arrays.asList("p",null,null,"origin","state"),ids(object(CompactProtocol.project(input,false))));
     }
 
     @Test public void protectedOperationMetadataKeepsDynamicFieldsAndUsesActualWirePaths() {
@@ -295,8 +295,8 @@ public class CompactProtocolV5Test {
 
     private static UiProjectionHints.Node hint(boolean empty,List<String> children,String locator,Map<String,String> display) {return new UiProjectionHints.Node(empty,children,locator,display);}
     private static String rowVisibility(Map<String,Object> map) {return (String)((List<?>)((List<?>)map.get("rows")).get(0)).get(3);}
-    private static List<Object> ids(Map<String,Object> data) {List<Object> ids=new ArrayList<>();for(Object node:(List<?>)object(data.get("ui")).get("nodes"))ids.add(object(node).get("id"));return ids;}
-    private static Map<String,Object> node(Map<String,Object> data,String id) {for(Object node:(List<?>)object(data.get("ui")).get("nodes"))if(id.equals(object(node).get("id")))return object(node);throw new AssertionError(id);}
+    private static List<Object> ids(Map<String,Object> data) {List<Object> ids=new ArrayList<>();for(Object node:(List<?>)object(object(CompactProtocol.expandStructures(data)).get("ui")).get("nodes"))ids.add(object(node).get("id"));return ids;}
+    private static Map<String,Object> node(Map<String,Object> data,String id) {for(Object node:(List<?>)object(object(CompactProtocol.expandStructures(data)).get("ui")).get("nodes"))if(id.equals(object(node).get("id")))return object(node);throw new AssertionError(id);}
     private static int bytes(Object value) {return JsonCodec.encode(value).getBytes(StandardCharsets.UTF_8).length;}
     private static Map<String,Object> item(String loc) {return map("locator",loc,"name","Item","quantity",1,"equipped",false,"type_known",true);}
     private static Map<String,Object> entity(int cell,String kind,String description) {return map("cell",cell,"kind",kind,"name","Public "+kind,"description",description);}

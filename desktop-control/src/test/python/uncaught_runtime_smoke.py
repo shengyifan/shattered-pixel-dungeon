@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """An actual Actor-thread uncaught exception must fail the session even when its GUI loop returns."""
 import json
+from fixture_identity import fixture_canonical_identity
 from pathlib import Path
 import shutil
 import sqlite3
@@ -91,7 +92,8 @@ def main():
                 session = db.execute("SELECT session_id,status,end_reason FROM sessions ORDER BY started_at DESC LIMIT 1").fetchone()
                 assert session[1] == "FAILED", {"side": side, "session": session}
                 paired.append(session)
-                exchanges = db.execute("SELECT COUNT(*),SUM(response_json IS NOT NULL) FROM exchanges WHERE scope_id=? AND id=?", (scope, request_id)).fetchone()
+                canonical_scope=fixture_canonical_identity(profile,"scope",scope)
+                exchanges = db.execute("SELECT COUNT(*),SUM(response_json IS NOT NULL) FROM exchanges WHERE scope_id=? AND id=?", (canonical_scope, request_id)).fetchone()
                 assert exchanges[0] == 1 and exchanges[1] <= 1, exchanges
                 if side == "internal":
                     rows = db.execute("SELECT exception_class,message,stack_trace,session_id FROM exceptions WHERE message='PRIVATE_UNCAUGHT_ACTOR_FIXTURE'").fetchall()

@@ -6,12 +6,14 @@
 
 - [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
 - [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
-- [CLI.5.0.0 实施与验收](cli5-implementation.md)：协议 5、schema 8、独立 v5 档案、同帧语义压缩及双终端查看器；包含本批次实际验证范围和限制。
-- [CLI.5.0.0 清理重建记录](cli-rebuild-5.0.0-20260919.md)：旧生成目录清理、当前实际 ARM64 包与完整性验证、分支推送。
+- [CLI.6.0.0 实施与验收](cli6-implementation.md)：协议 6、schema 9、独立 v6 档案、包内稳定控制器、持久短句柄与同帧 UI 压缩；包含本批次实际验证范围和限制。
+- [CLI 6 增量评估](cli6-incrementality-evaluation.md)：地图、背包和日志的单独离线评估，未部署增量协议。
 - [代理操作约定](../AGENTS.md)：当前协议解码、操作、记录和发布要求。
 
 ## 历史版本记录
 
+- [CLI.5.0.0 实施与验收](cli5-implementation.md)：该版本的语义压缩和实际验证。
+- [CLI.5.0.0 清理重建记录](cli-rebuild-5.0.0-20260919.md)：该批次旧生成目录清理、ARM64 包与完整性验证、分支推送。
 - [CLI.4.0.1 清理重建记录](cli-rebuild-4.0.1-20260914.md)：删除此前产物及实战故障 JSON 后的全量 ARM64 构建和当前包验证。
 - [CLI.4.0.1 独立终端颜色修复](cli-issues/2026-09-14-cli-4.0.1-terminal-color.md)：专用窗口显式彩色、实际脚本 PTY 与环境回归。
 - [CLI.4.0.0 实现与验收](cli4-implementation.md)：自包含 play/full 回复、行地图、轻量回执流程与严格 v4 目录隔离。

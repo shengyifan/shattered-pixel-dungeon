@@ -5,7 +5,7 @@ cd "$project_dir"
 ./gradlew :desktop-control:writeRuntimeClasspath --console=plain >&2
 classpath=$(cat desktop-control/build/runtime-classpath.txt)
 transport=$(cat desktop-control/build/runtime-transport.txt)
-profile_dir="$HOME/Library/Application Support/Shattered Pixel Dungeon CLI v5"
+profile_dir="$HOME/Library/Application Support/Shattered Pixel Dungeon CLI v6"
 expect_profile=0
 for argument do
   if [ "$expect_profile" = 1 ]; then profile_dir="$argument"; expect_profile=0

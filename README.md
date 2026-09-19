@@ -1,6 +1,6 @@
 # Shattered Pixel Dungeon
 
-本分支正在开发 `spdctl` 机器控制接口，使用方式与当前验收范围见 [CLI 文档](docs/cli.md)、[CLI 5 实施与验收](docs/cli5-implementation.md)。
+本分支正在开发 `spdctl` 机器控制接口，使用方式与当前验收范围见 [CLI 文档](docs/cli.md)、[CLI 6 实施与验收](docs/cli6-implementation.md)。
 
 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://watabou.itch.io/).
 

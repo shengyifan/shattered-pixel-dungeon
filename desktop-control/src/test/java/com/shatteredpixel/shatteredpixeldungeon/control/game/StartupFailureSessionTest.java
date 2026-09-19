@@ -24,10 +24,10 @@ public class StartupFailureSessionTest {
 
     @Test public void originalLaunchFailureIsDurableBeforeCloseAndNeverBecomesAStateTimeout()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
-            store.beginSession("startup-test","fixture-build","CLI.5.0.0",5);
+            store.beginSession("startup-test","fixture-build","CLI.6.0.0",6);
             WaitingGame game=new WaitingGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),30_000)){
-                CompletableFuture<Void> request=session.accept(V5Requests.encode(map("protocol_version",5,"id","first-state",
+                CompletableFuture<Void> request=session.accept(V6Requests.encode(store, map("protocol_version",6,"id","first-state",
                         "op","state.get","scope_id",store.menuScope())));
                 game.observed.get(2,TimeUnit.SECONDS);
                 NullPointerException startup=new NullPointerException("PRIVATE_STARTUP_SENTINEL");

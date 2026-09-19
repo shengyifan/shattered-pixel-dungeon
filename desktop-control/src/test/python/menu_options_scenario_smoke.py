@@ -11,6 +11,7 @@ import uuid
 from fixture_smoke import FixtureClient, assert_gui_environment, freeze_runtime, reach_game
 from low_frequency_smoke import act
 from menu_scenario_smoke import choose, return_to_title, ui
+from fixture_identity import fixture_identity_matches
 
 
 def controls(state, kind="ui.activate"):
@@ -38,7 +39,7 @@ def menu_assertion(client,state):
         if path.exists():
             for line in reversed(path.read_text().splitlines()):
                 value=json.loads(line)
-                if value["state_version"]==state["state_version"]:return value["menu"]
+                if fixture_identity_matches(client.profile,"revision",value["state_version"],state["state_version"]):return value["menu"]
         time.sleep(0.02)
     raise AssertionError("Missing post-action menu assertion")
 
@@ -59,11 +60,11 @@ def unlocked(client, results):
     prepared_menu(client)
     seed=choose(client,"Custom Seed")
     field=controls(seed,"ui.text")[0]["control"]
-    original=next(n["value"] for n in nodes(seed) if n["id"]==field)
+    original=next(n["value"] for n in nodes(seed) if n.get("id")==field)
     rejected=client.request("action.execute",{"action":"ui.text","control":field,"text":"A"*21})
     assert rejected.get("error",{}).get("code")=="INVALID_ARGUMENT",rejected
     unchanged=client.state()
-    assert next(n["value"] for n in nodes(unchanged) if n["id"]==field)==original
+    assert next(n["value"] for n in nodes(unchanged) if n.get("id")==field)==original
     act(client,"ui.text",control=field,text="ABC-DEF-GHI")
     selected=choose(client,"Set")
     assert menu_assertion(client,selected)["custom_seed"]=="ABC-DEF-GHI"
@@ -77,7 +78,7 @@ def unlocked(client, results):
     check=next(n for n in nodes(challenge) if "checked" in n and n.get("enabled"))
     label=check.get("text",check.get("label"))
     enabled=act(client,"ui.activate",control=check["id"])
-    assert next(n for n in nodes(enabled) if n["id"]==check["id"])["checked"] is True
+    assert next(n for n in nodes(enabled) if n.get("id")==check["id"])["checked"] is True
     saved=act(client,"ui.back")
     assert menu_assertion(client,saved)["challenges"]!=0
     again=choose(client,"Challenges")
@@ -109,7 +110,7 @@ def unlocked(client, results):
     game=reach_game(client,"WARRIOR")
     applied=menu_assertion(client,game)
     assert applied["game_custom_seed"]=="ABC-DEF-GHI" and not applied["daily"]
-    assert game["scope_id"].startswith("run:") and game["observation"]["hero"]["level"]==1
+    assert game["scope_id"] and game["observation"]["scene"]=="game" and ui(game)["scene"]=="GameScene" and game["observation"]["hero"]["level"]==1
     assert_gui_environment(client.profile,game)
     results.append({"case":"seeded_game_creation","original_start_created_run":True,"original_seed_applied":True,"hero_level":1})
 

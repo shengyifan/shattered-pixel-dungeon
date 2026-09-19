@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionArea;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
 import com.shatteredpixel.shatteredpixeldungeon.ui.InventoryPane;
+import com.shatteredpixel.shatteredpixeldungeon.ui.InventorySlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
@@ -142,7 +143,7 @@ public final class UiBridge {
             Map<String, String> display = new LinkedHashMap<>();
             if (control instanceof ItemSlot) {
                 ItemSlot slot = (ItemSlot) control;
-                empty = slot.emptyRenderedPlaceholder();
+                empty = emptyItemPlaceholder(slot);
                 locator = locators.get(slot.displayedItem());
                 for (Map.Entry<String, BitmapText> entry : slot.renderedTextComponents().entrySet()) {
                     BitmapText child = entry.getValue();
@@ -156,6 +157,14 @@ public final class UiBridge {
                 hints.put(nodeId, new UiProjectionHints.Node(empty, owned, locator, display));
         }
         return new UiProjectionHints(hints);
+    }
+
+    /** Only the fixed sidebar grid's empty inventory slots lack independent capacity information. */
+    static boolean emptyItemPlaceholder(ItemSlot slot) {
+        // WndBag creates one slot per remaining capacity. Unknown containers must retain
+        // the same conservative behavior even when the slot's own pixels are decorative.
+        return slot.emptyRenderedPlaceholder()
+                && (!(slot instanceof InventorySlot) || slot.parent != null && slot.parent.getClass() == InventoryPane.class);
     }
 
     /** Match identities only among locators already exposed by this exact public inventory. */
@@ -797,7 +806,7 @@ public final class UiBridge {
 
     private String id(Gizmo gizmo) {
         String value = identities.get(gizmo);
-        if (value == null) { value = "ui-" + nextIdentity++; identities.put(gizmo, value); }
+        if (value == null) { value = "c" + Long.toString(nextIdentity++, 36); identities.put(gizmo, value); }
         return value;
     }
 

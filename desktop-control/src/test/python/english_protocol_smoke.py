@@ -3,16 +3,17 @@
 
 No game choices use the private UiSceneAssertions or audit database. Private data
 from isolated profiles is read only after a chosen operation, for assertions.
-CLI 5 uses fresh schema-8 profiles; old protocol/audit migration is unsupported.
+CLI 6 uses fresh schema-9 profiles; old protocol/audit migration is unsupported.
 """
 import argparse
+from fixture_identity import fixture_identity_matches
 import json
 from pathlib import Path
 import re
 import time
 import unicodedata
 import uuid
-from protocol5 import pages
+from protocol6 import pages
 from client_result import settle_action
 
 from fixture_smoke import FixtureClient, freeze_runtime, GAME_PROSE_FIELDS, RAW_FIELDS, game_prose_values
@@ -25,7 +26,7 @@ RAW = RAW_FIELDS
 
 
 def prose_values(value, path=(), prose=False):
-    """Share protocol-5 source-aware prose rules with every fixture client."""
+    """Share protocol-6 source-aware prose rules with every fixture client."""
     yield from game_prose_values(value, path, prose)
 
 
@@ -139,7 +140,9 @@ def gui_assertions(profile, required_scenes, required_version=None):
         file = profile / "ui-assertions.jsonl"
         rows = [json.loads(line) for line in file.read_text().splitlines()] if file.exists() else []
         seen = {row["scene"].split(".")[-1] for row in rows if row.get("scene")}
-        if required_scenes <= seen and (required_version is None or any(row["state_version"] == required_version for row in rows)):
+        if required_scenes <= seen and (required_version is None or any(fixture_identity_matches(profile,
+                "activity" if str(row["state_version"]).startswith("activity:") else "revision",
+                row["state_version"],required_version) for row in rows)):
             assert rows and all(row["language"] == "CHI_SMPL" and row["fullscreen"] is False for row in rows)
             return {"language": "CHI_SMPL", "fullscreen": False, "scenes": sorted(seen), "checkpoints": len(rows)}
         time.sleep(.03)

@@ -3,9 +3,9 @@ package com.shatteredpixel.shatteredpixeldungeon.control.protocol;
 import java.math.BigInteger;
 import java.util.*;
 
-/** Strict protocol 5 envelope parsing; gameplay availability and argument semantics belong to the coordinator. */
+/** Strict protocol 6 envelope parsing; gameplay availability and argument semantics belong to the coordinator. */
 public final class ControlRequest {
-    public static final int PROTOCOL_VERSION = 5;
+    public static final int PROTOCOL_VERSION = 6;
     private static final Set<String> ENVELOPE = new HashSet<>(Arrays.asList("v","id","s","rev","op"));
     private static final Set<String> DETAILS = new HashSet<>(Arrays.asList("raw","reply","before","after","meta"));
 
@@ -17,7 +17,7 @@ public final class ControlRequest {
     public final String wireOp;
     public final String stateVersion;
     public final Map<String, Object> args;
-    /** Original, unmodified protocol 5 request for durable audit. */
+    /** Original, unmodified protocol 6 request for durable audit. */
     public final Map<String, Object> raw;
     public final boolean sources;
     /** Presentation only; never forwarded as an engine argument. */
@@ -32,7 +32,7 @@ public final class ControlRequest {
         wireOp = string(raw, "op", true, 128);
         stateVersion = string(raw, "rev", false, 256);
         String canonical = WireNames.canonicalOperation(wireOp);
-        if(canonical==null) throw new ProtocolException("UNKNOWN_OPERATION", "Unknown protocol 5 operation: " + wireOp);
+        if(canonical==null) throw new ProtocolException("UNKNOWN_OPERATION", "Unknown protocol 6 operation: " + wireOp);
         op = WireNames.isQuery(wireOp) ? canonical : "action.execute";
         Map<String,Object> arguments = new LinkedHashMap<>();
         if(!WireNames.isQuery(wireOp)) arguments.put("action", canonical);

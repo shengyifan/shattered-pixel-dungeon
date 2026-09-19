@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Switch the original GUI language repeatedly in one protocol-5 fixture JVM.
+"""Switch the original GUI language repeatedly in one protocol-6 fixture JVM.
 
 Targets come from public language/code sources, never native-word matching. Only
 same-version UI postconditions read the isolated assertion stream; no save reads.
 """
 import argparse
+from fixture_identity import fixture_context_matches
 import copy
 import json
 import os
@@ -74,7 +75,7 @@ class SwitchClient(MatrixClient):
 
     def request(self, op, args=None, **kwargs):
         response = super().request(op, args, **kwargs)
-        assert response.get("protocol_version") == 5, response
+        assert response.get("protocol_version") == 6, response
         if response.get("ok") and op == "state.get":
             failures = validate(response.get("result"))
             assert not failures, {"op": op, "source_failures": failures[:30]}
@@ -126,7 +127,7 @@ def assert_gui_checkpoint(profile, state, code):
         if path.exists():
             for line in reversed(path.read_text().splitlines()):
                 row = json.loads(line)
-                if row["scope_id"] == state["scope_id"] and row["state_version"] == state["state_version"]:
+                if fixture_context_matches(profile, row, state):
                     assert row["language_code"] == code and row["fullscreen"] is False, row
                     return {"state_version": state["state_version"], "language_code": row["language_code"],
                             "language_enum": row["language"], "fullscreen": row["fullscreen"]}
@@ -183,7 +184,7 @@ def run(root, classpath, runtime_id, languages):
         hello = client.request("protocol.info")
         assert hello.get("ok"), hello
         metadata = hello["result"]
-        assert hello["protocol_version"] == 5 and metadata["audit_schema_version"] == 8 and metadata["text_language"] == "en", metadata
+        assert hello["protocol_version"] == 6 and metadata["audit_schema_version"] == 9 and metadata["text_language"] == "en", metadata
         report.update(build_id=metadata["build_id"], cli_version=metadata["cli_version"], session_id=metadata["session_id"])
         initial = start_warrior(client)
         assert_gui_checkpoint(profile, initial, "zh")

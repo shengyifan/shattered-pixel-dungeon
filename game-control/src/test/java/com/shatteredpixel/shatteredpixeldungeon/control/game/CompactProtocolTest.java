@@ -11,7 +11,7 @@ public class CompactProtocolTest {
                 "observation",map("scene","GameScene","hero",map("hp",20),"inventory",Collections.emptyList()),
                 "actions",Arrays.asList(map("action","move.step","parameters",map("direction",Arrays.asList("north","east")))));
         Map<String,Object> reply=CompactProtocol.success("a","menu:old","completed",state,true,false);
-        assertEquals("run:new",reply.get("s"));assertEquals("run:new:1",reply.get("rev"));assertEquals(5,reply.get("v"));
+        assertEquals("run:new",reply.get("s"));assertEquals("run:new:1",reply.get("rev"));assertEquals(6,reply.get("v"));
         Map<String,Object> data=object(reply.get("data"));assertEquals("player_ready",data.get("phase"));
         assertTrue(data.containsKey("hero"));assertTrue(data.containsKey("inv"));
         for(String redundant:Arrays.asList("s","rev","observation","scope_id","state_version"))assertFalse(data.containsKey(redundant));
@@ -80,7 +80,7 @@ public class CompactProtocolTest {
         Map<String,Object> compact=object(CompactProtocol.project(item,false));assertEquals("bag:0",compact.get("loc"));
         assertTrue(compact.containsKey("level"));assertNull(compact.get("level"));assertTrue(compact.containsKey("cursed"));
         assertFalse(compact.containsKey("level_known"));assertFalse(compact.containsKey("curse_known"));
-        assertEquals(map("v",5,"id","bad","s","run:1","err","STALE_STATE"),CompactProtocol.failure("bad","run:1","STALE_STATE"));
+        assertEquals(map("v",6,"id","bad","s","run:1","err","STALE_STATE"),CompactProtocol.failure("bad","run:1","STALE_STATE"));
         assertTrue(object(CompactProtocol.info().get("commands")).containsKey("untarget"));
         assertFalse(CompactProtocol.failure("bad","run:1","EXECUTION_UNKNOWN").containsKey("st"));
         Map<String,Object> schema=CompactProtocol.info();
@@ -140,7 +140,7 @@ public class CompactProtocolTest {
         assertEquals(Arrays.asList(map("field","$.data.items[0].data.desc","code","legacy_diagnostic")),object(reply.get("pres")).get("diag"));
         for(String op:Arrays.asList("history","events")) {
             com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest query=
-                    com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest.parse("{\"v\":5,\"id\":\"q\",\"s\":\"run:1\",\"op\":\""+op+"\",\"until\":9}");
+                    com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest.parse("{\"v\":6,\"id\":\"q\",\"s\":\"run:1\",\"op\":\""+op+"\",\"until\":9}");
             assertEquals(9L,query.args.get("until"));
         }
         assertTrue(object(object(CompactProtocol.info().get("rules")).get("pagination")).containsKey("until"));

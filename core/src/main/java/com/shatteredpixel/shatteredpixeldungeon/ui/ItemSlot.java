@@ -234,6 +234,7 @@ public class ItemSlot extends Button {
 		if (item != null || isActive()) return false;
 		for (com.watabou.noosa.Gizmo child : childrenSnapshot()) {
 			if (child == null || child == hotArea || !child.exists || !child.isVisible()) continue;
+			if (emptyPlaceholderDecoration(child)) continue;
 			if (child instanceof BitmapText) {
 				BitmapText text = (BitmapText) child;
 				if (text == status || text == extra || text == level) {
@@ -244,6 +245,9 @@ public class ItemSlot extends Button {
 		}
 		return true;
 	}
+
+	/** Only subclasses that own a known, non-informative empty-slot decoration may exclude it. */
+	protected boolean emptyPlaceholderDecoration(com.watabou.noosa.Gizmo child) { return false; }
 
 	public void updateText(){
 

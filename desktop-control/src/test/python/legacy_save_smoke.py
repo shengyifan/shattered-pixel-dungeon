@@ -6,6 +6,7 @@ closed test save or create/remove an empty .spdtmp directory to inject IO failur
 Private audit reads are assertions after execution, never inputs to game choices.
 """
 import argparse
+from fixture_identity import fixture_canonical_identity
 import gzip
 import json
 import os
@@ -77,7 +78,7 @@ def save_json(path):
 def audit_schema(profile):
     for name in ("public", "internal"):
         with sqlite3.connect(f"file:{profile / 'audit' / (name + '.sqlite3')}?mode=ro", uri=True) as db:
-            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("7",)
+            assert db.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone() == ("9",)
             assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
 
 
@@ -118,7 +119,7 @@ def create_template(root, classpath, runtime_id):
         _, _, response = execute(client, "game.save")
         assert response["ok"], response
         initial_scope = state["scope_id"]
-        assert initial_scope == "run:" + save_json(save_file(profile))["run_uuid"]
+        assert fixture_canonical_identity(profile,"scope",initial_scope) == "run:" + save_json(save_file(profile))["run_uuid"]
     finally:
         stop(client)
     metadata(profile, "p8:template", runtime_id, game_state_modified_by_fixture=False,
@@ -159,7 +160,7 @@ def legacy_case(root, template, profile, classpath, runtime_id):
         first = resume_game(client, resume=True)
         assigned = save_json(game).get("run_uuid")
         assert assigned and str(uuid.UUID(assigned)) == assigned and assigned != old_uuid
-        assert first["scope_id"] == "run:" + assigned
+        assert fixture_canonical_identity(profile, "scope", first["scope_id"]) == "run:" + assigned
         # Persistence is checked now, before explicit game.save or app.quit can mask it.
         first_scope = first["scope_id"]
         claim_id = "legacy-run-id-" + uuid.uuid4().hex
@@ -221,7 +222,8 @@ def save_failure_case(root, template, profile, classpath, runtime_id, second_fil
         assert failed_events, {"no_public_save_failure": events}
         assert not any(event["kind"] in {"save", "save.completed"} and event["data"].get("success") is True for event in events["result"])
         with sqlite3.connect(f"file:{profile / 'audit/internal.sqlite3'}?mode=ro", uri=True) as db:
-            exceptions = db.execute("SELECT exception_class,stack_trace FROM exceptions WHERE scope_id=? AND id=?", (state["scope_id"], failed_id)).fetchall()
+            canonical_scope = fixture_canonical_identity(profile, "scope", state["scope_id"])
+            exceptions = db.execute("SELECT exception_class,stack_trace FROM exceptions WHERE scope_id=? AND id=?", (canonical_scope, failed_id)).fetchall()
             assert exceptions and any(blocked.name in stack and "IOException" in stack for _, stack in exceptions)
         for event in failed_events:
             assert "stack_trace" not in event["data"] and "message" not in event["data"]

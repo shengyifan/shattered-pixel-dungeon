@@ -6,7 +6,11 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
+import com.shatteredpixel.shatteredpixeldungeon.ui.InventorySlot;
+import com.shatteredpixel.shatteredpixeldungeon.ui.InventoryPane;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
 import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Group;
@@ -34,6 +38,8 @@ class UiProjectionHintsTest {
     private static class DisplayOnlySlot extends ItemSlot {
         @Override protected String hoverText() { return Messages.literal("Visible item"); }
     }
+
+    private static class UnknownInventoryPane extends InventoryPane { }
 
     @Test void sidecarSurvivesFreezeAndRenderWithoutChangingCanonicalJsonOrSemantics() {
         try (TextObservationFixture ignored = new TextObservationFixture()) {
@@ -151,6 +157,56 @@ class UiProjectionHintsTest {
         assertTrue(slot.emptyRenderedPlaceholder());
         slot.erase(status);
         assertTrue(slot.emptyRenderedPlaceholder(), "Erased group members can leave null list entries");
+    }
+
+    @Test void inventoryPlaceholderIgnoresOnlyItsOwnBackground() throws Exception {
+        InventorySlot slot=allocate(InventorySlot.class);
+        slot.exists=slot.alive=slot.visible=true;slot.active=false;
+        field(slot,Group.class,"members",new ArrayList<Gizmo>());
+        ColorBlock background=allocate(ColorBlock.class);
+        background.exists=background.alive=background.visible=true;
+        background.camera=new Camera(0,0,100,100,1);background.width=background.height=1;
+        field(slot,InventorySlot.class,"bg",background);slot.add(background);
+        assertTrue(slot.emptyRenderedPlaceholder(),"An empty inventory background is decorative");
+        ColorBlock independent=allocate(ColorBlock.class);
+        independent.exists=independent.alive=independent.visible=true;
+        independent.camera=background.camera;independent.width=independent.height=1;slot.add(independent);
+        assertFalse(slot.emptyRenderedPlaceholder(),"A custom color block remains independent evidence");
+        independent.visible=false;
+        BitmapText quantity=text("0");display(slot,"status",quantity);
+        assertFalse(slot.emptyRenderedPlaceholder(),"A visible zero remains meaningful");
+        quantity.visible=false;slot.active=true;
+        assertFalse(slot.emptyRenderedPlaceholder(),"An active empty control remains available");
+        slot.active=false;field(slot,ItemSlot.class,"item",new DisplayOnlyItem());
+        assertFalse(slot.emptyRenderedPlaceholder(),"A disabled unknown item is never an empty placeholder");
+    }
+
+    @Test void onlyFixedSidebarInventorySlotsCanBecomeEmptyProjectionHints() throws Exception {
+        InventorySlot slot=allocate(InventorySlot.class);
+        slot.exists=slot.alive=slot.visible=true;slot.active=false;
+        field(slot,Group.class,"members",new ArrayList<Gizmo>());
+        assertTrue(slot.emptyRenderedPlaceholder(),"The visual placeholder test alone cannot establish capacity semantics");
+        assertFalse(UiBridge.emptyItemPlaceholder(slot),"An unparented slot has no proven fixed-grid meaning");
+        Group unknown=new Group();unknown.add(slot);
+        assertFalse(UiBridge.emptyItemPlaceholder(slot),"Unknown containers may encode free capacity");
+        unknown.remove(slot);
+        WndBag dynamic=allocate(WndBag.class);field(dynamic,Group.class,"members",new ArrayList<Gizmo>());dynamic.add(slot);
+        assertFalse(UiBridge.emptyItemPlaceholder(slot),"WndBag's null-slot count is public free-capacity information");
+        dynamic.remove(slot);
+        InventoryPane fixed=allocate(InventoryPane.class);field(fixed,Group.class,"members",new ArrayList<Gizmo>());fixed.add(slot);
+        assertTrue(UiBridge.emptyItemPlaceholder(slot),"InventoryPane renders a fixed 20-position sidebar grid");
+        UnknownInventoryPane custom=allocate(UnknownInventoryPane.class);field(custom,Group.class,"members",new ArrayList<Gizmo>());custom.add(slot);
+        assertFalse(UiBridge.emptyItemPlaceholder(slot),"A custom sidebar subclass can change capacity presentation");
+        DisplayOnlySlot ordinary=slot(null);ordinary.active=false;unknown.add(ordinary);
+        assertTrue(UiBridge.emptyItemPlaceholder(ordinary),"Existing plain ItemSlot placeholder rules are unchanged");
+
+        Map<String,Object> node=Map.of("id","c1","role","button","enabled",false);
+        for(boolean fixedGrid:List.of(false,true)) {
+            UiProjectionHints hints=new UiProjectionHints(Map.of("c1",new UiProjectionHints.Node(fixedGrid,Collections.emptyList(),null,Collections.emptyMap())));
+            Map<?,?> projected=(Map<?,?>)CompactProtocol.project(Map.of("ui",hints.attach(Map.of("controls",List.of(node)))),false);
+            List<?> retained=(List<?>)((Map<?,?>)projected.get("ui")).get("nodes");
+            assertEquals(fixedGrid?0:1,retained.size(),"Only a proven fixed-grid hint permits omission");
+        }
     }
 
     private static UiProjectionHints.Node hints(UiBridge bridge, Map<String, Object> observation, String id) {

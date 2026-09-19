@@ -76,7 +76,7 @@ def exercise(root, classpath, code, fixture="class:WARRIOR"):
               "test_fixture": True, "counts_as_win": False}
     try:
         hello = client.request("protocol.info")
-        assert hello["protocol_version"] == 5, hello
+        assert hello["protocol_version"] == 6, hello
         report["build_id"] = hello["result"]["build_id"]
         state = start_warrior(client)
         assert state["observation"]["ui"]["display"]["language"] == code

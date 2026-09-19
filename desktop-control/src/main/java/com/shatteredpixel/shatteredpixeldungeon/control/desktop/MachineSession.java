@@ -43,6 +43,7 @@ public final class MachineSession implements AutoCloseable {
     }
     private static final List<String> HISTORY=Arrays.asList("request.get","history.list","events.read");
     private final AuditStore store;
+    private final PublicHandles handles;
     private final GamePort game;
     private final PrintStream output;
     private final long timeoutMillis;
@@ -83,7 +84,7 @@ public final class MachineSession implements AutoCloseable {
     }
     public MachineSession(AuditStore store,GamePort game,PrintStream output,long timeoutMillis){
         if(timeoutMillis<1)throw new IllegalArgumentException("A positive timeout is required");
-        this.store=store;this.game=game;this.output=output;this.timeoutMillis=timeoutMillis;
+        this.store=store;this.handles=new PublicHandles(store);this.game=game;this.output=output;this.timeoutMillis=timeoutMillis;
     }
     /** Lifecycle status only: ordinary rejected requests do not fail the process session. */
     public boolean failed(){return fatalFailure;}
@@ -122,6 +123,8 @@ public final class MachineSession implements AutoCloseable {
             if(frame.error!=null)throw frame.error;
             Map<String,Object> envelope=JsonCodec.decode(raw);
             id=identity(envelope.get("id"),128);scope=identity(envelope.get("s"),256);op=identity(envelope.get("op"),128);
+            boolean resolvedScope=false;
+            if(scope!=null){String canonical=handles.lookupScope(scope);if(canonical!=null){scope=canonical;resolvedScope=true;}}
             if(envelope.get("s")==null&&"info".equals(op))scope=store.menuScope();
             attempt=store.begin(scope,id,op,raw,frame.bytes,frame.format,frame.receivedAt,processingStartedAt);
             if(attempt.duplicate)throw new ProtocolException("DUPLICATE_REQUEST_ID","Request ID already appeared in this scope");
@@ -129,6 +132,7 @@ public final class MachineSession implements AutoCloseable {
             ControlRequest request=ControlRequest.parse(raw);
             op=request.op;
             if(scope==null)throw new ProtocolException("SCOPE_REQUIRED","s is required");
+            if(envelope.get("s")!=null&&!resolvedScope)throw new ProtocolException("UNKNOWN_SCOPE","Unknown scope handle in this profile");
             if(!store.hasScope(scope))throw new ProtocolException("UNKNOWN_SCOPE","Unknown scope");
             settleReady();
             refreshActivity();
@@ -153,12 +157,13 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("cli_version","CLI.5.0.0","game_version","3.3.8",
+                    result=map("cli_version","CLI.6.0.0","game_version","3.3.8",
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
                             "session_id",store.sessionId(),"audit_schema_version",AuditStore.SCHEMA_VERSION,"text_language","en","text_format","resource-v1",
+                            "request_prefix",handles.session(store.sessionId()),
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
-                            "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation"),
+                            "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation","persistent_handles"),
                             "schema",CompactProtocol.info());break;
                 case "state.get":result=publicStateResult(state);break;
                 case "actions.list":result=pending!=null||cancelling!=null||executionUncertain?publicStateResult(state):actionState(state);break;
@@ -175,19 +180,20 @@ public final class MachineSession implements AutoCloseable {
                 }
                 case "action.execute":{
                     if(request.stateVersion==null)throw new ProtocolException("STATE_VERSION_REQUIRED","rev is required");
+                    String version=handles.resolveVersion(request.stateVersion);
                     if(cancelRequest){
                         String target=requiredIdentifier(request.args,"target_id");
                         if(pending==null||pending.activity==null||!target.equals(pending.attempt.id)||!scope.equals(pending.attempt.scopeId))
                             throw new ProtocolException("ACTIVITY_NOT_ACTIVE","Target is not the active continuous request");
-                        if(!request.stateVersion.equals(pending.activity.version))throw new ProtocolException("STALE_ACTIVITY","Activity token has expired");
+                        if(!version.equals(pending.activity.version))throw new ProtocolException("STALE_ACTIVITY","Activity token has expired");
                         if(cancelling!=null)throw new ProtocolException("CANCEL_IN_PROGRESS","Cancellation is already resolving");
-                        preparedLease=request.stateVersion;
-                        state=game.prepareCancellation(request.stateVersion,target).get(timeoutMillis,TimeUnit.MILLISECONDS);
+                        preparedLease=version;
+                        state=game.prepareCancellation(version,target).get(timeoutMillis,TimeUnit.MILLISECONDS);
                         currentCertified=true;
-                        if(!scope.equals(state.scopeId)||!request.stateVersion.equals(state.version))throw new ProtocolException("STALE_ACTIVITY","Prepared boundary does not match the activity");
-                        store.markExecuting(attempt,request.stateVersion,state.publicState,state.internalState);
+                        if(!scope.equals(state.scopeId)||!version.equals(state.version))throw new ProtocolException("STALE_ACTIVITY","Prepared boundary does not match the activity");
+                        store.markExecuting(attempt,version,state.publicState,state.internalState);
                         dispatchAttempted=true;
-                        CompletableFuture<GameController.State> cancelled=game.cancelPrepared(request.stateVersion,target);
+                        CompletableFuture<GameController.State> cancelled=game.cancelPrepared(version,target);
                         try{state=cancelled.get(timeoutMillis,TimeUnit.MILLISECONDS);}
                         catch(TimeoutException waiting){
                             cancelling=new Pending(attempt,state);cancelling.future=cancelled;
@@ -201,7 +207,7 @@ public final class MachineSession implements AutoCloseable {
                         settleReady();
                         result=state.result();break;
                     }
-                    if(!request.stateVersion.equals(state.version))throw new ProtocolException("STALE_STATE","Observe before acting");
+                    if(!version.equals(state.version))throw new ProtocolException("STALE_STATE","Observe before acting");
                     requiredString(request.args,"action");String planned=null;
                     if(scope.equals(store.menuScope())){
                         planned=UUID.randomUUID().toString();store.ensureScope("run:"+planned,"planned",planned);store.linkTarget(attempt,"run:"+planned);
@@ -210,7 +216,7 @@ public final class MachineSession implements AutoCloseable {
                     // A synchronous throw after entering runtime code can also mean a partial operation.
                     dispatchAttempted=true;pending=new Pending(attempt,state);
                     if(planned!=null)game.prepareRun(planned);
-                    pending.execution=game.start(request.stateVersion,request.args,id);
+                    pending.execution=game.start(version,request.args,id);
                     pending.future=pending.execution.completion;
                     try{
                         state=pending.execution.firstResponse.get(timeoutMillis,TimeUnit.MILLISECONDS);
@@ -243,7 +249,7 @@ public final class MachineSession implements AutoCloseable {
             drainSaves();
             if("action.execute".equals(op))result=withPersistence(attempt,result,state==null?scope:state.scopeId);
             else if("state.get".equals(op)||"actions.list".equals(op))result=withLastSave(result,scope);
-            Map<String,Object> response=CompactProtocol.success(id,scope,status,PublicEnglishProjection.copy(result),!HISTORY.contains(op),request.sources,request.fullView);
+            Map<String,Object> response=CompactProtocol.success(id,handles.scope(scope),status,handles.encode(PublicEnglishProjection.copy(result)),!HISTORY.contains(op),request.sources,request.fullView);
             Map<String,Object>[] snapshots=dispatchAttempted&&currentCertified?directSnapshots(state):auditSnapshots(scope,state,currentCertified);
             store.complete(attempt,status.toUpperCase(Locale.ROOT),response,snapshots[0],snapshots[1],null,currentCertified&&state!=null?state.scopeId:null);responseStage.committed=true;
             send(attempt,response,responseStage);if(game.exiting())game.exitNow();
@@ -263,7 +269,7 @@ public final class MachineSession implements AutoCloseable {
                 drainSaveReceipts();
                 Map<String,Object> response=failure(id,scope,dispatchAttempted&&!definitelyNotExecuted?"EXECUTION_UNKNOWN":code(error));
                 if(dispatchAttempted&&!definitelyNotExecuted&&!attempt.duplicate)
-                    response.put("data",CompactProtocol.project(withPersistence(attempt,Collections.emptyMap(),scope),false));
+                    response.put("data",CompactProtocol.project(handles.encode(withPersistence(attempt,Collections.emptyMap(),scope)),false));
                 // Never substitute a pre-action snapshot for an unknown post-action state.
                 Map<String,Object>[] snapshots=dispatchAttempted?emptySnapshots():auditSnapshots(scope,state,currentCertified);
                 store.complete(attempt,dispatchAttempted&&!definitelyNotExecuted?"UNKNOWN":"REJECTED",response,snapshots[0],snapshots[1],error);responseStage.committed=true;
@@ -327,7 +333,7 @@ public final class MachineSession implements AutoCloseable {
             if(!rejected)executionUncertain=true;
             drainSaves();
             Map<String,Object> response=failure(completed.attempt.id,completed.attempt.scopeId,rejected?code(actual):"EXECUTION_UNKNOWN");
-            if(!rejected)response.put("data",CompactProtocol.project(withPersistence(completed.attempt,Collections.emptyMap(),completed.attempt.scopeId),false));
+            if(!rejected)response.put("data",CompactProtocol.project(handles.encode(withPersistence(completed.attempt,Collections.emptyMap(),completed.attempt.scopeId)),false));
             store.settle(completed.attempt,rejected?"REJECTED":"UNKNOWN",response,null,null,actual);
             return true;
         }
@@ -442,11 +448,11 @@ public final class MachineSession implements AutoCloseable {
     public void recordLog(String channel,String text){
         try{serial.execute(()->{try{store.recordLog(channel,text);}catch(Throwable error){fatal(error);}});}catch(RejectedExecutionException ignored){}
     }
-    private static Map<String,Object> success(String id,String scope,String status,Object result){
-        return CompactProtocol.success(id,scope,status,PublicEnglishProjection.copy(result),true,false);
+    private Map<String,Object> success(String id,String scope,String status,Object result){
+        return CompactProtocol.success(id,handles.scope(scope),status,handles.encode(PublicEnglishProjection.copy(result)),true,false);
     }
-    private static Map<String,Object> failure(String id,String scope,String code){
-        return CompactProtocol.failure(id,scope,code);
+    private Map<String,Object> failure(String id,String scope,String code){
+        return CompactProtocol.failure(id,handles.existingScope(scope),code);
     }
     private static Map<String,Object> actionState(GameController.State state){
         return map("scope_id",state.scopeId,"state_version",state.version,"phase",state.phase,

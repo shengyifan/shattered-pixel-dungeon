@@ -23,7 +23,7 @@ import unittest
 
 
 ENGINE = r'''
-import json, os, signal, sys, time
+import json, os, signal, subprocess, sys, time
 from pathlib import Path
 mode = sys.argv[1]
 os.write(2, ("ENGINE_PID=%d\n" % os.getpid()).encode())
@@ -31,7 +31,19 @@ if mode == "args":
     os.write(1, json.dumps(sys.argv[2:], ensure_ascii=False).encode() + b"\n")
 elif mode == "profile":
     os.write(1, json.dumps({"profile": os.environ.get("SPDCTL_PROFILE")}).encode() + b"\n")
-elif mode == "echo":
+elif mode == "context":
+    count = int(os.environ["SPDCTL_ENGINE_ARGC"])
+    os.write(1, json.dumps({"args": sys.argv[2:], "profile": os.environ.get("SPDCTL_PROFILE"),
+                          "native": os.environ["SPDCTL_NATIVE_LAUNCHER"],
+                          "engine": [os.environ["SPDCTL_ENGINE_ARG_" + str(i)] for i in range(count)]},
+                         ensure_ascii=False).encode() + b"\n")
+elif mode == "control-wrapper" and sys.argv[2] == "control":
+    count = int(os.environ["SPDCTL_ENGINE_ARGC"])
+    engine = [os.environ["SPDCTL_ENGINE_ARG_" + str(i)] for i in range(count)]
+    child = [os.environ["SPDCTL_NATIVE_LAUNCHER"], "--engine-argc", str(count), *engine,
+             "--", "run", *sys.argv[3:]]
+    sys.exit(subprocess.call(child))
+elif mode in ("echo", "control-wrapper"):
     while True:
         data = os.read(0, 8191)
         if not data: break
@@ -380,6 +392,48 @@ class NativeTransportTest(unittest.TestCase):
             if slave >= 0:
                 os.close(slave)
 
+    def assert_viewer_styles(self, rendered):
+        """Interpret SGR state, not merely the presence of selected escape codes."""
+        plain, styles = bytearray(), []
+        bold, foreground, position = False, 39, 0
+        for escape in re.finditer(rb"\x1b\[([0-9;]*)m", rendered):
+            text = rendered[position:escape.start()]
+            plain.extend(text)
+            styles.extend([(bold, foreground)] * len(text))
+            for value in escape[1].split(b";"):
+                code = int(value or b"0")
+                if code == 0:
+                    bold, foreground = False, 39
+                elif code == 1:
+                    bold = True
+                elif code == 22:
+                    bold = False
+                elif code == 39 or 30 <= code <= 37 or 90 <= code <= 97:
+                    foreground = code
+                else:
+                    self.fail("Unexpected viewer SGR code: " + str(code))
+            position = escape.end()
+        text = rendered[position:]
+        plain.extend(text)
+        styles.extend([(bold, foreground)] * len(text))
+        offset = 0
+        for line in bytes(plain).splitlines(keepends=True):
+            content = line.rstrip(b"\r\n")
+            heading = re.fullmatch(rb"\[\d+\.\d+\] #\d+ (SEND|RECV)(?: \(continued\))?", content)
+            error = re.fullmatch(rb"\[\d+\.\d+\] #\d+ ERROR(?: \(continued\))?", content)
+            content_styles = styles[offset:offset + len(content)]
+            if heading:
+                self.assertTrue(all(style == (True, 96) for style in content_styles), content)
+            else:
+                self.assertTrue(all(not style[0] for style in content_styles), content)
+                if error:
+                    self.assertTrue(all(style[1] == 91 for style in content_styles), content)
+            self.assertTrue(all(not style[0] for style in styles[offset + len(content):offset + len(line)]),
+                            "A heading left bold enabled across its newline")
+            offset += len(line)
+        self.assertEqual((False, 39), (bold, foreground), "Viewer did not reset terminal state")
+        return bytes(plain)
+
     def test_viewer_filters_success_events_and_keeps_all_failures(self):
         failures = ["EXITED:9", "SIGNAL:2", "CHILD_STDIN_BROKEN", "TRACE_IO_FAILED", "FUTURE_FAILURE"]
         session = self.fixture_session([
@@ -430,16 +484,17 @@ class NativeTransportTest(unittest.TestCase):
             with self.subTest(stream=stream):
                 colored = self.view(session, "always", stream=stream)
                 plain = self.view(session, "never", stream=stream)
-                self.assertTrue(colored.startswith(b"\x1b[0;1;39mspdctl transport viewer"))
+                self.assertTrue(colored.startswith(b"\x1b[0;39mspdctl transport viewer"))
                 self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", colored))
+                self.assertEqual(plain, self.assert_viewer_styles(colored))
                 self.assertTrue(colored.endswith(b"\x1b[0m"))
                 self.assertNotIn(b"\x1b[2m", colored)
                 self.assertNotIn(b"\x1b[40", colored)
                 if stream != "recv":
-                    self.assertIn(b'\x1b[1;94m"key"', colored)
-                    self.assertIn(b'\x1b[1;92m', colored)
-                    self.assertIn(b'\x1b[1;93m-1.5e+2', colored)
-                    self.assertIn(b'\x1b[1;95mtrue', colored)
+                    self.assertIn(b'\x1b[0;94m"key"', colored)
+                    self.assertIn(b'\x1b[0;92m', colored)
+                    self.assertIn(b'\x1b[0;93m-1.5e+2', colored)
+                    self.assertIn(b'\x1b[0;95mtrue', colored)
                 if stream == "send":
                     self.assertIn(request, plain)
                     self.assertNotIn(b"RECV", plain)
@@ -449,10 +504,10 @@ class NativeTransportTest(unittest.TestCase):
                     self.assertNotIn(b"EXITED:9", plain)
                 else:
                     self.assertIn(response, plain)
-                    self.assertIn(b'\x1b[1;94m"answer"', colored)
-                    self.assertIn(b'\x1b[1;92m"different"', colored)
-                    self.assertIn(b'\x1b[1;91mdiagnostic payload', colored)
-                    self.assertIn(b'\x1b[1;91mEXITED:9', colored)
+                    self.assertIn(b'\x1b[0;94m"answer"', colored)
+                    self.assertIn(b'\x1b[0;92m"different"', colored)
+                    self.assertIn(b'\x1b[0;91mdiagnostic payload', colored)
+                    self.assertIn(b'\x1b[0;91mEXITED:9', colored)
                 if stream == "recv":
                     self.assertNotIn(b"SEND", plain)
                     self.assertNotIn(b'"key"', plain)
@@ -527,11 +582,11 @@ class NativeTransportTest(unittest.TestCase):
                             arguments[at] = str(replacement)
 
                     with self.subTest(document=document, command=line):
-                        if arguments[0] == "run":
+                        if arguments[0] in ("run", "control"):
                             engine = [sys.executable, "-u", str(self.engine), "echo"]
                             command = [str(self.open_binary), "--engine-argc", str(len(engine)), *engine, "--", *arguments]
                             payload = b'{"fixture":"documentation command"}\n'
-                            exercised.add("run")
+                            exercised.add(arguments[0])
                         else:
                             self.assertEqual("trace", arguments[0])
                             self.assertIn(arguments[1], ("open", "view"))
@@ -546,8 +601,11 @@ class NativeTransportTest(unittest.TestCase):
                             self.assertNotIn(error, result.stderr)
 
                         stream = arguments[arguments.index("--stream") + 1] if "--stream" in arguments else "all"
-                        if arguments[0] == "run":
+                        if arguments[0] in ("run", "control"):
                             self.assertEqual(payload, result.stdout)
+                            if arguments[0] == "control":
+                                self.assertFalse(capture.exists(), "Controller parent opened Terminal")
+                                continue
                             if "--no-terminal" in arguments:
                                 self.assertFalse(capture.exists())
                                 exercised.add("no-terminal")
@@ -615,14 +673,15 @@ class NativeTransportTest(unittest.TestCase):
         colored = self.view(session, "always")
         plain = self.view(session, "never")
         self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", colored))
+        self.assertEqual(plain, self.assert_viewer_styles(colored))
         self.assertEqual(3, plain.count(b"SEND (continued)"))
-        self.assertIn(b'\x1b[1;94m"key"', colored)
-        self.assertIn(b'\x1b[1;92m"value"', colored)
-        self.assertIn(b'\x1b[1;94m"nested"', colored)
-        self.assertIn(b'\x1b[1;93m-1.5e+2', colored)
-        self.assertIn(b'\x1b[1;95mtrue', colored)
-        self.assertIn(b'\x1b[1;95mnull', colored)
-        self.assertIn(b'\x1b[1;39m', colored)
+        self.assertIn(b'\x1b[0;94m"key"', colored)
+        self.assertIn(b'\x1b[0;92m"value"', colored)
+        self.assertIn(b'\x1b[0;94m"nested"', colored)
+        self.assertIn(b'\x1b[0;93m-1.5e+2', colored)
+        self.assertIn(b'\x1b[0;95mtrue', colored)
+        self.assertIn(b'\x1b[0;95mnull', colored)
+        self.assertIn(b'\x1b[0;39m', colored)
         self.assertNotIn(b'\x1b[2m', colored)
         colored.decode("utf-8", errors="strict")
         self.assertNotIn(b"\\xE4", colored)
@@ -678,13 +737,18 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(64, rejected.returncode)
 
     def test_colored_malformed_json_and_incomplete_unicode_are_safe(self):
-        body = b'{"key":"raw\x1b[2J\x07", !!! ["value", -3]\n' + b'"incomplete:\xf0\x9f'
-        session = self.fixture_session([("SEND", body[:12]), ("SEND", body[12:])])
+        body = b'{"key":"raw\x1b[2J\x07\xff\xc0\xaf", !!! ["value", -3]\n' + b'"incomplete:\xf0\x9f'
+        session = self.fixture_session([("SEND", body[:12]), ("STDERR", b"bad-byte:\xff\n"),
+                                        ("SEND", body[12:])])
         rendered = self.view(session, "always")
         plain = re.sub(rb"\x1b\[[0-9;]*m", b"", rendered)
+        self.assertEqual(plain, self.assert_viewer_styles(rendered))
         self.assertNotIn(b"\x1b", plain)
         self.assertNotIn(b"\x07", plain)
-        self.assertIn(b"\\x1B[2J\\x07", plain)
+        self.assertIn(b"\\x1B", plain)
+        self.assertIn(b"[2J\\x07", plain)
+        self.assertIn(b"\\xFF\\xC0\\xAF", plain)
+        self.assertIn(b"bad-byte:\\xFF", plain)
         self.assertIn(b'"incomplete:\\xF0\\x9F', plain)
         plain.decode("utf-8", errors="strict")
 
@@ -775,8 +839,8 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(len(payload), sum(row[4] for row in delivered))
         self.assertIn("EOF_SENT", [row[5] for row in rows if row[2] == "STATUS"])
 
-    def test_default_profile_uses_v5_without_accessing_v4(self):
-        old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v4"
+    def test_default_profile_uses_v6_without_accessing_v5(self):
+        old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v5"
         old_profile.mkdir(parents=True)
         sentinel = old_profile / "do-not-read-or-change"
         sentinel.write_bytes(b"previous profile")
@@ -785,7 +849,7 @@ class NativeTransportTest(unittest.TestCase):
         del command[index:index + 2]
         result = subprocess.run(command, input=b"", capture_output=True, env=self.environment, timeout=10)
         self.assertEqual(0, result.returncode, result.stderr)
-        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v5"
+        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v6"
         self.assertEqual(str(expected), json.loads(result.stdout)["profile"])
         self.assertFalse(expected.exists(), "Native profile resolution unexpectedly created game data")
         self.assertEqual(b"previous profile", sentinel.read_bytes())
@@ -801,6 +865,72 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual([literal, "--looks-like-a-flag", "run", "--machine", "--data-dir", str(self.profile)], arguments)
         self.assertFalse((self.root / "should-not-exist").exists())
         self.assert_complete(self.session())
+
+    def test_controller_context_freezes_native_engine_and_profile_without_recording_parent(self):
+        literal = "spaces ' quotes ; $(touch should-not-exist) 中文"
+        requested_profile = self.root / "not-created" / ".." / "chosen profile"
+        command = self.command("context", [literal], profile=requested_profile)
+        command[command.index("run")] = "control"
+        # Ignore hostile inherited values and publish this launch's actual vector.
+        environment = {**self.environment, "SPDCTL_NATIVE_LAUNCHER": "/untrusted/native",
+                       "SPDCTL_ENGINE_ARGC": "99", "SPDCTL_ENGINE_ARG_0": "/untrusted/java"}
+        result = subprocess.run(command, input=b"", capture_output=True, env=environment, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
+        context = json.loads(result.stdout)
+        self.assertEqual(str(self.binary), context["native"])
+        self.assertEqual(str(self.root / "chosen profile"), context["profile"])
+        self.assertEqual([sys.executable, "-u", str(self.engine), "context", literal], context["engine"])
+        self.assertEqual([literal, "control", "--machine", "--data-dir", str(requested_profile),
+                          "--no-terminal", "--trace-dir", str(self.trace)], context["args"])
+        self.assertNotIn(b"TRACE_SESSION", result.stderr)
+        self.assertFalse(self.trace.exists(), "Controller parent created a second trace")
+        self.assertFalse((self.root / "chosen profile").exists())
+        self.assertFalse((self.root / "should-not-exist").exists())
+
+    def test_controller_run_child_alone_records_exact_machine_transport(self):
+        command = self.command("control-wrapper")
+        command[command.index("run")] = "control"
+        payload = '{"v":6,"id":"t1.1","text":"中文🐈"}\n'.encode()
+        result = subprocess.run(command, input=payload, capture_output=True, env=self.environment, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(payload, result.stdout)
+        self.assertEqual(1, result.stderr.count(b"TRACE_SESSION"))
+        session = self.session()
+        self.assertEqual(payload, (session / "send.raw").read_bytes())
+        self.assertEqual(payload, (session / "recv.raw").read_bytes())
+        self.assert_complete(session)
+
+    def test_controller_run_child_opens_only_one_pair_of_viewers(self):
+        command = self.command("control-wrapper")
+        command[0] = str(self.open_binary)
+        command[command.index("run")] = "control"
+        command.remove("--no-terminal")
+        capture = self.root / "controller-open.txt"
+        environment = {**self.environment, "SPDCTL_TEST_OPEN_CAPTURE": str(capture)}
+        result = subprocess.run(command, input=b'"actual machine bytes"\n', capture_output=True,
+                                env=environment, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(b'"actual machine bytes"\n', result.stdout)
+        self.assertEqual(1, result.stderr.count(b"TRACE_SESSION"))
+        calls = wait_until(lambda: capture.read_text().splitlines() if capture.exists() else [],
+                           "controller child viewer dispatch")
+        self.assertEqual(["send", "recv"], [line.split("\t")[0] for line in calls])
+        self.assert_complete(self.session())
+
+    def test_controller_arguments_are_validated_before_starting_jvm(self):
+        for suffix, expected in (([], b"MACHINE_MODE_REQUIRED"),
+                                 (["--machine", "--data-dir", "relative"], b"ABSOLUTE_PROFILE_REQUIRED"),
+                                 (["--machine", "--trace-dir", "relative"], b"ABSOLUTE_TRACE_DIRECTORY_REQUIRED"),
+                                 (["--machine", "--unknown"], b"UNKNOWN_LAUNCHER_ARGUMENT")):
+            with self.subTest(suffix=suffix):
+                engine = [sys.executable, "-u", str(self.engine), "echo"]
+                command = [str(self.binary), "--engine-argc", str(len(engine)), *engine, "--", "control", *suffix]
+                result = subprocess.run(command, input=b"", capture_output=True, env=self.environment, timeout=10)
+                self.assertEqual(64, result.returncode)
+                self.assertIn(expected, result.stderr)
+                self.assertNotIn(b"ENGINE_PID", result.stderr)
+                self.assertFalse(result.stdout)
+        self.assertFalse(self.trace.exists())
 
     def test_send_is_recorded_before_delayed_response(self):
         gate = self.root / "allow-response"
@@ -906,7 +1036,8 @@ class NativeTransportTest(unittest.TestCase):
                 with self.subTest(stream=stream, no_color=no_color):
                     environment = {**self.environment, "TERM": "dumb", "NO_COLOR": no_color}
                     rendered = self.viewer_in_pty(["/bin/sh", str(script)], environment)
-                    self.assertIn(b'\x1b[1;94m"key"', rendered)
+                    self.assertIn(b'\x1b[0;94m"key"', rendered)
+                    self.assert_viewer_styles(rendered)
                     self.assertTrue(rendered.endswith(b"\x1b[0m"))
                     self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
                     self.assertFalse((self.root / "INJECTED").exists())
@@ -999,7 +1130,8 @@ class NativeTransportTest(unittest.TestCase):
                     self.assertIn(str(self.open_binary), script)
                     wait_until(lambda: not command.parent.exists(), "temporary command cleanup")
                     self.assertFalse((self.root / "INJECTED").exists())
-                    self.assertIn(b'\x1b[1;94m"key"', rendered)
+                    self.assertIn(b'\x1b[0;94m"key"', rendered)
+                    self.assert_viewer_styles(rendered)
                     self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
                     for name, original in records.items():
                         self.assertEqual(original, (session / name).read_bytes(), name)

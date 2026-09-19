@@ -9,7 +9,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
-import protocol5
+import protocol6
 from client_result import settle_action
 
 
@@ -27,10 +27,10 @@ class Client:
 
     def request(self, op, args=None, request_id=None, scope=None, version=None):
         self.counter += 1
-        req = protocol5.request(op, args, request_id or f"{self.prefix}-{self.counter}",
+        req = protocol6.request(op, args, request_id or f"{self.prefix}-{self.counter}",
                                 scope or self.scope, version or self.version)
         self.last_wire_request = req
-        self.last_send_bytes = protocol5.wire_bytes(req)
+        self.last_send_bytes = protocol6.wire_bytes(req)
         assert self.process.stdin.write(self.last_send_bytes) == len(self.last_send_bytes), "Incomplete request write"
         self.process.stdin.flush()
         deadline = time.monotonic() + 45
@@ -48,9 +48,11 @@ class Client:
         self.last_recv_bytes = bytes(line) + b"\n"
         self.last_wire_response = json.loads(line)
         assert self.last_wire_response.get("id") == req["id"], (req, self.last_wire_response)
-        result = protocol5.response(self.last_wire_response, op)
+        result = protocol6.response(self.last_wire_response, op)
         data = result.get("result", {})
-        if isinstance(data, dict) and result.get("ok") and protocol5.is_live_operation(op):
+        if op == "protocol.info" and result.get("ok") and isinstance(data, dict) and isinstance(data.get("request_prefix"), str):
+            self.prefix = data["request_prefix"]
+        if isinstance(data, dict) and result.get("ok") and protocol6.is_live_operation(op):
             self.scope = data.get("scope_id", self.scope)
             self.version = data.get("state_version") or self.version
         return result

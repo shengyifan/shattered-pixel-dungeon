@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Replay explicit protocol-4 public NDJSON through the production protocol-5 encoder.
+"""Historical protocol-4 to protocol-5 replay analysis.
+
+Reproducing that release requires its matching compiled protocol-5 harness and
+classpath. Current CLI 6 validation uses cli6_token_benchmark.py instead. Shared
+pure comparison helpers here remain covered by unit tests.
 
 This program reads only send.raw/recv.raw from the supplied transport directory.
 It does not import a gameplay controller or open profiles, saves or audit databases.
@@ -264,7 +268,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     legacy = load_module("explicit_protocol4_public_fixture", args.legacy_adapter)
     protect_legacy_opaque(legacy)
-    current = load_module("current_protocol5_assertion_adapter", Path(__file__).with_name("protocol5.py"))
+    current = load_module("recorded_protocol5_assertion_adapter", Path(__file__).with_name("fixtures") / "protocol5_public_adapter.py")
     encoder = tiktoken.get_encoding("o200k_base")
     def tokens(value):
         return len(encoder.encode(frame_bytes(value).decode("utf-8"), disallowed_special=()))

@@ -6,6 +6,7 @@ frame. It neither changes a save nor restores game fields. Private save bytes an
 scheduler proof are read only for assertions, never for gameplay choices.
 """
 import argparse
+from fixture_identity import fixture_canonical_identity
 import json
 from pathlib import Path
 import sqlite3
@@ -63,9 +64,10 @@ def original_pause_fixture(classpath, agent, profile):
                 for child in value:visit(child)
         visit(hero)
         assert len(objects)==1 and not objects[0].get("blessed",False),objects
-        assert "run:"+saved["run_uuid"]==scope
+        canonical_scope=fixture_canonical_identity(profile,"scope",scope)
+        assert "run:"+saved["run_uuid"]==canonical_scope
         with sqlite3.connect((profile/"audit/public.sqlite3").as_uri()+"?mode=ro",uri=True) as db:
-            receipts=db.execute("SELECT receipt_id,success FROM save_checkpoints WHERE scope_id=?",(scope,)).fetchall()
+            receipts=db.execute("SELECT receipt_id,success FROM save_checkpoints WHERE scope_id=?",(canonical_scope,)).fetchall()
             assert any(success for _,success in receipts),receipts
         (profile/"native-pause.armed").unlink()
         return {"scope_id":scope,"build_id":hello["result"]["build_id"],"original_pause":proof,

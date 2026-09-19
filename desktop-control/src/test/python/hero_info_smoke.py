@@ -7,11 +7,12 @@ import traceback
 import uuid
 from fixture_smoke import FixtureClient, act, freeze_runtime
 from menu_scenario_smoke import choose, return_to_title, ui
+from fixture_identity import fixture_context_matches
 
 
 def actual_window(client,state,name):
     rows=[json.loads(line) for line in (client.profile/"ui-assertions.jsonl").read_text().splitlines()]
-    row=next(row for row in reversed(rows) if row["state_version"]==state["state_version"])
+    row=next(row for row in reversed(rows) if fixture_context_matches(client.profile,row,state))
     assert any(value.endswith("."+name) for value in row["window_classes"]),row
 
 
@@ -62,7 +63,7 @@ def run_case(root,classpath,runtime_id,hero,details=False):
             if details and index>=2:result["tabs"][-1]["details"]=details_case(client,panel,tabs,index)
         returned=act(client,"ui.back")
         assert ui(returned)["scene"]=="HeroSelectScene" and not ui(returned)["modal"]
-        assert returned["scope_id"].startswith("menu:")
+        assert returned["scope_id"] and returned["scope_id"] == panel["scope_id"] and "hero" not in returned["observation"]
         result.update(ok=True,original_back=True,game_created=False)
     except Exception as error:result.update(ok=False,error=repr(error),traceback=traceback.format_exc())
     finally:

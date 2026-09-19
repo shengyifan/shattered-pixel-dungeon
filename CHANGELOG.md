@@ -4,6 +4,14 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.6.0.0
+
+- Introduces protocol 6 and schema 9 with durable profile-local typed handles and an independent CLI v6 profile; previous formats are rejected without migration.
+- Adds packaged `control --machine`: short request IDs, exact displayed-revision binding, complete-response validation, interruptible initial observations, bounded receipt settling and uncertainty recovery without action replay.
+- Compacts same-frame UI shapes/operations, verified empty inventory backgrounds, captured item names, passive text identities, repeated characters and redundant activity/save bindings while retaining current decision evidence and protected diagnostics.
+- Uses normal-weight terminal payloads and errors; only numbered SEND/RECV headings are bold, with shared bright-cyan coloring. The child remains the sole raw recorder and viewer owner.
+- Current implementation and executed validation are recorded in [CLI 6 implementation and validation](docs/cli6-implementation.md); map/log incrementality remains a separate evaluation.
+
 ## CLI.5.0.0
 
 - Introduces protocol 5 and schema 8 with a separate CLI v5 profile; previous profiles are refused before writes and are never migrated automatically.

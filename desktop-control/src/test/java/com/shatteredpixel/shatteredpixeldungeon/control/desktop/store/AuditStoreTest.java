@@ -81,8 +81,10 @@ public class AuditStoreTest {
             assertEquals(0, store.recoverInterrupted());
             Map<String, Object> unknown = store.getRequest("run:a", "action");
             assertEquals("UNKNOWN", unknown.get("status"));
-            assertEquals(Values.map("v", 5L, "id", "action", "s", "run:a", "err", "UNKNOWN"), unknown.get("response"));
-            assertEquals(Values.map("v", 5L, "id", "queued", "s", "run:a", "err", "NOT_EXECUTED"),
+            String publicScope=store.publicHandle("scope","run:a");
+            assertEquals("run:a",store.resolveHandle("scope",publicScope));
+            assertEquals(Values.map("v", 6L, "id", "action", "s", publicScope, "err", "UNKNOWN"), unknown.get("response"));
+            assertEquals(Values.map("v", 6L, "id", "queued", "s", publicScope, "err", "NOT_EXECUTED"),
                     store.getRequest("run:a", "queued").get("response"));
             assertNull(unknown.get("after_snapshot"));
             assertNotNull(unknown.get("before_snapshot"));
@@ -245,7 +247,7 @@ public class AuditStoreTest {
                 s.execute("UPDATE metadata SET value='1' WHERE key='schema_version'");
             }
         }
-        AuditSchemaEightTest.assertRejectedWithoutChanges(root);
+        AuditSchemaNineTest.assertRejectedWithoutChanges(root);
     }
 
     @Test public void realProcessCrashAfterAnExternalEffectIsUnknownAndNeverReplayable() throws Exception {

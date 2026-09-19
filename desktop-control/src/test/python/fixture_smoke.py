@@ -17,7 +17,8 @@ import uuid
 import zipfile
 from machine_smoke import Client
 from client_result import settle_action
-from protocol5 import is_live_operation
+from protocol6 import is_live_operation
+from fixture_identity import fixture_identity_matches, fixture_context_matches
 
 CLASSES = ["WARRIOR", "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"]
 SUBCLASSES = {
@@ -209,7 +210,8 @@ def checkpoint(profile, version):
         if path.exists():
             for line in path.read_text().splitlines():
                 row = json.loads(line)
-                if row["state_version"] == version:
+                kind = "activity" if str(row["state_version"]).startswith("activity:") else "revision"
+                if fixture_identity_matches(profile, kind, row["state_version"], version):
                     return row
         time.sleep(0.02)
     raise AssertionError("Missing internal test assertion checkpoint for completed public response")
@@ -223,8 +225,9 @@ def assert_gui_environment(profile, state):
         if path.exists():
             for line in path.read_text().splitlines():
                 row = json.loads(line)
-                if row["state_version"] == state["state_version"]:
-                    assert row["scope_id"] == state["scope_id"], row
+                kind = "activity" if str(row["state_version"]).startswith("activity:") else "revision"
+                if fixture_identity_matches(profile, kind, row["state_version"], state["state_version"]):
+                    assert fixture_context_matches(profile, row, state), row
                     display = state["observation"]["ui"]["display"]
                     assert row["language_code"] == display["language"] == os.environ.get("SPDCTL_TEST_LANGUAGE", "zh"), row
                     assert row["fullscreen"] is False and display["fullscreen"] is False, row
@@ -423,7 +426,7 @@ def spell_test(client, profile, name, empty=False):
                  and norm(a.get("label", "").split("\n")[0]) == expected]
     if empty:
         assert available, {"missing_original_dimmed_spell_control": name}
-        node = next(n for n in menu["observation"]["ui"]["controls"] if n["id"] == available[0]["control"])
+        node = next(n for n in menu["observation"]["ui"]["controls"] if n.get("id") == available[0]["control"])
         assert node.get("dimmed"), {"empty_spell_not_visually_dimmed": node}
         refused = act(client, "ui.activate", control=available[0]["control"])
         assert not has_action(refused, "cell.cancel")

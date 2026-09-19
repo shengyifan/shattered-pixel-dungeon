@@ -27,9 +27,9 @@ public final class Cli5TokenSamples {
                 Map<String,Object> canonical = (Map<String,Object>) row.get("canonical");
                 if(canonical != null && canonical.containsKey("cli_version")) {
                     canonical = new LinkedHashMap<>(canonical);
-                    canonical.put("cli_version", "CLI.5.0.0");
-                    canonical.put("protocol_version", 5);
-                    canonical.put("audit_schema_version", 8);
+                    canonical.put("cli_version", "CLI.6.0.0");
+                    canonical.put("protocol_version", 6);
+                    canonical.put("audit_schema_version", 9);
                     canonical.put("schema", CompactProtocol.info());
                 }
                 for(boolean expanded : Arrays.asList(false,true)) {
@@ -46,13 +46,13 @@ public final class Cli5TokenSamples {
             }
         }
         Files.writeString(destination.resolve("encoder-policy.json"), JsonCodec.encode(map(
-                "encoder","production CompactProtocol", "protocol",5,
+                "encoder","production CompactProtocol", "protocol",6,
                 "ordinary_source_kinds",new ArrayList<>(PublicTextSources.ORDINARY_KINDS),
                 "ordinary_source_origins",new ArrayList<>(PublicTextSources.ORDINARY_ORIGINS),
                 "historical_capture_hints",false,
                 "full_limit","Full projects only supplied public evidence; omitted historical descriptions and talents cannot be reconstructed"))+"\n");
         Files.writeString(destination.resolve("synthetic-fixtures.json"),JsonCodec.encode(fixtures())+"\n");
-        System.out.println("Projected " + count + " recorded public replies with production CLI 5 play/full views; historical capture hints are absent");
+        System.out.println("Projected " + count + " recorded public replies with production CLI 6 play/full views; historical capture hints are absent");
     }
 
     /** Explicit synthetic public records exercise capture hints that old wire frames cannot establish. */

@@ -5,6 +5,7 @@ The fixture is a fresh profile and is not evidence of a legitimate game completi
 Private data is never used to choose an action or a target.
 """
 import argparse
+from fixture_identity import fixture_canonical_identity
 import json
 import os
 from pathlib import Path
@@ -54,7 +55,7 @@ def main():
         activity = first["result"]
         assert activity["phase"] == "continuous_activity", activity
         token = activity["state_version"]
-        assert token.startswith("activity:"), token
+        assert fixture_canonical_identity(profile,"activity",token).startswith("activity:"), token
         assert any(a["action"] == "action.cancel" and a["target_id"] == original for a in activity["actions"])
         assert activity["observation"]["continuous_activity"]["kind"] == ("rest" if mode == "rest" else "travel")
         cancel_id = "cancel-" + uuid.uuid4().hex
@@ -66,8 +67,9 @@ def main():
             assert cancelled.get("error", {}).get("code") == "AUDIT_UNAVAILABLE", cancelled
             client.process.wait(timeout=25)
             with sqlite3.connect(profile / "audit/public.sqlite3") as db:
-                original_status = db.execute("SELECT status FROM requests WHERE scope_id=? AND id=?", (first["scope_id"], original)).fetchone()[0]
-                rejected_status = db.execute("SELECT status FROM requests WHERE scope_id=? AND id=?", (first["scope_id"], cancel_id)).fetchone()[0]
+                canonical_scope=fixture_canonical_identity(profile,"scope",first["scope_id"])
+                original_status = db.execute("SELECT status FROM requests WHERE scope_id=? AND id=?", (canonical_scope, original)).fetchone()[0]
+                rejected_status = db.execute("SELECT status FROM requests WHERE scope_id=? AND id=?", (canonical_scope, cancel_id)).fetchone()[0]
             assert original_status != "INTERRUPTED", original_status
             assert rejected_status != "COMPLETED", rejected_status
             report.update(mode=mode, verified=True, original_status=original_status, cancel_status=rejected_status,
@@ -100,7 +102,8 @@ def main():
                       cancel_status=cancelled["status"], hp_after=after["observation"]["hero"]["hp"], verified=True)
         client.finish()
         with sqlite3.connect(profile / "audit/public.sqlite3") as db:
-            rows = db.execute("SELECT response_json FROM exchanges WHERE scope_id=? AND id=?", (first["scope_id"], original)).fetchall()
+            canonical_scope=fixture_canonical_identity(profile,"scope",first["scope_id"])
+            rows = db.execute("SELECT response_json FROM exchanges WHERE scope_id=? AND id=?", (canonical_scope, original)).fetchall()
             assert len(rows) == 1 and json.loads(rows[0][0]) == first_wire, rows
         (profile / "cancellation-result.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
         print(json.dumps(report, ensure_ascii=False))

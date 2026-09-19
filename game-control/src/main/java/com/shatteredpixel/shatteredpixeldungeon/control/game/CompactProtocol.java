@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 
-/** Pure protocol 5 projection of already rendered public values. Never observes the engine. */
+/** Pure protocol 6 projection of already rendered public values. Never observes the engine. */
 public final class CompactProtocol {
     private static final Set<String> OPAQUE = new HashSet<>(Arrays.asList(
             "raw", "reply", "schema", "raw_request", "raw_bytes", "request_json", "response_json", "original_payload"));
@@ -21,7 +21,7 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> success(String id,String scope,String status,Object canonicalResult,boolean live,boolean sources,boolean full) {
-        Map<String,Object> response=map("v",5,"id",id);
+        Map<String,Object> response=map("v",6,"id",id);
         Map<?,?> original=canonicalResult instanceof Map?(Map<?,?>)canonicalResult:Collections.emptyMap();
         Object effectiveScope=live && original.get("scope_id")!=null?original.get("scope_id"):scope;
         if(effectiveScope!=null)response.put("s",effectiveScope);
@@ -33,6 +33,7 @@ public final class CompactProtocol {
             data.remove("s"); data.remove("rev"); projected=data;
         }
         response.put("data",projected);
+        if(live && !sources && !full)CompactStructures.compactBindings(response);
         List<Object> diagnostics=new ArrayList<>();
         collectDiagnostics(projected,"$.data",diagnostics);
         if(!diagnostics.isEmpty())response.put("pres",map("st","partial","diag",diagnostics));
@@ -40,7 +41,7 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> failure(String id,String scope,String code) {
-        Map<String,Object> response=map("v",5,"id",id);
+        Map<String,Object> response=map("v",6,"id",id);
         if(scope!=null)response.put("s",scope);
         response.put("err",code);
         return response;
@@ -51,8 +52,12 @@ public final class CompactProtocol {
     public static Object project(Object canonical,boolean sources,boolean full) {
         Object projected=projectValue(canonical,sources,sources||full,"");
         normalizeUi(projected,sources||full,Collections.emptyMap());
+        if(!sources && !full)CompactStructures.compact(projected);
         return projected;
     }
+
+    /** Decode only same-frame structure/inheritance, without canonical aliases or stateful lookups. */
+    public static Object expandStructures(Object projected) { return CompactStructures.expand(projected); }
 
     private static Object projectValue(Object canonical,boolean sources,boolean full,String context) {
         if(canonical instanceof List) {
@@ -335,10 +340,13 @@ public final class CompactProtocol {
                 if(hint.locator!=null) {
                     node.put("loc",hint.locator);
                     Map<String,Object> item=inventory.get(hint.locator);
-                    if(item!=null)for(String field:Arrays.asList("label","name"))
-                        if(node.containsKey(field) && Objects.equals(node.get(field),item.get("name"))
-                                && !protectedField(node,field) && !protectedField(item,"name")
-                                && fieldMetadataContained(node,field,item,"name"))removeField(node,field);
+                    if(item!=null && node.get("label") instanceof String && item.get("name") instanceof String
+                            && !protectedField(node,"label") && !protectedField(item,"name")
+                            && fieldMetadataContained(node,"label",item,"name")) {
+                        String name=(String)item.get("name"),label=(String)node.get("label");
+                        if(label.equals(name)) {removeField(node,"label");node.put("label",0);}
+                        else if(label.equals(CompactStructures.titleCase(name))) {removeField(node,"label");node.put("label",1);}
+                    }
                 }
                 Set<String> displayed=new HashSet<>();
                 if(!node.containsKey("display"))for(Map.Entry<String,String> display:hint.displayChildren.entrySet()) {
@@ -451,7 +459,7 @@ public final class CompactProtocol {
                         "coordinates","cell=y*w+x_start+offset","env","complete cell-indexed visible effects; omitted means empty; array is inline, integer indexes this map's effect_defs",
                         "effect_defs","each definition is a complete ordered effect list; indexes are zero-based and valid only in this observation"),
                 "entities",map("inline","ordinary entity object","reference",map("cell","cell binding","def","zero-based index into this observation's entity_defs"),
-                        "entity_defs","complete trap/container descriptor except cell; duplicates must be structurally identical including metadata",
+                        "entity_defs","complete trap/container/character descriptor except cell; duplicates must be structurally identical including metadata",
                         "dictionary_policy","play only, repeated values only, emitted only when minified UTF-8 bytes decrease; full/src/before/after remain inline; missing or out-of-range references are invalid"),
                 "defaults",map("view","play","item",map("qty",1,"equipped",false,"available",true,"type_known",true,"via","click"),
                         "ui_node",map("enabled",true,"dimmed",false),"ui",map("modal",false,"item_info",null),"item_knowledge","level/cursed: absent=not applicable; null=unknown; value=known",
@@ -460,10 +468,17 @@ public final class CompactProtocol {
                         "ordinary_origins",new ArrayList<>(PublicTextSources.ORDINARY_ORIGINS),
                         "retention","recursive user/external origins remain; unknown/unavailable/partial/clipped public evidence remains protected; src includes full rendered source trees without exposing undisplayed arguments"),
                 "ui_projection",map("nodes","current controls; ops advertise executable capabilities; acts contains global operations",
+                        "node_shapes","optional local field-name arrays; a node is an expanded object or [shape index, values...] in that shape's exact order, including null/false/zero; metadata-bearing nodes stay expanded",
+                        "op_defs","optional local complete operation lists; integer node ops indexes this table, array ops remains inline",
+                        "label","integer 0 inherits name from the unique current inv item at loc; 1 applies the English item title rule; strings are literal",
+                        "identity","unreferenced passive text leaves may omit id; all parent and executable bindings remain current",
                         "protected_actions","when whole-list metadata addresses acts, that complete list and its indexes remain alongside node ops as a diagnostic exception",
                         "display","optional status/extra/level are exact already displayed ItemSlot text; loc binds the same captured item by identity",
                         "deduplication","only proven empty placeholders or fully covered passive text leaves; actionable blanks, informative disabled controls, independent state and bars remain",
                         "full","all captured nodes and default fields; historical before/after also use full; raw/reply stay opaque"),
+                "same_frame",map("activity","omitted activity.rev inherits envelope rev; cancel rev/rid inherit current activity rev/rid",
+                        "persistence","omitted receipt s inherits envelope s; omitted src_s inherits that receipt s; integer saved indexes persistence.saves",
+                        "boundaries","only current response bindings; no cross-frame baselines; full/src/before/after stay expanded"),
                 "rules",map("action","s and rev required; use a fresh id", "cell",map("mode",Arrays.asList("act","examine","context"),"default","act"),
                         "click",map("g",Arrays.asList("click","right","middle","long"),"default","click"),
                         "choose",map("opt","zero-based option index","alt","optional boolean"),
@@ -554,7 +569,7 @@ public final class CompactProtocol {
     private static Map<String,Object> entityDescriptor(Object raw) {
         if(!(raw instanceof Map))return null;
         Map<String,Object> entity=cast(raw);
-        if(!Arrays.asList("trap","container").contains(entity.get("kind")) || !entity.containsKey("cell")
+        if(!Arrays.asList("trap","container","character").contains(entity.get("kind")) || !entity.containsKey("cell")
                 || annotationReferences(entity,"cell"))return null;
         Map<String,Object> descriptor=new LinkedHashMap<>(entity);descriptor.remove("cell");
         return descriptor;

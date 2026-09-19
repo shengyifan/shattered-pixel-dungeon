@@ -17,11 +17,11 @@ import java.util.stream.Stream;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.Assert.*;
 
-public class AuditSchemaEightTest {
+public class AuditSchemaNineTest {
     @Rule public TemporaryFolder temporary = new TemporaryFolder();
 
     @Test public void everyOlderSchemaIsRejectedBeforeAnyDatabaseOrSidecarChanges() throws Exception {
-        for (int version = 1; version <= 7; version++) {
+        for (int version = 1; version <= 8; version++) {
             Path root = temporary.newFolder("schema-" + version).toPath();
             for (String name : new String[]{"public", "internal"}) {
                 try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + root.resolve(name + ".sqlite3"));
@@ -36,18 +36,18 @@ public class AuditSchemaEightTest {
         }
     }
 
-    @Test public void completeSchemaSevenPairIsRejectedWithoutRecoveringItsPendingRequests() throws Exception {
-        Path root = temporary.newFolder("complete-schema-seven").toPath();
+    @Test public void completeSchemaNinePairIsRejectedWithoutRecoveringItsPendingRequests() throws Exception {
+        Path root = temporary.newFolder("complete-schema-eight").toPath();
         try (AuditStore store = new AuditStore(root)) {
             String scope = store.menuScope();
             AuditStore.Attempt pending = store.begin(scope, "pending-old-action", "wait", "old-wire-evidence");
             store.markExecuting(pending, "old-revision", map("public", "before"), map("private", "before"));
         }
-        // Schema 7 has the same physical tables; only its version establishes the protocol boundary.
+        // An older version marker must reject the pair before pending recovery, even with current physical tables.
         for (String name : new String[]{"public", "internal"}) {
             try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + root.resolve(name + ".sqlite3"));
                  Statement statement = db.createStatement()) {
-                statement.execute("UPDATE metadata SET value='7' WHERE key='schema_version'");
+                statement.execute("UPDATE metadata SET value='8' WHERE key='schema_version'");
             }
         }
         assertRejectedWithoutChanges(root);
@@ -72,13 +72,13 @@ public class AuditSchemaEightTest {
         assertRejectedWithoutChanges(two, "AUDIT_PAIR_MISSING");
     }
 
-    @Test public void freshSchemaEightSeparatesRequestExecutionFromWirePresentation() throws Exception {
+    @Test public void freshSchemaNineSeparatesRequestExecutionFromWirePresentation() throws Exception {
         Path root = temporary.newFolder().toPath();
         try (AuditStore store = new AuditStore(root)) {
             String scope = store.menuScope();
             AuditStore.Attempt attempt = store.begin(scope, "partial", "action.execute", "{}");
             store.markExecuting(attempt, "v1", map("before", true), map("private", "before"));
-            Map<String,Object> partial = map("v", 5L, "st", "completed", "pres", map("st", "partial"));
+            Map<String,Object> partial = map("v", 6L, "st", "completed", "pres", map("st", "partial"));
             store.complete(attempt, "COMPLETED", partial, map("canonical", "unrendered"), map("private", "after"), null);
             store.event(scope, "game.log", map("entries", java.util.Collections.emptyList(), "presentation", map("status", "partial")));
             assertEquals("COMPLETED", store.getRequest(scope, "partial").get("status"));
@@ -88,7 +88,7 @@ public class AuditSchemaEightTest {
             for (Path file : new Path[]{store.publicDatabase(), store.internalDatabase()}) {
                 try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + file); Statement statement = db.createStatement()) {
                     try (ResultSet rows = statement.executeQuery("SELECT value FROM metadata WHERE key='schema_version'")) {
-                        assertTrue(rows.next()); assertEquals("8", rows.getString(1));
+                        assertTrue(rows.next()); assertEquals("9", rows.getString(1));
                     }
                     for (String table : new String[]{"requests", "exchanges", "events"}) {
                         try (ResultSet rows = statement.executeQuery("SELECT presentation_status FROM " + table)) {
@@ -103,7 +103,7 @@ public class AuditSchemaEightTest {
         }
     }
 
-    @Test public void aSchemaEightMarkerCannotRecreateMissingAuditTables() throws Exception {
+    @Test public void aSchemaNineMarkerCannotRecreateMissingAuditTables() throws Exception {
         Path root=temporary.newFolder().toPath();
         try(AuditStore ignored=new AuditStore(root)) { }
         for(String name:new String[]{"public","internal"})
@@ -118,9 +118,9 @@ public class AuditSchemaEightTest {
             String scope = store.menuScope();
             AuditStore.Attempt attempt = store.begin(scope, "pending", "action.execute", "{}");
             store.markExecuting(attempt, "v1", map(), map());
-            Map<String,Object> first = map("v", 5L, "st", "in_progress", "pres", map("st", "partial"));
+            Map<String,Object> first = map("v", 6L, "st", "in_progress", "pres", map("st", "partial"));
             store.respondPending(attempt, first, map(), map());
-            Map<String,Object> last = map("v", 5L, "st", "completed");
+            Map<String,Object> last = map("v", 6L, "st", "completed");
             store.settle(attempt, "COMPLETED", last, map(), map(), null);
             assertEquals(last, store.getRequest(scope, "pending").get("response"));
             assertEquals("complete", store.getRequest(scope, "pending").get("presentation_status"));

@@ -27,14 +27,14 @@ def panel_title(state):
 
 def slider_roundtrip(client, state, needle):
     action = next(a for a in controls(state, "ui.value") if needle in a.get("label", ""))
-    node = next(n for n in nodes(state) if n["id"] == action["control"])
+    node = next(n for n in nodes(state) if n.get("id") == action["control"])
     original = node["value"]
     target = node["minimum"] if original != node["minimum"] else node["maximum"]
     changed = act(client, "ui.value", control=node["id"], value=target)
-    current = next(n for n in nodes(changed) if n["id"] == node["id"])
+    current = next(n for n in nodes(changed) if n.get("id") == node["id"])
     assert current["value"] == target
     restored = act(client, "ui.value", control=node["id"], value=original)
-    assert next(n for n in nodes(restored) if n["id"] == node["id"])["value"] == original
+    assert next(n for n in nodes(restored) if n.get("id") == node["id"])["value"] == original
     return restored, {"label": needle, "old": original, "tested": target, "restored": True}
 
 

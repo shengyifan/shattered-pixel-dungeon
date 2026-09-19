@@ -431,7 +431,9 @@ static int read_session_file(int directory, const char *name) {
     return fd;
 }
 typedef enum { PLAIN, KEY, STRING, NUMBER, LITERAL, PUNCT, SEND_COLOR, RECV_COLOR, ERROR_COLOR } TextColor;
-static const char *ansi_colors[] = {"\033[0;1;39m", "\033[1;94m", "\033[1;92m", "\033[1;93m", "\033[1;95m", "\033[1;39m", "\033[1;96m", "\033[1;92m", "\033[1;91m"};
+/* Every payload style explicitly clears bold inherited from a record heading.
+ * SEND and RECV alone share the bold, bright-cyan first-line style. */
+static const char *ansi_colors[] = {"\033[0;39m", "\033[0;94m", "\033[0;92m", "\033[0;93m", "\033[0;95m", "\033[0;39m", "\033[0;1;96m", "\033[0;1;96m", "\033[0;91m"};
 typedef struct {
     unsigned char tail[4];
     size_t tail_count, depth, capacity;
@@ -902,30 +904,52 @@ int main(int argc, char **argv) {
     if (!forward) return fail("spdctl: ALLOCATION_FAILED\n", 1);
     for (int i = 0; i < engine_count; i++) forward[i] = engine[i];
     int forward_count = engine_count;
-    bool run = argc > first && !strcmp(argv[first], "run"), machine = false, terminal = true;
+    bool run = argc > first && !strcmp(argv[first], "run");
+    bool control = argc > first && !strcmp(argv[first], "control"), machine = false, terminal = true;
+    bool machine_mode = run || control;
     const char *home = getenv("HOME"), *selected = getenv("SPDCTL_PROFILE"), *trace_root = NULL;
     char default_profile[PATH_MAX], default_trace[PATH_MAX], profile[PATH_MAX];
-    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v5", home) >= PATH_MAX
+    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v6", home) >= PATH_MAX
         || snprintf(default_trace, sizeof(default_trace), "%s/Library/Logs/Shattered Pixel Dungeon CLI/transport", home) >= PATH_MAX)
         return fail("spdctl: HOME_UNAVAILABLE\n", 64);
     if (!selected) selected = default_profile;
     for (int i = first; i < argc; i++) {
-        if (run && !strcmp(argv[i], "--no-terminal")) terminal = false;
-        else if (run && !strcmp(argv[i], "--trace-dir")) {
+        if (machine_mode && !strcmp(argv[i], "--no-terminal")) {
+            terminal = false;
+            if (control) forward[forward_count++] = argv[i];
+        } else if (machine_mode && !strcmp(argv[i], "--trace-dir")) {
+            if (control) forward[forward_count++] = argv[i];
             if (++i >= argc || argv[i][0] != '/') return fail("spdctl: ABSOLUTE_TRACE_DIRECTORY_REQUIRED\n", 64);
             trace_root = argv[i];
+            if (control) forward[forward_count++] = argv[i];
         } else {
             forward[forward_count++] = argv[i];
-            if (run && !strcmp(argv[i], "--machine")) machine = true;
-            else if (run && !strcmp(argv[i], "--data-dir")) {
+            if (machine_mode && !strcmp(argv[i], "--machine")) machine = true;
+            else if (machine_mode && !strcmp(argv[i], "--data-dir")) {
                 if (++i >= argc || argv[i][0] != '/') return fail("spdctl: ABSOLUTE_PROFILE_REQUIRED\n", 64);
                 selected = argv[i]; forward[forward_count++] = argv[i];
-            } else if (run && i != first) return fail("spdctl: UNKNOWN_LAUNCHER_ARGUMENT\n", 64);
+            } else if (machine_mode && i != first) return fail("spdctl: UNKNOWN_LAUNCHER_ARGUMENT\n", 64);
         }
     }
-    if (run && !machine) return fail("spdctl: MACHINE_MODE_REQUIRED\n", 64);
-    if (run && (!canonical_path(selected, profile) || setenv("SPDCTL_PROFILE", profile, 1) != 0))
+    if (machine_mode && !machine) return fail("spdctl: MACHINE_MODE_REQUIRED\n", 64);
+    if (machine_mode && (!canonical_path(selected, profile) || setenv("SPDCTL_PROFILE", profile, 1) != 0))
         return fail("spdctl: ABSOLUTE_PROFILE_REQUIRED\n", 64);
+    if (control) {
+        /* Freeze the actual native executable and exact argv vector. The JVM
+         * controller starts its run child through this relay; development
+         * classpaths must not silently fall back to a packaged sibling JVM. */
+        char native[PATH_MAX], count[32], key[64];
+        if (!self_path(native) || setenv("SPDCTL_NATIVE_LAUNCHER", native, 1) != 0)
+            return fail("spdctl: CONTROLLER_CONTEXT_UNAVAILABLE\n", 1);
+        snprintf(count, sizeof(count), "%d", engine_count);
+        if (setenv("SPDCTL_ENGINE_ARGC", count, 1) != 0)
+            return fail("spdctl: CONTROLLER_CONTEXT_UNAVAILABLE\n", 1);
+        for (int i = 0; i < engine_count; i++) {
+            snprintf(key, sizeof(key), "SPDCTL_ENGINE_ARG_%d", i);
+            if (setenv(key, engine[i], 1) != 0)
+                return fail("spdctl: CONTROLLER_CONTEXT_UNAVAILABLE\n", 1);
+        }
+    }
     if (!run) {
         execv(forward[0], forward); free(forward);
         return fail("spdctl: BOOTSTRAP_EXEC_FAILED\n", 1);

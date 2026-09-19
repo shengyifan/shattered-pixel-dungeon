@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Kill the real game JVM at test-only bytecode barriers, then use public recovery APIs."""
 import argparse
+from fixture_identity import fixture_canonical_identity
 import json
 import os
 from pathlib import Path
@@ -9,7 +10,7 @@ import sqlite3
 import threading
 import time
 import uuid
-import protocol5
+import protocol6
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game as fixture_start
 from machine_smoke import reach_game
 from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
@@ -49,7 +50,8 @@ def database_record(profile, scope, request_id):
         # Opens and lets SQLite recover hot rollback journals before application recovery.
         with sqlite3.connect(profile / "audit" / (name+".sqlite3")) as db:
             assert db.execute("PRAGMA integrity_check").fetchone()[0]=="ok"
-            row=db.execute("SELECT status,response_json,before_snapshot,after_snapshot,target_scope FROM requests WHERE scope_id=? AND id=?",(scope,request_id)).fetchone()
+            canonical_scope=fixture_canonical_identity(profile,"scope",scope)
+            row=db.execute("SELECT status,response_json,before_snapshot,after_snapshot,target_scope FROM requests WHERE scope_id=? AND id=?",(canonical_scope,request_id)).fetchone()
             rows.append((row,db.execute("SELECT value FROM metadata WHERE key='pair_generation'").fetchone()))
     assert rows[0]==rows[1],rows
     return rows[0][0]
@@ -81,7 +83,7 @@ def run_case(root,classpath,agent,template,runtime_id,stage):
         scope=client.scope
         request_id="crash-"+uuid.uuid4().hex
         before_files={str(p.relative_to(profile)):p.read_bytes() for p in profile.glob("game*/*.dat")}
-        request=protocol5.request("action.execute", action, request_id, scope, state["state_version"])
+        request=protocol6.request("action.execute", action, request_id, scope, state["state_version"])
         write_json(profile/"target-request.json",request)
         (profile/"barrier.armed").write_text(request_id)
         target_result={}

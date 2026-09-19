@@ -138,7 +138,7 @@ def test_frozen(client):
             break
         state = act(client, "ui.activate", control=control)
     mode = next(a for a in state["actions"] if a["action"] == "ui.value" and "Interface Mode" in a.get("label", ""))
-    old = next(n["value"] for n in state["observation"]["ui"]["controls"] if n["id"] == mode["control"])
+    old = next(n["value"] for n in state["observation"]["ui"]["controls"] if n.get("id") == mode["control"])
     start = time.monotonic()
     rebuilt = act(client, "ui.value", control=mode["control"], value=0 if old != 0 else 2)
     elapsed = time.monotonic() - start

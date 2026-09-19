@@ -49,7 +49,7 @@ def note_edit_title_action(state, title):
         return named[0], None
     ui = state["observation"]["ui"]
     assert state["phase"] == "awaiting_input" and ui["scene"] == "GameScene" and ui["modal"], ui
-    nodes = {node["id"]: node for node in ui["controls"]}
+    nodes = {node["id"]: node for node in ui["controls"] if "id" in node}
     assert len(nodes) == len(ui["controls"]), "Duplicate public controls cannot establish a note context"
     roots = [node for node in nodes.values() if node.get("role") == "window" and not node.get("parent")]
     assert len(roots) == 1 and sum(node.get("role") == "window" for node in nodes.values()) == 1, roots
@@ -133,7 +133,7 @@ def open_notes(client):
 
 def item_note_button(client):
     opened = act(client, "inventory.open", locator="equipment.weapon")
-    nodes = {node["id"]: node for node in opened["observation"]["ui"]["controls"]}
+    nodes = {node["id"]: node for node in opened["observation"]["ui"]["controls"] if "id" in node}
     candidates = [candidate for candidate in controls(opened) if not candidate.get("label")
                   and nodes[candidate["control"]].get("role") == "button"]
     assert len(candidates) == 1, {"unlabelled_item_note_controls": candidates}
@@ -200,7 +200,7 @@ def open_saved_note(client, title, item_shortcut):
         opened = item_note_button(client)
     else:
         state = open_notes(client)
-        nodes = {node["id"]: node for node in state["observation"]["ui"]["controls"]}
+        nodes = {node["id"]: node for node in state["observation"]["ui"]["controls"] if "id" in node}
         entries = [candidate for candidate in controls(state, "ui.select") if nodes[candidate["control"]].get("role") == "entry"]
         assert entries, "The custom-note section must expose its original note entry"
         # This fixture creates exactly one note. Its original icon is the first entry

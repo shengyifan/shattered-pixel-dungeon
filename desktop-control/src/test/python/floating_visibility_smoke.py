@@ -30,7 +30,7 @@ def outside(state):
             for child in value: yield from strings(child)
     # Search the whole public UI, including any future cached/raw-text fields.
     assert not any(value.casefold() in TARGETS or value in {"战士", "闪避"} for value in strings(visible_ui)), nodes
-    return {node["id"] for node in nodes}
+    return {node["id"] for node in nodes if "id" in node}
 
 
 def main():

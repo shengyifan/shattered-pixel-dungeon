@@ -24,10 +24,10 @@ import java.util.regex.Pattern;
 import static org.junit.Assert.*;
 
 /** Current documentation is executable public protocol evidence, never a game fixture. */
-public class Cli5DocumentationTest {
+public class Cli6DocumentationTest {
     private static final Pattern CODE = Pattern.compile("`([^`]+)`");
     private static final Pattern FENCE = Pattern.compile("(?ms)^```(json|python)([^\\r\\n]*)\\r?\\n(.*?)^```[ \\t]*$");
-    private static final List<String> CLI5_FIELDS = Arrays.asList(
+    private static final List<String> ALIASED_FIELDS = Arrays.asList(
             "max_experience", "max_hp", "subclass_name", "talent_points_available",
             "details_via", "shortcut_action", "cell_prompt", "continuous_activity",
             "snapshot_status", "inspected_item", "saves_during_request", "last_save",
@@ -87,13 +87,13 @@ public class Cli5DocumentationTest {
     @Test public void currentEntryPointsDeclareTheProductionVersionsAndIndependentProfile() throws Exception {
         int protocol = ControlRequest.PROTOCOL_VERSION;
         Map<String, Object> build = BuildCatalog.current();
-        assertEquals("This suite protects the CLI 5 contract", 5, protocol);
-        assertEquals(8, AuditStore.SCHEMA_VERSION);
+        assertEquals("This suite protects the CLI 6 contract", 6, protocol);
+        assertEquals(9, AuditStore.SCHEMA_VERSION);
         assertEquals(protocol, ((Number) build.get("protocol_version")).intValue());
         assertEquals(AuditStore.SCHEMA_VERSION, ((Number) build.get("audit_schema_version")).intValue());
         String cli = (String) build.get("cli_version");
         assertNotNull("The production build catalog must supply cli_version", cli);
-        assertTrue(cli.startsWith("CLI.5."));
+        assertTrue(cli.startsWith("CLI.6."));
 
         String help = document("docs/cli-help.md");
         assertTrue("The help introduction must declare the current CLI version", firstSection(help).contains(cli));
@@ -107,16 +107,16 @@ public class Cli5DocumentationTest {
         hasVersion("Project agreements", agreements, "CLI", protocol);
         hasVersion("Project agreements", agreements, "protocol", protocol);
         hasVersion("Project agreements", agreements, "schema", AuditStore.SCHEMA_VERSION);
-        assertTrue("The current implementation reference must exist", Files.isRegularFile(root().resolve("docs/cli5-implementation.md")));
+        assertTrue("The current implementation reference must exist", Files.isRegularFile(root().resolve("docs/cli6-implementation.md")));
     }
 
     @Test public void allSixteenNewAliasesMatchTheProductionWireAndInfoTables() throws Exception {
         List<Set<String>> rows = tableCodeRows(document("docs/cli-help.md"));
         Map<?, ?> advertised = object(CompactProtocol.info().get("aliases"));
-        assertEquals(16, CLI5_FIELDS.size());
-        for (String canonical : CLI5_FIELDS) {
+        assertEquals(16, ALIASED_FIELDS.size());
+        for (String canonical : ALIASED_FIELDS) {
             String wire = WireNames.field(canonical);
-            assertNotEquals("A CLI 5 alias must exist for " + canonical, canonical, wire);
+            assertNotEquals("A CLI 6 alias must exist for " + canonical, canonical, wire);
             assertEquals("info must advertise the same alias", canonical, advertised.get(wire));
             assertTrue("Help needs a table row mapping " + canonical + " to " + wire, hasRow(rows, canonical, wire));
         }
@@ -179,6 +179,17 @@ public class Cli5DocumentationTest {
             if (!(example instanceof Map)) continue;
             Map<?, ?> request = object(example);
             if (!request.containsKey("op") || request.containsKey("st") || request.containsKey("err") || request.containsKey("data")) continue;
+            if (!request.containsKey("v")) {
+                // The packaged controller accepts intents; its inner child alone sees direct wire frames.
+                assertFalse("Controller examples do not allocate their own id",request.containsKey("id"));
+                assertFalse("Controller examples do not substitute their own scope",request.containsKey("s"));
+                String operation=(String)request.get("op");
+                assertTrue("Controller operation must be advertised or local settle",
+                        "settle".equals(operation) || WireNames.operations().contains(operation));
+                if (!"settle".equals(operation) && !WireNames.isQuery(operation))
+                    assertTrue("Controller actions must bind an explicit shown revision",request.get("rev") instanceof String);
+                continue;
+            }
             ControlRequest parsed = ControlRequest.parse(JsonCodec.encode(request));
             assertEquals(ControlRequest.PROTOCOL_VERSION, parsed.protocolVersion);
             operations.add(parsed.wireOp);
@@ -313,7 +324,7 @@ public class Cli5DocumentationTest {
     }
 
     @Test public void bundledHelpIsByteForByteTheAuthoritativeDocument() throws Exception {
-        try (InputStream resource = Cli5DocumentationTest.class.getResourceAsStream("/cli-help.md")) {
+        try (InputStream resource = Cli6DocumentationTest.class.getResourceAsStream("/cli-help.md")) {
             assertNotNull("The runtime must include cli-help.md", resource);
             assertArrayEquals(Files.readAllBytes(root().resolve("docs/cli-help.md")), resource.readAllBytes());
         }
@@ -322,7 +333,7 @@ public class Cli5DocumentationTest {
     @Test public void currentEntryPointLinksResolveWithinTheCheckout() throws Exception {
         Pattern links = Pattern.compile("\\[[^\\]\\r\\n]*\\]\\(([^)\\s]+)\\)");
         for (String name : Arrays.asList("README.md", "AGENTS.md", "docs/README.md", "docs/cli.md",
-                "docs/cli-help.md", "docs/cli-playthrough-client.md", "docs/cli5-implementation.md")) {
+                "docs/cli-help.md", "docs/cli-playthrough-client.md", "docs/cli6-implementation.md")) {
             Matcher link = links.matcher(document(name));
             while (link.find()) {
                 String target = link.group(1);
@@ -333,6 +344,6 @@ public class Cli5DocumentationTest {
             }
         }
         for (String name : Arrays.asList("README.md", "docs/README.md", "docs/cli.md"))
-            assertTrue(name + " must link to the current implementation record", document(name).contains("cli5-implementation.md"));
+            assertTrue(name + " must link to the current implementation record", document(name).contains("cli6-implementation.md"));
     }
 }
