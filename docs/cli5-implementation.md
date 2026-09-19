@@ -1,5 +1,10 @@
 # CLI 5 implementation and validation
 
+> Cleanup notice (2026-09-19): the generated build trees, raw fixture evidence and
+> benchmark outputs referenced below were removed in the subsequent clean rebuild.
+> The recorded results below remain historical evidence for this implementation batch;
+> current package verification is in [the CLI 5 clean-rebuild record](cli-rebuild-5.0.0-20260919.md).
+
 Release contract: CLI.5.0.0, protocol 5, audit schema 8, base game 3.3.8.
 The authoritative English interface is [cli-help.md](cli-help.md); operational
 requirements are in [AGENTS.md](../AGENTS.md). The default CLI v5 profile is separate
