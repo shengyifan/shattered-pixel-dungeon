@@ -2,6 +2,7 @@
 
 Current release: **CLI.6.0.0 / protocol 6 / audit schema 9**, base game **3.3.8**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI 6 implementation and validation](cli6-implementation.md) and the repository [agent working agreements](../AGENTS.md).
+The latest documentation/package verification is the [CLI 6 clean rebuild](cli-rebuild-6.0.0-20260920.md); prior implementation artifacts were removed as requested.
 
 ## Start an independent v6 profile
 

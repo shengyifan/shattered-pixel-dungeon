@@ -8,6 +8,7 @@ This manual is printed by `spdctl --help` and bundled with the application.
 ```sh
 spdctl control --machine
 spdctl control --machine --data-dir "/absolute/path/to/profile"
+spdctl control --machine --no-terminal --trace-dir "/absolute/path/to/records"
 spdctl run --machine
 spdctl run --machine --data-dir "/absolute/path/to/profile"
 spdctl run --machine --no-terminal --trace-dir "/absolute/path/to/records"
@@ -35,7 +36,8 @@ These are **controller intents**, not direct wire requests. Omit `v/id`; the
 controller supplies them and binds each action's explicit `rev` to the exact scope
 of that already displayed observation. Example handles are illustrative. It never
 refreshes a stale action onto a new observation, chooses targets, or replays work.
-Queries use the current scope; history queries can name an explicit known `s`.
+Queries default to the current scope; history queries can name an explicit known
+`s`. Historical replies never update the controller's live revision/scope binding.
 
 An initial `in_progress` is emitted immediately. Local `settle` (not the gameplay
 `wait`) polls only small receipts at 100 ms intervals, up to 5 seconds by default;
@@ -43,6 +45,10 @@ An initial `in_progress` is emitted immediately. Local `settle` (not the gamepla
 Its `controller:"settle"` wrapper keeps `outcome` (the original action's receipt),
 optional `discovery`, and `observation` (fresh current state) separate. `st:"pending"`
 means more settling or cancellation may follow, not permission to repeat the action.
+Use the nested observation's own `s/rev`, not the wrapper's original request scope.
+The bundled controller must finish pending actions through `settle`; manually
+querying `req` or `state` does not clear its pending-action bookkeeping. An explicit
+`rid` must identify an action submitted by this controller.
 Local failures have `controller:"error"`, `err`, and the original request when known.
 Lost/invalid replies block new game actions until the original outcome is established.
 After complete-frame response loss, exceptional recovery may query the original
@@ -52,7 +58,11 @@ If it accompanies a normal response, the controller uses
 `{controller:"response",response:<current>,late_responses:[...]}`. Settling preserves
 the original `transport_error` and any `initial_error` alongside recovery results.
 The compact child data, source markers and immutable history are not expanded or
-rewritten for model display. Successful quit waits for the child to exit.
+rewritten for model display. Unwrap `controller:"response"` before decoding its
+current `response`; `late_responses` are historical evidence, not live bindings.
+Successful quit waits for the child to exit; `controller:"exit"` reports an exit
+wait or failure without creating a new game observation. Transport files contain
+the actual child requests/replies, not controller intents or local wrappers.
 
 The remaining request examples describe the direct `run --machine` interface.
 That mode starts the GUI and serial NDJSON connection in one game JVM. Keep the
@@ -548,7 +558,7 @@ report `saved` when available. In-memory action completion and persistence are
 separate facts. Close prompts before `quit`; read its response and await process exit.
 EOF requests ordinary lifecycle shutdown but cannot accept unresolved choices.
 
-Restart with the same v5 profile, perform a new handshake and continue the displayed
+Restart with the same v6 profile, perform a new handshake and continue the displayed
 saved game. Scope and request-ID history persist, but old process revisions do not.
 Do not replay successful actions to make a restored save catch up with history.
 Audit transactions do not include game save files. Public and internal SQLite stores
@@ -623,29 +633,32 @@ not confirmed.
 
 ## 8. Minimal complete-response client
 
-This Python example buffers the complete response independently of any tool display
-limit, validates its ID, and only prints selected state fields. Adapt its controller
-loop while keeping the same process and pipes open.
+Prefer the bundled controller above. This direct-client Python example buffers the
+complete response independently of any tool display limit, validates the response
+envelope, and only prints selected state fields. The child records all raw bytes.
+Adapt the loop while keeping the same process and pipes open; exceptions preserve
+the original request identity and never authorize replay.
 
 ```python
 import json
+import re
 import subprocess
 import time
 import uuid
 
 launcher = "/absolute/path/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl"
-profile = "/absolute/path/to/new-v5-profile"
+profile = "/absolute/path/to/new-v6-profile"
 process = subprocess.Popen(
     [launcher, "run", "--machine", "--data-dir", profile],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
 )
-prefix = uuid.uuid4().hex[:12]
+prefix = "h" + uuid.uuid4().hex  # One random bootstrap prefix before info.
 counter = 0
 
 def request(op, *, scope=None, rev=None, **params):
     global counter
     counter += 1
-    message = {"v": 6, "id": f"{prefix}-{counter}", "op": op, **params}
+    message = {"v": 6, "id": f"{prefix}.{counter}", "op": op, **params}
     if scope is not None:
         message["s"] = scope
     if rev is not None:
@@ -654,12 +667,22 @@ def request(op, *, scope=None, rev=None, **params):
     process.stdin.flush()
     line = process.stdout.readline()  # No application byte limit; reads through LF.
     if not line:
-        raise RuntimeError("Machine session ended before its response")
+        raise RuntimeError(("Machine session ended before its response", message["id"]))
     if not line.endswith(b"\n"):
         raise RuntimeError(("Incomplete response; preserve request identity", message["id"], line))
-    response = json.loads(line)
-    if response.get("id") != message["id"]:
-        raise RuntimeError("Unexpected response ID")
+    try:
+        response = json.loads(line.decode("utf-8", errors="strict"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise RuntimeError(("Invalid complete response; preserve request identity", message["id"])) from error
+    if not isinstance(response, dict) or type(response.get("v")) is not int or response["v"] != 6 or response.get("id") != message["id"]:
+        raise RuntimeError(("Unexpected response identity/version", message["id"], response))
+    if ("st" in response) == ("err" in response):
+        raise RuntimeError(("Expected exactly one of st or err", message["id"], response))
+    if "err" in response:
+        if not isinstance(response["err"], str) or not response["err"]:
+            raise RuntimeError(("Invalid error response", message["id"], response))
+    elif response["st"] not in ("completed", "awaiting_input", "in_progress", "interrupted"):
+        raise RuntimeError(("Invalid response status", message["id"], response))
     return response
 
 def observe_after_action(initial, original_scope, action_name):
@@ -707,6 +730,10 @@ try:
     hello = request("info")
     if "err" in hello:
         raise RuntimeError(hello)
+    prefix = hello["data"].get("request_prefix")
+    if not isinstance(prefix, str) or not re.fullmatch(r"t[1-9a-z][0-9a-z]*", prefix):
+        raise RuntimeError(("Invalid request prefix", hello))
+    counter = 0  # This newly allocated session prefix has not been used yet.
     state = request("state", scope=hello["s"])
     if "err" in state:
         raise RuntimeError(state)

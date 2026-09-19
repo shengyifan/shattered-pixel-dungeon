@@ -1,5 +1,10 @@
 # CLI 6: offline incrementality evaluation
 
+> Cleanup notice (2026-09-20): generated benchmark outputs referenced here were
+> removed with the old build trees. The measurements remain the recorded results
+> of that experiment; the source transport is preserved, and the reproduction
+> command below can generate a new report. See the [clean-rebuild record](cli-rebuild-6.0.0-20260920.md).
+
 This report evaluates a possible future protocol direction. CLI 6 still emits
 self-contained observations; no map, inventory or log deltas are enabled.
 

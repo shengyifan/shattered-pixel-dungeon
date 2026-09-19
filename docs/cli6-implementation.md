@@ -1,5 +1,10 @@
 # CLI 6 implementation and validation
 
+> Cleanup notice (2026-09-20): the generated build trees and fixture/replay JSON
+> named below were removed during the subsequent clean rebuild. These results
+> remain historical evidence for the implementation batch. Current package and
+> documentation verification is in [the clean-rebuild record](cli-rebuild-6.0.0-20260920.md).
+
 Release contract: CLI.6.0.0, protocol 6, audit schema 9, base game 3.3.8.
 The authoritative interface is [cli-help.md](cli-help.md). The default CLI v6
 profile is independent; previous profiles are refused before writes.

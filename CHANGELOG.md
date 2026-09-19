@@ -6,6 +6,7 @@
 
 ## CLI.6.0.0
 
+- Refreshes the protocol help and agent agreement against the shipped controller, and records the [2026-09-20 clean macOS rebuild](docs/cli-rebuild-6.0.0-20260920.md), old generated-data removal, package verification and branch push. This documentation-only batch does not change the CLI version or runtime behavior.
 - Introduces protocol 6 and schema 9 with durable profile-local typed handles and an independent CLI v6 profile; previous formats are rejected without migration.
 - Adds packaged `control --machine`: short request IDs, exact displayed-revision binding, complete-response validation, interruptible initial observations, bounded receipt settling and uncertainty recovery without action replay.
 - Compacts same-frame UI shapes/operations, verified empty inventory backgrounds, captured item names, passive text identities, repeated characters and redundant activity/save bindings while retaining current decision evidence and protected diagnostics.
