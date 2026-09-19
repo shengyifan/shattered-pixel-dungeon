@@ -1,7 +1,7 @@
-# spdctl: compact game control (protocol 4)
+# spdctl: compact game control (protocol 5)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.4.0.1, protocol 4, and base game 3.3.8.
+`spdctl --version` reports CLI.5.0.0, protocol 5, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -23,14 +23,14 @@ There is no network endpoint, background response stream, or attachment to anoth
 Finder-launched instance. Screenshots, window focus and simulated OS input are not
 needed to operate this connection.
 
-Protocol 4 accepts only the short, flat format below. Older request envelopes,
+Protocol 5 accepts only the short, flat format below. Older request envelopes,
 operation names and `args` are rejected. The default profile is now:
 
 ```text
-~/Library/Application Support/Shattered Pixel Dungeon CLI v4/
+~/Library/Application Support/Shattered Pixel Dungeon CLI v5/
 ```
 
-CLI 4 requires an intact schema-7 audit pair. Existing older audit directories are
+CLI 5 requires an intact schema-8 audit pair. Existing older audit directories are
 rejected before profile writes; they are not migrated or deleted. Use a new profile.
 Only genuinely absent or empty profiles receive the windowed Simplified-Chinese,
 skip-introduction/tutorial defaults. Existing settings and ordinary GUI defaults
@@ -42,7 +42,7 @@ remain unchanged; class unlocks, achievements and guidebook progress are not gra
 Start with a unique request ID:
 
 ```json
-{"v":4,"id":"q1","op":"info"}
+{"v":5,"id":"q1","op":"info"}
 ```
 
 `info` reports versions, build identity, current scope/revision, capabilities and a
@@ -50,7 +50,7 @@ static `schema` of commands, directions, row-map encoding and inspection rules. 
 returned `s`, then query the current state:
 
 ```json
-{"v":4,"id":"q2","s":"<S>","op":"state"}
+{"v":5,"id":"q2","s":"<S>","op":"state"}
 ```
 
 Replace placeholders and illustrative IDs with values for your own connection.
@@ -59,7 +59,7 @@ must remain unique within their scope, including across restarts of the same run
 
 | Field | Meaning |
 | --- | --- |
-| `v` | Required integer `4` on every request. |
+| `v` | Required integer `5` on every request. |
 | `id` | Required, caller-generated request identity. Queries also consume IDs. |
 | `s` | Required scope, except initial `info`. |
 | `rev` | Required for game actions; copy the latest live revision exactly. |
@@ -89,12 +89,12 @@ contain hero, inventory or map. Do not carry missing scene fields forward as liv
 `state` and `actions` accept `view:"play"` (default) or `view:"full"`:
 
 ```json
-{"v":4,"id":"q3","s":"<S>","op":"state","view":"full"}
-{"v":4,"id":"q4","s":"<S>","op":"actions","view":"play"}
+{"v":5,"id":"q3","s":"<S>","op":"state","view":"full"}
+{"v":5,"id":"q4","s":"<S>","op":"actions","view":"play"}
 ```
 
 `full` returns default-valued fields, empty UI nodes, ordinary item descriptions and
-the complete talent directory. It still uses protocol-4 row maps and knowledge
+the complete talent directory. It still uses protocol-5 row maps and knowledge
 semantics; it is not an older protocol. Normal action replies use `play`.
 `state src:true` automatically selects `full`, even if `view:"play"` is supplied.
 Historical `before/after` details use full projection; `raw/reply` are immutable.
@@ -116,7 +116,30 @@ The field aliases remain:
 | controls / global actions | `nodes` / `acts` |
 | description / quantity / minimum / maximum | `desc` / `qty` / `min` / `max` |
 
+Protocol 5 adds these field aliases. They do not change enum values, source AST
+keys, or immutable raw/reply payloads.
+
+| Canonical field | Wire field |
+| --- | --- |
+| `max_experience` | `mxp` |
+| `max_hp` | `ht` |
+| `subclass_name` | `sub_name` |
+| `talent_points_available` | `tp` |
+| `details_via` | `via` |
+| `shortcut_action` | `shortcut` |
+| `cell_prompt` | `prompt` |
+| `continuous_activity` | `activity` |
+| `snapshot_status` | `snap` |
+| `inspected_item` | `item_info` |
+| `saves_during_request` | `saves` |
+| `last_save` | `saved` |
+| `receipt_id` | `sid` |
+| `origin_scope_id` | `src_s` |
+| `origin_request_id` | `src_id` |
+| `occurred_at` | `at` |
+
 Unlisted fields keep their names. Actual game text and errors are not abbreviated.
+In particular, the value `phase:"continuous_activity"` remains unchanged.
 
 ### Map
 
@@ -132,25 +155,54 @@ For at most 64 types, `tiles` is a string indexing this message's `types` with:
 ```
 
 When the map contains more than 64 types, every row's `tiles` is an integer array.
-Its length equals the visibility string length. Visibility characters are `v`
-(visible), `s` (visited) or `m` (mapped). For offset i, the exact cell is
+In play, one visibility character repeats for the entire nonempty segment; otherwise
+the visibility string length must equal the tile count. Full view expands visibility
+per cell. Visibility characters have these meanings:
+
+| Character | Meaning |
+| --- | --- |
+| `v` | `visible` |
+| `s` | `visited` |
+| `m` | `mapped` |
+
+For offset i, the exact cell is
 `y*w+x_start+i`. Types retain each complete public terrain descriptor and text
 markers. The dictionary is local to this reply and may be reordered next time.
 
 Example segment (the enclosing map supplies dimensions and its complete legend):
 
 ```json
-[25,11,"0111122220","vvvvvvvvvv"]
+[25,11,"0111122220","v"]
 ```
 
 `env` is cell-indexed and complete for this reply, including fire, gas and other
-visible effects. A missing entry means the effect is not currently observed.
+visible effects. Its value is either an inline effect list or an integer index
+into this map's `effect_defs`, whose entries are complete ordered effect lists. A missing entry means the effect is not currently observed.
 No map baselines, references or patches are used. The encoder receives only the
 existing public map projection, never hidden level terrain.
 Exceptional whole-cell/coordinate source annotations that cannot be faithfully
 relocated to rows or the type legend retain their original public evidence in
 `map.preserved_cells`, with diagnostic paths rebased there. This is a diagnostic
 block, not another map or a baseline: only `rows` defines the current known cells.
+
+### Per-observation description dictionaries
+
+Play can share repeated complete trap/container records in `data.entity_defs`.
+A reference entity is exactly `{"cell":123,"def":0}`: expand entry 0 from the
+current response's table, then attach that cell. The definition contains every
+original field except `cell`, including source/partial metadata. Other entities
+remain inline. Names alone never establish equality.
+
+`map.effect_defs` entries are complete ordered effect lists. An integer env value
+references one such list; an array remains inline. A cell can have several effects.
+Both dictionaries use first-occurrence order and appear only when repetition makes
+the encoded fragment smaller. Full/src and historical before/after keep descriptions
+inline. An absent table cannot satisfy a reference; invalid indexes are errors.
+Tables are local to this observation, not persistent identities or delta baselines.
+
+```json
+{"entity_defs":[{"kind":"trap","name":"Trap","desc":"Complete public warning"}],"entities":[{"cell":1,"def":0},{"cell":2,"def":0}],"map":{"w":4,"h":1,"types":[{"terrain":1,"name":"Floor"}],"rows":[[0,1,"000","v"]],"effect_defs":[[{"type":"visible_effect","desc":"Complete public effect"}]],"env":{"1":0,"2":0}}}
+```
 
 ### Item knowledge and scoped defaults
 
@@ -162,7 +214,7 @@ For item records in `inv` or visible floor entities:
 | `cursed` | Not applicable | Player does not know | Known boolean; false means known uncursed |
 
 The redundant item `level_known/curse_known` flags are removed. The independent
-`ui.inspected_item.level_known` flag remains: it describes the already rendered
+`ui.item_info.level_known` flag remains: it describes the already rendered
 item-info branch and does not reveal an otherwise unknown numeric level.
 If a knowledge pair itself has protected source/partial metadata, its original
 value and explicit knowledge flag are retained together as a diagnostic exception.
@@ -170,9 +222,24 @@ Honor that explicit flag instead of inferring knowledge from the value alone.
 Wand charge `current:null` remains unknown; an explicit 0 remains known empty.
 Never delete null positions from a fixed-column array.
 
-In play item records only, absent `qty` means 1, `equipped` means false,
-`available` and `type_known` mean true. These defaults are not general rules for
-unrelated JSON objects; use explicit inspection routes where they are advertised.
+These defaults apply only to the listed play records, independently on each reply.
+Protected source/partial fields remain explicit. Full view includes default fields.
+
+| Record scope | Field | Default when absent |
+| --- | --- | --- |
+| `item` | `qty` | `1` |
+| `item` | `equipped` | `false` |
+| `item` | `available` | `true` |
+| `item` | `type_known` | `true` |
+| `item` | `via` | `click` |
+| `ui_node` | `enabled` | `true` |
+| `ui_node` | `dimmed` | `false` |
+| `ui` | `modal` | `false` |
+| `ui` | `item_info` | `null` |
+
+The item `via` default describes inspection only; it does not advertise a node
+operation. Missing `map.env` means no observed environment effects. These are not
+global null/false/zero omission rules.
 The explicit false/zero values that convey knowledge or availability are retained.
 
 Play omits ordinary inventory/floor-item descriptions. Open the original item or
@@ -180,7 +247,7 @@ cell examination window, or request full state, when that detail is needed.
 Container/mimic warnings, trap/environment descriptions and current window text
 remain available automatically. No risk is inferred from description keywords.
 
-`hero.talents` in play lists invested talents only. `talent_points_available`
+`hero.talents` in play lists invested talents only. `tp`
 contains current available points for tiers 1 through the hero's tier count in
 order, normally four integers. This uses the original GUI rule, including bonus
 points and subclass/armor gates. Full state retains zero-point talent entries;
@@ -191,13 +258,28 @@ the original talent window still shows its current choices in play mode.
 Only `ops` advertises executable node actions. `{"op":"click"}` means the single
 click gesture; multiple gestures are listed on that operation. Ordinary duplicate
 node-level gestures are omitted. Retained metadata-bearing gesture fields do not
-make a node actionable without an actual op. `acts` contains non-node operations.
+make a node actionable without an actual op. `acts` normally contains non-node
+operations. When protected metadata addresses an entire action list, its complete
+projected list and original indexes remain in `acts` alongside node `ops` as a
+diagnostic exception; these are the same actions, not additional operations to execute.
 
 Absent `enabled` on a play UI node means true; absent `dimmed` means false.
 Disabled options with informative text, actionable icons without text, item water
 counts/strength estimates, health/status information and clipped/origin/partial
-markers are retained. Only empty, noninteractive text leaves without extra state
-or metadata are removed. Meaningful parent relationships remain intact.
+markers are retained. Play removes confirmed empty placeholders and passive child text fully covered
+by its parent, only when no independent state or protected evidence is lost.
+Meaningful parent relationships remain intact. It does not use an English-label
+whitelist or discard all disabled/icon-only nodes.
+
+An ItemSlot node can have a current `loc` when its displayed item uniquely matches
+this capture's public inventory. Virtual or ambiguous items remain unbound. Its
+optional `display:{status,extra,level}` contains already displayed strings such as
+`"1/20"`, `"14?"` and `"+2"`; missing hidden text is not reconstructed. Preserve
+question marks and all corresponding metadata. `actions` remains independently
+readable even without an inventory list. Health bars retain rendered pixel widths
+and the visible target cell; they are not hidden exact enemy HP. Full view retains
+the expanded UI tree. Do not use unmarked map crops or drop danger descriptions,
+`acts`, `cues`, counts, estimates or bars when presenting an observation to a model.
 
 Do not treat a dimmed control as disabled, infer hidden actions, or identify an
 item permanently by its slot/control ID. Locators and node bindings can change
@@ -210,7 +292,7 @@ rules are in `info.schema`; current ops supply availability and dynamic constrai
 Full text-source trees are omitted by default. Request them explicitly:
 
 ```json
-{"v":4,"id":"q4","s":"<S>","op":"state","src":true}
+{"v":5,"id":"q4","s":"<S>","op":"state","src":true}
 ```
 
 This returns the sources for that observation's own `rev`, not for an earlier state.
@@ -253,11 +335,11 @@ are top-level. Only execute currently advertised operations and targets.
 Examples:
 
 ```json
-{"v":4,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
-{"v":4,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
-{"v":4,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
-{"v":4,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
-{"v":4,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
+{"v":5,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
+{"v":5,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
+{"v":5,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
+{"v":5,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
+{"v":5,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
 ```
 
 `123` is illustrative, not a predetermined destination. Movement can attack,
@@ -283,7 +365,7 @@ An `in_progress` response is the sole response to that request on the pipe. Do n
 repeat it. Poll its receipt with fresh query IDs:
 
 ```json
-{"v":4,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
+{"v":5,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
 ```
 
 Inspect `data.st`, not the query's outer `st`. `RECEIVED` and `EXECUTING` mean the
@@ -292,7 +374,7 @@ original action remains pending. Normal terminal success is `COMPLETED`,
 its `save` receipts, then obtain one fresh live state:
 
 ```json
-{"v":4,"id":"q6","s":"<CURRENT_SCOPE>","op":"state"}
+{"v":5,"id":"q6","s":"<CURRENT_SCOPE>","op":"state"}
 ```
 
 Do not request historical `get:["reply"]` on the normal successful path. Reserve
@@ -324,7 +406,7 @@ rejected as `BUSY` while execution is pending.
 | `STALE_STATE`, `STALE_ACTIVITY` | The revision is no longer current; reobserve and reconsider. |
 | `SCOPE_MISMATCH`, `UNKNOWN_SCOPE` | Discover the active scope with `info`; keep past scopes for history only. |
 | `ACTION_UNAVAILABLE`, `INVALID_ARGUMENT`, `INVALID_REQUEST` | Inspect current availability and parameter rules. |
-| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every frame requires integer `v:4`; old envelopes are unsupported. |
+| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every frame requires integer `v:5`; old envelopes are unsupported. |
 | `EXECUTION_UNKNOWN`, `EXECUTION_UNCERTAIN` | Do not assume failure or replay; preserve uncertainty and inspect the original result. |
 | `AUDIT_UNAVAILABLE` | The audit store failed; new game operations stop. |
 
@@ -347,7 +429,7 @@ For explicit diagnosis or verification, use `get` to select `raw`, `reply`,
 used with frozen snapshot details. Example:
 
 ```json
-{"v":4,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
+{"v":5,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
 ```
 
 `before/after` are frozen public snapshots, not a fresh engine observation. `reply`
@@ -359,8 +441,8 @@ wire response or old snapshot is rewritten to match the current game.
 Read paginated metadata and public events:
 
 ```json
-{"v":4,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
-{"v":4,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
+{"v":5,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
+{"v":5,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
 ```
 
 `data` contains `items`, `next` (next `after`, or null), `end`, and a fixed `until`
@@ -370,71 +452,81 @@ being audited. Omit `until` to start a new traversal or live-poll cycle. Cursors
 exclusive; history and events have separate sequences. Limits are 1–100, default 50.
 Pagination is not byte truncation.
 
-At a ready boundary use `save`; inspect `data.persistence.saves_during_request` for
+At a ready boundary use `save`; inspect `data.persistence.saves` for
 actual successful save receipts. An empty list does not confirm a save. Live queries
-report `last_save` when available. In-memory action completion and persistence are
+report `saved` when available. In-memory action completion and persistence are
 separate facts. Close prompts before `quit`; read its response and await process exit.
 EOF requests ordinary lifecycle shutdown but cannot accept unresolved choices.
 
-Restart with the same v4 profile, perform a new handshake and continue the displayed
+Restart with the same v5 profile, perform a new handshake and continue the displayed
 saved game. Scope and request-ID history persist, but old process revisions do not.
 Do not replay successful actions to make a restored save catch up with history.
 Audit transactions do not include game save files. Public and internal SQLite stores
 remain separate; the protocol does not expose general SQL or private snapshots.
 
-## 7. Terminal viewer, color and complete transport
+## 7. Two independent Terminal viewers and complete transport
 
-Machine mode records exact SEND/RECV bytes and stderr, and automatically opens an
-independent Terminal viewer. `--no-terminal` disables only automatic opening.
-`--trace-dir` selects an absolute recording root that must not overlap the profile,
-including through symlinks. The default root is:
+Machine mode records exact SEND/RECV bytes and stderr once, then automatically
+opens two independent Terminal windows: **SEND** and **RECV + ERROR**. They retain
+Terminal's current background and do not modify its global settings. Titles include
+the selected channel and session identity. `--no-terminal` disables both automatic
+windows, not recording. `--trace-dir` chooses an absolute root that must not overlap
+the profile, including symlinks. The default root remains:
 
 ```text
 ~/Library/Logs/Shattered Pixel Dungeon CLI/transport/
 ```
 
-Each launch creates a session with `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`
-and an `open-viewer.command`. Closing/reopening the viewer does not close the game.
+Each session contains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`,
+`open-send.command` and `open-recv.command`. Transport format is still version 1.
+The two command files directly view their own channel and do not create an extra
+launcher window. `trace open` always generates commands from the current trusted
+executable; it never executes a script loaded from the supplied session directory.
 
 ```sh
 spdctl trace open --session "/absolute/path/to/session"
-spdctl trace view --session "/absolute/path/to/session" --color auto
-spdctl trace view --session "/absolute/path/to/session" --color never
+spdctl trace open --session "/absolute/path/to/session" --stream send
+spdctl trace open --session "/absolute/path/to/session" --stream recv
+spdctl trace view --session "/absolute/path/to/session" --stream all --color auto
+spdctl trace view --session "/absolute/path/to/session" --stream send --color never
+spdctl trace view --session "/absolute/path/to/session" --stream recv --color always
 ```
 
-The viewer shows SEND, RECV and ERROR. DELIVERED and normal lifecycle events remain
-recorded but are not displayed. Stderr, failed exits/signals and incomplete records
-are ERROR. Consecutive chunks of one message share a heading; direction switches
-show continuation headings when necessary. Original JSON layout is retained.
+`--stream all|send|recv` defaults to `all`. For `trace open`, all opens two windows;
+for direct `trace view`, all displays the combined stream. Send shows only SEND
+transport records; recv shows RECV and ERROR (stderr, failing lifecycle status and
+incomplete records). Viewer-local failures still produce diagnostics. DELIVERED
+and successful lifecycle events remain recorded but hidden. Every index row and
+raw range is validated even when its stream is not displayed.
 
-`--color auto|always|never` applies to `trace view`. Auto enables ANSI colors for a
-TTY unless TERM is dumb or NO_COLOR is set; explicit modes override the environment.
-The dedicated Terminal commands opened automatically or through `trace open`, and
-newly generated `open-viewer.command` files, explicitly use `--color always`.
-Their display therefore remains colored even when a controller environment disables
-auto color. Direct `trace view` still defaults to auto; use `--color never` for a
-plain-text view. Old generated command files retain their original arguments;
-`trace open` always generates a fresh command from the current executable.
-SEND is cyan, RECV green, ERROR red; JSON keys blue, string values green, numbers
-yellow, booleans/null magenta and punctuation dim. Invalid JSON still displays safely.
-UTF-8, strings and escapes can cross arbitrary chunks. Input escape/control bytes
-are visibly escaped, never executed. Viewer colors never enter protocol or raw files.
+Both views share bold, bright JSON colors: keys blue, strings green, numbers yellow,
+booleans/null magenta; ordinary text and punctuation use the current foreground
+with bold and no dim. SEND headings are bright cyan, RECV headings bright green,
+and ERROR headings and bodies bright red. Dedicated windows force `--color always`.
+Direct auto enables color for a TTY unless TERM is dumb or NO_COLOR is set; explicit
+always/never override that rule. The viewer resets ANSI state when it exits.
+Colors never enter machine output or raw files. Payload control bytes are safely
+escaped, never executed. UTF-8, JSON strings and escapes can span arbitrary chunks;
+original layout and complete content are retained without pretty-printing.
 
-There is no configured whole-message byte limit and no body truncation in transport
-or the viewer. The 64 KiB native buffers are bounded streaming/backpressure buffers,
-not message limits. Java accumulates a complete NDJSON frame. Actual capacity still
-depends on memory, storage and OS/runtime resources. Identifier lengths, JSON nesting,
-source-rendering safeguards, page sizes and game input rules retain their semantics.
+Opening is detached from protocol forwarding and bounded. A denied, failed or
+uncertain Terminal launch reports its channel and reopen command; it is not blindly
+retried. If Automation is denied, manually run `open-send.command` or
+`open-recv.command`, or use direct `trace view` in an existing terminal. After an
+uncertain launch, inspect existing windows before reopening to avoid duplicates.
+Closing, signaling or reopening either viewer never closes the other,
+stops the game/recorder or resends a request. A finished interactive viewer retains
+its transcript and waits for Enter, as before.
 
-An outer AI/shell tool may truncate what it displays. That tool's output budget is
-not a spdctl limit: collect and decode the complete pipe response first, then present
-selected information to the model. Do not parse a tool-truncated JSON excerpt as a
-complete protocol response or resend a game action because its display was clipped.
-
+Transport and viewing have no configured whole-message byte limit. The 64 KiB
+buffers implement streaming/backpressure, not truncation; practical capacity still
+depends on memory, disk and runtime resources. Outer tools may limit displayed text:
+collect and decode the complete response through LF before presenting it. Never
+parse a clipped excerpt as a complete response or replay an action because of it.
 If recording fails, TRACE_IO_FAILED stops new requests and requests normal EOF
-shutdown; already triggered responses are forwarded when possible. No action is
-retried or response fabricated. An incomplete marker means finalization was not
-confirmed. Raw records remain until explicitly removed.
+shutdown; already triggered responses are forwarded when possible. Raw records are
+not removed automatically by the CLI. An incomplete marker means finalization was
+not confirmed.
 
 ## 8. Minimal complete-response client
 
@@ -449,7 +541,7 @@ import time
 import uuid
 
 launcher = "/absolute/path/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl"
-profile = "/absolute/path/to/new-v4-profile"
+profile = "/absolute/path/to/new-v5-profile"
 process = subprocess.Popen(
     [launcher, "run", "--machine", "--data-dir", profile],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -460,7 +552,7 @@ counter = 0
 def request(op, *, scope=None, rev=None, **params):
     global counter
     counter += 1
-    message = {"v": 4, "id": f"{prefix}-{counter}", "op": op, **params}
+    message = {"v": 5, "id": f"{prefix}-{counter}", "op": op, **params}
     if scope is not None:
         message["s"] = scope
     if rev is not None:
@@ -470,47 +562,53 @@ def request(op, *, scope=None, rev=None, **params):
     line = process.stdout.readline()  # No application byte limit; reads through LF.
     if not line:
         raise RuntimeError("Machine session ended before its response")
+    if not line.endswith(b"\n"):
+        raise RuntimeError(("Incomplete response; preserve request identity", message["id"], line))
     response = json.loads(line)
     if response.get("id") != message["id"]:
         raise RuntimeError("Unexpected response ID")
     return response
 
 def observe_after_action(initial, original_scope, action_name):
-    # This is a local derived result, never an original protocol response.
-    result = {"initial": initial, "receipt": None, "discovery": None, "observation": None}
+    # Consume incrementally: expose this complete initial reply before polling.
+    # Do not wrap this iterator in list() or buffer it until the action finishes.
+    yield ("initial", initial)
     if "err" in initial:
-        raise RuntimeError(result)
+        raise RuntimeError(initial)  # Preserve original ID/outcome; never replay.
     if initial.get("st") != "in_progress":
-        result["observation"] = initial
-        return result
+        if action_name == "quit":
+            process.wait(timeout=40)
+        return  # The synchronous reply itself is the current observation.
     deadline = time.monotonic() + 40
     while time.monotonic() < deadline:
         receipt = request("req", scope=original_scope, rid=initial["id"])
-        result["receipt"] = receipt
-        if "err" in receipt:
-            raise RuntimeError(result)
-        outcome = receipt["data"]
-        if "err" in outcome:
-            raise RuntimeError(result)
-        status = outcome["st"]
+        if "err" in receipt or "err" in receipt.get("data", {}):
+            yield ("receipt", receipt)
+            raise RuntimeError(receipt)
+        status = receipt["data"]["st"]
         if status in ("COMPLETED", "AWAITING_INPUT", "INTERRUPTED"):
-            if action_name != "quit":
-                live_scope = initial["s"]
-                if initial.get("data", {}).get("phase") in ("resolving", "cancelling"):
-                    discovery = request("info")
-                    result["discovery"] = discovery
-                    if "err" in discovery:
-                        raise RuntimeError(result)
-                    live_scope = discovery["s"]
-                current = request("state", scope=live_scope)
-                result["observation"] = current
-                if "err" in current:
-                    raise RuntimeError(result)
-            return result
+            yield ("receipt", receipt)  # Original outcome/save receipts stay separate.
+            if action_name == "quit":
+                process.wait(timeout=40)
+                return
+            scope = initial["s"]
+            if initial.get("data", {}).get("phase") in ("resolving", "cancelling"):
+                discovery = request("info")
+                yield ("discovery", discovery)
+                if "err" in discovery:
+                    raise RuntimeError(discovery)
+                scope = discovery["s"]
+            current = request("state", scope=scope)
+            yield ("observation", current)
+            if "err" in current:
+                raise RuntimeError(current)
+            return
         if status not in ("RECEIVED", "EXECUTING"):
-            raise RuntimeError(result)
-        time.sleep(0.05)  # Only the pending-receipt poll cadence.
-    raise TimeoutError(result)  # Preserve the ID; never replay the action.
+            yield ("receipt", receipt)
+            raise RuntimeError(receipt)
+        time.sleep(0.1)
+    raise TimeoutError(initial)  # Preserve this request ID; establish its outcome.
+
 
 try:
     hello = request("info")
@@ -522,14 +620,20 @@ try:
     print(json.dumps({"s": state["s"], "rev": state.get("rev"),
                       "phase": state["data"].get("phase"),
                       "hero": state["data"].get("hero")}, ensure_ascii=False))
-    # Keep this connection open for observe -> decide -> action -> inspect result.
-    # Capture original_scope before dispatch. A reply can carry a new live scope.
-    # For an advertised action:
+    # Keep the process and connection open in your controller loop.
+    # Each reply is a self-contained observation; expand its own dictionaries,
+    # scoped defaults and visibility before choosing a new advertised action.
     # original_scope = state["s"]
     # initial = request(action_name, scope=original_scope, rev=state["rev"], **args)
-    # derived = observe_after_action(initial, original_scope, action_name)
-    # Sync outcome/save receipts are in initial; async ones are in receipt.
-    # Use derived["observation"] for the next decision, never a historical reply.
+    # stream = observe_after_action(initial, original_scope, action_name)
+    # kind, initial = next(stream)  # Return this to the decision maker immediately.
+    # At continuous_activity, inspect initial data/activity/acts and expose cancel.
+    # A cancellation is its own request with a fresh ID and the advertised binding;
+    # keep resolving the original request receipt rather than replaying its action.
+    # Resume the iterator only when the decision maker elects to wait.
+    # for kind, reply in stream: publish_complete_reply(kind, reply)
+    # Never attach a new response header to a body loaded from an older cache.
+
 finally:
     process.stdin.close()
     process.wait(timeout=40)

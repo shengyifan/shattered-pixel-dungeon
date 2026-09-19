@@ -1,6 +1,7 @@
 # Project working agreements
 
 - Read `docs/cli-help.md` before operating or changing `spdctl`. It is the authoritative English protocol manual and the bundled `--help` source. Keep this file concise; put detailed schemas and validation results in `docs/`.
+- Use CLI.5.0.0, protocol 5 and the currently advertised capabilities. New default profiles use the independent CLI v5 directory and schema 8; do not migrate or modify earlier profiles implicitly.
 - Keep CLI requests, responses, help, diagnostics and test output English. The ordinary game GUI may remain Simplified Chinese and windowed.
 - During gameplay, use the same `spdctl run --machine` process and its serial NDJSON connection. Do not read personal game saves or private audit state to choose actions. Isolated, explicitly marked test fixtures are separate from gameplay evidence.
 - Send one request with a fresh ID, receive and parse its entire response through the newline, then present selected fields to the model. Preserve all original transport bytes independently of display limits.
@@ -12,6 +13,9 @@
 - On `REJECTED`, `UNKNOWN`, response loss, parsing/display failure or timeout, preserve the original ID and establish its outcome before any further decision. Never replay a pending, completed or uncertain action. Follow the user's stated stopping policy.
 - Retain interruptible travel/rest observations and cancellation. After successful `quit`, wait for process exit; do not send another state query.
 - Decode every default observation independently. Omitted schema defaults are not deltas; item and control locators are current bindings, not permanent identities. Inspect the original UI or request full detail when needed.
+- Expand each observation's own entity/effect dictionaries, uniform row visibility and scoped defaults. Missing, null, false and zero retain their documented knowledge meanings. Never truncate opaque scope/revision values.
+- Preserve bars, rendered item counts and strength estimates, hazard descriptions, dynamic operations and visual cues. Do not use ad hoc label whitelists, unmarked map crops or blanket `desc` removal to save tokens. Display each response with its own body and identity, never a new header paired with an older cached body.
+- Expose an interruptible initial response before waiting for its completion. The independent SEND and RECV + ERROR Terminal windows are passive viewers; opening, closing or reopening them is not a game operation and must not stop recording.
 - Keep personal profiles untouched during implementation and regression testing. Use new isolated profiles, and report fixture outcomes separately from real playthrough progress.
 - After verified changes, synchronize CLI/protocol/schema versions, launcher, build catalog, help and changelog as applicable; rebuild and verify the actual packaged executable.
 - Make a scoped local GPG-signed commit after validation, check `git diff --cached --check`, and verify the signature and worktree. Push, tags and publication require a separate user request.

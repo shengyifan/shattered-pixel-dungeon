@@ -1,5 +1,7 @@
 # CLI.4.0.1 macOS 清理重建
 
+> 历史版本记录。当前版本为 CLI.5.0.0；使用方式见[当前手册](cli-help.md)，本批次验收见 [CLI 5 实施与验收](cli5-implementation.md)。下文版本、数据和结论仅属于当时的批次。
+
 2026-09-14，按用户要求清理此前 build 产物和实战故障 JSON，从当前最新源码重新构建 macOS ARM64 CLI，并推送分支。
 
 - 构建源码：`feature/mac-cli`，`727de3ca716d0cdcc087596106ee4c23943c6543`。

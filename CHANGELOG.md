@@ -4,6 +4,14 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.5.0.0
+
+- Introduces protocol 5 and schema 8 with a separate CLI v5 profile; previous profiles are refused before writes and are never migrated automatically.
+- Unifies ordinary public text-source classification, adds semantic UI bindings/display fields and conservative deduplication, per-observation hazard/effect dictionaries, scoped defaults, uniform visibility and measured field aliases. Full/source and immutable history retain their diagnostic boundaries.
+- Opens independent SEND and RECV + ERROR Terminal windows with selectable streams, shared bold bright syntax colors and unchanged backgrounds. Raw trace format/bytes remain unchanged; opening and viewer lifetimes stay independent of gameplay.
+- Updates authoritative CLI help, agent agreements, current documentation, decoders and isolated tests. See [CLI 5 implementation and validation](docs/cli5-implementation.md) for measured results and acceptance limits.
+- Fixes the visual observer's uncached scene-camera lookup so a newly created visible particle emitter participates in the existing first-draw readiness check; this preserves the action's immediate bomb warning without advancing particles or changing the waiting protocol.
+
 ## CLI.4.0.1
 
 - 独立 Terminal 查看器的自动打开、`trace open` 和新生成的 `open-viewer.command` 显式使用 `--color always`，避免颜色被查看器继承的 `NO_COLOR`／`TERM=dumb` 自动判定关闭；直接 `trace view` 的 auto/always/never 语义保持。

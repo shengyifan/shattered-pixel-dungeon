@@ -2,7 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.protocol;
 
 import java.util.*;
 
-/** Protocol 4 names live only at the wire boundary. Engine and audit names remain canonical. */
+/** Protocol 5 names live only at the wire boundary. Engine and audit names remain canonical. */
 public final class WireNames {
     private static final Map<String,String> OPERATIONS;
     private static final Map<String,String> FIELDS;
@@ -23,7 +23,11 @@ public final class WireNames {
         pairs(fields, "ctl","control", "dir","direction", "g","gesture", "loc","locator", "rid","target_id",
                 "opt","option", "alt","alternate", "inv","inventory", "entities","visible_entities", "cues","visual_cues",
                 "nodes","controls", "acts","actions", "desc","description", "qty","quantity", "min","minimum", "max","maximum",
-                "s","scope_id", "rev","state_version");
+                "s","scope_id", "rev","state_version",
+                "mxp","max_experience", "ht","max_hp", "sub_name","subclass_name", "tp","talent_points_available",
+                "via","details_via", "shortcut","shortcut_action", "prompt","cell_prompt", "activity","continuous_activity",
+                "snap","snapshot_status", "item_info","inspected_item", "saves","saves_during_request", "saved","last_save",
+                "sid","receipt_id", "src_s","origin_scope_id", "src_id","origin_request_id", "at","occurred_at");
         FIELDS = Collections.unmodifiableMap(fields);
         Map<String,Set<String>> parameters = new LinkedHashMap<>();
         for(String op:operations.keySet()) parameters.put(op, Collections.emptySet());
@@ -50,6 +54,7 @@ public final class WireNames {
     public static boolean isQuery(String wire) { return Arrays.asList("info","state","actions","req","history","events").contains(wire); }
     public static Set<String> parameters(String operation) { return PARAMETERS.get(operation); }
     public static Set<String> operations() { return OPERATIONS.keySet(); }
+    public static Map<String,String> fields() { return FIELDS; }
     public static String canonicalField(String wire) { return FIELDS.getOrDefault(wire,wire); }
     public static String field(String canonical) {
         for(Map.Entry<String,String> entry:FIELDS.entrySet()) if(entry.getValue().equals(canonical)) return entry.getKey();

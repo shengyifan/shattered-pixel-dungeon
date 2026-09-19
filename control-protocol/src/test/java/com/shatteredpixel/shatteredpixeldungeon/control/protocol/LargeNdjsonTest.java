@@ -13,7 +13,7 @@ public class LargeNdjsonTest {
     @Test public void sixtyFourMiBRequestWithoutFinalNewlineIsComplete() throws Exception { verify(64*1024*1024,false,false); }
 
     private static void verify(int bytes,boolean unicode,boolean newline) throws Exception {
-        byte[] prefix="{\"v\":4,\"id\":\"large\",\"op\":\"text\",\"text\":\"".getBytes(StandardCharsets.UTF_8);
+        byte[] prefix="{\"v\":5,\"id\":\"large\",\"op\":\"text\",\"text\":\"".getBytes(StandardCharsets.UTF_8);
         byte[] suffix=((unicode?"中文🎮":"")+"\"}"+(newline?"\n":"")).getBytes(StandardCharsets.UTF_8);
         int padding=bytes-prefix.length-suffix.length;
         MessageDigest expected=MessageDigest.getInstance("SHA-256");

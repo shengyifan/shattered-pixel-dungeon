@@ -5,10 +5,10 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.WireNames;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Test-only request builder: canonical fake-engine arguments become actual V4 wire bytes.
+/** Test-only request builder: canonical fake-engine arguments become actual V5 wire bytes.
  * Responses are deliberately never expanded: assertions inspect the production wire output. */
-public final class V4Requests {
-    private V4Requests() { }
+public final class V5Requests {
+    private V5Requests() { }
     public static String encode(Map<String,Object> canonical) {
         if(canonical.containsKey("v")) return JsonCodec.encode(canonical);
         Map<String,Object> wire = new LinkedHashMap<>();

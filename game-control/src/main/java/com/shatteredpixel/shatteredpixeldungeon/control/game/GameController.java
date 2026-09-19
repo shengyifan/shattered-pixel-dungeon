@@ -521,10 +521,10 @@ public final class GameController implements RuntimeObserver {
     private State capture(boolean forceNewVersion){
         GameSnapshotter.Capture captured=snapshotter.capture();
         Map<String,Object> pub=new LinkedHashMap<>(captured.publicState);
-        Map<String,Object> uiState=ui.frozenUi();
+        boolean active=runActive();
+        Map<String,Object> uiState=ui.frozenUi(active?captured.publicState:Collections.emptyMap());
         pub.put("ui",uiState);
         if(Game.scene() instanceof GameScene)pub.put("visual_cues",visualState());
-        boolean active=runActive();
         if(!active){pub.remove("hero");pub.remove("map");pub.remove("inventory");pub.remove("visible_entities");}
         String scope=active && Dungeon.runId!=null?"run:"+Dungeon.runId:menuScope;
         Map<String,Object> outcome=runOutcome;

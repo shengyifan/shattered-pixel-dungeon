@@ -220,6 +220,31 @@ public class ItemSlot extends Button {
 	/** The item already represented by this slot; no display getter is evaluated. */
 	public Item displayedItem() { return item; }
 
+	/** Already laid-out display components. Reading these never recomputes item knowledge or stats. */
+	public java.util.Map<String, BitmapText> renderedTextComponents() {
+		java.util.Map<String, BitmapText> result = new java.util.LinkedHashMap<>();
+		if (status != null && status.parent == this) result.put("status", status);
+		if (extra != null && extra.parent == this) result.put("extra", extra);
+		if (level != null && level.parent == this) result.put("level", level);
+		return java.util.Collections.unmodifiableMap(result);
+	}
+
+	/** A confirmed empty slot, excluding custom visible decorations and the active unknown-item icon. */
+	public boolean emptyRenderedPlaceholder() {
+		if (item != null || isActive()) return false;
+		for (com.watabou.noosa.Gizmo child : childrenSnapshot()) {
+			if (child == null || child == hotArea || !child.exists || !child.isVisible()) continue;
+			if (child instanceof BitmapText) {
+				BitmapText text = (BitmapText) child;
+				if (text == status || text == extra || text == level) {
+					if (text.text() == null || text.text().isEmpty()) continue;
+				}
+			}
+			return false;
+		}
+		return true;
+	}
+
 	public void updateText(){
 
 		if (itemIcon != null){

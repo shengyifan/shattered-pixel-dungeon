@@ -43,13 +43,13 @@ public class SaveReceiptSessionTest {
         try (Harness h = harness()) {
             h.action("ordinary", "wait");
             assertFalse(h.last().containsKey("err"));
-            assertNull(persistence(h.last()).get("last_save"));
-            assertEquals(Collections.emptyList(), persistence(h.last()).get("saves_during_request"));
+            assertNull(persistence(h.last()).get("saved"));
+            assertEquals(Collections.emptyList(), persistence(h.last()).get("saves"));
             assertNull(h.store.latestSave(SCOPE));
             for (String op : Arrays.asList("state.get", "actions.list")) {
                 h.query(op, op, map());
-                assertTrue(result(h.last()).containsKey("last_save"));
-                assertNull(result(h.last()).get("last_save"));
+                assertTrue(result(h.last()).containsKey("saved"));
+                assertNull(result(h.last()).get("saved"));
             }
         }
     }
@@ -75,9 +75,9 @@ public class SaveReceiptSessionTest {
             assertReceipt(lastSave(h.last()), "sync-receipt", SCOPE, SCOPE, "save-now", true);
             assertEquals(Collections.singletonList("sync-receipt"), receiptIds(saves(h.last())));
             h.query("state-after-save", "state.get", map());
-            assertReceipt(object(result(h.last()).get("last_save")), "sync-receipt", SCOPE, SCOPE, "save-now", true);
+            assertReceipt(object(result(h.last()).get("saved")), "sync-receipt", SCOPE, SCOPE, "save-now", true);
             h.query("actions-after-save", "actions.list", map());
-            assertReceipt(object(result(h.last()).get("last_save")), "sync-receipt", SCOPE, SCOPE, "save-now", true);
+            assertReceipt(object(result(h.last()).get("saved")), "sync-receipt", SCOPE, SCOPE, "save-now", true);
         }
     }
 
@@ -91,7 +91,7 @@ public class SaveReceiptSessionTest {
             assertEquals("EXECUTION_UNKNOWN", error(h.last()));
             assertReceipt(lastSave(h.last()), "latest-failure", SCOPE, SCOPE, "bad-save", false);
             assertEquals(Collections.singletonList("latest-failure"), receiptIds(saves(h.last())));
-            assertEquals(Collections.singletonList("earlier-success"), receiptIds(h.store.requestSaves(SCOPE, "good-save")));
+            assertEquals(Collections.singletonList("earlier-success"), canonicalReceiptIds(h.store.requestSaves(SCOPE, "good-save")));
             assertNull(h.store.getRequest(SCOPE, "bad-save").get("after_snapshot"));
             assertFalse(h.output.text().contains(PRIVATE));
             assertFalse(JsonCodec.encode(h.store.events(SCOPE, 0, 100)).contains(PRIVATE));
@@ -100,7 +100,7 @@ public class SaveReceiptSessionTest {
             }
             h.query("state-after-failure", "state.get", map());
             assertEquals("execution_unknown", result(h.last()).get("phase"));
-            assertReceipt(object(result(h.last()).get("last_save")), "latest-failure", SCOPE, SCOPE, "bad-save", false);
+            assertReceipt(object(result(h.last()).get("saved")), "latest-failure", SCOPE, SCOPE, "bad-save", false);
         }
     }
 
@@ -115,7 +115,7 @@ public class SaveReceiptSessionTest {
             assertEquals(Arrays.asList("first-ok", "second-failed"), receiptIds(saves(h.last())));
             assertEquals(Boolean.TRUE, saves(h.last()).get(0).get("success"));
             assertEquals(Boolean.FALSE, saves(h.last()).get(1).get("success"));
-            assertEquals("second-failed", lastSave(h.last()).get("receipt_id"));
+            assertEquals("second-failed", lastSave(h.last()).get("sid"));
         }
     }
 
@@ -151,7 +151,7 @@ public class SaveReceiptSessionTest {
             h.query("lookup-fresh", "request.get", map("target_id", "slow-save", "get", Arrays.asList("reply")));
             Map<String, Object> oldResponse = object(result(h.last()).get("reply"));
             assertEquals(Collections.singletonList("late-success"), receiptIds(saves(oldResponse)));
-            assertEquals("late-success", lastSave(oldResponse).get("receipt_id"));
+            assertEquals("late-success", lastSave(oldResponse).get("sid"));
         }
     }
 
@@ -191,9 +191,9 @@ public class SaveReceiptSessionTest {
             };
             h.action("same-id", "game.save");
             assertEquals(Collections.singletonList("new-save"), receiptIds(saves(h.last())));
-            assertEquals("new-save", lastSave(h.last()).get("receipt_id"));
-            assertEquals(Arrays.asList("old-save", "delayed-old-save"), receiptIds(h.store.requestSaves(oldScope, "same-id")));
-            assertEquals(Collections.singletonList("new-save"), receiptIds(h.store.requestSaves(SCOPE, "same-id")));
+            assertEquals("new-save", lastSave(h.last()).get("sid"));
+            assertEquals(Arrays.asList("old-save", "delayed-old-save"), canonicalReceiptIds(h.store.requestSaves(oldScope, "same-id")));
+            assertEquals(Collections.singletonList("new-save"), canonicalReceiptIds(h.store.requestSaves(SCOPE, "same-id")));
         }
     }
 
@@ -211,7 +211,7 @@ public class SaveReceiptSessionTest {
             assertEquals(runScope, h.last().get("s"));
             assertReceipt(lastSave(h.last()), "new-run-save", runScope, menu, "start", true);
             assertEquals(Collections.singletonList("new-run-save"), receiptIds(saves(h.last())));
-            assertEquals(Collections.singletonList("new-run-save"), receiptIds(h.store.requestSaves(menu, "start")));
+            assertEquals(Collections.singletonList("new-run-save"), canonicalReceiptIds(h.store.requestSaves(menu, "start")));
             assertEquals(Collections.emptyList(), h.store.requestSaves(runScope, "start"));
             assertNull(h.store.latestSave(menu));
             assertEquals(runScope, h.store.getRequest(menu, "start").get("target_scope"));
@@ -228,10 +228,10 @@ public class SaveReceiptSessionTest {
             assertFalse(h.last().containsKey("data"));
             assertEquals(starts, h.game.starts);
             assertEquals(observations, h.game.observations);
-            h.send(map("v", 4, "id", "bad-args", "s", SCOPE, "op", "wait", "rev", "v1", "args", Collections.emptyList()));
+            h.send(map("v", 5, "id", "bad-args", "s", SCOPE, "op", "wait", "rev", "v1", "args", Collections.emptyList()));
             assertEquals("INVALID_REQUEST", error(h.last()));
             assertFalse(h.last().containsKey("data"));
-            h.send(map("protocol_version", 4, "id", "stale-before-dispatch", "scope_id", SCOPE, "op", "action.execute", "state_version", "old-version", "args", map("action", "wait")));
+            h.send(map("protocol_version", 5, "id", "stale-before-dispatch", "scope_id", SCOPE, "op", "action.execute", "state_version", "old-version", "args", map("action", "wait")));
             assertEquals("STALE_STATE", error(h.last()));
             assertFalse(h.last().containsKey("data"));
             h.game.onStart = ignored -> {};
@@ -245,14 +245,14 @@ public class SaveReceiptSessionTest {
     @Test public void currentSessionAttributionDoesNotPullPriorSessionReceiptsIntoANewAction() throws Exception {
         Path profile = temporary.newFolder().toPath();
         try (AuditStore old = new AuditStore(profile)) {
-            old.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.4.0.0",4);
+            old.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.5.0.0",5);
             old.ensureScope(SCOPE, "run", "receipt-fixture");
             old.recordSave("previous-session-save", SCOPE, 1, true, TIME, SCOPE, "future-id", null);
             old.endSession("CLOSED", "fixture complete");
         }
         try (Harness h = new Harness(profile)) {
             h.action("future-id", "wait");
-            assertEquals("previous-session-save", lastSave(h.last()).get("receipt_id"));
+            assertEquals("previous-session-save", lastSave(h.last()).get("sid"));
             assertEquals(Collections.emptyList(), saves(h.last()));
             assertEquals(Collections.emptyList(), h.store.requestSaves(SCOPE, "future-id"));
         }
@@ -289,16 +289,20 @@ public class SaveReceiptSessionTest {
     @SuppressWarnings("unchecked") private static Map<String, Object> object(Object value) { assertTrue(value instanceof Map); return (Map<String, Object>) value; }
     private static Map<String, Object> result(Map<String, Object> response) { return object(response.get("data")); }
     private static Map<String, Object> persistence(Map<String, Object> response) { return object(result(response).get("persistence")); }
-    private static Map<String, Object> lastSave(Map<String, Object> response) { return object(persistence(response).get("last_save")); }
-    @SuppressWarnings("unchecked") private static List<Map<String, Object>> saves(Map<String, Object> response) { return (List<Map<String, Object>>) persistence(response).get("saves_during_request"); }
+    private static Map<String, Object> lastSave(Map<String, Object> response) { return object(persistence(response).get("saved")); }
+    @SuppressWarnings("unchecked") private static List<Map<String, Object>> saves(Map<String, Object> response) { return (List<Map<String, Object>>) persistence(response).get("saves"); }
     private static String error(Map<String, Object> response) { return String.valueOf(response.get("err")); }
     private static List<String> receiptIds(List<Map<String, Object>> receipts) {
+        List<String> ids = new ArrayList<>(); for (Map<String, Object> receipt : receipts) ids.add((String) receipt.get("sid")); return ids;
+    }
+    // Store DTOs retain canonical names; wire receipts are asserted separately above.
+    private static List<String> canonicalReceiptIds(List<Map<String, Object>> receipts) {
         List<String> ids = new ArrayList<>(); for (Map<String, Object> receipt : receipts) ids.add((String) receipt.get("receipt_id")); return ids;
     }
     private static void assertReceipt(Map<String, Object> receipt, String id, String scope, String originScope, String originId, boolean success) {
-        assertEquals(id, receipt.get("receipt_id")); assertEquals(scope, receipt.get("s"));
-        assertEquals(originScope, receipt.get("origin_scope_id")); assertEquals(originId, receipt.get("origin_request_id"));
-        assertEquals(success, receipt.get("success")); assertEquals(TIME, receipt.get("occurred_at"));
+        assertEquals(id, receipt.get("sid")); assertEquals(scope, receipt.get("s"));
+        assertEquals(originScope, receipt.get("src_s")); assertEquals(originId, receipt.get("src_id"));
+        assertEquals(success, receipt.get("success")); assertEquals(TIME, receipt.get("at"));
         assertEquals(1, ((Number) receipt.get("slot")).intValue());
         assertEquals(7, receipt.size());
     }
@@ -353,15 +357,15 @@ public class SaveReceiptSessionTest {
         final MachineSession session;
         Harness(Path path) throws Exception {
             store = new AuditStore(path);
-            store.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.4.0.0",4);
+            store.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.5.0.0",5);
             store.ensureScope(SCOPE, "run", "receipt-fixture");
             session = new MachineSession(store, game, new PrintStream(output, true, "UTF-8"), 30);
         }
         void action(String id, String action) throws Exception { query(id, "action.execute", map("action", action)); }
         void query(String id, String op, Map<String, Object> args) throws Exception {
-            send(map("protocol_version", 4, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args));
+            send(map("protocol_version", 5, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args));
         }
-        void send(Map<String, Object> request) throws Exception { session.accept(V4Requests.encode(request)).get(5, TimeUnit.SECONDS); }
+        void send(Map<String, Object> request) throws Exception { session.accept(V5Requests.encode(request)).get(5, TimeUnit.SECONDS); }
         List<String> lines() { List<String> lines = new ArrayList<>(); for (String line : output.text().split("\\R")) if (!line.isEmpty()) lines.add(line); return lines; }
         Map<String, Object> last() { List<String> lines = lines(); assertFalse(lines.isEmpty()); return JsonCodec.decode(lines.get(lines.size() - 1)); }
         String firstWireFor(String id) { for (String line : lines()) if (id.equals(JsonCodec.decode(line).get("id"))) return line; throw new AssertionError("No response for " + id); }

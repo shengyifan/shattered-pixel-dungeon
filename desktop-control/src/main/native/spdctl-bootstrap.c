@@ -32,6 +32,13 @@ typedef struct {
     bool failed;
 } Trace;
 typedef struct { unsigned char bytes[BUFFER_SIZE]; size_t begin, end; } Buffer;
+typedef enum { STREAM_ALL, STREAM_SEND, STREAM_RECV } StreamSelection;
+static const char *stream_name(StreamSelection stream) {
+    return stream == STREAM_SEND ? "send" : stream == STREAM_RECV ? "recv" : "all";
+}
+static bool selected_stream(StreamSelection selection, int stream) {
+    return selection == STREAM_ALL || (selection == STREAM_SEND ? stream == 0 : stream != 0);
+}
 static volatile sig_atomic_t interrupted;
 static void receive_signal(int value) { interrupted = value; }
 static uint64_t now_ns(void) {
@@ -164,16 +171,17 @@ static bool shell_word(int fd, const char *text) {
     }
     return write_all(fd, start, (size_t)(text - start)) == 0 && write_all(fd, "'", 1) == 0;
 }
-static bool create_viewer_command(const char *session) {
+static bool create_viewer_command(const char *session, StreamSelection stream) {
     char executable[PATH_MAX];
     if (!self_path(executable)) return false;
-    int fd = create_private(session, "open-viewer.command");
+    int fd = create_private(session, stream == STREAM_SEND ? "open-send.command" : "open-recv.command");
     if (fd < 0) return false;
     static const char header[] = "#!/bin/sh\nexec ";
     /* Dedicated Terminal windows request ANSI explicitly; controller auto-color settings are unrelated. */
-    static const char arguments[] = " trace view --color always --session ";
+    static const char arguments[] = " trace view --color always --stream ";
     bool ok = write_all(fd, header, sizeof(header) - 1) == 0 && shell_word(fd, executable)
-        && write_all(fd, arguments, sizeof(arguments) - 1) == 0 && shell_word(fd, session)
+        && write_all(fd, arguments, sizeof(arguments) - 1) == 0 && shell_word(fd, stream_name(stream))
+        && write_all(fd, " --session ", 11) == 0 && shell_word(fd, session)
         && write_all(fd, "\n", 1) == 0 && fchmod(fd, 0700) == 0;
     if (close(fd) != 0) ok = false;
     return ok;
@@ -182,7 +190,7 @@ static void remove_temporary_command(const char *directory, const char *command)
     unlink(command);
     rmdir(directory);
 }
-static bool temporary_viewer_command(const char *session, char *directory, char *command) {
+static bool temporary_viewer_command(const char *session, StreamSelection stream, char *directory, char *command) {
     strcpy(directory, "/tmp/spdctl-trace-view-XXXXXX");
     if (!mkdtemp(directory) || !join_path(command, directory, "viewer.command")) return false;
     int fd = create_private(directory, "viewer.command");
@@ -192,60 +200,153 @@ static bool temporary_viewer_command(const char *session, char *directory, char 
     static const char second[] = "\n/bin/rmdir -- ";
     static const char third[] = "\nexec ";
     /* Keep automatic opening and trace open consistent with the saved Terminal command. */
-    static const char arguments[] = " trace view --color always --session ";
+    static const char arguments[] = " trace view --color always --stream ";
     bool ok = self_path(executable) && write_all(fd, first, sizeof(first) - 1) == 0
         && shell_word(fd, command) && write_all(fd, second, sizeof(second) - 1) == 0
         && shell_word(fd, directory) && write_all(fd, third, sizeof(third) - 1) == 0
         && shell_word(fd, executable) && write_all(fd, arguments, sizeof(arguments) - 1) == 0
+        && shell_word(fd, stream_name(stream)) && write_all(fd, " --session ", 11) == 0
         && shell_word(fd, session) && write_all(fd, "\n", 1) == 0 && fchmod(fd, 0700) == 0;
     if (close(fd) != 0) ok = false;
     if (!ok) remove_temporary_command(directory, command);
     return ok;
 }
-static int open_terminal(const char *session) {
+/* The source is constant: paths are argv data, then quoted by AppleScript for
+ * the shell. An untargeted do-script creates a new window rather than writing
+ * into an existing user tab. Verify the returned tab's owning window as well. */
+static const char terminal_script[] =
+    "on run argv\n"
+    "try\n"
+    "tell application id \"com.apple.Terminal\"\n"
+    "set previousWindows to id of every window\n"
+    "set createdTab to do script (\"exec /bin/sh \" & quoted form of (item 1 of argv))\n"
+    "set createdTTY to tty of createdTab\n"
+    "set createdWindow to 0\n"
+    "repeat with candidate in windows\n"
+    "repeat with candidateTab in tabs of candidate\n"
+    "if tty of candidateTab is createdTTY then set createdWindow to id of candidate\n"
+    "end repeat\n"
+    "end repeat\n"
+    "if createdWindow is 0 or previousWindows contains createdWindow then return \"UNCERTAIN\"\n"
+    "if (createdWindow as text) is (item 3 of argv) then return \"UNCERTAIN\"\n"
+    "set custom title of createdTab to item 2 of argv\n"
+    "return \"OK:\" & (createdWindow as text)\n"
+    "end tell\n"
+    "on error errorText number errorNumber\n"
+    "if errorNumber is -1743 then return \"DENIED\"\n"
+    "return \"UNCERTAIN\"\n"
+    "end try\n"
+    "end run\n";
+
+/* -1 means dispatch definitely failed; -2 means its delivery is uncertain.
+ * Never retry uncertain dispatch or remove a command Terminal may still run. */
+static int open_terminal_view(const char *session, StreamSelection stream, long previous_window, long *window) {
     char directory[PATH_MAX], command[PATH_MAX];
     /* Never execute code read from a trace directory. Reopening after a build
      * replacement always uses this invocation's trusted native executable. */
-    if (!temporary_viewer_command(session, directory, command)) return -1;
+    if (!temporary_viewer_command(session, stream, directory, command)) return -1;
+    int receipt[2];
+    if (pipe(receipt) < 0) { remove_temporary_command(directory, command); return -1; }
+    if (cloexec(receipt[0]) < 0 || cloexec(receipt[1]) < 0 || nonblocking(receipt[0]) < 0) {
+        close(receipt[0]); close(receipt[1]); remove_temporary_command(directory, command); return -1;
+    }
     /* posix_spawn actions ensure Terminal can never inherit a game pipe. */
     posix_spawn_file_actions_t actions;
-    if (posix_spawn_file_actions_init(&actions) != 0) { remove_temporary_command(directory, command); return -1; }
-    for (int fd = 0; fd <= 2; fd++) posix_spawn_file_actions_addopen(&actions, fd, "/dev/null", O_RDWR, 0);
-    char *arguments[] = {"/usr/bin/open", "-a", "Terminal", command, NULL};
+    if (posix_spawn_file_actions_init(&actions) != 0) {
+        close(receipt[0]); close(receipt[1]); remove_temporary_command(directory, command); return -1;
+    }
+    int action_error = posix_spawn_file_actions_addopen(&actions, 0, "/dev/null", O_RDONLY, 0);
+    if (!action_error) action_error = posix_spawn_file_actions_adddup2(&actions, receipt[1], 1);
+    if (!action_error) action_error = posix_spawn_file_actions_addopen(&actions, 2, "/dev/null", O_WRONLY, 0);
+    char previous[32], title[128];
+    snprintf(previous, sizeof(previous), "%ld", previous_window);
+    const char *base = strrchr(session, '/');
+    snprintf(title, sizeof(title), "spdctl %s — %.80s", stream == STREAM_SEND ? "SEND" : "RECV + ERROR", base ? base + 1 : session);
+    char *arguments[] = {"/usr/bin/osascript", "-e", (char *)terminal_script, command, title, previous, NULL};
     pid_t child;
     posix_spawnattr_t attributes;
     int attribute_error = posix_spawnattr_init(&attributes);
     if (attribute_error) {
-        posix_spawn_file_actions_destroy(&actions); remove_temporary_command(directory, command);
+        posix_spawn_file_actions_destroy(&actions); close(receipt[0]); close(receipt[1]); remove_temporary_command(directory, command);
         errno = attribute_error; return -1;
     }
-    posix_spawnattr_setflags(&attributes, POSIX_SPAWN_CLOEXEC_DEFAULT);
-    int error = posix_spawn(&child, arguments[0], &actions, &attributes, arguments, environ);
+    if (!action_error) action_error = posix_spawnattr_setflags(&attributes, POSIX_SPAWN_CLOEXEC_DEFAULT);
+    int error = action_error ? action_error : posix_spawn(&child, arguments[0], &actions, &attributes, arguments, environ);
     posix_spawnattr_destroy(&attributes);
     posix_spawn_file_actions_destroy(&actions);
-    if (error) { errno = error; remove_temporary_command(directory, command); return -1; }
-    int status;
+    close(receipt[1]);
+    if (error) { close(receipt[0]); errno = error; remove_temporary_command(directory, command); return -1; }
+    int status = 0;
+    char reply[128] = {0}; size_t reply_size = 0;
     double deadline = monotonic_seconds() + 3;
     for (;;) {
+        ssize_t count;
+        while (reply_size < sizeof(reply) - 1 && (count = read(receipt[0], reply + reply_size, sizeof(reply) - 1 - reply_size)) > 0)
+            reply_size += (size_t)count;
         pid_t result = waitpid(child, &status, WNOHANG);
         if (result == child) {
-            bool success = WIFEXITED(status) && WEXITSTATUS(status) == 0;
-            if (!success) remove_temporary_command(directory, command);
-            return success ? 0 : -1;
+            while (reply_size < sizeof(reply) - 1 && (count = read(receipt[0], reply + reply_size, sizeof(reply) - 1 - reply_size)) > 0)
+                reply_size += (size_t)count;
+            close(receipt[0]);
+            if (WIFEXITED(status) && WEXITSTATUS(status) == 0 && reply_size >= 5 && !strncmp(reply, "OK:", 3)
+                && reply[3] >= '0' && reply[3] <= '9') {
+                char *end = NULL;
+                errno = 0;
+                long identifier = strtol(reply + 3, &end, 10);
+                if (errno != ERANGE && identifier > 0 && identifier != previous_window
+                    && end == reply + reply_size - 1 && *end == '\n' && end[1] == '\0') {
+                    *window = identifier; return 0;
+                }
+            }
+            if (reply_size == 7 && !memcmp(reply, "DENIED\n", 7)) { remove_temporary_command(directory, command); return -1; }
+            return -2;
         }
-        if (result < 0 && errno != EINTR) { remove_temporary_command(directory, command); return -1; }
+        if (result < 0 && errno != EINTR) { close(receipt[0]); return -2; }
         if (interrupted || monotonic_seconds() > deadline) {
             kill(child, SIGKILL);
             while (waitpid(child, &status, 0) < 0 && errno == EINTR) {}
-            remove_temporary_command(directory, command);
-            return -1;
+            close(receipt[0]);
+            return -2;
         }
         struct timespec pause = {0, 10000000}; nanosleep(&pause, NULL);
     }
 }
-static void terminal_warning(const char *session) {
-    diagnostic("spdctl: TERMINAL_OPEN_FAILED (recording continues; reopen with spdctl trace open --session PATH)\n");
+static void terminal_warning(const char *session, StreamSelection stream, bool uncertain) {
+    diagnostic(uncertain ? "spdctl: TERMINAL_OPEN_UNCERTAIN stream=" : "spdctl: TERMINAL_OPEN_FAILED stream=");
+    diagnostic(stream_name(stream));
+    diagnostic(" (recording continues; inspect existing windows before manually reopening this stream)\n");
+    diagnostic("spdctl: Reopen with trace open --stream "); diagnostic(stream_name(stream)); diagnostic(" --session PATH\n");
     diagnostic("spdctl: TRACE_SESSION "); diagnostic(session); diagnostic("\n");
+}
+static int open_terminal(const char *session, StreamSelection selection) {
+    long previous_window = 0; int failed = 0;
+    for (StreamSelection stream = STREAM_SEND; stream <= STREAM_RECV; stream++) {
+        if (selection != STREAM_ALL && selection != stream) continue;
+        long window = 0;
+        int result = open_terminal_view(session, stream, previous_window, &window);
+        if (result) { terminal_warning(session, stream, result == -2); failed = 1; }
+        else previous_window = window;
+    }
+    return failed;
+}
+static pid_t open_terminal_async(const char *session) {
+    char executable[PATH_MAX];
+    if (!self_path(executable)) return -1;
+    posix_spawn_file_actions_t actions; posix_spawnattr_t attributes;
+    int error = posix_spawn_file_actions_init(&actions);
+    if (error) return -1;
+    error = posix_spawnattr_init(&attributes);
+    if (error) { posix_spawn_file_actions_destroy(&actions); return -1; }
+    if (!error) error = posix_spawn_file_actions_addopen(&actions, 0, "/dev/null", O_RDONLY, 0);
+    if (!error) error = posix_spawn_file_actions_addopen(&actions, 1, "/dev/null", O_WRONLY, 0);
+    /* Keep only the controller diagnostics descriptor, never engine/trace FDs. */
+    if (!error) error = posix_spawn_file_actions_adddup2(&actions, STDERR_FILENO, STDERR_FILENO);
+    if (!error) error = posix_spawnattr_setflags(&attributes, POSIX_SPAWN_CLOEXEC_DEFAULT);
+    char *arguments[] = {executable, "trace", "open", "--session", (char *)session, NULL};
+    pid_t child = -1;
+    if (!error) error = posix_spawn(&child, executable, &actions, &attributes, arguments, environ);
+    posix_spawnattr_destroy(&attributes); posix_spawn_file_actions_destroy(&actions);
+    return error ? -1 : child;
 }
 static bool trace_create(Trace *trace, const char *root, const char *profile) {
     memset(trace, 0, sizeof(*trace)); trace->index = trace->owner = -1;
@@ -271,7 +372,7 @@ static bool trace_create(Trace *trace, const char *root, const char *profile) {
     for (int i = 0; i < 3 && ok; i++) { trace->raw[i] = create_private(trace->session, names[i]); ok = trace->raw[i] >= 0; }
     if (ok) { trace->index = create_private(trace->session, "events.tsv"); ok = trace->index >= 0; }
     if (ok) ok = write_all(trace->index, TRACE_VERSION, strlen(TRACE_VERSION)) == 0;
-    if (ok) ok = create_viewer_command(trace->session);
+    if (ok) ok = create_viewer_command(trace->session, STREAM_SEND) && create_viewer_command(trace->session, STREAM_RECV);
     if (!ok) { trace_error(trace); return false; }
     return event(trace, "STATUS", 0, 0, "STARTED");
 }
@@ -330,7 +431,7 @@ static int read_session_file(int directory, const char *name) {
     return fd;
 }
 typedef enum { PLAIN, KEY, STRING, NUMBER, LITERAL, PUNCT, SEND_COLOR, RECV_COLOR, ERROR_COLOR } TextColor;
-static const char *ansi_colors[] = {"\033[0m", "\033[34m", "\033[32m", "\033[33m", "\033[35m", "\033[2m", "\033[36m", "\033[32m", "\033[31m"};
+static const char *ansi_colors[] = {"\033[0;1;39m", "\033[1;94m", "\033[1;92m", "\033[1;93m", "\033[1;95m", "\033[1;39m", "\033[1;96m", "\033[1;92m", "\033[1;91m"};
 typedef struct {
     unsigned char tail[4];
     size_t tail_count, depth, capacity;
@@ -425,7 +526,7 @@ static bool render_bytes(Viewer *viewer, int direction, const unsigned char *dat
             stream->message_open = true;
         }
         unsigned char byte = data[i];
-        TextColor color = PLAIN;
+        TextColor color = direction == 2 ? ERROR_COLOR : PLAIN;
         if (direction != 2 && !token_color(stream, byte, &color)) return false;
         if (byte == '\n') color = PLAIN;
         size_t count = byte < 0x80 ? 1 : utf8_unit(data + i, size - i);
@@ -473,7 +574,8 @@ static bool flush_text_tails(Viewer *viewer) {
 }
 static bool viewer_error(Viewer *viewer, uint64_t timestamp, uint64_t sequence, const char *detail) {
     if (!viewer_header(viewer, 2, timestamp, sequence, false)
-        || !safe_text((const unsigned char *)detail, strlen(detail)) || fputc('\n', stdout) == EOF) return false;
+        || !set_color(viewer, ERROR_COLOR) || !safe_text((const unsigned char *)detail, strlen(detail))
+        || !set_color(viewer, PLAIN) || fputc('\n', stdout) == EOF) return false;
     viewer->last_stream = -1; viewer->line_start = true;
     return true;
 }
@@ -482,7 +584,7 @@ static bool status_is_error(const char *detail) {
      * visible by default without requiring a viewer update. */
     return strcmp(detail, "STARTED") && strcmp(detail, "EOF_SENT") && strcmp(detail, "EXITED:0");
 }
-static int view_session(const char *session, bool color) {
+static int view_session(const char *session, bool color, StreamSelection selection) {
     int directory = open(session, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
     if (directory < 0) return fail("spdctl: TRACE_SESSION_UNAVAILABLE\n", 66);
     int index = read_session_file(directory, "events.tsv"), raw[3];
@@ -495,11 +597,14 @@ static int view_session(const char *session, bool color) {
     if (!input || raw[0] < 0 || raw[1] < 0 || raw[2] < 0 || !fgets(line, sizeof(line), input) || strcmp(line, TRACE_VERSION)) {
         result = fail("spdctl: TRACE_FORMAT_UNSUPPORTED_OR_INCOMPLETE\n", 65); goto done;
     }
-    if (printf("spdctl transport viewer — SEND: controller → CLI; RECV: CLI → recorder; ERROR: diagnostics\n"
-               "Raw bytes remain in the session files.\n") < 0) { result = 1; goto done; }
+    if (viewer.color && fputs(ansi_colors[PLAIN], stdout) == EOF) { result = 1; goto done; }
+    const char *description = selection == STREAM_SEND ? "SEND: controller → CLI" : selection == STREAM_RECV
+        ? "RECV: CLI → recorder; ERROR: diagnostics" : "SEND: controller → CLI; RECV: CLI → recorder; ERROR: diagnostics";
+    if (printf("spdctl transport viewer — %s\nRaw bytes remain in the session files.\n", description) < 0) { result = 1; goto done; }
     if (fputs("Session: ", stdout) == EOF || !safe_text((const unsigned char *)session, strlen(session))
         || fputc('\n', stdout) == EOF || fflush(stdout) != 0) { result = 1; goto done; }
     uint64_t expected = 1;
+    uint64_t next_offset[3] = {0, 0, 0};
     bool finished = false;
     for (;;) {
         off_t position = ftello(input);
@@ -517,12 +622,21 @@ static int view_session(const char *session, bool color) {
                 }
                 int stream = !strcmp(kind, "SEND") ? 0 : !strcmp(kind, "RECV") ? 1 : !strcmp(kind, "STDERR") ? 2 : -1;
                 if (stream >= 0) {
-                    viewer.streams[stream].timestamp = timestamp; viewer.streams[stream].sequence = sequence;
-                    if (!read_range(raw[stream], offset, length, &viewer, stream)) {
+                    struct stat information;
+                    if (offset != next_offset[stream] || fstat(raw[stream], &information) < 0
+                        || information.st_size < 0 || offset + length > (uint64_t)information.st_size) {
                         result = fail("spdctl: TRACE_DATA_UNAVAILABLE\n", 65); break;
                     }
+                    next_offset[stream] += length;
+                    if (selected_stream(selection, stream)) {
+                        viewer.streams[stream].timestamp = timestamp; viewer.streams[stream].sequence = sequence;
+                        if (!read_range(raw[stream], offset, length, &viewer, stream)) {
+                            result = fail("spdctl: TRACE_DATA_UNAVAILABLE\n", 65); break;
+                        }
+                    }
                 } else if (!strcmp(kind, "STATUS")) {
-                    if (status_is_error(detail) && !viewer_error(&viewer, timestamp, sequence, detail)) { result = 1; break; }
+                    if (selected_stream(selection, 2) && status_is_error(detail)
+                        && !viewer_error(&viewer, timestamp, sequence, detail)) { result = 1; break; }
                 } else if (strcmp(kind, "DELIVERED")) { result = fail("spdctl: TRACE_INDEX_INVALID\n", 65); break; }
                 if (fflush(stdout) != 0) { result = 1; break; }
                 continue;
@@ -543,7 +657,8 @@ static int view_session(const char *session, bool color) {
         close(marker);
         if (locked == 0) {
             if (!flush_text_tails(&viewer)
-                || !viewer_error(&viewer, now_ns(), expected, "Recording incomplete: recorder exited without finalizing the trace.")) result = 1;
+                || (selected_stream(selection, 2)
+                    && !viewer_error(&viewer, now_ns(), expected, "Recording incomplete: recorder exited without finalizing the trace."))) result = 1;
             fflush(stdout); finished = true; break;
         }
         if (lock_error != EWOULDBLOCK && lock_error != EAGAIN) {
@@ -559,7 +674,7 @@ static int view_session(const char *session, bool color) {
         }
     }
 done:
-    (void)set_color(&viewer, PLAIN);
+    if (viewer.color) (void)fputs("\033[0m", stdout);
     for (int i = 0; i < 3; i++) free(viewer.streams[i].containers);
     if (input) fclose(input); else close_fd(&index);
     for (int i = 0; i < 3; i++) close_fd(&raw[i]);
@@ -613,7 +728,10 @@ static int relay(char **arguments, Trace *trace, bool terminal) {
         return fail("spdctl: BOOTSTRAP_EXEC_FAILED\n", 1);
     }
     diagnostic("spdctl: TRACE_SESSION "); diagnostic(trace->session); diagnostic("\n");
-    if (terminal && open_terminal(trace->session) != 0) terminal_warning(trace->session);
+    pid_t terminal_child = terminal ? open_terminal_async(trace->session) : -1;
+    if (terminal && terminal_child < 0) {
+        terminal_warning(trace->session, STREAM_SEND, false); terminal_warning(trace->session, STREAM_RECV, false);
+    }
     int original[3] = {-1, -1, -1};
     bool setup_failed = false;
     for (int i = 0; i < 3; i++) { original[i] = nonblocking(i); if (original[i] < 0) setup_failed = true; }
@@ -626,6 +744,11 @@ static int relay(char **arguments, Trace *trace, bool terminal) {
     double stop_started = 0, exit_seen = 0;
     if (setup_failed) diagnostic("spdctl: TRANSPORT_SETUP_FAILED\n");
     for (;;) {
+        if (terminal_child > 0) {
+            int terminal_status;
+            pid_t result = waitpid(terminal_child, &terminal_status, WNOHANG);
+            if (result == terminal_child || (result < 0 && errno == ECHILD)) terminal_child = -1;
+        }
         if (interrupted && !stopping) {
             char detail[48]; snprintf(detail, sizeof(detail), "SIGNAL:%d", interrupted);
             event(trace, "STATUS", 0, 0, detail);
@@ -743,25 +866,29 @@ int main(int argc, char **argv) {
     }
     if (argc > first && !strcmp(argv[first], "trace")) {
         if (argc < first + 4 || (strcmp(argv[first + 1], "view") && strcmp(argv[first + 1], "open")))
-            return fail("spdctl: Expected trace view|open --session ABS [--color auto|always|never]\n", 64);
+            return fail("spdctl: Expected trace view|open --session ABS [--stream all|send|recv] [--color auto|always|never]\n", 64);
         bool viewing = !strcmp(argv[first + 1], "view");
-        const char *requested_session = NULL, *color_mode = "auto";
-        bool color_seen = false;
+        const char *requested_session = NULL, *color_mode = "auto", *stream_mode = "all";
+        bool color_seen = false, stream_seen = false;
         for (int i = first + 2; i < argc; i++) {
             if (!strcmp(argv[i], "--session") && !requested_session && i + 1 < argc) requested_session = argv[++i];
             else if (viewing && !strcmp(argv[i], "--color") && !color_seen && i + 1 < argc) {
                 color_mode = argv[++i]; color_seen = true;
+            } else if (!strcmp(argv[i], "--stream") && !stream_seen && i + 1 < argc) {
+                stream_mode = argv[++i]; stream_seen = true;
             } else return fail("spdctl: INVALID_TRACE_ARGUMENTS\n", 64);
         }
         if (!requested_session || requested_session[0] != '/' || (strcmp(color_mode, "auto")
-            && strcmp(color_mode, "always") && strcmp(color_mode, "never")))
+            && strcmp(color_mode, "always") && strcmp(color_mode, "never"))
+            || (strcmp(stream_mode, "all") && strcmp(stream_mode, "send") && strcmp(stream_mode, "recv")))
             return fail("spdctl: INVALID_TRACE_ARGUMENTS\n", 64);
+        StreamSelection selection = !strcmp(stream_mode, "send") ? STREAM_SEND : !strcmp(stream_mode, "recv") ? STREAM_RECV : STREAM_ALL;
         const char *term = getenv("TERM");
         bool color = !strcmp(color_mode, "always") || (!strcmp(color_mode, "auto") && isatty(STDOUT_FILENO)
                      && (!term || strcmp(term, "dumb")) && !getenv("NO_COLOR"));
         char session[PATH_MAX];
         if (!realpath(requested_session, session)) return fail("spdctl: TRACE_SESSION_UNAVAILABLE\n", 66);
-        if (viewing) return view_session(session, color);
+        if (viewing) return view_session(session, color, selection);
         int directory = open(session, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
         int index = directory >= 0 ? read_session_file(directory, "events.tsv") : -1;
         char header[sizeof(TRACE_VERSION)] = {0};
@@ -769,8 +896,7 @@ int main(int argc, char **argv) {
         close_fd(&index); close_fd(&directory);
         if (read_count != (ssize_t)sizeof(TRACE_VERSION) - 1 || strcmp(header, TRACE_VERSION))
             return fail("spdctl: TRACE_FORMAT_UNSUPPORTED_OR_INCOMPLETE\n", 65);
-        if (open_terminal(session) != 0) { terminal_warning(session); return 1; }
-        return 0;
+        return open_terminal(session, selection);
     }
     char **forward = calloc((size_t)engine_count + (size_t)(argc - first) + 1, sizeof(char *));
     if (!forward) return fail("spdctl: ALLOCATION_FAILED\n", 1);
@@ -779,7 +905,7 @@ int main(int argc, char **argv) {
     bool run = argc > first && !strcmp(argv[first], "run"), machine = false, terminal = true;
     const char *home = getenv("HOME"), *selected = getenv("SPDCTL_PROFILE"), *trace_root = NULL;
     char default_profile[PATH_MAX], default_trace[PATH_MAX], profile[PATH_MAX];
-    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v4", home) >= PATH_MAX
+    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v5", home) >= PATH_MAX
         || snprintf(default_trace, sizeof(default_trace), "%s/Library/Logs/Shattered Pixel Dungeon CLI/transport", home) >= PATH_MAX)
         return fail("spdctl: HOME_UNAVAILABLE\n", 64);
     if (!selected) selected = default_profile;

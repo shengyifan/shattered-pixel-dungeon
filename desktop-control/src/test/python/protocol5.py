@@ -1,4 +1,4 @@
-"""Protocol 4 wire client and explicit test-only canonical assertion projection.
+"""Protocol 5 wire client and explicit test-only canonical assertion projection.
 
 The engine accepts only the compact protocol. Existing scenario assertions use
 canonical names locally; this module never sends their old envelopes or invents
@@ -6,6 +6,7 @@ missing provenance, request details, or game observations.
 """
 import copy
 import json
+import re
 
 OPS = dict(zip(
     "info state actions req history events move cell item wait rest search save quit cancel click choose select text value scroll bind_slot bind_key back reveal zoom pan untarget".split(),
@@ -13,6 +14,9 @@ OPS = dict(zip(
 FIELDS = dict(zip(
     "ctl dir g loc rid opt alt inv entities cues nodes acts desc qty min max s rev".split(),
     "control direction gesture locator target_id option alternate inventory visible_entities visual_cues controls actions description quantity minimum maximum scope_id state_version".split()))
+FIELDS.update(dict(zip(
+    "mxp ht sub_name tp via shortcut prompt activity snap item_info saves saved sid src_s src_id at".split(),
+    "max_experience max_hp subclass_name talent_points_available details_via shortcut_action cell_prompt continuous_activity snapshot_status inspected_item saves_during_request last_save receipt_id origin_scope_id origin_request_id occurred_at".split())))
 TO_OP = {value: key for key, value in OPS.items()}
 TO_FIELD = {value: key for key, value in FIELDS.items()}
 DIRECTIONS = dict(zip("N NE E SE S SW W NW".split(),
@@ -28,11 +32,11 @@ def is_live_operation(op):
 
 
 def request(op, args=None, request_id=None, scope=None, version=None):
-    """Encode a scenario request as an actual flat protocol-4 request."""
+    """Encode a scenario request as an actual flat protocol-5 request."""
     params = dict(args or {})
     action = params.pop("action", None) if op == "action.execute" else None
     wire_op = TO_OP.get(action if action is not None else op, action or op)
-    wire = {"v": 4, "id": request_id, "op": wire_op}
+    wire = {"v": 5, "id": request_id, "op": wire_op}
     if scope is not None:
         wire["s"] = scope
     if action is not None or wire_op in OPS.keys() - QUERY_OPS:
@@ -48,6 +52,29 @@ def wire_bytes(value):
     return (json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
 
 
+def _path(path):
+    return re.sub(r"[A-Za-z_][A-Za-z_0-9]*", lambda m: FIELDS.get(m.group(), m.group()), path)
+
+
+def _definition(table, index):
+    assert type(index) is int and isinstance(table, list) and 0 <= index < len(table), (table, index)
+    return copy.deepcopy(table[index])
+
+
+def _entities(value):
+    table = value.get("entity_defs", [])
+    result = []
+    for item in value.get("entities", []):
+        if "def" not in item:
+            result.append(_value(item))
+            continue
+        assert set(item) == {"cell", "def"}, item
+        descriptor = _definition(table, item["def"])
+        assert isinstance(descriptor, dict) and "cell" not in descriptor and descriptor.get("kind") in {"trap", "container"}, descriptor
+        result.append(_value({"cell": item["cell"], **descriptor}))
+    return result
+
+
 def _value(value):
     if isinstance(value, list):
         return [_value(item) for item in value]
@@ -57,24 +84,34 @@ def _value(value):
         return _map(value)
     result = {}
     for key, child in value.items():
+        if key == "entity_defs":
+            continue
+        if key == "entities":
+            result["visible_entities"] = _entities(value)
+            continue
+        if key == "cues" and isinstance(child, list):
+            # The outer observation alias is a map; VisualSnapshot and event payloads
+            # also use the canonical key cues for their list of rendered kind/cell pairs.
+            result["cues"] = _value(child)
+            continue
         if key in {"text_sources", "text_diagnostics"}:
-            result[key] = {FIELDS.get(field, field): copy.deepcopy(details) for field, details in child.items()}
-        elif key in {"raw", "preserved_cells"}:
+            result[key] = {_path(field): copy.deepcopy(details) for field, details in child.items()}
+        elif key in {"raw", "reply", "schema", "original_payload", "preserved_cells"}:
             # Diagnostic cell annotations are disclosed evidence, not an
             # alternate row encoding or a baseline to merge into the live map.
             result[key] = copy.deepcopy(child)
         elif key == "text_origins":
-            result[key] = {FIELDS.get(field, field): copy.deepcopy(origins) for field, origins in child.items()}
+            result[key] = {_path(field): copy.deepcopy(origins) for field, origins in child.items()}
         elif key == "op":
             result["action"] = OPS.get(child, child)
         elif key == "pres":
             result["translation_status"] = child.get("st")
-            result["text_diagnostics"] = {FIELDS.get(item["field"], item["field"]): item["code"]
+            result["text_diagnostics"] = {_path(item["field"]): item["code"]
                                           for item in child.get("diag", [])}
         elif key == "dir":
             result["direction"] = DIRECTIONS.get(child, child)
-        elif key == "details_via" and isinstance(child, str):
-            result[key] = OPS.get(child, child)
+        elif FIELDS.get(key, key) == "details_via" and isinstance(child, str):
+            result["details_via"] = OPS.get(child, child)
         else:
             result[FIELDS.get(key, key)] = _value(child)
     return result
@@ -84,7 +121,12 @@ def _map(value):
     if not isinstance(value, dict) or "rows" not in value:
         return value
     width, height = value["w"], value["h"]
-    environment = value.get("env", {})
+    environment = {}
+    for cell, effects in value.get("env", {}).items():
+        if type(effects) is int:
+            effects = _definition(value.get("effect_defs", []), effects)
+        assert isinstance(effects, list), effects
+        environment[cell] = effects
     cells = []
     alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
     integer_rows = len(value["types"]) > len(alphabet)
@@ -92,6 +134,9 @@ def _map(value):
     for y, start, encoded, visibility in value["rows"]:
         assert isinstance(encoded, list) if integer_rows else isinstance(encoded, str), value
         indices = encoded if integer_rows else [alphabet.index(char) for char in encoded]
+        assert indices and isinstance(visibility, str), value
+        if len(visibility) == 1:
+            visibility *= len(indices)
         assert len(indices) == len(visibility) and 0 <= y < height and 0 <= start < width
         assert start + len(indices) <= width
         for offset, (index, vis) in enumerate(zip(indices, visibility)):
@@ -106,14 +151,15 @@ def _map(value):
     result = {"width": width, "height": height, "cells": cells, "unknown": "omitted"}
     result.update({key: copy.deepcopy(child) if key == "preserved_cells" else _value(child)
                    for key, child in value.items()
-                   if key not in {"w", "h", "types", "rows", "env"}})
+                   if key not in {"w", "h", "types", "rows", "env", "effect_defs"}})
     return result
 
 
 def _item_defaults(item):
-    """Expand documented v4 defaults, retaining unknown versus inapplicable."""
+    """Expand documented v5 defaults, retaining unknown versus inapplicable."""
     for field, default in (("quantity", 1), ("equipped", False), ("available", True), ("type_known", True)):
         item.setdefault(field, default)
+    item.setdefault("details_via", "ui.activate")
     for field, known in (("level", "level_known"), ("cursed", "curse_known")):
         # The normal wire uses three states. Protected source/partial metadata
         # may retain the original property/knowledge pair as diagnostic evidence.
@@ -144,6 +190,9 @@ def state(value, scope=None, version=None):
         if isinstance(entity.get("item"), dict):
             _item_defaults(entity["item"])
     actions = result.setdefault("actions", [])
+    if "ui" in observation:
+        observation["ui"].setdefault("modal", False)
+        observation["ui"].setdefault("inspected_item", None)
     for node in observation.get("ui", {}).get("controls", []):
         node.setdefault("enabled", True)
         node.setdefault("dimmed", False)
@@ -171,10 +220,10 @@ def state(value, scope=None, version=None):
 
 
 def response(wire, op=None):
-    """Decode real v4 bytes into a test-only assertion view, never a wire log."""
-    if wire.get("v") != 4:
-        raise AssertionError({"expected_protocol_4": wire})
-    result = {"protocol_version": 4, "id": wire.get("id"), "scope_id": wire.get("s"),
+    """Decode real v5 bytes into a test-only assertion view, never a wire log."""
+    if wire.get("v") != 5:
+        raise AssertionError({"expected_protocol_5": wire})
+    result = {"protocol_version": 5, "id": wire.get("id"), "scope_id": wire.get("s"),
               "ok": "err" not in wire}
     if "st" in wire:
         result["status"] = wire["st"]

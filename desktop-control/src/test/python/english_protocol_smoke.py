@@ -3,7 +3,7 @@
 
 No game choices use the private UiSceneAssertions or audit database. Private data
 from isolated profiles is read only after a chosen operation, for assertions.
-CLI 4 uses fresh schema-7 profiles; old protocol/audit migration is unsupported.
+CLI 5 uses fresh schema-8 profiles; old protocol/audit migration is unsupported.
 """
 import argparse
 import json
@@ -12,7 +12,7 @@ import re
 import time
 import unicodedata
 import uuid
-from protocol4 import pages
+from protocol5 import pages
 from client_result import settle_action
 
 from fixture_smoke import FixtureClient, freeze_runtime, GAME_PROSE_FIELDS, RAW_FIELDS, game_prose_values
@@ -25,7 +25,7 @@ RAW = RAW_FIELDS
 
 
 def prose_values(value, path=(), prose=False):
-    """Share protocol-4 source-aware prose rules with every fixture client."""
+    """Share protocol-5 source-aware prose rules with every fixture client."""
     yield from game_prose_values(value, path, prose)
 
 

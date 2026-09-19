@@ -1,62 +1,38 @@
-# spdctl 控制接口
+# spdctl control interface
 
-当前版本 **CLI.4.0.1**，基础游戏 **3.3.8**，协议 **4**，审计 schema **7**。完整接口以随包提供的[英文操作手册](cli-help.md)为准；本次补丁见[独立终端颜色修复](cli-issues/2026-09-14-cli-4.0.1-terminal-color.md)，主版本实现见 [CLI 4.0 记录](cli4-implementation.md)。历史版本文档不作为新版请求格式。
+Current release: **CLI.5.0.0 / protocol 5 / audit schema 8**, base game **3.3.8**.
+The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI 5 implementation and validation](cli5-implementation.md) and the repository [agent working agreements](../AGENTS.md).
 
-## 启动与目录
+## Start an independent v5 profile
 
 ```sh
 ./bin/spdctl run --machine
 "desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl" run --machine
 ```
 
-默认使用 `~/Library/Application Support/Shattered Pixel Dungeon CLI v4/`，保留原 v3 及更早目录不动。显式指定旧审计目录时会在写入前拒绝，不迁移、不清空。新目录默认中文窗口、跳过教程和首次前言；已有目录的设置与游戏规则保留。
+The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v5/`. Earlier profiles remain untouched; schema 1–7 is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty profiles receive the existing windowed Chinese/new-profile defaults.
 
-机器入口在同一 JVM 启动 GUI 和串行 stdin/stdout 管道；始终保持原连接。它不能接管另一个普通 GUI 进程。所有游戏决策使用公开协议，不需要截图或 OS 键鼠输入。
+The game and controller share one JVM and one serial NDJSON connection. Every request requires `v:5` and a fresh id; actions additionally bind the actual current scope and revision. Use only currently advertised `ops/acts`. Do not inspect saves or private audit to choose actions.
 
-## 短命令
+## Decode the current observation
 
-```json
-{"v":4,"id":"q1","op":"info"}
-{"v":4,"id":"q2","s":"<返回的作用域>","op":"state"}
-{"v":4,"id":"a1","s":"<当前作用域>","rev":"<当前版本>","op":"move","dir":"N"}
-{"v":4,"id":"a2","s":"<当前作用域>","rev":"<当前版本>","op":"click","ctl":"<当前控件>"}
-```
+Default `play` is complete and self-contained. Expand its own `entity_defs`, `map.effect_defs`, uniform row visibility and scoped defaults as specified in help. Preserve unknown gaps, distinct terrain descriptors, knowledge nulls, danger descriptions, health bars, rendered counts/estimates, available actions and visual cues. UI item `loc/display` comes from the same rendered capture, not hidden item properties. Full/src views retain expanded diagnostic detail.
 
-每帧需要 `v:4` 和新的 `id`；除首次 `info` 外还需要 `s`，动作需要 `rev`。参数直接放在顶层。旧请求名、旧 envelope 和 `args` 均拒绝。短 ID 仍须在整个 scope 内唯一，含存档重启后的历史；scope/rev 仍是不透明令牌。
+Synchronous success already supplies the current observation. Expose an interruptible `in_progress` response before polling its small `req` receipt; after successful terminal receipt obtain one fresh state (and first discover scope for finite resolving/cancelling). Preserve original outcomes/save receipts separately. Never replay completed, pending or uncertain actions. After successful quit await exit without another query.
 
-成功返回 `v/id/s/rev/st/data`，没有 `ok`、`result.observation` 和重复的作用域。失败使用 `err`。`st` 表示请求执行状态，`data.phase` 表示游戏阶段，不能互相替代。开局等实时结果以返回的新 `s` 为准；历史查询不提供顶层实时 `rev`。
-
-查询为 `info/state/actions/req/history/events`。游戏、控件和界面操作直接使用 `move/cell/item/click/text/choose/save/quit` 等短命令，完整 22 项见英文手册。可用操作来自 `acts` 和 `ui.nodes[].ops`；控件已有的标签、手势和范围可以由其 ops 共享。
-
-## 精简观察与详情
-
-默认 `play` 为自包含观察，不是差量；`state/actions view:"full"` 返回完整诊断视图，普通动作返回 play。背包为 `inv`，可见实体为 `entities`，视觉线索为 `cues`；只按明确规则省略默认值、空文字叶和普通物品长说明，保留有意义文本/控件、父子关系、禁用、变暗和额外库存状态。物品 level/cursed 缺失表示不适用，null 表示未知，显式 0/false 表示已知值。
-
-地图使用完整的 `w/h/types/rows/env`，每段 `[y,x_start,tiles,visibility]`。tiles 用 64 字符序列索引本次完整地形字典；超过 64 种时整张图改用整数数组。visibility 的 v/s/m 分别为可见/已探索/已探明；cell=`y*w+x_start+offset`。未知间隙保持省略，env 缺失表示当前为空，不依赖任何旧地图。
-
-CLI 系统文字为官方英文；用户和外部文字保留原文及 `text_origins` 标记。完整来源树默认省略，`state src:true` 自动使用 full，获取该次冻结观察的来源。`pres`、裁剪和部分呈现诊断仍保留，不得因为文案降级重放已经完成的动作。裁剪来源详情也不能暴露未显示的文字或参数。
-
-`req` 默认只返回原请求执行状态、错误、保存回执和可选详情。`get:["raw","reply","before","after","meta"]` 显式选取；before/after 来自冻结公开快照，reply 是保存的最终逻辑结果，raw 是首个实际交换的原文及输出尝试记录。它们不触发新的引擎观察，不反推丢失信息。
-
-`history/events` 的分页数据为 `items/next/end/until`。后续页使用 after=next 并沿用同一 until 上界，保证每页一条时也能结束；新一轮轮询省略 until。保留条数限制，分页不属于传输截断。
-
-## 执行保护与持久化
-
-进行中的动作通过小 `req` 回执查询；COMPLETED/AWAITING_INPUT/INTERRUPTED 后读一次实时 state，正常成功不取历史 reply。同步成功回复已经是当前观察，无需强制再查询；quit 成功后只等待退出。原动作 outcome/save 与当前 observation 分开，错误和 UNKNOWN 不能被后续成功查询覆盖。原生持续移动/休息仍可用当前广告的 `cancel` 取消；`untarget` 只取消选格。
-
-`STALE_STATE` 表示游戏回调前拒绝；允许恢复的客户端应重新观察、核对目标/资源/控件后以新 ID、新 rev 重新决策，并设有限次数。服务端不替换版本重放。任务规定遇错暂停时，记录证据并停止操作。教程和攻击指示器的有限更新仍纳入稳定边界。
-
-`save` 后检查 `data.persistence.saves_during_request`；空数组不确认保存。关闭选择后再 `quit`，等待响应和进程结束。存档文件与审计事务不是同一个事务；不会重放历史动作来补齐存档。公开/内部审计分离，协议不提供 SQL 或私有状态导出。
-
-## Terminal 查看器与长度
-
-默认打开独立 Terminal 查看器，专用窗口显式启用彩色；关闭查看器不关闭游戏或记录。`--no-terminal` 仅关闭自动弹窗，`--trace-dir` 指定不与 profile 重叠的记录目录。
+## Two passive Terminal windows
 
 ```sh
 spdctl trace open --session /absolute/session
-spdctl trace view --session /absolute/session --color auto
+spdctl trace open --session /absolute/session --stream send
+spdctl trace open --session /absolute/session --stream recv
+spdctl trace view --session /absolute/session --stream all --color auto
 ```
 
-查看器只显示 SEND、RECV、ERROR。DELIVERED 和正常生命周期仍写入原始索引，但不显示。相同消息的连续分块不插入重复头，方向切换显示延续标记。颜色支持 auto/always/never；auto 遵循 TTY、TERM 和 NO_COLOR。JSON key、字符串、数字、布尔/null 分色，正文不重排；原文控制字符安全转义，颜色不进入机器 stdout 或 raw 文件。
+Run and `trace open` default to two independent windows, SEND and RECV + ERROR. Direct `trace view` defaults to a combined display. Both dedicated windows use bold bright syntax highlighting while preserving Terminal's background. `--no-terminal` disables automatic opening only. Closing/reopening either view does not affect the other, the game, or byte-exact recording.
 
-传输和查看器没有人为的整条消息字节上限。64 KiB 是有背压的循环缓冲，不是消息上限；实际容量仍受内存、磁盘和系统资源约束。字段语义、JSON 层数、来源渲染保护和游戏输入限制保留。外层 AI 工具可以限制显示量，不能把该截断片段当完整 JSON；随附示例先完整收发，再选择交给 AI 的内容。
+One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, `open-send.command`, and `open-recv.command`. Trace format remains 1. Color/control escaping belongs only to presentation; no message body is truncated or reformatted. Viewer launch failures report a channel and reopen command without retrying uncertain opens or interrupting protocol forwarding.
+
+## Validation boundary
+
+Use current v5 tests and the rebuilt executable. Historical CLI 2/3/4 reports describe their own versions; their test counts are not v5 evidence. Test profiles and generated JSON live in ignored build directories. Actual token measurements, package checks and any remaining real-window acceptance limits are recorded in the v5 implementation report.

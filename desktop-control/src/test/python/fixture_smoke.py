@@ -17,7 +17,7 @@ import uuid
 import zipfile
 from machine_smoke import Client
 from client_result import settle_action
-from protocol4 import is_live_operation
+from protocol5 import is_live_operation
 
 CLASSES = ["WARRIOR", "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"]
 SUBCLASSES = {

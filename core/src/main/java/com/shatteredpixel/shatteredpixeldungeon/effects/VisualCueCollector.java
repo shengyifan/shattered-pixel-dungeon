@@ -178,7 +178,12 @@ public final class VisualCueCollector {
     }
 
     private static Camera resolvedCamera(Gizmo gizmo) {
-        for (Gizmo current = gizmo; current != null; current = current.parent) if (current.camera != null) return current.camera;
+        for (Gizmo current = gizmo; current != null; current = current.parent) {
+            // Scene.camera() supplies the main camera even before an emitter's first
+            // particle lazily caches it. Read that fallback without populating caches.
+            if (current instanceof com.watabou.noosa.Scene) return Camera.main;
+            if (current.camera != null) return current.camera;
+        }
         return null;
     }
 

@@ -17,6 +17,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Pasty;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HealthBar;
@@ -91,7 +92,10 @@ public final class UiBridge {
 
     public Map<String,Object> describeUi() { return PublicEnglishProjection.copy(frozenUi()); }
 
-    public Map<String, Object> frozenUi() {
+    public Map<String, Object> frozenUi() { return frozenUi(Collections.emptyMap()); }
+
+    /** The supplied public inventory was captured at this same stable render-thread boundary. */
+    public Map<String, Object> frozenUi(Map<String, Object> observation) {
         refresh();
         Map<String, Object> result = map("scene", scene == null ? "none" : scene.getClass().getSimpleName(),
                 "modal", scope instanceof Window || scope instanceof RightClickMenu, "controls", new ArrayList<>(nodes),
@@ -108,7 +112,63 @@ public final class UiBridge {
         if (scope instanceof InventoryPane) {
             result.put("item_prompt", ((InventoryPane) scope).getSelector().textPrompt());
         }
-        return PublicEnglishProjection.freeze(result);
+        return PublicEnglishProjection.freeze(projectionHints(observation).attach(result));
+    }
+
+    private UiProjectionHints projectionHints(Map<String, Object> observation) {
+        IdentityHashMap<Item, String> locators = publicItemLocators(observation);
+        Map<String, Map<String, Object>> byId = new LinkedHashMap<>();
+        for (Map<String, Object> node : nodes) byId.put((String) node.get("id"), node);
+        Map<String, UiProjectionHints.Node> hints = new LinkedHashMap<>();
+        for (Map<String, Object> node : nodes) {
+            String nodeId = (String) node.get("id");
+            Gizmo control = controls.get(nodeId);
+            List<String> owned = new ArrayList<>();
+            // visibleText only aggregates direct text children of these groups. Text blocks and
+            // text inputs have their own rendering rules and cannot claim their internal children.
+            if (control instanceof Group && !(control instanceof RenderedTextBlock)
+                    && !(control instanceof TextInput)) {
+                for (Gizmo child : ((Group) control).childrenSnapshot()) {
+                    if (!(child instanceof RenderedTextBlock || child instanceof BitmapText) || !shown(child)) continue;
+                    String childId = identities.get(child);
+                    Map<String, Object> childNode = byId.get(childId);
+                    if (childNode != null && nodeId.equals(childNode.get("parent")) && childNode.containsKey("text"))
+                        owned.add(childId);
+                }
+            }
+            boolean empty = "text".equals(node.get("role")) && !node.containsKey("text")
+                    && !Boolean.TRUE.equals(node.get("clipped"));
+            String locator = null;
+            Map<String, String> display = new LinkedHashMap<>();
+            if (control instanceof ItemSlot) {
+                ItemSlot slot = (ItemSlot) control;
+                empty = slot.emptyRenderedPlaceholder();
+                locator = locators.get(slot.displayedItem());
+                for (Map.Entry<String, BitmapText> entry : slot.renderedTextComponents().entrySet()) {
+                    BitmapText child = entry.getValue();
+                    String childId = identities.get(child);
+                    Map<String, Object> childNode = byId.get(childId);
+                    if (shown(child) && childNode != null && nodeId.equals(childNode.get("parent"))
+                            && childNode.containsKey("text")) display.put(entry.getKey(), childId);
+                }
+            }
+            if (empty || !owned.isEmpty() || locator != null || !display.isEmpty())
+                hints.put(nodeId, new UiProjectionHints.Node(empty, owned, locator, display));
+        }
+        return new UiProjectionHints(hints);
+    }
+
+    /** Match identities only among locators already exposed by this exact public inventory. */
+    private static IdentityHashMap<Item, String> publicItemLocators(Map<String, Object> observation) {
+        IdentityHashMap<Item, String> locators = new IdentityHashMap<>();
+        Object inventory = observation.get("inventory");
+        if (inventory instanceof List) for (Object raw : (List<?>) inventory) {
+            if (!(raw instanceof Map) || !(((Map<?, ?>) raw).get("locator") instanceof String)) continue;
+            String locator = (String) ((Map<?, ?>) raw).get("locator");
+            Item item = PlayerObservation.resolveItem(Dungeon.hero, locator);
+            if (item != null) locators.put(item, locators.containsKey(item) ? null : locator);
+        }
+        return locators;
     }
 
     private Map<String,Object> inspectedItemKnowledge() {

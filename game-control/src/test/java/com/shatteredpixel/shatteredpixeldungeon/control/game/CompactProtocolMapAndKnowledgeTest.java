@@ -6,7 +6,7 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 import static org.junit.Assert.*;
 
 /** Schema and public-information invariants independent of the live engine. */
-public class CompactProtocolV4Test {
+public class CompactProtocolMapAndKnowledgeTest {
     @Test public void mapsRoundTripUnknownGapsRowBoundariesAndEnvironmentRemoval() {
         List<Object> cells=Arrays.asList(tile(7,1,"visited"),tile(0,2,"mapped"),tile(1,1,"visible"),tile(3,1,"visible"),tile(4,1,"visible"));
         Map<String,Object> fire=object(cells.get(2));fire.put("environment",Arrays.asList(map("type","fire","description","Flames")));
@@ -60,7 +60,7 @@ public class CompactProtocolV4Test {
             assertTrue(object(inventory.get(1)).containsKey("cursed"));assertNull(object(inventory.get(1)).get("cursed"));
             assertEquals(0,object(inventory.get(2)).get("level"));assertEquals(false,object(inventory.get(2)).get("cursed"));
             for(Object value:inventory){assertFalse(object(value).containsKey("level_known"));assertFalse(object(value).containsKey("curse_known"));}
-            assertEquals(map("level_known",false),object(projected.get("ui")).get("inspected_item"));
+            assertEquals(map("level_known",false),object(projected.get("ui")).get("item_info"));
         }
     }
     @Test public void scopedDefaultsPreserveNondefaultsZeroesNullSlotsAndVisibleItemDetails() {
@@ -119,7 +119,7 @@ public class CompactProtocolV4Test {
         List<?> entities=(List<?>)play.get("entities");assertEquals("Something feels off",object(entities.get(0)).get("desc"));
         assertEquals("A hidden danger",object(entities.get(1)).get("desc"));assertFalse(object(object(entities.get(2)).get("item")).containsKey("desc"));
         assertEquals(Collections.singletonList(map("name","Trained","points",2)),object(play.get("hero")).get("talents"));
-        assertEquals(Arrays.asList(0,1,0,0),object(play.get("hero")).get("talent_points_available"));
+        assertEquals(Arrays.asList(0,1,0,0),object(play.get("hero")).get("tp"));
         for(boolean sources:Arrays.asList(false,true)) {
             Map<String,Object> full=object(CompactProtocol.project(original,sources,true));
             assertEquals("A normal potion.",object(((List<?>)full.get("inv")).get(0)).get("desc"));
@@ -150,13 +150,13 @@ public class CompactProtocolV4Test {
                 map("field","$.data.map.types[0].name","code","clipped_text"),
                 map("field","$.data.ui.nodes[0].text","code","clipped_text")),diagnostics);
     }
-    @Test public void presentationOnlyDiagnosticKeepsEnclosingNodeIndexesStable() {
+    @Test public void presentationOnlyDiagnosticMovesWithItsNodeAfterPruning() {
         Map<String,Object> state=map("ui",map("controls",Arrays.asList(map("id","empty","role","text"),
                 map("id","diagnostic","role","text","text","Warning"))),"presentation",map("status","partial","diagnostics",Arrays.asList(
                 map("field","$.ui.controls[1].text","code","legacy"))));
         Map<String,Object> reply=CompactProtocol.success("q","run:a","completed",state,true,false);
-        assertEquals(2,((List<?>)object(object(reply.get("data")).get("ui")).get("nodes")).size());
-        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[1].text","code","legacy")),object(reply.get("pres")).get("diag"));
+        assertEquals(1,((List<?>)object(object(reply.get("data")).get("ui")).get("nodes")).size());
+        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].text","code","legacy")),object(reply.get("pres")).get("diag"));
     }
     @Test public void protectedKnowledgePairsAndZeroTalentRecordsKeepTheirOwnMeaning() {
         Map<String,Object> unknown=item("protected",null,false);
@@ -220,10 +220,10 @@ public class CompactProtocolV4Test {
         for(Object raw:(List<?>)map.get("rows")) {
             List<?> row=(List<?>)raw;int cell=((Number)row.get(0)).intValue()*width+((Number)row.get(1)).intValue();
             Object tiles=row.get(2);String vis=(String)row.get(3);
-            for(int i=0;i<vis.length();i++) {
+            for(int i=0;i<(tiles instanceof String?((String)tiles).length():((List<?>)tiles).size());i++) {
                 int index=tiles instanceof String?CompactProtocol.TILE_ALPHABET.indexOf(((String)tiles).charAt(i)):((Number)((List<?>)tiles).get(i)).intValue();
                 Map<String,Object> descriptor=new LinkedHashMap<>(object(types.get(index)));
-                descriptor.put("visibility",vis.charAt(i)=='v'?"visible":vis.charAt(i)=='s'?"visited":"mapped");cells.put(cell+i,descriptor);
+                descriptor.put("visibility",vis.charAt(vis.length()==1?0:i)=='v'?"visible":vis.charAt(vis.length()==1?0:i)=='s'?"visited":"mapped");cells.put(cell+i,descriptor);
             }
         }
         return cells;

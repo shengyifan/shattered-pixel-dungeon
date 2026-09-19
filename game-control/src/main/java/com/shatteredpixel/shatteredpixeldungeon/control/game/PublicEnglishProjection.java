@@ -29,7 +29,7 @@ public final class PublicEnglishProjection {
                 result.put(key, OPAQUE_FIELDS.contains(key) || rendered ? entry.getValue()
                         : freezeValue(entry.getValue(), key, "text".equals(key) && Boolean.TRUE.equals(input.get("clipped"))));
             }
-            return Collections.unmodifiableMap(result);
+            return UiProjectionHints.preserve(source, Collections.unmodifiableMap(result));
         }
         if (source instanceof List) {
             List<Object> result = new ArrayList<>();
@@ -93,7 +93,7 @@ public final class PublicEnglishProjection {
             } else {
                 result.remove("translation_status"); result.remove("text_diagnostics");
             }
-            return result;
+            return UiProjectionHints.preserve(source, result);
         }
         if (source instanceof List) {
             List<Object> result = new ArrayList<>();

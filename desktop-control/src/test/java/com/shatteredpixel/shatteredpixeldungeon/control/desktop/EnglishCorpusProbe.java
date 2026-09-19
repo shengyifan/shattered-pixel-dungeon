@@ -58,7 +58,7 @@ public final class EnglishCorpusProbe {
 
     public void inspect(Map<String, Object> response, Map<String, Object> sample) {
         frames++;
-        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 4;
+        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 5;
         compactDiagnostics.clear();
         if (compactFrame) { compactFrames++; collectCompactDiagnostics(response, "/response"); }
         walk(response, null, null, null, map(), false, "/response", "/response", sample,
@@ -126,7 +126,7 @@ public final class EnglishCorpusProbe {
         // Source identity, rather than matching surface text or its script, controls rendering.
         String recordedDiagnostic = compactFrame ? compactDiagnostics.get(path) : null;
         List<Object> key = Arrays.asList(scene, field, clipped, original, metadata, compactFrame, recordedDiagnostic);
-        // Protocol 4 already contains rendered public text. Omitted source trees
+        // Protocol 5 already contains rendered public text. Omitted source trees
         // are not evidence of missing provenance: only its recorded diagnostics
         // identify unavailable/partial fields. Never reclassify user text by script.
         Outcome outcome = cache.computeIfAbsent(key, ignored -> compactFrame
@@ -226,7 +226,7 @@ public final class EnglishCorpusProbe {
                 "translated_occurrences", translated, "unavailable_occurrences", failures,
                 "partial_occurrences", partials, "unique_issues", result.size(),
                 "issue_occurrences_by_scene", sceneOccurrences, "issues", result,
-                "limits", Arrays.asList("Protocol 4 rendered output is assessed using its recorded per-field presentation diagnostics; omitted source trees are not independently retranslated.",
+                "limits", Arrays.asList("Protocol 5 rendered output is assessed using its recorded per-field presentation diagnostics; omitted source trees are not independently retranslated.",
                         "Unknown/opaque fields follow PublicEnglishProjection and are not reclassified as prose.",
                         "Each leaf retains public node identity/role/parent/control/shortcut/checkbox/slider metadata; the same response's complete public UI is context only, not recursively translated with the leaf.",
                         "Partial clipped fallback is reported separately from a rejected complete string.",

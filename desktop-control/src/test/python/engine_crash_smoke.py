@@ -9,7 +9,7 @@ import sqlite3
 import threading
 import time
 import uuid
-import protocol4
+import protocol5
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game as fixture_start
 from machine_smoke import reach_game
 from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
@@ -81,7 +81,7 @@ def run_case(root,classpath,agent,template,runtime_id,stage):
         scope=client.scope
         request_id="crash-"+uuid.uuid4().hex
         before_files={str(p.relative_to(profile)):p.read_bytes() for p in profile.glob("game*/*.dat")}
-        request=protocol4.request("action.execute", action, request_id, scope, state["state_version"])
+        request=protocol5.request("action.execute", action, request_id, scope, state["state_version"])
         write_json(profile/"target-request.json",request)
         (profile/"barrier.armed").write_text(request_id)
         target_result={}

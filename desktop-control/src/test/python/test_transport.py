@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 import resource
 import select
+import shlex
 import shutil
 import signal
 import subprocess
@@ -105,12 +106,17 @@ int spdctl_test_spawn(pid_t *pid, const char *path,
                       const posix_spawn_file_actions_t *actions,
                       const posix_spawnattr_t *attributes,
                       char *const argv[], char *const environment[]) {
-    if (strcmp(path, "/usr/bin/open") != 0)
+    if (strcmp(path, "/usr/bin/osascript") != 0)
         return posix_spawn(pid, path, actions, attributes, argv, environment);
     const char *capture = getenv("SPDCTL_TEST_OPEN_CAPTURE");
     const char *behavior = getenv("SPDCTL_TEST_OPEN_BEHAVIOR");
-    if (!capture || !argv[3]) return EINVAL;
-    FILE *record = fopen(capture, "wb");
+    const char *python = getenv("SPDCTL_TEST_PYTHON");
+    const char *helper = getenv("SPDCTL_TEST_OPEN_HELPER");
+    if (!capture || !python || !helper || !argv[3] || !argv[4] || !argv[5]) return EINVAL;
+    const char *channel = strstr(argv[4], "SEND") ? "send" : "recv";
+    char filename[4096];
+    snprintf(filename, sizeof(filename), "%s.%s", capture, channel);
+    FILE *record = fopen(filename, "wb");
     if (!record) return errno;
     struct stat info;
     if (stat(argv[3], &info) != 0) { fclose(record); return errno; }
@@ -121,24 +127,48 @@ int spdctl_test_spawn(pid_t *pid, const char *path,
     while ((count = fread(buffer, 1, sizeof(buffer), script)) > 0)
         fwrite(buffer, 1, count, record);
     fclose(script); fclose(record);
-    if (behavior && strcmp(behavior, "fail") == 0) return ENOENT;
-    char *shell[] = {"/bin/sh", argv[3], NULL};
-    const char *viewer_tty = getenv("SPDCTL_TEST_VIEWER_TTY");
-    if (viewer_tty) {
-        /* Simulate Terminal's independent TTY, not the launcher's game pipes. */
-        posix_spawn_file_actions_t viewer_actions;
-        int error = posix_spawn_file_actions_init(&viewer_actions);
-        if (error) return error;
-        error = posix_spawn_file_actions_addopen(&viewer_actions, 0, "/dev/null", O_RDONLY, 0);
-        if (!error) error = posix_spawn_file_actions_addopen(&viewer_actions, 1, viewer_tty, O_WRONLY, 0);
-        if (!error) error = posix_spawn_file_actions_addopen(&viewer_actions, 2, "/dev/null", O_WRONLY, 0);
-        if (!error) error = posix_spawn(pid, shell[0], &viewer_actions, attributes, shell, environment);
-        posix_spawn_file_actions_destroy(&viewer_actions);
-        return error;
-    }
-    return posix_spawn(pid, shell[0], actions, attributes, shell, environment);
+    record = fopen(capture, "a");
+    if (!record) return errno;
+    fprintf(record, "%s\t%s\t%s\n", channel, argv[3], argv[5]);
+    fclose(record);
+    snprintf(filename, sizeof(filename), "%s.source", capture);
+    record = fopen(filename, "w");
+    if (!record) return errno;
+    fputs(argv[2], record); fclose(record);
+    if (behavior && (!strcmp(behavior, "fail")
+        || (!strcmp(behavior, "send-fail") && !strcmp(channel, "send"))
+        || (!strcmp(behavior, "recv-fail") && !strcmp(channel, "recv")))) return ENOENT;
+    char *arguments[] = {(char *)python, (char *)helper, argv[3], (char *)channel, argv[5], NULL};
+    return posix_spawn(pid, python, actions, attributes, arguments, environment);
 }
 """
+
+OPEN_HELPER = r'''
+import os, subprocess, sys, time
+from pathlib import Path
+command, channel, previous = sys.argv[1:]
+behavior = os.environ.get("SPDCTL_TEST_OPEN_BEHAVIOR", "")
+if behavior == channel + "-denied":
+    print("DENIED", flush=True)
+elif behavior == channel + "-timeout":
+    time.sleep(10)
+elif behavior == channel + "-uncertain":
+    print("UNCERTAIN", flush=True)
+elif behavior == channel + "-malformed":
+    os.write(1, bytes.fromhex(os.environ["SPDCTL_TEST_OPEN_ACK_HEX"]))
+else:
+    tty = os.environ.get("SPDCTL_TEST_VIEWER_TTY_" + channel.upper()) or os.environ.get("SPDCTL_TEST_VIEWER_TTY")
+    with open(tty or os.devnull, "wb", buffering=0) as output:
+        viewer = subprocess.Popen(["/bin/sh", command], stdin=subprocess.DEVNULL,
+                                  stdout=output, stderr=subprocess.DEVNULL, close_fds=True,
+                                  start_new_session=True)
+    if os.environ.get("SPDCTL_TEST_VIEWER_PIDS"):
+        with open(os.environ["SPDCTL_TEST_VIEWER_PIDS"], "a") as record:
+            record.write(str(viewer.pid) + "\n")
+    identifier = "101" if channel == "send" else "102"
+    print("OK:" + (previous if behavior == channel + "-duplicate" else identifier), flush=True)
+'''
+
 
 
 def wait_until(check, description, timeout=8):
@@ -172,6 +202,8 @@ class NativeTransportTest(unittest.TestCase):
         subprocess.run([shutil.which("cc") or "/usr/bin/cc", "-std=c11", "-O2", "-Wall", "-Wextra",
                         "-Werror", str(object_path), str(shim), "-o", str(cls.open_binary)],
                        check=True, capture_output=True)
+        cls.open_helper = cls.build_path / "open_helper.py"
+        cls.open_helper.write_text(OPEN_HELPER)
         cls.engine = cls.build_path / "synthetic_engine.py"
         cls.engine.write_text(ENGINE)
 
@@ -187,6 +219,9 @@ class NativeTransportTest(unittest.TestCase):
         self.processes = []
         self.environment = os.environ.copy()
         self.environment.pop("SPDCTL_PROFILE", None)
+        self.environment["SPDCTL_TEST_PYTHON"] = sys.executable
+        self.environment["SPDCTL_TEST_OPEN_HELPER"] = str(self.open_helper)
+        self.environment["SPDCTL_TEST_VIEWER_PIDS"] = str(self.root / "viewer-pids")
         self.environment["HOME"] = str(self.root / "home")
 
     def tearDown(self):
@@ -201,6 +236,23 @@ class NativeTransportTest(unittest.TestCase):
             for stream in (process.stdin, process.stdout, process.stderr):
                 if stream and not stream.closed:
                     stream.close()
+        pids = self.root / "viewer-pids"
+        if pids.exists():
+            for pid in pids.read_text().splitlines():
+                try:
+                    os.kill(int(pid), signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+        for capture in self.root.glob("*.txt.send"):
+            command = Path(capture.read_text().splitlines()[0])
+            command.unlink(missing_ok=True)
+            if command.parent.exists():
+                command.parent.rmdir()
+        for capture in self.root.glob("*.txt.recv"):
+            command = Path(capture.read_text().splitlines()[0])
+            command.unlink(missing_ok=True)
+            if command.parent.exists():
+                command.parent.rmdir()
         self.temp.cleanup()
 
     def command(self, mode="echo", extra_engine=(), profile=None, trace=None):
@@ -257,7 +309,9 @@ class NativeTransportTest(unittest.TestCase):
         self.assertFalse((session / ".incomplete").exists())
         rows = self.events(session)
         self.assert_index_matches_raw(session, rows)
-        self.assertTrue((session / "open-viewer.command").is_file())
+        self.assertTrue((session / "open-send.command").is_file())
+        self.assertTrue((session / "open-recv.command").is_file())
+        self.assertFalse((session / "open-viewer.command").exists())
         return rows
 
 
@@ -279,10 +333,12 @@ class NativeTransportTest(unittest.TestCase):
         (session / "events.tsv").write_text("".join(index))
         return session
 
-    def view(self, session, color=None, environment=None):
+    def view(self, session, color=None, environment=None, stream=None):
         command = [str(self.binary), "trace", "view", "--session", str(session)]
         if color:
             command.extend(["--color", color])
+        if stream:
+            command.extend(["--stream", stream])
         result = subprocess.run(command, stdin=subprocess.DEVNULL, capture_output=True,
                                 env=environment or self.environment, timeout=45)
         self.assertEqual(0, result.returncode, result.stderr)
@@ -357,6 +413,195 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(4, len(re.findall(rb"\] #\d+ (?:SEND|RECV)\n", rendered)))
         self.assertNotIn(b"continued", rendered)
 
+    def test_selected_views_filter_only_display_and_share_bright_json_palette(self):
+        request = '{"key":"中文🐈 \\"quoted\\"","n":-1.5e+2,"b":true,"nil":null}\n'.encode()
+        response = b'{"answer":"different","n":12,"b":false}\n'
+        events = []
+        for index, byte in enumerate(request):
+            events.append(("SEND", bytes([byte])))
+            if index == 15:
+                events.extend(("RECV", bytes([part])) for part in response)
+            if index == 23:
+                events.append(("STDERR", b"diagnostic payload\n"))
+        events.extend([("DELIVERED", "-"), ("STATUS", "STARTED"), ("STATUS", "EXITED:9")])
+        session = self.fixture_session(events)
+        original = {path.name: path.read_bytes() for path in session.iterdir()}
+        for stream in ("send", "recv", "all"):
+            with self.subTest(stream=stream):
+                colored = self.view(session, "always", stream=stream)
+                plain = self.view(session, "never", stream=stream)
+                self.assertTrue(colored.startswith(b"\x1b[0;1;39mspdctl transport viewer"))
+                self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", colored))
+                self.assertTrue(colored.endswith(b"\x1b[0m"))
+                self.assertNotIn(b"\x1b[2m", colored)
+                self.assertNotIn(b"\x1b[40", colored)
+                if stream != "recv":
+                    self.assertIn(b'\x1b[1;94m"key"', colored)
+                    self.assertIn(b'\x1b[1;92m', colored)
+                    self.assertIn(b'\x1b[1;93m-1.5e+2', colored)
+                    self.assertIn(b'\x1b[1;95mtrue', colored)
+                if stream == "send":
+                    self.assertIn(request, plain)
+                    self.assertNotIn(b"RECV", plain)
+                    self.assertNotIn(b"ERROR", plain)
+                    self.assertNotIn(b"continued", plain)
+                    self.assertNotIn(b"diagnostic payload", plain)
+                    self.assertNotIn(b"EXITED:9", plain)
+                else:
+                    self.assertIn(response, plain)
+                    self.assertIn(b'\x1b[1;94m"answer"', colored)
+                    self.assertIn(b'\x1b[1;92m"different"', colored)
+                    self.assertIn(b'\x1b[1;91mdiagnostic payload', colored)
+                    self.assertIn(b'\x1b[1;91mEXITED:9', colored)
+                if stream == "recv":
+                    self.assertNotIn(b"SEND", plain)
+                    self.assertNotIn(b'"key"', plain)
+                self.assertNotIn(b"DELIVERED", plain)
+                self.assertNotIn(b"STARTED", plain)
+        self.assertEqual(original, {path.name: path.read_bytes() for path in session.iterdir()})
+
+    def test_filtered_out_events_still_validate_index_and_raw_ranges(self):
+        session = self.fixture_session([("SEND", b"request\n"), ("RECV", b"response\n")])
+        original = (session / "events.tsv").read_bytes()
+        for stream, raw_name in (("send", "recv.raw"), ("recv", "send.raw")):
+            raw = session / raw_name
+            saved = raw.read_bytes()
+            raw.write_bytes(b"")
+            result = subprocess.run([str(self.binary), "trace", "view", "--session", str(session), "--stream", stream],
+                                    capture_output=True, env=self.environment, timeout=3)
+            self.assertEqual(65, result.returncode)
+            self.assertIn(b"TRACE_DATA_UNAVAILABLE", result.stderr)
+            raw.write_bytes(saved)
+        (session / "events.tsv").write_bytes(original.replace(b"\n2\t", b"\n9\t"))
+        result = subprocess.run([str(self.binary), "trace", "view", "--session", str(session), "--stream", "send"],
+                                capture_output=True, env=self.environment, timeout=3)
+        self.assertEqual(65, result.returncode)
+        self.assertIn(b"TRACE_INDEX_INVALID", result.stderr)
+
+    def test_stream_arguments_are_validated_before_launch(self):
+        session = self.fixture_session([])
+        capture = self.root / "invalid-flags.txt"
+        environment = {**self.environment, "SPDCTL_TEST_OPEN_CAPTURE": str(capture)}
+        for operation in ("open", "view"):
+            for suffix in (["--stream"], ["--stream", "stderr"], ["--stream", "send", "--stream", "recv"]):
+                with self.subTest(operation=operation, suffix=suffix):
+                    result = subprocess.run([str(self.open_binary), "trace", operation, "--session", str(session), *suffix],
+                                            capture_output=True, env=environment, timeout=3)
+                    self.assertEqual(64, result.returncode)
+                    self.assertIn(b"INVALID_TRACE_ARGUMENTS", result.stderr)
+        self.assertFalse(capture.exists())
+
+    def test_current_documentation_shell_commands_match_native_parser(self):
+        root = Path(__file__).resolve().parents[4]
+        session = self.fixture_session([
+            ("SEND", b"documentation request\n"),
+            ("RECV", b"documentation response\n"),
+            ("STDERR", b"documentation diagnostic\n")])
+        exercised = set()
+        example_number = 0
+        for document in ("docs/cli-help.md", "docs/cli.md"):
+            source = (root / document).read_text()
+            for fence in re.findall(r"(?ms)^```sh\s*\n(.*?)^```[ \t]*$", source):
+                for line in re.sub(r"\\\r?\n", " ", fence).splitlines():
+                    tokens = shlex.split(line, comments=True)
+                    if not tokens:
+                        continue
+                    self.assertEqual("spdctl", Path(tokens[0]).name, document + ": " + line)
+                    arguments = tokens[1:]
+                    self.assertTrue(arguments, document + ": " + line)
+                    example_number += 1
+                    case = self.root / ("document-command-" + str(example_number))
+                    capture = self.root / ("document-open-" + str(example_number) + ".txt")
+                    environment = {**self.environment, "HOME": str(case / "home"),
+                                   "SPDCTL_TEST_OPEN_CAPTURE": str(capture)}
+
+                    # Treat documentation as argv data, never shell program text.
+                    # Only path operands are replaced; all advertised switches
+                    # and values go unchanged through the production parser.
+                    for option, replacement in (("--data-dir", case / "profile"),
+                                                ("--trace-dir", case / "trace"),
+                                                ("--session", session)):
+                        if option in arguments:
+                            at = arguments.index(option) + 1
+                            self.assertLess(at, len(arguments), document + ": " + line)
+                            arguments[at] = str(replacement)
+
+                    with self.subTest(document=document, command=line):
+                        if arguments[0] == "run":
+                            engine = [sys.executable, "-u", str(self.engine), "echo"]
+                            command = [str(self.open_binary), "--engine-argc", str(len(engine)), *engine, "--", *arguments]
+                            payload = b'{"fixture":"documentation command"}\n'
+                            exercised.add("run")
+                        else:
+                            self.assertEqual("trace", arguments[0])
+                            self.assertIn(arguments[1], ("open", "view"))
+                            command = [str(self.open_binary), *arguments]
+                            payload = b""
+                            exercised.add("trace-" + arguments[1])
+                        result = subprocess.run(command, input=payload, capture_output=True,
+                                                env=environment, timeout=10)
+                        self.assertEqual(0, result.returncode, result.stderr)
+                        for error in (b"UNKNOWN_LAUNCHER_ARGUMENT", b"INVALID_TRACE_ARGUMENTS",
+                                      b"TERMINAL_OPEN_FAILED", b"TERMINAL_OPEN_UNCERTAIN"):
+                            self.assertNotIn(error, result.stderr)
+
+                        stream = arguments[arguments.index("--stream") + 1] if "--stream" in arguments else "all"
+                        if arguments[0] == "run":
+                            self.assertEqual(payload, result.stdout)
+                            if "--no-terminal" in arguments:
+                                self.assertFalse(capture.exists())
+                                exercised.add("no-terminal")
+                                continue
+                        elif arguments[1] == "view":
+                            exercised.add("view-" + stream)
+                            plain = re.sub(rb"\x1b\[[0-9;]*m", b"", result.stdout)
+                            self.assertEqual(stream != "recv", b"documentation request" in plain)
+                            self.assertEqual(stream != "send", b"documentation response" in plain)
+                            self.assertEqual(stream != "send", b"documentation diagnostic" in plain)
+                            color = arguments[arguments.index("--color") + 1] if "--color" in arguments else "auto"
+                            exercised.add("color-" + color)
+                            self.assertEqual(color == "always", b"\x1b" in result.stdout)
+                            self.assertFalse(capture.exists(), "Direct trace view opened Terminal")
+                            continue
+
+                        expected = ["send", "recv"] if stream == "all" else [stream]
+                        calls = [row.split("\t")[0] for row in capture.read_text().splitlines()]
+                        self.assertEqual(expected, calls)
+                        exercised.add("open-" + stream)
+
+        self.assertGreater(example_number, 0, "No documented CLI commands were tested")
+        self.assertTrue({"run", "no-terminal", "trace-open", "trace-view", "open-all", "open-send", "open-recv",
+                         "view-all", "view-send", "view-recv", "color-auto", "color-always", "color-never"} <= exercised,
+                        "Current help must demonstrate the documented viewer choices: " + repr(exercised))
+
+    def test_each_selected_view_retains_finished_tty_until_enter(self):
+        session = self.fixture_session([("SEND", b"request\n"), ("RECV", b"reply\n")])
+        for stream in ("send", "recv"):
+            with self.subTest(stream=stream):
+                master, slave = pty.openpty()
+                try:
+                    process = subprocess.Popen([str(self.binary), "trace", "view", "--session", str(session),
+                                                "--stream", stream, "--color", "always"],
+                                               stdin=slave, stdout=slave, stderr=subprocess.PIPE, env=self.environment)
+                    self.processes.append(process)
+                    os.close(slave)
+                    slave = -1
+                    rendered = bytearray()
+                    deadline = time.monotonic() + 4
+                    while b"Press Enter to close" not in rendered and time.monotonic() < deadline:
+                        ready, _, _ = select.select([master], [], [], .2)
+                        if ready:
+                            rendered.extend(os.read(master, 65536))
+                    self.assertIn(b"Press Enter to close", rendered)
+                    self.assertIsNone(process.poll())
+                    os.write(master, b"\n")
+                    process.wait(timeout=3)
+                    self.assertEqual(0, process.returncode, process.stderr.read())
+                finally:
+                    os.close(master)
+                    if slave >= 0:
+                        os.close(slave)
+
     def test_color_lexer_survives_interleaving_escapes_and_utf8(self):
         request = '{"key":"中文🐈 \\"quoted\\"","array":["value",{"nested":-1.5e+2}],"bool":true,"nil":null}\n'.encode()
         # Split every byte, including escapes and UTF-8. Every RECV interruption
@@ -371,13 +616,14 @@ class NativeTransportTest(unittest.TestCase):
         plain = self.view(session, "never")
         self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", colored))
         self.assertEqual(3, plain.count(b"SEND (continued)"))
-        self.assertIn(b'\x1b[34m"key"', colored)
-        self.assertIn(b'\x1b[32m"value"', colored)
-        self.assertIn(b'\x1b[34m"nested"', colored)
-        self.assertIn(b'\x1b[33m-1.5e+2', colored)
-        self.assertIn(b'\x1b[35mtrue', colored)
-        self.assertIn(b'\x1b[35mnull', colored)
-        self.assertIn(b'\x1b[2m', colored)
+        self.assertIn(b'\x1b[1;94m"key"', colored)
+        self.assertIn(b'\x1b[1;92m"value"', colored)
+        self.assertIn(b'\x1b[1;94m"nested"', colored)
+        self.assertIn(b'\x1b[1;93m-1.5e+2', colored)
+        self.assertIn(b'\x1b[1;95mtrue', colored)
+        self.assertIn(b'\x1b[1;95mnull', colored)
+        self.assertIn(b'\x1b[1;39m', colored)
+        self.assertNotIn(b'\x1b[2m', colored)
         colored.decode("utf-8", errors="strict")
         self.assertNotIn(b"\\xE4", colored)
 
@@ -495,6 +741,22 @@ class NativeTransportTest(unittest.TestCase):
                     self.assertTrue(payload.rstrip(b"\n") == body, f"{direction.decode()} viewer body was truncated or changed")
                 self.assertNotIn(b"DELIVERED", rendered)
                 self.assertNotIn(b" STATUS", rendered)
+                del rendered, recovered
+                for stream, heading in (("send", b"SEND"), ("recv", b"RECV")):
+                    selected = self.view(session, "never", stream=stream)
+                    body = bytearray()
+                    direction = None
+                    for line in selected.splitlines():
+                        match = re.fullmatch(rb"\[\d+\.\d+\] #\d+ (SEND|RECV|ERROR)(?: \(continued\))?", line)
+                        if match:
+                            direction = match[1]
+                        elif line.startswith(b"Session ended."):
+                            direction = None
+                        elif direction == heading:
+                            body.extend(line)
+                    self.assertTrue(payload.rstrip(b"\n") == body, f"{stream} selected large frame differs")
+                    self.assertNotIn(b"continued", selected)
+                    del selected, body
 
     def test_exact_binary_transport_and_raw_event_offsets(self):
         payload = ('{"text":"中文、emoji 🐈","spaces": [1, 2]}\r\n'.encode()
@@ -513,8 +775,8 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(len(payload), sum(row[4] for row in delivered))
         self.assertIn("EOF_SENT", [row[5] for row in rows if row[2] == "STATUS"])
 
-    def test_default_profile_uses_v4_without_accessing_v3(self):
-        old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v3"
+    def test_default_profile_uses_v5_without_accessing_v4(self):
+        old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v4"
         old_profile.mkdir(parents=True)
         sentinel = old_profile / "do-not-read-or-change"
         sentinel.write_bytes(b"previous profile")
@@ -523,7 +785,7 @@ class NativeTransportTest(unittest.TestCase):
         del command[index:index + 2]
         result = subprocess.run(command, input=b"", capture_output=True, env=self.environment, timeout=10)
         self.assertEqual(0, result.returncode, result.stderr)
-        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v4"
+        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v5"
         self.assertEqual(str(expected), json.loads(result.stdout)["profile"])
         self.assertFalse(expected.exists(), "Native profile resolution unexpectedly created game data")
         self.assertEqual(b"previous profile", sentinel.read_bytes())
@@ -584,28 +846,49 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(b"REPLY:" + request, output)
         self.assert_complete(session)
 
-    def test_reopen_script_quotes_paths_without_shell_interpolation(self):
-        self.trace = self.root / "trace space ' $(touch INJECTED)"
-        process = self.start()
-        output, errors = process.communicate(b"original\n", timeout=10)
-        self.assertEqual(0, process.returncode, errors)
-        self.assertEqual(b"original\n", output)
-        script = self.session() / "open-viewer.command"
-        subprocess.run(["/bin/sh", "-n", str(script)], check=True, capture_output=True)
-        viewer = subprocess.Popen(["/bin/sh", str(script)], stdin=subprocess.DEVNULL,
-                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                  env=self.environment, cwd=self.root)
-        self.processes.append(viewer)
-        try:
-            rendered, diagnostics = viewer.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            viewer.terminate()
-            rendered, diagnostics = viewer.communicate(timeout=5)
-        self.assertIn(b"original", re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
-        self.assertFalse((self.root / "INJECTED").exists())
-        self.assertFalse(diagnostics, diagnostics)
+    def test_two_selected_viewers_close_and_reopen_independently(self):
+        gate = self.root / "allow-response"
+        process = self.start("gated", [gate])
+        request = b'{"id":"only-once-two-viewers"}\n'
+        process.stdin.write(request)
+        process.stdin.flush()
+        session = self.session()
+        wait_until(lambda: self.read_bytes(session / "send.raw") == request, "initial request")
 
-    def test_generated_reopen_script_keeps_color_with_hostile_environment(self):
+        def launch(stream):
+            viewer = subprocess.Popen([str(self.binary), "trace", "view", "--session", str(session), "--stream", stream],
+                                      stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                      env=self.environment)
+            self.processes.append(viewer)
+            ready, _, _ = select.select([viewer.stdout], [], [], 3)
+            self.assertTrue(ready, stream + " viewer did not start")
+            return viewer
+
+        viewers = {stream: launch(stream) for stream in ("send", "recv")}
+        for stream, stop_signal in (("send", signal.SIGHUP), ("recv", signal.SIGTERM)):
+            viewers[stream].send_signal(stop_signal)
+            viewers[stream].wait(timeout=3)
+            other = "recv" if stream == "send" else "send"
+            self.assertIsNone(viewers[other].poll(), "Closing one viewer stopped the other")
+            self.assertIsNone(process.poll(), "Closing a viewer stopped the engine")
+            self.assertEqual(request, self.read_bytes(session / "send.raw"))
+            viewers[stream] = launch(stream)
+        gate.touch()
+        output, errors = process.communicate(timeout=10)
+        self.assertEqual(0, process.returncode, errors)
+        self.assertEqual(b"REPLY:" + request, output)
+        for stream, viewer in viewers.items():
+            rendered, diagnostics = viewer.communicate(timeout=4)
+            self.assertEqual(0, viewer.returncode, diagnostics)
+            if stream == "send":
+                self.assertIn(request, rendered)
+                self.assertNotIn(b"REPLY:", rendered)
+            else:
+                self.assertIn(b"REPLY:" + request, rendered)
+        self.assertEqual(request, self.read_bytes(session / "send.raw"))
+        self.assert_complete(session)
+
+    def test_reopen_scripts_keep_color_and_quote_paths_without_interpolation(self):
         self.trace = self.root / "trace space ' $(touch INJECTED)"
         payload = b'{"key":"value","number":12,"flag":true,"empty":null}\n'
         process = self.start()
@@ -615,18 +898,21 @@ class NativeTransportTest(unittest.TestCase):
         session = self.session()
         records = {name: (session / name).read_bytes()
                    for name in ("send.raw", "recv.raw", "stderr.raw", "events.tsv")}
-        plain = self.view(session, "never")
-        script = session / "open-viewer.command"
-        for no_color in ("1", ""):
-            with self.subTest(no_color=no_color):
-                environment = {**self.environment, "TERM": "dumb", "NO_COLOR": no_color}
-                rendered = self.viewer_in_pty(["/bin/sh", str(script)], environment)
-                self.assertIn(b'\x1b[34m"key"', rendered)
-                self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
-                self.assertFalse((self.root / "INJECTED").exists())
-                self.assertTrue(script.is_file(), "Persistent reopen command was removed")
-                for name, original in records.items():
-                    self.assertEqual(original, (session / name).read_bytes(), name)
+        for stream in ("send", "recv"):
+            script = session / ("open-" + stream + ".command")
+            subprocess.run(["/bin/sh", "-n", str(script)], check=True, capture_output=True)
+            plain = self.view(session, "never", stream=stream)
+            for no_color in ("1", ""):
+                with self.subTest(stream=stream, no_color=no_color):
+                    environment = {**self.environment, "TERM": "dumb", "NO_COLOR": no_color}
+                    rendered = self.viewer_in_pty(["/bin/sh", str(script)], environment)
+                    self.assertIn(b'\x1b[1;94m"key"', rendered)
+                    self.assertTrue(rendered.endswith(b"\x1b[0m"))
+                    self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
+                    self.assertFalse((self.root / "INJECTED").exists())
+                    self.assertTrue(script.is_file(), "Persistent reopen command was removed")
+                    for name, original in records.items():
+                        self.assertEqual(original, (session / name).read_bytes(), name)
 
     def test_finished_incomplete_session_ignores_reused_or_invalid_pid_metadata(self):
         process = self.start()
@@ -642,35 +928,53 @@ class NativeTransportTest(unittest.TestCase):
                 marker = session / ".incomplete"
                 marker.write_text(metadata)
                 marker.chmod(0o600)
-                viewer = subprocess.run([str(self.binary), "trace", "view", "--session", str(session)],
-                                        stdin=subprocess.DEVNULL, capture_output=True,
-                                        env=self.environment, timeout=3)
-                self.assertEqual(0, viewer.returncode, viewer.stderr)
-                self.assertIn(b"Recording incomplete", viewer.stdout)
+                for stream in ("send", "recv", "all"):
+                    rendered = self.view(session, "never", stream=stream)
+                    self.assertEqual(stream != "send", b"Recording incomplete" in rendered)
 
-    def test_trace_open_uses_current_binary_and_never_executes_session_script(self):
+    def captured_open(self, capture, stream):
+        record = Path(str(capture) + "." + stream)
+        wait_until(record.exists, "captured " + stream + " launch")
+        command, mode, script = record.read_text().split("\n", 2)
+        return Path(command), mode, script
+
+    def test_trace_open_uses_two_current_binary_commands_and_distinct_windows(self):
         process = self.start()
         _, errors = process.communicate(b"trusted original bytes\n", timeout=10)
         self.assertEqual(0, process.returncode, errors)
         session = self.session()
         marker = self.root / "UNTRUSTED_SCRIPT_EXECUTED"
-        (session / "open-viewer.command").write_text("#!/bin/sh\ntouch '" + str(marker) + "'\n")
+        for stream in ("send", "recv"):
+            (session / ("open-" + stream + ".command")).write_text("#!/bin/sh\ntouch '" + str(marker) + "'\n")
         capture = self.root / "intercepted-open.txt"
         environment = {**self.environment, "SPDCTL_TEST_OPEN_CAPTURE": str(capture)}
         result = subprocess.run([str(self.open_binary), "trace", "open", "--session", str(session)],
                                 stdin=subprocess.DEVNULL, capture_output=True, env=environment, timeout=5)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertFalse(marker.exists())
-        command, mode, generated_script = capture.read_text().split("\n", 2)
-        self.assertEqual("700", mode)
-        self.assertIn(str(self.open_binary), generated_script)
-        self.assertIn(" trace view --color always --session ", generated_script)
-        self.assertIn(str(session), generated_script)
-        self.assertNotEqual(session / "open-viewer.command", Path(command))
-        self.assertFalse(Path(command).exists(), "Temporary Terminal command was not removed")
-        self.assertFalse(Path(command).parent.exists(), "Temporary Terminal directory was not removed")
+        commands = []
+        for stream in ("send", "recv"):
+            command, mode, script = self.captured_open(capture, stream)
+            commands.append(command)
+            self.assertEqual("700", mode)
+            self.assertIn(str(self.open_binary), script)
+            self.assertIn(" trace view --color always --stream '" + stream + "' --session ", script)
+            self.assertIn(str(session), script)
+            self.assertNotEqual(session, command.parent)
+            wait_until(lambda: not command.parent.exists(), "temporary " + stream + " cleanup")
+        self.assertNotEqual(commands[0].parent, commands[1].parent)
+        calls = [line.split("\t") for line in capture.read_text().splitlines()]
+        self.assertEqual(["send", "recv"], [call[0] for call in calls])
+        self.assertEqual(["0", "101"], [call[2] for call in calls])
+        source = Path(str(capture) + ".source").read_text()
+        self.assertIn("do script", source)
+        self.assertIn("quoted form of (item 1 of argv)", source)
+        self.assertIn("previousWindows contains createdWindow", source)
+        self.assertNotIn(str(session), source)
+        self.assertNotIn("System Events", source)
+        self.assertNotIn("default settings", source)
 
-    def test_generated_trace_open_keeps_color_with_hostile_environment(self):
+    def test_generated_trace_open_keeps_both_channels_colored_with_hostile_environment(self):
         self.trace = self.root / "trace space ' $(touch INJECTED)"
         payload = b'{"key":"value","number":12,"flag":true,"empty":null}\n'
         process = self.start()
@@ -680,49 +984,112 @@ class NativeTransportTest(unittest.TestCase):
         session = self.session()
         records = {name: (session / name).read_bytes()
                    for name in ("send.raw", "recv.raw", "stderr.raw", "events.tsv")}
-        plain = self.view(session, "never")
-        marker = self.root / "UNTRUSTED_SCRIPT_EXECUTED"
-        (session / "open-viewer.command").write_text("#!/bin/sh\ntouch '" + str(marker) + "'\n")
         capture = self.root / "intercepted-open.txt"
-        for no_color in ("1", ""):
-            with self.subTest(no_color=no_color):
-                environment = {**self.environment, "TERM": "dumb", "NO_COLOR": no_color,
-                               "SPDCTL_TEST_OPEN_CAPTURE": str(capture)}
-                rendered = self.viewer_in_pty(
-                    [str(self.open_binary), "trace", "open", "--session", str(session)],
-                    environment, through_open=True)
-                command, mode, generated_script = capture.read_text().split("\n", 2)
-                self.assertEqual("700", mode)
-                self.assertIn(str(self.open_binary), generated_script)
-                self.assertNotEqual(session / "open-viewer.command", Path(command))
-                self.assertFalse(Path(command).exists(), "Temporary Terminal command was not removed")
-                self.assertFalse(Path(command).parent.exists(), "Temporary Terminal directory was not removed")
-                self.assertFalse(marker.exists())
-                self.assertFalse((self.root / "INJECTED").exists())
-                self.assertIn(b'\x1b[34m"key"', rendered)
-                self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
-                for name, original in records.items():
-                    self.assertEqual(original, (session / name).read_bytes(), name)
+        for stream in ("send", "recv"):
+            plain = self.view(session, "never", stream=stream)
+            for no_color in ("1", ""):
+                with self.subTest(stream=stream, no_color=no_color):
+                    environment = {**self.environment, "TERM": "dumb", "NO_COLOR": no_color,
+                                   "SPDCTL_TEST_OPEN_CAPTURE": str(capture)}
+                    rendered = self.viewer_in_pty(
+                        [str(self.open_binary), "trace", "open", "--session", str(session), "--stream", stream],
+                        environment, through_open=True)
+                    command, mode, script = self.captured_open(capture, stream)
+                    self.assertEqual("700", mode)
+                    self.assertIn(str(self.open_binary), script)
+                    wait_until(lambda: not command.parent.exists(), "temporary command cleanup")
+                    self.assertFalse((self.root / "INJECTED").exists())
+                    self.assertIn(b'\x1b[1;94m"key"', rendered)
+                    self.assertEqual(plain, re.sub(rb"\x1b\[[0-9;]*m", b"", rendered))
+                    for name, original in records.items():
+                        self.assertEqual(original, (session / name).read_bytes(), name)
 
-    def test_terminal_open_failure_keeps_recording_and_engine_operation(self):
-        capture = self.root / "failed-open.txt"
+    def test_terminal_first_or_second_launch_failure_keeps_other_view_and_recording(self):
+        for failed_stream in ("send", "recv"):
+            with self.subTest(failed_stream=failed_stream):
+                self.trace = self.root / ("trace-" + failed_stream)
+                capture = self.root / (failed_stream + "-failed-open.txt")
+                environment = {**self.environment, "SPDCTL_TEST_OPEN_CAPTURE": str(capture),
+                               "SPDCTL_TEST_OPEN_BEHAVIOR": failed_stream + "-fail"}
+                command = self.command()
+                command[0] = str(self.open_binary)
+                command.remove("--no-terminal")
+                result = subprocess.run(command, input=b"request-after-viewer-failure\n",
+                                        capture_output=True, env=environment, timeout=10)
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(b"request-after-viewer-failure\n", result.stdout)
+                self.assertIn(("TERMINAL_OPEN_FAILED stream=" + failed_stream).encode(), result.stderr)
+                self.assertEqual(["send", "recv"], [row.split("\t")[0] for row in capture.read_text().splitlines()])
+                for stream in ("send", "recv"):
+                    temporary_command, _, _ = self.captured_open(capture, stream)
+                    wait_until(lambda: not temporary_command.parent.exists(), "launch command cleanup")
+                session = self.session()
+                self.assertEqual(result.stdout, (session / "send.raw").read_bytes())
+                self.assertEqual(result.stdout, (session / "recv.raw").read_bytes())
+                self.assert_complete(session)
+
+    def test_denial_cleans_up_and_uncertainty_never_retries(self):
+        session = self.fixture_session([("SEND", b"request\n"), ("RECV", b"reply\n")])
+        for behavior in ("send-denied", "send-uncertain", "send-timeout", "recv-duplicate"):
+            with self.subTest(behavior=behavior):
+                capture = self.root / (behavior + ".txt")
+                environment = {**self.environment, "SPDCTL_TEST_OPEN_CAPTURE": str(capture),
+                               "SPDCTL_TEST_OPEN_BEHAVIOR": behavior}
+                started = time.monotonic()
+                result = subprocess.run([str(self.open_binary), "trace", "open", "--session", str(session)],
+                                        capture_output=True, env=environment, timeout=7)
+                self.assertEqual(1, result.returncode, result.stderr)
+                self.assertLess(time.monotonic() - started, 5)
+                self.assertEqual(2, len(capture.read_text().splitlines()), "Uncertain opening was retried")
+                stream = behavior.split("-")[0]
+                warning = "FAILED" if behavior.endswith("denied") else "UNCERTAIN"
+                self.assertIn(("TERMINAL_OPEN_" + warning + " stream=" + stream).encode(), result.stderr)
+                command, _, _ = self.captured_open(capture, stream)
+                if behavior.endswith("denied"):
+                    self.assertFalse(command.parent.exists())
+                elif behavior.endswith(("uncertain", "timeout")):
+                    self.assertTrue(command.exists(), "Potentially queued command was removed")
+
+    def test_automatic_open_timeout_does_not_block_game_relay(self):
+        capture = self.root / "async-timeout.txt"
         environment = {**self.environment, "SPDCTL_TEST_OPEN_CAPTURE": str(capture),
-                       "SPDCTL_TEST_OPEN_BEHAVIOR": "fail"}
+                       "SPDCTL_TEST_OPEN_BEHAVIOR": "send-timeout"}
         command = self.command()
         command[0] = str(self.open_binary)
         command.remove("--no-terminal")
-        result = subprocess.run(command, input=b"request-after-viewer-failure\n",
-                                capture_output=True, env=environment, timeout=10)
-        self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual(b"request-after-viewer-failure\n", result.stdout)
-        self.assertIn(b"TERMINAL_OPEN_FAILED", result.stderr)
-        temporary_command = Path(capture.read_text().splitlines()[0])
-        self.assertFalse(temporary_command.exists())
-        self.assertFalse(temporary_command.parent.exists())
-        session = self.session()
-        self.assertEqual(result.stdout, (session / "send.raw").read_bytes())
-        self.assertEqual(result.stdout, (session / "recv.raw").read_bytes())
-        self.assert_complete(session)
+        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, env=environment)
+        self.processes.append(process)
+        process.stdin.write(b"request-while-terminal-waits\n")
+        process.stdin.flush()
+        ready, _, _ = select.select([process.stdout], [], [], 1.5)
+        self.assertTrue(ready, "Terminal opening blocked protocol forwarding")
+        self.assertEqual(b"request-while-terminal-waits\n", process.stdout.readline())
+        process.stdin.close()
+        process.stdin = None
+        _, errors = process.communicate(timeout=7)
+        self.assertEqual(0, process.returncode, errors)
+        self.assertIn(b"TERMINAL_OPEN_UNCERTAIN stream=send", errors)
+        self.assert_complete(self.session())
+
+    def test_terminal_receipt_requires_complete_positive_decimal_window_id(self):
+        session = self.fixture_session([("SEND", b"request\n")])
+        receipts = [b"OK:101\nextra", b"OK:101\n\x00", b"OK:101\x00\n", b"OK:101",
+                    b"OK:101\r\n", b"OK: 101\n", b"OK:+101\n", b"OK:-1\n", b"OK:0\n",
+                    b"OK:" + b"9" * 100 + b"\n", b"OK:101\n" + b"x" * 200,
+                    b"DENIED\n\x00extra"]
+        for index, receipt in enumerate(receipts):
+            with self.subTest(receipt=receipt):
+                capture = self.root / ("malformed-receipt-" + str(index) + ".txt")
+                environment = {**self.environment, "SPDCTL_TEST_OPEN_CAPTURE": str(capture),
+                               "SPDCTL_TEST_OPEN_BEHAVIOR": "send-malformed", "SPDCTL_TEST_OPEN_ACK_HEX": receipt.hex()}
+                result = subprocess.run([str(self.open_binary), "trace", "open", "--session", str(session), "--stream", "send"],
+                                        capture_output=True, env=environment, timeout=4)
+                self.assertEqual(1, result.returncode, result.stderr)
+                self.assertIn(b"TERMINAL_OPEN_UNCERTAIN stream=send", result.stderr)
+                self.assertEqual(1, len(capture.read_text().splitlines()), "Malformed receipt caused an automatic retry")
+                command, _, _ = self.captured_open(capture, "send")
+                self.assertTrue(command.exists(), "Potentially queued command was removed")
 
     def test_terminal_control_and_invalid_utf8_are_rendered_safely(self):
         payload = '中文'.encode() + b'\x1b]52;c;ZWNo\x07\x1b[2J\r\x00\x08\xff\xfe\n'

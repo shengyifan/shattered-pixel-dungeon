@@ -9,8 +9,9 @@ import uuid
 
 
 def snapshot(profile):
-    return {str(path.relative_to(profile)): (path.stat().st_mtime_ns, path.read_bytes())
-            for path in profile.rglob("*") if path.is_file()}
+    return {str(path.relative_to(profile)): (path.stat().st_mtime_ns,
+                                            path.read_bytes() if path.is_file() else None)
+            for path in [profile, *profile.rglob("*")]}
 
 
 def main():
@@ -18,10 +19,10 @@ def main():
     parser.add_argument("--launcher", required=True, type=Path)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging4.0" / ("old-schema-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging5.0" / ("old-schema-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     cases = []
-    for version in range(1, 7):
+    for version in range(1, 8):
         profile = output / ("schema-" + str(version))
         audit = profile / "audit"
         audit.mkdir(parents=True)
@@ -38,7 +39,7 @@ def main():
         before = snapshot(profile)
         process = subprocess.run([str(args.launcher.resolve()), "run", "--machine", "--no-terminal",
                                   "--data-dir", str(profile), "--trace-dir", str(output / "transport")],
-                                 input=b'{"v":4,"id":"info","op":"info"}\n', capture_output=True, timeout=30)
+                                 input=b'{"v":5,"id":"info","op":"info"}\n', capture_output=True, timeout=30)
         assert process.returncode != 0, process
         assert process.stdout == b"", process.stdout
         assert b"AUDIT_SCHEMA_UNSUPPORTED" in process.stderr, process.stderr

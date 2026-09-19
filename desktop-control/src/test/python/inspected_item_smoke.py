@@ -28,7 +28,7 @@ def resources(source):
             yield from resources(child)
 
 
-def inspected(state, known):
+def inspected(state, known, *, with_sources=True):
     ui = state["observation"]["ui"]
     item = ui.get("inspected_item")
     assert item and set(item) == {"control", "level_known"}, item
@@ -42,6 +42,8 @@ def inspected(state, known):
     assert "The Duelist can use the tip of a spear to spike an enemy that is in range but not adjacent." in text, text
     ranges = re.findall(re.escape(expected) + r"(\d+)-(\d+) damage, knocks the enemy back, and is guaranteed to hit\.", text)
     assert ranges, text
+    if not with_sources:
+        return item, text
     key = "items.weapon.melee.spear." + ("ability_desc" if known else "typical_ability_desc")
     opposite = "items.weapon.melee.spear." + ("typical_ability_desc" if known else "ability_desc")
     source = list(resources(owners[0].get("text_sources", {}).get("text")))
@@ -87,7 +89,13 @@ def run(root, cp, runtime_id, name):
                 assert checkpoint(profile, queried["state_version"])["inspection"]["identified_after_body"]
                 act(client, "ui.back")
                 reopened = act(client, "inventory.open", locator="equipment.weapon")
-                inspected(reopened, True)
+                current = inspected(reopened, True, with_sources=False)
+                # Ordinary source trees are intentionally absent from play. This
+                # explicit diagnostic query validates the same rendered revision.
+                detailed = client.state(source=True)
+                assert detailed["state_version"] == reopened["state_version"]
+                assert inspected(detailed, True)[0] == current[0]
+                assert set(re.findall(r"\d+-\d+ damage", body(detailed))) == set(re.findall(r"\d+-\d+ damage", body(reopened)))
                 assert body(reopened) != text
             act(client, "ui.back")
             assert client.state()["observation"]["ui"].get("inspected_item") is None
@@ -105,7 +113,11 @@ def run(root, cp, runtime_id, name):
                     # The public entity's knowledge chooses the assertion, not a hidden heap peek.
                     known = entity.get("item", {}).get("level_known")
                     assert isinstance(known, bool), entity
-                    inspected(opened, known)
+                    current = inspected(opened, known, with_sources=False)
+                    detailed = client.state(source=True)
+                    assert detailed["state_version"] == opened["state_version"]
+                    assert inspected(detailed, known)[0] == current[0]
+                    assert set(re.findall(r"\d+-\d+ damage", body(detailed))) == set(re.findall(r"\d+-\d+ damage", body(opened)))
                 else:
                     assert opened["observation"]["ui"].get("inspected_item") is None
                     assert "This typically deals" not in body(opened)

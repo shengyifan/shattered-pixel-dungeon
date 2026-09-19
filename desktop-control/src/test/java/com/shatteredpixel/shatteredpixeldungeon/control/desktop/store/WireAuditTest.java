@@ -44,6 +44,6 @@ public class WireAuditTest {
             s.execute("ALTER TABLE exchanges DROP COLUMN raw_bytes");s.execute("ALTER TABLE exchanges DROP COLUMN raw_format");
             s.execute("UPDATE metadata SET value='2' WHERE key='schema_version'");
         }
-        AuditSchemaSevenTest.assertRejectedWithoutChanges(root);
+        AuditSchemaEightTest.assertRejectedWithoutChanges(root);
     }
 }

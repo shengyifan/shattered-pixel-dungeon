@@ -35,7 +35,7 @@ public class MachineSessionTest {
 
     @Test public void malformedArgumentsConsumeTheIdBeforeAnyRuntimeCall() throws Exception {
         try (Harness h = harness()) {
-            h.accept("{\"v\":4,\"s\":\"run:a\",\"id\":\"bad\",\"op\":\"wait\",\"args\":[]}");
+            h.accept("{\"v\":5,\"s\":\"run:a\",\"id\":\"bad\",\"op\":\"wait\",\"args\":[]}");
             assertEquals("INVALID_REQUEST", error(h.last()));
             assertEquals("REJECTED", h.store.getRequest("run:a", "bad").get("status"));
             int observations = h.game.observations;
@@ -84,7 +84,7 @@ public class MachineSessionTest {
             h.send("during", "state.get", map());
             Map<?, ?> result = (Map<?, ?>) h.last().get("data");
             assertEquals("resolving", result.get("phase"));
-            assertEquals("last_stable", result.get("snapshot_status"));
+            assertEquals("last_stable", result.get("snap"));
             assertNull(h.last().get("rev"));
             assertEquals(Collections.emptyList(), result.get("acts"));
             h.send("blocked", "action.execute", map("action", "wait"));
@@ -139,7 +139,7 @@ public class MachineSessionTest {
             AuditStore.Attempt old = h.store.begin("run:old", "old", "state.get", "{}");
             h.store.complete(old, "COMPLETED", map("old", true), map("known", "old run"), map("private", "old"), null);
             h.game.state = state("run:a", "v1", "player_ready", "OTHER_RUN_PUBLIC_SENTINEL");
-            h.accept(V4Requests.encode(map("protocol_version", 4, "scope_id", "run:old", "id", "history", "op", "history.list")));
+            h.accept(V5Requests.encode(map("protocol_version", 5, "scope_id", "run:old", "id", "history", "op", "history.list")));
             assertFalse(h.output.toString("UTF-8").contains("OTHER_RUN_PUBLIC_SENTINEL"));
             String audit = JsonCodec.encode(h.store.getRequest("run:old", "history"));
             assertFalse(audit.contains("OTHER_RUN_PUBLIC_SENTINEL"));
@@ -243,7 +243,7 @@ public class MachineSessionTest {
             assertEquals(1, h.responses().size());
             assertEquals("EXECUTING", h.store.getRequest("run:a", "slow").get("status"));
             assertThrows(java.util.concurrent.ExecutionException.class,
-                    () -> h.session.accept(V4Requests.encode(map("protocol_version", 4, "scope_id", "run:a", "id", "next", "op", "action.execute", "args", map("action", "wait")))).get());
+                    () -> h.session.accept(V5Requests.encode(map("protocol_version", 5, "scope_id", "run:a", "id", "next", "op", "action.execute", "args", map("action", "wait")))).get());
             assertEquals(1, h.game.executions);
         }
     }
@@ -262,7 +262,7 @@ public class MachineSessionTest {
             store.ensureScope("run:a", "run", "a");
             FakeGame game = new FakeGame();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(broken, true, "UTF-8"), 30)) {
-                session.accept(V4Requests.encode(map("protocol_version", 4, "scope_id", "run:a", "id", "query", "op", "state.get"))).get(5, TimeUnit.SECONDS);
+                session.accept(V5Requests.encode(map("protocol_version", 5, "scope_id", "run:a", "id", "query", "op", "state.get"))).get(5, TimeUnit.SECONDS);
                 assertEquals(1, attempts[0]);
                 assertEquals("COMPLETED", store.getRequest("run:a", "query").get("status"));
                 assertEquals(Boolean.FALSE, store.history("run:a", 0, 10).get(0).get("output_succeeded"));
@@ -322,7 +322,7 @@ public class MachineSessionTest {
         }
         void accept(String raw) throws Exception { session.accept(raw).get(5, TimeUnit.SECONDS); }
         void send(String id, String op, Map<String, Object> args) throws Exception {
-            accept(V4Requests.encode(map("protocol_version", 4, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args)));
+            accept(V5Requests.encode(map("protocol_version", 5, "scope_id", game.state.scopeId, "id", id, "op", op, "state_version", game.state.version, "args", args)));
         }
         List<Map<String, Object>> responses() throws Exception {
             List<Map<String, Object>> result = new ArrayList<>();
