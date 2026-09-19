@@ -33,7 +33,7 @@ public final class Cli6TokenSamples {
                 if(canonical!=null) {
                     bindDisclosedLocators(canonical);
                     if(canonical.containsKey("cli_version")) {
-                        canonical.put("cli_version","CLI.6.0.0");canonical.put("audit_schema_version",9);
+                        canonical.put("cli_version",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("cli_version"));canonical.put("audit_schema_version",9);
                         canonical.put("schema",CompactProtocol.info());
                         canonical.put("request_prefix",handles.session((String)canonical.get("session_id")));
                         canonical.put("capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation","persistent_handles"));

@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 6)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.6.0.0, protocol 6, and base game 3.3.8.
+`spdctl --version` reports CLI.6.0.1, protocol 6, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -22,6 +22,12 @@ The package includes its JVM and SQLite library. The source checkout also suppli
 `control --machine` is the recommended bundled controller. It uses the packaged
 runtime and owns one `run --machine` child; it needs no external Python or network
 endpoint. The child alone records the actual machine bytes and opens the viewers.
+Normal terminal/PTY startup needs no stdout-file workaround. The child's stderr
+uses its own pipe; a separate byte forwarder sends diagnostics to controller stderr
+without changing the controller's terminal flags. Keep stdout and stderr separate
+when parsing NDJSON: intentionally merging them on one terminal can mix diagnostics
+with displayed JSON. Child traces remain separate and byte-exact. Diagnostic display
+is best-effort; after child exit its drain wait is bounded to 5 seconds.
 The controller emits its initial `info` reply, then accepts flat JSON intents:
 
 ```json
@@ -509,6 +515,14 @@ rejected as `BUSY` while execution is pending.
 | `UNKNOWN_REVISION` | The revision handle is unknown or has the wrong identity kind; obtain a current observation. |
 | `EXECUTION_UNKNOWN`, `EXECUTION_UNCERTAIN` | Do not assume failure or replay; preserve uncertainty and inspect the original result. |
 | `AUDIT_UNAVAILABLE` | The audit store failed; new game operations stop. |
+
+Controller launch/stream failures also emit a stage-specific stderr diagnostic:
+`CONTROLLER_CHILD_START_FAILED`, `CONTROLLER_OUTPUT_FAILED`,
+`CONTROLLER_INPUT_FAILED`, or fallback `CONTROLLER_FAILED`, with an exception class
+only, not arbitrary exception text or paths. `CONTROLLER_DIAGNOSTIC_READ_FAILED`
+reports a diagnostic-pipe read failure. These are local diagnostics, not game
+responses or proof of an action outcome. The controller creates no profile log for
+them; retain child transport records and caller-captured output when diagnosing.
 
 A controller may make a bounded new attempt after a definite stale rejection only
 when its operating policy allows recovery. Obtain fresh state; verify scope, phase,

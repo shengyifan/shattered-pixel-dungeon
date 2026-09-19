@@ -1,8 +1,8 @@
 # spdctl control interface
 
-Current release: **CLI.6.0.0 / protocol 6 / audit schema 9**, base game **3.3.8**.
+Current release: **CLI.6.0.1 / protocol 6 / audit schema 9**, base game **3.3.8**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI 6 implementation and validation](cli6-implementation.md) and the repository [agent working agreements](../AGENTS.md).
-The latest documentation/package verification is the [CLI 6 clean rebuild](cli-rebuild-6.0.0-20260920.md); prior implementation artifacts were removed as requested.
+The current fix and validation boundary are recorded in [CLI.6.0.1 controller terminal startup](cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md). The [CLI 6 clean rebuild](cli-rebuild-6.0.0-20260920.md) remains the historical 6.0.0 cleanup record.
 
 ## Start an independent v6 profile
 
@@ -14,6 +14,10 @@ The latest documentation/package verification is the [CLI 6 clean rebuild](cli-r
 The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v6/`. Earlier profiles remain untouched; schema 1–8 is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty profiles receive the existing windowed Chinese/new-profile defaults.
 
 The packaged controller owns one native-recorded game child using the bundled JVM. It emits initial info and accepts short intents; actions bind an explicit already displayed revision. It supplies `v:6`, a fresh request ID and that observation's scope. Direct `run --machine` remains available and requires these fields explicitly. Use only advertised `ops/acts`. Short durable identities are profile-local; separate directories can reuse numbers. Do not inspect saves or private audit to choose actions.
+
+Normal terminal/PTY launch works without redirecting stdout to a file. Child stderr has a dedicated pipe and a separate byte forwarder, so the native relay cannot change the controller terminal's blocking flags through an inherited descriptor. When consuming NDJSON, keep stdout and stderr separate; deliberately merging them on a terminal may interleave diagnostic text with JSON. The child's raw SEND/RECV/ERROR records remain separate and unchanged. Diagnostic forwarding is best-effort, with a bounded final drain after child exit.
+
+Controller startup and stream failures report `CONTROLLER_CHILD_START_FAILED`, `CONTROLLER_OUTPUT_FAILED`, `CONTROLLER_INPUT_FAILED`, or `CONTROLLER_FAILED` on stderr with an exception class only. A diagnostic-pipe read failure reports `CONTROLLER_DIAGNOSTIC_READ_FAILED`. These messages are local transport evidence, not a game action's result; retain the original request identity and child trace. The controller does not create profile logs for these failures.
 
 ## Decode the current observation
 
@@ -36,4 +40,4 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 ## Validation boundary
 
-Use current v6 tests and the rebuilt executable. Historical CLI 2–5 reports describe their own versions; their test counts are not v6 evidence. Test profiles and generated JSON live in ignored build directories. Actual token measurements, package checks and any remaining real-window acceptance limits are recorded in the v6 implementation report. Map/inventory/log deltas are evaluated separately and are not part of the default protocol.
+Use current v6 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later patch. Test profiles and generated JSON live in ignored build directories. CLI.6.0.1 startup checks are in its issue report; original token measurements and protocol validation remain in the CLI.6.0.0 implementation report. Map/inventory/log deltas are evaluated separately and are not part of the default protocol.

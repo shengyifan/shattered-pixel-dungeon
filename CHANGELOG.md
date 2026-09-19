@@ -4,6 +4,13 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.6.0.1
+
+- Fixes default `control --machine` startup on a shared terminal/PTY: the child receives a dedicated stderr pipe, preventing its native relay's `O_NONBLOCK` setting from changing the controller stdout descriptor. Normal startup no longer needs stdout-file redirection.
+- Forwards diagnostic bytes independently of NDJSON processing, with best-effort display and a bounded final drain. Intentionally merged caller stdout/stderr can still mix text; exact child transport records remain separate.
+- Reports sanitized controller failure stages on stderr instead of the generic game startup error; no controller failure log is written into the selected profile.
+- Adds real JVM/native-relay PTY regressions and synchronizes launcher, build metadata, authoritative help and agent agreements. Protocol 6, schema 9, the v6 profile directory and base game 3.3.8 remain unchanged. See [controller terminal startup fix and validation](docs/cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md).
+
 ## CLI.6.0.0
 
 - Refreshes the protocol help and agent agreement against the shipped controller, and records the [2026-09-20 clean macOS rebuild](docs/cli-rebuild-6.0.0-20260920.md), old generated-data removal, package verification and branch push. This documentation-only batch does not change the CLI version or runtime behavior.

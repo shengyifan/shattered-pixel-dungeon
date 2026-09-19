@@ -29,16 +29,16 @@ public final class SpdctlLauncher {
             return;
         }
         if(args.length==1&&args[0].equals("--version")){
-            protocol.println("CLI.6.0.0 (protocol 6, game 3.3.8)");return;
+            protocol.println("CLI.6.0.1 (protocol 6, game 3.3.8)");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
                 ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v6")
                 :Paths.get(System.getenv("SPDCTL_PROFILE"));
         int exitCode=0;
         boolean profileAccepted=false;
+        boolean control=args.length>0&&args[0].equals("control");
         try{
             boolean machine=false;
-            boolean control=args.length>0&&args[0].equals("control");
             if(args.length==0||!(args[0].equals("run")||control))throw new IllegalArgumentException("Expected run or control --machine");
             for(int i=1;i<args.length;i++){
                 if(args[i].equals("--machine"))machine=true;
@@ -51,7 +51,7 @@ public final class SpdctlLauncher {
             }
             if(!machine||!profile.isAbsolute())throw new IllegalArgumentException("Machine mode and absolute profile path required");
             if(control){
-                int result=StableController.launch(args,profile,System.in,protocol);
+                int result=StableController.launch(args,profile,System.in,protocol,diagnostics);
                 if(result!=0)System.exit(result);
                 return;
             }
@@ -110,7 +110,7 @@ public final class SpdctlLauncher {
                 Path emergency=profile.resolve("audit").resolve("emergency");Files.createDirectories(emergency);
                 try(PrintWriter writer=new PrintWriter(Files.newBufferedWriter(emergency.resolve("startup-"+System.currentTimeMillis()+".log"),StandardCharsets.UTF_8))){failure.printStackTrace(writer);}
             }catch(Throwable ignored){}
-            diagnostics.println(failure instanceof AuditException
+            diagnostics.println(control ? StableController.launchDiagnostic(failure) : failure instanceof AuditException
                     ? "spdctl: " + ((AuditException)failure).code + " (" + failure.getMessage() + ")"
                     : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI 6 profile)");
             System.exit(1);

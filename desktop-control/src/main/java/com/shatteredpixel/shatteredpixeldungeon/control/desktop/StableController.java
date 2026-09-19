@@ -44,38 +44,117 @@ public final class StableController {
     }
 
     static int launch(String[] args, Path profile, InputStream input, PrintStream output) throws Exception {
-        Process process = new ProcessBuilder(childCommand(System.getenv(), args, profile))
-                .redirectError(ProcessBuilder.Redirect.INHERIT).start();
+        return launch(args,profile,input,output,System.err);
+    }
+
+    static int launch(String[] args, Path profile, InputStream input, PrintStream output, PrintStream diagnostics) throws Exception {
+        final Process process;
+        try {
+            // All three child descriptors must be fresh pipes. The native relay sets
+            // O_NONBLOCK on them; an inherited terminal stderr can share its open-file
+            // description with this JVM's stdout and make PrintStream writes fail.
+            process = new ProcessBuilder(childCommand(System.getenv(), args, profile))
+                    .redirectError(ProcessBuilder.Redirect.PIPE).start();
+        } catch (IOException failure) {
+            throw new LaunchFailure("CONTROLLER_CHILD_START_FAILED",failure);
+        }
+        DiagnosticForwarder errors = new DiagnosticForwarder(process.getErrorStream(),diagnostics);
         StreamTransport transport = new StreamTransport(process.getInputStream(), process.getOutputStream(), process);
         StableController controller = new StableController(transport, RESPONSE_TIMEOUT_MS);
+        Throwable primary = null;
         try {
             Map<String,Object> hello = controller.handshake();
-            output.println(JsonCodec.encode(hello));
-            if (output.checkError()) throw new IOException("Controller output failed");
+            writeFrame(output,hello);
             if (controller.prefix == null) return 1;
             NdjsonReader reader = new NdjsonReader(input);
             NdjsonReader.Frame intentFrame;
-            while (!controller.exited && (intentFrame = reader.next()) != null) {
+            while (!controller.exited && (intentFrame = nextIntent(reader)) != null) {
                 Map<String,Object> result;
                 try {
                     if (intentFrame.error != null) throw intentFrame.error;
                     result = controller.accept(JsonCodec.decode(intentFrame.text));
                 }
                 catch (RuntimeException invalid) { result = localError("INVALID_INTENT", invalid.getMessage(), null); }
-                output.println(JsonCodec.encode(result));
-                if (output.checkError()) throw new IOException("Controller output failed");
+                writeFrame(output,result);
             }
             transport.closeInput();
             Integer exit = transport.awaitExit(RESPONSE_TIMEOUT_MS);
             if (exit == null) {
-                output.println(JsonCodec.encode(localError("CHILD_EXIT_TIMEOUT", "Child has not exited; no requests were replayed", null)));
+                writeFrame(output,localError("CHILD_EXIT_TIMEOUT", "Child has not exited; no requests were replayed", null));
                 return 1;
             }
             return exit;
+        } catch (Exception | Error failure) {
+            primary = failure;
+            throw failure;
         } finally {
             // EOF is the ordinary lifecycle shutdown request. Never kill a child with unresolved game work.
-            transport.closeInput();
+            try { transport.closeInput(); }
+            catch (IOException failure) { if(primary!=null)primary.addSuppressed(failure);else throw failure; }
+            // A viewer launcher may still hold a diagnostic descriptor. Never wait
+            // indefinitely for it, or for a diagnostics consumer that is not reading.
+            if(!process.isAlive()) {
+                try { errors.await(5000); }
+                catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    if(primary!=null)primary.addSuppressed(interrupted);else throw interrupted;
+                }
+            }
         }
+    }
+
+    static void writeFrame(PrintStream output,Map<String,Object> frame) throws IOException {
+        output.println(JsonCodec.encode(frame));
+        if(output.checkError())throw new LaunchFailure("CONTROLLER_OUTPUT_FAILED",null);
+    }
+
+    private static NdjsonReader.Frame nextIntent(NdjsonReader reader) throws IOException {
+        try { return reader.next(); }
+        catch(IOException failure){throw new LaunchFailure("CONTROLLER_INPUT_FAILED",failure);}
+    }
+
+    /** Stage-specific public diagnosis; arbitrary exception messages and paths are not printed. */
+    static final class LaunchFailure extends IOException {
+        final String code;
+        LaunchFailure(String code,Throwable cause){super(code,cause);this.code=code;}
+    }
+
+    static String launchDiagnostic(Throwable failure){
+        String code=failure instanceof LaunchFailure?((LaunchFailure)failure).code:"CONTROLLER_FAILED";
+        Throwable cause=failure.getCause()==null?failure:failure.getCause();
+        return "spdctl: "+code+" ("+cause.getClass().getSimpleName()+")";
+    }
+
+    /** Bounded byte forwarding, separate from the NDJSON channel and its frame reader. */
+    static final class DiagnosticForwarder {
+        private final Thread worker;
+        private volatile boolean consumerFailed;
+        private volatile IOException readFailure;
+        DiagnosticForwarder(InputStream source,PrintStream destination){
+            worker=new Thread(()->{
+                try(InputStream owned=source){
+                    byte[] bytes=new byte[8192];int count;
+                    while((count=owned.read(bytes))!=-1){
+                        if(!consumerFailed){
+                            destination.write(bytes,0,count);destination.flush();
+                            consumerFailed=destination.checkError();
+                        }
+                        // The child's original stderr has already been recorded by
+                        // the native relay. A broken display sink must not fill its pipe.
+                    }
+                }catch(IOException failure){
+                    readFailure=failure;
+                    if(!consumerFailed){destination.println("spdctl: CONTROLLER_DIAGNOSTIC_READ_FAILED");consumerFailed=destination.checkError();}
+                }
+            },"SPD Controller Diagnostics");
+            worker.setDaemon(true);worker.start();
+        }
+        boolean await(long timeoutMillis)throws InterruptedException{
+            if(timeoutMillis<1)throw new IllegalArgumentException("A positive diagnostic wait is required");
+            worker.join(timeoutMillis);return !worker.isAlive();
+        }
+        boolean consumerFailed(){return consumerFailed;}
+        IOException readFailure(){return readFailure;}
     }
 
     static List<String> childCommand(Map<String,String> environment, String[] args, Path profile) {
