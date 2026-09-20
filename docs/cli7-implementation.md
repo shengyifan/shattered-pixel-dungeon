@@ -28,6 +28,15 @@ Common and varying fields cannot overlap. Object records and rows may mix withou
 changing list positions. Missing fields use a different shape or an inline record,
 never a fake null. JSON object member order is not a public semantic; array order is.
 
+Strict validation requires exactly the `common` and `fields` keys in each template:
+`common` is an object and `fields` is an array of unique string field names (possibly
+empty), disjoint from `common`. A present table requires its corresponding sibling
+record array. Every template is validated, even if no row references it. Template
+and action indexes are zero-based, nonnegative JSON integers; booleans, floats and
+out-of-range values are invalid. Rows have exactly `1 + len(fields)` entries.
+Only the documented snapshot roots and their UI node lists own templates; identical
+field names inside unknown extensions or source ASTs have no structural meaning.
+
 Groups have identical ordered key sets and at least two records. Only exactly equal,
 type-sensitive values become common fields. Candidates are accepted only when the
 entire affected fragment, including its table, has fewer minified UTF-8 bytes.
@@ -42,7 +51,8 @@ The old `op_defs`/`node_shapes` wire mechanisms are unsupported.
 
 Encoding separates public field projection, live-play binding omissions, action
 sharing, templates and final diagnostic collection. Decoders first restore acts
-and inv, then nodes, operation references, labels and applicable binding defaults;
+and inv, restore applicable activity/cancel bindings before copying operation
+references, then expand nodes and resolve operations/labels and remaining defaults;
 JSON object field order never determines reference resolution. Malformed references
 fail closed while preserving original response and request identity.
 
@@ -74,7 +84,12 @@ complete minified JSON plus LF and all tables, using tiktoken 0.12.0/o200k_base;
 counts are reference representation tokens, not model billing. Legacy research
 decoders are isolated from the protocol-7 production client.
 
-## Public-corpus measurements
+## Historical public-corpus measurements (2026-09-20)
+
+These measurements describe the implementation acceptance at `18816c6bd`, not a
+new run during the [2026-09-21 clean rebuild](cli-rebuild-7.0.0-20260921.md). The old
+generated replay files and fixture inputs were removed from the workspace during
+that cleanup; the measured results remain historical evidence.
 
 The replay keeps all historical public content and existing map/label/default
 encoding, expands only the replaced v6 UI structures, then applies the production
@@ -110,7 +125,11 @@ codecs and are not claimed for this release.
 Metrics, per-frame costs, original/combined examples and complete replay files are
 generated under the ignored `desktop-control/build/cli7-token-study-20260920/`.
 
-## Executed package and regression validation
+## Historical package and regression validation (2026-09-20)
+
+The following build identity, help byte count and fixture paths belong to the
+implementation acceptance. Those generated artifacts have been cleaned; current
+package evidence is in the [clean-rebuild record](cli-rebuild-7.0.0-20260921.md).
 
 The final no-cache/rerun/offline Gradle gate completed all 34 tasks successfully:
 **558 Java tests** (control-protocol 18, game-control 348, desktop-control 192),

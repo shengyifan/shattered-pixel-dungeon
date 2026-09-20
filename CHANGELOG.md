@@ -6,6 +6,7 @@
 
 ## CLI.7.0.0
 
+- Synchronizes the help and agent/client guidance with the implemented decode order and strict template rules, distinguishes failing query identities from original action identities, and records the [2026-09-21 clean macOS rebuild](docs/cli-rebuild-7.0.0-20260921.md). This documentation/cleanup batch does not change runtime behavior or increment CLI/protocol/schema versions.
 - Introduces protocol 7, audit schema 10 and an independent CLI v7 profile. Earlier request formats and profile schemas are refused without migration or history rewriting.
 - Shares node operations through exact same-observation references into the complete ordered action list. Replaces old UI shapes/operation-list dictionaries with common-field templates for UI nodes, actions and inventory records.
 - Applies the new representation to play/full/src and independently projected frozen snapshots. Public values, ordered occurrences, unknown/null/false/zero distinctions, node identities/parents, source trees and diagnostic paths remain intact; protected records stay inline.

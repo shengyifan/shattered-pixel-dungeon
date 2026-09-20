@@ -24,15 +24,27 @@ and does not require Python.
 Read transport through LF and parse the complete JSON object before using these
 functions. Preserve the transport bytes independently of any display limit. A
 packed node starts with a template index, not a control ID; the helper first expands
-the current observation's `act_templates` and `inv_templates`, then its
+the current observation's `act_templates` and `inv_templates`, restores applicable
+activity/cancel bindings before copying referenced operations, then expands
 `ui.node_templates` and node operation references into `acts`, before resolving
 item labels. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
-If decoding fails, `DecodeError.raw` retains a deep copy of the failing wire frame;
-`identity` contains its valid `id/s`, with `response_id/scope` convenience fields.
-`stage` and `contexts` retain the controller wrapper and its original outcome or
-request when present. These are recovery evidence, never authorization to retry.
+If `decode_wire_response()` or `decode_client_response()` fails, `DecodeError.raw`
+retains a deep copy of the parsed failing wire JSON, not the original transport
+bytes. `identity` contains its valid `id/s`, with `response_id/scope` convenience
+fields. This is the failed reply's identity: a bad settle observation may identify
+the state query, not the original action. Keep the original action's `rid`, outcome
+and request from the wrapper separately. `stage` is the failing stage or None;
+`contexts` holds `{controller,stage,raw}` wrappers, and `context` returns the
+outermost recorded one. Preserve actual transport bytes independently. This
+evidence never authorizes retry.
+
+`expand_structures()` is a structure-only research/test helper. Its default does
+not restore activity bindings, item/UI defaults or map cells; it is not a substitute
+for `decode_wire_response()` when choosing actions and does not attach envelope
+identity to exceptions. Its optional `bindings=True` is for explicit test adapters,
+not a promise of complete semantic decoding.
 
 ```python
 # Run from the repository root; no game operation occurs in this example.
@@ -90,6 +102,6 @@ semantics but do not promise uncompressed records on the wire.
 python3 desktop-control/src/test/python/autoplay.py --self-test
 ```
 
-旧批次曾通过离线检查和 Python 编译；本批次结果见 [CLI 7 实施与验收](cli7-implementation.md)。它们验证有限策略分支、取消和保存退出错误处理，不能当作真实规则、全场景覆盖或通关证明。正式 profile 和公开游玩日志曾使用忽略的 `desktop-control/build/playthroughs`，没有随源码提交；这是历史位置，2026-09-19 清理前该目录已不存在。最新构建产物与清理范围见 [CLI 5 清理重建](cli-rebuild-5.0.0-20260919.md)。
+旧批次曾通过离线检查和 Python 编译；本批次结果见 [CLI 7 实施与验收](cli7-implementation.md)。它们验证有限策略分支、取消和保存退出错误处理，不能当作真实规则、全场景覆盖或通关证明。正式 profile 和公开游玩日志曾使用忽略的 `desktop-control/build/playthroughs`，没有随源码提交；这是历史位置，2026-09-19 清理前该目录已不存在。最新构建产物与清理范围见 [CLI 7 清理重建](cli-rebuild-7.0.0-20260921.md)。
 
 面向模型的控制器必须及时暴露进行中的可取消观察，不得等动作全部结束后才统一输出。展示应使用同一个已解析响应对象；禁止按固定英文标签过滤、无标记裁图、统一删除危险说明或省略视觉提示。

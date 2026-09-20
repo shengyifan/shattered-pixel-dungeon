@@ -1,5 +1,11 @@
 # Complete single-frame CLI responses: token-format study
 
+> Historical offline experiment, before CLI 7. CLI 7 implements only the selected
+> action-sharing/record-template subset; its measurements are reported separately.
+> Generated build artifacts were removed from the workspace during the
+> [2026-09-21 cleanup](cli-rebuild-7.0.0-20260921.md). Paths and version statements
+> below describe this experiment's original execution, not the current package.
+
 ## Current requirement and status
 
 **Every response must remain complete and independently interpretable.** This

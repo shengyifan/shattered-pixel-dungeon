@@ -7,17 +7,18 @@
 - [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
 - [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
 - [CLI.7.0.0 实施与验收](cli7-implementation.md)：本帧操作共享、UI/操作/背包记录模板，协议 7、schema 10 与独立 v7 profile。
+- [CLI.7.0.0 清理重建记录](cli-rebuild-7.0.0-20260921.md)：本轮协议文档校准、旧生成物清理、全新 macOS ARM64 包与实际验证。
 - [完整单帧响应的 token 研究](cli-complete-frame-token-study-20260920.md)：CLI 7 之前的离线研究；部分思路现由 CLI 7 实施，原研究测量包含未部署候选，不能当作 CLI 7 收益。
-- [CLI.6.1.1 第 9 层实战数据 token 分析](cli-token-study-d9-20260920.md)：早期格式实验、十进制请求序号及当前包验证；跨帧缓存/增量建议已由完整单帧要求取代。
-- [CLI.6.1.0 可读性与无损响应审查](cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md)：恢复公开信息、图标语义标签、客户端校验与该批包验证边界。
-- [CLI.6.0.1 控制器终端启动修复](cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md)：子进程 stderr 独立管道、共享 PTY 回归及分阶段诊断的历史记录。
-- [CLI.6.0.0 实施与验收](cli6-implementation.md)：协议 6、schema 9、独立 v6 档案、包内稳定控制器、持久短句柄与同帧 UI 压缩；包含本批次实际验证范围和限制。
-- [CLI.6.0.0 清理重建记录](cli-rebuild-6.0.0-20260920.md)：该批次协议文档校准、旧生成数据清理、全新 ARM64 包与验证。
-- [CLI 6 增量评估](cli6-incrementality-evaluation.md)：地图、背包和日志的单独离线评估，未部署增量协议。
 - [代理操作约定](../AGENTS.md)：当前协议解码、操作、记录和发布要求。
 
 ## 历史版本记录
 
+- [CLI.6.1.1 第 9 层实战数据 token 分析](cli-token-study-d9-20260920.md)：早期格式实验、十进制请求序号及该版本包验证；跨帧缓存/增量建议已由完整单帧要求取代。
+- [CLI.6.1.0 可读性与无损响应审查](cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md)：恢复公开信息、图标语义标签、客户端校验与该批包验证边界。
+- [CLI.6.0.1 控制器终端启动修复](cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md)：子进程 stderr 独立管道、共享 PTY 回归及分阶段诊断的历史记录。
+- [CLI.6.0.0 实施与验收](cli6-implementation.md)：协议 6、schema 9、独立 v6 档案、包内稳定控制器、持久短句柄与同帧 UI 压缩；包含该历史批次验证范围和限制。
+- [CLI.6.0.0 清理重建记录](cli-rebuild-6.0.0-20260920.md)：该批次协议文档校准、旧生成数据清理、全新 ARM64 包与验证。
+- [CLI 6 增量评估](cli6-incrementality-evaluation.md)：地图、背包和日志的单独离线评估，未部署增量协议。
 - [CLI.5.0.0 实施与验收](cli5-implementation.md)：该版本的语义压缩和实际验证。
 - [CLI.5.0.0 清理重建记录](cli-rebuild-5.0.0-20260919.md)：该批次旧生成目录清理、ARM64 包与完整性验证、分支推送。
 - [CLI.4.0.1 清理重建记录](cli-rebuild-4.0.1-20260914.md)：删除此前产物及实战故障 JSON 后的全量 ARM64 构建和当前包验证。

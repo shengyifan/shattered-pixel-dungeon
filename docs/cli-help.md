@@ -332,12 +332,13 @@ points and subclass/armor gates. The original talent window shows its current ch
 
 ### Controls and action discovery
 
-In every view, `acts` retains the complete ordered operation list. Each node's `ops`
-is an ordered array: an integer references one action in this observation's `acts`,
-while an object is a complete inline operation. A reference requires that action's
+In every view, `acts` retains the complete ordered operation list. A node's `ops`
+array contains complete inline operation objects or zero-based integer references
+into this observation's `acts`. A reference requires that action's
 `ctl` to equal the node's `id`; expansion copies the action and removes the inherited
 `ctl`. Explicit-control or independently protected operations stay inline. Order,
 duplicate occurrences, labels and every dynamic constraint survive.
+Absent, null or empty `ops` does not advertise a node action.
 
 Three optional same-frame template tables compress records:
 
@@ -357,11 +358,15 @@ Templates use deterministic first occurrence and are emitted only when the compl
 fragment, including the table, has fewer UTF-8 JSON bytes. Token savings are measured
 separately. JSON object member order is not semantic; array order always is.
 
-Expand `acts` and `inv` templates before UI rows, operation references and item labels,
-regardless of JSON field order. References cannot borrow another frame or snapshot's
+Expand `acts` and `inv` templates first, then restore applicable activity/cancel
+`rev/rid` bindings before copying referenced node operations. Expand UI node templates,
+resolve ordered operation references and item labels, then apply remaining scoped
+defaults. This order does not depend on JSON field order. References cannot borrow another frame or snapshot's
 tables. Invalid indexes, duplicate fields, overlapping fields, wrong row widths and
 control mismatches are decoding errors, never partial observations. Protocol 6's
 `op_defs`, `node_shapes` and whole-operation-list indexes are unsupported.
+Boolean and floating-point indexes are invalid. Detailed template validation and
+snapshot boundaries are specified in `docs/cli7-implementation.md`.
 
 ```json
 {"acts":[{"op":"click","ctl":"c3"},{"op":"click","ctl":"c4"}],"ui":{"node_templates":[{"common":{"role":"button"},"fields":["id","text","ops"]}],"nodes":[[0,"c3","Drink",[0]],[0,"c4","Throw",[1]]]}}
@@ -794,8 +799,9 @@ try:
                       "phase": state["data"].get("phase"),
                       "hero": state["data"].get("hero")}, ensure_ascii=False))
     # Keep the process and connection open in your controller loop.
-    # Each reply is a self-contained observation; expand its own dictionaries,
-    # scoped defaults and visibility before choosing a new advertised action.
+    # Each reply is self-contained: expand its acts/inv templates, restore current
+    # activity/cancel bindings, then resolve node templates/ops/labels and other
+    # scoped defaults/visibility before choosing a new advertised action.
     # original_scope = state["s"]
     # initial = request(action_name, scope=original_scope, rev=state["rev"], **args)
     # stream = observe_after_action(initial, original_scope, action_name)
