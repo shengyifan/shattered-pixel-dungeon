@@ -22,14 +22,14 @@ import java.util.concurrent.TimeUnit;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.Assert.*;
 
-/** End-to-end v6 wire and real audit receipts, with no GUI, user profile, or game save reads. */
-public class Cli6ContractTest {
+/** End-to-end v7 wire and real audit receipts, with no GUI, user profile, or game save reads. */
+public class Cli7ContractTest {
     @Rule public TemporaryFolder temporary = new TemporaryFolder();
 
     @Test public void compactLiveStateAndFlatMovesKeepCanonicalExecutionAndFrozenDetails() throws Exception {
         try (Harness h = new Harness(temporary.newFolder().toPath())) {
-            Map<String,Object> state = h.send(map("v",6,"id","state","s","run:test","op","state"));
-            assertEquals(6L,state.get("v"));assertEquals("r1",h.store.resolveHandle("revision",(String)state.get("rev")));
+            Map<String,Object> state = h.send(map("v",7,"id","state","s","run:test","op","state"));
+            assertEquals(7L,state.get("v"));assertEquals("r1",h.store.resolveHandle("revision",(String)state.get("rev")));
             assertFalse(state.containsKey("ok"));assertFalse(state.containsKey("result"));
             Map<?,?> data = (Map<?,?>)state.get("data");
             assertFalse(data.containsKey("observation"));assertFalse(data.containsKey("rev"));
@@ -40,16 +40,16 @@ public class Cli6ContractTest {
             Map<?,?> expanded=(Map<?,?>)CompactProtocol.expandStructures(state);
             List<?> nodes=(List<?>)((Map<?,?>)((Map<?,?>)expanded.get("data")).get("ui")).get("nodes");
             assertEquals("click",((Map<?,?>)((List<?>)((Map<?,?>)nodes.get(0)).get("ops")).get(0)).get("op"));
-            Map<String,Object> moved=h.send(map("v",6,"id","move","s","run:test","op","move","rev","r1","dir","N"));
+            Map<String,Object> moved=h.send(map("v",7,"id","move","s","run:test","op","move","rev","r1","dir","N"));
             assertEquals(map("action","move.step","direction","north"),h.game.lastArgs);
             assertEquals("r2",h.store.resolveHandle("revision",(String)moved.get("rev")));
             h.game.rejectObservation=true;
-            Map<String,Object> receipt=h.send(map("v",6,"id","receipt","s","run:test","op","req","rid","move"));
+            Map<String,Object> receipt=h.send(map("v",7,"id","receipt","s","run:test","op","req","rid","move"));
             assertFalse(receipt.containsKey("rev"));
             assertEquals("COMPLETED",((Map<?,?>)receipt.get("data")).get("st"));
             assertFalse(((Map<?,?>)receipt.get("data")).containsKey("reply"));
             assertFalse(((Map<?,?>)receipt.get("data")).containsKey("after"));
-            Map<String,Object> detail=h.send(map("v",6,"id","detail","s","run:test","op","req","rid","move",
+            Map<String,Object> detail=h.send(map("v",7,"id","detail","s","run:test","op","req","rid","move",
                     "get",List.of("reply","before","after","raw"),"src",true));
             Map<?,?> details=(Map<?,?>)detail.get("data");
             assertEquals(moved,details.get("reply"));
@@ -63,7 +63,7 @@ public class Cli6ContractTest {
 
     @Test public void stateAndActionsViewsHaveIndependentDefaultsAndHistoryKeepsFullDiagnostics() throws Exception {
         try (Harness h = new Harness(temporary.newFolder().toPath())) {
-            Map<String,Object> play = h.send(map("v",6,"id","play","s","run:test","op","state"));
+            Map<String,Object> play = h.send(map("v",7,"id","play","s","run:test","op","state"));
             Map<?,?> playData = (Map<?,?>)play.get("data");
             Map<?,?> playItem = (Map<?,?>)((List<?>)playData.get("inv")).get(0);
             assertFalse(playItem.containsKey("qty")); assertEquals("Before",playItem.get("desc"));
@@ -77,22 +77,22 @@ public class Cli6ContractTest {
             assertNotNull(emptyNode.get("id"));assertEquals("text",emptyNode.get("role"));assertEquals("",emptyNode.get("text"));
             assertEquals(List.of("click","move"),((List<?>)playData.get("acts")).stream().map(action->((Map<?,?>)action).get("op")).collect(java.util.stream.Collectors.toList()));
 
-            Map<String,Object> full = h.send(map("v",6,"id","full","s","run:test","op","state","view","full"));
+            Map<String,Object> full = h.send(map("v",7,"id","full","s","run:test","op","state","view","full"));
             assertFullDetails((Map<?,?>)full.get("data"));
-            Map<String,Object> explicitPlay = h.send(map("v",6,"id","explicit-play","s","run:test","op","state","view","play"));
+            Map<String,Object> explicitPlay = h.send(map("v",7,"id","explicit-play","s","run:test","op","state","view","play"));
             assertEquals(playData,explicitPlay.get("data"));
-            Map<String,Object> sourced = h.send(map("v",6,"id","sourced","s","run:test","op","state","view","play","src",true));
+            Map<String,Object> sourced = h.send(map("v",7,"id","sourced","s","run:test","op","state","view","play","src",true));
             assertFullDetails((Map<?,?>)sourced.get("data"));
             assertTrue(JsonCodec.encode(sourced).contains("text_sources"));
 
-            Map<String,Object> actions = h.send(map("v",6,"id","actions-play","s","run:test","op","actions"));
+            Map<String,Object> actions = h.send(map("v",7,"id","actions-play","s","run:test","op","actions"));
             List<?> actionNodes=(List<?>)((Map<?,?>)((Map<?,?>)CompactProtocol.expandStructures(actions.get("data"))).get("ui")).get("nodes");
             assertEquals(2,actionNodes.size());assertEquals(emptyNode,actionNodes.get(1));
-            Map<String,Object> fullActions = h.send(map("v",6,"id","actions-full","s","run:test","op","actions","view","full"));
+            Map<String,Object> fullActions = h.send(map("v",7,"id","actions-full","s","run:test","op","actions","view","full"));
             assertEquals(2,((List<?>)((Map<?,?>)((Map<?,?>)fullActions.get("data")).get("ui")).get("nodes")).size());
 
             h.game.rejectObservation = true;
-            Map<String,Object> historic = h.send(map("v",6,"id","historic","s","run:test","op","req","rid","play","get",List.of("after","raw","reply")));
+            Map<String,Object> historic = h.send(map("v",7,"id","historic","s","run:test","op","req","rid","play","get",List.of("after","raw","reply")));
             Map<?,?> details=(Map<?,?>)historic.get("data");
             assertFullDetails((Map<?,?>)details.get("after"));
             assertEquals(play,details.get("reply"));
@@ -102,6 +102,7 @@ public class Cli6ContractTest {
     }
 
     private static void assertFullDetails(Map<?,?> data) {
+        data=(Map<?,?>)CompactProtocol.expandStructures(data);
         Map<?,?> item=(Map<?,?>)((List<?>)data.get("inv")).get(0);
         assertEquals(1L,item.get("qty")); assertEquals("Before",item.get("desc"));
         assertEquals(Boolean.TRUE,item.get("available")); assertEquals(Boolean.FALSE,item.get("equipped"));
@@ -112,21 +113,72 @@ public class Cli6ContractTest {
         assertTrue(((Map<?,?>)data.get("map")).containsKey("rows"));
     }
 
+    @Test public void everyViewAndFrozenSnapshotUsesItsOwnRecordTemplates() throws Exception {
+        try(Harness h=new Harness(temporary.newFolder().toPath())) {
+            List<Map<String,Object>> items=new java.util.ArrayList<>(),nodes=new java.util.ArrayList<>(),actions=new java.util.ArrayList<>();
+            for(int i=0;i<20;i++) {
+                items.add(map("locator","backpack."+i,"quantity",1,"equipped",false,"available",true,
+                        "charges",map("current",2,"maximum",5,"known",true)));
+                nodes.add(map("id","ui-"+i,"role","button","enabled",true,"parent","ui-root","ordinal",i));
+                actions.add(map("action","ui.activate","control","ui-"+i,"gestures",List.of("click","long"),
+                        "parameters",map("fixture_constraint",true)));
+            }
+            Map<String,Object> observation=map("scene","game","inventory",items,"ui",map("controls",nodes),"actions",actions);
+            h.game.state=new GameController.State("run:test","r1","player_ready",observation,map("fixture",true),actions);
+            for(String view:List.of("play","full","src")) {
+                Map<String,Object> request=map("v",7,"id",view,"s","run:test","op","state");
+                if(view.equals("src"))request.put("src",true);else request.put("view",view);
+                Map<String,Object> response=h.send(request);
+                assertFalse(response.toString(),response.containsKey("err"));
+                assertThreeTemplateTables((Map<?,?>)response.get("data"));
+                Map<?,?> decoded=(Map<?,?>)CompactProtocol.expandStructures(response);
+                Map<?,?> data=(Map<?,?>)decoded.get("data");
+                assertEquals(20,((List<?>)data.get("acts")).size());
+                assertEquals(20,((List<?>)data.get("inv")).size());
+                List<?> expandedNodes=(List<?>)((Map<?,?>)data.get("ui")).get("nodes");
+                for(int i=0;i<20;i++) {
+                    Map<?,?> node=(Map<?,?>)expandedNodes.get(i);
+                    assertEquals("ui-"+i,node.get("id"));assertEquals("ui-root",node.get("parent"));
+                    Map<String,Object> expected=new java.util.LinkedHashMap<>((Map<String,Object>)((List<?>)data.get("acts")).get(i));
+                    assertEquals(node.get("id"),expected.remove("ctl"));
+                    assertEquals(expected,((List<?>)node.get("ops")).get(0));
+                }
+            }
+            h.game.rejectObservation=true;
+            Map<String,Object> history=h.send(map("v",7,"id","history-templates","s","run:test","op","req","rid","play","get",List.of("after","reply")));
+            Map<?,?> details=(Map<?,?>)history.get("data");
+            assertThreeTemplateTables((Map<?,?>)details.get("after"));
+            assertThreeTemplateTables((Map<?,?>)((Map<?,?>)details.get("reply")).get("data"));
+            Map<?,?> expandedHistory=(Map<?,?>)CompactProtocol.expandStructures(history);
+            assertEquals(details.get("reply"),((Map<?,?>)expandedHistory.get("data")).get("reply"));
+            assertFalse(history.containsKey("rev"));
+        }
+    }
+
+    private static void assertThreeTemplateTables(Map<?,?> data) {
+        assertTrue(data.toString(),data.containsKey("act_templates"));
+        assertTrue(data.toString(),data.containsKey("inv_templates"));
+        assertTrue(data.toString(),((Map<?,?>)data.get("ui")).containsKey("node_templates"));
+        assertTrue(((List<?>)data.get("acts")).get(0) instanceof List);
+        assertTrue(((List<?>)data.get("inv")).get(0) instanceof List);
+        assertTrue(((List<?>)((Map<?,?>)data.get("ui")).get("nodes")).get(0) instanceof List);
+    }
+
     @Test public void defaultReceiptDoesNotLoadASnapshotOrObserveTheEngine() throws Exception {
         Path profile=temporary.newFolder().toPath();
         try(Harness h=new Harness(profile)) {
-            h.send(map("v",6,"id","original","s","run:test","op","state"));
+            h.send(map("v",7,"id","original","s","run:test","op","state"));
             h.game.rejectObservation=true;
             try(var connection=DriverManager.getConnection("jdbc:sqlite:"+profile.resolve("public.sqlite3"));
                 var statement=connection.createStatement()) {
                 statement.executeUpdate("UPDATE snapshot_blobs SET body=x'00'");
             }
-            Map<String,Object> receipt=h.send(map("v",6,"id","small","s","run:test","op","req","rid","original"));
+            Map<String,Object> receipt=h.send(map("v",7,"id","small","s","run:test","op","req","rid","original"));
             assertFalse(receipt.containsKey("err"));
             assertEquals("COMPLETED",((Map<?,?>)receipt.get("data")).get("st"));
             assertTrue(JsonCodec.encode(receipt).length()<1000);
             assertEquals(1,h.game.observations);
-            Map<String,Object> expanded=h.send(map("v",6,"id","snapshot","s","run:test","op","req","rid","original","get",List.of("after")));
+            Map<String,Object> expanded=h.send(map("v",7,"id","snapshot","s","run:test","op","req","rid","original","get",List.of("after")));
             assertEquals("AUDIT_UNAVAILABLE",expanded.get("err"));
             assertEquals(1,h.game.observations);
         }
@@ -135,11 +187,11 @@ public class Cli6ContractTest {
     @Test public void scopeTransitionUsesEffectiveScopeAndHistoryHasExplicitPageBounds() throws Exception {
         try(Harness h=new Harness(temporary.newFolder().toPath())) {
             h.game.scope=h.store.menuScope();h.game.state=h.game.snapshot("r1","Before");
-            Map<String,Object> result=h.send(map("v",6,"id","start","s",h.store.menuScope(),"rev","r1","op","click","ctl","ui-1"));
+            Map<String,Object> result=h.send(map("v",7,"id","start","s",h.store.menuScope(),"rev","r1","op","click","ctl","ui-1"));
             assertTrue(((String)result.get("s")).matches("s[1-9a-z][0-9a-z]*"));
             assertEquals(h.game.scope,h.store.resolveHandle("scope",(String)result.get("s")));
             assertFalse(((Map<?,?>)result.get("data")).containsKey("s"));
-            Map<String,Object> history=h.send(map("v",6,"id","history","s",h.store.menuScope(),"op","history","limit",1));
+            Map<String,Object> history=h.send(map("v",7,"id","history","s",h.store.menuScope(),"op","history","limit",1));
             assertFalse(history.containsKey("rev"));
             Map<?,?> page=(Map<?,?>)history.get("data");
             assertEquals(1,((List<?>)page.get("items")).size());assertEquals(false,page.get("end"));assertNotNull(page.get("next"));
@@ -148,14 +200,14 @@ public class Cli6ContractTest {
 
     @Test public void aOneItemHistoryTraversalEndsDespiteAuditingEveryPage() throws Exception {
         try(Harness h=new Harness(temporary.newFolder().toPath())) {
-            h.send(map("v",6,"id","seed","s","run:test","op","state"));
-            Map<String,Object> response=h.send(map("v",6,"id","page0","s","run:test","op","history","limit",1));
+            h.send(map("v",7,"id","seed","s","run:test","op","state"));
+            Map<String,Object> response=h.send(map("v",7,"id","page0","s","run:test","op","history","limit",1));
             Map<?,?> page=(Map<?,?>)response.get("data");
             long until=((Number)page.get("until")).longValue();
             int pages=1;
             while(!Boolean.TRUE.equals(page.get("end"))) {
                 assertTrue("Self-audited page queries must not extend this traversal",pages<5);
-                response=h.send(map("v",6,"id","page"+pages++,"s","run:test","op","history","limit",1,
+                response=h.send(map("v",7,"id","page"+pages++,"s","run:test","op","history","limit",1,
                         "after",page.get("next"),"until",until));
                 page=(Map<?,?>)response.get("data");
                 assertEquals(until,((Number)page.get("until")).longValue());
@@ -171,11 +223,11 @@ public class Cli6ContractTest {
         final MachineSession session;
         Harness(Path profile)throws Exception {
             store=new AuditStore(profile);store.ensureScope("run:test","run","test");
-            store.beginSession("test","test-build","CLI.6.0.0",6);
+            store.beginSession("test","test-build","CLI.7.0.0",7);
             session=new MachineSession(store,game,new PrintStream(bytes,true,"UTF-8"),1000);
         }
         Map<String,Object> send(Map<String,Object> request)throws Exception {
-            bytes.reset();session.accept(V6Requests.encode(store, request)).get(5,TimeUnit.SECONDS);
+            bytes.reset();session.accept(V7Requests.encode(store, request)).get(5,TimeUnit.SECONDS);
             return JsonCodec.decode(bytes.toString(StandardCharsets.UTF_8).trim());
         }
         public void close(){session.close();store.close();}

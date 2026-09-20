@@ -4,7 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/** Same-frame protocol-6 structures. This class has no engine, profile or cross-frame state. */
+/** Same-frame protocol-7 structures. This class has no engine, profile or cross-frame state. */
 final class CompactStructures {
     private static final Set<String> OPAQUE = new HashSet<>(Arrays.asList(
             "raw", "reply", "schema", "raw_request", "raw_bytes", "request_json", "response_json",
@@ -12,63 +12,141 @@ final class CompactStructures {
     private static final Set<String> NO_CAPS = new HashSet<>(Arrays.asList("a", "an", "and", "of", "by", "to", "the", "x", "for"));
     private CompactStructures() { }
 
-    static void compact(Object value) { compact(value, false); }
+    static void compact(Object value) { compact(value, true, true); }
 
-    private static void compact(Object value, boolean expanded) {
-        if (value instanceof List) {for (Object child : (List<?>)value) compact(child, expanded); return;}
+    /** Independent switches exist only for deterministic offline measurements of the production codec. */
+    static void compact(Object value, boolean shareOps, boolean templates) {
+        // Validate every owned snapshot before any mutation. Existing reserved keys are public
+        // input conflicts, never an invitation to overwrite data or reinterpret an encoded frame.
+        validateEncodingRoot(value);
+        compactRoot(value, false, shareOps, templates);
+    }
+
+    private static void validateEncodingRoot(Object value) {
+        if(!(value instanceof Map))return;
+        Map<String,Object> root=object(value);
+        if(root.containsKey("v") && root.get("data") instanceof Map) {
+            validateEncodingRoot(root.get("data"));return;
+        }
+        for(String reserved:Arrays.asList("act_templates","inv_templates"))
+            if(root.containsKey(reserved))throw new IllegalArgumentException("Reserved protocol 7 structure field: "+reserved);
+        if(root.get("ui") instanceof Map && object(root.get("ui")).containsKey("node_templates"))
+            throw new IllegalArgumentException("Reserved protocol 7 structure field: ui.node_templates");
+        for(String snapshot:Arrays.asList("before","after"))validateEncodingRoot(root.get(snapshot));
+    }
+
+    private static void compactRoot(Object value, boolean protectedAncestor, boolean shareOps, boolean templates) {
         if (!(value instanceof Map)) return;
         Map<String,Object> current=object(value);
-        // An ancestor-owned path can address nodes by index. Keep its whole subtree addressable.
-        expanded |= metadata(current);
-        if (!expanded && current.get("nodes") instanceof List) compactUi(current);
-        for (Map.Entry<String,Object> entry : current.entrySet())
-            if (!OPAQUE.contains(entry.getKey())) compact(entry.getValue(), expanded || "before".equals(entry.getKey()) || "after".equals(entry.getKey()));
-    }
-
-    private static void compactUi(Map<String,Object> ui) {
-        if (ui.containsKey("op_defs") || ui.containsKey("node_shapes")) return;
-        List<Object> nodes=new ArrayList<>();
-        for (Object raw:(List<?>)ui.get("nodes")) {
-            if (!(raw instanceof Map)) return;
-            Map<String,Object> node=new LinkedHashMap<>(object(raw));
-            nodes.add(node);
+        boolean protectedRoot=protectedAncestor || metadata(current);
+        if (current.containsKey("v") && current.get("data") instanceof Map) {
+            Map<String,Object> data=new LinkedHashMap<>(object(current.get("data")));current.put("data",data);
+            compactRoot(data,protectedRoot,shareOps,templates);
+            return;
         }
-        ui.put("nodes",nodes);
-
-        Map<List<?>,Integer> counts=new LinkedHashMap<>();
-        for (Object raw:nodes) {
-            Object ops=object(raw).get("ops");
-            if (ops instanceof List && !containsMetadata(raw)) counts.put((List<?>)ops,counts.getOrDefault(ops,0)+1);
-        }
-        List<Object> definitions=new ArrayList<>();
-        for(Map.Entry<List<?>,Integer> entry:counts.entrySet()) {
-            if(entry.getValue()<2)continue;
-            List<Object> candidateNodes=copyNodes(nodes),candidateDefinitions=new ArrayList<>(definitions);
-            int index=definitions.size();candidateDefinitions.add(entry.getKey());
-            for(Object raw:candidateNodes)if(!containsMetadata(raw) && Objects.equals(object(raw).get("ops"),entry.getKey()))object(raw).put("ops",index);
-            Map<String,Object> candidate=new LinkedHashMap<>(ui);
-            candidate.put("nodes",candidateNodes);candidate.put("op_defs",candidateDefinitions);
-            // Each accepted definition must independently pay for itself, including table overhead.
-            if(bytes(candidate)<bytes(ui)) {
-                ui.put("nodes",candidateNodes);ui.put("op_defs",candidateDefinitions);
-                nodes=candidateNodes;definitions=candidateDefinitions;
+        // Only documented observation roots own these records. Unknown extension objects are opaque.
+        if (!protectedRoot) {
+            if(current.get("ui") instanceof Map)current.put("ui",new LinkedHashMap<>(object(current.get("ui"))));
+            if (shareOps) shareOperations(current);
+            if (templates) {
+                compactRecords(current,"acts","act_templates");
+                compactRecords(current,"inv","inv_templates");
+                if (current.get("ui") instanceof Map && !metadata(object(current.get("ui"))))
+                    compactRecords(object(current.get("ui")),"nodes","node_templates");
             }
         }
-
-        List<Object> shapes=new ArrayList<>(),rows=new ArrayList<>();Map<List<String>,Integer> shapeIndexes=new LinkedHashMap<>();
-        for(Object raw:nodes) {
-            if(containsMetadata(raw)){rows.add(raw);continue;}
-            Map<String,Object> node=object(raw);List<String> shape=new ArrayList<>(node.keySet());
-            Integer index=shapeIndexes.get(shape);
-            if(index==null){index=shapes.size();shapeIndexes.put(shape,index);shapes.add(shape);}
-            List<Object> row=new ArrayList<>();row.add(index);row.addAll(node.values());rows.add(row);
+        for (String snapshot:Arrays.asList("before","after")) if(current.get(snapshot) instanceof Map) {
+            // Detached public snapshots may share Java object identities with immutable raw evidence.
+            Map<String,Object> child=new LinkedHashMap<>(object(current.get(snapshot)));current.put(snapshot,child);
+            compactRoot(child,protectedRoot,shareOps,templates);
         }
-        Map<String,Object> candidate=new LinkedHashMap<>(ui);candidate.put("nodes",rows);candidate.put("node_shapes",shapes);
-        if(!rows.isEmpty() && bytes(candidate)<bytes(ui)) {ui.put("nodes",rows);ui.put("node_shapes",shapes);}
     }
 
-    private static List<Object> copyNodes(List<?> nodes) {
-        List<Object> copy=new ArrayList<>();for(Object node:nodes)copy.add(new LinkedHashMap<>(object(node)));return copy;
+    private static void shareOperations(Map<String,Object> observation) {
+        if (!(observation.get("acts") instanceof List) || !(observation.get("ui") instanceof Map)) return;
+        Map<String,Object> ui=object(observation.get("ui"));
+        if (metadata(ui) || !(ui.get("nodes") instanceof List)) return;
+        List<?> actions=(List<?>)observation.get("acts");
+        List<Object> nodes=new ArrayList<>();
+        for (Object raw:(List<?>)ui.get("nodes")) {
+            if (!(raw instanceof Map) || containsMetadata(raw)) { nodes.add(raw); continue; }
+            Map<String,Object> node=new LinkedHashMap<>(object(raw));
+            nodes.add(node);
+            if (!(node.get("id") instanceof String) || !(node.get("ops") instanceof List)) continue;
+            List<Object> operations=new ArrayList<>();
+            for (Object operation:(List<?>)node.get("ops")) {
+                Object encoded=operation;
+                if (operation instanceof Map && !object(operation).containsKey("ctl") && !containsMetadata(operation)) {
+                    for (int index=0;index<actions.size();index++) {
+                        Object rawAction=actions.get(index);
+                        if (!(rawAction instanceof Map) || containsMetadata(rawAction)) continue;
+                        Map<String,Object> action=object(rawAction);
+                        if (!Objects.equals(node.get("id"),action.get("ctl"))) continue;
+                        Map<String,Object> inherited=new LinkedHashMap<>(action);inherited.remove("ctl");
+                        if (exact(operation,inherited)) { encoded=index; break; }
+                    }
+                }
+                operations.add(encoded);
+            }
+            node.put("ops",operations);
+        }
+        ui.put("nodes",nodes);
+    }
+
+    private static void compactRecords(Map<String,Object> owner,String field,String tableField) {
+        if (!(owner.get(field) instanceof List)) return;
+        List<?> original=(List<?>)owner.get(field);
+        Map<List<String>,List<Integer>> groups=new LinkedHashMap<>();
+        for (int index=0;index<original.size();index++) {
+            Object record=original.get(index);
+            if (!(record instanceof Map) || containsMetadata(record)) continue;
+            List<String> fields=new ArrayList<>(object(record).keySet());
+            groups.computeIfAbsent(fields,ignored->new ArrayList<>()).add(index);
+        }
+        List<Object> records=new ArrayList<>(original),templates=new ArrayList<>();
+        for (Map.Entry<List<String>,List<Integer>> group:groups.entrySet()) {
+            if (group.getValue().size()<2) continue;
+            Map<String,Object> first=object(original.get(group.getValue().get(0))),common=new LinkedHashMap<>();
+            List<String> fields=new ArrayList<>();
+            for (String key:group.getKey()) {
+                boolean same=true;
+                for (int index:group.getValue()) if (!exact(first.get(key),object(original.get(index)).get(key))) {same=false;break;}
+                if (same) common.put(key,first.get(key)); else fields.add(key);
+            }
+            Map<String,Object> template=new LinkedHashMap<>();template.put("common",common);template.put("fields",fields);
+            List<Object> candidateRecords=new ArrayList<>(records),candidateTemplates=new ArrayList<>(templates);
+            int templateIndex=templates.size();candidateTemplates.add(template);
+            for (int index:group.getValue()) {
+                List<Object> row=new ArrayList<>();row.add(templateIndex);
+                for (String key:fields) row.add(object(original.get(index)).get(key));
+                candidateRecords.set(index,row);
+            }
+            Map<String,Object> candidate=new LinkedHashMap<>(owner);
+            candidate.put(field,candidateRecords);candidate.put(tableField,candidateTemplates);
+            // Include the complete records, table and wrapper overhead for every accepted group.
+            if (bytes(candidate)<bytes(owner)) {
+                records=candidateRecords;templates=candidateTemplates;
+                owner.put(field,records);owner.put(tableField,templates);
+            }
+        }
+    }
+
+    /** JSON type-sensitive equality: never collapse false/0, integer/float, missing/null or array order. */
+    private static boolean exact(Object left,Object right) {
+        if (left==null || right==null) return left==right;
+        if (left instanceof Map && right instanceof Map) {
+            Map<?,?> a=(Map<?,?>)left,b=(Map<?,?>)right;
+            if (!a.keySet().equals(b.keySet())) return false;
+            for (Object key:a.keySet()) if (!exact(a.get(key),b.get(key))) return false;
+            return true;
+        }
+        if (left instanceof List && right instanceof List) {
+            List<?> a=(List<?>)left,b=(List<?>)right;if(a.size()!=b.size())return false;
+            for(int i=0;i<a.size();i++)if(!exact(a.get(i),b.get(i)))return false;
+            return true;
+        }
+        if (integral(left) && integral(right)) return ((Number)left).longValue()==((Number)right).longValue();
+        return left.getClass()==right.getClass() && left.equals(right);
     }
 
     private static boolean metadata(Map<String,Object> value) {
@@ -121,54 +199,107 @@ final class CompactStructures {
         if(scope!=null && Objects.equals(actualScope,scope))receipt.remove("s");
     }
 
-    static Object expand(Object value) {return expand(value,Collections.emptyMap(),null,null);}
+    static Object expand(Object value) {return expandRoot(value,null,null,true);}
 
-    private static Object expand(Object value,Map<String,Map<String,Object>> inventory,Object scope,Object revision) {
-        if(value instanceof List){List<Object> list=new ArrayList<>();for(Object child:(List<?>)value)list.add(expand(child,inventory,scope,revision));return list;}
-        if(!(value instanceof Map))return value;
-        Map<String,Object> input=object(value),result=new LinkedHashMap<>();
-        if(input.containsKey("s"))scope=input.get("s");
-        if(input.containsKey("rev"))revision=input.get("rev");
-        if(input.get("inv") instanceof List) {
-            inventory=new LinkedHashMap<>();Set<String> ambiguous=new HashSet<>();
-            for(Object raw:(List<?>)input.get("inv"))if(raw instanceof Map && object(raw).get("loc") instanceof String) {
-                String locator=(String)object(raw).get("loc");if(inventory.put(locator,object(raw))!=null)ambiguous.add(locator);
-            }
-            for(String locator:ambiguous)inventory.remove(locator);
+    /** Structure-only entry point for exact offline round-trip measurements. */
+    static Object expandPure(Object value) {return expandRoot(value,null,null,false);}
+
+    private static Object expandRoot(Object value,Object scope,Object revision,boolean bindings) {
+        if (!(value instanceof Map)) return copy(value);
+        Map<String,Object> input=object(value),result=object(copy(input));
+        if (input.containsKey("s")) scope=input.get("s");
+        if (input.containsKey("rev")) revision=input.get("rev");
+        if (input.containsKey("v") && input.get("data") instanceof Map) {
+            result.put("data",expandRoot(input.get("data"),scope,revision,bindings));
+            return result;
         }
-        for(Map.Entry<String,Object> entry:input.entrySet()) {
-            String key=entry.getKey();Object child=entry.getValue();
-            if(input.get("nodes") instanceof List && Arrays.asList("op_defs","node_shapes").contains(key))continue;
-            if("nodes".equals(key) && child instanceof List) {
-                List<Object> nodes=new ArrayList<>();
-                for(Object raw:(List<?>)child) {
-                    Map<String,Object> node;
-                    if(raw instanceof List) {
-                        List<?> row=(List<?>)raw;if(row.isEmpty())throw new IllegalArgumentException("Empty UI node row");
-                        Object shapeValue=definition(input.get("node_shapes"),row.get(0));
-                        if(!(shapeValue instanceof List))throw new IllegalArgumentException("Invalid node shape");
-                        List<?> shape=(List<?>)shapeValue;if(shape.size()!=row.size()-1)throw new IllegalArgumentException("UI row width mismatch");
-                        node=new LinkedHashMap<>();
-                        for(int i=0;i<shape.size();i++) {
-                            if(!(shape.get(i) instanceof String) || node.containsKey(shape.get(i)))throw new IllegalArgumentException("Invalid node shape field");
-                            node.put((String)shape.get(i),row.get(i+1));
+        expandRecords(result,"acts","act_templates");
+        expandRecords(result,"inv","inv_templates");
+        if (bindings) expandBindings(result,scope,revision);
+        Map<String,Map<String,Object>> inventory=new LinkedHashMap<>();
+        Set<String> ambiguous=new HashSet<>();
+        if (result.get("inv") instanceof List) for(Object raw:(List<?>)result.get("inv")) {
+            if (!(raw instanceof Map) || !(object(raw).get("loc") instanceof String)) continue;
+            String locator=(String)object(raw).get("loc");
+            if(inventory.put(locator,object(raw))!=null)ambiguous.add(locator);
+        }
+        for(String locator:ambiguous)inventory.remove(locator);
+        if (result.get("ui") instanceof Map) {
+            Map<String,Object> ui=object(result.get("ui"));
+            if(ui.containsKey("node_shapes") || ui.containsKey("op_defs"))throw new IllegalArgumentException("Protocol 6 UI structures are unsupported");
+            expandRecords(ui,"nodes","node_templates");
+            if(ui.get("nodes") instanceof List)for(Object raw:(List<?>)ui.get("nodes")) {
+                if(!(raw instanceof Map))throw new IllegalArgumentException("Invalid UI node");
+                Map<String,Object> node=object(raw);
+                if(node.get("ops")!=null) {
+                    if(!(node.get("ops") instanceof List))throw new IllegalArgumentException("Invalid operation list");
+                    List<Object> operations=new ArrayList<>();
+                    for(Object operation:(List<?>)node.get("ops")) {
+                        if(operation instanceof Map) {
+                            if(!(object(operation).get("op") instanceof String) || ((String)object(operation).get("op")).isEmpty())
+                                throw new IllegalArgumentException("Invalid inline operation");
+                            operations.add(operation);
+                        } else {
+                            Object descriptor=definition(result.get("acts"),operation);
+                            if(!(descriptor instanceof Map))throw new IllegalArgumentException("Invalid action reference");
+                            Map<String,Object> action=object(descriptor);
+                            if(!(action.get("op") instanceof String) || ((String)action.get("op")).isEmpty()
+                                    || !(node.get("id") instanceof String) || !(action.get("ctl") instanceof String)
+                                    || !Objects.equals(node.get("id"),action.get("ctl")) || containsMetadata(action))
+                                throw new IllegalArgumentException("Action reference has no matching control binding");
+                            Map<String,Object> inherited=object(copy(action));inherited.remove("ctl");operations.add(inherited);
                         }
-                    } else if(raw instanceof Map)node=new LinkedHashMap<>(object(raw));
-                    else throw new IllegalArgumentException("Invalid UI node");
-                    if(node.get("ops") instanceof Number)node.put("ops",definition(input.get("op_defs"),node.get("ops")));
-                    if(node.containsKey("ops") && !(node.get("ops") instanceof List))throw new IllegalArgumentException("Invalid operation list");
-                    if(node.get("label") instanceof Number) {
-                        Object name=inventory.containsKey(node.get("loc"))?inventory.get(node.get("loc")).get("name"):null;
-                        int code=integer(node.get("label"));
-                        if(!(name instanceof String) || code<0 || code>1)throw new IllegalArgumentException("Unbound inherited item label");
-                        node.put("label",code==0?name:titleCase((String)name));
                     }
-                    if(node.get("label")!=null && !(node.get("label") instanceof String))throw new IllegalArgumentException("Invalid item label");
-                    nodes.add(expand(node,inventory,scope,revision));
+                    node.put("ops",operations);
                 }
-                result.put(key,nodes);
-            } else result.put(key,OPAQUE.contains(key)?child:expand(child,inventory,scope,revision));
+                if(node.get("label") instanceof Number) {
+                    Object name=inventory.containsKey(node.get("loc"))?inventory.get(node.get("loc")).get("name"):null;
+                    int code=integer(node.get("label"));
+                    if(!(name instanceof String) || code<0 || code>1)throw new IllegalArgumentException("Unbound inherited item label");
+                    node.put("label",code==0?name:titleCase((String)name));
+                }
+                if(node.get("label")!=null && !(node.get("label") instanceof String))throw new IllegalArgumentException("Invalid item label");
+            }
         }
+        for(String snapshot:Arrays.asList("before","after")) if(input.containsKey(snapshot))
+            result.put(snapshot,expandRoot(input.get(snapshot),null,null,bindings));
+        return result;
+    }
+
+    private static void expandRecords(Map<String,Object> owner,String field,String tableField) {
+        if(owner.containsKey(tableField) && !(owner.get(field) instanceof List))throw new IllegalArgumentException("Record table has no record list");
+        if(!(owner.get(field) instanceof List))return;
+        Object table=owner.get(tableField);
+        if(owner.containsKey(tableField)) {
+            if(!(table instanceof List))throw new IllegalArgumentException("Invalid record template table");
+            for(Object entry:(List<?>)table)validateTemplate(entry);
+        }
+        List<Object> records=new ArrayList<>();
+        for(Object raw:(List<?>)owner.get(field)) {
+            if(raw instanceof Map) {records.add(raw);continue;}
+            if(!(raw instanceof List) || ((List<?>)raw).isEmpty())throw new IllegalArgumentException("Invalid record row");
+            List<?> row=(List<?>)raw;Map<String,Object> template=object(definition(table,row.get(0)));
+            List<?> fields=(List<?>)template.get("fields");
+            if(row.size()!=fields.size()+1)throw new IllegalArgumentException("Record row width mismatch");
+            Map<String,Object> record=object(copy(template.get("common")));
+            for(int index=0;index<fields.size();index++)record.put((String)fields.get(index),copy(row.get(index+1)));
+            records.add(record);
+        }
+        owner.put(field,records);owner.remove(tableField);
+    }
+
+    private static void validateTemplate(Object value) {
+        if(!(value instanceof Map))throw new IllegalArgumentException("Invalid record template");
+        Map<String,Object> template=object(value);
+        if(template.size()!=2 || !(template.get("common") instanceof Map) || !(template.get("fields") instanceof List))
+            throw new IllegalArgumentException("Invalid record template fields");
+        Set<Object> fields=new HashSet<>(((Map<?,?>)template.get("common")).keySet());
+        for(Object field:fields)if(!(field instanceof String))throw new IllegalArgumentException("Invalid common field name");
+        for(Object field:(List<?>)template.get("fields"))
+            if(!(field instanceof String) || !fields.add(field))throw new IllegalArgumentException("Invalid or duplicate variable field");
+    }
+
+    private static void expandBindings(Map<String,Object> result,Object scope,Object revision) {
         if(result.get("activity") instanceof Map) {
             Map<String,Object> activity=object(result.get("activity"));
             if(!activity.containsKey("rev") && revision!=null)activity.put("rev",revision);
@@ -182,9 +313,19 @@ final class CompactStructures {
         if(result.get("persistence") instanceof Map) {
             Map<String,Object> persistence=object(result.get("persistence"));
             for(String field:Arrays.asList("saves","saved"))expandSaveScopes(persistence.get(field),scope);
-            if(persistence.get("saved") instanceof Number)persistence.put("saved",expand(definition(persistence.get("saves"),persistence.get("saved")),inventory,scope,revision));
+            if(persistence.get("saved") instanceof Number)persistence.put("saved",copy(definition(persistence.get("saves"),persistence.get("saved"))));
         }
-        return result;
+    }
+
+    private static Object copy(Object value) {
+        if(value instanceof Map) {
+            Map<String,Object> result=new LinkedHashMap<>();
+            for(Map.Entry<String,Object> entry:object(value).entrySet())
+                result.put(entry.getKey(),OPAQUE.contains(entry.getKey())?entry.getValue():copy(entry.getValue()));
+            return result;
+        }
+        if(value instanceof List){List<Object> result=new ArrayList<>();for(Object child:(List<?>)value)result.add(copy(child));return result;}
+        return value;
     }
 
     private static void expandSaveScopes(Object value,Object scope) {
@@ -202,11 +343,13 @@ final class CompactStructures {
     }
 
     private static int integer(Object value) {
-        if(!(value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long)
+        if(!integral(value)
                 || ((Number)value).longValue()>Integer.MAX_VALUE || ((Number)value).longValue()<Integer.MIN_VALUE)
             throw new IllegalArgumentException("Dictionary indexes must be integers");
         return ((Number)value).intValue();
     }
+
+    private static boolean integral(Object value) {return value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long;}
 
     /** Exact English item title display rule, independent of the GUI's current language. */
     static String titleCase(String text) {

@@ -53,7 +53,7 @@ public class CompactProtocolMapAndKnowledgeTest {
         List<Object> items=Arrays.asList(item("na",null,null),item("unknown",false,false),item("known",true,true));
         Map<String,Object> original=map("inventory",items,"ui",map("inspected_item",map("level_known",false)));
         for(boolean full:Arrays.asList(false,true)) {
-            Map<String,Object> projected=object(CompactProtocol.project(original,false,full));
+            Map<String,Object> projected=object(CompactProtocol.expandStructures(CompactProtocol.project(original,false,full)));
             List<?> inventory=(List<?>)projected.get("inv");
             assertFalse(object(inventory.get(0)).containsKey("level"));assertFalse(object(inventory.get(0)).containsKey("cursed"));
             assertTrue(object(inventory.get(1)).containsKey("level"));assertNull(object(inventory.get(1)).get("level"));

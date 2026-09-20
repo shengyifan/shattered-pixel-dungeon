@@ -1,10 +1,11 @@
-"""Strict, reusable decoders for ``spdctl`` protocol-7 client output.
+# Historical research-only frozen decoder. Never import from an active v7 client.
+"""Strict, reusable decoders for ``spdctl`` protocol-6 client output.
 
 This module is deliberately transport- and policy-free.  It does not launch the
 game, allocate request IDs, retry operations, replace revisions, or decide which
 game action to take.  It only:
 
-* validates and expands one protocol-7 wire response using that response's own
+* validates and expands one protocol-6 wire response using that response's own
   dictionaries and scoped defaults;
 * separates controller wrappers into their response, outcome, observation,
   discovery, diagnostic, and late-response parts; and
@@ -25,7 +26,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 
-PROTOCOL_VERSION = 7
+PROTOCOL_VERSION = 6
 TILE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
 WIRE_STATUSES = {"completed", "awaiting_input", "in_progress", "interrupted"}
 OBSERVATION_FIELDS = {
@@ -55,36 +56,7 @@ _NO_TITLE_CAPS = {"a", "an", "and", "of", "by", "to", "the", "x", "for"}
 
 
 class DecodeError(ValueError):
-    """Invalid public content with immutable-by-copy evidence, never a retry signal."""
-
-    def __init__(self, message: str):
-        super().__init__(message)
-        self.raw = None
-        self.identity: Dict[str, str] = {}
-        self.stage: Optional[str] = None
-        self.contexts = []
-        self._raw_attached = False
-
-    def preserve_raw(self, value: Any) -> None:
-        if self._raw_attached:
-            return
-        self.raw = copy.deepcopy(value)
-        self._raw_attached = True
-        if isinstance(value, Mapping):
-            self.identity = {key: value[key] for key in ("id", "s")
-                             if isinstance(value.get(key), str) and value[key]}
-
-    @property
-    def response_id(self) -> Optional[str]:
-        return self.identity.get("id")
-
-    @property
-    def scope(self) -> Optional[str]:
-        return self.identity.get("s")
-
-    @property
-    def context(self) -> Optional[Mapping[str, Any]]:
-        return self.contexts[-1] if self.contexts else None
+    """A public response is structurally invalid or internally inconsistent."""
 
 
 class IntentError(ValueError):
@@ -193,178 +165,76 @@ def _inventory(value: Any, path: str) -> Tuple[list, Dict[str, Mapping[str, Any]
     return decoded, by_locator, ambiguous
 
 
-def _records(source: Mapping[str, Any], key: str, table_key: str, path: str) -> list:
-    """Expand one explicitly supported list; no defaults or inferred fields."""
-    table = source.get(table_key, [])
-    if table_key in source:
-        _list(table, f"{path}.{table_key}")
-        if key not in source:
-            raise DecodeError(f"{path}.{table_key} has no {key} list")
-    definitions = []
-    for index, raw in enumerate(table):
-        here = f"{path}.{table_key}[{index}]"
-        template = _dict(raw, here)
-        if set(template) != {"common", "fields"}:
-            raise DecodeError(f"{here} must contain exactly common and fields")
-        common = _dict(template["common"], f"{here}.common")
-        fields = _list(template["fields"], f"{here}.fields")
-        if not all(isinstance(field, str) for field in fields) or len(set(fields)) != len(fields):
-            raise DecodeError(f"{here}.fields must contain unique field names")
-        if not all(isinstance(field, str) for field in common):
-            raise DecodeError(f"{here}.common must have string field names")
-        if set(common) & set(fields):
-            raise DecodeError(f"{here} common and fields overlap")
-        definitions.append((common, fields))
-    if key not in source:
-        return []
-    rows = _list(source[key], f"{path}.{key}")
-    result = []
-    for index, raw in enumerate(rows):
-        here = f"{path}.{key}[{index}]"
-        if isinstance(raw, Mapping):
-            result.append(dict(_copy(raw)))
-            continue
-        row = _list(raw, here)
-        if not row:
-            raise DecodeError(f"{here} is an empty template row")
-        template_index = _integer(row[0], f"{here}[0]")
-        if template_index < 0 or template_index >= len(definitions):
-            raise DecodeError(f"{here}[0] references a missing same-frame template")
-        common, fields = definitions[template_index]
-        if len(row) != len(fields) + 1:
-            raise DecodeError(f"{here} has the wrong number of values")
-        record = dict(_copy(common))
-        record.update(zip(fields, _copy(row[1:])))
-        result.append(record)
-    return result
-
-
-def _contains_metadata(value: Any) -> bool:
-    if isinstance(value, Mapping):
-        if value.get("clipped") is True or any(
-                isinstance(value.get(key), Mapping) and bool(value[key])
-                for key in ("text_sources", "text_origins", "text_diagnostics", "pres", "presentation")):
-            return True
-        return any(_contains_metadata(child) for child in value.values())
-    if isinstance(value, list):
-        return any(_contains_metadata(child) for child in value)
-    return False
-
-
-def _decode_operations(value: Any, actions: Any, control: Any, path: str) -> Any:
+def _decode_operations(value: Any, definitions: Any, path: str) -> Any:
     if value is None:
         return None
+    if type(value) is int:
+        value = _definition(definitions, value, path)
+    if not isinstance(value, list):
+        raise DecodeError(f"{path} must be an operation array or definition index")
     result = []
-    for index, raw in enumerate(_list(value, path)):
-        here = f"{path}[{index}]"
-        if type(raw) is int:
-            operation = dict(_dict(_definition(actions, raw, here), here))
-            if _contains_metadata(operation):
-                raise DecodeError(f"{here} protected action must remain inline")
-            if not isinstance(control, str) or not control or operation.get("ctl") != control:
-                raise DecodeError(f"{here} action ctl does not match this node id")
-            operation.pop("ctl")
-        else:
-            operation = dict(_generic(_dict(raw, here), here))
+    for index, operation in enumerate(value):
+        operation = dict(_generic(_dict(operation, f"{path}[{index}]"), f"{path}[{index}]"))
         if not isinstance(operation.get("op"), str) or not operation["op"]:
-            raise DecodeError(f"{here}.op must be a non-empty string")
+            raise DecodeError(f"{path}[{index}].op must be a non-empty string")
         result.append(operation)
     return result
 
 
-def _expand_observation(value: Mapping[str, Any], path: str,
-                        revision: Optional[str] = None, bindings: bool = False) -> Dict[str, Any]:
-    """Pure structure expansion at one snapshot root; unknown extensions stay opaque."""
-    source = _dict(value, path)
-    result = dict(_copy(source))
-    if isinstance(source.get("inv"), list) or "inv_templates" in source:
-        result["inv"] = _records(source, "inv", "inv_templates", path)
-        result.pop("inv_templates", None)
-    if isinstance(source.get("acts"), list) or "act_templates" in source:
-        result["acts"] = _records(source, "acts", "act_templates", path)
-        result.pop("act_templates", None)
-    actions = result.get("acts", [])
-    if bindings:
-        # Bind before copying referenced operations, so both advertised copies
-        # have identical current activity constraints. Frozen children reset rev.
-        activity = result.get("activity")
-        if isinstance(activity, dict):
-            own_revision = source.get("rev", revision)
-            if "rev" not in activity and own_revision is not None:
-                activity["rev"] = own_revision
-            for action in actions if isinstance(actions, list) else []:
-                if isinstance(action, dict) and action.get("op") == "cancel":
-                    for field in ("rev", "rid"):
-                        if field not in action and field in activity:
-                            action[field] = _copy(activity[field])
-    inventory, ambiguous = {}, set()
-    for item in result.get("inv", []) if isinstance(result.get("inv"), list) else []:
-        locator = item.get("loc")
-        if isinstance(locator, str):
-            if locator in inventory:
-                ambiguous.add(locator)
-            inventory[locator] = item
-    if isinstance(source.get("ui"), Mapping):
-        ui_source = _dict(source["ui"], f"{path}.ui")
-        if "node_shapes" in ui_source or "op_defs" in ui_source:
-            raise DecodeError(f"{path}.ui contains unsupported protocol-6 structures")
-        ui = dict(_copy(ui_source))
-        if "nodes" in ui_source or "node_templates" in ui_source:
-            nodes = _records(ui_source, "nodes", "node_templates", f"{path}.ui")
-            ui.pop("node_templates", None)
-            for index, node in enumerate(nodes):
-                here = f"{path}.ui.nodes[{index}]"
-                if "ops" in node:
-                    node["ops"] = _decode_operations(node["ops"], actions, node.get("id"), f"{here}.ops")
-                if "label" in node:
-                    label = node["label"]
-                    if type(label) is int:
-                        if label not in (0, 1):
-                            raise DecodeError(f"{here}.label has an invalid item-label mode")
-                        locator = node.get("loc")
-                        if not isinstance(locator, str) or locator in ambiguous or locator not in inventory:
-                            raise DecodeError(f"{here}.label has no unique same-frame loc binding")
-                        name = inventory[locator].get("name")
-                        if not isinstance(name, str):
-                            raise DecodeError(f"{here}.label binding has no string item name")
-                        node["label"] = name if label == 0 else _title_case(name)
-                    elif label is not None and not isinstance(label, str):
-                        raise DecodeError(f"{here}.label must be literal text, null, or 0/1")
-            ui["nodes"] = nodes
-        result["ui"] = ui
-    for key in ("before", "after"):
-        if isinstance(source.get(key), Mapping):
-            result[key] = _expand_observation(source[key], f"{path}.{key}", bindings=bindings)
-    return result
-
-
-def expand_structures(value: Mapping[str, Any], scope: Optional[str] = None,
-                      revision: Optional[str] = None, *, bindings: bool = False) -> Dict[str, Any]:
-    """Expand v7 templates/references only, without semantic defaults or aliases.
-
-    By default no binding defaults are applied. Test adapters may explicitly bind
-    current activity before resolving references; frozen children still reset
-    their context. Raw/reply/source/unknown data is untouched in either mode.
-    """
-    source = _dict(value, "$")
-    if "v" in source and isinstance(source.get("data"), Mapping):
-        result = dict(_copy(source))
-        result["data"] = _expand_observation(_dict(source["data"], "$.data"), "$.data",
-                                             source.get("rev"), bindings)
-        return result
-    return _expand_observation(source, "$", revision, bindings)
-
-
 def _ui(value: Any, inventory: Mapping[str, Mapping[str, Any]], ambiguous: set,
         path: str) -> Dict[str, Any]:
-    # Structure and labels were expanded against this snapshot before defaults.
-    result = dict(_generic(_dict(value, path), path))
-    if "nodes" in result:
-        for node in result["nodes"]:
+    source = _dict(value, path)
+    result = dict(_generic(source, path))
+    shapes = source.get("node_shapes")
+    definitions = source.get("op_defs")
+    if "nodes" in source:
+        nodes = []
+        for row_index, raw in enumerate(_list(source["nodes"], f"{path}.nodes")):
+            row_path = f"{path}.nodes[{row_index}]"
+            if isinstance(raw, list):
+                if not raw:
+                    raise DecodeError(f"{row_path} is an empty packed row")
+                shape = _definition(shapes, raw[0], f"{row_path}[0]")
+                if not isinstance(shape, list) or not all(isinstance(field, str) for field in shape):
+                    raise DecodeError(f"{row_path} shape must contain field names")
+                if len(set(shape)) != len(shape):
+                    raise DecodeError(f"{row_path} shape contains duplicate fields")
+                if len(raw) != len(shape) + 1:
+                    raise DecodeError(f"{row_path} has the wrong number of values")
+                # raw[0] is exclusively a shape-table index.  It is never a ctl/id.
+                node = dict(zip(shape, _copy(raw[1:])))
+            elif isinstance(raw, Mapping):
+                node = dict(_generic(raw, row_path))
+            else:
+                raise DecodeError(f"{row_path} must be an object or packed row")
+
+            if "ops" in node:
+                node["ops"] = _decode_operations(node["ops"], definitions, f"{row_path}.ops")
+
+            if "label" in node:
+                label = node["label"]
+                if type(label) is int:
+                    if label not in (0, 1):
+                        raise DecodeError(f"{row_path}.label has an invalid item-label mode")
+                    locator = node.get("loc")
+                    if not isinstance(locator, str):
+                        raise DecodeError(f"{row_path}.label has no string loc binding")
+                    if locator in ambiguous or locator not in inventory:
+                        raise DecodeError(f"{row_path}.label has no unique same-frame loc binding")
+                    name = inventory[locator].get("name")
+                    if not isinstance(name, str):
+                        raise DecodeError(f"{row_path}.label binding has no string item name")
+                    node["label"] = name if label == 0 else _title_case(name)
+                elif label is not None and not isinstance(label, str):
+                    raise DecodeError(f"{row_path}.label must be literal text, null, or 0/1")
+
             if "enabled" not in node:
                 node["enabled"] = True
             if "dimmed" not in node:
                 node["dimmed"] = False
+            nodes.append(node)
+        result["nodes"] = nodes
+
     if "modal" not in result:
         result["modal"] = False
     if "item_info" not in result:
@@ -464,7 +334,7 @@ def _map(value: Any, path: str) -> Dict[str, Any]:
         raise DecodeError(f"{path}.env refers to cells omitted from rows: {sorted(unknown_environment)}")
 
     result = dict(_generic(source, path))
-    # ``cells`` is not a protocol-7 compact field today.  Preserve it if a
+    # ``cells`` is not a protocol-6 compact field today.  Preserve it if a
     # future frame supplies that unknown field instead of overwriting it.
     result["decoded_cells" if "cells" in source else "cells"] = cells
     return result
@@ -509,12 +379,7 @@ def _receipt_defaults(receipt: Any, scope: Optional[str], path: str) -> Any:
 def decode_data(value: Mapping[str, Any], scope: Optional[str] = None,
                 revision: Optional[str] = None) -> Dict[str, Any]:
     """Expand one response body without consulting any earlier response."""
-    source = _expand_observation(_dict(value, "$.data"), "$.data", revision, bindings=True)
-    if "acts" in source:
-        for index, raw in enumerate(_list(source["acts"], "$.data.acts")):
-            action = _dict(raw, f"$.data.acts[{index}]")
-            if not isinstance(action.get("op"), str) or not action["op"]:
-                raise DecodeError(f"$.data.acts[{index}].op must be a non-empty string")
+    source = _dict(value, "$.data")
     decoded_inventory, inventory_by_locator, ambiguous = [], {}, set()
     if "inv" in source:
         decoded_inventory, inventory_by_locator, ambiguous = _inventory(source["inv"], "$.data.inv")
@@ -530,8 +395,6 @@ def decode_data(value: Mapping[str, Any], scope: Optional[str] = None,
             result[key] = _map(child, path)
         elif key == "entities":
             result[key] = _entities(source, path)
-        elif key in {"before", "after"} and isinstance(child, Mapping):
-            result[key] = decode_data(child, child.get("s"), child.get("rev"))
         elif key in _OPAQUE_FIELDS:
             result[key] = _copy(child)
         else:
@@ -571,7 +434,7 @@ def decode_data(value: Mapping[str, Any], scope: Optional[str] = None,
 
 @dataclass(frozen=True)
 class WireResponse:
-    """One validated protocol-7 response and its independently decoded copy."""
+    """One validated protocol-6 response and its independently decoded copy."""
 
     raw: Mapping[str, Any]
     frame: Mapping[str, Any]
@@ -600,24 +463,16 @@ class WireResponse:
 
 def decode_wire_response(value: Mapping[str, Any]) -> WireResponse:
     """Validate and decode exactly one direct child wire response."""
-    try:
-        return _decode_wire_response(value)
-    except DecodeError as error:
-        error.preserve_raw(value)
-        raise
-
-
-def _decode_wire_response(value: Mapping[str, Any]) -> WireResponse:
     source = _dict(value, "$")
     if type(source.get("v")) is not int or source.get("v") != PROTOCOL_VERSION:
-        raise DecodeError("$.v must be integer protocol version 7")
+        raise DecodeError("$.v must be integer protocol version 6")
     if not isinstance(source.get("id"), str) or not source["id"]:
         raise DecodeError("$.id must be a non-empty string")
     has_status, has_error = "st" in source, "err" in source
     if has_status == has_error:
         raise DecodeError("response must contain exactly one of st or err")
     if has_status and (not isinstance(source["st"], str) or source["st"] not in WIRE_STATUSES):
-        raise DecodeError("$.st is not a protocol-7 response status")
+        raise DecodeError("$.st is not a protocol-6 response status")
     if has_error and (not isinstance(source["err"], str) or not source["err"]):
         raise DecodeError("$.err must be a non-empty string")
 
@@ -700,13 +555,7 @@ def _wire_stage(value: Any, stage: str,
             raise DecodeError(f"{stage} controller error has no code")
         problems.append(ClientProblem(stage, code, _copy(value)))
         return None
-    try:
-        response = decode_wire_response(_dict(value, stage))
-    except DecodeError as error:
-        error.preserve_raw(value)
-        if error.stage is None:
-            error.stage = stage
-        raise
+    response = decode_wire_response(_dict(value, stage))
     if response.is_error:
         problems.append(ClientProblem(stage, response.error_code, response.raw))
     return response
@@ -729,17 +578,6 @@ def _late(value: Any, problems: list) -> Tuple[LateResponse, ...]:
 
 def decode_client_response(value: Mapping[str, Any]) -> ClientResponse:
     """Decode a direct response or one StableController output object."""
-    try:
-        return _decode_client_response(value)
-    except DecodeError as error:
-        error.preserve_raw(value)
-        if isinstance(value, Mapping) and "controller" in value:
-            error.contexts.append({"controller": _copy(value.get("controller")),
-                                   "stage": error.stage, "raw": _copy(value)})
-        raise
-
-
-def _decode_client_response(value: Mapping[str, Any]) -> ClientResponse:
     source = _dict(value, "$")
     if "controller" not in source:
         response = decode_wire_response(source)

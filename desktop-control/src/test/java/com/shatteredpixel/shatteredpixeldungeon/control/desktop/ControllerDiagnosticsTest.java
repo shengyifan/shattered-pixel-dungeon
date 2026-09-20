@@ -48,7 +48,7 @@ public class ControllerDiagnosticsTest {
     @Test public void controllerOutputFailureIsSpecificAndDoesNotPrintPrivateCauseMessages()throws Exception{
         PrintStream broken=new PrintStream(new OutputStream(){@Override public void write(int value)throws IOException{throw new IOException("PRIVATE_OUTPUT_DETAIL");}});
         StableController.LaunchFailure failure=assertThrows(StableController.LaunchFailure.class,
-                ()->StableController.writeFrame(broken,map("v",6,"id","t1.1","st","completed")));
+                ()->StableController.writeFrame(broken,map("v",7,"id","t1.1","st","completed")));
         assertEquals("CONTROLLER_OUTPUT_FAILED",failure.code);
         assertTrue(StableController.launchDiagnostic(failure).startsWith("spdctl: CONTROLLER_OUTPUT_FAILED"));
         String launch=StableController.launchDiagnostic(new StableController.LaunchFailure("CONTROLLER_CHILD_START_FAILED",new IOException("PRIVATE_PATH")));

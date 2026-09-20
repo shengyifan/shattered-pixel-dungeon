@@ -30,7 +30,7 @@ public class CompactProtocolV5Test {
         assertEquals(Arrays.asList("external"),object(output.get("text_origins")).get("item_info.ht"));
         assertEquals(Arrays.asList(map("field","sub_name","code","display_warning")),object(output.get("pres")).get("diag"));
         for(String field:Arrays.asList("schema","raw","reply","original_payload"))assertSame(input.get(field),output.get(field));
-        assertEquals(6,CompactProtocol.failure("q","s","FAILURE").get("v"));
+        assertEquals(7,CompactProtocol.failure("q","s","FAILURE").get("v"));
         assertEquals(WireNames.fields(),CompactProtocol.info().get("aliases"));
     }
 
@@ -63,7 +63,7 @@ public class CompactProtocolV5Test {
         assertEquals(Collections.emptyMap(),play.get("ui"));assertEquals(Arrays.asList(null,false,0),play.get("slots"));
         assertEquals(map("modal",false,"item_info",null,"via","click"),play.get("unrelated"));
         for(boolean sources:Arrays.asList(false,true)) {
-            Map<String,Object> full=object(CompactProtocol.project(input,sources,true));
+            Map<String,Object> full=object(CompactProtocol.expandStructures(CompactProtocol.project(input,sources,true)));
             assertEquals(map("modal",false,"item_info",null),full.get("ui"));
             assertEquals("click",object(((List<?>)full.get("inv")).get(0)).get("via"));
         }

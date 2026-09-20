@@ -2,7 +2,7 @@
 """Historical protocol-4 to protocol-5 replay analysis.
 
 Reproducing that release requires its matching compiled protocol-5 harness and
-classpath. Current CLI 6 validation uses cli6_token_benchmark.py instead. Shared
+classpath. Current CLI 7 validation uses cli7_token_benchmark.py instead. Shared
 pure comparison helpers here remain covered by unit tests.
 
 This program reads only send.raw/recv.raw from the supplied transport directory.

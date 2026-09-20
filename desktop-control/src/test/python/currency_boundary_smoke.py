@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original currency fades and real counter changes over protocol 6, without retries.
+"""Original currency fades and real counter changes over protocol 7, without retries.
 
 Only isolated test starting conditions are injected. The runner never reads a save,
 SQLite database, or private fixture assertion to select an action or assert a result.

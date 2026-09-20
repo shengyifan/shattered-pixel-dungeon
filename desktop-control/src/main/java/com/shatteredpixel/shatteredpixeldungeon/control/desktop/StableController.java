@@ -256,7 +256,7 @@ public final class StableController {
     private static void validateBindings(Map<String,Object> request) {
         String op = (String)request.get("op");
         if (WireNames.parameters(op).contains("ctl") && string(request.get("ctl")) == null)
-            throw new IllegalArgumentException("ctl must be the current control ID string, not a node index or shape index");
+            throw new IllegalArgumentException("ctl must be the current control ID string, not a node index or template index");
         if ("item".equals(op) && string(request.get("loc")) == null)
             throw new IllegalArgumentException("loc must be a current inventory locator string");
         if ("move".equals(op) && !WireNames.DIRECTIONS.contains(request.get("dir")))
@@ -476,7 +476,7 @@ public final class StableController {
             }
             if (!valid) {
                 if (inFlight.pendingOwner == null) inFlight = null;
-                return localError("INVALID_RESPONSE", "Child frame must contain protocol 6, matching id, and either st or err", original);
+                return localError("INVALID_RESPONSE", "Child frame must contain protocol 7, matching id, and either st or err", original);
             }
             inFlight = null;
             return response;

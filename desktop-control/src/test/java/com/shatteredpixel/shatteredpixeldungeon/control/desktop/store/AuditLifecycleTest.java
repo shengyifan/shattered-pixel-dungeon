@@ -31,14 +31,14 @@ public class AuditLifecycleTest {
     @Test public void sessionHistoryDistinguishesCleanCloseInterruptionAndDuplicateArrival()throws Exception{
         Path root=temporary.newFolder().toPath();String first,second,scope;
         try(AuditStore store=new AuditStore(root)){
-            scope=store.menuScope();first=store.beginSession("boot-1","fixture-build","CLI.6.0.0",6);
+            scope=store.menuScope();first=store.beginSession("boot-1","fixture-build","CLI.7.0.0",7);
             AuditStore.Attempt a=store.begin(scope,"used","state.get","{}");store.complete(a,"COMPLETED",map("ok",true),map(),map(),null);
-            store.endSession("CLOSED","normal_eof");second=store.beginSession("boot-2","fixture-build","CLI.6.0.0",6);
+            store.endSession("CLOSED","normal_eof");second=store.beginSession("boot-2","fixture-build","CLI.7.0.0",7);
             assertTrue(store.begin(scope,"used","state.get","{}").duplicate);
             // Simulate a process that never wrote its normal session end.
         }
         try(AuditStore store=new AuditStore(root)){
-            store.recoverInterrupted();String third=store.beginSession("boot-3","fixture-build","CLI.6.0.0",6);
+            store.recoverInterrupted();String third=store.beginSession("boot-3","fixture-build","CLI.7.0.0",7);
             for(String name:new String[]{"public","internal"})try(Connection c=open(root,name)){
                 assertEquals("CLOSED",scalar(c,"SELECT status FROM sessions WHERE session_id='"+first+"'"));
                 assertEquals("INTERRUPTED",scalar(c,"SELECT status FROM sessions WHERE session_id='"+second+"'"));
@@ -57,20 +57,20 @@ public class AuditLifecycleTest {
     @Test public void everySessionFreezesItsBuildMetadataAcrossCloseRestartAndHistoryReads()throws Exception{
         Path root=temporary.newFolder().toPath();String first,scope;
         try(AuditStore store=new AuditStore(root)){
-            scope=store.menuScope();first=store.beginSession("first-boot","build-first","CLI.6.0.0",6);
+            scope=store.menuScope();first=store.beginSession("first-boot","build-first","CLI.7.0.0",7);
             AuditStore.Attempt attempt=store.begin(scope,"recorded","state.get","{}");
             store.complete(attempt,"COMPLETED",map("ok",true),map(),map(),null);
             store.endSession("CLOSED","finished");
         }
         try(AuditStore store=new AuditStore(root)){
-            String second=store.beginSession("second-boot","build-second","CLI.6.0.0",6);
-            assertEquals(map("build_id","build-first","cli_version","CLI.6.0.0","protocol_version",6),
+            String second=store.beginSession("second-boot","build-second","CLI.7.0.0",7);
+            assertEquals(map("build_id","build-first","cli_version","CLI.7.0.0","protocol_version",7),
                     store.getRequest(scope,"recorded").get("session_build"));
             for(String side:new String[]{"public","internal"})try(Connection db=open(root,side);Statement statement=db.createStatement()){
                 assertEquals("build-first",scalar(db,"SELECT build_id FROM sessions WHERE session_id='"+first+"'"));
                 assertEquals("build-second",scalar(db,"SELECT build_id FROM sessions WHERE session_id='"+second+"'"));
-                assertEquals("CLI.6.0.0",scalar(db,"SELECT cli_version FROM sessions WHERE session_id='"+first+"'"));
-                assertEquals(6,((Number)scalar(db,"SELECT protocol_version FROM sessions WHERE session_id='"+first+"'")).intValue());
+                assertEquals("CLI.7.0.0",scalar(db,"SELECT cli_version FROM sessions WHERE session_id='"+first+"'"));
+                assertEquals(7,((Number)scalar(db,"SELECT protocol_version FROM sessions WHERE session_id='"+first+"'")).intValue());
                 assertThrows(SQLException.class,()->statement.execute("UPDATE sessions SET build_id='rewritten' WHERE session_id='"+first+"'"));
                 assertThrows(SQLException.class,()->statement.execute("UPDATE sessions SET cli_version='CLI.9.0.0' WHERE session_id='"+first+"'"));
                 assertThrows(SQLException.class,()->statement.execute("UPDATE sessions SET protocol_version=9 WHERE session_id='"+first+"'"));
@@ -85,9 +85,9 @@ public class AuditLifecycleTest {
     @Test public void missingBuildMetadataCannotStartOrRecoverASession()throws Exception{
         Path root=temporary.newFolder().toPath();
         try(AuditStore store=new AuditStore(root)){
-            assertThrows(IllegalArgumentException.class,()->store.beginSession("boot",null,"CLI.6.0.0",6));
+            assertThrows(IllegalArgumentException.class,()->store.beginSession("boot",null,"CLI.7.0.0",7));
             assertThrows(IllegalArgumentException.class,()->store.beginSession("boot","build",null,2));
-            assertThrows(IllegalArgumentException.class,()->store.beginSession("boot","build","CLI.6.0.0",3));
+            assertThrows(IllegalArgumentException.class,()->store.beginSession("boot","build","CLI.7.0.0",3));
             assertNull(store.sessionId());
             for(String side:new String[]{"public","internal"})try(Connection db=open(root,side)){
                 assertEquals(0,((Number)scalar(db,"SELECT count(*) FROM sessions")).intValue());
@@ -99,7 +99,7 @@ public class AuditLifecycleTest {
     @Test public void saveReceiptsKeepSuccessFailureScopeAndFollowingObservationWithoutLeakingException()throws Exception{
         Path root=temporary.newFolder().toPath();
         try(AuditStore store=new AuditStore(root)){
-            store.beginSession("boot","fixture-build","CLI.6.0.0",6);String menu=store.menuScope(),run="run:example";
+            store.beginSession("boot","fixture-build","CLI.7.0.0",7);String menu=store.menuScope(),run="run:example";
             store.ensureScope(run,"planned","example");
             AuditStore.Attempt start=store.begin(menu,"same","action.execute","{}");store.markExecuting(start,"v1",map(),map());
             store.recordSave("save-ok",run,1,true,TIME,menu,"same",null);
@@ -110,7 +110,7 @@ public class AuditLifecycleTest {
             store.recordSave("last-failure",run,2,false,TIME,menu,"same",new IOException("private-path-secret"));
             assertEquals(Boolean.FALSE,store.latestSave(run).get("success"));
             assertFalse(JsonCodec.encode(store.latestSave(run)).contains("private-path-secret"));
-            store.complete(start,"COMPLETED",map("v",6,"s",run,"st","completed","data",map("hero",map("class","warrior"))),map("scene","game","hero",map("class","warrior")),map("hidden",1),null,run);
+            store.complete(start,"COMPLETED",map("v",7,"s",run,"st","completed","data",map("hero",map("class","warrior"))),map("scene","game","hero",map("class","warrior")),map("hidden",1),null,run);
             for(String name:new String[]{"public","internal"})try(Connection c=open(root,name)){
                 assertEquals(3,((Number)scalar(c,"SELECT count(*) FROM save_checkpoints WHERE following_snapshot IS NOT NULL")).intValue());
                 assertNull(scalar(c,"SELECT following_snapshot FROM save_checkpoints WHERE receipt_id='other-scope'"));
@@ -153,7 +153,7 @@ public class AuditLifecycleTest {
             if(name.equals("internal")){s.execute("ALTER TABLE exceptions DROP COLUMN session_id");s.execute("ALTER TABLE exceptions DROP COLUMN save_receipt_id");s.execute("ALTER TABLE logs DROP COLUMN session_id");}
             s.execute("UPDATE metadata SET value='3' WHERE key='schema_version'");
         }
-        AuditSchemaNineTest.assertRejectedWithoutChanges(root);
+        AuditSchemaTenTest.assertRejectedWithoutChanges(root);
     }
 
     @Test public void failedInternalReceiptInsertRollsBackPublicReceiptScopePromotionAndEvent()throws Exception{

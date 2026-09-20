@@ -6,6 +6,7 @@ SQLite reads, host JVM, or gameplay policy is used. Exact model-facing bytes and
 the native child's independent transport trace are retained in build/fixtures.
 """
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -19,7 +20,7 @@ import time
 import uuid
 import zlib
 
-import protocol6
+import protocol7
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "desktop-control/client"))
 from spdctl_client import decode_wire_response
 
@@ -62,8 +63,8 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.6.1.1", self.hello
-            assert self.hello["data"]["audit_schema_version"] == 9, self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.7.0.0", self.hello
+            assert self.hello["data"]["audit_schema_version"] == 10, self.hello
             self.install(self.hello, "info")
         except Exception:
             self.cleanup()
@@ -85,7 +86,7 @@ class ControllerClient:
         return json.loads(line.decode("utf-8", errors="strict"))
 
     def request(self, intent):
-        encoded = protocol6.wire_bytes(intent)
+        encoded = protocol7.wire_bytes(intent)
         self.send_file.write(encoded)
         self.send_file.flush()
         assert self.process.stdin.write(encoded) == len(encoded)
@@ -100,7 +101,7 @@ class ControllerClient:
     def remember_wire(self, value):
         if not isinstance(value, dict):
             return
-        if value.get("v") == 6 and "id" in value and ("st" in value or "err" in value):
+        if value.get("v") == 7 and "id" in value and ("st" in value or "err" in value):
             self.wire_frames.append(value)
             return
         for field in ("response", "outcome", "observation", "discovery", "initial_error", "original_response", "receipt"):
@@ -113,8 +114,8 @@ class ControllerClient:
         return result["response"] if result.get("controller") == "response" else result
 
     def install(self, result, op):
-        assert result.get("v") == 6 and "err" not in result, result
-        view = protocol6.response(result, op)
+        assert result.get("v") == 7 and "err" not in result, result
+        view = protocol7.response(result, op)
         assert view["ok"], view
         self.scope = result.get("s", self.scope)
         self.revision = result.get("rev", self.revision)
@@ -153,7 +154,7 @@ class ControllerClient:
             self.stale_rejections += 1
             self.state()
             raise StaleAction(op)
-        assert response.get("v") == 6 and "err" not in response, response
+        assert response.get("v") == 7 and "err" not in response, response
         assert response["id"].startswith(self.prefix + "."), response
         if response["st"] == "in_progress":
             # This frame was already written and flushed to action-events before any settle command.
@@ -304,9 +305,9 @@ def native_operation(client, operation):
 def save_receipts(action):
     if "settled" in action:
         frame = action["settled"]["outcome"]
-        rows = protocol6.expand_structures(frame)["data"].get("save", [])
+        rows = protocol7.expand_structures(frame)["data"].get("save", [])
     else:
-        frame = protocol6.expand_structures(action["initial"])
+        frame = protocol7.expand_structures(action["initial"])
         rows = frame["data"].get("persistence", {}).get("saves", [])
     assert rows, action
     for receipt in rows:
@@ -329,7 +330,7 @@ def validate_trace(client, decimal_boundary=False):
     previous = 0
     by_id = {}
     for index, (request, response) in enumerate(zip(sent, received)):
-        assert request["v"] == response["v"] == 6 and request["id"] == response["id"], (request, response)
+        assert request["v"] == response["v"] == 7 and request["id"] == response["id"], (request, response)
         assert request["id"] not in by_id, request
         by_id[request["id"]] = response
         if index:
@@ -444,8 +445,7 @@ def lossless_views_check(client):
         assert not decoded.is_error and decoded.is_observation, reply
         data = dict(decoded.data)
         ui = dict(data["ui"])
-        ui.pop("node_shapes", None)
-        ui.pop("op_defs", None)
+        assert "node_templates" not in ui, "Production decoder must expand every v7 node template"
         data["ui"] = ui
         if "map" in data:
             dungeon_map = dict(data["map"])
@@ -469,8 +469,8 @@ def lossless_views_check(client):
             "ordered_actions": len(data["acts"]), "inventory_items": len(data["inv"]),
             "items_with_description": described,
             "talents": len(data["hero"]["talents"]),
-            "play_bytes": len(protocol6.wire_bytes(replies[0][0])),
-            "full_bytes": len(protocol6.wire_bytes(replies[1][0]))}
+            "play_bytes": len(protocol7.wire_bytes(replies[0][0])),
+            "full_bytes": len(protocol7.wire_bytes(replies[1][0]))}
 
 
 def decimal_request_ids_check(client):
@@ -488,12 +488,106 @@ def decimal_request_ids_check(client):
     raise AssertionError("Packaged controller did not issue decimal request IDs across 9/10")
 
 
+def source_view_check(client):
+    """Request real source content and decode its own templates without changing it."""
+    old_scope, old_revision = client.scope, client.revision
+    reply = client.unwrap(client.request({"op": "state", "view": "play", "src": True}))
+    original = copy.deepcopy(reply)
+    client.install(reply, "state")
+    decoded = decode_wire_response(reply)
+    assert decoded.is_observation and not decoded.is_error, reply
+    assert reply == original, "Decoding mutated the source wire response"
+    assert (client.scope, client.revision) == (old_scope, old_revision), "Source query crossed a decision boundary"
+    def sources(value):
+        if isinstance(value, list):
+            return sum(sources(child) for child in value)
+        if not isinstance(value, dict):
+            return 0
+        own = len(value["text_sources"]) if isinstance(value.get("text_sources"), dict) else 0
+        return own + sum(sources(child) for key, child in value.items() if key != "text_sources")
+    count = sources(decoded.data)
+    assert count > 0, "src:true returned no rendered source AST evidence"
+    data = decoded.data
+    assert "act_templates" not in data and "inv_templates" not in data
+    assert "node_templates" not in data.get("ui", {})
+    assert all(isinstance(row, dict) for row in data.get("inv", []))
+    assert all(isinstance(row, dict) for row in data.get("acts", []))
+    assert all(isinstance(row, dict) for row in data.get("ui", {}).get("nodes", []))
+    raw = reply["data"]
+    return {"src_true_decoded": True, "source_fields": count, "scope": reply["s"], "rev": reply["rev"],
+            "source_bytes": len(protocol7.wire_bytes(reply)),
+            "templates": {"acts": len(raw.get("act_templates", [])), "inv": len(raw.get("inv_templates", [])),
+                          "nodes": len(raw.get("ui", {}).get("node_templates", []))}}
+
+
+def inventory_round_trip_check(client):
+    """Open native inventory, inspect one item, then close without executing item use.
+
+    Toolbar.onClick opens WndBag on compact UI and toggles InventoryPane on large
+    UI. WndBag's normal slot click opens WndUseItem; the explicit item command
+    opens that same native item menu when the large sidebar is used. No quickbag,
+    long click, equip, drink, eat, throw or other resource-changing action is sent.
+    """
+    before = snapshot(client.state_view)
+    def current():
+        return decode_wire_response(client.current).data
+    def inventory_button():
+        data = current()
+        controls = {node["id"] for node in data["ui"]["nodes"]
+                    if str(node.get("shortcut", "")).casefold() == "inventory"}
+        choices = [action for action in data["acts"] if action.get("op") == "click"
+                   and action.get("ctl") in controls and "click" in action.get("gestures", ["click"])]
+        assert len(choices) == 1, {"inventory_button_matches": choices}
+        return choices[0]["ctl"]
+    client.action("click", ctl=inventory_button())
+    opened = current()
+    assert not opened["ui"].get("item_prompt"), "Unexpected item selector; do not select an item"
+    modal_bag = bool(opened["ui"].get("modal"))
+    views = lossless_views_check(client)
+    source = source_view_check(client)
+    if modal_bag:
+        data = current()
+        locators = {item["loc"] for item in data["inv"] if item.get("available", True)}
+        choices = [node for node in data["ui"]["nodes"] if node.get("loc") in locators
+                   and any(op.get("op") == "click" and "click" in op.get("gestures", ["click"])
+                           for op in node.get("ops", []) or [])]
+        assert choices, "Native inventory has no bound inspectable item control"
+        selected = choices[0]["loc"]
+        client.action("click", ctl=choices[0]["id"])
+    else:
+        # Restore the large sidebar's original toggle state, then use its exact
+        # advertised inventory locator to inspect (never activate a quickslot).
+        client.action("click", ctl=inventory_button())
+        data = current()
+        assert any(action.get("op") == "item" for action in data["acts"]), data["acts"]
+        item = next(item for item in data["inv"] if item.get("available", True))
+        selected = item["loc"]
+        client.action("item", loc=selected)
+    assert current()["ui"].get("modal"), "Selecting an item did not open its original item menu"
+    item_views = lossless_views_check(client)
+    item_source = source_view_check(client)
+    closed = 0
+    for _ in range(3):
+        data = current()
+        if not data["ui"].get("modal") and not data["ui"].get("item_prompt"):
+            break
+        assert any(action.get("op") == "back" for action in data["acts"]), data["acts"]
+        client.action("back")
+        closed += 1
+    assert not current()["ui"].get("modal"), "Inventory/item windows did not close"
+    assert snapshot(client.state_view) == before, "Inspecting inventory changed hero resources or items"
+    return {"opened_inventory": True, "modal_bag": modal_bag, "selected_loc": selected,
+            "item_menu_opened": True, "close_actions": closed, "hero_inventory_unchanged": True,
+            "inventory_views": views, "inventory_source": source,
+            "item_views": item_views, "item_source": item_source}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures" / ("cli6-controller-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures" / ("cli7-controller-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     profile = output / "fresh 中文 profile"
     assert not profile.exists()
@@ -503,7 +597,7 @@ def main():
     environment.pop("JAVA_HOME", None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.6.1.1 (protocol 6, game 3.3.8)", version
+    assert version == "CLI.7.0.0 (protocol 7, game 3.3.8)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}
@@ -514,6 +608,8 @@ def main():
         initial, first_scenes = reach_warrior(first)
         report["lossless_views"] = lossless_views_check(first)
         report["decimal_request_ids"] = decimal_request_ids_check(first)
+        report["source_view"] = source_view_check(first)
+        report["inventory_round_trip"] = inventory_round_trip_check(first)
         before = snapshot(initial)
         assert before["hero"]["depth"] == 1 and before["hero"]["level"] == 1, before
         saved = native_operation(first, "save")

@@ -30,7 +30,7 @@ class RequestIdTest(unittest.TestCase):
         return client
 
     def respond(self, client, identifier, error=None):
-        frame = {"v": 6, "id": identifier, "s": "s1"}
+        frame = {"v": 7, "id": identifier, "s": "s1"}
         if error:
             frame["err"] = error
         else:

@@ -70,7 +70,7 @@ public final class ControllerPtyHarness {
                 ? map("request_prefix", "t1", "padding", payload)
                 : "state".equals(op) ? map("phase", "menu_ready", "padding", payload)
                 : map("phase", "menu_ready");
-            Map<String,Object> response = map("v", 6, "id", request.get("id"), "st", "completed",
+            Map<String,Object> response = map("v", ControlRequest.PROTOCOL_VERSION, "id", request.get("id"), "st", "completed",
                 "s", "s1", "rev", "info".equals(op) ? "r1" : "r2", "data", data);
             byte[] encoded = (JsonCodec.encode(response) + "\n").getBytes(StandardCharsets.UTF_8);
             // Split the final multi-byte characters as well as the surrounding JSON.

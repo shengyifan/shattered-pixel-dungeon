@@ -7,15 +7,15 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 import static org.junit.Assert.*;
 
 public class CompactProtocolV6Test {
-    @Test public void shapesAndOperationDefinitionsRoundTripEveryValueAndFieldOrder() {
+    @Test public void templatesRoundTripEveryValueAndRecordOrder() {
         List<Object> nodes=new ArrayList<>();
         for(int i=0;i<20;i++)nodes.add(map("id","c"+i,"role","button","label","Choice "+i,"enabled",i!=1,
                 "unknown",Arrays.asList(null,false,0),"ops",Arrays.asList(map("op","click","gestures",Arrays.asList("click","right","middle","long")))));
-        Map<String,Object> input=map("ui",map("nodes",nodes));String before=JsonCodec.encode(input);
+        Map<String,Object> input=map("ui",map("nodes",nodes));Object before=CompactStructures.expandPure(input);
         CompactStructures.compact(input);
-        assertTrue(object(input.get("ui")).containsKey("op_defs"));
-        assertTrue(object(input.get("ui")).containsKey("node_shapes"));
-        assertEquals(before,JsonCodec.encode(CompactProtocol.expandStructures(input)));
+        assertFalse(object(input.get("ui")).containsKey("op_defs"));
+        assertTrue(object(input.get("ui")).containsKey("node_templates"));
+        assertEquals(before,CompactProtocol.expandStructures(input));
     }
 
     @Test public void singleUseOperationsAndSmallStructuresRemainInline() {
@@ -27,10 +27,10 @@ public class CompactProtocolV6Test {
     @Test public void metadataKeepsActualPathsExpandedAndOpaqueHistoryUntouched() {
         Map<String,Object> ui=largeUi();object(((List<?>)ui.get("nodes")).get(3)).put("pres",map("st","partial","diag",Arrays.asList(map("field","label","code","clipped_text"))));
         Map<String,Object> input=map("ui",ui,"before",map("ui",largeUi()),"after",map("ui",largeUi()),"reply",map("ui",largeUi()),"raw",map("ui",largeUi()));
-        String before=JsonCodec.encode(input);CompactStructures.compact(input);
-        assertTrue(object(input.get("ui")).containsKey("node_shapes"));
+        Object before=CompactStructures.expandPure(input);CompactStructures.compact(input);
+        assertTrue(object(input.get("ui")).containsKey("node_templates"));
         assertTrue(((List<?>)object(input.get("ui")).get("nodes")).get(3) instanceof Map);
-        assertEquals(before,JsonCodec.encode(CompactProtocol.expandStructures(input)));
+        assertEquals(before,CompactProtocol.expandStructures(input));
     }
 
     @Test public void passiveIdsRemainEvenWithoutReferencesOrIndependentFields() {
@@ -54,7 +54,7 @@ public class CompactProtocolV6Test {
         Map<String,Object> snapshot=map("ui",map("controls",nodes));
         Map<String,Object> reply=CompactProtocol.success("q","s1","completed",snapshot,true,false);
         Map<String,Object> ui=object(object(reply.get("data")).get("ui"));
-        assertTrue(ui.containsKey("node_shapes"));
+        assertTrue(ui.containsKey("node_templates"));
         List<?> wireNodes=(List<?>)ui.get("nodes");
         assertTrue(wireNodes.get(0) instanceof List);assertTrue(wireNodes.get(3) instanceof Map);
         assertEquals("c3",object(wireNodes.get(3)).get("id"));
@@ -62,7 +62,7 @@ public class CompactProtocolV6Test {
         assertEquals(protectedNode.get("text_sources"),object(wireNodes.get(3)).get("text_sources"));
         assertEquals(Arrays.asList(map("field","$.data.ui.nodes[3].label","code","clipped_text")),object(reply.get("pres")).get("diag"));
         assertEquals("Visible 3",object(wireNodes.get(3)).get("label"));
-        assertEquals(CompactProtocol.success("q","s1","completed",snapshot,true,false,true),CompactProtocol.expandStructures(reply));
+        assertEquals(CompactProtocol.expandStructures(CompactProtocol.success("q","s1","completed",snapshot,true,false,true)),CompactProtocol.expandStructures(reply));
     }
 
     @Test public void labelsUseCurrentCapturedIdentityAndOfficialEnglishTitleRule() {
@@ -93,7 +93,7 @@ public class CompactProtocolV6Test {
         assertFalse(object(((List<?>)persistence.get("saves")).get(1)).containsKey("src_s"));
         Map<String,Object> expanded=object(CompactProtocol.expandStructures(reply));
         Map<String,Object> full=CompactProtocol.success("t1.4","s1","in_progress",input,true,false,true);
-        assertEquals(full,expanded);
+        assertEquals(CompactProtocol.expandStructures(full),expanded);
     }
 
     @Test public void charactersShareOnlyTheirEntireExactDescriptor() {
@@ -108,10 +108,10 @@ public class CompactProtocolV6Test {
 
     @Test public void malformedDefinitionsAndAmbiguousItemBindingsFailClosed() {
         for(Object invalid:Arrays.asList(-1,2,0.5,true,null)) {
-            Map<String,Object> ui=map("node_shapes",Arrays.asList(Arrays.asList("role")),"nodes",Arrays.asList(Arrays.asList(invalid,"button")));
+            Map<String,Object> ui=map("node_templates",Arrays.asList(map("common",Collections.emptyMap(),"fields",Arrays.asList("role"))),"nodes",Arrays.asList(Arrays.asList(invalid,"button")));
             assertThrows(IllegalArgumentException.class,()->CompactProtocol.expandStructures(map("ui",ui)));
         }
-        assertThrows(IllegalArgumentException.class,()->CompactProtocol.expandStructures(map("ui",map("node_shapes",Arrays.asList(Arrays.asList("x","x")),"nodes",Arrays.asList(Arrays.asList(0,1,2))))));
+        assertThrows(IllegalArgumentException.class,()->CompactProtocol.expandStructures(map("ui",map("node_templates",Arrays.asList(map("common",Collections.emptyMap(),"fields",Arrays.asList("x","x"))),"nodes",Arrays.asList(Arrays.asList(0,1,2))))));
         assertThrows(IllegalArgumentException.class,()->CompactProtocol.expandStructures(map("ui",map("nodes",Arrays.asList(map("loc","bag.0","label",1))))));
         assertThrows(IllegalArgumentException.class,()->CompactProtocol.expandStructures(map("inv",Arrays.asList(map("loc","bag.0","name","One"),map("loc","bag.0","name","Two")),"ui",map("nodes",Arrays.asList(map("loc","bag.0","label",1))))));
     }

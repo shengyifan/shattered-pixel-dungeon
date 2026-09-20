@@ -29,10 +29,10 @@ public final class SpdctlLauncher {
             return;
         }
         if(args.length==1&&args[0].equals("--version")){
-            protocol.println("CLI.6.1.1 (protocol 6, game 3.3.8)");return;
+            protocol.println("CLI.7.0.0 (protocol 7, game 3.3.8)");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
-                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v6")
+                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v7")
                 :Paths.get(System.getenv("SPDCTL_PROFILE"));
         int exitCode=0;
         boolean profileAccepted=false;
@@ -112,7 +112,7 @@ public final class SpdctlLauncher {
             }catch(Throwable ignored){}
             diagnostics.println(control ? StableController.launchDiagnostic(failure) : failure instanceof AuditException
                     ? "spdctl: " + ((AuditException)failure).code + " (" + failure.getMessage() + ")"
-                    : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI 6 profile)");
+                    : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI 7 profile)");
             System.exit(1);
         }
         if(exitCode!=0)System.exit(exitCode);

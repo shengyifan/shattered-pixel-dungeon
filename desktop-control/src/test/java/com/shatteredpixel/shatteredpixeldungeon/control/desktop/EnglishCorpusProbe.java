@@ -60,7 +60,7 @@ public final class EnglishCorpusProbe {
     @SuppressWarnings("unchecked")
     public void inspect(Map<String, Object> response, Map<String, Object> sample) {
         frames++;
-        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 6;
+        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 7;
         if (compactFrame) response=(Map<String,Object>)CompactProtocol.expandStructures(response);
         compactDiagnostics.clear();
         if (compactFrame) { compactFrames++; collectCompactDiagnostics(response, "/response"); }
@@ -129,7 +129,7 @@ public final class EnglishCorpusProbe {
         // Source identity, rather than matching surface text or its script, controls rendering.
         String recordedDiagnostic = compactFrame ? compactDiagnostics.get(path) : null;
         List<Object> key = Arrays.asList(scene, field, clipped, original, metadata, compactFrame, recordedDiagnostic);
-        // Protocol 5 already contains rendered public text. Omitted source trees
+        // Protocol 7 already contains rendered public text. Omitted source trees
         // are not evidence of missing provenance: only its recorded diagnostics
         // identify unavailable/partial fields. Never reclassify user text by script.
         Outcome outcome = cache.computeIfAbsent(key, ignored -> compactFrame
@@ -225,7 +225,7 @@ public final class EnglishCorpusProbe {
                 ((Number) value.get("frequency")).longValue()).reversed());
         return map("test_only", true, "source", "closed_fixture_public_responses_only",
                 "projection_context", "complete_public_ui_and_leaf_node_metadata",
-                "frames", frames, "protocol_6_frames", compactFrames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
+                "frames", frames, "protocol_7_frames", compactFrames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
                 "translated_occurrences", translated, "unavailable_occurrences", failures,
                 "partial_occurrences", partials, "unique_issues", result.size(),
                 "issue_occurrences_by_scene", sceneOccurrences, "issues", result,

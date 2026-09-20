@@ -4,6 +4,13 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.7.0.0
+
+- Introduces protocol 7, audit schema 10 and an independent CLI v7 profile. Earlier request formats and profile schemas are refused without migration or history rewriting.
+- Shares node operations through exact same-observation references into the complete ordered action list. Replaces old UI shapes/operation-list dictionaries with common-field templates for UI nodes, actions and inventory records.
+- Applies the new representation to play/full/src and independently projected frozen snapshots. Public values, ordered occurrences, unknown/null/false/zero distinctions, node identities/parents, source trees and diagnostic paths remain intact; protected records stay inline.
+- Updates strict Java/Python decoders and active acceptance clients while isolating v6 research readers. The controller preserves compact child bytes and never expands them before forwarding. No cross-frame cache, gameplay changes or semantic UI pruning is included. Validation is recorded in [CLI 7 implementation and validation](docs/cli7-implementation.md).
+
 ## CLI.6.1.1
 
 - Uses decimal digits only for the controller's incrementing request-ID suffix (`t1.9`, `t1.10`, `t1.11`). Failed allocations remain consumed; session prefixes and historical or explicitly supplied identities are unchanged.

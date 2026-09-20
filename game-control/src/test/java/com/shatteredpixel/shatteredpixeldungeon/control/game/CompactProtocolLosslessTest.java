@@ -122,10 +122,11 @@ public class CompactProtocolLosslessTest {
                 map("action","ui.activate","control","c9","gestures",Arrays.asList("long")),map("action","wait"),
                 map("action","ui.activate","control","c1","gestures",Arrays.asList("click")),
                 map("action","ui.activate","control","c9","gestures",Arrays.asList("click"))));
-        Map<String,Object> full=object(CompactProtocol.project(capture,false,true));
+        Map<String,Object> full=object(CompactProtocol.expandStructures(CompactProtocol.project(capture,false,true)));
         Map<String,Object> play=object(CompactProtocol.project(capture,false));
-        assertTrue(object(play.get("ui")).containsKey("node_shapes"));
+        assertTrue(object(play.get("ui")).containsKey("node_templates"));
         assertEquals(full,CompactProtocol.expandStructures(play));
+        play=object(CompactProtocol.expandStructures(play));
         assertEquals(Arrays.asList("c9",null,"c1","c9"),Arrays.asList(
                 object(((List<?>)play.get("acts")).get(0)).get("ctl"),object(((List<?>)play.get("acts")).get(1)).get("ctl"),
                 object(((List<?>)play.get("acts")).get(2)).get("ctl"),object(((List<?>)play.get("acts")).get(3)).get("ctl")));

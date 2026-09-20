@@ -1,7 +1,7 @@
-# spdctl: compact game control (protocol 6)
+# spdctl: compact game control (protocol 7)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.6.1.1, protocol 6, and base game 3.3.8.
+`spdctl --version` reports CLI.7.0.0, protocol 7, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -58,7 +58,7 @@ querying `req` or `state` does not clear its pending-action bookkeeping. An expl
 Local failures have `controller:"error"`, `err`, and the original request when known.
 Malformed control/locator bindings and cell/direction types are rejected locally as
 `INVALID_INTENT` before sending a game action. Use `ctl`, never `id`, for a control;
-a packed node's leading integer is a shape index, never its control ID. Always
+a packed node's leading integer is a template index, never its control ID. Always
 check `err` and the controller wrapper before accessing a normal reply's `data`.
 Lost/invalid replies block new game actions until the original outcome is established.
 After complete-frame response loss, exceptional recovery may query the original
@@ -82,14 +82,14 @@ There is no network endpoint, background response stream, or attachment to anoth
 Finder-launched instance. Screenshots, window focus and simulated OS input are not
 needed to operate this connection.
 
-Protocol 6 accepts only the short, flat format below. Older request envelopes,
+Protocol 7 accepts only the short, flat format below. Older request envelopes,
 operation names and `args` are rejected. The default profile is now:
 
 ```text
-~/Library/Application Support/Shattered Pixel Dungeon CLI v6/
+~/Library/Application Support/Shattered Pixel Dungeon CLI v7/
 ```
 
-CLI 6 requires an intact schema-9 audit pair. Existing older audit directories are
+CLI 7 requires an intact schema-10 audit pair. Existing older audit directories are
 rejected before profile writes; they are not migrated or deleted. Use a new profile.
 Only genuinely absent or empty profiles receive the windowed Simplified-Chinese,
 skip-introduction/tutorial defaults. Existing settings and ordinary GUI defaults
@@ -101,7 +101,7 @@ remain unchanged; class unlocks, achievements and guidebook progress are not gra
 Start with a unique request ID:
 
 ```json
-{"v":6,"id":"q1","op":"info"}
+{"v":7,"id":"q1","op":"info"}
 ```
 
 `info` reports versions, build identity, current scope/revision, capabilities,
@@ -110,7 +110,7 @@ static `schema` of commands, directions, row-map encoding and inspection rules. 
 returned `s`, then query the current state:
 
 ```json
-{"v":6,"id":"q2","s":"<S>","op":"state"}
+{"v":7,"id":"q2","s":"<S>","op":"state"}
 ```
 
 Replace placeholders and illustrative IDs with values for your own connection.
@@ -124,7 +124,7 @@ rewritten, and existing history keeps its original identities.
 
 | Field | Meaning |
 | --- | --- |
-| `v` | Required integer `6` on every request. |
+| `v` | Required integer `7` on every request. |
 | `id` | Required, caller-generated request identity. Queries also consume IDs. |
 | `s` | Required scope, except `info` discovery requests. |
 | `rev` | Required for game actions; copy the latest live revision exactly. |
@@ -139,7 +139,7 @@ resuming a run can change `s`; update from that response. Scope/revision strings
 opaque: do not generate, shorten or reinterpret them. Restarting invalidates all
 old revisions. Historical queries never return a top-level live `rev`.
 
-Protocol 6 allocates durable typed base36 handles in the selected profile: `s` for
+Protocol 7 allocates durable typed base36 handles in the selected profile: `s` for
 scope, `r` for normal revision, `a` for activity revision, `t` for session, `p` for
 save receipt and `m` for map context (for example `s2`, `r7`, `a3`). They represent
 complete canonical identities, including process epochs, and are never recycled in
@@ -164,17 +164,18 @@ contain hero, inventory or map. Do not carry missing scene fields forward as liv
 `state` and `actions` accept `view:"play"` (default) or `view:"full"`:
 
 ```json
-{"v":6,"id":"q3","s":"<S>","op":"state","view":"full"}
-{"v":6,"id":"q4","s":"<S>","op":"actions","view":"play"}
+{"v":7,"id":"q3","s":"<S>","op":"state","view":"full"}
+{"v":7,"id":"q4","s":"<S>","op":"actions","view":"play"}
 ```
 
 Both views retain item descriptions, the complete talent directory, captured UI
 nodes and their identity/order/parent relationships, and all operation constraints.
-`play` uses reversible dictionaries, rows and scoped defaults; `full` expands those
-UI/item defaults and dictionaries for inspection. Both still use protocol-6 row maps
-and knowledge semantics; neither is an older protocol. Normal action replies use `play`.
+All views use same-frame action sharing and record templates. `full` retains explicit
+UI/item defaults and literal item labels; it is not an uncompressed wire format.
+Both still use protocol-7 row maps and knowledge semantics. Normal action replies use `play`.
 `state src:true` automatically selects `full`, even if `view:"play"` is supplied.
-Historical `before/after` details use full projection; `raw/reply` are immutable.
+Historical `before/after` details use full content and their own independent templates;
+`raw/reply` are immutable. Expand compact records in the client, not the controller.
 
 Names, prompts and descriptions use official English while the GUI may use any
 registered language. Player/external text retains its original content and origin
@@ -331,26 +332,48 @@ points and subclass/armor gates. The original talent window shows its current ch
 
 ### Controls and action discovery
 
-In play, `ui.op_defs` may contain repeated complete operation lists. A node's integer
-`ops` is a zero-based reference into this response's table; an array remains inline.
-`ui.node_shapes` contains ordered field-name arrays. A packed `nodes` entry is
-`[shapeIndex, ...values]` with exactly one value for every named field; protected
-nodes can remain objects at their original indexes alongside packed rows. Without
-the table all nodes remain objects. Missing, null, false and zero remain distinct.
-Definitions use deterministic first occurrence and are emitted only when smaller.
-Never use another observation's tables or infer missing operations. Invalid indexes,
-duplicate shape fields and wrong row lengths are errors, not partial observations.
+In every view, `acts` retains the complete ordered operation list. Each node's `ops`
+is an ordered array: an integer references one action in this observation's `acts`,
+while an object is a complete inline operation. A reference requires that action's
+`ctl` to equal the node's `id`; expansion copies the action and removes the inherited
+`ctl`. Explicit-control or independently protected operations stay inline. Order,
+duplicate occurrences, labels and every dynamic constraint survive.
+
+Three optional same-frame template tables compress records:
+
+| Table | Record list |
+| --- | --- |
+| `data.act_templates` | `data.acts` |
+| `data.inv_templates` | `data.inv` |
+| `data.ui.node_templates` | `data.ui.nodes` |
+
+A template is `{"common":{...},"fields":[...]}`. A packed record is
+`[templateIndex, ...values]`; its values correspond exactly to `fields` and combine
+with `common`. The two field sets must not overlap. Complete objects can remain at
+their original indexes alongside rows, especially when source/diagnostic paths
+protect them. A row's first integer is a template index, never a control or item ID.
+Missing, null, false and zero remain distinct; no trailing values may be omitted.
+Templates use deterministic first occurrence and are emitted only when the complete
+fragment, including the table, has fewer UTF-8 JSON bytes. Token savings are measured
+separately. JSON object member order is not semantic; array order always is.
+
+Expand `acts` and `inv` templates before UI rows, operation references and item labels,
+regardless of JSON field order. References cannot borrow another frame or snapshot's
+tables. Invalid indexes, duplicate fields, overlapping fields, wrong row widths and
+control mismatches are decoding errors, never partial observations. Protocol 6's
+`op_defs`, `node_shapes` and whole-operation-list indexes are unsupported.
 
 ```json
-{"ui":{"op_defs":[[{"op":"click"}]],"node_shapes":[["id","role","text","ops"]],"nodes":[[0,"c3","button","Drink",0]]}}
+{"acts":[{"op":"click","ctl":"c3"},{"op":"click","ctl":"c4"}],"ui":{"node_templates":[{"common":{"role":"button"},"fields":["id","text","ops"]}],"nodes":[[0,"c3","Drink",[0]],[0,"c4","Throw",[1]]]}}
 ```
 
 A current item-bound node may use `label:0` for its inventory item's exact `name`,
 or `label:1` for the game's standard title-case rendering. Resolve using that node's
 current `loc` and this observation's `inv`. Custom, unbound or protected labels stay
 literal. Passive text leaves retain their captured identities and parent links.
-Full/src and frozen before/after use object nodes,
-literal labels and complete operations. Diagnostic/source-bearing nodes stay
+Full/src and frozen before/after retain literal labels and use the same record
+templates and action references. Each frozen snapshot is decoded independently,
+without inheriting a live envelope's scope/revision. Diagnostic/source-bearing nodes stay
 expanded at unchanged indexes; ancestor-owned diagnostics keep their addressed UI
 subtree expanded. Bars and other game evidence remain.
 
@@ -369,8 +392,8 @@ Only `ops` advertises executable node actions. `{"op":"click"}` means the single
 click gesture; multiple gestures are listed on that operation. Node-level fields do not
 make a node actionable without an actual op. `acts` retains the complete advertised
 action list in its original order, including node-bound operations. Node `ops`
-provide convenient copies of the same capabilities, not additional actions to
-execute. Preserve list order and all operation metadata when decoding either form.
+reference the same capabilities, not additional actions to execute. Preserve list
+order and all operation metadata when decoding either form.
 
 Absent `enabled` on a play UI node means true; absent `dimmed` means false.
 Disabled options with informative text, actionable icons without text, item water
@@ -389,7 +412,7 @@ question marks and all corresponding metadata. These semantic fields supplement,
 never replace, the captured text nodes. `actions` remains independently
 readable even without an inventory list. Health bars retain rendered pixel widths
 and the visible target cell; they are not hidden exact enemy HP. Full view retains
-the expanded UI tree. Do not use unmarked map crops or drop danger descriptions,
+the complete UI tree through reversible templates. Do not use unmarked map crops or drop danger descriptions,
 `acts`, `cues`, counts, estimates or bars when presenting an observation to a model.
 
 Do not treat a dimmed control as disabled, infer hidden actions, or identify an
@@ -409,7 +432,7 @@ does not require Python to launch or operate.
 Full text-source trees are omitted by default. Request them explicitly:
 
 ```json
-{"v":6,"id":"q4","s":"<S>","op":"state","src":true}
+{"v":7,"id":"q4","s":"<S>","op":"state","src":true}
 ```
 
 This returns the sources for that observation's own `rev`, not for an earlier state.
@@ -452,11 +475,11 @@ are top-level. Only execute currently advertised operations and targets.
 Examples:
 
 ```json
-{"v":6,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
-{"v":6,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
-{"v":6,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
-{"v":6,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
-{"v":6,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
+{"v":7,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
+{"v":7,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
+{"v":7,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
+{"v":7,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
+{"v":7,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
 ```
 
 `123` is illustrative, not a predetermined destination. Movement can attack,
@@ -486,7 +509,7 @@ An `in_progress` response is the sole response to that request on the pipe. Do n
 repeat it. Poll its receipt with fresh query IDs:
 
 ```json
-{"v":6,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
+{"v":7,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
 ```
 
 Inspect `data.st`, not the query's outer `st`. `RECEIVED` and `EXECUTING` mean the
@@ -495,7 +518,7 @@ original action remains pending. Normal terminal success is `COMPLETED`,
 its `save` receipts, then obtain one fresh live state:
 
 ```json
-{"v":6,"id":"q6","s":"<CURRENT_SCOPE>","op":"state"}
+{"v":7,"id":"q6","s":"<CURRENT_SCOPE>","op":"state"}
 ```
 
 Do not request historical `get:["reply"]` on the normal successful path. Reserve
@@ -527,7 +550,7 @@ rejected as `BUSY` while execution is pending.
 | `STALE_STATE`, `STALE_ACTIVITY` | The revision is no longer current; reobserve and reconsider. |
 | `SCOPE_MISMATCH`, `UNKNOWN_SCOPE` | Discover the active scope with `info`; keep past scopes for history only. |
 | `ACTION_UNAVAILABLE`, `INVALID_ARGUMENT`, `INVALID_REQUEST` | Inspect current availability and parameter rules. |
-| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every direct frame requires integer `v:6`; old envelopes are unsupported. |
+| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every direct frame requires integer `v:7`; old envelopes are unsupported. |
 | `UNKNOWN_REVISION` | The revision handle is unknown or has the wrong identity kind; obtain a current observation. |
 | `EXECUTION_UNKNOWN`, `EXECUTION_UNCERTAIN` | Do not assume failure or replay; preserve uncertainty and inspect the original result. |
 | `AUDIT_UNAVAILABLE` | The audit store failed; new game operations stop. |
@@ -559,7 +582,7 @@ For explicit diagnosis or verification, use `get` to select `raw`, `reply`,
 used with frozen snapshot details. Example:
 
 ```json
-{"v":6,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
+{"v":7,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
 ```
 
 `before/after` are frozen public snapshots, not a fresh engine observation. `reply`
@@ -571,8 +594,8 @@ wire response or old snapshot is rewritten to match the current game.
 Read paginated metadata and public events:
 
 ```json
-{"v":6,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
-{"v":6,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
+{"v":7,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
+{"v":7,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
 ```
 
 `data` contains `items`, `next` (next `after`, or null), `end`, and a fixed `until`
@@ -588,7 +611,7 @@ report `saved` when available. In-memory action completion and persistence are
 separate facts. Close prompts before `quit`; read its response and await process exit.
 EOF requests ordinary lifecycle shutdown but cannot accept unresolved choices.
 
-Restart with the same v6 profile, perform a new handshake and continue the displayed
+Restart with the same v7 profile, perform a new handshake and continue the displayed
 saved game. Scope and request-ID history persist, but old process revisions do not.
 Do not replay successful actions to make a restored save catch up with history.
 Audit transactions do not include game save files. Public and internal SQLite stores
@@ -677,7 +700,7 @@ import time
 import uuid
 
 launcher = "/absolute/path/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl"
-profile = "/absolute/path/to/new-v6-profile"
+profile = "/absolute/path/to/new-v7-profile"
 process = subprocess.Popen(
     [launcher, "run", "--machine", "--data-dir", profile],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -688,7 +711,7 @@ counter = 0
 def request(op, *, scope=None, rev=None, **params):
     global counter
     counter += 1
-    message = {"v": 6, "id": f"{prefix}.{counter}", "op": op, **params}
+    message = {"v": 7, "id": f"{prefix}.{counter}", "op": op, **params}
     if scope is not None:
         message["s"] = scope
     if rev is not None:
@@ -704,7 +727,7 @@ def request(op, *, scope=None, rev=None, **params):
         response = json.loads(line.decode("utf-8", errors="strict"))
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise RuntimeError(("Invalid complete response; preserve request identity", message["id"])) from error
-    if not isinstance(response, dict) or type(response.get("v")) is not int or response["v"] != 6 or response.get("id") != message["id"]:
+    if not isinstance(response, dict) or type(response.get("v")) is not int or response["v"] != 7 or response.get("id") != message["id"]:
         raise RuntimeError(("Unexpected response identity/version", message["id"], response))
     if ("st" in response) == ("err" in response):
         raise RuntimeError(("Expected exactly one of st or err", message["id"], response))

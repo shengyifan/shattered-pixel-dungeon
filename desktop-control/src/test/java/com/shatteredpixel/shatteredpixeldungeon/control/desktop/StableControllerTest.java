@@ -91,11 +91,11 @@ public class StableControllerTest {
         assertEquals("t3.2", child.sent.get(1).get("id"));
     }
 
-    @Test public void packedShapeIndexCannotBecomeAGameControlOrLeavePendingWork() throws Exception {
+    @Test public void packedTemplateIndexCannotBecomeAGameControlOrLeavePendingWork() throws Exception {
         Fake child = new Fake(); StableController controller = boot(child);
         Map<String,Object> invalid = controller.accept(map("op", "click", "rev", "r1", "ctl", 2));
         assertEquals("INVALID_INTENT", invalid.get("err"));
-        assertTrue(invalid.get("message").toString().contains("shape index"));
+        assertTrue(invalid.get("message").toString().contains("template index"));
         assertEquals(1, child.sent.size());
         child.answer(q -> success(q, "s1", "r2", "awaiting_input", map("phase", "awaiting_input")));
         assertEquals("awaiting_input", controller.accept(map("op", "click", "rev", "r1", "ctl", "c1")).get("st"));
@@ -155,9 +155,10 @@ public class StableControllerTest {
         Fake child = new Fake(); StableController controller = boot(child);
         Map<String,Object> payload = map("raw", map("text", "{\"id\":\"long-original-id\"}\n"),
                 "reply", map("s", "old-scope", "text", "雪🙂"),
-                "ui", map("node_shapes", Arrays.asList(Arrays.asList("label", "ops")),
-                        "op_defs", Arrays.asList(Arrays.asList(map("op", "click"))),
-                        "nodes", Arrays.asList(Arrays.asList(0, 1, 0))),
+                "act_templates", Arrays.asList(map("common",map("op","click"),"fields",Arrays.asList("ctl"))),
+                "acts", Arrays.asList(Arrays.asList(0,"c1")),
+                "ui", map("node_templates", Arrays.asList(map("common",map("role","button"),"fields",Arrays.asList("id","label","ops"))),
+                        "nodes", Arrays.asList(Arrays.asList(0,"c1",1,Arrays.asList(0)))),
                 "text_sources", map("label", map("resource", "do-not-rewrite", "args", Arrays.asList("s1", "r1"))));
         child.answer(q -> success(q, "s1", null, "completed", payload));
         Map<String,Object> result = controller.accept(map("op", "req", "rid", "old", "get", Arrays.asList("raw", "reply")));
@@ -181,6 +182,39 @@ public class StableControllerTest {
         assertEquals("s1", child.sent.get(2).get("s"));
         assertFalse(child.sent.get(2).containsKey("get"));
         assertNotEquals(child.sent.get(2).get("id"), child.sent.get(2).get("rid"));
+    }
+
+    @Test public void currentAndSettledObservationsKeepTheirOwnTemplateTablesVerbatim() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        Map<String,Object> initial = map("phase","continuous_activity",
+                "act_templates",Arrays.asList(map("common",map("op","cancel"),"fields",Arrays.asList("ctl"))),
+                "acts",Arrays.asList(Arrays.asList(0,"c1")),
+                "ui",map("node_templates",Arrays.asList(map("common",map("role","button"),"fields",Arrays.asList("id","ops"))),
+                        "nodes",Arrays.asList(Arrays.asList(0,"c1",Arrays.asList(0)))));
+        child.answer(q -> success(q,"s1","a4","in_progress",initial));
+        assertEquals(JsonCodec.encode(initial),JsonCodec.encode(controller.accept(map("op","rest","rev","r1")).get("data")));
+        Map<String,Object> current = map("phase","player_ready",
+                "act_templates",Arrays.asList(map("common",map("op","click"),"fields",Arrays.asList("ctl"))),
+                "acts",Arrays.asList(Arrays.asList(0,"c2")),
+                "inv_templates",Arrays.asList(map("common",map("name","Current item"),"fields",Arrays.asList("loc"))),
+                "inv",Arrays.asList(Arrays.asList(0,"pack.0")),
+                "ui",map("node_templates",Arrays.asList(map("common",map("role","button"),"fields",Arrays.asList("id","ops"))),
+                        "nodes",Arrays.asList(Arrays.asList(0,"c2",Arrays.asList(0)))));
+        child.answer(q -> receipt(q,"rest","COMPLETED",null));
+        child.answer(q -> success(q,"s1","r3","completed",current));
+        Map<String,Object> settled=controller.accept(map("op","settle"));
+        assertEquals(JsonCodec.encode(current),JsonCodec.encode(object(settled.get("observation")).get("data")));
+        assertEquals(Arrays.asList("info","rest","req","state"),child.ops());
+    }
+
+    @Test public void protocolSixChildFrameIsRejectedWithoutInstallingItsRevision() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        child.answer(q -> map("v",6,"id",q.get("id"),"s","s1","rev","r9","st","completed","data",map()));
+        Map<String,Object> result=controller.accept(map("op","state"));
+        assertEquals("INVALID_RESPONSE",result.get("err"));
+        assertEquals("t3.1",object(result.get("request")).get("id"));
+        assertEquals("UNOBSERVED_REVISION",controller.accept(map("op","wait","rev","r9")).get("err"));
+        assertEquals(2,child.sent.size());
     }
 
     @Test public void finiteOperationDiscoversNewScopeBeforeOneFreshState() throws Exception {

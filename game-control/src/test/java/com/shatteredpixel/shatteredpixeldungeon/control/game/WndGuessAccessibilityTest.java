@@ -126,8 +126,8 @@ class WndGuessAccessibilityTest {
                 UiBridge bridge = new UiBridge(() -> scene);
                 Map<String, Object> canonical = PublicEnglishProjection.copy(map("ui", bridge.frozenUi()));
                 Map<String, Object> play = expanded(CompactProtocol.project(canonical, false, false));
-                Map<String, Object> full = object(CompactProtocol.project(canonical, false, true));
-                Map<String, Object> source = object(CompactProtocol.project(canonical, true, false));
+                Map<String, Object> full = expanded(CompactProtocol.project(canonical, false, true));
+                Map<String, Object> source = expanded(CompactProtocol.project(canonical, true, false));
 
                 assertEquals(new LinkedHashSet<>(expected), labels(play));
                 assertEquals(new LinkedHashSet<>(expected), labels(full));

@@ -19,10 +19,10 @@ def main():
     parser.add_argument("--launcher", required=True, type=Path)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging6.0" / ("old-schema-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging7.0" / ("old-schema-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     cases = []
-    for version in range(1, 9):
+    for version in range(1, 10):
         profile = output / ("schema-" + str(version))
         audit = profile / "audit"
         audit.mkdir(parents=True)
@@ -39,7 +39,7 @@ def main():
         before = snapshot(profile)
         process = subprocess.run([str(args.launcher.resolve()), "run", "--machine", "--no-terminal",
                                   "--data-dir", str(profile), "--trace-dir", str(output / "transport")],
-                                 input=b'{"v":6,"id":"info","op":"info"}\n', capture_output=True, timeout=30)
+                                 input=b'{"v":7,"id":"info","op":"info"}\n', capture_output=True, timeout=30)
         assert process.returncode != 0, process
         assert process.stdout == b"", process.stdout
         assert b"AUDIT_SCHEMA_UNSUPPORTED" in process.stderr, process.stderr

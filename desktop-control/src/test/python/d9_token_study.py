@@ -17,7 +17,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "desktop-control/client"))
-from spdctl_client import decode_wire_response
+from historical_v6_client import decode_wire_response
 
 
 def wire(value):

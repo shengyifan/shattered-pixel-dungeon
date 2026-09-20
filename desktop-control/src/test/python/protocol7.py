@@ -1,4 +1,4 @@
-"""Historical research-only protocol 6 assertion projection; not an active client.
+"""Protocol 7 wire client and explicit test-only canonical assertion projection.
 
 The engine accepts only the compact protocol. Existing scenario assertions use
 canonical names locally; this module never sends their old envelopes or invents
@@ -32,11 +32,11 @@ def is_live_operation(op):
 
 
 def request(op, args=None, request_id=None, scope=None, version=None):
-    """Encode a scenario request as an actual flat protocol-6 request."""
+    """Encode a scenario request as an actual flat protocol-7 request."""
     params = dict(args or {})
     action = params.pop("action", None) if op == "action.execute" else None
     wire_op = TO_OP.get(action if action is not None else op, action or op)
-    wire = {"v": 6, "id": request_id, "op": wire_op}
+    wire = {"v": 7, "id": request_id, "op": wire_op}
     if scope is not None:
         wire["s"] = scope
     if action is not None or wire_op in OPS.keys() - QUERY_OPS:
@@ -163,7 +163,7 @@ def _map(value):
 
 
 def _item_defaults(item):
-    """Expand documented v6 defaults, retaining unknown versus inapplicable."""
+    """Expand documented v7 defaults, retaining unknown versus inapplicable."""
     for field, default in (("quantity", 1), ("equipped", False), ("available", True), ("type_known", True)):
         item.setdefault(field, default)
     item.setdefault("details_via", "ui.activate")
@@ -197,50 +197,26 @@ def state(value, scope=None, version=None):
     for entity in observation.get("visible_entities", []):
         if isinstance(entity.get("item"), dict):
             _item_defaults(entity["item"])
-    actions = result.setdefault("actions", [])
-    explicit_actions = list(actions)
+    result.setdefault("actions", [])
     if "ui" in observation:
         observation["ui"].setdefault("modal", False)
         observation["ui"].setdefault("inspected_item", None)
     for node in observation.get("ui", {}).get("controls", []):
         node.setdefault("enabled", True)
         node.setdefault("dimmed", False)
-        gestures_explicit = "gestures" in node
-        for descriptor in node.pop("ops", []):
-            # CLI 6.1 retains the complete original action list and also attaches
-            # node capabilities. Older v6 frames may contain only the latter.
-            if any(action.get("control") == node.get("id") and action.get("action") == descriptor.get("action")
-                   for action in explicit_actions):
-                continue
-            entry = {key: copy.deepcopy(child) for key, child in node.items()
-                     if key in {"gestures", "options", "minimum", "maximum", "step", "max_length", "multiline", "slots", "keys", "binding"}}
-            entry.update(descriptor)
-            if entry.get("action") == "ui.activate":
-                entry.setdefault("gestures", ["click"])
-                if not gestures_explicit:
-                    node.setdefault("gestures", []).extend(entry["gestures"])
-            entry["control"] = node["id"]
-            if "binding_slots" in node:
-                entry.setdefault("slots", copy.deepcopy(node["binding_slots"]))
-            if "minimum" in node and "maximum" in node:
-                entry.setdefault("range", [node["minimum"], node["maximum"]])
-            label_field = "label" if "label" in node else "text"
-            if label_field in node:
-                entry.setdefault("label", node[label_field])
-                for field in ("text_sources", "text_diagnostics", "text_origins"):
-                    if label_field in node.get(field, {}):
-                        entry.setdefault(field, {}).setdefault("label", copy.deepcopy(node[field][label_field]))
-            actions.append(entry)
+        # The global action list is authoritative and complete in protocol 7.
+        # Never invent a missing capability from node appearance or metadata.
+        node.pop("ops", None)
     result["observation"] = observation
     return result
 
 
 def response(wire, op=None):
-    """Decode real v6 bytes into a test-only assertion view, never a wire log."""
-    if wire.get("v") != 6:
-        raise AssertionError({"expected_protocol_6": wire})
+    """Decode real v7 bytes into a test-only assertion view, never a wire log."""
+    if wire.get("v") != 7:
+        raise AssertionError({"expected_protocol_7": wire})
     wire = expand_structures(wire)
-    result = {"protocol_version": 6, "id": wire.get("id"), "scope_id": wire.get("s"),
+    result = {"protocol_version": 7, "id": wire.get("id"), "scope_id": wire.get("s"),
               "ok": "err" not in wire}
     if "st" in wire:
         result["status"] = wire["st"]
@@ -303,104 +279,54 @@ def pages(client, op, scope=None, after=0, limit=100):
         assert isinstance(next_cursor, int) and after < next_cursor <= until, "Pagination did not advance within its bound"
         after = next_cursor
 
-# The structural decoder operates on one wire frame, before canonical test aliases.
-# It keeps raw/reply/source ASTs opaque and never consults an earlier response.
-_OPAQUE = {"raw", "reply", "schema", "raw_request", "raw_bytes", "request_json",
-           "response_json", "original_payload", "text_sources", "text_origins",
-           "pres", "preserved_cells"}
-_NO_CAPS = {"a", "an", "and", "of", "by", "to", "the", "x", "for"}
+# Share the production structural decoder, not its display/default projection.
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "client"))
+from spdctl_client import DecodeError, expand_structures as _expand_v7
 
 
-def _title_case(text):
-    import unicodedata
-    words, start = [], 0
-    for index, char in enumerate(text):
-        if unicodedata.category(char) == "Zs":
-            words.append(text[start:index + 1])
-            start = index + 1
-    if start < len(text):
-        words.append(text[start:])
-    capitalize = lambda word: word[:1].upper() + word[1:]
-    value = "".join(word if re.sub(r":|[0-9]", "", word.strip("".join(map(chr, range(33)))).lower()) in _NO_CAPS
-                    else capitalize(word) for word in words)
-    return capitalize(value)
+def expand_structures(value, scope=None, version=None):
+    """Expand one v7 frame, then restore only its own documented bindings."""
+    try:
+        result = _expand_v7(value, scope, version, bindings=True)
+    except DecodeError as error:
+        raise AssertionError(str(error)) from error
 
-
-def expand_structures(value, scope=None, version=None, _inventory=None):
-    """Expand v6 same-frame UI tables, item labels and binding inheritance."""
-    inventory = {} if _inventory is None else _inventory
-    if isinstance(value, list):
-        return [expand_structures(child, scope, version, inventory) for child in value]
-    if not isinstance(value, dict):
-        return value
-    scope, version = value.get("s", scope), value.get("rev", version)
-    if isinstance(value.get("inv"), list):
-        inventory, ambiguous = {}, set()
-        for item in value["inv"]:
-            if not isinstance(item, dict) or not isinstance(item.get("loc"), str):
-                continue
-            if item["loc"] in inventory:
-                ambiguous.add(item["loc"])
-            inventory[item["loc"]] = item
-        for locator in ambiguous:
-            del inventory[locator]
-    result = {}
-    for key, child in value.items():
-        if isinstance(value.get("nodes"), list) and key in {"node_shapes", "op_defs"}:
-            continue
-        if key == "nodes" and isinstance(child, list):
-            nodes = []
-            for raw in child:
-                if isinstance(raw, list):
-                    assert raw, "Empty UI row"
-                    shape = _definition(value.get("node_shapes"), raw[0])
-                    assert isinstance(shape, list) and len(shape) == len(raw) - 1
-                    assert all(isinstance(field, str) for field in shape) and len(set(shape)) == len(shape)
-                    node = dict(zip(shape, raw[1:]))
-                else:
-                    assert isinstance(raw, dict), raw
-                    node = copy.deepcopy(raw)
-                if type(node.get("ops")) is int:
-                    node["ops"] = _definition(value.get("op_defs"), node["ops"])
-                    assert isinstance(node["ops"], list), node
-                elif "ops" in node:
-                    assert isinstance(node["ops"], list), node
-                if type(node.get("label")) is int:
-                    name = inventory.get(node.get("loc"), {}).get("name")
-                    assert isinstance(name, str) and node["label"] in (0, 1), node
-                    node["label"] = name if node["label"] == 0 else _title_case(name)
-                elif "label" in node:
-                    assert node["label"] is None or isinstance(node["label"], str), node
-                nodes.append(expand_structures(node, scope, version, inventory))
-            result[key] = nodes
-        elif key in _OPAQUE:
-            result[key] = copy.deepcopy(child)
-        else:
-            result[key] = expand_structures(child, scope, version, inventory)
-    activity = result.get("activity")
-    if isinstance(activity, dict):
-        if version is not None:
-            activity.setdefault("rev", version)
-        for action in result.get("acts", []):
-            if isinstance(action, dict) and action.get("op") == "cancel":
-                for field in ("rev", "rid"):
-                    if field in activity:
-                        action.setdefault(field, activity[field])
-    def receipt_defaults(receipt):
-        if not isinstance(receipt, dict) or "sid" not in receipt:
+    def bindings(data, frame_scope=None, frame_version=None):
+        if not isinstance(data, dict):
             return
-        if scope is not None:
-            receipt.setdefault("s", scope)
-        if "s" in receipt:
-            receipt.setdefault("src_s", receipt["s"])
-    receipt_defaults(result.get("saved"))
-    persistence = result.get("persistence")
-    if isinstance(persistence, dict):
-        for receipt in persistence.get("saves", []):
-            receipt_defaults(receipt)
-        saved = persistence.get("saved")
-        if type(saved) is int:
-            persistence["saved"] = _definition(persistence.get("saves"), saved)
-        else:
-            receipt_defaults(saved)
+        own_scope = data.get("s", frame_scope)
+        own_version = data.get("rev", frame_version)
+        activity = data.get("activity")
+        if isinstance(activity, dict):
+            if own_version is not None:
+                activity.setdefault("rev", own_version)
+            for action in data.get("acts", []):
+                if action.get("op") == "cancel":
+                    for field in ("rev", "rid"):
+                        if field in activity:
+                            action.setdefault(field, copy.deepcopy(activity[field]))
+        def receipt(value):
+            if not isinstance(value, dict) or "sid" not in value:
+                return
+            if own_scope is not None:
+                value.setdefault("s", own_scope)
+            if "s" in value:
+                value.setdefault("src_s", value["s"])
+        receipt(data.get("saved"))
+        persistence = data.get("persistence")
+        if isinstance(persistence, dict):
+            for item in persistence.get("saves", []):
+                receipt(item)
+            if type(persistence.get("saved")) is int:
+                persistence["saved"] = _definition(persistence.get("saves"), persistence["saved"])
+            receipt(persistence.get("saved"))
+        for key in ("before", "after"):
+            if isinstance(data.get(key), dict):
+                bindings(data[key])  # A frozen snapshot never inherits live context.
+    if "v" in result and isinstance(result.get("data"), dict):
+        bindings(result["data"], result.get("s"), result.get("rev"))
+    else:
+        bindings(result, scope, version)
     return result

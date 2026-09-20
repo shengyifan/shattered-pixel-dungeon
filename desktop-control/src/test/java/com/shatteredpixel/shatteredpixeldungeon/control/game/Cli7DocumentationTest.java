@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import static org.junit.Assert.*;
 
 /** Current documentation is executable public protocol evidence, never a game fixture. */
-public class Cli6DocumentationTest {
+public class Cli7DocumentationTest {
     private static final Pattern CODE = Pattern.compile("`([^`]+)`");
     private static final Pattern FENCE = Pattern.compile("(?ms)^```(json|python)([^\\r\\n]*)\\r?\\n(.*?)^```[ \\t]*$");
     private static final List<String> ALIASED_FIELDS = Arrays.asList(
@@ -87,13 +87,13 @@ public class Cli6DocumentationTest {
     @Test public void currentEntryPointsDeclareTheProductionVersionsAndIndependentProfile() throws Exception {
         int protocol = ControlRequest.PROTOCOL_VERSION;
         Map<String, Object> build = BuildCatalog.current();
-        assertEquals("This suite protects the CLI 6 contract", 6, protocol);
-        assertEquals(9, AuditStore.SCHEMA_VERSION);
+        assertEquals("This suite protects the CLI 7 contract", 7, protocol);
+        assertEquals(10, AuditStore.SCHEMA_VERSION);
         assertEquals(protocol, ((Number) build.get("protocol_version")).intValue());
         assertEquals(AuditStore.SCHEMA_VERSION, ((Number) build.get("audit_schema_version")).intValue());
         String cli = (String) build.get("cli_version");
         assertNotNull("The production build catalog must supply cli_version", cli);
-        assertTrue(cli.startsWith("CLI.6."));
+        assertTrue(cli.startsWith("CLI.7."));
 
         String help = document("docs/cli-help.md");
         assertTrue("The help introduction must declare the current CLI version", firstSection(help).contains(cli));
@@ -107,7 +107,7 @@ public class Cli6DocumentationTest {
         hasVersion("Project agreements", agreements, "CLI", protocol);
         hasVersion("Project agreements", agreements, "protocol", protocol);
         hasVersion("Project agreements", agreements, "schema", AuditStore.SCHEMA_VERSION);
-        assertTrue("The current implementation reference must exist", Files.isRegularFile(root().resolve("docs/cli6-implementation.md")));
+        assertTrue("The current implementation reference must exist", Files.isRegularFile(root().resolve("docs/cli7-implementation.md")));
     }
 
     @Test public void allSixteenNewAliasesMatchTheProductionWireAndInfoTables() throws Exception {
@@ -116,7 +116,7 @@ public class Cli6DocumentationTest {
         assertEquals(16, ALIASED_FIELDS.size());
         for (String canonical : ALIASED_FIELDS) {
             String wire = WireNames.field(canonical);
-            assertNotEquals("A CLI 6 alias must exist for " + canonical, canonical, wire);
+            assertNotEquals("A CLI 7 alias must exist for " + canonical, canonical, wire);
             assertEquals("info must advertise the same alias", canonical, advertised.get(wire));
             assertTrue("Help needs a table row mapping " + canonical + " to " + wire, hasRow(rows, canonical, wire));
         }
@@ -324,7 +324,7 @@ public class Cli6DocumentationTest {
     }
 
     @Test public void bundledHelpIsByteForByteTheAuthoritativeDocument() throws Exception {
-        try (InputStream resource = Cli6DocumentationTest.class.getResourceAsStream("/cli-help.md")) {
+        try (InputStream resource = Cli7DocumentationTest.class.getResourceAsStream("/cli-help.md")) {
             assertNotNull("The runtime must include cli-help.md", resource);
             assertArrayEquals(Files.readAllBytes(root().resolve("docs/cli-help.md")), resource.readAllBytes());
         }
@@ -333,7 +333,7 @@ public class Cli6DocumentationTest {
     @Test public void currentEntryPointLinksResolveWithinTheCheckout() throws Exception {
         Pattern links = Pattern.compile("\\[[^\\]\\r\\n]*\\]\\(([^)\\s]+)\\)");
         for (String name : Arrays.asList("README.md", "AGENTS.md", "docs/README.md", "docs/cli.md",
-                "docs/cli-help.md", "docs/cli-playthrough-client.md", "docs/cli6-implementation.md")) {
+                "docs/cli-help.md", "docs/cli-playthrough-client.md", "docs/cli7-implementation.md")) {
             Matcher link = links.matcher(document(name));
             while (link.find()) {
                 String target = link.group(1);
@@ -344,6 +344,6 @@ public class Cli6DocumentationTest {
             }
         }
         for (String name : Arrays.asList("README.md", "docs/README.md", "docs/cli.md"))
-            assertTrue(name + " must link to the current implementation record", document(name).contains("cli6-implementation.md"));
+            assertTrue(name + " must link to the current implementation record", document(name).contains("cli7-implementation.md"));
     }
 }

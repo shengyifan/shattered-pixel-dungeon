@@ -1,19 +1,19 @@
 # spdctl control interface
 
-Current release: **CLI.6.1.1 / protocol 6 / audit schema 9**, base game **3.3.8**.
-The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI 6 implementation and validation](cli6-implementation.md) and the repository [agent working agreements](../AGENTS.md).
-Current decimal request-ID allocation and offline format experiments are recorded in [the depth-9 token study](cli-token-study-d9-20260920.md). The [CLI.6.1.0 readability and lossless projection](cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md), [controller terminal startup fix](cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md) and [CLI 6 clean rebuild](cli-rebuild-6.0.0-20260920.md) remain historical records.
+Current release: **CLI.7.0.0 / protocol 7 / audit schema 10**, base game **3.3.8**.
+The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI 7 implementation and validation](cli7-implementation.md) and the repository [agent working agreements](../AGENTS.md).
+Protocol 7 introduces same-frame action sharing and record templates without removing public information. The [complete-frame study](cli-complete-frame-token-study-20260920.md), [depth-9 token study](cli-token-study-d9-20260920.md), [CLI.6.1.0 readability audit](cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md), and CLI 6 validation reports remain historical evidence, not current protocol instructions.
 
-## Start an independent v6 profile
+## Start an independent v7 profile
 
 ```sh
 ./bin/spdctl control --machine
 "desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl" control --machine
 ```
 
-The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v6/`. Earlier profiles remain untouched; schema 1–8 is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty profiles receive the existing windowed Chinese/new-profile defaults.
+The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v7/`. Earlier profiles remain untouched; schema 1–9 is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty profiles receive the existing windowed Chinese/new-profile defaults.
 
-The packaged controller owns one native-recorded game child using the bundled JVM. It emits initial info and accepts short intents; actions bind an explicit already displayed revision. It supplies `v:6`, a fresh request ID and that observation's scope. Direct `run --machine` remains available and requires these fields explicitly. Use only advertised `ops/acts`. Short durable identities are profile-local; separate directories can reuse numbers. Do not inspect saves or private audit to choose actions.
+The packaged controller owns one native-recorded game child using the bundled JVM. It emits initial info and accepts short intents; actions bind an explicit already displayed revision. It supplies `v:7`, a fresh request ID and that observation's scope. Direct `run --machine` remains available and requires these fields explicitly. Use only advertised `ops/acts`. Short durable identities are profile-local; separate directories can reuse numbers. Do not inspect saves or private audit to choose actions.
 
 Generated request counters are decimal: `t1.9` is followed by `t1.10`, not `t1.a`.
 The server-provided prefix remains opaque; failed allocations consume numbers,
@@ -25,7 +25,7 @@ Controller startup and stream failures report `CONTROLLER_CHILD_START_FAILED`, `
 
 ## Decode the current observation
 
-Default `play` is complete and self-contained. Expand its own `ui.node_shapes`, `ui.op_defs`, inherited item labels, `entity_defs`, `map.effect_defs`, uniform row visibility and scoped bindings/defaults as specified in help. Preserve unknown gaps, distinct terrain descriptors, knowledge nulls, danger descriptions, health bars, rendered counts/estimates, available actions and visual cues. UI item `loc/display` comes from the same rendered capture, not hidden item properties. Full/src views retain expanded diagnostic detail.
+Every view is complete and self-contained. Expand the current observation's `act_templates`, `inv_templates` and `ui.node_templates`, then its node `ops` references into the complete ordered `acts`, inherited item labels, entity/effect dictionaries and scoped defaults. Preserve unknown gaps, knowledge nulls, descriptions, bars, counts, estimates, actions and cues. UI `loc/display` comes from the same rendered capture. Full/src retain more explicit fields or sources but use the same structural encoding. Protected records remain inline with their real diagnostic paths. Frozen before/after snapshots use independent tables; raw/reply stay immutable.
 
 Since CLI.6.1.0, both views retain all captured item descriptions, talent entries including zero points, UI nodes and their identities/order/parents/text, and every operation constraint. Only reversible encoding is permitted for public observation content. `src` remains the explicit full-provenance interface. Earlier token-saving measurements included reductions now removed and do not describe the current lossless response. See the [reference client guidance](cli-playthrough-client.md) for decoding and validating intents without guessing array positions or suppressing errors.
 
@@ -46,4 +46,4 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 ## Validation boundary
 
-Use current v6 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later patch. Test profiles and generated JSON live in ignored build directories. Current validation is in the CLI.6.1.1 depth-9 study; earlier readability and protocol validation remain in their versioned reports. Map/inventory/log deltas are evaluated separately and are not part of the default protocol.
+Use current v7 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later patch. Test profiles and generated JSON live in ignored build directories. Current validation is in [CLI 7 implementation and validation](cli7-implementation.md). There are no cross-frame dictionaries, map/inventory/log deltas, short scalar encodings or GUI semantic pruning in this release.

@@ -17,7 +17,7 @@ import uuid
 import zipfile
 from machine_smoke import Client
 from client_result import settle_action
-from protocol6 import is_live_operation
+from protocol7 import is_live_operation
 from fixture_identity import fixture_identity_matches, fixture_context_matches
 
 CLASSES = ["WARRIOR", "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"]

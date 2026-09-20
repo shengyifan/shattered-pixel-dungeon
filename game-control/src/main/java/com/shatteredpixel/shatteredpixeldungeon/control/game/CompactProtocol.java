@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 
-/** Pure protocol 6 projection of already rendered public values. Never observes the engine. */
+/** Pure protocol 7 projection of already rendered public values. Never observes the engine. */
 public final class CompactProtocol {
     private static final Set<String> OPAQUE = new HashSet<>(Arrays.asList(
             "raw", "reply", "schema", "raw_request", "raw_bytes", "request_json", "response_json", "original_payload"));
@@ -20,19 +20,20 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> success(String id,String scope,String status,Object canonicalResult,boolean live,boolean sources,boolean full) {
-        Map<String,Object> response=map("v",6,"id",id);
+        Map<String,Object> response=map("v",7,"id",id);
         Map<?,?> original=canonicalResult instanceof Map?(Map<?,?>)canonicalResult:Collections.emptyMap();
         Object effectiveScope=live && original.get("scope_id")!=null?original.get("scope_id"):scope;
         if(effectiveScope!=null)response.put("s",effectiveScope);
         if(live && original.get("state_version")!=null)response.put("rev",original.get("state_version"));
         response.put("st",status);
-        Object projected=project(canonicalResult,sources,full);
+        Object projected=projectExpanded(canonicalResult,sources,full);
         if(projected instanceof Map && live) {
             Map<String,Object> data=new LinkedHashMap<>(cast(projected));
             data.remove("s"); data.remove("rev"); projected=data;
         }
         response.put("data",projected);
         if(live && !sources && !full)CompactStructures.compactBindings(response);
+        CompactStructures.compact(projected);
         List<Object> diagnostics=new ArrayList<>();
         collectDiagnostics(projected,"$.data",diagnostics);
         if(!diagnostics.isEmpty())response.put("pres",map("st","partial","diag",diagnostics));
@@ -40,7 +41,7 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> failure(String id,String scope,String code) {
-        Map<String,Object> response=map("v",6,"id",id);
+        Map<String,Object> response=map("v",7,"id",id);
         if(scope!=null)response.put("s",scope);
         response.put("err",code);
         return response;
@@ -49,9 +50,15 @@ public final class CompactProtocol {
     public static Object project(Object canonical,boolean sources) { return project(canonical,sources,false); }
 
     public static Object project(Object canonical,boolean sources,boolean full) {
+        Object projected=projectExpanded(canonical,sources,full);
+        CompactStructures.compact(projected);
+        return projected;
+    }
+
+    /** Field projection is independent of the reversible representation used by every view. */
+    static Object projectExpanded(Object canonical,boolean sources,boolean full) {
         Object projected=projectValue(canonical,sources,sources||full,"");
         normalizeUi(projected,sources||full,Collections.emptyMap());
-        if(!sources && !full)CompactStructures.compact(projected);
         return projected;
     }
 
@@ -422,18 +429,23 @@ public final class CompactProtocol {
                 "text_sources",map("ordinary_kinds",new ArrayList<>(PublicTextSources.ORDINARY_KINDS),
                         "ordinary_origins",new ArrayList<>(PublicTextSources.ORDINARY_ORIGINS),
                         "retention","recursive user/external origins remain; unknown/unavailable/partial/clipped public evidence remains protected; src includes full rendered source trees without exposing undisplayed arguments"),
-                "ui_projection",map("nodes","current controls; ops repeat node capabilities; acts retains all original operations in order",
-                        "node_shapes","optional local field-name arrays; a node is an expanded object or [shape index, values...] in that shape's exact order, including null/false/zero; metadata-bearing nodes stay expanded",
-                        "op_defs","optional local complete operation lists; integer node ops indexes this table, array ops remains inline",
+                "record_templates",map("tables",map("acts","act_templates","inv","inv_templates","ui.nodes","ui.node_templates"),
+                        "definition","each template has common fixed fields and fields listing variable field names; records are objects or [template index, variable values...]",
+                        "validation","integer indexes, exact row width, unique string fields disjoint from common; missing, null, false and zero remain distinct",
+                        "policy","all views including full/src and newly projected before/after; same ordered key set, at least two records, exact values only, emitted only when complete minified UTF-8 fragment becomes smaller; protected metadata remains inline",
+                        "scope","each observation or frozen snapshot owns its tables; no inherited or cross-frame tables"),
+                "ui_projection",map("nodes","current controls; ops contains inline operation objects or integer indexes into this observation's acts",
+                        "node_templates","optional local common/fields templates; preserve node count, order, identities and parents; protected nodes remain objects",
+                        "ops","integer element copies acts[index] without ctl, which must exactly match this node id; explicit ctl or protected metadata remains inline; missing or invalid references are errors",
                         "label","integer 0 inherits name from the unique current inv item at loc; 1 applies the English item title rule; strings are literal and explicit null remains null",
                         "identity","all captured node identities and parent bindings are retained and remain current",
-                        "actions","acts retains every original operation in order; node ops repeats the matching capabilities with the node control binding inherited",
+                        "actions","acts retains every original operation in order and may use act_templates; decode acts before resolving node ops; no capability is inferred from labels",
                         "display","optional status/extra/level are exact already displayed ItemSlot text; loc binds the same captured item by identity",
-                        "deduplication","only reversible same-frame dictionaries, shapes, labels and documented defaults; all captured nodes, text, descriptions, talents and action constraints remain",
-                        "full","all captured nodes and default fields; historical before/after also use full; raw/reply stay opaque"),
+                        "deduplication","only reversible same-frame operation sharing, record templates, dictionaries, labels and documented defaults; all captured nodes, text, descriptions, talents and action constraints remain",
+                        "full","explicit default fields and literal labels; src additionally retains source ASTs; all use the same structural encoding; raw/reply stay opaque"),
                 "same_frame",map("activity","omitted activity.rev inherits envelope rev; cancel rev/rid inherit current activity rev/rid",
                         "persistence","omitted receipt s inherits envelope s; omitted src_s inherits that receipt s; integer saved indexes persistence.saves",
-                        "boundaries","only current response bindings; no cross-frame baselines; full/src/before/after stay expanded"),
+                        "boundaries","only current live response bindings; full/src/before/after retain explicit bindings; each snapshot independently decodes its structure and never borrows an outer scope or revision"),
                 "rules",map("action","s and rev required; use a fresh id", "cell",map("mode",Arrays.asList("act","examine","context"),"default","act"),
                         "click",map("g",Arrays.asList("click","right","middle","long"),"default","click"),
                         "choose",map("opt","zero-based option index","alt","optional boolean"),
