@@ -192,6 +192,11 @@ public class StoneOfIntuition extends InventoryStone {
 
 				IconButton btn = new IconButton(){
 					@Override
+					protected String accessibleLabelText() {
+						return Messages.titleCase(Messages.get(i, "name"));
+					}
+
+					@Override
 					protected void onClick() {
 						curGuess = i;
 						guess.visible = true;

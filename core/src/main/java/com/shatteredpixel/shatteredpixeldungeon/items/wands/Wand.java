@@ -678,8 +678,8 @@ public abstract class Wand extends Item {
 				final Ballistica shot = new Ballistica( curUser.pos, target, curWand.collisionProperties(target));
 				int cell = shot.collisionPos;
 				
-				if (target == curUser.pos || cell == curUser.pos) {
-					if (target == curUser.pos && curUser.hasTalent(Talent.SHIELD_BATTERY)){
+				if (target == curUser.pos) {
+					if (curUser.hasTalent(Talent.SHIELD_BATTERY)){
 
 						if (curUser.buff(MagicImmune.class) != null){
 							GLog.w( Messages.get(Wand.class, "no_magic") );
@@ -704,6 +704,10 @@ public abstract class Wand extends Item {
 						return;
 					}
 					GLog.i( Messages.get(Wand.class, "self_target") );
+					return;
+				}
+				if (cell == curUser.pos) {
+					GLog.i( Messages.get(Wand.class, "blocked_path") );
 					return;
 				}
 

@@ -33,7 +33,7 @@ public class CompactProtocolV6Test {
         assertEquals(before,JsonCodec.encode(CompactProtocol.expandStructures(input)));
     }
 
-    @Test public void passiveIdsAreRemovedOnlyWhenNoReferencesOrIndependentFieldsExist() {
+    @Test public void passiveIdsRemainEvenWithoutReferencesOrIndependentFields() {
         Map<String,Object> input=map("ui",map("nodes",Arrays.asList(
                 map("id","c1","role","text","text","Independent text"),
                 map("id","c2","role","text","text","Parent"),
@@ -41,8 +41,7 @@ public class CompactProtocolV6Test {
                 map("id","c4","role","text","text","Referenced by action"),
                 map("id","c5","role","text","text","State","extra",0))),"acts",Arrays.asList(map("op","select","ctl","c4")));
         CompactStructures.compact(input);List<?> nodes=(List<?>)object(object(CompactProtocol.expandStructures(input)).get("ui")).get("nodes");
-        assertFalse(object(nodes.get(0)).containsKey("id"));
-        for(int i=1;i<nodes.size();i++)assertEquals("c"+(i+1),object(nodes.get(i)).get("id"));
+        for(int i=0;i<nodes.size();i++)assertEquals("c"+(i+1),object(nodes.get(i)).get("id"));
     }
 
     @Test public void mixedRowsKeepProtectedNodeIndexesAndWireDiagnosticPaths() {

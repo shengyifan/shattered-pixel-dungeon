@@ -79,7 +79,7 @@ public class CompactProtocolMapAndKnowledgeTest {
         Map<String,Object> other=object(((List<?>)play.get("inv")).get(1));
         assertEquals(2,other.get("qty"));assertEquals(true,other.get("equipped"));assertEquals(false,other.get("available"));assertEquals(false,other.get("type_known"));
     }
-    @Test public void blankLeafPruningPreservesParentsOperationsMetadataAndDisabledState() {
+    @Test public void blankLeavesKeepIdentitiesParentsOperationsMetadataAndDisabledState() {
         List<Object> controls=Arrays.asList(
                 map("id","empty","role","text","enabled",true),
                 map("id","parent","role","text","enabled",true),
@@ -94,12 +94,12 @@ public class CompactProtocolMapAndKnowledgeTest {
                 map("action","ui.activate","control","icon","gestures",Collections.singletonList("click"))));
         Map<String,Object> play=object(CompactProtocol.expandStructures(CompactProtocol.project(original,false)));List<?> nodes=(List<?>)object(play.get("ui")).get("nodes");
         List<Object> ids=new ArrayList<>();for(Object node:nodes)ids.add(object(node).get("id"));
-        assertEquals(Arrays.asList("parent",null,"clickable",null,"clipped","special","icon"),ids);
-        assertEquals(Collections.singletonList(map("op","click")),object(nodes.get(2)).get("ops"));
-        assertFalse(object(nodes.get(6)).containsKey("gestures"));
+        assertEquals(Arrays.asList("empty","parent","child","clickable","disabled","clipped","special","icon"),ids);
+        assertEquals(Collections.singletonList(map("op","click","gestures",Collections.singletonList("click"))),object(nodes.get(3)).get("ops"));
+        assertEquals(Collections.singletonList("click"),object(nodes.get(7)).get("gestures"));
         assertEquals(8,((List<?>)object(object(CompactProtocol.project(original,false,true)).get("ui")).get("nodes")).size());
     }
-    @Test public void descriptionsDeferOnlyForOrdinaryItemsAndTalentsUseCanonicalPointCounts() {
+    @Test public void allItemDescriptionsAndZeroPointTalentsRemainInEveryView() {
         Map<String,Object> potion=item("potion",null,null);potion.put("description","A normal potion.");
         Map<String,Object> external=item("external",null,null);external.put("description","External warning");
         external.put("text_sources",map("description",map("kind","literal","origin","external","value","External warning")));
@@ -112,13 +112,13 @@ public class CompactProtocolMapAndKnowledgeTest {
                 map("name","Unused","points",0),map("name","Trained","points",2)),"talent_points_available",Arrays.asList(0,1,0,0)),
                 "ui",map("controls",Arrays.asList(map("id","modal","role","text","text","All visible description text"))));
         Map<String,Object> play=object(CompactProtocol.project(original,false));List<?> inventory=(List<?>)play.get("inv");
-        assertFalse(object(inventory.get(0)).containsKey("desc"));
+        assertEquals("A normal potion.",object(inventory.get(0)).get("desc"));
         for(int i=1;i<4;i++)assertTrue(object(inventory.get(i)).containsKey("desc"));
         assertEquals(map("desc",Arrays.asList("external")),object(inventory.get(1)).get("text_origins"));
         assertEquals(map("desc",map("kind","future_source","value","Custom")),object(inventory.get(3)).get("text_sources"));
         List<?> entities=(List<?>)play.get("entities");assertEquals("Something feels off",object(entities.get(0)).get("desc"));
-        assertEquals("A hidden danger",object(entities.get(1)).get("desc"));assertFalse(object(object(entities.get(2)).get("item")).containsKey("desc"));
-        assertEquals(Collections.singletonList(map("name","Trained","points",2)),object(play.get("hero")).get("talents"));
+        assertEquals("A hidden danger",object(entities.get(1)).get("desc"));assertEquals("A normal potion.",object(object(entities.get(2)).get("item")).get("desc"));
+        assertEquals(Arrays.asList(map("name","Unused","points",0),map("name","Trained","points",2)),object(play.get("hero")).get("talents"));
         assertEquals(Arrays.asList(0,1,0,0),object(play.get("hero")).get("tp"));
         for(boolean sources:Arrays.asList(false,true)) {
             Map<String,Object> full=object(CompactProtocol.project(original,sources,true));
@@ -138,7 +138,7 @@ public class CompactProtocolMapAndKnowledgeTest {
         }
         assertSame(recorded,receipt.get("reply"));assertSame(recorded,receipt.get("raw"));
     }
-    @Test public void pruningAndRelocationKeepDiagnosticsAtExistingWirePaths() {
+    @Test public void preservedNodesAndRelocationKeepDiagnosticsAtExistingWirePaths() {
         Map<String,Object> item=item("partial",null,null);item.put("description","Warning");item.put("text_diagnostics",map("description","clipped_text"));
         Map<String,Object> terrain=tile(1,4,"visible");terrain.put("text_diagnostics",map("name","clipped_text"));
         Map<String,Object> state=map("inventory",Arrays.asList(item),"map",map("width",4,"height",1,"cells",Arrays.asList(terrain)),
@@ -148,15 +148,15 @@ public class CompactProtocolMapAndKnowledgeTest {
         List<?> diagnostics=(List<?>)object(response.get("pres")).get("diag");
         assertEquals(Arrays.asList(map("field","$.data.inv[0].desc","code","clipped_text"),
                 map("field","$.data.map.types[0].name","code","clipped_text"),
-                map("field","$.data.ui.nodes[0].text","code","clipped_text")),diagnostics);
+                map("field","$.data.ui.nodes[1].text","code","clipped_text")),diagnostics);
     }
-    @Test public void presentationOnlyDiagnosticMovesWithItsNodeAfterPruning() {
+    @Test public void presentationOnlyDiagnosticKeepsItsOriginalNodeIndex() {
         Map<String,Object> state=map("ui",map("controls",Arrays.asList(map("id","empty","role","text"),
                 map("id","diagnostic","role","text","text","Warning"))),"presentation",map("status","partial","diagnostics",Arrays.asList(
                 map("field","$.ui.controls[1].text","code","legacy"))));
         Map<String,Object> reply=CompactProtocol.success("q","run:a","completed",state,true,false);
-        assertEquals(1,((List<?>)object(object(reply.get("data")).get("ui")).get("nodes")).size());
-        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].text","code","legacy")),object(reply.get("pres")).get("diag"));
+        assertEquals(2,((List<?>)object(object(reply.get("data")).get("ui")).get("nodes")).size());
+        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[1].text","code","legacy")),object(reply.get("pres")).get("diag"));
     }
     @Test public void protectedKnowledgePairsAndZeroTalentRecordsKeepTheirOwnMeaning() {
         Map<String,Object> unknown=item("protected",null,false);
@@ -170,7 +170,7 @@ public class CompactProtocolMapAndKnowledgeTest {
             assertTrue(item.containsKey("level_known"));assertNull(item.get("level_known"));assertTrue(item.containsKey("level"));assertNull(item.get("level"));
             assertEquals(false,item.get("curse_known"));assertNull(item.get("cursed"));
             assertEquals(map("level_known",Arrays.asList("external")),item.get("text_origins"));
-            assertEquals(full?2:1,((List<?>)object(result.get("hero")).get("talents")).size());
+            assertEquals(2,((List<?>)object(result.get("hero")).get("talents")).size());
         }
     }
     @Test public void mapAggregateAnnotationsFollowUnsortedCellsAndDictionaryIdentity() {

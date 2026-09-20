@@ -223,7 +223,7 @@ public final class StableController {
         if (inFlight != null) return localError("RESPONSE_PENDING", "Use settle to receive the original response before sending another request", inFlight.request);
         if (WireNames.canonicalOperation(op) == null) return localError("UNKNOWN_OPERATION", "Unknown controller operation", null);
         if (intent.containsKey("v") || intent.containsKey("id"))
-            return localError("INVALID_INTENT", "The controller owns v and id", null);
+            return localError("INVALID_INTENT", "The controller owns v and id; use ctl for a UI control", null);
         boolean action = !WireNames.isQuery(op);
         if (action && !pending.isEmpty() && !"cancel".equals(op))
             return localError("OUTCOME_PENDING", "Establish the original action outcome with settle before another action", pending.values().iterator().next().request);
@@ -241,11 +241,32 @@ public final class StableController {
         if (!"info".equals(op) && scope == null) return localError("SCOPE_REQUIRED", "Discover a live scope with info", null);
         Map<String,Object> request = request(op, scope, intent);
         // Validate the same flat grammar as the direct interface before crossing the child boundary.
-        try { ControlRequest.parse(JsonCodec.encode(request)); }
+        try {
+            ControlRequest.parse(JsonCodec.encode(request));
+            validateBindings(request);
+        }
         catch (RuntimeException invalid) { return localError("INVALID_INTENT", invalid.getMessage(), request); }
         if (action) pending.put((String)request.get("id"), new Pending(request));
         Map<String,Object> response = exchange(request, responseTimeout);
         return handleResponse(request, response);
+    }
+
+    /** Catch malformed client bindings before they become audited game actions.
+     * Current availability, targets and gameplay constraints remain engine decisions. */
+    private static void validateBindings(Map<String,Object> request) {
+        String op = (String)request.get("op");
+        if (WireNames.parameters(op).contains("ctl") && string(request.get("ctl")) == null)
+            throw new IllegalArgumentException("ctl must be the current control ID string, not a node index or shape index");
+        if ("item".equals(op) && string(request.get("loc")) == null)
+            throw new IllegalArgumentException("loc must be a current inventory locator string");
+        if ("move".equals(op) && !WireNames.DIRECTIONS.contains(request.get("dir")))
+            throw new IllegalArgumentException("move requires dir; use op cell with cell for a map target");
+        if ("cell".equals(op)) {
+            Object cell = request.get("cell");
+            if (!(cell instanceof Byte || cell instanceof Short || cell instanceof Integer || cell instanceof Long)
+                    || ((Number)cell).longValue() < 0 || ((Number)cell).longValue() > Integer.MAX_VALUE)
+                throw new IllegalArgumentException("cell must be a non-negative JSON integer within the current map");
+        }
     }
 
     private Map<String,Object> handleResponse(Map<String,Object> request, Map<String,Object> response) throws InterruptedException {

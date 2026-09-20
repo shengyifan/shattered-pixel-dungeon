@@ -1,8 +1,8 @@
 # spdctl control interface
 
-Current release: **CLI.6.0.1 / protocol 6 / audit schema 9**, base game **3.3.8**.
+Current release: **CLI.6.1.0 / protocol 6 / audit schema 9**, base game **3.3.8**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI 6 implementation and validation](cli6-implementation.md) and the repository [agent working agreements](../AGENTS.md).
-The current fix and validation boundary are recorded in [CLI.6.0.1 controller terminal startup](cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md). The [CLI 6 clean rebuild](cli-rebuild-6.0.0-20260920.md) remains the historical 6.0.0 cleanup record.
+The current fix and validation boundary are recorded in [CLI.6.1.0 readability and lossless projection](cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md). The [controller terminal startup fix](cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md) and [CLI 6 clean rebuild](cli-rebuild-6.0.0-20260920.md) remain historical records.
 
 ## Start an independent v6 profile
 
@@ -23,6 +23,8 @@ Controller startup and stream failures report `CONTROLLER_CHILD_START_FAILED`, `
 
 Default `play` is complete and self-contained. Expand its own `ui.node_shapes`, `ui.op_defs`, inherited item labels, `entity_defs`, `map.effect_defs`, uniform row visibility and scoped bindings/defaults as specified in help. Preserve unknown gaps, distinct terrain descriptors, knowledge nulls, danger descriptions, health bars, rendered counts/estimates, available actions and visual cues. UI item `loc/display` comes from the same rendered capture, not hidden item properties. Full/src views retain expanded diagnostic detail.
 
+Since CLI.6.1.0, both views retain all captured item descriptions, talent entries including zero points, UI nodes and their identities/order/parents/text, and every operation constraint. Only reversible encoding is permitted for public observation content. `src` remains the explicit full-provenance interface. Earlier token-saving measurements included reductions now removed and do not describe the current lossless response. See the [reference client guidance](cli-playthrough-client.md) for decoding and validating intents without guessing array positions or suppressing errors.
+
 Synchronous success already supplies the current observation. The controller exposes interruptible `in_progress` before local `settle`; direct clients poll small `req` receipts and obtain one fresh state after successful settlement (first discover scope for finite resolving/cancelling). Preserve original outcomes/save receipts separately. Never replay completed, pending or uncertain actions. After successful quit await exit without another query.
 
 ## Two passive Terminal windows
@@ -40,4 +42,4 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 ## Validation boundary
 
-Use current v6 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later patch. Test profiles and generated JSON live in ignored build directories. CLI.6.0.1 startup checks are in its issue report; original token measurements and protocol validation remain in the CLI.6.0.0 implementation report. Map/inventory/log deltas are evaluated separately and are not part of the default protocol.
+Use current v6 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later patch. Test profiles and generated JSON live in ignored build directories. Current validation is in the CLI.6.1.0 issue report; original token measurements and protocol validation remain in the CLI.6.0.0 implementation report. Map/inventory/log deltas are evaluated separately and are not part of the default protocol.

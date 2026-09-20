@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 6)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.6.0.1, protocol 6, and base game 3.3.8.
+`spdctl --version` reports CLI.6.1.0, protocol 6, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -56,6 +56,10 @@ The bundled controller must finish pending actions through `settle`; manually
 querying `req` or `state` does not clear its pending-action bookkeeping. An explicit
 `rid` must identify an action submitted by this controller.
 Local failures have `controller:"error"`, `err`, and the original request when known.
+Malformed control/locator bindings and cell/direction types are rejected locally as
+`INVALID_INTENT` before sending a game action. Use `ctl`, never `id`, for a control;
+a packed node's leading integer is a shape index, never its control ID. Always
+check `err` and the controller wrapper before accessing a normal reply's `data`.
 Lost/invalid replies block new game actions until the original outcome is established.
 After complete-frame response loss, exceptional recovery may query the original
 receipt; partial frames must first finish. A late original reply is retained under
@@ -161,9 +165,11 @@ contain hero, inventory or map. Do not carry missing scene fields forward as liv
 {"v":6,"id":"q4","s":"<S>","op":"actions","view":"play"}
 ```
 
-`full` returns default-valued fields, empty UI nodes, ordinary item descriptions and
-the complete talent directory. It still uses protocol-6 row maps and knowledge
-semantics; it is not an older protocol. Normal action replies use `play`.
+Both views retain item descriptions, the complete talent directory, captured UI
+nodes and their identity/order/parent relationships, and all operation constraints.
+`play` uses reversible dictionaries, rows and scoped defaults; `full` expands those
+UI/item defaults and dictionaries for inspection. Both still use protocol-6 row maps
+and knowledge semantics; neither is an older protocol. Normal action replies use `play`.
 `state src:true` automatically selects `full`, even if `view:"play"` is supplied.
 Historical `before/after` details use full projection; `raw/reply` are immutable.
 
@@ -310,16 +316,15 @@ operation. Missing `map.env` means no observed environment effects. These are no
 global null/false/zero omission rules.
 The explicit false/zero values that convey knowledge or availability are retained.
 
-Play omits ordinary inventory/floor-item descriptions. Open the original item or
-cell examination window, or request full state, when that detail is needed.
-Container/mimic warnings, trap/environment descriptions and current window text
-remain available automatically. No risk is inferred from description keywords.
+Play retains inventory/floor-item descriptions as well as container/mimic warnings,
+trap/environment descriptions and current window text. Open the original item or
+cell examination window for additional details only exposed there by the game.
+No risk is inferred from description keywords and no descriptions are dropped.
 
-`hero.talents` in play lists invested talents only. `tp`
+`hero.talents` in both views retains all captured entries, including zero points. `tp`
 contains current available points for tiers 1 through the hero's tier count in
 order, normally four integers. This uses the original GUI rule, including bonus
-points and subclass/armor gates. Full state retains zero-point talent entries;
-the original talent window still shows its current choices in play mode.
+points and subclass/armor gates. The original talent window shows its current choices.
 
 ### Controls and action discovery
 
@@ -340,8 +345,8 @@ duplicate shape fields and wrong row lengths are errors, not partial observation
 A current item-bound node may use `label:0` for its inventory item's exact `name`,
 or `label:1` for the game's standard title-case rendering. Resolve using that node's
 current `loc` and this observation's `inv`. Custom, unbound or protected labels stay
-literal. Passive text leaves can omit `id` only when no operation or reference needs
-it; their text and state remain. Full/src and frozen before/after use object nodes,
+literal. Passive text leaves retain their captured identities and parent links.
+Full/src and frozen before/after use object nodes,
 literal labels and complete operations. Diagnostic/source-bearing nodes stay
 expanded at unchanged indexes; ancestor-owned diagnostics keep their addressed UI
 subtree expanded. Bars and other game evidence remain.
@@ -358,29 +363,27 @@ not need these omissions. Empty saves never prove a new save, and a recent saved
 receipt does not mean the current action caused it.
 
 Only `ops` advertises executable node actions. `{"op":"click"}` means the single
-click gesture; multiple gestures are listed on that operation. Ordinary duplicate
-node-level gestures are omitted. Retained metadata-bearing gesture fields do not
-make a node actionable without an actual op. `acts` normally contains non-node
-operations. When protected metadata addresses an entire action list, its complete
-projected list and original indexes remain in `acts` alongside node `ops` as a
-diagnostic exception; these are the same actions, not additional operations to execute.
+click gesture; multiple gestures are listed on that operation. Node-level fields do not
+make a node actionable without an actual op. `acts` retains the complete advertised
+action list in its original order, including node-bound operations. Node `ops`
+provide convenient copies of the same capabilities, not additional actions to
+execute. Preserve list order and all operation metadata when decoding either form.
 
 Absent `enabled` on a play UI node means true; absent `dimmed` means false.
 Disabled options with informative text, actionable icons without text, item water
 counts/strength estimates, health/status information and clipped/origin/partial
-markers are retained. Play removes confirmed empty placeholders and passive child text fully covered
-by its parent, only when no independent state or protected evidence is lost.
-Meaningful parent relationships remain intact. It does not use an English-label
-whitelist or discard all disabled/icon-only nodes.
-Only visually empty InventorySlot controls in the fixed 20-position inventory
-sidebar are candidates for empty-slot removal. Dynamic bag-window slots and
-unknown parents remain because their count can convey capacity.
+markers are retained. Play preserves empty nodes, duplicate child text, passive
+identities and all parent relationships. Fixed inventory and dynamic bag slots
+remain because their structure/count is public information. It does not use an
+English-label whitelist or discard disabled/icon-only nodes. Operation parameters,
+arguments, modes, units, ranges, labels and unknown extra fields survive both views.
 
 An ItemSlot node can have a current `loc` when its displayed item uniquely matches
 this capture's public inventory. Virtual or ambiguous items remain unbound. Its
 optional `display:{status,extra,level}` contains already displayed strings such as
 `"1/20"`, `"14?"` and `"+2"`; missing hidden text is not reconstructed. Preserve
-question marks and all corresponding metadata. `actions` remains independently
+question marks and all corresponding metadata. These semantic fields supplement,
+never replace, the captured text nodes. `actions` remains independently
 readable even without an inventory list. Health bars retain rendered pixel widths
 and the visible target cell; they are not hidden exact enemy HP. Full view retains
 the expanded UI tree. Do not use unmarked map crops or drop danger descriptions,
@@ -391,6 +394,12 @@ item permanently by its slot/control ID. Locators and node bindings can change
 after a purchase, pickup, sort or UI transition. Use the current observation.
 `actions` returns current UI/actions without repeating the world map. Parameter
 rules are in `info.schema`; current ops supply availability and dynamic constraints.
+
+The optional repository helper `desktop-control/client/spdctl_client.py` provides
+strict per-frame decoding and intent validation without I/O or gameplay policy.
+It separates controller errors, original outcomes, current observations and late
+replies. See `docs/cli-playthrough-client.md` for its API; the packaged controller
+does not require Python to launch or operate.
 
 ### Text sources and presentation limits
 
@@ -451,6 +460,10 @@ Examples:
 pick up, open doors or use stairs under the original rules; it is not teleportation
 or a guarantee of exactly one turn. A remote cell can start native path travel.
 Opening an inspection window is an action, and can mark information as read.
+`completed` means the original input finished, not that travel reached its target:
+walls, occupants, stairs and game rules still determine the actual result. Recheck
+the returned hero cell/depth and prompt before the next decision. After a blocked
+wand shot the target prompt closes; another `cell` is then ordinary map input.
 
 To start a new game, select the title's Enter the Dungeon control, then New Game
 if a save selector appears, choose an available class, and activate its Start

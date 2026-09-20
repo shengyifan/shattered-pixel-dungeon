@@ -4,6 +4,14 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.6.1.0
+
+- Removes lossy public-response reduction: both play and full retain item descriptions, zero-point talents, captured UI node identities/order/parents/text, and complete advertised operation constraints. Reversible same-frame maps, dictionaries, labels and scoped defaults remain; full text provenance is still explicitly available with `src`.
+- Adds native accessible labels to the Stone of Intuition guess icons. This was a UI capture gap present in both play and full, separate from the lossy projection rules found in this audit.
+- Distinguishes a wand shot blocked at its first step from deliberately targeting oneself, using localized native messages without changing combat or charge consumption.
+- Rejects malformed controller bindings before game dispatch and adds a reusable strict observation/result decoder and intent validator. Original errors, pending outcomes, late responses and current observations remain separate; no action is automatically replayed or rebound.
+- Tightens regression comparisons so deleted nodes or fields cannot be normalized away as equivalent. Protocol 6, schema 9, the v6 profile directory and base game 3.3.8 remain unchanged. See [readability and lossless projection audit](docs/cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md) for the verified scope.
+
 ## CLI.6.0.1
 
 - Fixes default `control --machine` startup on a shared terminal/PTY: the child receives a dedicated stderr pipe, preventing its native relay's `O_NONBLOCK` setting from changing the controller stdout descriptor. Normal startup no longer needs stdout-file redirection.

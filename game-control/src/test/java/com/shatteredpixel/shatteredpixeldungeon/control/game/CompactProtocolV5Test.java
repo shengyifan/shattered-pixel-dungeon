@@ -146,7 +146,7 @@ public class CompactProtocolV5Test {
                 "text_diagnostics",map("map.cells[0].name","map_warning","ui.controls[1].text","ui_warning"),
                 "text_sources",map("ui.controls[1].text",map("kind","literal","origin","external","value","Warning")));
         Map<String,Object> reply=CompactProtocol.success("q","s","completed",input,true,false);
-        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].text","code","ui_warning"),
+        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[1].text","code","ui_warning"),
                 map("field","$.data.map.types[0].name","code","map_warning")),object(reply.get("pres")).get("diag"));
         assertEquals(map("text",Arrays.asList("external")),node(object(reply.get("data")),"warning").get("text_origins"));
         assertFalse(object(input.get("map")).containsKey("text_diagnostics"));
@@ -167,7 +167,7 @@ public class CompactProtocolV5Test {
         assertEquals("vsv",rowVisibility(object(CompactProtocol.project(map("width",3,"height",1,"cells",Arrays.asList(tile(0,effects),middle,tile(2,effects))),false))));
     }
 
-    @Test public void captureHintsRemoveOnlyEmptyPlaceholdersAndCoveredPassiveChildren() {
+    @Test public void captureHintsPreserveEmptyPlaceholdersAndCoveredPassiveChildren() {
         List<Object> nodes=Arrays.asList(map("id","slot","role","button","enabled",false),map("id","plain","role","button","enabled",false),
                 map("id","icon","role","button","enabled",false),map("id","info","role","button","enabled",false,"text","Unavailable"),
                 map("id","parent","role","button","text","First\nSecond"),map("id","first","parent","parent","role","text","text","First"),
@@ -180,14 +180,14 @@ public class CompactProtocolV5Test {
         Map<String,Object> ui=new UiProjectionHints(hints).attach(map("controls",nodes));
         Map<String,Object> input=map("ui",ui,"actions",Arrays.asList(map("action","ui.activate","control","icon"),map("action","ui.back")));
         Map<String,Object> play=object(CompactProtocol.project(input,false));
-        assertEquals(Arrays.asList("plain","icon","info","parent",null,"bar"),ids(play));
-        assertEquals(Arrays.asList(map("op","back")),play.get("acts"));
+        assertEquals(Arrays.asList("slot","plain","icon","info","parent","first","second","independent","bar"),ids(play));
+        assertEquals(Arrays.asList(map("op","click","ctl","icon"),map("op","back")),play.get("acts"));
         assertEquals(Collections.singletonList(map("op","click")),node(play,"icon").get("ops"));
         assertEquals(25,node(play,"bar").get("health_and_shield_pixels"));
         assertEquals(9,ids(object(CompactProtocol.project(input,false,true))).size());
     }
 
-    @Test public void displayedItemFieldsRelocateTextOriginsDiagnosticsAndExactIdentityNames() {
+    @Test public void displayedItemFieldsAddBindingsWithoutDroppingTextOriginsOrChildIdentity() {
         Map<String,Object> status=map("id","status","parent","item","role","text","text","4/20");
         Map<String,Object> strength=map("id","strength","parent","item","role","text","text","14?","text_sources",map("text",map("kind","literal","origin","external","value","14?")),"text_diagnostics",map("text","display_warning"));
         Map<String,Object> item=map("id","item","role","button","label","Waterskin","text","4/20\n14?");
@@ -197,23 +197,24 @@ public class CompactProtocolV5Test {
         Map<String,Object> inventory=item("inventory:1");inventory.put("name","Waterskin");
         Map<String,Object> input=map("inventory",Arrays.asList(inventory),"ui",ui,"actions",Arrays.asList(map("action","ui.activate","control","item","gestures",Arrays.asList("click","long"))));
         Map<String,Object> reply=CompactProtocol.success("q","s","completed",input,true,false),play=object(reply.get("data"));
-        assertEquals(Arrays.asList("item"),ids(play));Map<String,Object> projected=node(play,"item");
-        assertEquals("inventory:1",projected.get("loc"));assertEquals("Waterskin",projected.get("label"));assertFalse(projected.containsKey("text"));
+        assertEquals(Arrays.asList("item","status","strength"),ids(play));Map<String,Object> projected=node(play,"item");
+        assertEquals("inventory:1",projected.get("loc"));assertEquals("Waterskin",projected.get("label"));assertEquals("4/20\n14?",projected.get("text"));
         Map<String,Object> fields=object(projected.get("display"));assertEquals("4/20",fields.get("status"));assertEquals("14?",fields.get("extra"));
         assertEquals(map("extra",Arrays.asList("external")),fields.get("text_origins"));
-        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].display.extra","code","display_warning")),object(reply.get("pres")).get("diag"));
+        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].display.extra","code","display_warning"),
+                map("field","$.data.ui.nodes[2].text","code","display_warning")),object(reply.get("pres")).get("diag"));
         assertEquals(Arrays.asList(map("op","click","gestures",Arrays.asList("click","long"))),projected.get("ops"));
         Map<String,Object> actions=object(CompactProtocol.project(map("ui",ui),false));assertEquals("Waterskin",node(actions,"item").get("label"));
         inventory.put("name","waterskin");assertEquals("Waterskin",node(object(CompactProtocol.project(input,false)),"item").get("label"));
     }
 
-    @Test public void fallbackDedupRequiresExactFullTextAndAllIndependentState() {
+    @Test public void repeatedTextKeepsEveryOriginalIdentityAndIndependentState() {
         Map<String,Object> input=map("ui",map("controls",Arrays.asList(map("id","p","role","button","text","Apply"),
                 map("id","same","parent","p","role","text","text","Apply"),map("id","substring","parent","p","role","text","text","App"),
                 map("id","disabled","parent","p","role","text","text","Apply","enabled",false),
                 map("id","origin","parent","p","role","text","text","Apply","text_sources",map("text",map("kind","literal","origin","user","value","Apply"))),
                 map("id","state","parent","p","role","text","text","Apply","extra",1))));
-        assertEquals(Arrays.asList("p",null,null,"origin","state"),ids(object(CompactProtocol.project(input,false))));
+        assertEquals(Arrays.asList("p","same","substring","disabled","origin","state"),ids(object(CompactProtocol.project(input,false))));
     }
 
     @Test public void protectedOperationMetadataKeepsDynamicFieldsAndUsesActualWirePaths() {
@@ -228,7 +229,8 @@ public class CompactProtocolV5Test {
         assertEquals("slider",operation.get("ctl"));assertEquals(Arrays.asList(1,10),operation.get("range"));
         assertTrue(operation.containsKey("parameters"));assertEquals(source,object(operation.get("text_sources")).get("op"));
         assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].ops[0].range","code","range_warning"),
-                map("field","$.data.ui.nodes[0].ops[0].ctl","code","binding_warning")),object(reply.get("pres")).get("diag"));
+                map("field","$.data.ui.nodes[0].ops[0].ctl","code","binding_warning"),
+                map("field","$.data.acts[0].range","code","range_warning"),map("field","$.data.acts[0].ctl","code","binding_warning")),object(reply.get("pres")).get("diag"));
     }
 
     @Test public void presentationOnlyRootActionDiagnosticsFollowAttachedOpsInAllViews() {
@@ -239,9 +241,11 @@ public class CompactProtocolV5Test {
         for(boolean full:Arrays.asList(false,true))for(boolean sources:Arrays.asList(false,true)) {
             Map<String,Object> reply=CompactProtocol.success("q","s","completed",canonical,true,sources,full);
             Map<String,Object> operation=object(((List<?>)node(object(reply.get("data")),"button").get("ops")).get(0));
-            assertEquals("button",operation.get("ctl"));assertEquals(Collections.emptyList(),object(reply.get("data")).get("acts"));
+            assertEquals("button",operation.get("ctl"));assertEquals(1,((List<?>)object(reply.get("data")).get("acts")).size());
             assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].ops[0].ctl","code","root_warning","detail","Original binding evidence"),
-                    map("field","$.data.ui.nodes[0].ops[0].ctl","code","local_warning")),object(reply.get("pres")).get("diag"));
+                    map("field","$.data.ui.nodes[0].ops[0].ctl","code","local_warning"),
+                    map("field","$.data.acts[0].ctl","code","root_warning","detail","Original binding evidence"),
+                    map("field","$.data.acts[0].ctl","code","local_warning")),object(reply.get("pres")).get("diag"));
         }
         assertEquals(original,JsonCodec.encode(canonical));
     }

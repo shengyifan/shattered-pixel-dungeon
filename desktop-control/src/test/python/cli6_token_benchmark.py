@@ -59,43 +59,19 @@ def decode(adapter, reply, live):
 
 
 def normalize_expected_ui(before, after):
-    """Permit only documented ID omission and independently provable passive duplicate leaves."""
+    """Require exact decoded UI content, node identity, order and parentage.
+
+    The replay encoder can use reversible dictionaries and shapes. It must not
+    make a benchmark pass by deleting old IDs, empty slots or repeated text.
+    Capture-only bindings are not invented for this historical public replay.
+    """
     if not isinstance(before, dict) or not isinstance(after, dict):
         return
     old_ui = before.get("observation", {}).get("ui")
     new_ui = after.get("observation", {}).get("ui")
     if not isinstance(old_ui, dict) or not isinstance(new_ui, dict):
         return
-    old_nodes, new_nodes = old_ui.get("controls", []), new_ui.get("controls", [])
-    refs = {node.get("parent") for node in old_nodes}
-    refs.update(action.get("control") for action in before.get("actions", []))
-    old_by_id = {node.get("id"): node for node in old_nodes}
-    def removable(node):
-        if node.get("id") in refs or node.get("role") != "text" or node.get("dimmed", False):
-            return False
-        if set(node) - {"id", "role", "text", "parent", "enabled", "dimmed"}:
-            return False
-        if not node.get("text") and node.get("enabled", True):
-            return True
-        parent = old_by_id.get(node.get("parent"), {})
-        return ("text" in node and node["text"] == parent.get("text")
-                and node.get("enabled", True) == parent.get("enabled", True)
-                and node.get("dimmed", False) == parent.get("dimmed", False))
-    cursor, retained = 0, []
-    for current in new_nodes:
-        while cursor < len(old_nodes):
-            old = copy.deepcopy(old_nodes[cursor])
-            if "id" not in current and old.get("id") not in refs and old.get("role") == "text" and not set(old) - {"id", "role", "text", "parent", "enabled", "dimmed"}:
-                old.pop("id", None)
-            if typed_equal(old, current):
-                retained.append(old); cursor += 1; break
-            if removable(old_nodes[cursor]):
-                cursor += 1; continue
-            raise AssertionError({"lost_or_changed_ui": first_difference(old, current), "old": old, "new": current})
-        else:
-            raise AssertionError({"invented_ui_node": current})
-    assert all(removable(node) for node in old_nodes[cursor:]), "Lost meaningful trailing UI"
-    old_ui["controls"] = retained
+    assert typed_equal(old_ui, new_ui), {"lost_or_changed_ui": first_difference(old_ui, new_ui)}
 
 
 def assert_semantics(expected, reply, live):
@@ -104,6 +80,65 @@ def assert_semantics(expected, reply, live):
     before, after = copy.deepcopy(expected), decode(protocol6, reply, live)
     normalize_expected_ui(before, after)
     assert typed_equal(before, after), first_difference(before, after)
+
+
+def lossless_view(reply):
+    """Expand documented wire defaults without canonicalizing away diagnostic fields.
+
+    Unlike the legacy scenario assertion adapter, this comparison keeps all
+    presentation metadata and every original UI node and action in order.
+    """
+    def expand(value, context=None):
+        if isinstance(value, list):
+            return [expand(child, context) for child in value]
+        if not isinstance(value, dict):
+            return value
+        result = {key: copy.deepcopy(child) if key in OPAQUE else expand(child, key)
+                  for key, child in value.items()}
+        if isinstance(value.get("entities"), list):
+            entities = []
+            for entity in value["entities"]:
+                if "def" in entity:
+                    assert set(entity) == {"cell", "def"}, entity
+                    descriptor = protocol6._definition(value.get("entity_defs"), entity["def"])
+                    assert isinstance(descriptor, dict) and "cell" not in descriptor, descriptor
+                    entity = {"cell": entity["cell"], **descriptor}
+                entities.append(expand(entity))
+            result["entities"] = entities
+            result.pop("entity_defs", None)
+        if {"w", "h", "types", "rows"} <= value.keys():
+            rows = []
+            for y, start, tiles, visibility in value["rows"]:
+                assert tiles and isinstance(visibility, str)
+                if len(visibility) == 1:
+                    visibility *= len(tiles)
+                assert len(visibility) == len(tiles)
+                rows.append([y, start, copy.deepcopy(tiles), visibility])
+            result["rows"] = rows
+            environment = {}
+            for cell, effects in value.get("env", {}).items():
+                if type(effects) is int:
+                    effects = protocol6._definition(value.get("effect_defs"), effects)
+                assert isinstance(effects, list), effects
+                environment[cell] = expand(effects)
+            result["env"] = environment
+            result.pop("effect_defs", None)
+        if context in {"inv", "item"} and "loc" in result:
+            for key, default in (("qty", 1), ("equipped", False), ("available", True), ("type_known", True), ("via", "click")):
+                result.setdefault(key, default)
+        if context == "ui":
+            result.setdefault("modal", False)
+            result.setdefault("item_info", None)
+        if context == "nodes":
+            result.setdefault("enabled", True)
+            result.setdefault("dimmed", False)
+        return result
+    return expand(protocol6.expand_structures(reply))
+
+
+def assert_lossless_views(full, play):
+    before, after = lossless_view(full), lossless_view(play)
+    assert typed_equal(before, after), {"lossy_play_projection": first_difference(before, after)}
 
 
 def incrementality(replies, token_count):
@@ -194,6 +229,7 @@ def main():
                 assert (field in new, new.get(field)) == (field in old, old.get(field))
             assert_semantics(canonical["canonical"], new, row["live"])
             assert_semantics(canonical["canonical"], expanded, row["live"])
+            assert_lossless_views(expanded, new)
         except Exception as error:
             raise AssertionError({"frame": index, "id": old["id"], "detail": str(error)}) from error
         per_message.append({"frame": index, "id": old["id"], "op": row["request"]["op"], "before_tokens": count(old), "after_tokens": count(new), "full_tokens": count(expanded)})

@@ -565,8 +565,8 @@ public final class UiBridge {
             if (logFragment != null && logFragment.clipped) node.put("clipped", true);
             if (gizmo instanceof Button) {
                 Button button = (Button) gizmo;
-                String hover = hoverText(button);
-                if (hover != null && !hover.isEmpty()) node.put("label", hover);
+                String label = buttonLabel(button);
+                if (label != null && !label.isEmpty()) node.put("label", label);
                 if (button.keyAction() != null) node.put("shortcut_action", button.keyAction().name());
                 if (button instanceof IconButton && ((IconButton) button).icon() != null) {
                     // Some controls (notably cleric spells) are visually dimmed but remain
@@ -750,7 +750,7 @@ public final class UiBridge {
         return result;
     }
 
-    private static String hoverText(Button button) {
+    private static String buttonLabel(Button button) {
         if (button instanceof ItemSlot && ((ItemSlot) button).displayedItem() instanceof Pasty) {
             // Preserve custom hover overrides (e.g. WndQuickBag deliberately has no tooltip).
             // The standard ItemSlot path and QuickSlot's non-empty fallback both call name(),
@@ -765,7 +765,7 @@ public final class UiBridge {
                 } catch (NoSuchMethodException ignored) { }
             }
         }
-        return button.accessibleHoverText();
+        return button.accessibleLabel();
     }
 
     private static boolean hasMethod(Class<?> type, String name, Class<?>... arguments) {

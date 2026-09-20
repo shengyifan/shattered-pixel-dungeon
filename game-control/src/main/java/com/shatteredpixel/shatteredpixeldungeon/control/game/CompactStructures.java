@@ -12,39 +12,25 @@ final class CompactStructures {
     private static final Set<String> NO_CAPS = new HashSet<>(Arrays.asList("a", "an", "and", "of", "by", "to", "the", "x", "for"));
     private CompactStructures() { }
 
-    static void compact(Object value) {
-        Set<String> references = new HashSet<>();
-        collectReferences(value, references);
-        compact(value, false, references);
-    }
+    static void compact(Object value) { compact(value, false); }
 
-    private static void collectReferences(Object value, Set<String> references) {
-        if (value instanceof List) for (Object child : (List<?>)value) collectReferences(child, references);
-        else if (value instanceof Map) for (Map.Entry<String,Object> entry : object(value).entrySet()) {
-            if ("id".equals(entry.getKey())) continue;
-            if (entry.getValue() instanceof String) references.add((String)entry.getValue());
-            else collectReferences(entry.getValue(), references);
-        }
-    }
-
-    private static void compact(Object value, boolean expanded, Set<String> references) {
-        if (value instanceof List) {for (Object child : (List<?>)value) compact(child, expanded, references); return;}
+    private static void compact(Object value, boolean expanded) {
+        if (value instanceof List) {for (Object child : (List<?>)value) compact(child, expanded); return;}
         if (!(value instanceof Map)) return;
         Map<String,Object> current=object(value);
         // An ancestor-owned path can address nodes by index. Keep its whole subtree addressable.
         expanded |= metadata(current);
-        if (!expanded && current.get("nodes") instanceof List) compactUi(current, references);
+        if (!expanded && current.get("nodes") instanceof List) compactUi(current);
         for (Map.Entry<String,Object> entry : current.entrySet())
-            if (!OPAQUE.contains(entry.getKey())) compact(entry.getValue(), expanded || "before".equals(entry.getKey()) || "after".equals(entry.getKey()), references);
+            if (!OPAQUE.contains(entry.getKey())) compact(entry.getValue(), expanded || "before".equals(entry.getKey()) || "after".equals(entry.getKey()));
     }
 
-    private static void compactUi(Map<String,Object> ui, Set<String> references) {
+    private static void compactUi(Map<String,Object> ui) {
         if (ui.containsKey("op_defs") || ui.containsKey("node_shapes")) return;
         List<Object> nodes=new ArrayList<>();
         for (Object raw:(List<?>)ui.get("nodes")) {
             if (!(raw instanceof Map)) return;
             Map<String,Object> node=new LinkedHashMap<>(object(raw));
-            if (!containsMetadata(node) && passiveLeaf(node) && !references.contains(node.get("id"))) node.remove("id");
             nodes.add(node);
         }
         ui.put("nodes",nodes);
@@ -79,12 +65,6 @@ final class CompactStructures {
         }
         Map<String,Object> candidate=new LinkedHashMap<>(ui);candidate.put("nodes",rows);candidate.put("node_shapes",shapes);
         if(!rows.isEmpty() && bytes(candidate)<bytes(ui)) {ui.put("nodes",rows);ui.put("node_shapes",shapes);}
-    }
-
-    private static boolean passiveLeaf(Map<String,Object> node) {
-        if(!"text".equals(node.get("role")) || !node.containsKey("id"))return false;
-        for(String key:node.keySet())if(!Arrays.asList("id","role","parent","text","enabled","dimmed").contains(key))return false;
-        return true;
     }
 
     private static List<Object> copyNodes(List<?> nodes) {
@@ -183,7 +163,7 @@ final class CompactStructures {
                         if(!(name instanceof String) || code<0 || code>1)throw new IllegalArgumentException("Unbound inherited item label");
                         node.put("label",code==0?name:titleCase((String)name));
                     }
-                    if(node.containsKey("label") && !(node.get("label") instanceof String))throw new IllegalArgumentException("Invalid item label");
+                    if(node.get("label")!=null && !(node.get("label") instanceof String))throw new IllegalArgumentException("Invalid item label");
                     nodes.add(expand(node,inventory,scope,revision));
                 }
                 result.put(key,nodes);

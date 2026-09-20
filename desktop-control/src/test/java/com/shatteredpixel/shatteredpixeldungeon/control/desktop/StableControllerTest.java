@@ -48,6 +48,37 @@ public class StableControllerTest {
         assertEquals("t3.2", child.sent.get(1).get("id"));
     }
 
+    @Test public void packedShapeIndexCannotBecomeAGameControlOrLeavePendingWork() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        Map<String,Object> invalid = controller.accept(map("op", "click", "rev", "r1", "ctl", 2));
+        assertEquals("INVALID_INTENT", invalid.get("err"));
+        assertTrue(invalid.get("message").toString().contains("shape index"));
+        assertEquals(1, child.sent.size());
+        child.answer(q -> success(q, "s1", "r2", "awaiting_input", map("phase", "awaiting_input")));
+        assertEquals("awaiting_input", controller.accept(map("op", "click", "rev", "r1", "ctl", "c1")).get("st"));
+        assertEquals("t3.2", child.sent.get(1).get("id"));
+        assertEquals("c1", child.sent.get(1).get("ctl"));
+    }
+
+    @Test public void malformedBindingsAreRejectedLocallyWithoutCoercion() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        for (Map<String,Object> intent : Arrays.asList(
+                map("op", "select", "rev", "r1"),
+                map("op", "item", "rev", "r1", "loc", 0),
+                map("op", "move", "rev", "r1"),
+                map("op", "move", "rev", "r1", "cell", 505),
+                map("op", "cell", "rev", "r1", "cell", "505"),
+                map("op", "cell", "rev", "r1", "cell", 505.0),
+                map("op", "cell", "rev", "r1", "cell", -1),
+                map("op", "cell", "rev", "r1", "cell", 2147483648L))) {
+            assertEquals("INVALID_INTENT", controller.accept(intent).get("err"));
+        }
+        assertEquals(1, child.sent.size());
+        child.answer(q -> success(q, "s1", "r2", "completed", map()));
+        assertEquals("completed", controller.accept(map("op", "cell", "rev", "r1", "cell", 0)).get("st"));
+        assertEquals(0L, child.sent.get(1).get("cell"));
+    }
+
     @Test public void invalidHandshakeDoesNotAcceptGameIntents() throws Exception {
         Fake child = new Fake();
         child.answer(q -> success(q, "s1", "r1", "completed", map("request_prefix", "uuid-unregistered")));

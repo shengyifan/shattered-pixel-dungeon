@@ -157,7 +157,7 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("cli_version","CLI.6.0.1","game_version","3.3.8",
+                    result=map("cli_version","CLI.6.1.0","game_version","3.3.8",
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
                             "session_id",store.sessionId(),"audit_schema_version",AuditStore.SCHEMA_VERSION,"text_language","en","text_format","resource-v1",
                             "request_prefix",handles.session(store.sessionId()),

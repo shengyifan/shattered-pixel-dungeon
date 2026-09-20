@@ -39,6 +39,62 @@ class Protocol6StructuresTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             expand_structures({"inv": [{"loc": "b.0", "name": "One"}, {"loc": "b.0", "name": "Two"}], "ui": ui})
 
+    def test_explicit_node_gestures_and_operation_metadata_are_not_overwritten(self):
+        wire = {"v": 6, "id": "q", "st": "completed", "data": {"ui": {"nodes": [
+            {"id": "c1", "role": "button", "label": "Apply", "gestures": ["click", "long"],
+             "text_origins": {"label": ["user"]},
+             "ops": [{"op": "click", "label": "Apply", "gestures": ["click", "long"],
+                      "text_origins": {"label": ["external"]}}]}]}}}
+        decoded = response(wire)["result"]
+        node = decoded["observation"]["ui"]["controls"][0]
+        self.assertEqual(["click", "long"], node["gestures"])
+        self.assertEqual({"label": ["user"]}, node["text_origins"])
+        self.assertEqual({"label": ["external"]}, decoded["actions"][0]["text_origins"])
+
+    def test_complete_actions_keep_order_without_reappending_node_capabilities(self):
+        actions = [{"op": "click", "ctl": "c2", "gestures": ["long"]}, {"op": "wait"},
+                   {"op": "click", "ctl": "c1"}, {"op": "click", "ctl": "c2"}]
+        wire = {"v": 6, "id": "q", "st": "completed", "data": {"acts": actions, "ui": {"nodes": [
+            {"id": "c1", "label": None, "ops": [{"op": "click"}]},
+            {"id": "c2", "ops": [{"op": "click", "gestures": ["long"]}, {"op": "click"}]}]}}}
+        decoded = response(wire)["result"]
+        self.assertEqual(["c2", None, "c1", "c2"], [action.get("control") for action in decoded["actions"]])
+        self.assertIsNone(decoded["observation"]["ui"]["controls"][0]["label"])
+        self.assertEqual(["long"], decoded["actions"][0]["gestures"])
+
+    def test_capability_parameter_direction_lists_are_not_scalar_enums(self):
+        directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+        wire = {"v": 6, "id": "t1.5", "s": "s2", "rev": "r5", "st": "completed", "data": {
+            "hero": {"depth": 1, "hp": 20, "cell": 876},
+            "coverage": {"details_via": {"terrain": {"op": "cell", "mode": "examine"}}},
+            "acts": [{"op": "move", "parameters": {"dir": directions}}]}}
+        original = copy.deepcopy(wire)
+        decoded = response(wire)["result"]
+        self.assertEqual(directions, decoded["actions"][0]["parameters"]["direction"])
+        self.assertEqual("move.step", decoded["actions"][0]["action"])
+        self.assertEqual({"details_via": {"terrain": {"action": "cell.select", "mode": "examine"}}},
+                         decoded["observation"]["coverage"])
+        self.assertEqual(original, wire)
+
+    def test_structured_or_unknown_constraint_values_retain_types_and_contents(self):
+        from protocol6 import _value
+        for value in ([None, False, 0, "N"], {"allowed": ["N", "S"], "min": 0}, None, False, 0):
+            with self.subTest(value=value):
+                expected = {"allowed": ["N", "S"], "minimum": 0} if isinstance(value, dict) else value
+                self.assertEqual({"direction": expected}, _value({"dir": value}))
+                self.assertEqual({"action": expected}, _value({"op": value}))
+        self.assertEqual({"direction": "north", "action": "move.step"}, _value({"dir": "N", "op": "move"}))
+        self.assertEqual({"text_diagnostics": None, "text_sources": None, "text_origins": None},
+                         _value({"text_diagnostics": None, "text_sources": None, "text_origins": None}))
+        for presentation in (None, False, 0, [None, False, 0], {"st": "pending", "diag": None}):
+            self.assertEqual({"pres": presentation}, _value({"pres": presentation}))
+
+    def test_mixed_packed_null_label_is_preserved(self):
+        frame = {"ui": {"node_shapes": [["id", "role", "label"]],
+                        "nodes": [[0, "c1", "button", None], {"id": "c2", "role": "text", "text": None}]}}
+        self.assertEqual([{"id": "c1", "role": "button", "label": None}, {"id": "c2", "role": "text", "text": None}],
+                         expand_structures(frame)["ui"]["nodes"])
+
     def test_complete_character_descriptors_expand_with_own_dictionary(self):
         wire = {"v": 6, "id": "q", "s": "s1", "rev": "r1", "st": "completed", "data": {
             "entity_defs": [{"kind": "character", "name": "Wraith", "alignment": "enemy", "buffs": [], "desc": "A warning"}],

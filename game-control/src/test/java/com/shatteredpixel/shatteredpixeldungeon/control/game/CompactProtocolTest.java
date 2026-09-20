@@ -15,7 +15,7 @@ public class CompactProtocolTest {
         Map<String,Object> data=object(reply.get("data"));assertEquals("player_ready",data.get("phase"));
         assertTrue(data.containsKey("hero"));assertTrue(data.containsKey("inv"));
         for(String redundant:Arrays.asList("s","rev","observation","scope_id","state_version"))assertFalse(data.containsKey(redundant));
-        assertEquals(Arrays.asList(map("op","move")),data.get("acts"));assertFalse(reply.containsKey("ok"));assertFalse(reply.containsKey("pres"));
+        assertEquals(Arrays.asList(map("op","move","parameters",map("dir",Arrays.asList("north","east")))),data.get("acts"));assertFalse(reply.containsKey("ok"));assertFalse(reply.containsKey("pres"));
     }
     @Test public void compactMapPreservesTerrainVisibilityCoordinatesAndVisibleEnvironment() {
         Map<String,Object> original=map("width",4,"height",3,"unknown","omitted","cells",Arrays.asList(
@@ -38,13 +38,14 @@ public class CompactProtocolTest {
                 map("action","ui.activate","control","a","label","Apply","gestures",Arrays.asList("click","long")),
                 map("action","ui.value","control","c","range",Arrays.asList(1,10)),map("action","ui.back")));
         Map<String,Object> result=object(CompactProtocol.project(original,false));
-        List<?> nodes=(List<?>)object(result.get("ui")).get("nodes");assertEquals(4,nodes.size());
-        assertEquals(Arrays.asList(map("op","click","gestures",Arrays.asList("click","long"))),object(nodes.get(0)).get("ops"));
-        assertFalse(object(nodes.get(0)).containsKey("gestures"));assertFalse(object(nodes.get(0)).containsKey("enabled"));
+        List<?> nodes=(List<?>)object(object(CompactProtocol.expandStructures(result)).get("ui")).get("nodes");assertEquals(4,nodes.size());
+        assertEquals(Arrays.asList(map("op","click","label","Apply","gestures",Arrays.asList("click","long"))),object(nodes.get(0)).get("ops"));
+        assertEquals(Arrays.asList("click","long"),object(nodes.get(0)).get("gestures"));assertFalse(object(nodes.get(0)).containsKey("enabled"));
         assertEquals(true,object(nodes.get(0)).get("dimmed"));assertEquals("a",object(nodes.get(1)).get("parent"));
-        assertEquals(Arrays.asList(map("op","value")),object(nodes.get(2)).get("ops"));
+        assertEquals(Arrays.asList(map("op","value","range",Arrays.asList(1,10))),object(nodes.get(2)).get("ops"));
         assertEquals(false,object(nodes.get(3)).get("enabled"));assertFalse(object(nodes.get(3)).containsKey("ops"));
-        assertEquals(Arrays.asList(map("op","back")),result.get("acts"));
+        assertEquals(Arrays.asList(map("op","click","ctl","a","label","Apply","gestures",Arrays.asList("click","long")),
+                map("op","value","ctl","c","range",Arrays.asList(1,10)),map("op","back")),result.get("acts"));
         assertFalse(object(((List<?>)object(object(original.get("observation")).get("ui")).get("controls")).get(0)).containsKey("ops"));
     }
     @Test public void sourceTreesAreOptionalButNestedUntrustedOriginsAndClippingRemain() {
@@ -87,7 +88,7 @@ public class CompactProtocolTest {
         assertSame(schema,object(CompactProtocol.project(PublicEnglishProjection.copy(map("schema",schema)),false)).get("schema"));
         assertTrue(schema.containsKey("coverage"));
     }
-    @Test public void deduplicatingLabelRetainsIndependentOptionOriginsAndDiagnostics() {
+    @Test public void operationLabelsRetainIndependentOriginsAndDiagnostics() {
         Map<String,Object> labelSource=map("kind","literal","origin","user","value","Choose");
         Map<String,Object> optionSource=map("kind","literal","origin","external","value","Guest");
         Map<String,Object> node=map("id","a","text","Choose","text_sources",map("text",labelSource),
@@ -100,8 +101,8 @@ public class CompactProtocolTest {
             Map<String,Object> result=object(CompactProtocol.project(original,sources));
             Map<String,Object> op=object(((List<?>)object(((List<?>)object(result.get("ui")).get("nodes")).get(0)).get("ops")).get(0));
             Map<String,Object> origins=object(op.get(sources?"text_sources":"text_origins"));
-            assertTrue(origins.containsKey("options"));assertFalse(origins.containsKey("label"));
-            assertEquals(Arrays.asList(map("field","options[0]","code","option_problem")),object(op.get("pres")).get("diag"));
+            assertTrue(origins.containsKey("options"));assertTrue(origins.containsKey("label"));
+            assertEquals(Arrays.asList(map("field","label","code","label_problem"),map("field","options[0]","code","option_problem")),object(op.get("pres")).get("diag"));
         }
     }
     @Test public void sourceFieldNamesMatchWireFieldsButSourceAstKeysStayCanonical() {

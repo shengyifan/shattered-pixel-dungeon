@@ -21,7 +21,7 @@ TO_OP = {value: key for key, value in OPS.items()}
 TO_FIELD = {value: key for key, value in FIELDS.items()}
 DIRECTIONS = dict(zip("N NE E SE S SW W NW".split(),
                       "north northeast east southeast south southwest west northwest".split()))
-OBSERVATION_FIELDS = {"scene", "hero", "map", "inventory", "visible_entities", "visual_cues", "ui", "continuous_activity"}
+OBSERVATION_FIELDS = {"scene", "hero", "map", "inventory", "visible_entities", "visual_cues", "ui", "continuous_activity", "coverage"}
 QUERY_OPS = {"info", "state", "actions", "req", "history", "events"}
 
 
@@ -42,7 +42,7 @@ def request(op, args=None, request_id=None, scope=None, version=None):
     if action is not None or wire_op in OPS.keys() - QUERY_OPS:
         wire["rev"] = version
     for key, value in params.items():
-        if key == "direction":
+        if key == "direction" and isinstance(value, str):
             value = {v: k for k, v in DIRECTIONS.items()}.get(value, value)
         wire[TO_FIELD.get(key, key)] = value
     return wire
@@ -95,21 +95,28 @@ def _value(value):
             result["cues"] = _value(child)
             continue
         if key in {"text_sources", "text_diagnostics"}:
-            result[key] = {_path(field): copy.deepcopy(details) for field, details in child.items()}
+            result[key] = ({_path(field): copy.deepcopy(details) for field, details in child.items()}
+                           if isinstance(child, dict) else copy.deepcopy(child))
         elif key in {"raw", "reply", "schema", "original_payload", "preserved_cells"}:
             # Diagnostic cell annotations are disclosed evidence, not an
             # alternate row encoding or a baseline to merge into the live map.
             result[key] = copy.deepcopy(child)
         elif key == "text_origins":
-            result[key] = {_path(field): copy.deepcopy(origins) for field, origins in child.items()}
+            result[key] = ({_path(field): copy.deepcopy(origins) for field, origins in child.items()}
+                           if isinstance(child, dict) else copy.deepcopy(child))
         elif key == "op":
-            result["action"] = OPS.get(child, child)
+            result["action"] = OPS.get(child, child) if isinstance(child, str) else _value(child)
         elif key == "pres":
-            result["translation_status"] = child.get("st")
-            result["text_diagnostics"] = {_path(item["field"]): item["code"]
-                                          for item in child.get("diag", [])}
+            if isinstance(child, dict) and isinstance(child.get("diag", []), list):
+                result["translation_status"] = child.get("st")
+                result["text_diagnostics"] = {_path(item["field"]): item["code"]
+                                              for item in child.get("diag", [])}
+            else:
+                result["pres"] = copy.deepcopy(child)
         elif key == "dir":
-            result["direction"] = DIRECTIONS.get(child, child)
+            # Dynamic capability constraints can contain a list/map here. Only a
+            # scalar direction is an enum; preserve structured values recursively.
+            result["direction"] = DIRECTIONS.get(child, child) if isinstance(child, str) else _value(child)
         elif FIELDS.get(key, key) == "details_via" and isinstance(child, str):
             result["details_via"] = OPS.get(child, child)
         else:
@@ -191,19 +198,27 @@ def state(value, scope=None, version=None):
         if isinstance(entity.get("item"), dict):
             _item_defaults(entity["item"])
     actions = result.setdefault("actions", [])
+    explicit_actions = list(actions)
     if "ui" in observation:
         observation["ui"].setdefault("modal", False)
         observation["ui"].setdefault("inspected_item", None)
     for node in observation.get("ui", {}).get("controls", []):
         node.setdefault("enabled", True)
         node.setdefault("dimmed", False)
+        gestures_explicit = "gestures" in node
         for descriptor in node.pop("ops", []):
+            # CLI 6.1 retains the complete original action list and also attaches
+            # node capabilities. Older v6 frames may contain only the latter.
+            if any(action.get("control") == node.get("id") and action.get("action") == descriptor.get("action")
+                   for action in explicit_actions):
+                continue
             entry = {key: copy.deepcopy(child) for key, child in node.items()
                      if key in {"gestures", "options", "minimum", "maximum", "step", "max_length", "multiline", "slots", "keys", "binding"}}
             entry.update(descriptor)
             if entry.get("action") == "ui.activate":
                 entry.setdefault("gestures", ["click"])
-                node.setdefault("gestures", []).extend(entry["gestures"])
+                if not gestures_explicit:
+                    node.setdefault("gestures", []).extend(entry["gestures"])
             entry["control"] = node["id"]
             if "binding_slots" in node:
                 entry.setdefault("slots", copy.deepcopy(node["binding_slots"]))
@@ -214,7 +229,7 @@ def state(value, scope=None, version=None):
                 entry.setdefault("label", node[label_field])
                 for field in ("text_sources", "text_diagnostics", "text_origins"):
                     if label_field in node.get(field, {}):
-                        entry.setdefault(field, {})["label"] = copy.deepcopy(node[field][label_field])
+                        entry.setdefault(field, {}).setdefault("label", copy.deepcopy(node[field][label_field]))
             actions.append(entry)
     result["observation"] = observation
     return result
@@ -355,7 +370,7 @@ def expand_structures(value, scope=None, version=None, _inventory=None):
                     assert isinstance(name, str) and node["label"] in (0, 1), node
                     node["label"] = name if node["label"] == 0 else _title_case(name)
                 elif "label" in node:
-                    assert isinstance(node["label"], str), node
+                    assert node["label"] is None or isinstance(node["label"], str), node
                 nodes.append(expand_structures(node, scope, version, inventory))
             result[key] = nodes
         elif key in _OPAQUE:

@@ -66,12 +66,16 @@ public class Cli6ContractTest {
             Map<String,Object> play = h.send(map("v",6,"id","play","s","run:test","op","state"));
             Map<?,?> playData = (Map<?,?>)play.get("data");
             Map<?,?> playItem = (Map<?,?>)((List<?>)playData.get("inv")).get(0);
-            assertFalse(playItem.containsKey("qty")); assertFalse(playItem.containsKey("desc"));
+            assertFalse(playItem.containsKey("qty")); assertEquals("Before",playItem.get("desc"));
             assertFalse(playItem.containsKey("available")); assertFalse(playItem.containsKey("equipped"));
             assertFalse(playItem.containsKey("type_known")); assertFalse(playItem.containsKey("level_known"));
             assertFalse(playItem.containsKey("curse_known")); assertFalse(playItem.containsKey("cursed"));
             assertTrue(playItem.containsKey("level")); assertNull(playItem.get("level"));
-            assertEquals(1,((List<?>)((Map<?,?>)playData.get("ui")).get("nodes")).size());
+            List<?> playNodes=(List<?>)((Map<?,?>)((Map<?,?>)CompactProtocol.expandStructures(playData)).get("ui")).get("nodes");
+            assertEquals(2,playNodes.size());
+            Map<?,?> emptyNode=(Map<?,?>)playNodes.get(1);
+            assertNotNull(emptyNode.get("id"));assertEquals("text",emptyNode.get("role"));assertEquals("",emptyNode.get("text"));
+            assertEquals(List.of("click","move"),((List<?>)playData.get("acts")).stream().map(action->((Map<?,?>)action).get("op")).collect(java.util.stream.Collectors.toList()));
 
             Map<String,Object> full = h.send(map("v",6,"id","full","s","run:test","op","state","view","full"));
             assertFullDetails((Map<?,?>)full.get("data"));
@@ -82,7 +86,8 @@ public class Cli6ContractTest {
             assertTrue(JsonCodec.encode(sourced).contains("text_sources"));
 
             Map<String,Object> actions = h.send(map("v",6,"id","actions-play","s","run:test","op","actions"));
-            assertEquals(1,((List<?>)((Map<?,?>)((Map<?,?>)actions.get("data")).get("ui")).get("nodes")).size());
+            List<?> actionNodes=(List<?>)((Map<?,?>)((Map<?,?>)CompactProtocol.expandStructures(actions.get("data"))).get("ui")).get("nodes");
+            assertEquals(2,actionNodes.size());assertEquals(emptyNode,actionNodes.get(1));
             Map<String,Object> fullActions = h.send(map("v",6,"id","actions-full","s","run:test","op","actions","view","full"));
             assertEquals(2,((List<?>)((Map<?,?>)((Map<?,?>)fullActions.get("data")).get("ui")).get("nodes")).size());
 

@@ -181,7 +181,7 @@ class UiProjectionHintsTest {
         assertFalse(slot.emptyRenderedPlaceholder(),"A disabled unknown item is never an empty placeholder");
     }
 
-    @Test void onlyFixedSidebarInventorySlotsCanBecomeEmptyProjectionHints() throws Exception {
+    @Test void onlyFixedSidebarSlotsReceiveEmptyHintsButEverySlotRemainsInProjection() throws Exception {
         InventorySlot slot=allocate(InventorySlot.class);
         slot.exists=slot.alive=slot.visible=true;slot.active=false;
         field(slot,Group.class,"members",new ArrayList<Gizmo>());
@@ -203,9 +203,9 @@ class UiProjectionHintsTest {
         Map<String,Object> node=Map.of("id","c1","role","button","enabled",false);
         for(boolean fixedGrid:List.of(false,true)) {
             UiProjectionHints hints=new UiProjectionHints(Map.of("c1",new UiProjectionHints.Node(fixedGrid,Collections.emptyList(),null,Collections.emptyMap())));
-            Map<?,?> projected=(Map<?,?>)CompactProtocol.project(Map.of("ui",hints.attach(Map.of("controls",List.of(node)))),false);
+            Map<?,?> projected=(Map<?,?>)CompactProtocol.expandStructures(CompactProtocol.project(Map.of("ui",hints.attach(Map.of("controls",List.of(node)))),false));
             List<?> retained=(List<?>)((Map<?,?>)projected.get("ui")).get("nodes");
-            assertEquals(fixedGrid?0:1,retained.size(),"Only a proven fixed-grid hint permits omission");
+            assertEquals(List.of(node),retained,"Layout and node identity remain public even for a proven fixed-grid placeholder");
         }
     }
 

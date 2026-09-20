@@ -1,4 +1,64 @@
-# 已暂停的公开 CLI 实战客户端
+# Public CLI clients and per-frame decoding
+
+## Reusable CLI.6.1.0 reference helper
+
+`desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
+module for consumers of the packaged controller. It does not launch the game,
+read profiles, perform I/O, choose actions, retry requests or replace revisions.
+The packaged `spdctl control --machine` remains the normal game-control entry point
+and does not require Python.
+
+- `decode_wire_response(value)` validates one complete protocol-6 child response.
+- `decode_client_response(value)` also understands controller response/error,
+  settle and exit wrappers. Inspect `problems` before assuming success. Its
+  `current_frame` is only a current observation, never a receipt, historical reply
+  or late response; original evidence remains separately accessible and in `raw`.
+- `validate_intent(current_frame, intent)` checks an explicit proposed controller
+  intent against that frame's exact revision, scope and advertised operations. It
+  does not modify or send the intent. This rejects a `select` for a click-only
+  button and a `move` while only a modal choice is available.
+- `map_cell(current_frame, cell)` returns the decoded known cell or `None` for an
+  unknown gap. Coordinates use that frame's `w`, rows and terrain dictionary.
+  It does not decide whether a cell is passable or promise successful travel.
+
+Read transport through LF and parse the complete JSON object before using these
+functions. Preserve the transport bytes independently of any display limit. A
+packed node starts with a shape index, not a control ID; the helper expands its
+own `node_shapes` and `op_defs` before resolving item labels. Null, false, zero,
+unknown fields, protected metadata and literal labels remain distinct.
+
+```python
+# Run from the repository root; no game operation occurs in this example.
+import json
+import sys
+sys.path.insert(0, "desktop-control/client")
+from spdctl_client import decode_client_response, validate_intent
+
+result = decode_client_response(json.loads(complete_response_line))
+# Retain/display the original outcome and errors, not only selected data fields.
+print(json.dumps(result.raw, ensure_ascii=False))
+if result.problems:
+    for problem in result.problems:
+        print(problem.stage, problem.code, file=sys.stderr)
+else:
+    frame = result.current_frame
+    if frame is not None:
+        checked = validate_intent(frame, explicitly_chosen_intent)
+        # A caller may now send checked.intent once on its existing connection.
+```
+
+An initial `in_progress` must be presented before explicit settling. A successful
+state query does not clear controller pending bookkeeping. After any definite
+game rejection, `settle` establishes its original outcome; `ACTION_REJECTED` is
+that confirmation, not a second gameplay error. Reobserve and make a fresh
+decision only after the original outcome is known. Never repeat an uncertain,
+pending or completed action. A blocked wand target closes the targeting prompt,
+so sending another cell without reopening ZAP can become ordinary movement.
+
+Since CLI.6.1.0 `acts` retains its full original order and node `ops` repeats the
+same capabilities for convenient lookup. Do not execute both representations.
+
+## Historical paused gameplay driver
 
 正式的模型控制入口现为包内 `spdctl control --machine`，由包内 JVM 维护唯一的机器子进程，不需要此开发脚本或外部 Python。它要求动作携带已经展示的 revision，补全短请求 ID 与作用域，并提供显式 `settle`；不包含战斗或探索策略。
 
@@ -6,7 +66,7 @@
 
 该脚本不是“已经能自主通关”的交付物。它有有界探索策略和接受 JSON 意图的持续连接模式，遇到未知生物、重要选择、首领或策略不支持的情况需要重新决策。已发现但未实现的例子是按探险手册钥匙记录优先处理锁门。实际失败和资源消耗没有回滚。
 
-当前开发驱动使用协议 6（CLI.6.0.0 / schema 9）。同帧字典、可见性简写和局部默认值由 `protocol6.py` 按当前手册展开，历史 v4 适配器仅用于显式离线基准。共享 `ActionResult` 将原动作 outcome/receipt 与当前 observation 分开；同步成功直接使用原回复，连续活动只轮询小回执并在成功终态后读一次当前 state，正常路径不读历史 reply。历史诊断不会覆盖当前 scope/revision，成功 quit 后不再查询。
+当前开发驱动使用协议 6（CLI.6.1.0 / schema 9）。同帧字典、可见性简写和局部默认值由 `protocol6.py` 按当前手册展开，历史 v4 适配器仅用于显式离线基准。共享 `ActionResult` 将原动作 outcome/receipt 与当前 observation 分开；同步成功直接使用原回复，连续活动只轮询小回执并在成功终态后读一次当前 state，正常路径不读历史 reply。历史诊断不会覆盖当前 scope/revision，成功 quit 后不再查询。
 
 客户端只使用公开协议、自己的公开响应日志和公开状态文件，不读取 `game.dat`、楼层文件或审计数据库。每个动作均使用会话前缀及发送前分配的短计数 ID 和当前版本；进行中的原动作通过新 ID 查询结果，不重发执行。待选物品窗口中的输入异常保留机器连接，避免因开发脚本结束而丢掉已消耗物品的选择机会。
 

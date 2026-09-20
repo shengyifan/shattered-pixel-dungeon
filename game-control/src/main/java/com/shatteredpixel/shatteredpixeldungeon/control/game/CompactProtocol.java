@@ -11,7 +11,6 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 public final class CompactProtocol {
     private static final Set<String> OPAQUE = new HashSet<>(Arrays.asList(
             "raw", "reply", "schema", "raw_request", "raw_bytes", "request_json", "response_json", "original_payload"));
-    private static final Set<String> STATIC_ACTION = new HashSet<>(Arrays.asList("parameters", "arguments", "modes", "units"));
     private static final java.util.regex.Pattern NESTED_ANNOTATION=java.util.regex.Pattern.compile("([A-Za-z_][A-Za-z_0-9]*)(?:\\[(\\d{1,9})\\])?\\.(.+)");
     public static final String TILE_ALPHABET="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
     private CompactProtocol() { }
@@ -71,15 +70,27 @@ public final class CompactProtocol {
         if(input.containsKey("width") && input.containsKey("height") && input.get("cells") instanceof List)
             return terrain(input,sources,full);
         Map<String,Object> flattened=new LinkedHashMap<>();
-        if(input.get("observation") instanceof Map)flattened.putAll(cast(input.get("observation")));
-        flattened.putAll(input);flattened.remove("observation");
+        if(input.get("observation") instanceof Map) {
+            flattened.putAll(cast(input.get("observation")));
+            for(Map.Entry<String,Object> entry:flattened.entrySet())
+                if(input.containsKey(entry.getKey()) && !Objects.equals(input.get(entry.getKey()),entry.getValue()))
+                    throw new IllegalArgumentException("Conflicting public observation field: " + entry.getKey());
+        }
+        flattened.putAll(input);
+        if(input.get("observation") instanceof Map)flattened.remove("observation");
         flattened=localizePresentation(flattened);
         flattened=localizeNestedAnnotations(flattened);
         flattened=simplifyFields(flattened,full,context);
+        for(Map.Entry<String,Object> entry:flattened.entrySet()) {
+            String key=entry.getKey(),wire="action".equals(key)?"op":WireNames.field(key);
+            if(!key.equals(wire) && flattened.containsKey(wire) && !Objects.equals(entry.getValue(),flattened.get(wire)))
+                throw new IllegalArgumentException("Conflicting public wire field: " + wire);
+        }
         Map<String,Object> result=new LinkedHashMap<>();
         for(Map.Entry<String,Object> entry:flattened.entrySet()) {
             String key=entry.getKey();Object value=entry.getValue();
-            if("coverage".equals(key) || "translation_status".equals(key) || "text_diagnostics".equals(key))continue;
+            if("translation_status".equals(key) && "partial".equals(value))continue;
+            if("text_diagnostics".equals(key) && value instanceof Map && !((Map<?,?>)value).isEmpty())continue;
             if("text_sources".equals(key)) {
                 if(sources) result.put(key,sourceFields(value));
                 else {
@@ -92,10 +103,14 @@ public final class CompactProtocol {
             }
             if("text_origins".equals(key)) { mergeOrigins(result,sourceFields(value));continue; }
             if("presentation".equals(key) && value instanceof Map) {
-                if(!"complete".equals(((Map<?,?>)value).get("status"))) {
-                    Map<String,Object> presentation=projectPresentation((Map<?,?>)value,input);
-                    if(presentation.size()>2 || !((List<?>)presentation.get("diag")).isEmpty() || !hasTextDiagnostics(input))result.put("pres",presentation);
-                }
+                Map<String,Object> presentation=projectPresentation((Map<?,?>)value,input);
+                // A bare successful status is the documented default. Additional fields are
+                // public evidence, even when the status is complete or diagnostics relocate.
+                boolean completeDefault="complete".equals(((Map<?,?>)value).get("status"))
+                        && ((Map<?,?>)value).keySet().stream().allMatch(field -> Arrays.asList("status","diagnostics").contains(field))
+                        && ((Map<?,?>)value).get("diagnostics") instanceof List
+                        && ((List<?>)((Map<?,?>)value).get("diagnostics")).isEmpty();
+                if(!completeDefault)result.put("pres",presentation);
                 continue;
             }
             if("actions".equals(key) && value instanceof List) {
@@ -130,7 +145,8 @@ public final class CompactProtocol {
         boolean item=input.containsKey("locator") && (input.containsKey("quantity") || input.containsKey("level_known") || input.containsKey("curse_known"));
         if(item) {
             for(String[] pair:new String[][]{{"level_known","level"},{"curse_known","cursed"}}) {
-                if(result.containsKey(pair[0]) && !protectedField(result,pair[0]) && !protectedField(result,pair[1])) {
+                if(result.containsKey(pair[0]) && !protectedField(result,pair[0]) && !protectedField(result,pair[1])
+                        && !(full && (annotationReferences(result,pair[0]) || annotationReferences(result,pair[1])))) {
                     Object known=result.get(pair[0]);
                     if(known==null)removeField(result,pair[1]);
                     else if(Boolean.FALSE.equals(known))result.put(pair[1],null);
@@ -142,18 +158,7 @@ public final class CompactProtocol {
                 omitDefault(result,"available",true);omitDefault(result,"type_known",true);
                 Object via=result.get("details_via");
                 if(via instanceof String && "click".equals(WireNames.operation((String)via)) && !protectedField(result,"details_via"))removeField(result,"details_via");
-                // Only player item records defer ordinary explanations. Containers and hazards are separate records.
-                if(("inventory".equals(context) || "item".equals(context)) && !protectedField(result,"description"))removeField(result,"description");
             }
-        }
-        if(!full && "hero".equals(context) && result.get("talents") instanceof List && !protectedField(result,"talents")) {
-            List<Object> invested=new ArrayList<>();
-            for(Object talent:(List<?>)result.get("talents")) {
-                if(!(talent instanceof Map)){invested.add(talent);continue;}
-                Object points=((Map<?,?>)talent).get("points");
-                if(!(points instanceof Number) || ((Number)points).intValue()!=0 || protectedRecord(cast(talent)))invested.add(talent);
-            }
-            result.put("talents",invested);
         }
         if(!full && "ui".equals(context)) {
             omitDefault(result,"modal",false);omitDefault(result,"inspected_item",null);
@@ -162,11 +167,6 @@ public final class CompactProtocol {
             omitDefault(result,"enabled",true);omitDefault(result,"dimmed",false);
         }
         return result;
-    }
-
-    private static boolean protectedRecord(Map<String,Object> input) {
-        for(String key:input.keySet())if(protectedField(input,key))return true;
-        return false;
     }
 
     /** Keep presentation-only evidence local to the object whose structure it describes. */
@@ -216,7 +216,7 @@ public final class CompactProtocol {
     private static Map<String,Object> localizeNestedAnnotations(Map<String,Object> original) {
         Map<String,Object> result=original;
         for(String metadata:Arrays.asList("text_sources","text_origins","text_diagnostics")) {
-            Object raw=result.get(metadata);if(!(raw instanceof Map))continue;
+            Object raw=result.get(metadata);if(!(raw instanceof Map) || ((Map<?,?>)raw).isEmpty())continue;
             for(Map.Entry<String,Object> entry:new ArrayList<>(cast(raw).entrySet())) {
                 String path=relativePath(entry.getKey());
                 if(path.startsWith("observation."))path=path.substring("observation.".length());
@@ -322,25 +322,14 @@ public final class CompactProtocol {
                 Map<String,Object> node=cast(raw);byId.put(node.get("id"),node);
                 if(node.get("parent")!=null)parents.add(node.get("parent"));
             }
-            for(Object raw:nodes)if(raw instanceof Map) {
-                Map<String,Object> node=cast(raw);
-                if(!protectedField(node,"gestures"))removeField(node,"gestures");
-                if(node.get("ops") instanceof List)for(Object action:(List<?>)node.get("ops")) {
-                    if(!(action instanceof Map))continue;
-                    Map<String,Object> operation=cast(action);
-                    if("click".equals(operation.get("op")) && Collections.singletonList("click").equals(operation.get("gestures"))
-                            && !protectedField(operation,"gestures"))removeField(operation,"gestures");
-                }
-            }
             UiProjectionHints hints=UiProjectionHints.get(current);
-            Set<Object> moved=new HashSet<>();
-            if(!full)for(Map.Entry<String,UiProjectionHints.Node> entry:hints.nodes.entrySet()) {
+            for(Map.Entry<String,UiProjectionHints.Node> entry:hints.nodes.entrySet()) {
                 Map<String,Object> node=byId.get(entry.getKey());if(node==null)continue;
                 UiProjectionHints.Node hint=entry.getValue();
-                if(hint.locator!=null) {
+                if(hint.locator!=null && (!node.containsKey("loc") || Objects.equals(node.get("loc"),hint.locator))) {
                     node.put("loc",hint.locator);
                     Map<String,Object> item=inventory.get(hint.locator);
-                    if(item!=null && node.get("label") instanceof String && item.get("name") instanceof String
+                    if(!full && item!=null && node.get("label") instanceof String && item.get("name") instanceof String
                             && !protectedField(node,"label") && !protectedField(item,"name")
                             && fieldMetadataContained(node,"label",item,"name")) {
                         String name=(String)item.get("name"),label=(String)node.get("label");
@@ -348,45 +337,16 @@ public final class CompactProtocol {
                         else if(label.equals(CompactStructures.titleCase(name))) {removeField(node,"label");node.put("label",1);}
                     }
                 }
-                Set<String> displayed=new HashSet<>();
                 if(!node.containsKey("display"))for(Map.Entry<String,String> display:hint.displayChildren.entrySet()) {
                     Map<String,Object> child=byId.get(display.getValue());
                     if(child==null || parents.contains(child.get("id")) || !Objects.equals(node.get("id"),child.get("parent"))
                             || !passiveText(child,true) || !sameNodeState(child,node) || !(child.get("text") instanceof String))continue;
                     @SuppressWarnings("unchecked") Map<String,Object> fields=(Map<String,Object>)node.computeIfAbsent("display",ignored->new LinkedHashMap<>());
-                    moveTextField(child,fields,display.getKey());moved.add(child.get("id"));displayed.add(display.getValue());
-                }
-                if(!hint.ownedTextChildren.isEmpty() && displayed.containsAll(hint.ownedTextChildren) && !protectedField(node,"text")) {
-                    List<String> texts=new ArrayList<>();boolean complete=true;
-                    for(String childId:hint.ownedTextChildren) {
-                        Map<String,Object> child=byId.get(childId);
-                        if(child==null || !(child.get("text") instanceof String)){complete=false;break;}
-                        texts.add((String)child.get("text"));
-                    }
-                    if(complete && Objects.equals(node.get("text"),String.join("\n",texts)))removeField(node,"text");
+                    copyTextField(child,fields,display.getKey());
                 }
             }
-            List<Object> retained=new ArrayList<>();
-            for(Object raw:nodes) {
-                if(!(raw instanceof Map)){retained.add(raw);continue;}
-                Map<String,Object> node=cast(raw);UiProjectionHints.Node hint=hints.nodes.get(node.get("id"));
-                boolean leaf=!parents.contains(node.get("id"));
-                boolean empty=!full && leaf && ("text".equals(node.get("role")) || hint!=null && hint.emptyPlaceholder)
-                        && (!node.containsKey("text") || node.get("text")==null || "".equals(node.get("text")))
-                        && (hint!=null && hint.emptyPlaceholder || !Boolean.FALSE.equals(node.get("enabled")))
-                        && basicNodeFields(node) && !Boolean.TRUE.equals(node.get("dimmed"));
-                boolean duplicate=false;
-                if(!full && leaf && passiveText(node,false)) {
-                    Map<String,Object> parent=byId.get(node.get("parent"));
-                    UiProjectionHints.Node owner=parent==null?null:hints.nodes.get(parent.get("id"));
-                    duplicate=parent!=null && sameNodeState(node,parent) && !protectedField(parent,"text")
-                            && parent.get("text") instanceof String && node.get("text") instanceof String
-                            && (Objects.equals(parent.get("text"),node.get("text"))
-                            || owner!=null && owner.ownedTextChildren.contains(node.get("id")));
-                }
-                if(!empty && !duplicate && !moved.contains(node.get("id")))retained.add(node);
-            }
-            current.put("nodes",retained);
+            // Hints add semantic bindings, never erase captured nodes, identities, text or parentage.
+            // Empty slots convey layout/capacity, and repeated child text remains independently addressable.
         }
         for(Map.Entry<String,Object> entry:current.entrySet())
             if(!OPAQUE.contains(entry.getKey()) && !Arrays.asList("text_sources","text_origins","pres").contains(entry.getKey()))
@@ -409,11 +369,6 @@ public final class CompactProtocol {
                 && Objects.equals(first.getOrDefault("dimmed",false),second.getOrDefault("dimmed",false));
     }
 
-    private static boolean basicNodeFields(Map<String,Object> node) {
-        for(String key:node.keySet())if(!Arrays.asList("id","role","parent","text","enabled","dimmed").contains(key))return false;
-        return true;
-    }
-
     private static boolean passiveText(Map<String,Object> node,boolean movableMetadata) {
         if(!"text".equals(node.get("role")) || Boolean.TRUE.equals(node.get("dimmed")))return false;
         for(String key:node.keySet()) {
@@ -432,8 +387,8 @@ public final class CompactProtocol {
         return true;
     }
 
-    /** Move already projected metadata without examining or rewriting source AST internals. */
-    private static void moveTextField(Map<String,Object> source,Map<String,Object> target,String field) {
+    /** Add a semantic display field while retaining its original node and metadata. */
+    private static void copyTextField(Map<String,Object> source,Map<String,Object> target,String field) {
         target.put(field,source.get("text"));
         for(String metadata:Arrays.asList("text_sources","text_origins"))if(source.get(metadata) instanceof Map) {
             @SuppressWarnings("unchecked") Map<String,Object> fields=(Map<String,Object>)target.computeIfAbsent(metadata,ignored->new LinkedHashMap<>());
@@ -467,14 +422,14 @@ public final class CompactProtocol {
                 "text_sources",map("ordinary_kinds",new ArrayList<>(PublicTextSources.ORDINARY_KINDS),
                         "ordinary_origins",new ArrayList<>(PublicTextSources.ORDINARY_ORIGINS),
                         "retention","recursive user/external origins remain; unknown/unavailable/partial/clipped public evidence remains protected; src includes full rendered source trees without exposing undisplayed arguments"),
-                "ui_projection",map("nodes","current controls; ops advertise executable capabilities; acts contains global operations",
+                "ui_projection",map("nodes","current controls; ops repeat node capabilities; acts retains all original operations in order",
                         "node_shapes","optional local field-name arrays; a node is an expanded object or [shape index, values...] in that shape's exact order, including null/false/zero; metadata-bearing nodes stay expanded",
                         "op_defs","optional local complete operation lists; integer node ops indexes this table, array ops remains inline",
-                        "label","integer 0 inherits name from the unique current inv item at loc; 1 applies the English item title rule; strings are literal",
-                        "identity","unreferenced passive text leaves may omit id; all parent and executable bindings remain current",
-                        "protected_actions","when whole-list metadata addresses acts, that complete list and its indexes remain alongside node ops as a diagnostic exception",
+                        "label","integer 0 inherits name from the unique current inv item at loc; 1 applies the English item title rule; strings are literal and explicit null remains null",
+                        "identity","all captured node identities and parent bindings are retained and remain current",
+                        "actions","acts retains every original operation in order; node ops repeats the matching capabilities with the node control binding inherited",
                         "display","optional status/extra/level are exact already displayed ItemSlot text; loc binds the same captured item by identity",
-                        "deduplication","only proven empty placeholders or fully covered passive text leaves; actionable blanks, informative disabled controls, independent state and bars remain",
+                        "deduplication","only reversible same-frame dictionaries, shapes, labels and documented defaults; all captured nodes, text, descriptions, talents and action constraints remain",
                         "full","all captured nodes and default fields; historical before/after also use full; raw/reply stay opaque"),
                 "same_frame",map("activity","omitted activity.rev inherits envelope rev; cancel rev/rid inherit current activity rev/rid",
                         "persistence","omitted receipt s inherits envelope s; omitted src_s inherits that receipt s; integer saved indexes persistence.saves",
@@ -742,42 +697,31 @@ public final class CompactProtocol {
     }
 
     private static Map<String,Object> action(Map<String,Object> input,boolean sources,boolean full,boolean preserveFields) {
-        Map<String,Object> compact=new LinkedHashMap<>(input);
-        if(!preserveFields)for(String key:STATIC_ACTION)if(!protectedField(compact,key))removeField(compact,key);
-        return cast(projectValue(compact,sources,full || preserveFields,"actions"));
+        // Availability and argument constraints belong to this observation, even when a similar
+        // static rule exists in info.schema. A future or dynamic value cannot be reconstructed there.
+        return cast(projectValue(input,sources,full || preserveFields,"actions"));
     }
 
     private static void attachActions(Map<String,Object> result) {
         if(!(result.get("acts") instanceof List))return;
-        boolean preserveActions=annotationReferences(result,"acts");
         Object ui=result.get("ui");
         Object nodes=ui instanceof Map?((Map<?,?>)ui).get("nodes"):result.get("nodes");
         if(!(nodes instanceof List))return;
         Map<Object,Map<String,Object>> index=new LinkedHashMap<>();
         for(Object node:(List<?>)nodes)if(node instanceof Map)index.put(((Map<?,?>)node).get("id"),cast(node));
-        List<Object> global=new ArrayList<>();
         for(Object value:(List<?>)result.get("acts")) {
-            if(!(value instanceof Map)){global.add(value);continue;}
+            if(!(value instanceof Map))continue;
             Map<String,Object> descriptor=cast(value),node=index.get(descriptor.get("ctl"));
-            if(node==null){global.add(value);continue;}
+            if(node==null)continue;
             Map<String,Object> operation=new LinkedHashMap<>(descriptor);
             if(!annotationReferences(operation,"ctl"))operation.remove("ctl");
-            for(String key:new ArrayList<>(operation.keySet())) {
-                if(!Arrays.asList("op","gestures","text_sources","text_origins","pres").contains(key)
-                        && Objects.equals(operation.get(key),node.get(key)) && fieldMetadataContained(operation,key,node,key)) {
-                    operation.remove(key);deduplicateFieldMarkers(operation,node,key,key);
-                }
-            }
-            if(operation.containsKey("label") && Objects.equals(operation.get("label"),node.get("text"))
-                    && fieldMetadataContained(operation,"label",node,"text")) {
-                operation.remove("label");deduplicateFieldMarkers(operation,node,"label","text");
-            }
-            if(Objects.equals(operation.get("slots"),node.get("binding_slots")) && !annotationReferences(operation,"slots"))operation.remove("slots");
-            if(Objects.equals(operation.get("range"),Arrays.asList(node.get("min"),node.get("max"))) && !annotationReferences(operation,"range"))operation.remove("range");
+            // Only the enclosing node's exact control binding is inherited. Keep every other
+            // operation field, including labels, bounds, modes and their independent metadata.
             @SuppressWarnings("unchecked") List<Object> operations=(List<Object>)node.computeIfAbsent("ops",ignored->new ArrayList<>());
             operations.add(operation);
         }
-        if(!preserveActions)result.put("acts",global);
+        // The original list also remains complete: moving entries to separate nodes loses its
+        // relative ordering and prevents an exact reconstruction of the advertised capabilities.
     }
 
     private static boolean fieldMetadataContained(Map<String,Object> operation,String field,Map<String,Object> node,String nodeField) {
@@ -805,34 +749,6 @@ public final class CompactProtocol {
     }
     private static boolean references(Object path,String field) {
         return path instanceof String && (path.equals(field) || ((String)path).startsWith(field+"[") || ((String)path).startsWith(field+"."));
-    }
-
-    private static void deduplicateFieldMarkers(Map<String,Object> operation,Map<String,Object> node,String field,String nodeField) {
-        for(String metadata:Arrays.asList("text_sources","text_origins")) {
-            Object raw=operation.get(metadata),nodeRaw=node.get(metadata);
-            if(raw instanceof Map && nodeRaw instanceof Map) {
-                Map<String,Object> fields=new LinkedHashMap<>(cast(raw));
-                for(String key:new ArrayList<>(fields.keySet()))if(references(key,field)
-                        && Objects.equals(fields.get(key),((Map<?,?>)nodeRaw).get(nodeField+key.substring(field.length()))))fields.remove(key);
-                if(fields.isEmpty())operation.remove(metadata);else operation.put(metadata,fields);
-            }
-        }
-        if(operation.get("pres") instanceof Map && node.get("pres") instanceof Map) {
-            Map<String,Object> pres=new LinkedHashMap<>(cast(operation.get("pres")));
-            Object raw=pres.get("diag"),nodeRaw=((Map<?,?>)node.get("pres")).get("diag");
-            if(raw instanceof List && nodeRaw instanceof List) {
-                List<Object> retained=new ArrayList<>();
-                for(Object diagnostic:(List<?>)raw) {
-                    boolean duplicated=false;
-                    if(diagnostic instanceof Map && references(((Map<?,?>)diagnostic).get("field"),field))
-                        for(Object nodeDiagnostic:(List<?>)nodeRaw)
-                            if(nodeDiagnostic instanceof Map && (nodeField+String.valueOf(((Map<?,?>)diagnostic).get("field")).substring(field.length())).equals(((Map<?,?>)nodeDiagnostic).get("field"))
-                                    && Objects.equals(((Map<?,?>)diagnostic).get("code"),((Map<?,?>)nodeDiagnostic).get("code")))duplicated=true;
-                    if(!duplicated)retained.add(diagnostic);
-                }
-                if(retained.isEmpty())operation.remove("pres");else {pres.put("diag",retained);operation.put("pres",pres);}
-            }
-        }
     }
 
     private static Object sourceFields(Object value) {
@@ -894,15 +810,6 @@ public final class CompactProtocol {
         }
         Map<String,Object> result=new LinkedHashMap<>(cast(value));result.remove("status");result.remove("diagnostics");
         result.put("st",value.get("status"));result.put("diag",diagnostics);return result;
-    }
-    private static boolean hasTextDiagnostics(Object value) {
-        if(value instanceof Map) {
-            Map<?,?> current=(Map<?,?>)value;
-            if(current.get("text_diagnostics") instanceof Map && !((Map<?,?>)current.get("text_diagnostics")).isEmpty())return true;
-            for(Map.Entry<?,?> entry:current.entrySet())
-                if(!OPAQUE.contains(entry.getKey()) && !Arrays.asList("presentation","text_sources").contains(entry.getKey()) && hasTextDiagnostics(entry.getValue()))return true;
-        } else if(value instanceof List)for(Object child:(List<?>)value)if(hasTextDiagnostics(child))return true;
-        return false;
     }
     private static boolean canonicalDiagnosticExists(Object value,String path,Map<String,Object> diagnostic) {
         if(value instanceof Map) {

@@ -14,11 +14,14 @@ import re
 import select
 import signal
 import subprocess
+import sys
 import time
 import uuid
 import zlib
 
 import protocol6
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "desktop-control/client"))
+from spdctl_client import decode_wire_response
 
 
 SUCCESS = {"COMPLETED", "AWAITING_INPUT", "INTERRUPTED"}
@@ -59,7 +62,7 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.6.0.1", self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.6.1.0", self.hello
             assert self.hello["data"]["audit_schema_version"] == 9, self.hello
             self.install(self.hello, "info")
         except Exception:
@@ -423,6 +426,50 @@ def viewer_check(cli, client, environment):
             "plain_text_identical": True, "raw_files_unchanged": True}
 
 
+def lossless_views_check(client):
+    """Compare real packaged play/full public observations at a ready boundary.
+
+    Only encoding tables and row syntax are removed from the decoded copies.
+    Descriptions, all nodes/IDs/text, actions/order, unknown fields and diagnostics
+    must compare exactly; no old lossy benchmark normalization is used.
+    """
+    replies = []
+    for view in ("play", "full"):
+        reply = client.unwrap(client.request({"op": "state", "view": view}))
+        client.install(reply, "state")
+        decoded = decode_wire_response(reply)
+        assert not decoded.is_error and decoded.is_observation, reply
+        data = dict(decoded.data)
+        ui = dict(data["ui"])
+        ui.pop("node_shapes", None)
+        ui.pop("op_defs", None)
+        data["ui"] = ui
+        if "map" in data:
+            dungeon_map = dict(data["map"])
+            for encoding in ("types", "rows", "env", "effect_defs"):
+                dungeon_map.pop(encoding, None)
+            data["map"] = dungeon_map
+        data.pop("entity_defs", None)
+        replies.append((reply, data))
+    assert replies[0][0]["s"] == replies[1][0]["s"], "View comparison changed scope"
+    assert replies[0][0]["rev"] == replies[1][0]["rev"], "View comparison crossed a decision boundary"
+    assert replies[0][1] == replies[1][1], "Decoded play/full observations differ"
+    data = replies[0][1]
+    # The native public observer only supplies inline descriptions for certain
+    # item families. Other details require opening the original item window.
+    # Equality above checks every description actually captured by full; do not
+    # invent missing descriptions for the Warrior's ordinary starting equipment.
+    described = sum("desc" in item for item in data["inv"])
+    assert any(talent["points"] == 0 for talent in data["hero"]["talents"]), "Play lost unspent talents"
+    return {"decoded_public_content_equal": True, "scope": replies[0][0]["s"],
+            "rev": replies[0][0]["rev"], "nodes": len(data["ui"]["nodes"]),
+            "ordered_actions": len(data["acts"]), "inventory_items": len(data["inv"]),
+            "items_with_description": described,
+            "talents": len(data["hero"]["talents"]),
+            "play_bytes": len(protocol6.wire_bytes(replies[0][0])),
+            "full_bytes": len(protocol6.wire_bytes(replies[1][0]))}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path, required=True)
@@ -438,7 +485,7 @@ def main():
     environment.pop("JAVA_HOME", None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.6.0.1 (protocol 6, game 3.3.8)", version
+    assert version == "CLI.6.1.0 (protocol 6, game 3.3.8)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}
@@ -447,6 +494,7 @@ def main():
         clients.append(first)
         first.state()
         initial, first_scenes = reach_warrior(first)
+        report["lossless_views"] = lossless_views_check(first)
         before = snapshot(initial)
         assert before["hero"]["depth"] == 1 and before["hero"]["level"] == 1, before
         saved = native_operation(first, "save")

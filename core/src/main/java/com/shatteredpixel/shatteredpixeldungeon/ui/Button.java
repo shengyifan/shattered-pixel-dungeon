@@ -193,6 +193,19 @@ public class Button extends Component {
 		return hoverText();
 	}
 
+	/**
+	 * Public semantic label for accessibility and external control surfaces.
+	 * Defaults to the native hover text, but icon-only controls may provide a
+	 * label without changing their ordinary hover behavior.
+	 */
+	public final String accessibleLabel() {
+		return accessibleLabelText();
+	}
+
+	protected String accessibleLabelText() {
+		return hoverText();
+	}
+
 	protected void onPointerUp() {}
 	protected void onClick() {} //left click, default key type
 	protected void onRightClick() {}
