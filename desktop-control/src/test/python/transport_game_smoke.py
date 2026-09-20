@@ -94,7 +94,7 @@ class CapturedClient(Client):
         self.counter += 1
         if op == "state.get":
             args = {**(args or {}), "src": True}
-        request = protocol6.request(op, args, request_id or f"{self.prefix}-{self.counter}",
+        request = protocol6.request(op, args, request_id or f"{self.prefix}-{self.counter:d}",
                                     scope or self.scope, version or self.version)
         wire = protocol6.wire_bytes(request)
         self.last_wire_request, self.last_send_bytes = request, wire

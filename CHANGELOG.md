@@ -4,6 +4,12 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.6.1.1
+
+- Uses decimal digits only for the controller's incrementing request-ID suffix (`t1.9`, `t1.10`, `t1.11`). Failed allocations remain consumed; session prefixes and historical or explicitly supplied identities are unchanged.
+- Adds allocator boundary/restart/failure regressions and an actual-package `.9`/`.10` wire check. Active Python clients explicitly retain decimal allocation. Protocol 6, schema 9 and the v6 profile remain unchanged.
+- Adds reproducible, lossless offline format experiments on the depth-9 public transport corpus, comparing item definitions, row tables, readable sections and explicit delta baselines. These candidate formats are analysis artifacts, not deployed wire changes; see [the measured study](docs/cli-token-study-d9-20260920.md).
+
 ## CLI.6.1.0
 
 - Removes lossy public-response reduction: both play and full retain item descriptions, zero-point talents, captured UI node identities/order/parents/text, and complete advertised operation constraints. Reversible same-frame maps, dictionaries, labels and scoped defaults remain; full text provenance is still explicitly available with `src`.

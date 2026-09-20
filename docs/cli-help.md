@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 6)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.6.1.0, protocol 6, and base game 3.3.8.
+`spdctl --version` reports CLI.6.1.1, protocol 6, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -116,14 +116,17 @@ returned `s`, then query the current state:
 Replace placeholders and illustrative IDs with values for your own connection.
 IDs may be short strings, for example a fresh client prefix plus a counter. They
 must remain unique within their scope, including across restarts of the same run.
-After the first handshake, use `request_prefix` plus a counter allocated before
-sending, such as `t2.1`; failures also consume IDs. The bundled controller does this.
+After the first handshake, use `request_prefix` plus a decimal counter allocated
+before sending, such as `t2.9`, `t2.10`, `t2.11`; failures also consume IDs. The
+counter suffix uses ASCII 0-9 only, never base36 letters. The bundled controller
+does this. Opaque handle prefixes and explicitly supplied request IDs are not
+rewritten, and existing history keeps its original identities.
 
 | Field | Meaning |
 | --- | --- |
 | `v` | Required integer `6` on every request. |
 | `id` | Required, caller-generated request identity. Queries also consume IDs. |
-| `s` | Required scope, except initial `info`. |
+| `s` | Required scope, except `info` discovery requests. |
 | `rev` | Required for game actions; copy the latest live revision exactly. |
 | `op` | Query or action name. Action parameters are at the same object level. |
 | `st` | Successful response status: `completed`, `awaiting_input`, `in_progress`, or terminal `interrupted`. |

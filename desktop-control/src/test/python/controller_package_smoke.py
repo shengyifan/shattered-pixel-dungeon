@@ -62,7 +62,7 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.6.1.0", self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.6.1.1", self.hello
             assert self.hello["data"]["audit_schema_version"] == 9, self.hello
             self.install(self.hello, "info")
         except Exception:
@@ -316,7 +316,7 @@ def save_receipts(action):
     return rows
 
 
-def validate_trace(client):
+def validate_trace(client, decimal_boundary=False):
     session = client.trace_session()
     assert not (session / ".incomplete").exists(), session
     raw = {name: (session / name).read_bytes() for name in ("send.raw", "recv.raw", "stderr.raw")}
@@ -334,10 +334,13 @@ def validate_trace(client):
         by_id[request["id"]] = response
         if index:
             prefix, count = request["id"].split(".")
-            assert prefix == client.prefix and int(count, 36) > previous, request
-            previous = int(count, 36)
+            assert prefix == client.prefix and re.fullmatch(r"[1-9][0-9]*", count), request
+            assert int(count) > previous, request
+            previous = int(count)
         if request["op"] == "req":
             assert request["id"] != request["rid"] and "get" not in request, request
+    if decimal_boundary:
+        assert client.prefix + ".9" in by_id and client.prefix + ".10" in by_id, "Missing decimal request ID boundary in raw trace"
     for wire in client.wire_frames:
         assert by_id.get(wire["id"]) == wire, {"controller_frame_differs_from_child": wire}
     quit_index = max(i for i, request in enumerate(sent) if request["op"] == "quit")
@@ -470,6 +473,21 @@ def lossless_views_check(client):
             "full_bytes": len(protocol6.wire_bytes(replies[1][0]))}
 
 
+def decimal_request_ids_check(client):
+    """Cross 9/10 with read-only observations in this disposable package fixture."""
+    expected = [client.prefix + ".9", client.prefix + ".10"]
+    for _ in range(10):
+        latest = client.wire_frames[-1]["id"]
+        prefix, count = latest.split(".")
+        assert prefix == client.prefix and re.fullmatch(r"[1-9][0-9]*", count), latest
+        if int(count) >= 10:
+            # Internal receipt polls may not all be displayed by the controller.
+            # validate_trace checks both exact boundary IDs in the original bytes.
+            return {"decimal_suffixes": True, "boundary_ids": expected, "observed_through": latest}
+        client.state()
+    raise AssertionError("Packaged controller did not issue decimal request IDs across 9/10")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path, required=True)
@@ -485,7 +503,7 @@ def main():
     environment.pop("JAVA_HOME", None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.6.1.0 (protocol 6, game 3.3.8)", version
+    assert version == "CLI.6.1.1 (protocol 6, game 3.3.8)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}
@@ -495,6 +513,7 @@ def main():
         first.state()
         initial, first_scenes = reach_warrior(first)
         report["lossless_views"] = lossless_views_check(first)
+        report["decimal_request_ids"] = decimal_request_ids_check(first)
         before = snapshot(initial)
         assert before["hero"]["depth"] == 1 and before["hero"]["level"] == 1, before
         saved = native_operation(first, "save")
@@ -504,7 +523,7 @@ def main():
         quit_first = native_operation(first, "quit")
         first_quit_receipts = save_receipts(quit_first)
         first.finish_exit()
-        first_trace = validate_trace(first)
+        first_trace = validate_trace(first, decimal_boundary=True)
         styles = viewer_check(cli, first, environment)
 
         restarted = ControllerClient(cli, profile, output / "restarted", environment)

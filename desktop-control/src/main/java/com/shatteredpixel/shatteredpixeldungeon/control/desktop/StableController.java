@@ -405,7 +405,7 @@ public final class StableController {
 
     private Map<String,Object> request(String op, String scope, Map<String,Object> args) {
         if (sequence == Long.MAX_VALUE) throw new IllegalStateException("Controller request sequence exhausted");
-        Map<String,Object> request = map("v", ControlRequest.PROTOCOL_VERSION, "id", prefix + "." + Long.toString(++sequence, 36));
+        Map<String,Object> request = map("v", ControlRequest.PROTOCOL_VERSION, "id", prefix + "." + Long.toString(++sequence));
         if (scope != null) request.put("s", scope);
         request.put("op", op);
         for (Map.Entry<String,Object> entry : args.entrySet())

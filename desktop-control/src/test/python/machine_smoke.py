@@ -27,7 +27,7 @@ class Client:
 
     def request(self, op, args=None, request_id=None, scope=None, version=None):
         self.counter += 1
-        req = protocol6.request(op, args, request_id or f"{self.prefix}-{self.counter}",
+        req = protocol6.request(op, args, request_id or f"{self.prefix}-{self.counter:d}",
                                 scope or self.scope, version or self.version)
         self.last_wire_request = req
         self.last_send_bytes = protocol6.wire_bytes(req)

@@ -213,7 +213,7 @@ class PublicClient(Client):
             if self.action_count >= self.maximum:
                 raise Checkpoint("maximum_action_requests_reached")
             self.action_count += 1
-        request_id = request_id or f"{self.prefix}-{self.counter + 1}"
+        request_id = request_id or f"{self.prefix}-{self.counter + 1:d}"
         self.log("request", request=protocol6.request(op, args, request_id, scope or self.scope, version or self.version),
                  action_number=self.action_count, cleanup=self.cleanup)
         response = super().request(op, args, request_id, scope, version)

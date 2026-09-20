@@ -14,6 +14,49 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 import static org.junit.Assert.*;
 
 public class StableControllerTest {
+    @Test public void requestCountersStayDecimalAcrossDigitAndFormerRadixBoundaries() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        for(int number=1;number<=100;number++) {
+            child.answer(q -> success(q,"s1","r1","completed",map()));
+            Map<String,Object> result=controller.accept(map("op","state"));
+            assertEquals("t3."+number,result.get("id"));
+            assertEquals("t3."+number,child.sent.get(number).get("id"));
+            assertTrue(result.get("id").toString().matches("t3\\.[0-9]+"));
+        }
+        for(int number:Arrays.asList(9,10,35,36,99,100))
+            assertEquals("t3."+number,child.sent.get(number).get("id"));
+    }
+
+    @Test public void decimalIdsRemainConsumedByLocalAndServerRejection() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        for(int number=1;number<=8;number++) {
+            child.answer(q -> success(q,"s1","r1","completed",map()));
+            controller.accept(map("op","state"));
+        }
+        Map<String,Object> invalid=controller.accept(map("op","wait","rev","r1","surprise",true));
+        assertEquals("INVALID_INTENT",invalid.get("err"));
+        assertEquals("t3.9",object(invalid.get("request")).get("id"));
+        assertEquals(9,child.sent.size());
+        child.answer(q -> failure(q,"STALE_STATE"));
+        Map<String,Object> rejected=controller.accept(map("op","wait","rev","r1"));
+        assertEquals("t3.10",rejected.get("id"));assertEquals("STALE_STATE",rejected.get("err"));
+        child.answer(q -> receipt(q,"wait","REJECTED",null));
+        assertEquals("ACTION_REJECTED",controller.accept(map("op","settle")).get("err"));
+        assertEquals("t3.11",child.sent.get(10).get("id"));assertEquals("t3.10",child.sent.get(10).get("rid"));
+        child.answer(q -> success(q,"s1","r1","completed",map()));
+        assertEquals("t3.12",controller.accept(map("op","state")).get("id"));
+    }
+
+    @Test public void aNewControllerUsesItsNewOpaquePrefixAndRestartsDecimalCounter() throws Exception {
+        Set<Object> ids=new HashSet<>();
+        for(String prefix:Arrays.asList("tz","t10")) {
+            Fake child=new Fake();StableController controller=boot(child,prefix);
+            child.answer(q -> success(q,"s1","r1","completed",map()));
+            Object id=controller.accept(map("op","state")).get("id");
+            assertEquals(prefix+".1",id);assertTrue(ids.add(id));
+        }
+    }
+
     @Test public void handshakeUsesUniqueRandomIdThenPersistentPrefixAndDisplayedScope() throws Exception {
         Fake child = new Fake(); StableController controller = boot(child);
         assertTrue(child.sent.get(0).get("id").toString().matches("h[0-9a-f]{32}"));
@@ -499,7 +542,10 @@ public class StableControllerTest {
     }
 
     private static StableController boot(Fake child) throws Exception {
-        child.answer(q -> success(q, "s1", "r1", "completed", map("request_prefix", "t3")));
+        return boot(child,"t3");
+    }
+    private static StableController boot(Fake child,String prefix) throws Exception {
+        child.answer(q -> success(q, "s1", "r1", "completed", map("request_prefix", prefix)));
         StableController controller = new StableController(child, 1);
         assertEquals("completed", controller.handshake().get("st"));
         return controller;
