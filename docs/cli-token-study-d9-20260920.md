@@ -1,5 +1,10 @@
 # Depth-9 public CLI corpus: model-token study and decimal request IDs
 
+> Updated requirement: every response must remain independently complete. The
+> stateful cache/delta candidates below are historical experiments, not the current
+> recommendation. See the [complete single-frame study](cli-complete-frame-token-study-20260920.md)
+> for measured alternatives that do not depend on another response or lookup.
+
 ## Status and measurement boundary
 
 The format experiments in this document are **offline proposals, not deployed
