@@ -22,6 +22,11 @@
 package com.watabou.noosa;
 
 public class Gizmo {
+
+	private long observationLifetime;
+	/** A pooled owner cannot inherit display evidence from an earlier lifetime. */
+	public final long observationLifetime(){return observationLifetime;}
+	final void observationDetached(){observationLifetime++;}
 	
 	public boolean exists;
 	public boolean alive;
@@ -40,6 +45,7 @@ public class Gizmo {
 	}
 	
 	public void destroy() {
+		observationDetached();
 		Game.observer.onTextReleased(this);
 		parent = null;
 	}
@@ -61,6 +67,7 @@ public class Gizmo {
 	
 	// Not exactly opposite to "kill" method
 	public void revive() {
+		observationLifetime++;
 		alive = true;
 		exists = true;
 	}

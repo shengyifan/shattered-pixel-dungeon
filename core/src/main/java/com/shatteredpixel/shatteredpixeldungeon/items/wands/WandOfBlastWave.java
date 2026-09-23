@@ -33,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Effects;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
+import com.shatteredpixel.shatteredpixeldungeon.effects.RadialVisualCue;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
@@ -46,6 +47,7 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.VisualCue;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Callback;
 import com.watabou.utils.PathFinder;
@@ -257,6 +259,14 @@ public class WandOfBlastWave extends DamageWand {
 
 			time = TIME_TO_FADE;
 			this.size = size;
+		}
+
+		@Override public void draw() {
+			super.draw();
+			if (texture != null && buffer != null && Game.observer.observesVisualCues()) {
+				VisualCue cue = RadialVisualCue.capture(this, "blast_wave", "ring", width / 2f);
+				if (cue != null) GameScene.observeCellVisualDraw(this, cue);
+			}
 		}
 
 		@Override

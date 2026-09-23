@@ -88,6 +88,16 @@ public abstract class CrystalSpireSprite extends MobSprite {
 		updateIdle();
 	}
 
+	@Override public void draw() {
+		super.draw();
+		if (!com.watabou.noosa.Game.observer.observesVisualCues() || texture == null || buffer == null) return;
+		int cell = renderedCell();
+		java.util.Map<String,Object> image = com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance.image(this);
+		if (cell >= 0 && !image.isEmpty())
+			GameScene.observeCellVisualDraw(this, new com.watabou.noosa.VisualCue("crystal_spire_appearance", cell,
+					null, null, null, null, image));
+	}
+
 	boolean wasVisible = false;
 
 	@Override

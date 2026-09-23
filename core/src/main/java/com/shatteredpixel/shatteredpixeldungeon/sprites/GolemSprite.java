@@ -89,6 +89,9 @@ public class GolemSprite extends MobSprite {
 
 	public void teleParticles(boolean value){
 		if (teleParticles != null) teleParticles.on = value;
+		if (value && teleParticles != null && ch != null && com.watabou.noosa.Game.observer.observesVisualCues())
+			teleParticles.observeDraw(new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue(
+					"golem_teleport_particles", ch.pos, ElmoParticle.FACTORY, ElmoParticle.class));
 	}
 
 	@Override

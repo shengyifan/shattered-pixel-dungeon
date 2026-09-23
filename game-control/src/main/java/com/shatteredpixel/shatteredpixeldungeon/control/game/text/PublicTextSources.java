@@ -6,7 +6,7 @@ import java.util.*;
 public final class PublicTextSources {
     public static final Set<String> ORDINARY_KINDS = Collections.unmodifiableSet(new LinkedHashSet<>(Arrays.asList(
             "resource", "literal", "scalar", "concat", "format", "case", "slice", "replace",
-            "formatted_argument", "formatted_fragment", "decimal", "language", "strip_prefix", "displayed")));
+            "formatted_argument", "formatted_fragment", "decimal", "language", "strip_prefix", "displayed", "markup_segment")));
     public static final Set<String> ORDINARY_ORIGINS = Collections.unmodifiableSet(new LinkedHashSet<>(Arrays.asList(
             "catalog", "literal", "symbol", "scalar")));
 

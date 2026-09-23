@@ -88,6 +88,9 @@ public class DelayedRockFall extends FlavourBuff {
 				e.y -= DungeonTilemap.SIZE*0.2f;
 				e.height *= 0.4f;
 				e.pour(EarthParticle.FALLING, 0.1f);
+				if (com.watabou.noosa.Game.observer.observesVisualCues()) e.observeDraw(
+						new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("falling_rock_warning", i,
+								EarthParticle.FALLING, EarthParticle.class));
 				rockEmitters.add(e);
 			}
 		} else {

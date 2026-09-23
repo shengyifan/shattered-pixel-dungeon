@@ -60,6 +60,7 @@ public final class ControlRequest {
             }
         }
         details=Collections.unmodifiableSet(requestedDetails);
+        RequestArguments.validate(wireOp, raw);
         args = Collections.unmodifiableMap(arguments);
     }
 

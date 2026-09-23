@@ -23,8 +23,54 @@ package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Scene;
+import com.watabou.utils.RectF;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Collections;
 
-public class Banner extends Image {
+public class Banner extends Image implements RenderedStatus {
+
+	private String observationKind;
+	private com.watabou.gltextures.SmartTexture observationTexture;
+	private RectF observationFrame;
+	private boolean observed;
+
+	/** Bound only at the two native combat-banner creation sites, after copying their actual pixels. */
+	public Banner observationKind(String kind) {
+		if(!"boss_slain".equals(kind)&&!"game_over".equals(kind))throw new IllegalArgumentException("Unknown combat banner");
+		observationKind=kind;observationTexture=texture;observationFrame=frame();observed=false;return this;
+	}
+
+	private String displayedKind() {
+		if(observationFrame==null||frame==null||texture!=observationTexture)return null;
+		return frame.left==observationFrame.left&&frame.top==observationFrame.top
+				&&frame.right==observationFrame.right&&frame.bottom==observationFrame.bottom?observationKind:null;
+	}
+
+	@Override public void draw() {
+		super.draw();
+		if(Game.observer.observesVisualCues()&&buffer!=null)recordDisplayedBanner();
+	}
+
+	private void recordDisplayedBanner() {
+		Scene scene=Game.instance==null?null:Game.scene();String kind=displayedKind();
+		if(observed||kind==null||!(scene instanceof GameScene)||Dungeon.runId==null
+				||!RenderedAppearance.uncoveredInScene(this,scene))return;
+		Map<String,Object> appearance=RenderedAppearance.image(this);if(appearance.isEmpty())return;
+		observed=true;Game.observer.onBanner(Dungeon.runId,kind,appearance);
+	}
+
+	@Override public Map<String,Object> renderedStatus() {
+		String kind=displayedKind();Scene scene=Game.instance==null?null:Game.scene();
+		if(!observed||kind==null||!(scene instanceof GameScene)||!RenderedAppearance.uncoveredInScene(this,scene))return Collections.emptyMap();
+		Map<String,Object> result=new LinkedHashMap<>();result.put("banner_kind",kind);result.put("banner_appearance",RenderedAppearance.image(this));return result;
+	}
+
+	@Override public Map<String,Object> intentStatus(){return Collections.emptyMap();}
 
 	private enum State {
 		FADE_IN, STATIC, FADE_OUT
@@ -49,6 +95,7 @@ public class Banner extends Image {
 	}
 	
 	public void show( int color, float fadeTime, float showTime ) {
+		observed=false;
 		
 		this.color = color;
 		this.fadeTime = fadeTime;

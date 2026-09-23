@@ -170,6 +170,9 @@ public class ScrollOfChallenge extends ExoticScroll {
 				for (int i : arenaPositions){
 					Emitter e = CellEmitter.get(i);
 					e.pour(ChallengeParticle.FACTORY, 0.05f);
+					if (com.watabou.noosa.Game.observer.observesVisualCues()) e.observeDraw(
+							new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("challenge_arena", i,
+									ChallengeParticle.FACTORY, ChallengeParticle.class));
 					arenaEmitters.add(e);
 				}
 			} else {

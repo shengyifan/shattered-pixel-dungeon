@@ -52,7 +52,7 @@ public class ShockingDart extends TippedDart {
 				ArrayList<Lightning.Arc> arcs = new ArrayList<>();
 				arcs.add(new Lightning.Arc(new PointF(s.x, s.y + s.height / 2), new PointF(s.x + s.width, s.y + s.height / 2)));
 				arcs.add(new Lightning.Arc(new PointF(s.x + s.width / 2, s.y), new PointF(s.x + s.width / 2, s.y + s.height)));
-				s.parent.add(new Lightning(arcs, null));
+				s.parent.add(new Lightning(arcs, null).observeDraw("lightning_arc", defender.pos, defender.pos));
 				Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 			}
 		}

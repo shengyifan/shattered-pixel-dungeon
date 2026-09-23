@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 
 public class PublicTextSourcesTest {
     @Test public void everyRendererOutputKindAndOrdinaryOriginIsOrdinary() {
-        assertEquals(14,PublicTextSources.ORDINARY_KINDS.size());
+        assertEquals(15,PublicTextSources.ORDINARY_KINDS.size());
         for(String kind:PublicTextSources.ORDINARY_KINDS)for(String origin:PublicTextSources.ORDINARY_ORIGINS) {
             Object source=map("kind",kind,"origin",origin,"value",map("kind","literal","origin","literal","value","Safe"));
             assertFalse(kind+"/"+origin,PublicTextSources.requiresSource(source));
@@ -38,7 +38,9 @@ public class PublicTextSourcesTest {
                 new Object[]{"strip_prefix",map("kind","strip_prefix","prefix","@","value",
                         map("kind","literal","origin","literal","value","@Safe")),"Safe"},
                 new Object[]{"displayed",map("kind","displayed","markup",true,"value",
-                        map("kind","literal","origin","literal","value","**Safe**")),"Safe"});
+                        map("kind","literal","origin","literal","value","**Safe**")),"Safe"},
+                new Object[]{"markup_segment",map("kind","markup_segment","index",1,"count",3,"value",
+                        map("kind","literal","origin","literal","value","Before **Safe** after")),"Safe"});
         Set<String> emittedKinds=new LinkedHashSet<>();
         for(Object[] fixture:fixtures) {
             String kind=(String)fixture[0];
@@ -57,8 +59,50 @@ public class PublicTextSourcesTest {
             assertFalse(kind,PublicTextSources.protectsField(source));
             emittedKinds.add((String)source.get("kind"));
         }
-        assertEquals(14,emittedKinds.size());
+        assertEquals(15,emittedKinds.size());
         assertEquals(PublicTextSources.ORDINARY_KINDS,emittedKinds);
+    }
+    @Test public void markupSegmentsKeepInheritedPartialDiagnosticsAndUnsafeClippedEvidence() {
+        for(String reason:Arrays.asList("english_template_missing","argument_not_displayed","clipped_text")) {
+            Map<String,Object> child=reason.equals("english_template_missing")
+                    ? map("kind","resource","key","test.missing","arguments",Collections.emptyList())
+                    : reason.equals("argument_not_displayed")
+                    ? map("kind","resource_reference","key","test.hidden","reason",reason)
+                    : map("kind","unavailable","reason",reason);
+            Map<String,Object> token=JsonCodec.decode(JsonCodec.encode(map("$text_source",1,"node",
+                    map("kind","markup_segment","value",child,"index",0,"count",1))));
+            Map<String,Object> rendered=EnglishTextRenderer.render(token);
+            assertEquals(reason,"partial",rendered.get("translation_status"));
+            assertEquals(reason,reason,rendered.get("diagnostic"));
+            if(reason.equals("clipped_text")) {
+                assertEquals("Partially displayed text",rendered.get("text"));
+                assertNull(rendered.get("source"));
+            } else {
+                Map<?,?> source=(Map<?,?>)rendered.get("source");
+                assertEquals("markup_segment",source.get("kind"));
+                assertEquals("resource",((Map<?,?>)source.get("value")).get("kind"));
+                assertEquals(reason.equals("english_template_missing")?"[key: test.missing]":"[key: test.hidden]",
+                        rendered.get("text"));
+            }
+        }
+    }
+    @Test public void markupSegmentsRetainExternalOriginsAndRejectInvalidShape() {
+        Map<String,Object> literal=map("kind","literal","origin","external","value","Before **旅人** after");
+        Map<String,Object> segment=map("kind","markup_segment","value",literal,"index",1,"count",3);
+        Map<String,Object> rendered=EnglishTextRenderer.render(JsonCodec.decode(JsonCodec.encode(map("$text_source",1,"node",segment))));
+        assertEquals("旅人",rendered.get("text"));assertEquals("complete",rendered.get("translation_status"));
+        assertEquals(Collections.singleton("external"),PublicTextSources.origins(rendered.get("source")));
+        assertTrue(PublicTextSources.protectsField(rendered.get("source")));
+        assertFalse(PublicTextSources.requiresSource(rendered.get("source")));
+        for(Object[] boundary:Arrays.asList(new Object[]{1,2,"translated_markup_shape_changed"},
+                new Object[]{3,3,"translated_markup_shape_changed"},new Object[]{-1,3,"translated_markup_shape_changed"},
+                new Object[]{true,3,"invalid_markup_segment"},new Object[]{1.0,3,"invalid_markup_segment"})) {
+            Map<String,Object> token=JsonCodec.decode(JsonCodec.encode(map("$text_source",1,"node",
+                    map("kind","markup_segment","value",literal,"index",boundary[0],"count",boundary[1]))));
+            Map<String,Object> invalid=EnglishTextRenderer.render(token);
+            assertEquals("partial",invalid.get("translation_status"));assertEquals(boundary[2],invalid.get("diagnostic"));
+            assertEquals("Text unavailable",invalid.get("text"));assertNull(invalid.get("source"));
+        }
     }
     @Test public void renderedResourceReferencesRemainProtectedPartialResourceSources() {
         for(String reason:Arrays.asList("argument_not_displayed","format_precision_not_displayed")) {

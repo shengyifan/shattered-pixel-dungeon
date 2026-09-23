@@ -28,7 +28,13 @@ import com.watabou.noosa.particles.Emitter.Factory;
 import com.watabou.noosa.particles.PixelParticle;
 import com.watabou.utils.Random;
 
-public class SparkParticle extends PixelParticle {
+public class SparkParticle extends PixelParticle implements com.shatteredpixel.shatteredpixeldungeon.effects.ParticleMotionCue.AnchoredMotion {
+	private float observationOriginX = Float.NaN, observationOriginY = Float.NaN;
+	@Override public float observedOriginX() { return observationOriginX; }
+	@Override public float observedOriginY() { return observationOriginY; }
+	@Override public void revive() {
+		super.revive(); observationOriginX = observationOriginY = Float.NaN;
+	}
 
 	public static final Emitter.Factory FACTORY = new Factory() {
 		@Override
@@ -94,6 +100,9 @@ public class SparkParticle extends PixelParticle {
 		//offset the particles slightly so they don't go too far outside of the cell
 		this.x -= speed.x / 8f;
 		this.y -= speed.y / 8f;
+		if (com.watabou.noosa.Game.observer.observesVisualCues()) {
+			observationOriginX = this.x; observationOriginY = this.y;
+		}
 	}
 
 	public void setMaxSize( float value ){

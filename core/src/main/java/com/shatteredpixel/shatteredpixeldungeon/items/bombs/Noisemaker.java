@@ -27,10 +27,13 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Bundle;
 
 public class Noisemaker extends Bomb {
@@ -97,7 +100,11 @@ public class Noisemaker extends Bomb {
 							left--;
 
 							if (left <= 0){
-								CellEmitter.center( heap.pos ).start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
+								Emitter emitter = CellEmitter.center(heap.pos);
+								Emitter.Factory factory = Speck.factory(Speck.SCREAM);
+								emitter.start(factory, 0.3f, 3);
+								if (Game.observer.observesVisualCues()) emitter.observeDraw(
+										new CellParticleCue("noisemaker_alarm", heap.pos, factory, Speck.class));
 								Sample.INSTANCE.play( Assets.Sounds.ALERT );
 
 								for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {

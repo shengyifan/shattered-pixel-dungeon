@@ -208,6 +208,7 @@ public class GameScene extends PixelScene {
 	private ActionIndicator action;
 	private ResumeIndicator resume;
 	private com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector visualCueCollector;
+	private com.shatteredpixel.shatteredpixeldungeon.effects.ScreenEffectCollector screenEffectCollector;
 
 	@Override
 	public void draw() {
@@ -216,14 +217,51 @@ public class GameScene extends PixelScene {
 			return;
 		}
 		if (visualCueCollector == null) visualCueCollector = new com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector(this);
+		if (screenEffectCollector == null) screenEffectCollector = new com.shatteredpixel.shatteredpixeldungeon.effects.ScreenEffectCollector(this);
 		visualCueCollector.beginDraw();
+		screenEffectCollector.beginDraw();
 		super.draw();
 		visualCueCollector.finishDraw();
+		screenEffectCollector.finishDraw();
+	}
+
+	public static void observeScreenOverlayDraw(com.watabou.noosa.Image source,Object episode,int solidArgb,boolean additive) {
+		if(scene!=null&&scene.screenEffectCollector!=null)scene.screenEffectCollector.overlayDrawn(source,episode,solidArgb,additive);
 	}
 
 	/** Optional draw annotations; these never ask the simulation to create or predict effects. */
 	public static void observeTargetedCellDraw(com.watabou.noosa.Visual source, int cell) {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.targetDrawn(source, cell);
+	}
+
+	public static void observeCellVisualDraw(com.watabou.noosa.Visual source, com.watabou.noosa.VisualCue cue) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.cellVisualDrawn(source, cue);
+	}
+
+	public static void observeHaloVisualDraw(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.SuperNovaTracker.NovaVFX source,
+	                                        com.watabou.noosa.VisualCue cue) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.haloVisualDrawn(source, cue);
+	}
+
+	public static void observeMovingVisualDraw(com.watabou.noosa.Visual source, com.watabou.noosa.VisualCue cue) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.movingVisualDrawn(source, cue);
+	}
+
+	public static void observeParticleMetricDraw(com.watabou.noosa.Visual source, String kind, int cell) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.particleMetricDrawn(source, kind, cell);
+	}
+
+	public static void observeEmitterMetricDraw(Emitter source, Object episode) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.emitterMetricDrawn(source, episode);
+	}
+
+	public static void observeLinkedVisualDraw(com.watabou.noosa.Visual first, com.watabou.noosa.Visual second,
+	                                         com.watabou.noosa.VisualCue cue) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.linkedVisualDrawn(first, second, cue);
+	}
+
+	public static void observeRadialVisualDraw(com.watabou.noosa.Visual source, com.watabou.noosa.VisualCue cue, float radius) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.radialVisualDrawn(source, cue, radius);
 	}
 
 	public static void observeCellParticleDraw(Emitter source, com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue observation) {
@@ -1541,7 +1579,7 @@ public class GameScene extends PixelScene {
 	public static void gameOver() {
 		if (scene == null) return;
 
-		Banner gameOver = new Banner( BannerSprites.get( BannerSprites.Type.GAME_OVER ) );
+		Banner gameOver = new Banner( BannerSprites.get( BannerSprites.Type.GAME_OVER ) ).observationKind("game_over");
 		gameOver.show( 0x000000, 2f );
 		scene.showBanner( gameOver );
 
@@ -1595,7 +1633,7 @@ public class GameScene extends PixelScene {
 	
 	public static void bossSlain() {
 		if (Dungeon.hero.isAlive()) {
-			Banner bossSlain = new Banner( BannerSprites.get( BannerSprites.Type.BOSS_SLAIN ) );
+			Banner bossSlain = new Banner( BannerSprites.get( BannerSprites.Type.BOSS_SLAIN ) ).observationKind("boss_slain");
 			bossSlain.show( 0xFFFFFF, 0.3f, 5f );
 			scene.showBanner( bossSlain );
 			

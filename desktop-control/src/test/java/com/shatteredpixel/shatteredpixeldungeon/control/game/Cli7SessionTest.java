@@ -57,7 +57,7 @@ public class Cli7SessionTest {
                 assertFalse(last(wire).containsKey("err"));
                 Map<?,?> hello = (Map<?,?>) last(wire).get("data");
                 assertEquals(7L, last(wire).get("v")); assertEquals(10L, hello.get("audit_schema_version"));
-                assertEquals("CLI.7.0.0", hello.get("cli_version"));
+                assertEquals("CLI.7.0.1", hello.get("cli_version"));
             }
         }
     }

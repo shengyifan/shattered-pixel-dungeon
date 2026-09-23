@@ -204,13 +204,19 @@ public class SaveReceiptSessionTest {
     @Test public void menuStartReceiptUsesTheNewRunForStorageAndOriginalMenuForRequestAttribution() throws Exception {
         try (Harness h = harness()) {
             String menu = h.store.menuScope();
-            h.game.state = state(menu, "menu-v1", "menu_ready");
+            h.game.state = new GameController.State(menu, "menu-v1", "menu_ready",
+                    map("scene", "title", "ui", map("controls", Collections.singletonList(
+                            map("id", "c1", "role", "button", "label", "Start", "enabled", true)))),
+                    map("test_fixture", true), Collections.singletonList(
+                            map("action", "ui.activate", "control", "c1", "gestures", Collections.singletonList("click"))));
             h.game.onStart = id -> {
                 String runScope = "run:" + h.game.plannedRun;
                 h.game.state = state(runScope, "run-v1", "player_ready");
                 h.game.saves.add(new GameController.SaveResult("new-run-save", h.game.plannedRun, 1, null, TIME, menu, id));
             };
-            h.action("start", "ui.activate");
+            h.query("start", "action.execute", map("action", "ui.activate", "control", "c1"));
+            assertFalse(h.last().containsKey("err"));
+            assertNotNull(h.game.plannedRun);
             String runScope = "run:" + h.game.plannedRun;
             assertEquals(runScope, h.store.resolveHandle("scope", (String)h.last().get("s")));
             assertReceipt(h.store, lastSave(h.last()), "new-run-save", runScope, menu, "start", true);

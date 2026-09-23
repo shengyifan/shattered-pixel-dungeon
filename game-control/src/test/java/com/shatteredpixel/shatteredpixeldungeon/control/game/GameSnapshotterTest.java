@@ -366,7 +366,7 @@ class GameSnapshotterTest {
         Holiday.clearCachedHoliday();
         String expected = Messages.titleCase(PlayerObservation.displayItemName(food));
         for (int i = 0; i < 10; i++) {
-            assertTrue(JsonCodec.encode(bridge.describeUi()).contains(expected));
+            assertTrue(JsonCodec.encode(UiDrawFixture.capture(bridge).describeUi()).contains(expected));
             bridge.describeActions();
             assertNull(SnapshotFields.read(Holiday.class, "cached"));
         }
@@ -386,21 +386,21 @@ class GameSnapshotterTest {
             IntentButtonFixture button = new IntentButtonFixture();
             scene.add(button);
             UiBridge bridge = new UiBridge(() -> scene);
-            String presentation = bridge.contextSignature();
+            String presentation = UiDrawFixture.capture(bridge).contextSignature();
             String intent = bridge.intentSignature();
             FloatingText damage = allocateFixture(FloatingText.class);
             damage.exists = damage.alive = damage.active = damage.visible = true;
             set(damage, Group.class, "members", new ArrayList<Gizmo>());
             set(damage, RenderedTextBlock.class, "text", "4");
             scene.add(damage);
-            assertFalse(JsonCodec.encode(bridge.describeUi()).contains("\"text\":\"4\""), "An unrendered float has no public text or handle");
-            assertEquals(presentation,bridge.contextSignature());
+            assertFalse(JsonCodec.encode(UiDrawFixture.capture(bridge).describeUi()).contains("\"text\":\"4\""), "An unrendered float has no public text or handle");
+            assertEquals(presentation,UiDrawFixture.capture(bridge).contextSignature());
             set(damage,FloatingText.class,"displayedText",new RenderedTextBlock.VisibleText("4",false,true));
-            assertTrue(JsonCodec.encode(bridge.describeUi()).contains("\"text\":\"4\""));
-            assertNotEquals(presentation, bridge.contextSignature());
+            assertTrue(JsonCodec.encode(UiDrawFixture.capture(bridge).describeUi()).contains("\"text\":\"4\""));
+            assertNotEquals(presentation, UiDrawFixture.capture(bridge).contextSignature());
             assertEquals(intent, bridge.intentSignature());
             scene.remove(damage);
-            assertEquals(presentation, bridge.contextSignature());
+            assertEquals(presentation, UiDrawFixture.capture(bridge).contextSignature());
             assertEquals(intent, bridge.intentSignature());
             button.label = "A changed real choice";
             assertNotEquals(intent, bridge.intentSignature());

@@ -57,7 +57,7 @@ public class StoneOfShock extends Runestone {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 				Char n = Actor.findChar(i);
 				if (n != null) {
-					arcs.add(new Lightning.Arc(cell, n.sprite.center()));
+					arcs.add(new Lightning.Arc(cell, n.sprite.center()).observeDraw("lightning_arc", cell, n.pos));
 					Buff.prolong(n, Paralysis.class, 1f);
 					hits++;
 				}

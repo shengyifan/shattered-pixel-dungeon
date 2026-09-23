@@ -31,9 +31,11 @@ public class CheckedCell extends Image {
 	
 	private float alpha;
 	private float delay;
+	private final int visualCell;
 	
 	public CheckedCell( int pos ) {
 		super( TextureCache.createSolid( 0xFF55AAFF ) );
+		visualCell = pos;
 
 		origin.set( 0.5f );
 		
@@ -42,6 +44,13 @@ public class CheckedCell extends Image {
 			DungeonTilemap.SIZE / 2 ) );
 		
 		alpha = 0.8f;
+	}
+
+	@Override public void draw() {
+		super.draw();
+		if (texture != null && buffer != null && Game.observer.observesVisualCues())
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,
+					new com.watabou.noosa.VisualCue("checked_cell", visualCell));
 	}
 
 	public CheckedCell( int pos, int visSource ) {

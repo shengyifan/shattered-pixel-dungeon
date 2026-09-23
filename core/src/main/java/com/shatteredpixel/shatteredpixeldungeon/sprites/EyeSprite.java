@@ -108,6 +108,10 @@ public class EyeSprite extends MobSprite {
 		if (visible) Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );
 	}
 
+	@Override protected String renderedStateCue() {
+		return curAnim == charging ? "evil_eye_charging" : null;
+	}
+
 	@Override
 	public void play(Animation anim) {
 		if (chargeParticles != null) chargeParticles.on = anim == charging;
@@ -127,9 +131,9 @@ public class EyeSprite extends MobSprite {
 		if (anim == zap) {
 			idle();
 			if (Actor.findChar(zapPos) != null){
-				parent.add(new Beam.DeathRay(center(), Actor.findChar(zapPos).sprite.center()));
+				parent.add(new Beam.DeathRay(center(), Actor.findChar(zapPos).sprite.center()).observeDraw(ch.pos, zapPos));
 			} else {
-				parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(zapPos)));
+				parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(zapPos)).observeDraw(ch.pos, zapPos));
 			}
 			Sample.INSTANCE.play( Assets.Sounds.RAY );
 			((Eye)ch).deathGaze();

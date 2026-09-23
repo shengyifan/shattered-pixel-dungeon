@@ -240,6 +240,9 @@ public class WarpBeacon extends ArmorAbility {
 			if (on && depth == Dungeon.depth) {
 				e = CellEmitter.center(pos);
 				e.pour(MagicMissile.WardParticle.UP, 0.05f);
+				if (com.watabou.noosa.Game.observer.observesVisualCues()) e.observeDraw(
+						new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("warp_beacon", pos,
+								MagicMissile.WardParticle.UP, MagicMissile.WardParticle.class));
 			}
 			else if (e != null) e.on = false;
 		}

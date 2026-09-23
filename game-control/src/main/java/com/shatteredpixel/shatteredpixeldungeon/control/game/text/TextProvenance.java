@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.game.text;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.game.util.WeakIdentityRegistry;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
@@ -112,6 +114,19 @@ public final class TextProvenance {
                     source = operands.length == 2 && operands[1] instanceof Boolean
                             ? TextSource.of("displayed", "value", argument(operands[0]), "markup", operands[1])
                             : TextSource.unknown("invalid_display_operation"); break;
+                case "markup_segment": {
+                    if (operands.length != 3 || !(operands[0] instanceof String)
+                            || !(operands[1] instanceof Integer) || !(operands[2] instanceof Integer)) {
+                        source = TextSource.unknown("invalid_markup_segment"); break;
+                    }
+                    String[] parts = ((String)operands[0]).split("\\*\\*|_", -1);
+                    int index = (Integer)operands[1], count = (Integer)operands[2];
+                    source = count == parts.length && index >= 0 && index < count
+                            && parts[index].trim().equals(rendered.trim())
+                            ? TextSource.of("markup_segment", "value", argument(operands[0]), "index", index, "count", count)
+                            : TextSource.unknown("partial_markup_segment");
+                    break;
+                }
                 case "replace": {
                     source = replacementSource(rendered, operands); break;
                 }

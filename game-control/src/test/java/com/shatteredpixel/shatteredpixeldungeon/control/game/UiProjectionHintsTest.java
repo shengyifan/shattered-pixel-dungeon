@@ -82,7 +82,7 @@ class UiProjectionHintsTest {
                 Scene scene = new Scene(); scene.add(slot);
                 UiBridge bridge = new UiBridge(() -> scene);
                 Map<String, Object> observation = inventory("backpack.0");
-                Map<String, Object> frozen = bridge.frozenUi(observation);
+                Map<String, Object> frozen = UiDrawFixture.capture(bridge).frozenUi(observation);
                 Map<String, Object> rendered = PublicEnglishProjection.copy(frozen);
                 String slotId = firstId(rendered);
                 UiProjectionHints.Node hint = UiProjectionHints.get(rendered).nodes.get(slotId);
@@ -95,18 +95,18 @@ class UiProjectionHintsTest {
                     assertTrue(child.containsKey("text_sources"));
                 }
                 assertEquals("14?", node(rendered, hint.displayChildren.get("extra")).get("text"));
-                assertEquals(JsonCodec.encode(bridge.describeUi()), JsonCodec.encode(rendered));
+                assertEquals(JsonCodec.encode(UiDrawFixture.capture(bridge).describeUi()), JsonCodec.encode(rendered));
                 String signature = bridge.intentSignature();
-                bridge.frozenUi(observation);
+                UiDrawFixture.capture(bridge).frozenUi(observation);
                 assertEquals(signature, bridge.intentSignature(), "Hint construction must not affect freshness");
                 extra.visible = false;
-                UiProjectionHints.Node hidden = UiProjectionHints.get(bridge.frozenUi(observation)).nodes.get(slotId);
+                UiProjectionHints.Node hidden = UiProjectionHints.get(UiDrawFixture.capture(bridge).frozenUi(observation)).nodes.get(slotId);
                 assertFalse(hidden.displayChildren.containsKey("extra"));
                 slot.remove(level);
-                UiProjectionHints.Node detached = UiProjectionHints.get(bridge.frozenUi(observation)).nodes.get(slotId);
+                UiProjectionHints.Node detached = UiProjectionHints.get(UiDrawFixture.capture(bridge).frozenUi(observation)).nodes.get(slotId);
                 assertFalse(detached.displayChildren.containsKey("level"));
                 status.alpha(0);
-                UiProjectionHints.Node transparent = UiProjectionHints.get(bridge.frozenUi(observation)).nodes.get(slotId);
+                UiProjectionHints.Node transparent = UiProjectionHints.get(UiDrawFixture.capture(bridge).frozenUi(observation)).nodes.get(slotId);
                 assertFalse(transparent.displayChildren.containsKey("status"));
             } finally { Dungeon.hero = previous; }
         }
@@ -124,7 +124,7 @@ class UiProjectionHintsTest {
                 Scene scene = new Scene(); scene.add(slot);
                 UiBridge bridge = new UiBridge(() -> scene);
                 Map<String, Object> fullInventory = inventory("backpack.0", "backpack.1");
-                String id = firstId(bridge.describeUi());
+                String id = firstId(UiDrawFixture.capture(bridge).describeUi());
                 assertEquals("backpack.0", hints(bridge, fullInventory, id).locator);
                 Collections.swap(Dungeon.hero.belongings.backpack.items, 0, 1);
                 assertEquals("backpack.1", hints(bridge, fullInventory, id).locator);
@@ -210,7 +210,7 @@ class UiProjectionHintsTest {
     }
 
     private static UiProjectionHints.Node hints(UiBridge bridge, Map<String, Object> observation, String id) {
-        return UiProjectionHints.get(bridge.frozenUi(observation)).nodes.get(id);
+        return UiProjectionHints.get(UiDrawFixture.capture(bridge).frozenUi(observation)).nodes.get(id);
     }
 
     private static Map<String, Object> inventory(String... locators) {

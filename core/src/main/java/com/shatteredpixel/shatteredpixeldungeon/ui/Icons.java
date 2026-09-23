@@ -141,7 +141,7 @@ public enum Icons {
 	}
 	
 	public static Image get( Icons type ) {
-		Image icon = new Image( Assets.Interfaces.ICONS );
+		SymbolImage icon = new SymbolImage( Assets.Interfaces.ICONS );
 		switch (type) {
 
 			case ENTER:
@@ -435,7 +435,26 @@ public enum Icons {
 				break;
 
 		}
+		icon.bindSymbol(type.name().toLowerCase(java.util.Locale.ROOT));
 		return icon;
+	}
+
+	/** A semantic symbol belongs only to the exact image made by this factory. */
+	public static String displayedSymbol(Image image) {
+		return image instanceof SymbolImage?((SymbolImage)image).displayedSymbol():null;
+	}
+
+	private static final class SymbolImage extends Image {
+		private String symbol;
+		private com.watabou.gltextures.SmartTexture symbolTexture;
+		private RectF symbolFrame;
+		SymbolImage(Object texture){super(texture);}
+		void bindSymbol(String value){symbol=value;symbolTexture=texture;symbolFrame=frame();}
+		String displayedSymbol(){
+			if(symbolFrame==null||texture!=symbolTexture||frame==null)return null;
+			return frame.left==symbolFrame.left&&frame.top==symbolFrame.top
+					&&frame.right==symbolFrame.right&&frame.bottom==symbolFrame.bottom?symbol:null;
+		}
 	}
 
 	private static int runTypeOfsX(){

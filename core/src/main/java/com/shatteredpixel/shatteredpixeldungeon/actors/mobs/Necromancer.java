@@ -173,7 +173,7 @@ public class Necromancer extends Mob {
 		if (mySkeleton.HP < mySkeleton.HT){
 
 			if (sprite.visible || mySkeleton.sprite.visible) {
-				sprite.parent.add(new Beam.HealthRay(sprite.center(), mySkeleton.sprite.center()));
+				sprite.parent.add(new Beam.HealthRay(sprite.center(), mySkeleton.sprite.center()).observeDraw(pos, mySkeleton.pos));
 				Sample.INSTANCE.play( Assets.Sounds.RAY );
 			}
 			
@@ -186,7 +186,7 @@ public class Necromancer extends Mob {
 		} else if (mySkeleton.buff(Adrenaline.class) == null) {
 
 			if (sprite.visible || mySkeleton.sprite.visible) {
-				sprite.parent.add(new Beam.HealthRay(sprite.center(), mySkeleton.sprite.center()));
+				sprite.parent.add(new Beam.HealthRay(sprite.center(), mySkeleton.sprite.center()).observeDraw(pos, mySkeleton.pos));
 				Sample.INSTANCE.play( Assets.Sounds.RAY );
 			}
 			

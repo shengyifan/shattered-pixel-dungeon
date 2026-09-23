@@ -389,6 +389,42 @@ public final class AuditStore implements AutoCloseable {
         });
     }
 
+    /** Pre-encoded immutable display write. Original wording never enters the public event payload. */
+    public static final class DisplayEventWrite {
+        public final String scopeId,kind;
+        private final String dataJson,originalJson;
+        public DisplayEventWrite(String scopeId,String kind,Map<String,Object> data,Map<String,Object> original){
+            if(scopeId==null||!scopeId.startsWith("run:")||kind==null||!kind.startsWith("game.")||!Identifiers.valid(kind,128))
+                throw new IllegalArgumentException("A display event requires a run scope and supported display kind");
+            this.scopeId=scopeId;this.kind=kind;dataJson=JsonCodec.encode(data);
+            originalJson=original==null?null:JsonCodec.encode(original);
+        }
+    }
+
+    /** One frozen ordered batch, one unchanged durable paired transaction, no content coalescing. */
+    public synchronized void displayEvents(List<DisplayEventWrite> events){
+        if(events==null)throw new IllegalArgumentException("Display batch is required");
+        List<DisplayEventWrite> batch=new ArrayList<>(events);
+        if(batch.stream().anyMatch(java.util.Objects::isNull))throw new IllegalArgumentException("Display batch contains a null event");
+        if(batch.isEmpty())return;
+        transaction(()->{
+            Set<String> scopes=new java.util.HashSet<>();
+            for(DisplayEventWrite event:batch){
+                if(scopes.add(event.scopeId))insertScope(event.scopeId,"run",event.scopeId.substring(4));
+                long sequence=insertEvent(event.scopeId,event.kind,event.dataJson);
+                if(event.originalJson!=null){
+                    String prefix=JsonCodec.encode(Values.map("event_sequence",sequence,"scope_id",event.scopeId,"kind",event.kind));
+                    String original=prefix.substring(0,prefix.length()-1)+",\"original_display\":"+event.originalJson+"}";
+                    try(PreparedStatement statement=writer.prepareStatement("INSERT INTO internal.logs(channel,text,created_at,session_id) VALUES(?,?,?,?)")){
+                        statement.setString(1,"displayed_text_original");statement.setString(2,original);
+                        statement.setString(3,now());statement.setString(4,activeSession);statement.executeUpdate();
+                    }
+                }
+            }
+            return null;
+        });
+    }
+
     public synchronized void recordSave(String scopeId, int slot, boolean success, Throwable error) {
         recordSave(UUID.randomUUID().toString(),scopeId,slot,success,now(),null,null,error);
     }
@@ -458,16 +494,17 @@ public final class AuditStore implements AutoCloseable {
 
     private long insertEvent(String scopeId,String kind,String json,String sessionId)throws SQLException{
         String created = now();
+        String presentation=presentationStatus(JsonCodec.decode(json));
         long sequence;
         try (PreparedStatement s = writer.prepareStatement("INSERT INTO main.events(scope_id,kind,data_json,created_at,session_id,presentation_status) VALUES(?,?,?,?,?,?)")) {
-            s.setString(1, scopeId); s.setString(2, kind); s.setString(3, json); s.setString(4, created);s.setString(5,sessionId);s.setString(6,presentationStatus(JsonCodec.decode(json))); s.executeUpdate();
+            s.setString(1, scopeId); s.setString(2, kind); s.setString(3, json); s.setString(4, created);s.setString(5,sessionId);s.setString(6,presentation); s.executeUpdate();
         }
         try (Statement s = writer.createStatement(); ResultSet rs = s.executeQuery("SELECT last_insert_rowid()")) {
             if (!rs.next()) throw new SQLException("Missing event identity");
             sequence = rs.getLong(1);
         }
         try (PreparedStatement s = writer.prepareStatement("INSERT INTO internal.events(sequence,scope_id,kind,data_json,created_at,session_id,presentation_status) VALUES(?,?,?,?,?,?,?)")) {
-            s.setLong(1, sequence); s.setString(2, scopeId); s.setString(3, kind); s.setString(4, json); s.setString(5, created);s.setString(6,sessionId);s.setString(7,presentationStatus(JsonCodec.decode(json))); s.executeUpdate();
+            s.setLong(1, sequence); s.setString(2, scopeId); s.setString(3, kind); s.setString(4, json); s.setString(5, created);s.setString(6,sessionId);s.setString(7,presentation); s.executeUpdate();
         }
         return sequence;
     }

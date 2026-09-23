@@ -79,7 +79,7 @@ def client_type(evidence):
                     assert not failures, {"op": op, "source_failures": failures[:30]}
                 if op == "protocol.info":
                     assert response["protocol_version"] == 7 and result["audit_schema_version"] == 10, result
-                    assert result["cli_version"] == "CLI.7.0.0" and result["text_language"] == "en", result
+                    assert result["cli_version"] == "CLI.7.0.1" and result["text_language"] == "en", result
                     assert result.get("build_id") and result.get("session_id"), result
                     metadata = {key: result[key] for key in ("build_id", "cli_version", "audit_schema_version", "text_language", "session_id")}
                     metadata["protocol_version"] = response["protocol_version"]

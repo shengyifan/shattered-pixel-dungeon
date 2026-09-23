@@ -163,6 +163,19 @@ public final class EnglishTextRenderer {
                 String text = Boolean.TRUE.equals(value.get("markup")) ? input.text.replace("**", "").replace("_", "") : input.text;
                 return new Result(text, text, map("kind", kind, "value", input.source, "markup", value.get("markup")), input.reason, false);
             }
+            case "markup_segment": {
+                Result input = node(value.get("value"), budget, depth + 1);
+                if (input.unsafe) return input;
+                if (!(value.get("index") instanceof Integer || value.get("index") instanceof Long)
+                        || !(value.get("count") instanceof Integer || value.get("count") instanceof Long))
+                    return unavailable("invalid_markup_segment");
+                long index = ((Number)value.get("index")).longValue(), count = ((Number)value.get("count")).longValue();
+                String[] parts = input.text.split("\\*\\*|_", -1);
+                if (count != parts.length || index < 0 || index >= count)
+                    return unavailable("translated_markup_shape_changed");
+                String text = parts[(int)index].trim();
+                return new Result(text, text, map("kind", kind, "value", input.source, "index", index, "count", count), input.reason, false);
+            }
             case "replace": case "slice": {
                 Result input = node(value.get("value"), budget, depth + 1);
                 if (input.unsafe) return input;

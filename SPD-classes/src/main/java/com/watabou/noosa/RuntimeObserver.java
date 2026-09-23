@@ -2,11 +2,14 @@ package com.watabou.noosa;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Map;
 
 /** Optional in-process lifecycle observer. No transport or game rules live here. */
 public interface RuntimeObserver {
     RuntimeObserver NONE = new RuntimeObserver() {};
     default void afterFrame() {}
+    /** Completed scene draw, before step/input/update can change the pixels' source objects. */
+    default void afterDraw() {}
     /** Render-thread hook before scene animations update; never performs disk IO. */
     default void beforeSceneUpdate() {}
     /** Render-thread scheduling gate; called under the waiting actor thread's monitor. Never perform IO here. */
@@ -27,11 +30,22 @@ public interface RuntimeObserver {
     /** Snapshot of text that an existing game log control has just drawn, never a raw log signal. */
     default void onGameLog(String contextId, List<LogEntry> entries) {}
     default boolean observesVisualCues() { return false; }
+    /** One actually displayed floating-text occurrence; appearance contains only gated draw evidence. */
+    default void onFloatingText(String runId, Object levelIdentity, int depth,
+                                String text, boolean clipped, Map<String,Object> appearance) {}
+    /** A known graphical combat announcement, emitted once after its unobscured native draw. */
+    default void onBanner(String runId,String kind,Map<String,Object> appearance) {}
+    /** Complete current-frame screen effects. Opaque episode identities must never be serialized. */
+    default void onScreenEffects(String runId,Object levelIdentity,int depth,List<ScreenEffect> effects) {}
     /** One completed GameScene draw. The identity token is opaque and must never be serialized. */
     default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues) {
         onVisualCues(runId,levelIdentity,depth,cues,true);
     }
     default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues, boolean presentationReady) {}
+    /** Quantitative display noise from the same completed draw; separate from discrete visual cues. */
+    default void onVisualMetrics(String runId,Object levelIdentity,int depth,List<VisualMetric> metrics,java.util.Set<Object> visibleEpisodes) {}
+    /** Existing emitter children have finished drawing; its opaque episode is only a sampling key. */
+    default void onEmitterDraw(com.watabou.noosa.particles.Emitter source,Object episode) {}
     final class LogEntry {
         public final String text;
         public final int color;

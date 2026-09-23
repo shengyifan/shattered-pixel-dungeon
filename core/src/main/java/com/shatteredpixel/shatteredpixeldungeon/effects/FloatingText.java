@@ -57,6 +57,7 @@ import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.RenderedText;
 import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.Visual;
 import com.watabou.utils.Callback;
 import com.watabou.utils.SparseArray;
 
@@ -64,6 +65,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class FloatingText extends RenderedTextBlock {
 
@@ -144,6 +147,9 @@ public class FloatingText extends RenderedTextBlock {
 	private int key = -1;
 	private int observationCell = -1;
 	private VisibleText displayedText;
+	private Map<String,Object> displayedAppearance;
+	private Map<String,Object> lastPublishedAppearance;
+	private int displayedIconIndex = -1;
 
 	private static final SparseArray<ArrayList<FloatingText>> stacks = new SparseArray<>();
 	
@@ -156,6 +162,9 @@ public class FloatingText extends RenderedTextBlock {
 		Game.observer.onTextReleased(this);
 		observationCell = -1;
 		displayedText = null;
+		displayedAppearance = null;
+		lastPublishedAppearance = null;
+		displayedIconIndex = -1;
 		super.revive();
 	}
 
@@ -168,14 +177,44 @@ public class FloatingText extends RenderedTextBlock {
 
 	/** The previous completed draw's visible words; queries never render or regenerate text. */
 	public VisibleText displayedText() { return displayedText; }
+	public Map<String,Object> displayedAppearance() { return displayedAppearance; }
+	public int observationCell() { return observationCell; }
 
-	void clearDisplayedText() { displayedText = null; }
+	void clearDisplayedText() { displayedText = null; displayedAppearance = null; }
 
 	/** Called after the scene has drawn its later UI layers. Omit partial glyph-only fragments. */
 	void recordDisplayedText(java.util.function.Predicate<RenderedText> uncoveredWord) {
+		recordDisplayedAppearance(visual -> visual instanceof RenderedText
+				&& uncoveredWord.test((RenderedText)visual), false);
+	}
+
+	void recordDisplayedAppearance(java.util.function.Predicate<Visual> uncovered, boolean cellVisible) {
 		VisibleText fragment = visibleTextFragment(word -> word.hasRenderableText()
-				&& Float.isFinite(word.am + word.aa) && word.am + word.aa > 0 && uncoveredWord.test(word));
+				&& Float.isFinite(word.am + word.aa) && word.am + word.aa > 0 && uncovered.test(word));
 		displayedText = fragment.visible && !fragment.text.isEmpty() ? fragment : null;
+		Map<String,Object> appearance = new LinkedHashMap<>(fragment.styleData());
+		if (cellVisible && observationCell >= 0) appearance.put("cell", observationCell);
+		if (icon != null && icon.parent == this && icon.exists && icon.visible && icon.texture != null
+				&& icon.width() > 0 && icon.height() > 0 && Float.isFinite(icon.alpha()) && icon.alpha() > 0
+				&& displayedIconIndex >= 0 && uncovered.test(icon)) {
+			Map<String,Object> descriptor = new LinkedHashMap<>();
+			descriptor.put("atlas", "floating_text"); descriptor.put("index", displayedIconIndex);
+			appearance.put("icon", Collections.unmodifiableMap(descriptor));
+		}
+		displayedAppearance = displayedText != null || appearance.containsKey("icon")
+				? Collections.unmodifiableMap(appearance) : null;
+	}
+
+	void publishDisplayedText(String runId, Object levelIdentity, int depth) {
+		if (displayedAppearance == null) return;
+		Map<String,Object> evidence = new LinkedHashMap<>(displayedAppearance);
+		evidence.put("text", displayedText == null ? "" : displayedText.text);
+		evidence.put("clipped", displayedText != null && displayedText.clipped);
+		if (evidence.equals(lastPublishedAppearance)) return;
+		lastPublishedAppearance = evidence;
+		Game.observer.onFloatingText(runId, levelIdentity, depth,
+				displayedText == null ? "" : displayedText.text,
+				displayedText != null && displayedText.clipped, displayedAppearance);
 	}
 
 	/** Only already-renderable, fully visible words qualify. No timer or status model is read. */
@@ -263,6 +302,7 @@ public class FloatingText extends RenderedTextBlock {
 		hardlight( color );
 
 		if (iconIdx != NO_ICON){
+			displayedIconIndex = iconIdx;
 			icon = new Image( Assets.Effects.TEXT_ICONS);
 			icon.frame(iconFilm.get(iconIdx));
 			add(icon);
@@ -299,6 +339,10 @@ public class FloatingText extends RenderedTextBlock {
 	/** Same displayed text and stacking as show; additionally marks its original grid anchor. */
 	public static void showOnCell(float x, float y, int cell, String text, int color) {
 		show(x, y, cell, text, color, -1, false, cell);
+	}
+
+	public static void showOnCell(float x, float y, int cell, String text, int color, int iconIdx, boolean left) {
+		show(x, y, cell, text, color, iconIdx, left, cell);
 	}
 
 	private static void show(float x, float y, int key, String text, int color, int iconIdx, boolean left, int cell) {

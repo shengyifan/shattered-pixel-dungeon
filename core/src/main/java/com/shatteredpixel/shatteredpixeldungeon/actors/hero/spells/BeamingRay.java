@@ -137,7 +137,7 @@ public class BeamingRay extends TargetedClericSpell {
 			GameScene.add((Mob) ally);
 			hero.buff(Stasis.StasisBuff.class).detach();
 			hero.sprite.parent.add(
-					new Beam.SunRay(hero.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(telePos)));
+					new Beam.SunRay(hero.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(telePos)).observeDraw(hero.pos, telePos));
 			Sample.INSTANCE.play( Assets.Sounds.RAY );
 
 			if (ally.buff(LifeLink.class) != null){
@@ -145,7 +145,7 @@ public class BeamingRay extends TargetedClericSpell {
 			}
 		} else {
 			hero.sprite.parent.add(
-					new Beam.SunRay(ally.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(telePos)));
+					new Beam.SunRay(ally.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(telePos)).observeDraw(ally.pos, telePos));
 			Sample.INSTANCE.play( Assets.Sounds.RAY );
 		}
 

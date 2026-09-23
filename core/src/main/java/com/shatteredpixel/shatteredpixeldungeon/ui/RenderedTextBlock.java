@@ -31,6 +31,11 @@ import com.watabou.noosa.RenderedText;
 import com.watabou.noosa.ui.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class RenderedTextBlock extends Component {
 
@@ -44,10 +49,18 @@ public class RenderedTextBlock extends Component {
 	protected String[] tokens = null;
 	protected ArrayList<RenderedText> words = new ArrayList<>();
 	protected boolean multiline = false;
+	private final IdentityHashMap<RenderedText, Integer> markupSegments = new IdentityHashMap<>();
+	private int markupSegmentCount = 1;
 
 	private int size;
 	private float zoom;
 	private int color = -1;
+	private boolean animatedColor;
+
+	/** Explicit native color-phase annotation; displayed colors remain public, only input meaning ignores the phase. */
+	public synchronized void animatedColor(int color){hardlight(color);animatedColor=true;}
+	public synchronized boolean hasAnimatedColor(){return animatedColor;}
+	@Override public synchronized void revive(){super.revive();animatedColor=false;}
 	
 	private int hightlightColor = Window.TITLE_COLOR;
 	private boolean highlightingEnabled = true;
@@ -67,6 +80,7 @@ public class RenderedTextBlock extends Component {
 	}
 
 	public void text(String text){
+		animatedColor=false;
 		this.text = text;
 		Game.observer.onTextBound(this, text);
 
@@ -80,6 +94,7 @@ public class RenderedTextBlock extends Component {
 
 	//for manual text block splitting, a space between each word is assumed
 	public void tokens(String... words){
+		animatedColor=false;
 		String fullText = "";
 		for (String word : words) {
 			fullText = Messages.concat(fullText, word);
@@ -109,6 +124,7 @@ public class RenderedTextBlock extends Component {
 	/** Optional draw-time restriction, used for words later covered by another visible layer. */
 	protected synchronized VisibleText visibleTextFragment(java.util.function.Predicate<RenderedText> completeWord) {
 		StringBuilder result = new StringBuilder(), separators = new StringBuilder();
+		List<VisibleStyle> styles = new ArrayList<>();
 		boolean clipped = false, visible = false, omitted = false;
 		if (words == null) return new VisibleText("", false, false);
 		for (RenderedText word : words) {
@@ -125,15 +141,16 @@ public class RenderedTextBlock extends Component {
 			// Calling Visual.isVisible()/camera() here would populate camera caches during a query.
 			float width = word.width(), height = word.height();
 			float alpha = word.am + word.aa;
+			Camera.DrawnTransform transform=camera!=null&&camera.scroll!=null?camera.observedTransform():null;
 			// A positive layout rectangle alone does not draw letters: RenderedText.draw
 			// needs a font, and zero effective shader opacity cannot expose its contents.
 			boolean paintable = word.hasRenderableText() && Float.isFinite(alpha) && alpha > 0;
-			boolean intersects = shown && paintable && camera != null && camera.scroll != null && width > 0 && height > 0
+			boolean intersects = shown && paintable && camera != null && transform != null && width > 0 && height > 0
 					&& word.angle == 0 && word.origin.x == 0 && word.origin.y == 0
-					&& word.x < camera.scroll.x + camera.width && word.x + width > camera.scroll.x
-					&& word.y < camera.scroll.y + camera.height && word.y + height > camera.scroll.y;
-			boolean complete = intersects && word.x >= camera.scroll.x && word.y >= camera.scroll.y
-					&& word.x + width <= camera.scroll.x + camera.width && word.y + height <= camera.scroll.y + camera.height;
+					&& word.x < transform.scrollX + transform.width && word.x + width > transform.scrollX
+					&& word.y < transform.scrollY + transform.height && word.y + height > transform.scrollY;
+			boolean complete = intersects && word.x >= transform.scrollX && word.y >= transform.scrollY
+					&& word.x + width <= transform.scrollX + transform.width && word.y + height <= transform.scrollY + transform.height;
 			complete &= completeWord == null || completeWord.test(word);
 			visible |= intersects;
 			if (complete && word.text() != null) {
@@ -142,6 +159,14 @@ public class RenderedTextBlock extends Component {
 					else result.append(separators);
 				}
 				result.append(word.text()); omitted = false;
+				int segment = markupSegments == null ? 0 : markupSegments.getOrDefault(word, 0);
+				int rgb = word.displayedTextColor();
+				String separator = styles.isEmpty() ? "" : separators.toString();
+				if (!styles.isEmpty() && styles.get(styles.size()-1).segment == segment
+						&& styles.get(styles.size()-1).color == rgb) {
+					VisibleStyle previous = styles.remove(styles.size()-1);
+					styles.add(new VisibleStyle(previous.text + separator + word.text(), rgb, segment));
+				} else styles.add(new VisibleStyle(word.text(), rgb, segment));
 			} else { clipped = true; omitted = true; }
 			separators.setLength(0);
 		}
@@ -149,14 +174,58 @@ public class RenderedTextBlock extends Component {
 		String shownText = !clipped && !highlightingEnabled && text != null ? text : result.toString();
 		if (!clipped && text != null && shownText != text)
 			shownText = Game.observer.onTextOperation("displayed", shownText, text, highlightingEnabled);
-		return new VisibleText(shownText, clipped, visible);
+		List<VisibleStyle> frozen = new ArrayList<>();
+		for (VisibleStyle style : styles) {
+			String fragment = style.text;
+			if (!clipped && text != null) {
+				if (styles.size() == 1) fragment = shownText;
+				else fragment = Game.observer.onTextOperation("markup_segment", fragment,
+						text, style.segment, markupSegmentCount);
+			}
+			frozen.add(new VisibleStyle(fragment, style.color, style.segment));
+		}
+		return new VisibleText(shownText, clipped, visible, frozen);
+	}
+
+	public static final class VisibleStyle {
+		public final String text;
+		public final int color;
+		private final int segment;
+		public VisibleStyle(String text, int color, int segment) {
+			this.text = text; this.color = color; this.segment = segment;
+		}
 	}
 
 	public static final class VisibleText {
 		public final String text;
 		public final boolean clipped, visible;
+		public final List<VisibleStyle> styles;
 		public VisibleText(String text, boolean clipped, boolean visible) {
+			this(text, clipped, visible, Collections.emptyList());
+		}
+		public VisibleText(String text, boolean clipped, boolean visible, List<VisibleStyle> styles) {
 			this.text = text; this.clipped = clipped; this.visible = visible;
+			this.styles = Collections.unmodifiableList(new ArrayList<>(styles));
+		}
+		/** Includes no text that failed the same visibility gate as the parent fragment. */
+		public Map<String,Object> styleData() {
+			Map<String,Object> result = new LinkedHashMap<>();
+			if (styles.isEmpty()) return result;
+			int color = styles.get(0).color;
+			boolean uniform = true;
+			for (VisibleStyle style : styles) uniform &= style.color == color;
+			if (uniform) result.put("color", color);
+			else {
+				List<Map<String,Object>> runs = new ArrayList<>();
+				for (VisibleStyle style : styles) {
+					Map<String,Object> run = new LinkedHashMap<>();
+					run.put("text", style.text); run.put("color", style.color);
+					if (clipped) run.put("clipped", true);
+					runs.add(Collections.unmodifiableMap(run));
+				}
+				result.put("styles", Collections.unmodifiableList(runs));
+			}
+			return Collections.unmodifiableMap(result);
 		}
 	}
 
@@ -177,6 +246,8 @@ public class RenderedTextBlock extends Component {
 		
 		clear();
 		words = new ArrayList<>();
+		markupSegments.clear();
+		markupSegmentCount = 1;
 		boolean highlighting = false;
 		for (String str : tokens){
 
@@ -184,6 +255,7 @@ public class RenderedTextBlock extends Component {
 			// the actual symbols are not rendered
 			if ((str.equals("_") || str.equals("**")) && highlightingEnabled){
 				highlighting = !highlighting;
+				markupSegmentCount++;
 			} else if (str.equals("\n")){
 				words.add(NEWLINE);
 			} else if (str.equals(" ")){
@@ -196,6 +268,7 @@ public class RenderedTextBlock extends Component {
 				word.scale.set(zoom);
 				
 				words.add(word);
+				markupSegments.put(word, markupSegmentCount - 1);
 				add(word);
 				
 				if (height < word.height()) height = word.height();
@@ -213,6 +286,7 @@ public class RenderedTextBlock extends Component {
 	}
 
 	public synchronized void hardlight(int color){
+		animatedColor=false;
 		this.color = color;
 		for (RenderedText word : words) {
 			if (word != null) word.hardlight( color );
@@ -220,6 +294,7 @@ public class RenderedTextBlock extends Component {
 	}
 	
 	public synchronized void resetColor(){
+		animatedColor=false;
 		this.color = -1;
 		for (RenderedText word : words) {
 			if (word != null) word.resetColor();
@@ -238,6 +313,7 @@ public class RenderedTextBlock extends Component {
 	
 	public synchronized void setHightlighting(boolean enabled, int color){
 		if (enabled != highlightingEnabled || color != hightlightColor) {
+			animatedColor=false;
 			hightlightColor = color;
 			highlightingEnabled = enabled;
 			build();
@@ -245,6 +321,7 @@ public class RenderedTextBlock extends Component {
 	}
 
 	public synchronized void invert(){
+		animatedColor=false;
 		if (words != null) {
 			for (RenderedText word : words) {
 				if (word != null) {

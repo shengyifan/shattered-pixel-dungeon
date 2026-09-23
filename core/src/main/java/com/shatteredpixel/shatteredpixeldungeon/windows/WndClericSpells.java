@@ -38,6 +38,8 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RightClickMenu;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -129,13 +131,19 @@ public class WndClericSpells extends Window {
 
 	}
 
-	public class SpellButton extends IconButton {
+	public class SpellButton extends IconButton implements RenderedStatus {
 
 		ClericSpell spell;
 		HolyTome tome;
 		boolean info;
 
 		NinePatch bg;
+
+		@Override
+		public java.util.Map<String,Object> renderedStatus() {
+			java.util.Map<String,Object> appearance=RenderedAppearance.image(icon);
+			return appearance.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("spell_icon",appearance);
+		}
 
 		public SpellButton(ClericSpell spell, HolyTome tome, boolean info){
 			super(new HeroIcon(spell));

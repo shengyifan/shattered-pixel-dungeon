@@ -15,6 +15,10 @@ import com.watabou.noosa.Game;
 import com.watabou.noosa.RuntimeObserver;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
 import com.watabou.noosa.VisualCue;
+import com.watabou.noosa.VisualMetric;
+import com.watabou.noosa.ScreenEffect;
+import com.watabou.noosa.Camera;
+import java.lang.ref.WeakReference;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
@@ -92,6 +96,30 @@ public final class GameController implements RuntimeObserver {
             return map("format","display_snapshot_v2","occurred_at",occurredAt,"gui_language",guiLanguage,"entries",lines);
         }
     }
+    public static final class BannerSnapshot {
+        public final String scopeId;
+        private final Map<String,Object> frozen;
+        BannerSnapshot(String runId,String kind,Map<String,Object> appearance){
+            scopeId="run:"+runId;
+            frozen=PublicEnglishProjection.freeze(map("format","display_occurrence_v1","occurred_at",Instant.now().toString(),
+                    "kind",kind,"appearance",appearance));
+        }
+        public Map<String,Object> data(){return frozen;}
+    }
+    public static final class FloatingSnapshot {
+        public final String scopeId;
+        private final Map<String,Object> original,frozen;
+        public FloatingSnapshot(String runId,int depth,String mapContext,String text,boolean clipped,Map<String,Object> appearance) {
+            scopeId="run:"+runId;
+            Map<String,Object> entry=new LinkedHashMap<>(appearance);
+            entry.put("text",text);entry.put("clipped",clipped);
+            original=Collections.unmodifiableMap(map("format","display_snapshot_v1","occurred_at",Instant.now().toString(),
+                    "depth",depth,"map_context",mapContext,"entries",Collections.singletonList(Collections.unmodifiableMap(entry))));
+            frozen=PublicEnglishProjection.freeze(original);
+        }
+        public Map<String,Object> data(){return frozen;}
+        public Map<String,Object> originalData(){return original;}
+    }
     public static final class VisualSnapshot {
         public final String runId,scopeId,mapContext,occurredAt;
         public final int depth;
@@ -110,12 +138,130 @@ public final class GameController implements RuntimeObserver {
         }
         private List<Map<String,Object>> cueData(){
             List<Map<String,Object>> data=new ArrayList<>();
-            for(VisualCue cue:cues)data.add(Collections.unmodifiableMap(map("kind",cue.kind,"cell",cue.cell)));
+            for(VisualCue cue:cues){
+                Map<String,Object> value=map("kind",cue.kind,"cell",cue.cell);
+                if(cue.sourceCell!=null)value.put("source_cell",cue.sourceCell);
+                if(cue.direction!=null)value.put("direction",cue.direction);
+                if(cue.color!=null)value.put("color",cue.color);
+                if(cue.opacity!=null)value.put("opacity",cue.opacity);
+                if(cue.appearance!=null)value.put("appearance",cue.appearance);
+                data.add(Collections.unmodifiableMap(value));
+            }
             return Collections.unmodifiableList(data);
         }
         public Map<String,Object> data(){return Collections.unmodifiableMap(map("format","display_snapshot_v1","depth",depth,
                 "map_context",mapContext,"occurred_at",occurredAt,"cues",cueData()));}
         public Map<String,Object> stateData(){return map("status","last_rendered","depth",depth,"map_context",mapContext,"cues",cueData());}
+    }
+    /** A sampled quantitative draw, kept separate from unsampled discrete visual events. */
+    public static final class VisualMetricSnapshot {
+        public static final int SAMPLE_PERIOD_MS=250;
+        public final String runId,scopeId,mapContext,occurredAt;
+        public final int depth;
+        private final Object levelIdentity;
+        private final long generation;
+        private final Set<Object> visibleEpisodes;
+        public final List<VisualMetric> metrics;
+        VisualMetricSnapshot(VisualSnapshot visual,String occurredAt,List<VisualMetric> metrics,Set<Object> episodes){
+            runId=visual.runId;scopeId=visual.scopeId;mapContext=visual.mapContext;depth=visual.depth;
+            levelIdentity=visual.levelIdentity;generation=visual.generation;this.occurredAt=occurredAt;
+            this.metrics=Collections.unmodifiableList(new ArrayList<>(metrics));
+            Set<Object> identities=Collections.newSetFromMap(new IdentityHashMap<>());identities.addAll(episodes);
+            visibleEpisodes=Collections.unmodifiableSet(identities);
+        }
+        public List<Map<String,Object>> metricData(){
+            List<Map<String,Object>> values=new ArrayList<>();
+            for(VisualMetric metric:metrics){
+                Map<String,Object> value=map("kind",metric.kind,"cell",metric.cell,"rendered_particles",metric.renderedParticles);
+                if(!metric.appearance.isEmpty())value.put("appearance",metric.appearance);
+                values.add(Collections.unmodifiableMap(value));
+            }
+            return Collections.unmodifiableList(values);
+        }
+        public Map<String,Object> data(){return Collections.unmodifiableMap(map("format","sampled_display_snapshot_v1",
+                "sample_period_ms",SAMPLE_PERIOD_MS,"depth",depth,"map_context",mapContext,"occurred_at",occurredAt,"metrics",metricData()));}
+    }
+    /** Exact current screen pixels with independently sampled public history. */
+    private static final class ScreenSnapshot {
+        static final int SAMPLE_PERIOD_MS=250;
+        private static final Object NO_SURFACE=new Object();
+        final VisualSnapshot visual;
+        final WeakReference<Object> sceneIdentity,cameraIdentity;
+        final String occurredAt;
+        final List<Map<String,Object>> effects;
+        final Set<Object> visibleEpisodes;
+        ScreenSnapshot(VisualSnapshot visual,String occurredAt,List<ScreenEffect> observations){
+            this.visual=visual;this.occurredAt=occurredAt;
+            // The last public sample must not retain a destroyed scene graph or its camera.
+            sceneIdentity=new WeakReference<>(surface(Game.instance==null?null:Game.scene()));
+            cameraIdentity=new WeakReference<>(surface(Camera.main));
+            List<Map<String,Object>> values=new ArrayList<>();
+            Set<Object> episodes=Collections.newSetFromMap(new IdentityHashMap<>());
+            for(ScreenEffect effect:observations){values.add(effect.publicData());episodes.add(effect.episode);}
+            // Equal measured frames have a stable representation independent of callback iteration order.
+            values.sort(Comparator.comparing(value->JsonCodec.encode(value)));
+            effects=PublicEnglishProjection.freeze(values);
+            visibleEpisodes=Collections.unmodifiableSet(episodes);
+        }
+        boolean sameSurface(ScreenSnapshot other){
+            return other!=null&&visual.mapContext.equals(other.visual.mapContext)
+                    &&sceneIdentity.get()!=null&&cameraIdentity.get()!=null
+                    &&sceneIdentity.get()==other.sceneIdentity.get()&&cameraIdentity.get()==other.cameraIdentity.get();
+        }
+        boolean current(VisualSnapshot rendered){
+            return rendered!=null&&visual.generation==rendered.generation
+                    &&visual.levelIdentity==rendered.levelIdentity&&visual.depth==rendered.depth
+                    &&visual.runId.equals(rendered.runId)&&visual.mapContext.equals(rendered.mapContext)
+                    &&sceneIdentity.get()==surface(Game.instance==null?null:Game.scene())&&cameraIdentity.get()==surface(Camera.main);
+        }
+        private static Object surface(Object value){return value==null?NO_SURFACE:value;}
+        Map<String,Object> data(){return map("format","sampled_display_snapshot_v1","sample_period_ms",SAMPLE_PERIOD_MS,
+                "depth",visual.depth,"map_context",visual.mapContext,"occurred_at",occurredAt,"screen_effects",effects);}
+    }
+    /** An immutable occurrence in the single render-callback FIFO. Type adapters retain existing test APIs. */
+    public static final class DisplayEvent {
+        public final String scopeId,kind;
+        private final Object snapshot;
+        private final Map<String,Object> publicData,originalData;
+        private DisplayEvent(String scopeId,String kind,Object snapshot){
+            this.scopeId=scopeId;this.kind=kind;this.snapshot=snapshot;
+            publicData=freezeLiteral(snapshotData(snapshot));originalData=freezeLiteral(snapshotOriginal(snapshot));
+        }
+        /** New display surfaces use the same persistence path without adding another parallel queue. */
+        public DisplayEvent(String scopeId,String kind,Map<String,Object> data,Map<String,Object> original){
+            if(scopeId==null||!scopeId.startsWith("run:")||kind==null||!kind.startsWith("game."))
+                throw new IllegalArgumentException("Display events require a run scope and game event kind");
+            this.scopeId=scopeId;this.kind=kind;snapshot=null;
+            publicData=freezeLiteral(PublicEnglishProjection.freeze(data));originalData=freezeLiteral(original);
+        }
+        public static DisplayEvent from(Object snapshot){
+            if(snapshot instanceof GameLogSnapshot)return new DisplayEvent(((GameLogSnapshot)snapshot).scopeId,"game.log",snapshot);
+            if(snapshot instanceof FloatingSnapshot)return new DisplayEvent(((FloatingSnapshot)snapshot).scopeId,"game.floating_text",snapshot);
+            if(snapshot instanceof VisualSnapshot)return new DisplayEvent(((VisualSnapshot)snapshot).scopeId,"game.visual",snapshot);
+            if(snapshot instanceof VisualMetricSnapshot)return new DisplayEvent(((VisualMetricSnapshot)snapshot).scopeId,"game.visual_metrics",snapshot);
+            if(snapshot instanceof BannerSnapshot)return new DisplayEvent(((BannerSnapshot)snapshot).scopeId,"game.banner",snapshot);
+            throw new IllegalArgumentException("Unsupported display snapshot");
+        }
+        private static Map<String,Object> snapshotData(Object snapshot){
+            if(snapshot instanceof GameLogSnapshot)return ((GameLogSnapshot)snapshot).data();
+            if(snapshot instanceof FloatingSnapshot)return ((FloatingSnapshot)snapshot).data();
+            if(snapshot instanceof VisualSnapshot)return ((VisualSnapshot)snapshot).data();
+            if(snapshot instanceof VisualMetricSnapshot)return ((VisualMetricSnapshot)snapshot).data();
+            if(snapshot instanceof BannerSnapshot)return ((BannerSnapshot)snapshot).data();
+            throw new IllegalArgumentException("Unsupported display snapshot");
+        }
+        private static Map<String,Object> snapshotOriginal(Object snapshot){
+            if(snapshot instanceof GameLogSnapshot)return ((GameLogSnapshot)snapshot).originalData();
+            if(snapshot instanceof FloatingSnapshot)return ((FloatingSnapshot)snapshot).originalData();
+            return null;
+        }
+        public Map<String,Object> data(){return publicData;}
+        public Map<String,Object> originalData(){return originalData;}
+        @SuppressWarnings("unchecked") private static <T> T freezeLiteral(T value){
+            if(value instanceof Map){Map<String,Object> copy=new LinkedHashMap<>();((Map<String,Object>)value).forEach((key,item)->copy.put(key,freezeLiteral(item)));return (T)Collections.unmodifiableMap(copy);}
+            if(value instanceof List){List<Object> copy=new ArrayList<>();for(Object item:(List<?>)value)copy.add(freezeLiteral(item));return (T)Collections.unmodifiableList(copy);}
+            return value;
+        }
     }
     /** A wire response may become ready while the original continuous action still runs. */
     public static final class Execution {
@@ -156,14 +302,21 @@ public final class GameController implements RuntimeObserver {
     private final ConcurrentLinkedQueue<Work> queue=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<SaveResult> saves=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<RunOutcome> outcomes=new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<GameLogSnapshot> gameLogs=new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<VisualSnapshot> visuals=new ConcurrentLinkedQueue<>();
+    private final ArrayDeque<DisplayEvent> displayEvents=new ArrayDeque<>();
+    private Runnable displaySignal=()->{};
+    private boolean displayCaptureClosed;
     private final Map<String,Object> lastGameLogByRun=new HashMap<>();
     private final ConcurrentLinkedQueue<CancelControl> cancellations=new ConcurrentLinkedQueue<>();
     private final Consumer<Throwable> errors;
     private final ArrayList<Runnable> afterHandoff=new ArrayList<>();
     private volatile State latest;
     private volatile VisualSnapshot renderedVisual;
+    private volatile VisualMetricSnapshot renderedMetrics;
+    private VisualMetricSnapshot publishedMetrics;
+    private long lastMetricSampleNanos;
+    private volatile ScreenSnapshot renderedScreen;
+    private ScreenSnapshot publishedScreen;
+    private long lastScreenSampleNanos;
     private volatile boolean disposed, exiting;
     private volatile Throwable closureReason;
     private volatile String plannedRun;
@@ -215,8 +368,49 @@ public final class GameController implements RuntimeObserver {
     public boolean disposed(){return disposed;}
     public SaveResult pollSave(){return saves.poll();}
     public RunOutcome pollRunOutcome(){return outcomes.poll();}
-    public GameLogSnapshot pollGameLog(){return gameLogs.poll();}
-    public VisualSnapshot pollVisual(){return visuals.poll();}
+    public synchronized GameLogSnapshot pollGameLog(){return pollDisplayType(GameLogSnapshot.class);}
+    public synchronized FloatingSnapshot pollFloatingText(){return pollDisplayType(FloatingSnapshot.class);}
+    public synchronized BannerSnapshot pollBanner(){return pollDisplayType(BannerSnapshot.class);}
+    public synchronized VisualSnapshot pollVisual(){return pollDisplayType(VisualSnapshot.class);}
+    public synchronized VisualMetricSnapshot pollVisualMetrics(){return pollDisplayType(VisualMetricSnapshot.class);}
+    public synchronized List<VisualSnapshot> takeVisuals(){return takeDisplayType(VisualSnapshot.class);}
+    public synchronized List<VisualMetricSnapshot> takeVisualMetrics(){return takeDisplayType(VisualMetricSnapshot.class);}
+    public synchronized List<FloatingSnapshot> takeFloatingTexts(){return takeDisplayType(FloatingSnapshot.class);}
+    public synchronized List<BannerSnapshot> takeBanners(){return takeDisplayType(BannerSnapshot.class);}
+    public synchronized List<GameLogSnapshot> takeGameLogs(){return takeDisplayType(GameLogSnapshot.class);}
+    private <T> T pollDisplayType(Class<T> type){
+        for(Iterator<DisplayEvent> iterator=displayEvents.iterator();iterator.hasNext();){
+            Object value=iterator.next().snapshot;if(type.isInstance(value)){iterator.remove();return type.cast(value);}
+        }
+        return null;
+    }
+    private <T> List<T> takeDisplayType(Class<T> type){
+        List<T> batch=new ArrayList<>();T value;while((value=pollDisplayType(type))!=null)batch.add(value);return batch;
+    }
+    /** Called under the render callback lock; the listener may only schedule nonblocking work. */
+    public synchronized void enqueueDisplayEvent(DisplayEvent event){
+        if(displayCaptureClosed)return;
+        displayEvents.addLast(Objects.requireNonNull(event));displaySignal.run();
+    }
+    public synchronized void setDisplaySignal(Runnable signal){
+        displaySignal=signal==null?()->{}:signal;
+        if(!displayCaptureClosed&&!displayEvents.isEmpty())displaySignal.run();
+    }
+    public synchronized boolean hasDisplayEvents(){return !displayEvents.isEmpty();}
+    /** Peek then acknowledge only after the whole paired database transaction commits. */
+    public synchronized List<DisplayEvent> peekDisplayEvents(int limit){
+        if(limit<1)throw new IllegalArgumentException("A positive display batch limit is required");
+        List<DisplayEvent> batch=new ArrayList<>();
+        for(DisplayEvent event:displayEvents){if(batch.size()==limit)break;batch.add(event);}
+        return Collections.unmodifiableList(batch);
+    }
+    public synchronized void acknowledgeDisplayEvents(List<DisplayEvent> batch){
+        Iterator<DisplayEvent> queued=displayEvents.iterator();
+        for(DisplayEvent event:batch)if(!queued.hasNext()||queued.next()!=event)throw new IllegalStateException("Display batch is not the queued prefix");
+        for(int i=0;i<batch.size();i++)displayEvents.removeFirst();
+    }
+    /** Session teardown freezes a finite final cut; already captured events remain queued until committed. */
+    public synchronized void freezeDisplayEvents(){displayCaptureClosed=true;displaySignal=()->{};}
     public void prepareRun(String id){plannedRun=id;}
     public void exitNow(){if(Gdx.app!=null) Gdx.app.postRunnable(()->Gdx.app.exit());}
 
@@ -242,22 +436,92 @@ public final class GameController implements RuntimeObserver {
         Object capturedEntries=map("gui_language",snapshot.guiLanguage,"entries",snapshot.data().get("entries"));
         if(capturedEntries.equals(lastGameLogByRun.get(runId)))return;
         lastGameLogByRun.put(runId,capturedEntries);
-        gameLogs.add(snapshot);
+        enqueueDisplayEvent(DisplayEvent.from(snapshot));
     }
     @Override public boolean observesVisualCues(){return true;}
+    @Override public synchronized void onBanner(String runId,String kind,Map<String,Object> appearance){
+        if(runId==null||!Arrays.asList("boss_slain","game_over").contains(kind))return;
+        enqueueDisplayEvent(DisplayEvent.from(new BannerSnapshot(runId,kind,appearance)));
+    }
+    @Override public synchronized void onFloatingText(String runId,Object levelIdentity,int depth,
+            String text,boolean clipped,Map<String,Object> appearance) {
+        VisualSnapshot rendered=renderedVisual;
+        if(rendered==null||!rendered.runId.equals(runId)||rendered.levelIdentity!=levelIdentity||rendered.depth!=depth)return;
+        enqueueDisplayEvent(DisplayEvent.from(new FloatingSnapshot(runId,depth,rendered.mapContext,text,clipped,appearance)));
+    }
     @Override public synchronized void onVisualCues(String runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady){
         if(runId==null||levelIdentity==null)return;
-        TreeSet<VisualCue> normalized=new TreeSet<>(Comparator.comparingInt((VisualCue cue)->cue.cell).thenComparing(cue->cue.kind));
+        TreeSet<VisualCue> normalized=new TreeSet<>(Comparator.comparingInt((VisualCue cue)->cue.cell)
+                .thenComparing(cue->cue.kind)
+                .thenComparing(cue->cue.sourceCell,Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(cue->cue.direction,Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(cue->cue.color,Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(cue->cue.opacity,Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(cue->cue.appearance==null?"":JsonCodec.encode(cue.appearance)));
         normalized.addAll(cues);
         List<VisualCue> copy=new ArrayList<>(normalized);
         VisualSnapshot previous=renderedVisual;
         boolean sameMap=previous!=null&&previous.levelIdentity==levelIdentity&&previous.depth==depth&&previous.runId.equals(runId);
         String context=sameMap?previous.mapContext:UUID.randomUUID().toString();
-        boolean changed=!sameMap||!copy.equals(previous.cues);
+        boolean changed=!sameMap||!visualEventMeaning(copy).equals(visualEventMeaning(previous.cues));
         VisualSnapshot snapshot=new VisualSnapshot(runId,levelIdentity,depth,context,++drawGeneration,
                 changed?Instant.now().toString():previous.occurredAt,copy,presentationReady);
         renderedVisual=snapshot;
-        if(changed)visuals.add(snapshot);
+        if(changed)enqueueDisplayEvent(DisplayEvent.from(snapshot));
+    }
+    /** Current frames retain exact tints; only documented decorative color cycles are event-deduplicated. */
+    private static List<Map<String,Object>> visualEventMeaning(List<VisualCue> cues){
+        List<Map<String,Object>> meaning=new ArrayList<>();
+        for(VisualCue cue:cues){
+            Map<String,Object> appearance=cue.appearance;
+            if("sprite_state_appearance".equals(cue.kind)&&appearance!=null
+                    &&Arrays.asList("golden_glow","icy","prismatic_cycle").contains(appearance.get("tint_style"))){
+                appearance=new LinkedHashMap<>(appearance);appearance.remove("tint");
+            }
+            meaning.add(map("kind",cue.kind,"cell",cue.cell,"source_cell",cue.sourceCell,"direction",cue.direction,
+                    "color",cue.color,"opacity",cue.opacity,"appearance",appearance));
+        }
+        return meaning;
+    }
+    @Override public void onEmitterDraw(com.watabou.noosa.particles.Emitter source,Object episode){
+        GameScene.observeEmitterMetricDraw(source,episode);
+    }
+    @Override public synchronized void onVisualMetrics(String runId,Object levelIdentity,int depth,List<VisualMetric> metrics,Set<Object> episodes){
+        recordVisualMetrics(runId,levelIdentity,depth,metrics,episodes,System.nanoTime(),Instant.now().toString());
+    }
+    synchronized void recordVisualMetrics(String runId,Object levelIdentity,int depth,List<VisualMetric> metrics,Set<Object> episodes,long now,String occurredAt){
+        VisualSnapshot visual=renderedVisual;
+        if(visual==null||visual.levelIdentity!=levelIdentity||visual.depth!=depth||!Objects.equals(visual.runId,runId))return;
+        List<VisualMetric> copy=new ArrayList<>(metrics);
+        copy.sort(Comparator.comparing((VisualMetric value)->value.kind).thenComparingInt(value->value.cell).thenComparing(value->value.appearance.toString()));
+        VisualMetricSnapshot previous=renderedMetrics;
+        boolean sameMap=previous!=null&&previous.mapContext.equals(visual.mapContext);
+        VisualMetricSnapshot snapshot=new VisualMetricSnapshot(visual,occurredAt,copy,episodes);renderedMetrics=snapshot;
+        boolean presenceChanged=sameMap&&!previous.visibleEpisodes.equals(snapshot.visibleEpisodes);
+        boolean changed=publishedMetrics==null||!snapshot.mapContext.equals(publishedMetrics.mapContext)||!copy.equals(publishedMetrics.metrics);
+        boolean publish=!sameMap?(!copy.isEmpty()||previous!=null&&!previous.metrics.isEmpty())
+                :changed&&(presenceChanged||now-lastMetricSampleNanos>=VisualMetricSnapshot.SAMPLE_PERIOD_MS*1_000_000L);
+        if(publish){enqueueDisplayEvent(DisplayEvent.from(snapshot));publishedMetrics=snapshot;lastMetricSampleNanos=now;}
+    }
+    @Override public synchronized void onScreenEffects(String runId,Object levelIdentity,int depth,List<ScreenEffect> effects){
+        recordScreenEffects(runId,levelIdentity,depth,effects,System.nanoTime(),Instant.now().toString());
+    }
+    synchronized void recordScreenEffects(String runId,Object levelIdentity,int depth,List<ScreenEffect> effects,long now,String occurredAt){
+        VisualSnapshot visual=renderedVisual;
+        if(visual==null||visual.levelIdentity!=levelIdentity||visual.depth!=depth||!Objects.equals(visual.runId,runId))return;
+        ScreenSnapshot previous=renderedScreen;
+        ScreenSnapshot snapshot=new ScreenSnapshot(visual,occurredAt,effects);
+        renderedScreen=snapshot;
+        boolean sameSurface=snapshot.sameSurface(previous);
+        boolean presenceChanged=sameSurface&&!previous.visibleEpisodes.equals(snapshot.visibleEpisodes);
+        boolean changed=publishedScreen==null?!snapshot.effects.isEmpty()
+                :!snapshot.sameSurface(publishedScreen)||!snapshot.effects.equals(publishedScreen.effects);
+        boolean publish=!sameSurface?(!snapshot.effects.isEmpty()||previous!=null&&!previous.effects.isEmpty())
+                :presenceChanged||changed&&now-lastScreenSampleNanos>=ScreenSnapshot.SAMPLE_PERIOD_MS*1_000_000L;
+        if(publish){
+            enqueueDisplayEvent(new DisplayEvent(visual.scopeId,"game.screen_visual",snapshot.data(),null));
+            publishedScreen=snapshot;lastScreenSampleNanos=now;
+        }
     }
     @Override public String onTextResource(String text,String key,String language,Object[] arguments) {
         return TextProvenance.INSTANCE.onTextResource(text,key,language,arguments);
@@ -344,6 +608,7 @@ public final class GameController implements RuntimeObserver {
         }
         Actor.holdMotionHandoff(hold);
     }
+    @Override public void afterDraw(){ui.captureDrawnEvidence();}
     @Override public void afterFrame(){
         frame++;
         try{
@@ -362,6 +627,7 @@ public final class GameController implements RuntimeObserver {
             if(Game.instance==null||Game.scene()==null||Game.switchingScene()||Game.hasPendingCallbacks()||hasPendingEffects(Game.scene())){resetRenderedBoundary();return;}
             if(continuousHandoff()){
                 resetRenderedBoundary();
+                if(!ui.drawnIntentReady())return;
                 if(executing.activityVersion==null){
                     executing.activityVersion="activity:"+epoch+":"+(++activityGeneration);
                     executing.activityKind=Dungeon.hero.resting?"rest":"travel";
@@ -376,6 +642,7 @@ public final class GameController implements RuntimeObserver {
             }
             if(!stable()){resetRenderedBoundary();return;}
             if(!renderedBoundaryReady())return;
+            if((executing!=null||!queue.isEmpty())&&!ui.drawnIntentReady())return;
             if(runActive() && Dungeon.runIdentityNeedsSave) Dungeon.saveAll();
             if(executing!=null && frame>executedFrame){
                 State state=capture(true); Work done=executing;executing=null;deliver(done.result,state);
@@ -429,6 +696,7 @@ public final class GameController implements RuntimeObserver {
             reject(control.result,new NotExecuted("ACTIVITY_EXPIRED",null));return;
         }
         if(Game.switchingScene()||Game.hasPendingCallbacks()||hasPendingEffects(Game.scene()))return;
+        if(!ui.drawnIntentReady())return;
         if(!continuousHandoff()){
             if(!activityStillRunning()){
                 cancellations.poll();cancellationLease=null;
@@ -498,7 +766,18 @@ public final class GameController implements RuntimeObserver {
     }
     private Map<String,Object> visualState(){
         VisualSnapshot rendered=renderedVisual;
-        return matchesCurrentVisual(rendered)?rendered.stateData():map("status","not_rendered","map_context",null,"cues",Collections.emptyList());
+        if(!matchesCurrentVisual(rendered))return map("status","not_rendered","map_context",null,"cues",Collections.emptyList());
+        Map<String,Object> state=rendered.stateData();
+        VisualMetricSnapshot metrics=renderedMetrics;
+        if(metrics!=null&&metrics.levelIdentity==rendered.levelIdentity&&metrics.generation==rendered.generation
+                &&metrics.mapContext.equals(rendered.mapContext)&&!metrics.metrics.isEmpty()){
+            state.put("metrics",metrics.metricData());state.put("metrics_at",metrics.occurredAt);
+        }
+        ScreenSnapshot screen=renderedScreen;
+        if(screen!=null&&screen.current(rendered)){
+            state.put("screen_effects",screen.effects);state.put("screen_effects_at",screen.occurredAt);
+        }
+        return state;
     }
     private State captureContinuous(){
         State ordinary=capture(false);

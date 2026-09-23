@@ -14,6 +14,24 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 import static org.junit.Assert.*;
 
 public class StableControllerTest {
+    @Test public void malformedStaticIntentsAndSettleIdentifiersNeverReachTheChild() throws Exception {
+        Fake child=new Fake(); StableController controller=boot(child);
+        for(Map<String,Object> intent:Arrays.asList(
+                map("op","value","rev","r1","ctl","c1","value",1.0),
+                map("op","choose","rev","r1","ctl","c1","opt",0,"alt",1),
+                map("op","text","rev","r1","ctl","c1","text","","submit",null),
+                map("op","scroll","rev","r1","ctl","c1","x",true),
+                map("op","pan","rev","r1","y",1e40),
+                map("op","bind_key","rev","r1","ctl","c1","keycode",0),
+                map("op","state","s",null),map("op","req","rid",0),
+                map("op","events","limit",0),map("op","settle","rid",false),
+                map("op","settle","rid",null),map("op","settle","rid",""),
+                map("op","settle","timeout_ms",1.0))) {
+            assertEquals(intent.toString(),"INVALID_INTENT",controller.accept(intent).get("err"));
+        }
+        assertEquals(1,child.sent.size());
+    }
+
     @Test public void requestCountersStayDecimalAcrossDigitAndFormerRadixBoundaries() throws Exception {
         Fake child = new Fake(); StableController controller = boot(child);
         for(int number=1;number<=100;number++) {

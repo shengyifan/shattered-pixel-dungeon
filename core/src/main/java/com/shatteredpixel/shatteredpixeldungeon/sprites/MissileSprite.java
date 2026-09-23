@@ -39,6 +39,10 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSp
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Trident;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.VisualCue;
 import com.watabou.noosa.Visual;
 import com.watabou.noosa.tweeners.PosTweener;
 import com.watabou.noosa.tweeners.Tweener;
@@ -52,6 +56,27 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 	private static final float SPEED	= 240f;
 	
 	private Callback callback;
+
+	@Override public void draw() {
+		super.draw();
+		if(!Game.observer.observesVisualCues()||buffer==null)return;
+		VisualCue cue=renderedProjectileCue();
+		if(cue!=null)GameScene.observeMovingVisualDraw(this,cue);
+	}
+
+	/** Measures the currently displayed projectile only; no Item, callback, or planned destination. */
+	public VisualCue renderedProjectileCue() {
+		if(Dungeon.level==null||Dungeon.level.width()<=0)return null;
+		java.util.Map<String,Object> appearance=RenderedAppearance.image(this);
+		if(appearance.isEmpty())return null;
+		// Native setup rotates around the image center. Do not guess for another anchor.
+		if(origin.x!=width/2f||origin.y!=height/2f)return null;
+		float centerX=x+origin.x,centerY=y+origin.y;
+		if(!Float.isFinite(centerX+centerY)||centerX<0||centerY<0)return null;
+		int column=(int)(centerX/DungeonTilemap.SIZE),row=(int)(centerY/DungeonTilemap.SIZE);
+		if(column>=Dungeon.level.width()||row>=Dungeon.level.height())return null;
+		return new VisualCue("missile_projectile",row*Dungeon.level.width()+column,null,null,null,alpha(),appearance);
+	}
 
 	@Override
 	public boolean hasPendingCallback() { return callback != null; }

@@ -222,7 +222,7 @@ final class LowFrequencyFixtures {
                 "ankhs_used", Statistics.ankhsUsed);
     }
 
-    private static void arena(Hero hero) {
+    static void arena(Hero hero) {
         for (Mob mob : new ArrayList<>(Dungeon.level.mobs)) {
             for (Buff buff : mob.buffs()) Actor.remove(buff);
             Actor.remove(mob);

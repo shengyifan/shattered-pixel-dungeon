@@ -530,9 +530,9 @@ public class CursedWand {
 		public void FX(Item origin, Char user, Ballistica bolt, Callback callback) {
 			Char ch = Actor.findChar( bolt.collisionPos );
 			if (ch != null){
-				user.sprite.parent.addToFront(new Lightning(user.sprite.center(), ch.sprite.center(), null));
+				user.sprite.parent.addToFront(new Lightning(user.sprite.center(), ch.sprite.center(), null).observeDraw("lightning_arc", user.pos, ch.pos));
 			} else {
-				user.sprite.parent.addToFront(new Lightning(user.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(bolt.collisionPos), null));
+				user.sprite.parent.addToFront(new Lightning(user.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(bolt.collisionPos), null).observeDraw("lightning_arc", user.pos, bolt.collisionPos));
 			}
 			Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );
 			callback.call();

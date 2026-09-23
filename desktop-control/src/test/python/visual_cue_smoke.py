@@ -9,6 +9,7 @@ import uuid
 
 from fixture_smoke import FixtureClient, assert_gui_environment, close_choices, freeze_runtime, reach_game
 from low_frequency_smoke import act
+from protocol7 import pages
 
 
 def visual(state):
@@ -32,14 +33,14 @@ def wait_result(client, kind, fixture):
                               "later_diagnostic_only": visual(late)})
     visible = {tile["cell"] for tile in result["observation"]["map"]["cells"] if tile["visibility"] == "visible"}
     assert all(cue["cell"] in visible for cue in visual(result)["cues"])
-    assert all(set(cue) == {"kind", "cell"} for cue in visual(result)["cues"]), visual(result)
+    assert all({"kind", "cell"} <= set(cue) <= {"kind", "cell", "source_cell", "direction", "color", "opacity", "appearance"}
+               for cue in visual(result)["cues"]), visual(result)
     return result
 
 
 def read_visual_events(client, after=0):
-    response = client.request("events.read", {"after": after, "limit": 100})
-    assert response["ok"], response
-    return [event for event in response["result"] if event["kind"] == "game.visual"]
+    return [event for batch in pages(client, "events.read", after=after, limit=100)
+            for event in batch if event["kind"] == "game.visual"]
 
 
 def test_red(client):
@@ -59,11 +60,12 @@ def test_red(client):
     assert faded["observation"]["hero"] == warning["observation"]["hero"]
     later_events = read_visual_events(client)
     assert historical in later_events, "A displayed warning must remain in public event history"
-    assert any(event["sequence"] > historical["sequence"] and event["data"]["cues"] == [] for event in later_events)
+    assert any(event["sequence"] > historical["sequence"]
+               and not any(cue["kind"] == "red_target" for cue in event["data"]["cues"]) for event in later_events)
     assert visual(faded)["map_context"] == visual(warning)["map_context"]
     return {"native_boss": "YogDzewa", "red_cells_in_final_wait_response": sorted(cells),
             "render_fade_does_not_reconstruct_ai_target_list": True,
-            "seen_warning_retained_in_public_history": True, "empty_draw_event_after_fade": True,
+            "seen_warning_retained_in_public_history": True, "red_target_absent_in_later_draw_event": True,
             "game_action_after_warning_before_fade": False}
 
 

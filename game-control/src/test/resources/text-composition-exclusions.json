@@ -1307,6 +1307,134 @@
       "expression": "DungeonSeed.convertToCode(Dungeon.seed)",
       "reason": "Stores the selected replay seed in settings; this expression does not display text.",
       "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\" + cue.cell",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\" + cue.opacity",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "visibleTextFragment",
+      "kind": "PLUS",
+      "expression": "previous.text + separator + word.text()",
+      "count": 1,
+      "reason": "Visible color-run composition; the complete fragment is registered as a displayed markup segment, and clipped fragments retain explicit unavailable provenance."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "visibleTextFragment",
+      "kind": "PLUS",
+      "expression": "previous.text + separator",
+      "count": 1,
+      "reason": "Visible color-run composition; the complete fragment is registered as a displayed markup segment, and clipped fragments retain explicit unavailable provenance."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/MagicMissile.java",
+      "method": "appearance",
+      "kind": "PLUS",
+      "expression": "\"magic_speck_\" + (type - SPECK)",
+      "count": 1,
+      "reason": "Protocol rendering-kind identifier for the already selected native Speck drawing branch; not localized display text or a model identity."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\" + cue.opacity + \":\" + cue.appearance",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\" + cue.opacity + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/Icons.java",
+      "method": "get",
+      "kind": "METHOD_INVOCATION",
+      "expression": "type.name().toLowerCase(java.util.Locale.ROOT)",
+      "count": 1,
+      "reason": "Stable English icon symbol from the native enum and exact displayed atlas frame; not a translated display string."
     }
   ]
 }

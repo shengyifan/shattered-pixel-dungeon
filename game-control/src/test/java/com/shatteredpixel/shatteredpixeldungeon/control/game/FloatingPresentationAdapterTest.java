@@ -39,9 +39,9 @@ class FloatingPresentationAdapterTest {
             Scene scene=new Scene();Group container=new Group();scene.add(container);
             container.add(floating(raw,null));container.add(floating(raw+"隐藏变化",null));scene.add(new Choice());
             UiBridge bridge=new UiBridge(()->scene);
-            assertEquals(baseline.describeUi(),bridge.describeUi(),raw);
+            assertEquals(UiDrawFixture.capture(baseline).describeUi(),UiDrawFixture.capture(bridge).describeUi(),raw);
             assertEquals(baseline.describeActions(),bridge.describeActions(),raw);
-            assertEquals(baseline.contextSignature(),bridge.contextSignature(),raw);
+            assertEquals(UiDrawFixture.capture(baseline).contextSignature(),UiDrawFixture.capture(bridge).contextSignature(),raw);
         }
     }
     @Test void publishedTextComesOnlyFromTheCompletedDrawCacheAndDoesNotRegenerateIt() throws Exception {
@@ -55,7 +55,7 @@ class FloatingPresentationAdapterTest {
         Scene a=new Scene(),b=new Scene();
         a.add(floating("Visible secret A",new RenderedTextBlock.VisibleText("Visible",true,true)));
         b.add(floating("Visible secret B",new RenderedTextBlock.VisibleText("Visible",true,true)));
-        Map<String,Object> first=new UiBridge(()->a).describeUi(),second=new UiBridge(()->b).describeUi();
+        Map<String,Object> first=UiDrawFixture.capture(new UiBridge(()->a)).describeUi(),second=UiDrawFixture.capture(new UiBridge(()->b)).describeUi();
         assertEquals(first,second);assertTrue(first.toString().contains("clipped=true"));assertFalse(first.toString().contains("secret"));
         assertFalse(first.toString().contains("presentation"));
     }
@@ -75,12 +75,12 @@ class FloatingPresentationAdapterTest {
     }
     @Test void ordinaryStoredTextIsNeverGivenFloatingPresentation() throws Exception {
         Scene scene=new Scene();RenderedTextBlock ordinary=ResourceTextFixture.laidOut("闪避");scene.add(ordinary);
-        Map<String,Object> observed=new UiBridge(()->scene).describeUi();
+        Map<String,Object> observed=UiDrawFixture.capture(new UiBridge(()->scene)).describeUi();
         assertEquals("partial",PublicEnglishProjection.presentation(observed).get("status"));
         assertFalse(observed.toString().contains("dodged"));
         assertFalse(observed.toString().contains("floating_text"));
     }
-    @SuppressWarnings("unchecked") private static List<Map<String,Object>> nodes(UiBridge bridge){return (List<Map<String,Object>>)bridge.describeUi().get("controls");}
+    @SuppressWarnings("unchecked") private static List<Map<String,Object>> nodes(UiBridge bridge){return (List<Map<String,Object>>)UiDrawFixture.capture(bridge).describeUi().get("controls");}
     private static FloatingText floating(String text,RenderedTextBlock.VisibleText visible)throws Exception {
         FloatingText value=allocate(FloatingText.class);init(value);set(value,RenderedTextBlock.class,"text",text);set(value,FloatingText.class,"displayedText",visible);return value;
     }

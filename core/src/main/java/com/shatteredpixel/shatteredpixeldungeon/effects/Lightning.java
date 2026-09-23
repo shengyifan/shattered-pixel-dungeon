@@ -74,6 +74,12 @@ public class Lightning extends Group {
 		
 		life = DURATION;
 	}
+
+	/** Attach source coordinates to the effect already created by the ordinary game path. */
+	public Lightning observeDraw(String kind, int from, int to) {
+		if (Game.observer.observesVisualCues()) for (Arc arc : arcs) arc.observeDraw(kind, from, to);
+		return this;
+	}
 	
 	private static final double A = 180 / Math.PI;
 	
@@ -113,10 +119,12 @@ public class Lightning extends Group {
 
 		//starting and ending x/y values
 		private PointF start, end;
+		private com.watabou.noosa.VisualCue observation;
 
 		public Arc(int from, int to){
 			this( DungeonTilemap.tileCenterToWorld(from),
 					DungeonTilemap.tileCenterToWorld(to));
+			observeDraw("lightning_arc", from, to);
 		}
 
 		public Arc(PointF from, int to){
@@ -146,6 +154,17 @@ public class Lightning extends Group {
 
 		public void alpha(float alpha) {
 			arc1.am = arc2.am = alpha;
+		}
+
+		public Arc observeDraw(String kind, int from, int to) {
+			if (Game.observer.observesVisualCues()) observation = new com.watabou.noosa.VisualCue(kind, to, from, null);
+			return this;
+		}
+
+		@Override public void draw() {
+			super.draw();
+			if (observation != null && Game.observer.observesVisualCues())
+				com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeLinkedVisualDraw(arc1, arc2, observation);
 		}
 
 		@Override

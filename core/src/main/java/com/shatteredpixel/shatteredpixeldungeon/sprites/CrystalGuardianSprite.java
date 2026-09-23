@@ -64,6 +64,10 @@ public abstract class CrystalGuardianSprite extends MobSprite {
 		play(crumple);
 	}
 
+	@Override protected String renderedStateCue() {
+		return curAnim == crumple ? "downed_crystal_guardian" : null;
+	}
+
 	public void endCrumple(){
 		if (curAnim == crumple){
 			idle();

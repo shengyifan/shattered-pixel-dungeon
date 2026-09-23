@@ -2,13 +2,14 @@
 
 ## Contract
 
-CLI.7.0.0 uses protocol 7, audit schema 10 and the independent default profile
+CLI.7.0.1 uses protocol 7, audit schema 10 and the independent default profile
 `Shattered Pixel Dungeon CLI v7`. Protocol 6 requests and schema 1–9 profiles are
 rejected, without migration or changes to their original history. The game remains
 3.3.8. Generated request counter suffixes remain decimal.
 
-This release implements only same-frame action sharing and common-field record
-templates. There are no deltas, previous-frame dictionaries, shortened hero/gesture
+Protocol 7 introduced same-frame action sharing and common-field record
+templates. CLI.7.0.1 adds [rendered combat evidence and reliability fixes](cli-combat-visuals.md)
+without changing those encoding boundaries. There are no deltas, previous-frame dictionaries, shortened hero/gesture
 notations, new map encodings, inventory capacity summaries or GUI semantic pruning.
 The exact source transport remains separate from client expansion.
 
@@ -128,8 +129,9 @@ generated under the ignored `desktop-control/build/cli7-token-study-20260920/`.
 ## Historical package and regression validation (2026-09-20)
 
 The following build identity, help byte count and fixture paths belong to the
-implementation acceptance. Those generated artifacts have been cleaned; current
-package evidence is in the [clean-rebuild record](cli-rebuild-7.0.0-20260921.md).
+implementation acceptance. Those generated artifacts have been cleaned. The
+subsequent [CLI.7.0.0 rebuild](cli-rebuild-7.0.0-20260921.md) is also historical;
+current package evidence is in the [CLI.7.0.1 acceptance report](cli-rebuild-7.0.1-20260923.md).
 
 The final no-cache/rerun/offline Gradle gate completed all 34 tasks successfully:
 **558 Java tests** (control-protocol 18, game-control 348, desktop-control 192),

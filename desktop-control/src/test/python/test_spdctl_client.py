@@ -288,7 +288,7 @@ class SpdctlIntentValidationTest(unittest.TestCase):
                  "ops": [{"op": "click", "gestures": ["click", "long"]}]},
             ]},
             "acts": acts if acts is not None else [
-                {"op": "move"}, {"op": "cell"}, {"op": "item"}, {"op": "back"},
+                {"op": "move"}, {"op": "cell", "modes": ["act", "examine", "context"]}, {"op": "item"}, {"op": "back"},
             ],
         }))
 

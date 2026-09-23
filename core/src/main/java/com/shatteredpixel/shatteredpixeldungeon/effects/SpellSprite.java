@@ -59,6 +59,7 @@ public class SpellSprite extends Image {
 	private Phase phase;
 	private float duration;
 	private float passed;
+	private int visualIndex = -1;
 	
 	private static HashMap<Char,SpellSprite> all = new HashMap<>();
 	
@@ -72,12 +73,24 @@ public class SpellSprite extends Image {
 	
 	public void reset( int index ) {
 		frame( film.get( index ) );
+		visualIndex = index;
 		origin.set( width / 2, height / 2 );
 		
 		phase = Phase.FADE_IN;
 		
 		duration = FADE_IN_TIME;
 		passed = 0;
+	}
+
+	@Override public void draw() {
+		super.draw();
+		if (!Game.observer.observesVisualCues() || texture == null || buffer == null || visualIndex < 0
+				|| target == null || target.sprite == null) return;
+		int cell = target.sprite.renderedCell();
+		if (cell >= 0 && Math.abs(x-(target.sprite.center().x-SIZE/2f)) <= 2f
+				&& Math.abs(y-(target.sprite.y-SIZE)) <= 2f)
+			GameScene.observeCellVisualDraw(this, new com.watabou.noosa.VisualCue("spell_icon", cell, null, null,
+					displayedTextColor(), null, java.util.Map.of("atlas", "spell_icons", "frame", visualIndex)));
 	}
 	
 	@Override

@@ -1,4 +1,4 @@
-package com.shatteredpixel.shatteredpixeldungeon.control.game.text;
+package com.shatteredpixel.shatteredpixeldungeon.control.game.util;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -7,32 +7,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Values must never retain their key. Identity, not String.equals, is the contract. */
-final class WeakIdentityRegistry<V> {
+public final class WeakIdentityRegistry<V> {
     private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
     private final Map<Key, V> values = new HashMap<>();
 
-    synchronized V get(Object key) {
+    public synchronized V get(Object key) {
         try {
             drain();
             return key == null ? null : values.get(new Key(key, null));
         } finally { Reference.reachabilityFence(key); }
     }
 
-    synchronized void put(Object key, V value) {
+    public synchronized void put(Object key, V value) {
         try {
             drain();
             if (key != null) values.put(new Key(key, queue), value);
         } finally { Reference.reachabilityFence(key); }
     }
 
-    synchronized void remove(Object key) {
+    public synchronized void remove(Object key) {
         try {
             drain();
             if (key != null) values.remove(new Key(key, null));
         } finally { Reference.reachabilityFence(key); }
     }
 
-    synchronized void clear() {
+    public synchronized void clear() {
         values.clear();
         while (queue.poll() != null) { }
     }

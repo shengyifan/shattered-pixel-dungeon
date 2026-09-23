@@ -29,10 +29,30 @@ import com.watabou.input.GameAction;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Visual;
 
-public class ActionIndicator extends Tag {
+public class ActionIndicator extends Tag implements RenderedStatus {
 
 	Visual primaryVis;
 	Visual secondVis;
+
+	@Override
+	public synchronized java.util.Map<String,Object> renderedStatus() {
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		java.util.Map<String,Object> primary=RenderedAppearance.image(primaryVis),secondary=RenderedAppearance.image(secondVis);
+		if(!primary.isEmpty())result.put("primary_icon",primary);
+		if(!secondary.isEmpty())result.put("secondary_icon",secondary);
+		return result;
+	}
+
+	@Override
+	public synchronized java.util.Map<String,Object> intentStatus() {
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		java.util.Map<String,Object> primary=RenderedAppearance.intentImage(primaryVis,true,
+				!(primaryVis instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite));
+		java.util.Map<String,Object> secondary=RenderedAppearance.intentImage(secondVis,true,
+				!(secondVis instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite));
+		if(!primary.isEmpty())result.put("primary_icon",primary);if(!secondary.isEmpty())result.put("secondary_icon",secondary);
+		return result;
+	}
 
 	public static Action action;
 	public static ActionIndicator instance;

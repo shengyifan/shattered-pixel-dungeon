@@ -145,7 +145,7 @@ class CurrencyIndicatorIntentTest {
     private void assertTextVisible(String value) { assertTrue(nodes().stream().anyMatch(node -> value.equals(node.get("text")))); }
     private void assertNoText(String value) { assertTrue(nodes().stream().noneMatch(node -> value.equals(node.get("text")))); }
     @SuppressWarnings("unchecked") private List<Map<String, Object>> nodes() {
-        return (List<Map<String, Object>>) bridge.describeUi().get("controls");
+        return (List<Map<String, Object>>) UiDrawFixture.capture(bridge).describeUi().get("controls");
     }
 
     /** Only font measurement is stubbed; CurrencyIndicator.update() and its timers are unchanged. */

@@ -38,7 +38,23 @@ import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Image;
 import com.watabou.utils.Rect;
 
-public class ItemSlot extends Button {
+public class ItemSlot extends Button implements RenderedStatus {
+
+	@Override public java.util.Map<String,Object> renderedStatus() {
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		java.util.Map<String,Object> main=RenderedAppearance.image(sprite),badge=RenderedAppearance.image(itemIcon);
+		if(!main.isEmpty())result.put("item_icon",main);
+		if(!badge.isEmpty())result.put("item_badge",badge);
+		return result;
+	}
+
+	@Override public java.util.Map<String,Object> intentStatus() {
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		java.util.Map<String,Object> main=RenderedAppearance.intentImage(sprite,true,false),badge=RenderedAppearance.intentImage(itemIcon,true,true);
+		if(!main.isEmpty())result.put("item_icon",main);
+		if(!badge.isEmpty())result.put("item_badge",badge);
+		return result;
+	}
 
 	public static final int DEGRADED	= 0xFF4444;
 	public static final int UPGRADED	= 0x44FF44;

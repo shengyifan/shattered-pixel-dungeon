@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 7)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.7.0.0, protocol 7, and base game 3.3.8.
+`spdctl --version` reports CLI.7.0.1, protocol 7, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -73,6 +73,10 @@ current `response`; `late_responses` are historical evidence, not live bindings.
 Successful quit waits for the child to exit; `controller:"exit"` reports an exit
 wait or failure without creating a new game observation. Transport files contain
 the actual child requests/replies, not controller intents or local wrappers.
+An asynchronous quit keeps the request channel open until its exact successful
+terminal receipt is delivered. The controller obtains that receipt with `settle`,
+then only waits for exit. Unrelated queries cannot complete this shutdown. While
+a successful quit awaits receipt delivery, new game actions fail `SESSION_CLOSING`.
 
 The remaining request examples describe the direct `run --machine` interface.
 That mode starts the GUI and serial NDJSON connection in one game JVM. Keep the
@@ -426,6 +430,59 @@ after a purchase, pickup, sort or UI transition. Use the current observation.
 `actions` returns current UI/actions without repeating the world map. Parameter
 rules are in `info.schema`; current ops supply availability and dynamic constraints.
 
+### Rendered combat information
+
+CLI.7.0.1 adds optional rendered appearance without changing protocol 7 or profile
+schema 10. A cue retains `kind/cell` and may include `source_cell`, `dir`, `color`,
+`opacity` or `appearance`. Endpoints must independently pass visibility checks.
+Directions use N/NE/E/SE/S/SW/W/NW and require consecutive eligible draws; absence
+does not mean stationary. A projectile's cell is its actual drawn location, not
+its destination. English kinds name visual appearances, not guaranteed damage,
+AI decisions or future outcomes. Discovery describes the supported families.
+
+Text nodes preserve RGB `color` (including black/zero), or ordered `styles` with
+translated text/color runs. Item status strings retain their original types and
+nodes. Icons and HUD may include atlas, frame/index, tint, opacity, rotation,
+rendered Buff `icon_overlay` pixels and `turn_progress` sweep. Native icon symbols
+are retained when their original displayed atlas/frame still match. Unknown
+assets or unmappable translated style fragments remain explicit diagnostics.
+An enemy portrait describes its appearance, not the identity/cell of an unseen
+target. Only the actual map crosshair supplies `quickslot_target` geometry.
+
+Current `cues` describes the last matching completed draw. Optional `metrics` and
+`metrics_at` retain that same draw's visible particle histogram, with
+`rendered_particles` and optional appearance. These are rendered samples, never
+hidden item levels, blob amounts or remaining timers. `game.visual_metrics`
+history explicitly uses `sampled_display_snapshot_v1` and `sample_period_ms:250`;
+new visible emission episodes and their disappearance are recorded immediately,
+while ordinary histogram motion/color changes are sampled. It is not a recording
+of every intermediate frame. Discrete warnings are not sampled this way.
+
+`cues.screen_effects` and `screen_effects_at` describe that completed draw's visible
+screen overlays and actual camera displacement. Overlay color, effective opacity,
+blend and screen rectangle come from the drawn overlay, including its texture
+alpha. Camera offsets come from the matrix actually submitted to a nonempty draw,
+including native pixel alignment; requested future shake parameters are absent.
+`game.screen_visual` uses explicitly sampled quantitative snapshots at 250 ms,
+with immediate visible-episode appearance/disappearance. An empty snapshot means
+not currently observed, which can also result from occlusion, not just expiry.
+
+`events` also retains `game.floating_text` and `game.banner` occurrences. Identical
+floating values after reuse remain distinct; fading alone does not duplicate an
+occurrence. Expired beams, projectiles and text remain historical evidence, never
+current targets. These events are queried normally and are not unsolicited pipe
+replies. Event draining uses finite cuts so ongoing rendering cannot monopolize
+a request; later events remain queued for subsequent draining.
+
+All sources retain conservative current-map/FOV/full-viewport/UI-occlusion gates.
+Partly clipped and through-fog hints can therefore remain unreported. First-draw
+readiness never advances actors to manufacture evidence or waits for hidden or
+frozen emitters. Render-only pulses, idle frames and passive text/banner lifetimes
+do not alone expire action bindings. Meaningful resources, selections, warning
+colors and operation constraints remain protected.
+
+See `docs/cli-combat-visuals.md` for the source review and validation boundaries.
+
 The optional repository helper `desktop-control/client/spdctl_client.py` provides
 strict per-frame decoding and intent validation without I/O or gameplay policy.
 It separates controller errors, original outcomes, current observations and late
@@ -559,6 +616,7 @@ rejected as `BUSY` while execution is pending.
 | `UNKNOWN_REVISION` | The revision handle is unknown or has the wrong identity kind; obtain a current observation. |
 | `EXECUTION_UNKNOWN`, `EXECUTION_UNCERTAIN` | Do not assume failure or replay; preserve uncertainty and inspect the original result. |
 | `AUDIT_UNAVAILABLE` | The audit store failed; new game operations stop. |
+| `SESSION_CLOSING` | A successful quit awaits its original receipt delivery; settle it and wait for exit. |
 
 Controller launch/stream failures also emit a stage-specific stderr diagnostic:
 `CONTROLLER_CHILD_START_FAILED`, `CONTROLLER_OUTPUT_FAILED`,

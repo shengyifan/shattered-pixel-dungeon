@@ -21,11 +21,17 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.effects.particles;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.noosa.particles.Emitter.Factory;
 import com.watabou.noosa.particles.PixelParticle;
 
 public class SacrificialParticle extends PixelParticle.Shrinking {
+	private float observedOriginX, observedOriginY;
 
 	public static final Emitter.Factory FACTORY = new Factory() {
 		@Override
@@ -49,6 +55,8 @@ public class SacrificialParticle extends PixelParticle.Shrinking {
 
 	public void reset( float x, float y ) {
 		revive();
+		observedOriginX = x;
+		observedOriginY = y;
 
 		this.x = x;
 		this.y = y - 4;
@@ -64,5 +72,18 @@ public class SacrificialParticle extends PixelParticle.Shrinking {
 		super.update();
 		float p = left / lifespan;
 		am = p > 0.75f ? (1 - p) * 4 : 1;
+	}
+
+	@Override
+	public void draw() {
+		super.draw();
+		if (!Game.observer.observesVisualCues() || texture == null || buffer == null
+				|| !(parent instanceof BlobEmitter) || Dungeon.level == null) return;
+		String kind = ((BlobEmitter)parent).observedParticleMetric();
+		if (kind == null || !Float.isFinite(observedOriginX) || !Float.isFinite(observedOriginY)
+				|| observedOriginX < 0 || observedOriginY < 0) return;
+		int x = (int)(observedOriginX / DungeonTilemap.SIZE), y = (int)(observedOriginY / DungeonTilemap.SIZE);
+		if (x < Dungeon.level.width() && y < Dungeon.level.height())
+			GameScene.observeParticleMetricDraw(this, kind, y * Dungeon.level.width() + x);
 	}
 }

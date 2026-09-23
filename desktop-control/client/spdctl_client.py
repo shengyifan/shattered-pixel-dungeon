@@ -19,7 +19,9 @@ are copied rather than normalized away.
 from __future__ import annotations
 
 import copy
+import math
 import re
+import struct
 import unicodedata
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
@@ -396,11 +398,16 @@ def _map(value: Any, path: str) -> Dict[str, Any]:
         raise DecodeError(f"{path}.env must be an object")
     decoded_environment: Dict[int, list] = {}
     for raw_cell, effects in env.items():
-        if not isinstance(raw_cell, str) or not raw_cell.isdigit():
+        if not isinstance(raw_cell, str) or re.fullmatch(r"[0-9]+", raw_cell) is None:
             raise DecodeError(f"{path}.env keys must be decimal cell strings")
-        cell = int(raw_cell)
+        try:
+            cell = int(raw_cell)
+        except ValueError as error:
+            raise DecodeError(f"{path}.env cell is not a supported decimal integer") from error
         if not 0 <= cell < width * height:
             raise DecodeError(f"{path}.env contains an out-of-bounds cell")
+        if cell in decoded_environment:
+            raise DecodeError(f"{path}.env contains duplicate decimal cell identities")
         decoded_environment[cell] = _environment(effects, effect_defs, f"{path}.env.{raw_cell}")
 
     integer_rows = len(types) > len(TILE_ALPHABET)
@@ -554,6 +561,9 @@ def decode_data(value: Mapping[str, Any], scope: Optional[str] = None,
         saves = persistence.get("saves", [])
         if not isinstance(saves, list):
             raise DecodeError("$.data.persistence.saves must be an array")
+        for index, receipt in enumerate(saves):
+            if not isinstance(receipt, Mapping) or not isinstance(receipt.get("sid"), str) or not receipt["sid"]:
+                raise DecodeError(f"$.data.persistence.saves[{index}] must be a save receipt")
         persistence["saves"] = [
             _receipt_defaults(receipt, scope, f"$.data.persistence.saves[{index}]")
             for index, receipt in enumerate(saves)
@@ -563,9 +573,13 @@ def decode_data(value: Mapping[str, Any], scope: Optional[str] = None,
             if type(saved) is int:
                 persistence["saved"] = _definition(
                     persistence["saves"], saved, "$.data.persistence.saved")
-            else:
+            elif saved is None or isinstance(saved, Mapping):
+                if isinstance(saved, Mapping) and (not isinstance(saved.get("sid"), str) or not saved["sid"]):
+                    raise DecodeError("$.data.persistence.saved must be a save receipt")
                 persistence["saved"] = _receipt_defaults(
                     saved, scope, "$.data.persistence.saved")
+            else:
+                raise DecodeError("$.data.persistence.saved must be a receipt, null, or integer index")
     return result
 
 
@@ -861,6 +875,204 @@ def _current_wire(value: Any) -> WireResponse:
     return value
 
 
+_PARAMETERS = {
+    "info": (), "state": ("src", "view"), "actions": ("view",),
+    "req": ("rid", "get", "src"), "history": ("after", "limit", "until"),
+    "events": ("after", "limit", "until"), "move": ("dir",),
+    "cell": ("cell", "mode"), "item": ("loc",), "cancel": ("rid",),
+    "click": ("ctl", "g"), "choose": ("ctl", "opt", "alt"), "select": ("ctl",),
+    "text": ("ctl", "text", "submit"), "value": ("ctl", "value"),
+    "scroll": ("ctl", "x", "y"), "bind_slot": ("ctl", "slot"),
+    "bind_key": ("ctl", "keycode"), "zoom": ("zoom",), "pan": ("x", "y"),
+    "wait": (), "rest": (), "search": (), "save": (), "quit": (),
+    "back": (), "reveal": (), "untarget": (), "settle": ("rid", "timeout_ms"),
+}
+
+
+def _utf16_length(value: str) -> int:
+    return len(value.encode("utf-16-le", errors="surrogatepass")) // 2
+
+
+def _intent_identifier(value: Any, field: str, maximum: int = 2**31 - 1) -> None:
+    if not isinstance(value, str) or not value or _utf16_length(value) > maximum:
+        raise IntentError(f"{field} must be a valid non-empty identifier")
+    try:
+        value.encode("utf-16-le")
+    except UnicodeEncodeError as error:
+        raise IntentError(f"{field} contains invalid Unicode") from error
+    if any(ord(char) < 32 or 127 <= ord(char) <= 159 for char in value):
+        raise IntentError(f"{field} contains a control character")
+
+
+def _intent_integer(value: Any, field: str, minimum: int = -(2**31),
+                    maximum: int = 2**31 - 1) -> int:
+    if type(value) is not int or not minimum <= value <= maximum:
+        raise IntentError(f"{field} must be a JSON integer from {minimum} to {maximum}")
+    return value
+
+
+def _intent_boolean(value: Any, field: str) -> None:
+    if type(value) is not bool:
+        raise IntentError(f"{field} must be a boolean")
+
+
+def _intent_choice(value: Any, field: str, choices: Sequence[str]) -> None:
+    if not isinstance(value, str) or value not in choices:
+        raise IntentError(f"{field} has an unsupported value")
+
+
+def _intent_number(value: Any, field: str) -> None:
+    if type(value) not in (int, float):
+        raise IntentError(f"{field} must be a finite number")
+    try:
+        valid = math.isfinite(value) and math.isfinite(struct.unpack("!f", struct.pack("!f", value))[0])
+    except (OverflowError, struct.error):
+        valid = False
+    if not valid:
+        raise IntentError(f"{field} must be finite in map-view coordinates")
+
+
+def _validate_intent_syntax(source: Mapping[str, Any]) -> str:
+    """Static peer of protocol RequestArguments; no current-frame or gameplay assumptions."""
+    if "v" in source or "id" in source:
+        raise IntentError("controller intents must not contain v or id")
+    op = source.get("op")
+    if not isinstance(op, str) or op not in _PARAMETERS:
+        raise IntentError("intent.op is not a known controller operation")
+    envelope = {"op"} if op == "settle" else {"op", "s", "rev"}
+    if set(source) - envelope - set(_PARAMETERS[op]):
+        raise IntentError(f"intent contains an unsupported field for {op}")
+    for field in ("s", "rev"):
+        if field in source:
+            _intent_identifier(source[field], field, 256)
+    if op == "settle":
+        if "rid" in source:
+            _intent_identifier(source["rid"], "rid", 128)
+        if "timeout_ms" in source:
+            _intent_integer(source["timeout_ms"], "timeout_ms", 1, 5000)
+        return op
+    if "ctl" in _PARAMETERS[op]:
+        _intent_identifier(source.get("ctl"), "ctl")
+    if "src" in source:
+        _intent_boolean(source["src"], "src")
+    if "view" in source:
+        _intent_choice(source["view"], "view", ("play", "full"))
+    if op == "move":
+        _intent_choice(source.get("dir"), "dir", tuple(DIRECTIONS))
+    elif op == "cell":
+        _intent_integer(source.get("cell"), "cell", 0)
+        if "mode" in source:
+            _intent_choice(source["mode"], "mode", ("act", "examine", "context"))
+    elif op == "item":
+        _intent_identifier(source.get("loc"), "loc")
+    elif op in ("cancel", "req"):
+        _intent_identifier(source.get("rid"), "rid", 128)
+    elif op == "click" and "g" in source:
+        _intent_choice(source["g"], "g", ("click", "right", "middle", "long"))
+    elif op == "choose":
+        _intent_integer(source.get("opt"), "opt", 0)
+        if "alt" in source:
+            _intent_boolean(source["alt"], "alt")
+    elif op == "text":
+        if not isinstance(source.get("text"), str):
+            raise IntentError("text must be a string")
+        if "submit" in source:
+            _intent_boolean(source["submit"], "submit")
+    elif op in ("value", "zoom"):
+        _intent_integer(source.get(op), op)
+    elif op == "bind_slot":
+        _intent_integer(source.get("slot"), "slot", 1, 3)
+    elif op == "bind_key":
+        _intent_integer(source.get("keycode"), "keycode", 1)
+    elif op in ("pan", "scroll"):
+        for axis in ("x", "y"):
+            if axis in source:
+                _intent_number(source[axis], axis)
+    elif op in ("history", "events"):
+        for cursor in ("after", "until"):
+            if cursor in source:
+                _intent_integer(source[cursor], cursor, 0, 2**63 - 1)
+        if "limit" in source:
+            _intent_integer(source["limit"], "limit", 1, 100)
+    if "get" in source:
+        details = source["get"]
+        if not isinstance(details, list):
+            raise IntentError("get must be an array")
+        for detail in details:
+            _intent_choice(detail, "get entry", ("raw", "reply", "before", "after", "meta"))
+        if len(set(details)) != len(details):
+            raise IntentError("get must not contain duplicates")
+    return op
+
+
+def _descriptor_accepts(op: str, descriptor: Mapping[str, Any], node: Optional[Mapping[str, Any]],
+                        source: Mapping[str, Any]) -> bool:
+    """Check a complete advertised alternative without merging separate capabilities."""
+    if "ctl" in descriptor and descriptor["ctl"] != source.get("ctl"):
+        return False
+    if op == "click":
+        gestures = descriptor.get("gestures", ["click"])
+        if not isinstance(gestures, list) or not all(isinstance(value, str) for value in gestures):
+            raise IntentError("advertised click gestures are invalid")
+        return source.get("g", "click") in gestures
+    if op == "cell":
+        modes = descriptor.get("modes")
+        if not isinstance(modes, list) or not all(isinstance(value, str) for value in modes):
+            raise IntentError("advertised cell modes are invalid")
+        return source.get("mode", "act") in modes
+    if op == "choose":
+        options = descriptor.get("options")
+        if not isinstance(options, list) or not all(isinstance(value, str) for value in options):
+            raise IntentError("advertised choice options are missing or invalid")
+        if node is None or node.get("options") != options:
+            raise IntentError("advertised choice options contradict this node")
+        return source["opt"] < len(options)
+    if op == "value":
+        bounds = descriptor.get("range")
+        if not isinstance(bounds, list) or len(bounds) != 2:
+            raise IntentError("advertised slider range is missing or invalid")
+        lower, upper = bounds
+        if type(lower) is not int or type(upper) is not int or lower > upper:
+            raise IntentError("advertised slider range is invalid")
+        if node is None or type(node.get("min")) is not int or type(node.get("max")) is not int:
+            raise IntentError("current slider bounds are missing or invalid")
+        if node["min"] > node["max"] or lower < node["min"] or upper > node["max"]:
+            raise IntentError("advertised slider range contradicts node bounds")
+        return lower <= source["value"] <= upper
+    if op == "zoom":
+        lower, upper = descriptor.get("min"), descriptor.get("max")
+        if type(lower) is not int or type(upper) is not int or lower > upper:
+            raise IntentError("advertised zoom bounds are missing or invalid")
+        return lower <= source["zoom"] <= upper
+    if op == "bind_slot":
+        slots = descriptor.get("slots")
+        if not isinstance(slots, list) or not slots or any(type(value) is not int or value not in (1, 2, 3) for value in slots):
+            raise IntentError("advertised binding slots are missing or invalid")
+        node_slots = node.get("binding_slots") if node is not None else None
+        if not isinstance(node_slots, list) or any(type(value) is not int or value not in (1, 2, 3) for value in node_slots):
+            raise IntentError("current binding slots are missing or invalid")
+        if not set(slots) <= set(node_slots):
+            raise IntentError("advertised binding slots contradict this node")
+        return source["slot"] in slots
+    if op == "bind_key":
+        if node is None or node.get("binding_input") is not True:
+            raise IntentError("current node is not a binding input")
+        # Keyboard/controller membership is intentionally not inferred from hidden state.
+    if op == "text":
+        maximum = node.get("max_length") if node is not None else None
+        multiline = node.get("multiline") if node is not None else None
+        submit_supported = descriptor.get("submit_supported")
+        if type(maximum) is not int or type(multiline) is not bool or type(submit_supported) is not bool:
+            raise IntentError("current text input constraints are missing or invalid")
+        if multiline and submit_supported:
+            raise IntentError("advertised submit support contradicts multiline input")
+        text = source["text"]
+        return ((maximum <= 0 or _utf16_length(text) <= maximum)
+                and (multiline or not any(char in text for char in "\r\n"))
+                and (not source.get("submit", False) or (submit_supported and not multiline)))
+    return True
+
+
 def validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentValidation:
     """Validate one controller action against exactly one displayed frame.
 
@@ -870,12 +1082,10 @@ def validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentVali
     not need a current frame; they are returned unchanged after rejecting the
     controller-owned ``v``/``id`` fields.
     """
-    source = _dict(intent, "intent")
-    if "v" in source or "id" in source:
-        raise IntentError("controller intents must not contain v or id")
-    op = source.get("op")
-    if not isinstance(op, str) or not op:
-        raise IntentError("intent.op must be a non-empty string")
+    if not isinstance(intent, Mapping):
+        raise IntentError("intent must be an object")
+    source = intent
+    op = _validate_intent_syntax(source)
     if op in QUERY_OPERATIONS:
         return IntentValidation(intent=_copy(source))
     if op not in NODE_OPERATIONS | GLOBAL_OPERATIONS:
@@ -915,18 +1125,6 @@ def validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentVali
                       if isinstance(candidate, Mapping) and candidate.get("op") == op]
         if not advertised:
             raise IntentError("ctl does not advertise the requested operation")
-        if op == "click":
-            gesture = source.get("g", "click")
-            if not isinstance(gesture, str):
-                raise IntentError("click.g must be a string gesture")
-            supported = set()
-            for descriptor in advertised:
-                gestures = descriptor.get("gestures", ["click"])
-                if not isinstance(gestures, list) or not all(isinstance(value, str) for value in gestures):
-                    raise IntentError("advertised click gestures are invalid")
-                supported.update(gestures)
-            if gesture not in supported:
-                raise IntentError("ctl does not advertise the requested gesture")
     else:
         acts = data.get("acts", [])
         if not isinstance(acts, list):
@@ -942,6 +1140,11 @@ def validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentVali
                       and descriptor.get("rev") == source.get("rev")]
         if not advertised:
             raise IntentError("cancel must use the advertised activity rid and rev")
+
+    advertised = [descriptor for descriptor in advertised
+                  if _descriptor_accepts(op, descriptor, node, source)]
+    if not advertised:
+        raise IntentError("intent does not satisfy a complete currently advertised operation")
 
     if op == "move":
         direction = source.get("dir")

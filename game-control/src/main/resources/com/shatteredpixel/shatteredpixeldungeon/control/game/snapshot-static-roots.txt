@@ -293,6 +293,7 @@ com.shatteredpixel.shatteredpixeldungeon.ui.InventoryPane
 com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot
 com.shatteredpixel.shatteredpixeldungeon.ui.KeyDisplay
 com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton
+com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance
 com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock
 com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane
 com.shatteredpixel.shatteredpixeldungeon.ui.Tag

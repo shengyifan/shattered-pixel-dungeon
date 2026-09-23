@@ -77,8 +77,8 @@ public class HealthBar extends Component {
 	public int[] renderedPixelWidths() {
 		com.watabou.noosa.Gizmo owner = this;
 		while (owner != null && owner.camera == null) owner = owner.parent;
-		if (owner == null || Bg == null || Hp == null || Shld == null) return new int[0];
-		float zoom = owner.camera.zoom;
+		if (owner == null || owner.camera.scroll == null || Bg == null || Hp == null || Shld == null) return new int[0];
+		float zoom = owner.camera.observedTransform().zoom;
 		return new int[]{Math.round(Bg.width() * zoom), Math.round(Hp.width() * zoom),
 				Math.round(Shld.width() * zoom)};
 	}

@@ -116,6 +116,9 @@ public class CircleArc extends Visual {
 	public float getSweep(){
 		return sweep;
 	}
+
+	/** Existing rendered geometry, without consulting the scheduler or game model. */
+	public float radius(){ return rad; }
 	
 	private void updateTriangles(){
 		

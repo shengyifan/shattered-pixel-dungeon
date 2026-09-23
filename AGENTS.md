@@ -1,7 +1,7 @@
 # Project working agreements
 
 - Read `docs/cli-help.md` before operating or changing `spdctl`. It is the authoritative English protocol manual and the bundled `--help` source. Keep this file concise; put detailed schemas and validation results in `docs/`.
-- Use CLI.7.0.0, protocol 7 and the currently advertised capabilities. New default profiles use the independent CLI v7 directory and schema 10; do not migrate or modify earlier profiles implicitly.
+- Use CLI.7.0.1, protocol 7 and the currently advertised capabilities. New default profiles use the independent CLI v7 directory and schema 10; do not migrate or modify earlier profiles implicitly.
 - Keep CLI requests, responses, help, diagnostics and test output English. The ordinary game GUI may remain Simplified Chinese and windowed.
 - Prefer the packaged `spdctl control --machine` controller during gameplay; it owns one `run --machine` child and its serial NDJSON connection. Direct clients must likewise retain one process. Do not read personal game saves or private audit state to choose actions. Isolated, explicitly marked test fixtures are separate from gameplay evidence.
 - Normal controller terminal/PTY startup needs no output-file workaround. Its child stderr is an independent pipe with separate best-effort forwarding; keep caller stdout/stderr separate for NDJSON parsing. If deliberately merged, diagnostic text may mix on the terminal while child raw traces stay separate. Local `CONTROLLER_*` diagnostics are not game replies or evidence of action completion.

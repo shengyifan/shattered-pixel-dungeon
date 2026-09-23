@@ -4,6 +4,15 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.7.0.1
+
+- Adds render-backed combat warnings, charge/downed poses, facing, beam/lightning/projectile paths, summon/rock/bomb/arena markers, icon/color/shape evidence, HUD state and transient display history. Capture retains conservative current-scene/FOV/viewport/occlusion gates and never publishes hidden AI targets, timers or configured particle quantities.
+- Preserves actual floating text color/icon/cell, native item/Buff/ability/target/boss/quickslot appearance, ordered translated color runs, and current rendered quantitative samples. Sampled histories are explicitly labeled; raw transport and existing historical replies remain immutable. See [rendered combat observations](docs/cli-combat-visuals.md).
+- Keeps asynchronous quit queryable until the exact original terminal receipt is delivered, then exits once. Unrelated queries cannot complete shutdown, uncertain outcomes stay uncertain, and EOF cannot replay a dispatched quit.
+- Uses weak UI/control callback identity keys without recycling handles. Static Java/controller validation and Python advertised-constraint validation share cross-language cases; malformed environment/save references retain their failing wire identity and enclosing action context.
+- Adds a source-only, exact-digest combat visual review ledger and isolated renderer/lifecycle regressions. Static classification and shared-sink tests are reported separately from actual native fixtures. Protocol 7, audit schema 10, the independent v7 profile and base game 3.3.8 remain unchanged.
+- Freezes UI appearance between actual draw and update, with attachment/pool invalidation and explicit decorative color-phase exemptions. Final verification passes 677 Java tests, 273 Python tests and 64 isolated native scenarios on one build, plus ordinary and instrumented slow-quit package checks; see the [CLI.7.0.1 acceptance report](docs/cli-rebuild-7.0.1-20260923.md).
+
 ## CLI.7.0.0
 
 - Synchronizes the help and agent/client guidance with the implemented decode order and strict template rules, distinguishes failing query identities from original action identities, and records the [2026-09-21 clean macOS rebuild](docs/cli-rebuild-7.0.0-20260921.md). This documentation/cleanup batch does not change runtime behavior or increment CLI/protocol/schema versions.

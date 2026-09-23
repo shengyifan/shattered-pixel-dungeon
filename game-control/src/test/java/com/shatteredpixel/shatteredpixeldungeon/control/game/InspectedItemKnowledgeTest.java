@@ -68,30 +68,30 @@ class InspectedItemKnowledgeTest {
     @Test void repeatedUiQueriesUseTheCachedBodyAndCapturedKnowledgeEvenAfterTheItemChanges() throws Exception {
         SpySpear item=new SpySpear();Scene scene=new Scene();WndInfoItem window=window(item,false);scene.add(window);
         UiBridge bridge=new UiBridge(()->scene);
-        Map<String,Object> first=bridge.describeUi();assertTrue(first.toString().contains(TYPICAL));
+        Map<String,Object> first=UiDrawFixture.capture(bridge).describeUi();assertTrue(first.toString().contains(TYPICAL));
         item.levelKnown=true;item.cursedKnown=true;set(item,Item.class,"level",7);
         for(int i=0;i<10;i++) {
-            assertEquals(first,bridge.describeUi());bridge.describeActions();
+            assertEquals(first,UiDrawFixture.capture(bridge).describeUi());bridge.describeActions();
         }
         assertEquals(0,item.infoCalls);assertSame(item,window.inspectedItem());assertEquals(false,window.inspectedLevelKnown());
         scene.erase(window);WndInfoItem reopened=window(item,true);scene.add(reopened);
-        assertTrue(bridge.describeUi().toString().contains(ACTUAL));assertEquals(0,item.infoCalls);
+        assertTrue(UiDrawFixture.capture(bridge).describeUi().toString().contains(ACTUAL));assertEquals(0,item.infoCalls);
     }
 
     @Test void aContainerWindowWithoutADisplayedSubjectNeverReadsHiddenItems() throws Exception {
         Scene scene=new Scene();WndInfoItem container=window(null,null);scene.add(container);
         set(container,Group.class,"members",new ArrayList<Gizmo>());set(container,Group.class,"length",0);
         UiBridge bridge=new UiBridge(()->scene);
-        for(int i=0;i<10;i++){assertNull(bridge.describeUi().get("inspected_item"));bridge.describeActions();}
+        for(int i=0;i<10;i++){assertNull(UiDrawFixture.capture(bridge).describeUi().get("inspected_item"));bridge.describeActions();}
     }
 
     @Test void coveringOrRemovingTheWindowDropsItsPublishedKnowledge() throws Exception {
         Scene scene=new Scene();WndInfoItem inspected=window(new Spear(),false);scene.add(inspected);
-        UiBridge bridge=new UiBridge(()->scene);assertNotNull(bridge.describeUi().get("inspected_item"));
+        UiBridge bridge=new UiBridge(()->scene);assertNotNull(UiDrawFixture.capture(bridge).describeUi().get("inspected_item"));
         Window other=allocate(Window.class);initGroup(other);scene.add(other);
-        assertNull(bridge.describeUi().get("inspected_item"));scene.erase(other);
-        assertNotNull(bridge.describeUi().get("inspected_item"));scene.erase(inspected);
-        assertNull(bridge.describeUi().get("inspected_item"));
+        assertNull(UiDrawFixture.capture(bridge).describeUi().get("inspected_item"));scene.erase(other);
+        assertNotNull(UiDrawFixture.capture(bridge).describeUi().get("inspected_item"));scene.erase(inspected);
+        assertNull(UiDrawFixture.capture(bridge).describeUi().get("inspected_item"));
     }
 
     private static final class SpySpear extends Spear {

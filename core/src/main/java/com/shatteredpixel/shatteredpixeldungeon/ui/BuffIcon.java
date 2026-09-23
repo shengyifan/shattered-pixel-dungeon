@@ -35,6 +35,11 @@ public class BuffIcon extends Image {
 	private static final int LRG_SIZE = 16;
 
 	private final boolean large;
+	private int displayedIndex;
+
+	public java.util.Map<String,Object> renderedIcon() {
+		return RenderedAppearance.icon(this, large ? "buff_large" : "buff_small", displayedIndex);
+	}
 
 	public BuffIcon(Buff buff, boolean large){
 		super( large ? Assets.Interfaces.BUFFS_LARGE : Assets.Interfaces.BUFFS_SMALL );
@@ -54,6 +59,7 @@ public class BuffIcon extends Image {
 	}
 
 	public void refresh(int icon){
+		displayedIndex = icon;
 		if (large){
 			if (largeFilm == null) largeFilm = new TextureFilm(texture, LRG_SIZE, LRG_SIZE);
 			frame(largeFilm.get(icon));

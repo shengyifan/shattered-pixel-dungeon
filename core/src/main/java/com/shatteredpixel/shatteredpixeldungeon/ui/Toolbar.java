@@ -697,12 +697,22 @@ public class Toolbar extends Component {
 		}
 	};
 	
-	private static class Tool extends Button {
+	private static class Tool extends Button implements RenderedStatus {
 		
 		private static final int BGCOLOR = 0x7B8073;
 		
 		private Image base;
 		private Image icon;
+
+		@Override public java.util.Map<String,Object> renderedStatus() {
+			java.util.Map<String,Object> appearance=RenderedAppearance.image(icon);
+			return appearance.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("icon",appearance);
+		}
+
+		@Override public java.util.Map<String,Object> intentStatus() {
+			java.util.Map<String,Object> appearance=RenderedAppearance.intentImage(icon,true,true);
+			return appearance.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("icon",appearance);
+		}
 		
 		public Tool( int x, int y, int width, int height ) {
 			super();
@@ -819,6 +829,24 @@ public class Toolbar extends Component {
 
 		private Image[] icons = new Image[4];
 		private Item[] items = new Item[4];
+
+		@Override public java.util.Map<String,Object> renderedStatus() { return displayedPreviews(false); }
+		@Override public java.util.Map<String,Object> intentStatus() { return displayedPreviews(true); }
+
+		private java.util.Map<String,Object> displayedPreviews(boolean intent) {
+			java.util.List<Object> previews=new java.util.ArrayList<>();
+			for(Image image:icons) {
+				java.util.Map<String,Object> appearance=RenderedAppearance.image(image);
+				if(intent&&!appearance.isEmpty()) {
+					Object alpha=appearance.get("alpha");
+					appearance=RenderedAppearance.intentImage(image,true,false);
+					appearance.put("alpha",alpha); // a faint placeholder differs from an available preview
+				}
+				// Null means this fixed visual position has no fully visible icon, never an invented item.
+				previews.add(appearance.isEmpty()?null:appearance);
+			}
+			return java.util.Collections.singletonMap("preview_icons",previews);
+		}
 
 		public SlotSwapTool(int x, int y, int width, int height) {
 			super(x, y, width, height);

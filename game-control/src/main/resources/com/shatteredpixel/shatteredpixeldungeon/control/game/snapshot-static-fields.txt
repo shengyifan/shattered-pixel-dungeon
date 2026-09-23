@@ -1261,6 +1261,7 @@ com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton#instance
 com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton#lastTarget
 com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton#lastVisible
 com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton#targetingSlot
+com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance#OFFICIAL_ATLASES
 com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock#NEWLINE
 com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock#SPACE
 com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane#buffBarRowAdjusts

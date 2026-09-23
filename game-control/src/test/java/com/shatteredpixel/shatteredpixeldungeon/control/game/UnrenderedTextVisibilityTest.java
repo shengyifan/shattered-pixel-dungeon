@@ -54,8 +54,8 @@ class UnrenderedTextVisibilityTest {
             Block block = new Block(complete, visible, hidden); Scene scene = new Scene(); scene.add(block);
             RenderedTextBlock.VisibleText fragment = block.visibleTextFragment();
             assertTrue(fragment.visible); assertTrue(fragment.clipped); assertEquals(visibleSource, fragment.text);
-            String canonical = JsonCodec.encode(new UiBridge(() -> scene).frozenUi());
-            String wire = JsonCodec.encode(new UiBridge(() -> scene).describeUi());
+            String canonical = JsonCodec.encode(UiDrawFixture.capture(new UiBridge(() -> scene)).frozenUi());
+            String wire = JsonCodec.encode(UiDrawFixture.capture(new UiBridge(() -> scene)).describeUi());
             for (String secret : List.of("windows.wndupgrade.upgrade", "windows.wndupgrade.remaining", "987654")) {
                 assertFalse(canonical.contains(secret), canonical); assertFalse(wire.contains(secret), wire);
             }
@@ -82,8 +82,8 @@ class UnrenderedTextVisibilityTest {
         RenderedTextBlock.VisibleText fragment = block.visibleTextFragment();
         assertFalse(fragment.visible); assertTrue(fragment.clipped); assertEquals("", fragment.text);
         UiBridge bridge = new UiBridge(() -> scene);
-        assertTrue(((List<?>) bridge.describeUi().get("controls")).isEmpty());
-        assertFalse(JsonCodec.encode(bridge.frozenUi()).contains(key));
+        assertTrue(((List<?>) UiDrawFixture.capture(bridge).describeUi().get("controls")).isEmpty());
+        assertFalse(JsonCodec.encode(UiDrawFixture.capture(bridge).frozenUi()).contains(key));
         Map<String,Object> token = TextProvenance.INSTANCE.capture(block, fragment.text, fragment.clipped);
         assertFalse(JsonCodec.encode(token).contains(key)); assertNull(TextProvenance.INSTANCE.render(token).get("source"));
     }

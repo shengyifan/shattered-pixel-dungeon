@@ -22,7 +22,9 @@
 package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.PrismaticImage;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.VisualCue;
 
 public class PrismaticSprite extends MirrorSprite {
 
@@ -50,6 +52,29 @@ public class PrismaticSprite extends MirrorSprite {
 					interval > 1 ? Math.max(0, 2-interval): interval,
 					interval > 2 ? Math.max(0, 3-interval): interval-1, 0.5f);
 		}
+	}
+
+	@Override
+	public void draw() {
+		super.draw();
+		if (Game.observer.observesVisualCues() && texture != null && buffer != null) {
+			VisualCue cue = renderedPrismaticCue(renderedCell());
+			if (cue != null) GameScene.observeCellVisualDraw(this, cue);
+		}
+	}
+
+	/** Report the frozen animation and its drawn transparency, never the image's death timer. */
+	protected VisualCue renderedPrismaticCue(int cell) {
+		float opacity = alpha();
+		if (cell < 0 || !paused || !Float.isFinite(opacity) || opacity <= 0) return null;
+		return new VisualCue("prismatic_image_paused", cell, null, null, null, Math.min(1f, opacity));
+	}
+
+	@Override
+	protected String renderedTintStyle() {
+		String controlled = super.renderedTintStyle();
+		if (controlled != null) return controlled;
+		return flashTime <= 0 && darkBlock == null ? "prismatic_cycle" : null;
 	}
 	
 }

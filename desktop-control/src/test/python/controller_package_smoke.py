@@ -2,8 +2,9 @@
 """Exercise the packaged controller with public controls and disposable profiles.
 
 The profile starts absent. No fixture engine, game-state injection, save reads,
-SQLite reads, host JVM, or gameplay policy is used. Exact model-facing bytes and
-the native child's independent transport trace are retained in build/fixtures.
+SQLite reads, or gameplay policy is used. The native controller uses its bundled
+JVM; a separately labeled offline codec replay uses host javac/java against only
+the packaged jar. Exact model-facing bytes and native transport remain retained.
 """
 import argparse
 import copy
@@ -14,6 +15,7 @@ from pathlib import Path
 import re
 import select
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -40,6 +42,7 @@ class ControllerClient:
     def __init__(self, cli, profile, output, environment):
         output.mkdir()
         self.output, self.trace_root = output, output / "transport"
+        self.codec_jar = cli.parent.parent / "app/desktop-control-3.3.8-all.jar"
         self.send_file = (output / "intent-send.raw").open("wb")
         self.recv_file = (output / "controller-recv.raw").open("wb")
         self.events = (output / "action-events.jsonl").open("w", encoding="utf-8")
@@ -63,7 +66,7 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.7.0.0", self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.7.0.1", self.hello
             assert self.hello["data"]["audit_schema_version"] == 10, self.hello
             self.install(self.hello, "info")
         except Exception:
@@ -430,47 +433,126 @@ def viewer_check(cli, client, environment):
             "plain_text_identical": True, "raw_files_unchanged": True}
 
 
-def lossless_views_check(client):
-    """Compare real packaged play/full public observations at a ready boundary.
+def public_view_differences(first, second, path="$", limit=20):
+    """Report exact typed content differences, including unknown fields and order."""
+    differences = []
+    def compare(left, right, here):
+        if len(differences) >= limit:
+            return
+        if type(left) is not type(right):
+            differences.append(here + " (type)")
+        elif isinstance(left, dict):
+            for key in sorted(left.keys() | right.keys()):
+                if key not in left or key not in right:
+                    differences.append(here + "." + key + " (presence)")
+                else:
+                    compare(left[key], right[key], here + "." + key)
+                if len(differences) >= limit:
+                    break
+        elif isinstance(left, list):
+            if len(left) != len(right):
+                differences.append(here + " (length)")
+            for index, (a, b) in enumerate(zip(left, right)):
+                compare(a, b, f"{here}[{index}]")
+        elif left != right:
+            differences.append(here)
+    compare(first, second, path)
+    return differences
 
-    Only encoding tables and row syntax are removed from the decoded copies.
-    Descriptions, all nodes/IDs/text, actions/order, unknown fields and diagnostics
-    must compare exactly; no old lossy benchmark normalization is used.
+
+def normalized_public_frame(frame):
+    """Expand one frozen frame and remove only redundant map/entity encodings."""
+    original = copy.deepcopy(frame)
+    decoded = decode_wire_response(frame)
+    assert not decoded.is_error and decoded.is_observation, frame
+    assert frame == original and decoded.raw == original, "Decoder changed frozen wire evidence"
+    result = copy.deepcopy(decoded.frame)
+    data = result["data"]
+    assert data.get("cues") == original["data"].get("cues"), "Decoder changed exact rendered visuals"
+    assert "node_templates" not in data.get("ui", {}), "Decoder left packed UI rows"
+    if "map" in data:
+        for encoding in ("types", "rows", "env", "effect_defs"):
+            data["map"].pop(encoding, None)
+    data.pop("entity_defs", None)
+    return result
+
+
+def replay_packaged_views(client, frozen):
+    """Offline component check: host JVM, actual packaged codec, one frozen input.
+
+    This helper does not send game requests or inspect saves/audit databases.
+    Exact source/full reconstruction is checked by its caller before trusting any
+    play/full result from the reversible test-only alias reconstruction adapter.
     """
-    replies = []
-    for view in ("play", "full"):
-        reply = client.unwrap(client.request({"op": "state", "view": view}))
-        client.install(reply, "state")
-        decoded = decode_wire_response(reply)
-        assert not decoded.is_error and decoded.is_observation, reply
-        data = dict(decoded.data)
-        ui = dict(data["ui"])
-        assert "node_templates" not in ui, "Production decoder must expand every v7 node template"
-        data["ui"] = ui
-        if "map" in data:
-            dungeon_map = dict(data["map"])
-            for encoding in ("types", "rows", "env", "effect_defs"):
-                dungeon_map.pop(encoding, None)
-            data["map"] = dungeon_map
-        data.pop("entity_defs", None)
-        replies.append((reply, data))
-    assert replies[0][0]["s"] == replies[1][0]["s"], "View comparison changed scope"
-    assert replies[0][0]["rev"] == replies[1][0]["rev"], "View comparison crossed a decision boundary"
-    assert replies[0][1] == replies[1][1], "Decoded play/full observations differ"
-    data = replies[0][1]
-    # The native public observer only supplies inline descriptions for certain
-    # item families. Other details require opening the original item window.
-    # Equality above checks every description actually captured by full; do not
-    # invent missing descriptions for the Warrior's ordinary starting equipment.
+    jar = client.codec_jar.resolve()
+    assert jar.is_file(), jar
+    javac, java = shutil.which("javac"), shutil.which("java")
+    assert javac and java, "Offline packaged-codec replay requires host javac and java"
+    directory = client.output / ("frozen-view-" + frozen["id"])
+    directory.mkdir()
+    classes = directory / "adapter-classes"
+    classes.mkdir()
+    source = Path(__file__).resolve().parent.parent / "codec/PackagedViewReplay.java"
+    environment = dict(os.environ)
+    for key in ("JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS"):
+        environment.pop(key, None)
+    compile_result = subprocess.run([javac, "-cp", str(jar), "-d", str(classes), str(source)],
+                                    capture_output=True, text=True, env=environment, timeout=45)
+    (directory / "compile.stdout").write_text(compile_result.stdout)
+    (directory / "compile.stderr").write_text(compile_result.stderr)
+    assert compile_result.returncode == 0, compile_result.stderr
+    write_json(directory / "frozen-input.json", frozen)
+    result = subprocess.run([java, "-cp", str(classes) + os.pathsep + str(jar), "PackagedViewReplay",
+                             str(directory / "frozen-input.json"), str(directory / "replayed-views.json")],
+                            capture_output=True, text=True, env=environment, timeout=45)
+    (directory / "replay.stdout").write_text(result.stdout)
+    (directory / "replay.stderr").write_text(result.stderr)
+    assert result.returncode == 0, result.stderr
+    runtime = subprocess.run([java, "-version"], capture_output=True, text=True, env=environment, timeout=15)
+    assert runtime.returncode == 0, runtime.stderr
+    return json.loads((directory / "replayed-views.json").read_text()), {
+        "classification": "offline packaged codec component replay; host JVM; no game process",
+        "packaged_jar": str(jar), "packaged_jar_sha256": hashlib.sha256(jar.read_bytes()).hexdigest(),
+        "adapter_source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "host_java": java, "host_javac": javac,
+        "host_java_version": (runtime.stderr or runtime.stdout).splitlines()[0], "artifacts": str(directory)}
+
+
+def lossless_views_check(client):
+    """Project exactly one frozen source observation through packaged play/full.
+
+    Successive GUI draws can differ without a decision revision change. This
+    check never waits for random animation stability and never removes rendered
+    colors, opacities, particle counts, timestamps, source ASTs or diagnostics.
+    """
+    source = client.unwrap(client.request({"op": "state", "view": "full", "src": True}))
+    client.install(source, "state")
+    original = copy.deepcopy(source)
+    frozen = normalized_public_frame(source)
+    frozen_original = copy.deepcopy(frozen)
+    replayed, component = replay_packaged_views(client, frozen)
+    assert frozen == frozen_original, "Codec adapter changed its frozen input"
+    reconstructed = normalized_public_frame(replayed["src"])
+    differences = public_view_differences(frozen, reconstructed)
+    assert not differences, {"error": "Frozen src/full reconstruction differs", "fields": differences,
+                             "source_id": source["id"], "artifacts": component.get("artifacts")}
+    full, play = (normalized_public_frame(replayed[view]) for view in ("full", "play"))
+    differences = public_view_differences(full, play)
+    assert not differences, {"error": "Same frozen packaged play/full observations differ", "fields": differences,
+                             "source_id": source["id"], "artifacts": component.get("artifacts")}
+    assert source == original, "Codec replay changed the actual source wire response"
+    data = play["data"]
     described = sum("desc" in item for item in data["inv"])
     assert any(talent["points"] == 0 for talent in data["hero"]["talents"]), "Play lost unspent talents"
-    return {"decoded_public_content_equal": True, "scope": replies[0][0]["s"],
-            "rev": replies[0][0]["rev"], "nodes": len(data["ui"]["nodes"]),
+    return {"decoded_public_content_equal": True, "same_frozen_input": True,
+            "exact_src_full_reconstruction": True, "source_request_id": source["id"],
+            "scope": source["s"], "rev": source["rev"], "nodes": len(data["ui"]["nodes"]),
             "ordered_actions": len(data["acts"]), "inventory_items": len(data["inv"]),
-            "items_with_description": described,
-            "talents": len(data["hero"]["talents"]),
-            "play_bytes": len(protocol7.wire_bytes(replies[0][0])),
-            "full_bytes": len(protocol7.wire_bytes(replies[1][0]))}
+            "items_with_description": described, "talents": len(data["hero"]["talents"]),
+            "rendered_visuals_and_timestamps_preserved": True, "component_replay": component,
+            "source_bytes": len(protocol7.wire_bytes(source)),
+            "play_bytes": len(protocol7.wire_bytes(replayed["play"])),
+            "full_bytes": len(protocol7.wire_bytes(replayed["full"]))}
 
 
 def decimal_request_ids_check(client):
@@ -597,7 +679,7 @@ def main():
     environment.pop("JAVA_HOME", None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.7.0.0 (protocol 7, game 3.3.8)", version
+    assert version == "CLI.7.0.1 (protocol 7, game 3.3.8)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}

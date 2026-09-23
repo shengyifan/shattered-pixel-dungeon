@@ -124,7 +124,7 @@ class WndGuessAccessibilityTest {
             scene.add(window);
             try {
                 UiBridge bridge = new UiBridge(() -> scene);
-                Map<String, Object> canonical = PublicEnglishProjection.copy(map("ui", bridge.frozenUi()));
+                Map<String, Object> canonical = PublicEnglishProjection.copy(map("ui", UiDrawFixture.capture(bridge).frozenUi()));
                 Map<String, Object> play = expanded(CompactProtocol.project(canonical, false, false));
                 Map<String, Object> full = expanded(CompactProtocol.project(canonical, false, true));
                 Map<String, Object> source = expanded(CompactProtocol.project(canonical, true, false));
@@ -135,7 +135,7 @@ class WndGuessAccessibilityTest {
                 assertTrue(nodes(source).stream().filter(node -> node.get("label") instanceof String)
                         .allMatch(node -> object(node.get("text_sources")).containsKey("label")));
 
-                Map<String, Object> firstChoice = controls(bridge.describeUi()).stream()
+                Map<String, Object> firstChoice = controls(UiDrawFixture.capture(bridge).describeUi()).stream()
                         .filter(node -> expected.get(0).equals(node.get("label"))).findFirst().orElseThrow();
                 int quantity = stone.quantity();
                 float cooldown = hero.cooldown();

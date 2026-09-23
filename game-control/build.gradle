@@ -41,3 +41,19 @@ tasks.register('checkTextSources', Exec) {
     }
 }
 test.dependsOn tasks.named('checkTextSources')
+
+// Exact reviewed source sites and safety-boundary bodies; generation never approves a review.
+tasks.register('checkCombatVisualSources', Exec) {
+    dependsOn classes
+    def classpathFile = layout.buildDirectory.file('combat-visual/source-classpath.txt')
+    def reportFile = layout.buildDirectory.file('combat-visual/coverage.json')
+    doFirst {
+        classpathFile.get().asFile.parentFile.mkdirs()
+        classpathFile.get().asFile.text = sourceSets.main.runtimeClasspath.asPath
+        commandLine 'python3', file('src/test/python/combat_visual_inventory.py').absolutePath,
+                '--root', rootProject.projectDir.absolutePath,
+                '--classpath-file', classpathFile.get().asFile.absolutePath,
+                '--output', reportFile.get().asFile.absolutePath
+    }
+}
+test.dependsOn tasks.named('checkCombatVisualSources')

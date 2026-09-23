@@ -59,6 +59,9 @@ import com.watabou.utils.Random;
 
 import java.nio.Buffer;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Arrays;
 
 public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip.Listener {
 	
@@ -190,6 +193,19 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 			PixelScene.align(Camera.main, ((cell / Dungeon.level.width()) + 1.0f) * csize - height() - csize * perspectiveRaise)
 		);
 	}
+
+	/** Inverse of the already rendered, stationary sprite anchor; never reads its actor position. */
+	public int renderedCell() {
+		if(isMoving || Dungeon.level==null || Dungeon.level.width()<=0 || angle!=0
+				|| !Float.isFinite(x+y+width()+height()) || width()<=0 || height()<=0)return -1;
+		float center=x+width()*0.5f,bottom=y+height()+DungeonTilemap.SIZE*perspectiveRaise;
+		int column=Math.round(center/DungeonTilemap.SIZE-0.5f),row=Math.round(bottom/DungeonTilemap.SIZE)-1;
+		if(column<0 || column>=Dungeon.level.width() || row<0
+				|| Math.abs(center-(column+0.5f)*DungeonTilemap.SIZE)>2f
+				|| Math.abs(bottom-(row+1f)*DungeonTilemap.SIZE)>2f)return -1;
+		long cell=(long)row*Dungeon.level.width()+column;
+		return cell<Dungeon.level.length()?(int)cell:-1;
+	}
 	
 	public void place( int cell ) {
 		point( worldToCamera( cell ) );
@@ -208,7 +224,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 			float y = destinationCenter().y - height()/2f;
 			int pos = DungeonTilemap.worldToTile(x, y + height(), Dungeon.level.width());
 			if (ch != null) {
-				FloatingText.show( x, y, pos, text, color, icon, true );
+				FloatingText.showOnCell( x, y, pos, text, color, icon, true );
 			} else {
 				FloatingText.show( x, y, -1, text, color, icon, true );
 			}
@@ -812,6 +828,50 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 		super.draw();
 
+		if (Game.observer.observesVisualCues() && buffer != null && Dungeon.level != null) {
+			String cue = renderedStateCue();
+			int cell=renderedCell();
+			if (cue != null && cell>=0)
+				GameScene.observeCellVisualDraw(this, new com.watabou.noosa.VisualCue(cue, cell));
+			com.watabou.noosa.VisualCue appearance = renderedAppearanceCue(cell);
+			if (appearance != null) GameScene.observeCellVisualDraw(this, appearance);
+		}
+	}
+
+	/** A semantic name for the animation currently being drawn, never a query of actor AI. */
+	protected String renderedStateCue() { return null; }
+
+	/** Existing renderer state only: hidden-icon effects must not disappear with their absent Buff icon. */
+	protected com.watabou.noosa.VisualCue renderedAppearanceCue(int cell) {
+		if (cell < 0 || !Float.isFinite(alpha()) || alpha() <= 0
+				|| !Float.isFinite(scale.x+scale.y+rm+gm+bm+ra+ga+ba)) return null;
+		Map<String,Object> appearance = new LinkedHashMap<>();
+		appearance.put("flip_horizontal", flipHorizontal);
+		appearance.put("flip_vertical", flipVertical);
+		if (paused) appearance.put("paused", true);
+		if (scale.x != 1 || scale.y != 1) appearance.put("scale", Arrays.asList(scale.x, scale.y));
+		String style = renderedTintStyle();
+		if (style != null) appearance.put("tint_style", style);
+		if (rm != 1 || gm != 1 || bm != 1 || ra != 0 || ga != 0 || ba != 0) {
+			Map<String,Object> tint = new LinkedHashMap<>();
+			tint.put("multiply", Arrays.asList(rm,gm,bm));tint.put("add", Arrays.asList(ra,ga,ba));
+			appearance.put("tint", tint);
+		}
+		Float opacity = alpha() < 1 ? alpha() : null;
+		if (appearance.isEmpty() && opacity == null) return null;
+		return new com.watabou.noosa.VisualCue("sprite_state_appearance", cell, null, null, null, opacity, appearance);
+	}
+
+	/** These controllers animate only a decorative pulse/onset around a constant visible color style. */
+	protected String renderedTintStyle() {
+		if (glowBlock != null && glowBlock.exists && matchesTint(1.33f,1.33f,0.83f)) return "golden_glow";
+		if (iceBlock != null && iceBlock.exists && matchesTint(0.83f,1.17f,1.33f)) return "icy";
+		return null;
+	}
+	private boolean matchesTint(float red,float green,float blue) {
+		float strength=1-rm;
+		return strength>0 && Math.abs(gm-rm)<0.00001f && Math.abs(bm-rm)<0.00001f
+				&& Math.abs(ra-red*strength)<0.00001f && Math.abs(ga-green*strength)<0.00001f && Math.abs(ba-blue*strength)<0.00001f;
 	}
 
 	@Override

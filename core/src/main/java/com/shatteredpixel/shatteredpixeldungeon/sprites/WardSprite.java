@@ -67,9 +67,9 @@ public class WardSprite extends MobSprite {
 		flash();
 		emitter().burst(MagicMissile.WardParticle.UP, 2);
 		if (Actor.findChar(pos) != null){
-			parent.add(new Beam.DeathRay(center(), Actor.findChar(pos).sprite.center()));
+			parent.add(new Beam.DeathRay(center(), Actor.findChar(pos).sprite.center()).observeDraw(ch.pos, pos));
 		} else {
-			parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(pos)));
+			parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(pos)).observeDraw(ch.pos, pos));
 		}
 		Sample.INSTANCE.play( Assets.Sounds.RAY );
 		((WandOfWarding.Ward)ch).onZapComplete();

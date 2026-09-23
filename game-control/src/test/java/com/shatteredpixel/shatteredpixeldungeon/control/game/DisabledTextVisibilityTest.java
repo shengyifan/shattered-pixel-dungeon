@@ -28,7 +28,7 @@ class DisabledTextVisibilityTest {
             assertTrue(visible.visible);assertFalse(visible.clipped);
             Map<String,Object> rendered=TextProvenance.INSTANCE.render(TextProvenance.INSTANCE.capture(label,visible.text,visible.clipped));
             assertEquals("Upgrade",rendered.get("text"));assertEquals("complete",rendered.get("translation_status"));
-            UiBridge bridge=new UiBridge(()->scene);Map<String,Object> ui=bridge.describeUi();
+            UiBridge bridge=new UiBridge(()->scene);Map<String,Object> ui=UiDrawFixture.capture(bridge).describeUi();
             Map<String,Object> control=nodes(ui).stream().filter(node->"button".equals(node.get("role"))).findFirst().orElseThrow();
             assertEquals(false,control.get("enabled"));assertEquals("Upgrade",control.get("text"));
             assertFalse(Boolean.TRUE.equals(control.get("clipped")));
@@ -46,7 +46,7 @@ class DisabledTextVisibilityTest {
             assertTrue(visible.visible);assertTrue(visible.clipped);
             Map<String,Object> rendered=TextProvenance.INSTANCE.render(TextProvenance.INSTANCE.capture(label,visible.text,true));
             assertEquals("partial",rendered.get("translation_status"));assertNull(rendered.get("source"));
-            Map<String,Object> ui=new UiBridge(()->scene).describeUi();
+            Map<String,Object> ui=UiDrawFixture.capture(new UiBridge(()->scene)).describeUi();
             assertTrue(nodes(ui).stream().anyMatch(node->Boolean.TRUE.equals(node.get("clipped"))));
             assertFalse(JsonCodec.encode(ui).contains("windows.wndupgrade.upgrade"));
         }

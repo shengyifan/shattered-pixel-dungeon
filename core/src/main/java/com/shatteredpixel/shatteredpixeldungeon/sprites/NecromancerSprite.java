@@ -120,6 +120,10 @@ public class NecromancerSprite extends MobSprite {
 		play(charging);
 	}
 
+	@Override protected String renderedStateCue() {
+		return curAnim == charging ? "necromancer_charging" : null;
+	}
+
 	@Override
 	public void zap(int cell) {
 		super.zap(cell);
@@ -129,6 +133,9 @@ public class NecromancerSprite extends MobSprite {
 			}
 			summoningBones = CellEmitter.get(((Necromancer) ch).summoningPos);
 			summoningBones.pour(Speck.factory(Speck.RATTLE), 0.2f);
+			if (com.watabou.noosa.Game.observer.observesVisualCues()) summoningBones.observeDraw(
+					new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("summoning_bones", cell,
+							Speck.factory(Speck.RATTLE), Speck.class));
 			summoningBones.visible = Dungeon.level.heroFOV[((Necromancer) ch).summoningPos];
 			if (visible || summoningBones.visible ) Sample.INSTANCE.play( Assets.Sounds.CHARGEUP, 1f, 0.8f );
 		}

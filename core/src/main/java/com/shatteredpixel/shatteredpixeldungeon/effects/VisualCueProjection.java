@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
+import com.watabou.noosa.Visual;
+
 import java.util.List;
 
 /** Pure conservative geometry used by the draw observer; it never discovers a map or predicts an attack. */
@@ -52,6 +54,61 @@ final class VisualCueProjection {
                 || bounds.right > camera.screenX + camera.width*camera.zoom
                 || bounds.bottom > camera.screenY + camera.height*camera.zoom) return false;
         for (Rect blocker : blockers) if (bounds.overlaps(blocker)) return false;
+        return true;
+    }
+
+    /** Geometry of the actual transformed quad, independently of camera or model coordinates. */
+    static Rect worldBounds(Visual source) {
+        if (source == null || source.scale == null || source.origin == null
+                || !Float.isFinite(source.x) || !Float.isFinite(source.y)
+                || !Float.isFinite(source.width) || !Float.isFinite(source.height)
+                || !Float.isFinite(source.angle) || !Float.isFinite(source.scale.x) || !Float.isFinite(source.scale.y)
+                || !Float.isFinite(source.origin.x) || !Float.isFinite(source.origin.y)) return null;
+        float cosine = (float)Math.cos(Math.toRadians(source.angle));
+        float sine = (float)Math.sin(Math.toRadians(source.angle));
+        float left=Float.POSITIVE_INFINITY,top=Float.POSITIVE_INFINITY;
+        float right=Float.NEGATIVE_INFINITY,bottom=Float.NEGATIVE_INFINITY;
+        for (int corner=0;corner<4;corner++) {
+            float x=(((corner&1)==0?0:source.width)-source.origin.x)*source.scale.x;
+            float y=(((corner&2)==0?0:source.height)-source.origin.y)*source.scale.y;
+            float transformedX=source.x+source.origin.x+x*cosine-y*sine;
+            float transformedY=source.y+source.origin.y+x*sine+y*cosine;
+            left=Math.min(left,transformedX);right=Math.max(right,transformedX);
+            top=Math.min(top,transformedY);bottom=Math.max(bottom,transformedY);
+        }
+        if (!Float.isFinite(left)||!Float.isFinite(top)||!Float.isFinite(right)||!Float.isFinite(bottom)
+                || right<=left||bottom<=top) return null;
+        return new Rect(left,top,right,bottom);
+    }
+
+    /** Inverse of this draw's screen transform, including its committed camera displacement. */
+    static Rect screenToWorldBounds(Rect bounds,Viewport camera) {
+        if(bounds==null||camera==null||!Float.isFinite(camera.zoom)||camera.zoom<=0
+                ||!Float.isFinite(camera.left)||!Float.isFinite(camera.top)
+                ||!Float.isFinite(camera.screenX)||!Float.isFinite(camera.screenY))return null;
+        float left=camera.left+(bounds.left-camera.screenX)/camera.zoom;
+        float top=camera.top+(bounds.top-camera.screenY)/camera.zoom;
+        float right=camera.left+(bounds.right-camera.screenX)/camera.zoom;
+        float bottom=camera.top+(bounds.bottom-camera.screenY)/camera.zoom;
+        if(!Float.isFinite(left)||!Float.isFinite(top)||!Float.isFinite(right)||!Float.isFinite(bottom)
+                ||right<=left||bottom<=top)return null;
+        return new Rect(left,top,right,bottom);
+    }
+
+    /** Every cell touched by the current drawn quad must be visible, separately from its semantic anchor. */
+    static boolean permitsVisibleFootprint(Rect screenBounds,Viewport camera,float tileSize,
+                                           int gridWidth,int gridLength,boolean[] visible) {
+        Rect bounds=screenToWorldBounds(screenBounds,camera);
+        if(bounds==null||!Float.isFinite(tileSize)||tileSize<=0||gridWidth<=0||gridLength<=0
+                ||gridLength%gridWidth!=0||visible==null||visible.length<gridLength
+                ||bounds.left<0||bounds.top<0
+                ||bounds.right>(double)gridWidth*tileSize
+                ||bounds.bottom>(double)(gridLength/gridWidth)*tileSize)return false;
+        int firstX=(int)Math.floor(bounds.left/tileSize),firstY=(int)Math.floor(bounds.top/tileSize);
+        // Right and bottom edges are exclusive: a quad ending at x=48 does not paint the next tile.
+        int lastX=(int)Math.ceil(bounds.right/tileSize)-1,lastY=(int)Math.ceil(bounds.bottom/tileSize)-1;
+        for(int y=firstY;y<=lastY;y++)for(int x=firstX;x<=lastX;x++)
+            if(!visible[y*gridWidth+x])return false;
         return true;
     }
 

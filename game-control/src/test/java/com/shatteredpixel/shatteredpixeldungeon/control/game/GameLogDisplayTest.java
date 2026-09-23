@@ -109,7 +109,7 @@ class GameLogDisplayTest {
         RenderedTextBlock.VisibleText fragment=block.visibleTextFragment();
         assertEquals("VISIBLE\nNEXT",fragment.text);assertTrue(fragment.clipped);assertTrue(fragment.visible);
         assertNull(top.camera);assertNull(visible.camera);assertNull(edge.camera);assertNull(block.camera);
-        String publicUi=new UiBridge(()->scene).describeUi().toString();
+        String publicUi=UiDrawFixture.capture(new UiBridge(()->scene)).describeUi().toString();
         assertTrue(publicUi.contains("Partially displayed text"));assertTrue(publicUi.contains("clipped=true"));
         assertFalse(publicUi.contains("VISIBLE"),"Partial source text is not guessed or mixed into English output");
         assertFalse(publicUi.contains("OFFSCREEN_TOP_SECRET"));assertFalse(publicUi.contains("PARTIAL_WORD_SECRET"));
@@ -121,7 +121,7 @@ class GameLogDisplayTest {
     @Test void fullyOffscreenBlocksDoNotRevealTheirExistenceOrColor()throws Exception{
         log.camera=new Camera(0,0,100,60,1);
         attach(new LaidOutBlock("WHOLE_HIDDEN_ENTRY",new FakeWord("WHOLE_HIDDEN_ENTRY",0,-30,90,10)));
-        assertTrue(((List<?>)new UiBridge(()->scene).describeUi().get("controls")).isEmpty());
+        assertTrue(((List<?>)UiDrawFixture.capture(new UiBridge(()->scene)).describeUi().get("controls")).isEmpty());
         log.draw();assertTrue(snapshots.get(0).isEmpty());
     }
 
@@ -131,16 +131,16 @@ class GameLogDisplayTest {
         FakeWord word=new FakeWord(source,0,-30,90,10);
         LaidOutBlock detail=new LaidOutBlock(source,word);
         scene.add(detail);
-        assertTrue(((List<?>)new UiBridge(()->scene).describeUi().get("controls")).isEmpty());
+        assertTrue(((List<?>)UiDrawFixture.capture(new UiBridge(()->scene)).describeUi().get("controls")).isEmpty());
         word.y=10;
-        assertTrue(new UiBridge(()->scene).describeUi().toString().contains("Upgrade an Item"));
+        assertTrue(UiDrawFixture.capture(new UiBridge(()->scene)).describeUi().toString().contains("Upgrade an Item"));
         assertNull(word.camera);assertNull(detail.camera);
     }
 
     @Test void invisiblePrefixLengthEntryCountAndColorsDoNotChangePublicShapeOrIds()throws Exception{
         log.camera=new Camera(0,0,100,60,1);
         attach(new LaidOutBlock("HIDDEN_A VISIBLE",new FakeWord("HIDDEN_A",0,-50,30,10),new FakeWord("VISIBLE",0,10,50,10)));
-        Map<String,Object> first=new UiBridge(()->scene).describeUi();log.draw();
+        Map<String,Object> first=UiDrawFixture.capture(new UiBridge(()->scene)).describeUi();log.draw();
         log.clear();
         for(int i=0;i<5;i++){
             LaidOutBlock hidden=new LaidOutBlock("HIDDEN_ENTRY_"+i,new FakeWord("HIDDEN_ENTRY_"+i,0,-100-i*20,80,10));
@@ -150,7 +150,7 @@ class GameLogDisplayTest {
         }
         attach(new LaidOutBlock("MUCH_LONGER_HIDDEN_PREFIX ANOTHER_HIDDEN_WORD VISIBLE",
                 new FakeWord("MUCH_LONGER_HIDDEN_PREFIX",0,-80,90,10),new FakeWord("ANOTHER_HIDDEN_WORD",0,-50,90,10),new FakeWord("VISIBLE",0,10,50,10)));
-        Map<String,Object> second=new UiBridge(()->scene).describeUi();log.draw();
+        Map<String,Object> second=UiDrawFixture.capture(new UiBridge(()->scene)).describeUi();log.draw();
         // Fresh bridges assign the same visible ID as well as the same count: hidden glyphs/entries
         // must not reserve IDs or leave observable holes in the public control sequence.
         assertEquals(first,second);assertEquals(1,((List<?>)second.get("controls")).size());
@@ -161,7 +161,7 @@ class GameLogDisplayTest {
     @Test void logDisplayChangesDoNotExpireIntentButOtherUiTextRemainsProtected()throws Exception{
         FakeText block=add(Messages.get(WndUpgrade.class,"title"),1);UiBridge bridge=new UiBridge(()->scene);
         String before=bridge.intentSignature();block.text(Messages.get(WndUpgrade.class,"desc"));
-        assertEquals(before,bridge.intentSignature());assertTrue(bridge.describeUi().toString().contains("Upgrading an item permanently improves it:"));
+        assertEquals(before,bridge.intentSignature());assertTrue(UiDrawFixture.capture(bridge).describeUi().toString().contains("Upgrading an item permanently improves it:"));
         FakeText prompt=new FakeText(Messages.get(WndUpgrade.class,"upgrade"),1);scene.add(prompt);
         String promptBefore=bridge.intentSignature();prompt.text(Messages.get(WndUpgrade.class,"back"));
         assertNotEquals(promptBefore,bridge.intentSignature());

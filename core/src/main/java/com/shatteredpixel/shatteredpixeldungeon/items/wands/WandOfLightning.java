@@ -164,7 +164,7 @@ public class WandOfLightning extends DamageWand {
 		
 		affected.addAll(hitThisArc);
 		for (Char hit : hitThisArc){
-			arcs.add(new Lightning.Arc(ch.sprite.center(), hit.sprite.center()));
+			arcs.add(new Lightning.Arc(ch.sprite.center(), hit.sprite.center()).observeDraw("lightning_arc", ch.pos, hit.pos));
 			arc(hit);
 		}
 	}
@@ -184,10 +184,10 @@ public class WandOfLightning extends DamageWand {
 			}
 
 			affected.add( ch );
-			arcs.add( new Lightning.Arc(curUser.sprite.center(), ch.sprite.center()));
+			arcs.add( new Lightning.Arc(curUser.sprite.center(), ch.sprite.center()).observeDraw("lightning_arc", curUser.pos, ch.pos));
 			arc(ch);
 		} else {
-			arcs.add( new Lightning.Arc(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(bolt.collisionPos)));
+			arcs.add( new Lightning.Arc(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(bolt.collisionPos)).observeDraw("lightning_arc", curUser.pos, bolt.collisionPos));
 			CellEmitter.center( cell ).burst( SparkParticle.FACTORY, 3 );
 		}
 

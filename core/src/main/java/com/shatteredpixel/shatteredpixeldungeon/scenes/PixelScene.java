@@ -425,6 +425,10 @@ public class PixelScene extends Scene {
 		private static float FADE_TIME = 1f;
 		
 		private boolean light;
+		private final int drawnSolidColor;
+		private final com.watabou.gltextures.SmartTexture drawnSolidTexture;
+		private final RectF drawnSolidFrame;
+		private final Object drawnEpisode=new Object();
 		
 		private float time;
 
@@ -434,6 +438,7 @@ public class PixelScene extends Scene {
 			super( uiCamera.width, uiCamera.height, color );
 			
 			this.light = light;
+			drawnSolidColor=color;drawnSolidTexture=texture;drawnSolidFrame=frame();
 			
 			camera = uiCamera;
 			
@@ -472,6 +477,10 @@ public class PixelScene extends Scene {
 			} else {
 				super.draw();
 			}
+			if(Game.observer.observesVisualCues()&&buffer!=null&&texture==drawnSolidTexture&&frame!=null
+					&&frame.left==drawnSolidFrame.left&&frame.top==drawnSolidFrame.top
+					&&frame.right==drawnSolidFrame.right&&frame.bottom==drawnSolidFrame.bottom)
+				GameScene.observeScreenOverlayDraw(this,drawnEpisode,drawnSolidColor,light);
 		}
 	}
 	
@@ -496,6 +505,7 @@ public class PixelScene extends Scene {
 			
 			matrix[12] = -1 + x * invW2 - sx * matrix[0];
 			matrix[13] = +1 - y * invH2 - sy * matrix[5];
+			rememberUnshakenProjection(align(this,scroll.x),align(this,scroll.y));
 			
 		}
 	}

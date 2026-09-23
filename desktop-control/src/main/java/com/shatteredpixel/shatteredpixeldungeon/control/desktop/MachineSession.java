@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 
 /** Serial protocol processing and audit writes, with a separate logical lifetime for pending actions. */
@@ -36,7 +37,44 @@ public final class MachineSession implements AutoCloseable {
         GameController.SaveResult pollSave();
         default GameController.RunOutcome pollRunOutcome(){return null;}
         default GameController.GameLogSnapshot pollGameLog(){return null;}
+        default GameController.FloatingSnapshot pollFloatingText(){return null;}
+        default GameController.BannerSnapshot pollBanner(){return null;}
+        default List<GameController.BannerSnapshot> takeBanners(){
+            List<GameController.BannerSnapshot> batch=new ArrayList<>();GameController.BannerSnapshot value;
+            for(int i=0;i<128&&(value=pollBanner())!=null;i++)batch.add(value);return batch;
+        }
         default GameController.VisualSnapshot pollVisual(){return null;}
+        default GameController.VisualMetricSnapshot pollVisualMetrics(){return null;}
+        default List<GameController.VisualMetricSnapshot> takeVisualMetrics(){
+            List<GameController.VisualMetricSnapshot> batch=new ArrayList<>();GameController.VisualMetricSnapshot value;
+            for(int i=0;i<128&&(value=pollVisualMetrics())!=null;i++)batch.add(value);return batch;
+        }
+        default List<GameController.VisualSnapshot> takeVisuals(){
+            List<GameController.VisualSnapshot> batch=new ArrayList<>();GameController.VisualSnapshot value;
+            for(int i=0;i<128&&(value=pollVisual())!=null;i++)batch.add(value);return batch;
+        }
+        default List<GameController.FloatingSnapshot> takeFloatingTexts(){
+            List<GameController.FloatingSnapshot> batch=new ArrayList<>();GameController.FloatingSnapshot value;
+            for(int i=0;i<128&&(value=pollFloatingText())!=null;i++)batch.add(value);return batch;
+        }
+        default List<GameController.GameLogSnapshot> takeGameLogs(){
+            List<GameController.GameLogSnapshot> batch=new ArrayList<>();GameController.GameLogSnapshot value;
+            for(int i=0;i<128&&(value=pollGameLog())!=null;i++)batch.add(value);return batch;
+        }
+        /** Legacy isolated fakes may expose individual queues; production overrides the ordered FIFO API. */
+        default List<GameController.DisplayEvent> peekDisplayEvents(int limit){
+            List<GameController.DisplayEvent> batch=new ArrayList<>();Object value;
+            while(batch.size()<limit&&(value=pollGameLog())!=null)batch.add(GameController.DisplayEvent.from(value));
+            while(batch.size()<limit&&(value=pollFloatingText())!=null)batch.add(GameController.DisplayEvent.from(value));
+            while(batch.size()<limit&&(value=pollBanner())!=null)batch.add(GameController.DisplayEvent.from(value));
+            while(batch.size()<limit&&(value=pollVisual())!=null)batch.add(GameController.DisplayEvent.from(value));
+            while(batch.size()<limit&&(value=pollVisualMetrics())!=null)batch.add(GameController.DisplayEvent.from(value));
+            return batch;
+        }
+        default void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events){}
+        default boolean hasDisplayEvents(){return false;}
+        default void setDisplaySignal(Runnable signal){}
+        default void freezeDisplayEvents(){}
         boolean exiting();
         boolean disposed();
         void exitNow();
@@ -47,12 +85,28 @@ public final class MachineSession implements AutoCloseable {
     private final GamePort game;
     private final PrintStream output;
     private final long timeoutMillis;
-    private final ExecutorService serial=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"SPD Audit and Protocol");t.setDaemon(true);return t;});
+    private static final int DISPLAY_BATCH_LIMIT=64;
+    private static final long DISPLAY_COALESCE_MILLIS=50;
+    private final AtomicBoolean displayDrainScheduled=new AtomicBoolean();
+    private List<GameController.DisplayEvent> retainedDisplayBatch=Collections.emptyList();
+    private boolean retainedDisplayCommitted;
+    private volatile boolean displayDrainFailed;
+    private final ScheduledExecutorService serial=Executors.newSingleThreadScheduledExecutor(r->{Thread t=new Thread(r,"SPD Audit and Protocol");t.setDaemon(true);return t;});
     private volatile boolean closed;
     private volatile boolean fatalFailure;
     private boolean executionUncertain;
     private Pending pending;
     private Pending cancelling;
+    private QuitLifecycle quit;
+    private boolean exitIssued;
+    /** Runtime exit intent alone does not establish either action completion or wire delivery. */
+    private static final class QuitLifecycle {
+        final AuditStore.Attempt attempt;
+        String status="EXECUTING";
+        QuitLifecycle(AuditStore.Attempt attempt){this.attempt=attempt;}
+        boolean owns(String scope,String id){return attempt.scopeId.equals(scope)&&attempt.id.equals(id);}
+        boolean successful(){return Arrays.asList("COMPLETED","AWAITING_INPUT","INTERRUPTED").contains(status);}
+    }
     private static final class Pending {
         final AuditStore.Attempt attempt;
         final GameController.State before;
@@ -76,7 +130,20 @@ public final class MachineSession implements AutoCloseable {
             public GameController.SaveResult pollSave(){return game.pollSave();}
             public GameController.RunOutcome pollRunOutcome(){return game.pollRunOutcome();}
             public GameController.GameLogSnapshot pollGameLog(){return game.pollGameLog();}
+            public GameController.FloatingSnapshot pollFloatingText(){return game.pollFloatingText();}
+            public GameController.BannerSnapshot pollBanner(){return game.pollBanner();}
+            public List<GameController.BannerSnapshot> takeBanners(){return game.takeBanners();}
             public GameController.VisualSnapshot pollVisual(){return game.pollVisual();}
+            public GameController.VisualMetricSnapshot pollVisualMetrics(){return game.pollVisualMetrics();}
+            public List<GameController.VisualMetricSnapshot> takeVisualMetrics(){return game.takeVisualMetrics();}
+            public List<GameController.VisualSnapshot> takeVisuals(){return game.takeVisuals();}
+            public List<GameController.FloatingSnapshot> takeFloatingTexts(){return game.takeFloatingTexts();}
+            public List<GameController.GameLogSnapshot> takeGameLogs(){return game.takeGameLogs();}
+            public List<GameController.DisplayEvent> peekDisplayEvents(int limit){return game.peekDisplayEvents(limit);}
+            public void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events){game.acknowledgeDisplayEvents(events);}
+            public boolean hasDisplayEvents(){return game.hasDisplayEvents();}
+            public void setDisplaySignal(Runnable signal){game.setDisplaySignal(signal);}
+            public void freezeDisplayEvents(){game.freezeDisplayEvents();}
             public boolean exiting(){return game.exiting();}
             public boolean disposed(){return game.disposed();}
             public void exitNow(){game.exitNow();}
@@ -85,6 +152,7 @@ public final class MachineSession implements AutoCloseable {
     public MachineSession(AuditStore store,GamePort game,PrintStream output,long timeoutMillis){
         if(timeoutMillis<1)throw new IllegalArgumentException("A positive timeout is required");
         this.store=store;this.handles=new PublicHandles(store);this.game=game;this.output=output;this.timeoutMillis=timeoutMillis;
+        game.setDisplaySignal(this::scheduleDisplayDrain);
     }
     /** Lifecycle status only: ordinary rejected requests do not fail the process session. */
     public boolean failed(){return fatalFailure;}
@@ -103,11 +171,11 @@ public final class MachineSession implements AutoCloseable {
         try(InputStream source=input){
             NdjsonReader reader=new NdjsonReader(source);
             NdjsonReader.Frame frame;
-            while(!closed&&(frame=reader.next())!=null){accept(frame).get();if(game.exiting())return;}
+            while(!closed&&(frame=reader.next())!=null)accept(frame).get();
             if(!closed)serial.submit(()->endInput("stdin_eof")).get();
         }catch(Throwable error){
             try{serial.submit(()->{recordExceptionNow(unwrap(error));endInput("input_failure");}).get();}
-            catch(Throwable ignored){game.exitNow();}
+            catch(Throwable ignored){closeAndExit();}
         }
     }
     private void process(NdjsonReader.Frame frame){
@@ -117,7 +185,7 @@ public final class MachineSession implements AutoCloseable {
         AuditStore.Attempt attempt=null;
         String id=null,scope=null,op=null;
         GameController.State state=game.latest();
-        boolean currentCertified=false,dispatchAttempted=false,cancelRequest=false;
+        boolean currentCertified=false,dispatchAttempted=false,cancelRequest=false,deliversQuitReceipt=false;
         String preparedLease=null;
         try{
             if(frame.error!=null)throw frame.error;
@@ -141,6 +209,8 @@ public final class MachineSession implements AutoCloseable {
             if("action.execute".equals(op)&&!cancelRequest&&(busy||executionUncertain))
                 throw new ProtocolException(executionUncertain?"EXECUTION_UNCERTAIN":"BUSY","No new action can be dispatched");
             if(cancelRequest&&executionUncertain)throw new ProtocolException("EXECUTION_UNCERTAIN","Execution outcome is uncertain");
+            if("action.execute".equals(op)&&quit!=null&&quit.successful())
+                throw new ProtocolException("SESSION_CLOSING","Read the original quit receipt before process exit");
             if(busy&&!executionUncertain&&cancelling==null&&pending!=null&&pending.activity!=null
                     &&Arrays.asList("state.get","actions.list").contains(op)){
                 state=game.observe().get(timeoutMillis,TimeUnit.MILLISECONDS);currentCertified=true;
@@ -157,19 +227,25 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("cli_version","CLI.7.0.0","game_version","3.3.8",
+                    result=map("cli_version","CLI.7.0.1","game_version","3.3.8",
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
                             "session_id",store.sessionId(),"audit_schema_version",AuditStore.SCHEMA_VERSION,"text_language","en","text_format","resource-v1",
                             "request_prefix",handles.session(store.sessionId()),
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
-                            "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation","persistent_handles"),
+                            "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation","persistent_handles",
+                                    "rendered_combat_visuals","rendered_ui_appearance","floating_text_events","visual_metrics","banner_events","strict_intents","quit_receipt_exit"),
                             "schema",CompactProtocol.info());break;
                 case "state.get":result=publicStateResult(state);break;
                 case "actions.list":result=pending!=null||cancelling!=null||executionUncertain?publicStateResult(state):actionState(state);break;
-                case "request.get":
-                    result=store.getRequest(scope,requiredIdentifier(request.args,"target_id"),request.details);
-                    if(result==null)throw new ProtocolException("REQUEST_NOT_FOUND","Request not found");break;
+                case "request.get":{
+                    String target=requiredIdentifier(request.args,"target_id");
+                    Map<String,Object> receipt=store.getRequest(scope,target,request.details);
+                    if(receipt==null)throw new ProtocolException("REQUEST_NOT_FOUND","Request not found");
+                    deliversQuitReceipt=quit!=null&&quit.owns(scope,target)&&quit.successful()
+                            &&quit.status.equals(receipt.get("st"));
+                    result=receipt;break;
+                }
                 case "history.list":{
                     long until=number(request.args,"until",store.historyWatermark(scope));
                     result=page(store.history(scope,number(request.args,"after",0),limit(request.args)+1,until),limit(request.args),until);break;
@@ -213,6 +289,7 @@ public final class MachineSession implements AutoCloseable {
                         planned=UUID.randomUUID().toString();store.ensureScope("run:"+planned,"planned",planned);store.linkTarget(attempt,"run:"+planned);
                     }
                     store.markExecuting(attempt,state.version,state.publicState,state.internalState);
+                    if("app.quit".equals(request.args.get("action")))quit=new QuitLifecycle(attempt);
                     // A synchronous throw after entering runtime code can also mean a partial operation.
                     dispatchAttempted=true;pending=new Pending(attempt,state);
                     if(planned!=null)game.prepareRun(planned);
@@ -252,7 +329,12 @@ public final class MachineSession implements AutoCloseable {
             Map<String,Object> response=CompactProtocol.success(id,handles.scope(scope),status,handles.encode(PublicEnglishProjection.copy(result)),!HISTORY.contains(op),request.sources,request.fullView);
             Map<String,Object>[] snapshots=dispatchAttempted&&currentCertified?directSnapshots(state):auditSnapshots(scope,state,currentCertified);
             store.complete(attempt,status.toUpperCase(Locale.ROOT),response,snapshots[0],snapshots[1],null,currentCertified&&state!=null?state.scopeId:null);responseStage.committed=true;
-            send(attempt,response,responseStage);if(game.exiting())game.exitNow();
+            boolean originalQuit=quit!=null&&quit.attempt==attempt;
+            if(originalQuit)quit.status=status.toUpperCase(Locale.ROOT);
+            send(attempt,response,responseStage);
+            if((originalQuit&&quit.successful())||deliversQuitReceipt)closeAndExit();
+            // A GUI close has no protocol quit owner. Never let it abandon unresolved work.
+            else if(quit==null&&pending==null&&cancelling==null&&!executionUncertain&&game.exiting())closeAndExit();
         }catch(Throwable thrown){
             Throwable error=unwrap(thrown);
             boolean definitelyNotExecuted=error instanceof GameController.NotExecuted;
@@ -273,6 +355,10 @@ public final class MachineSession implements AutoCloseable {
                 // Never substitute a pre-action snapshot for an unknown post-action state.
                 Map<String,Object>[] snapshots=dispatchAttempted?emptySnapshots():auditSnapshots(scope,state,currentCertified);
                 store.complete(attempt,dispatchAttempted&&!definitelyNotExecuted?"UNKNOWN":"REJECTED",response,snapshots[0],snapshots[1],error);responseStage.committed=true;
+                if(quit!=null&&quit.attempt==attempt){
+                    if(definitelyNotExecuted)quit=null;
+                    else quit.status="UNKNOWN";
+                }
                 send(attempt,response,responseStage);
             }catch(Throwable auditFailure){
                 if(!responseStage.written&&!responseStage.committed){responseStage.written=true;output.println(JsonCodec.encode(failure(id,scope,"AUDIT_UNAVAILABLE")));output.flush();}
@@ -335,6 +421,10 @@ public final class MachineSession implements AutoCloseable {
             Map<String,Object> response=failure(completed.attempt.id,completed.attempt.scopeId,rejected?code(actual):"EXECUTION_UNKNOWN");
             if(!rejected)response.put("data",CompactProtocol.project(handles.encode(withPersistence(completed.attempt,Collections.emptyMap(),completed.attempt.scopeId)),false));
             store.settle(completed.attempt,rejected?"REJECTED":"UNKNOWN",response,null,null,actual);
+            if(quit!=null&&quit.owns(completed.attempt.scopeId,completed.attempt.id)){
+                if(rejected)quit=null;
+                else quit.status="UNKNOWN";
+            }
             return true;
         }
         if(after.scopeId.startsWith("run:"))store.ensureScope(after.scopeId,"run",after.scopeId.substring(4));
@@ -342,6 +432,7 @@ public final class MachineSession implements AutoCloseable {
         drainSaves();
         store.settle(completed.attempt,status.toUpperCase(Locale.ROOT),success(completed.attempt.id,completed.attempt.scopeId,status,
                 withPersistence(completed.attempt,after.result(),after.scopeId)),after.publicState,after.internalState,null,after.scopeId);
+        if(quit!=null&&quit.owns(completed.attempt.scopeId,completed.attempt.id))quit.status=status.toUpperCase(Locale.ROOT);
         return true;
     }
     private void send(AuditStore.Attempt attempt,Map<String,Object> response,ResponseStage stage){
@@ -361,19 +452,44 @@ public final class MachineSession implements AutoCloseable {
     }
     private void drainSaves(){
         drainSaveReceipts();
-        GameController.GameLogSnapshot log;
-        while((log=game.pollGameLog())!=null){
-            store.ensureScope(log.scopeId,"run",log.scopeId.substring(4));
-            Map<String,Object> original=log.data();
-            Map<String,Object> english=PublicEnglishProjection.copy(original);
-            english.put("text_language","en");
-            english.put("presentation",PublicEnglishProjection.presentation(english));
-            store.eventWithOriginalText(log.scopeId,"game.log",english,log.originalData());
-        }
-        GameController.VisualSnapshot visual;
-        while((visual=game.pollVisual())!=null){
-            store.ensureScope(visual.scopeId,"run",visual.runId);
-            store.event(visual.scopeId,"game.visual",visual.data());
+        if(drainDisplayBatch()==DISPLAY_BATCH_LIMIT||game.hasDisplayEvents())scheduleDisplayDrain();
+    }
+    /** Only background work waits for a short coalescing window. Requests remain immediately runnable. */
+    private void scheduleDisplayDrain(){
+        if(closed||displayDrainFailed||!displayDrainScheduled.compareAndSet(false,true))return;
+        try{serial.schedule(()->{
+            boolean full=false;
+            try{if(!closed&&!displayDrainFailed)full=drainDisplayBatch()==DISPLAY_BATCH_LIMIT;}
+            catch(Throwable error){fatal(error);}
+            finally{
+                displayDrainScheduled.set(false);
+                if(!closed&&!displayDrainFailed&&(full||game.hasDisplayEvents()))scheduleDisplayDrain();
+            }
+        },DISPLAY_COALESCE_MILLIS,TimeUnit.MILLISECONDS);}catch(RejectedExecutionException stopping){displayDrainScheduled.set(false);}
+    }
+    private int drainDisplayBatch(){
+        if(displayDrainFailed)return 0;
+        try{
+            if(retainedDisplayBatch.isEmpty())retainedDisplayBatch=game.peekDisplayEvents(DISPLAY_BATCH_LIMIT);
+            if(retainedDisplayBatch.isEmpty())return 0;
+            int size=retainedDisplayBatch.size();
+            if(!retainedDisplayCommitted){
+                List<AuditStore.DisplayEventWrite> writes=new ArrayList<>();
+                for(GameController.DisplayEvent event:retainedDisplayBatch){
+                    Map<String,Object> english=PublicEnglishProjection.copy(event.data());
+                    Map<String,Object> original=event.originalData();
+                    if(original!=null){
+                        english.put("text_language","en");english.put("presentation",PublicEnglishProjection.presentation(english));
+                    }
+                    writes.add(new AuditStore.DisplayEventWrite(event.scopeId,event.kind,english,original));
+                }
+                store.displayEvents(writes);retainedDisplayCommitted=true;
+            }
+            game.acknowledgeDisplayEvents(retainedDisplayBatch);
+            retainedDisplayBatch=Collections.emptyList();retainedDisplayCommitted=false;return size;
+        }catch(Throwable failure){
+            // Keep the original unacknowledged batch. A possibly committed transaction is never replayed.
+            displayDrainFailed=true;throw failure;
         }
     }
     @SuppressWarnings("unchecked") private Map<String,Object> withLastSave(Object result,String scope){
@@ -407,7 +523,10 @@ public final class MachineSession implements AutoCloseable {
                 try{pending.future.get(timeoutMillis,TimeUnit.MILLISECONDS);}catch(Throwable error){recordExceptionNow(unwrap(error));}
                 settleReady();
             }
-            if(pending==null&&!executionUncertain&&!game.exiting()&&!game.disposed()){
+            if(quit!=null&&quit.successful()&&pending==null&&cancelling==null&&!executionUncertain){
+                drainSaves();
+                store.event(scope,"shutdown.completed",map("source","system","quit_request_id",quit.attempt.id));
+            }else if(pending==null&&cancelling==null&&!executionUncertain&&!game.exiting()&&!game.disposed()){
                 quitAfterEof(scope);
                 drainSaves();
                 store.event(scope,"shutdown.completed",map("source","system"));
@@ -416,7 +535,7 @@ public final class MachineSession implements AutoCloseable {
             recordExceptionNow(unwrap(error));try{store.event(scope,"shutdown.failed",map("source","system","code",code(error)));}catch(Throwable ignored){}
         }finally{
             try{drainSaves();}catch(Throwable error){recordExceptionNow(error);}
-            closed=true;if(!game.disposed())game.exitNow();
+            closeAndExit();
         }
     }
     private void quitAfterEof(String scope)throws Exception{
@@ -437,7 +556,11 @@ public final class MachineSession implements AutoCloseable {
             }
         }
     }
-    private void fatal(Throwable error){fatalFailure=true;recordExceptionNow(unwrap(error));closed=true;game.exitNow();}
+    private synchronized void closeAndExit(){
+        closed=true;
+        if(!exitIssued&&!game.disposed()){exitIssued=true;game.exitNow();}
+    }
+    private void fatal(Throwable error){fatalFailure=true;recordExceptionNow(unwrap(error));closeAndExit();}
     private void recordExceptionNow(Throwable error){try{store.recordException(error);}catch(Throwable ignored){}}
     /** The launcher must retain the original failure before close waits on the protocol worker. */
     public void recordRuntimeFailure(Throwable error){
@@ -479,8 +602,14 @@ public final class MachineSession implements AutoCloseable {
     private static int limit(Map<String,Object> args){long n=number(args,"limit",50);if(n<1||n>100)throw new ProtocolException("INVALID_ARGUMENT","limit must be between 1 and 100");return (int)n;}
     @Override public void close(){
         closed=true;
-        try{serial.submit(()->{try{settleReady();drainSaves();}catch(Throwable error){recordExceptionNow(error);}});}catch(RejectedExecutionException ignored){}
-        serial.shutdown();try{if(!serial.awaitTermination(35,TimeUnit.SECONDS))serial.shutdownNow();}
+        game.freezeDisplayEvents();game.setDisplaySignal(null);
+        try{serial.submit(()->{try{
+            settleReady();drainSaveReceipts();
+            while(!displayDrainFailed&&drainDisplayBatch()>0){}
+        }catch(Throwable error){fatalFailure=true;recordExceptionNow(error);}});}catch(RejectedExecutionException ignored){}
+        serial.shutdown();try{if(!serial.awaitTermination(35,TimeUnit.SECONDS)){
+            fatalFailure=true;recordExceptionNow(new IllegalStateException("Session final drain timed out"));serial.shutdownNow();
+        }}
         catch(InterruptedException e){Thread.currentThread().interrupt();serial.shutdownNow();}
     }
 }

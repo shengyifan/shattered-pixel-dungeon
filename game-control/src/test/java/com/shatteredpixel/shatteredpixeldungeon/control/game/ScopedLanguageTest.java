@@ -102,10 +102,10 @@ class ScopedLanguageTest {
         try {
             com.watabou.noosa.Scene scene=new com.watabou.noosa.Scene();
             UiBridge bridge=new UiBridge(()->scene);
-            Map<?,?> shown=Messages.withLanguage(Languages.ENGLISH,()->(Map<?,?>)bridge.describeUi().get("display"));
+            Map<?,?> shown=Messages.withLanguage(Languages.ENGLISH,()->(Map<?,?>)UiDrawFixture.capture(bridge).describeUi().get("display"));
             assertEquals("zh",shown.get("language"));assertEquals(false,shown.get("fullscreen"));
             fullscreen.set(true);
-            assertEquals(true,((Map<?,?>)bridge.describeUi().get("display")).get("fullscreen"));
+            assertEquals(true,((Map<?,?>)UiDrawFixture.capture(bridge).describeUi().get("display")).get("fullscreen"));
             assertEquals(Languages.CHI_SMPL,Messages.lang());
         } finally { com.badlogic.gdx.Gdx.graphics=previous; }
     }

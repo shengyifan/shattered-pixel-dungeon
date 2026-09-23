@@ -110,6 +110,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("floating") && FloatingVisibilityFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("combatvisual") && CombatVisualFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("boundary") && AttackBoundaryFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("currency") && CurrencyBoundaryFixtures.supports(name)) {
@@ -239,6 +241,10 @@ public final class FixtureLauncher {
                     SPDSettings.intro(false);
                     menuPrepared = true;
                 }
+                // Let the real initial fullscreen fade finish before creating short-lived draw
+                // fixtures. Keep the test coordinator pending while ordinary rendering continues.
+                if (!injected && fixture.kind.equals("combatvisual") && Game.scene() instanceof GameScene
+                        && !CombatVisualFixtures.initialPresentationReady()) return;
                 if (!injected && Game.scene() instanceof GameScene && Dungeon.hero != null && Dungeon.hero.ready
                         && Actor.isYielded() && !GameScene.interfaceBlockingHero()) {
                     if(fixture.kind.equals("scenario"))TransitionScenarioFixtures.diagnostics(profile);
@@ -337,6 +343,10 @@ public final class FixtureLauncher {
         hero.lvl = 30; hero.STR = 100; hero.HT = hero.HP = 1000;
         hero.subClass = fixture.subclass;
         Talent.initSubclassTalents(hero);
+        if (fixture.kind.equals("combatvisual")) {
+            CombatVisualFixtures.prepare(fixture.name, hero);
+            Item.updateQuickslot(); Dungeon.observe(); hero.checkVisibleMobs(); return null;
+        }
         if(fixture.kind.equals("inspect")) {
             makeArena(hero);InspectedItemFixtures.prepare(fixture.name,hero);
             Item.updateQuickslot();Dungeon.observe();hero.checkVisibleMobs();return null;

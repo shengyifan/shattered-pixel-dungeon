@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.game.text;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.game.util.WeakIdentityRegistry;
+
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.watabou.noosa.RuntimeObserver;
 import org.junit.jupiter.api.Test;

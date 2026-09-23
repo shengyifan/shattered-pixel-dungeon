@@ -46,6 +46,7 @@ public class Chains extends Group {
 	private float rotation = 0;
 
 	private PointF from, to;
+	private final String observedKind;
 
 	public Chains(int from, int to, Effects.Type type, Callback callback){
 		this(DungeonTilemap.tileCenterToWorld(from),
@@ -56,6 +57,7 @@ public class Chains extends Group {
 
 	public Chains(PointF from, PointF to, Effects.Type type, Callback callback){
 		super();
+		observedKind = type == Effects.Type.ETHEREAL_CHAIN ? "ethereal_chain_link" : "chain_link";
 
 		this.callback = callback;
 
@@ -80,6 +82,29 @@ public class Chains extends Group {
 			chains[i].origin.set( chains[i].width()/ 2, chains[i].height() );
 			add(chains[i]);
 		}
+	}
+
+	@Override public void draw() {
+		super.draw();
+		if (!Game.observer.observesVisualCues() || com.shatteredpixel.shatteredpixeldungeon.Dungeon.level == null) return;
+		int width = com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.width();
+		for (Image chain : chains) {
+			int cell = renderedCell(chain, width, com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.height());
+			if (cell < 0) continue;
+			// Only links already drawn at their current extension; never publish 'to'.
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(chain,
+					new com.watabou.noosa.VisualCue(observedKind, cell));
+		}
+	}
+
+	/** Bottom-pivot links rotate away from their untransformed layout center. */
+	static int renderedCell(Image chain, int width, int height) {
+		VisualCueProjection.Rect bounds = VisualCueProjection.worldBounds(chain);
+		if (bounds == null || width <= 0 || height <= 0) return -1;
+		float centerX = (bounds.left + bounds.right) / 2f, centerY = (bounds.top + bounds.bottom) / 2f;
+		if (!Float.isFinite(centerX) || !Float.isFinite(centerY) || centerX < 0 || centerY < 0) return -1;
+		int column = (int)(centerX / DungeonTilemap.SIZE), row = (int)(centerY / DungeonTilemap.SIZE);
+		return column < width && row < height ? row*width+column : -1;
 	}
 
 	@Override

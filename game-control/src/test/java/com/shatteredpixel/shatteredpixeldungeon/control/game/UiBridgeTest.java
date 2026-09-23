@@ -46,9 +46,9 @@ class UiBridgeTest {
         scene.add(button);
         UiBridge bridge = new UiBridge(() -> scene);
 
-        Map<String, Object> ui = bridge.describeUi();
+        Map<String, Object> ui = UiDrawFixture.capture(bridge).describeUi();
         List<Map<String, Object>> actions = bridge.describeActions();
-        bridge.describeUi();
+        UiDrawFixture.capture(bridge).describeUi();
         assertEquals(0, button.clicks + button.rightClicks + button.longClicks);
         assertTrue(ui.toString().contains("Visible choice"));
         assertFalse(ui.toString().contains("DO_NOT_DISCLOSE"));
@@ -59,26 +59,26 @@ class UiBridgeTest {
     @Test void publishedBindingSlotsMatchTheExistingActionAndDoNotEnableAnInactiveRow() {
         TestScene scene=new TestScene();TestBindingRow row=new TestBindingRow();scene.add(row);
         UiBridge bridge=new UiBridge(()->scene);
-        @SuppressWarnings("unchecked") List<Map<String,Object>> nodes=(List<Map<String,Object>>)bridge.describeUi().get("controls");
+        @SuppressWarnings("unchecked") List<Map<String,Object>> nodes=(List<Map<String,Object>>)UiDrawFixture.capture(bridge).describeUi().get("controls");
         Map<String,Object> described=nodes.stream().filter(n->n.containsKey("binding_slots")).findFirst().orElseThrow();
         Map<String,Object> action=bridge.describeActions().stream().filter(a->a.get("action").equals("ui.binding_slot")).findFirst().orElseThrow();
         assertEquals(List.of(1,2,3),described.get("binding_slots"));assertEquals(action.get("slots"),described.get("binding_slots"));
         assertEquals(action.get("control"),described.get("id"));assertEquals(0,row.callbacks);
         row.active=false;
         assertTrue(bridge.describeActions().stream().noneMatch(a->a.get("action").equals("ui.binding_slot")));
-        assertTrue(bridge.describeUi().toString().contains("binding_slots"));assertEquals(0,row.callbacks);
+        assertTrue(UiDrawFixture.capture(bridge).describeUi().toString().contains("binding_slots"));assertEquals(0,row.callbacks);
     }
 
     @Test void publishedBindingInputMatchesTheExistingKeyActionWithoutInvokingIt() {
         TestScene scene=new TestScene();TestBindingInput input=new TestBindingInput();scene.add(input);
         UiBridge bridge=new UiBridge(()->scene);
-        @SuppressWarnings("unchecked") List<Map<String,Object>> nodes=(List<Map<String,Object>>)bridge.describeUi().get("controls");
+        @SuppressWarnings("unchecked") List<Map<String,Object>> nodes=(List<Map<String,Object>>)UiDrawFixture.capture(bridge).describeUi().get("controls");
         Map<String,Object> node=nodes.stream().filter(n->Boolean.TRUE.equals(n.get("binding_input"))).findFirst().orElseThrow();
         Map<String,Object> action=bridge.describeActions().stream().filter(a->a.get("action").equals("ui.binding_key")).findFirst().orElseThrow();
         assertEquals(node.get("id"),action.get("control"));assertEquals(0,input.chosen);
         input.active=false;
         assertTrue(bridge.describeActions().stream().noneMatch(a->a.get("action").equals("ui.binding_key")));
-        assertTrue(bridge.describeUi().toString().contains("binding_input"));assertEquals(0,input.chosen);
+        assertTrue(UiDrawFixture.capture(bridge).describeUi().toString().contains("binding_input"));assertEquals(0,input.chosen);
     }
 
     @Test void invokesEachSemanticCallbackExactlyOnceAndRejectsUnsupportedGesture() {
@@ -139,16 +139,16 @@ class UiBridgeTest {
         TestButton button = new TestButton();
         scene.add(button);
         UiBridge bridge = new UiBridge(() -> scene);
-        String original = bridge.contextSignature();
-        assertEquals(original, bridge.contextSignature());
+        String original = UiDrawFixture.capture(bridge).contextSignature();
+        assertEquals(original, UiDrawFixture.capture(bridge).contextSignature());
         button.label = "Different visible choice";
-        String changed = bridge.contextSignature();
+        String changed = UiDrawFixture.capture(bridge).contextSignature();
         assertNotEquals(original, changed);
         scene.erase(button);
         TestButton replacement = new TestButton();
         replacement.label = button.label;
         scene.add(replacement);
-        assertNotEquals(changed, bridge.contextSignature());
+        assertNotEquals(changed, UiDrawFixture.capture(bridge).contextSignature());
         assertEquals(0, button.clicks + replacement.clicks);
     }
 
@@ -157,7 +157,7 @@ class UiBridgeTest {
         TestButton button=new TestButton(){@Override protected String hoverText(){return label;}};
         scene.add(button); UiBridge bridge=new UiBridge(()->scene);
         String initial=bridge.intentSignature();
-        assertEquals("partial",PublicEnglishProjection.presentation(bridge.describeUi()).get("status"));
+        assertEquals("partial",PublicEnglishProjection.presentation(UiDrawFixture.capture(bridge).describeUi()).get("status"));
         button.label="A different unclassified choice";
         assertNotEquals(initial,bridge.intentSignature());
     }
@@ -200,7 +200,7 @@ class UiBridgeTest {
         UiBridge bridge = new UiBridge(() -> current[0]);
         String oldId = firstButtonId(bridge);
         current[0] = new TestScene();
-        bridge.describeUi();
+        UiDrawFixture.capture(bridge).describeUi();
         current[0] = first;
         assertNotEquals(oldId, firstButtonId(bridge));
         assertUnavailable(bridge, oldId);
@@ -212,11 +212,11 @@ class UiBridgeTest {
         scene.add(button);
         UiBridge bridge = new UiBridge(() -> scene);
         String control = firstButtonId(bridge);
-        String signature = bridge.contextSignature();
+        String signature = UiDrawFixture.capture(bridge).contextSignature();
         bridge.validate("ui.activate", Map.of("control", control));
         bridge.validate("ui.activate", Map.of("control", control, "gesture", "long"));
         bridge.validate("ui.back", Map.of());
-        assertEquals(signature, bridge.contextSignature());
+        assertEquals(signature, UiDrawFixture.capture(bridge).contextSignature());
         assertEquals(0, button.clicks + button.rightClicks + button.longClicks + scene.backCount);
     }
 
@@ -226,12 +226,12 @@ class UiBridgeTest {
         scene.add(button);
         UiBridge bridge = new UiBridge(() -> scene);
         String control = firstButtonId(bridge);
-        String signature = bridge.contextSignature();
+        String signature = UiDrawFixture.capture(bridge).contextSignature();
         assertThrows(IllegalArgumentException.class, () -> bridge.validate("ui.activate", Map.of("control", control, "gesture", "invalid")));
         assertThrows(IllegalArgumentException.class, () -> bridge.validate("ui.text", Map.of("control", control, "text", "value")));
         assertThrows(IllegalArgumentException.class, () -> bridge.validate("ui.scroll", Map.of("control", control, "y", 100)));
         assertThrows(IllegalArgumentException.class, () -> bridge.validate("ui.value", Map.of("control", control, "value", 1.5)));
-        assertEquals(signature, bridge.contextSignature());
+        assertEquals(signature, UiDrawFixture.capture(bridge).contextSignature());
         assertEquals(0, button.clicks + button.rightClicks + button.longClicks);
     }
 

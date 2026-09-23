@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.CorrosionParticle;
@@ -33,6 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.RainbowParticl
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Visual;
@@ -57,6 +60,11 @@ public class MagicMissile extends Emitter {
 	private float sx;
 	private float sy;
 	private float time;
+	private String observedAppearance;
+
+	@Override public void revive() {
+		super.revive(); observedAppearance = null;
+	}
 
 	//missile types
 	public static final int MAGIC_MISSILE   = 0;
@@ -136,6 +144,7 @@ public class MagicMissile extends Emitter {
 			size( 10 );
 			pour( Speck.factory(type-SPECK), 0.02f);
 			revive();
+			if (Game.observer.observesVisualCues()) observedAppearance = appearance(type);
 			return;
 		}
 
@@ -261,6 +270,58 @@ public class MagicMissile extends Emitter {
 		}
 
 		revive();
+		if (Game.observer.observesVisualCues()) observedAppearance = appearance(type);
+	}
+
+	/** Names the existing rendering branch, never a caster class, effect outcome or target. */
+	public static String appearance(int type) {
+		if (type >= SPECK) return "magic_speck_" + (type-SPECK);
+		switch (type) {
+			case FROST: return "magic_frost";
+			case FIRE: return "magic_fire";
+			case CORROSION: return "magic_corrosion";
+			case FOLIAGE: return "magic_foliage";
+			case FORCE: return "magic_force";
+			case BEACON: return "magic_beacon";
+			case SHADOW: return "magic_shadow";
+			case RAINBOW: return "magic_rainbow";
+			case EARTH: return "magic_earth";
+			case WARD: return "magic_ward";
+			case SHAMAN_RED: return "magic_red";
+			case SHAMAN_BLUE: return "magic_blue";
+			case SHAMAN_PURPLE: return "magic_purple";
+			case ELMO: return "magic_elmo";
+			case POISON: return "magic_poison";
+			case LIGHT_MISSILE: return "magic_light";
+			case MAGIC_MISS_CONE: return "magic_white_cone";
+			case FROST_CONE: return "magic_frost_cone";
+			case FIRE_CONE: return "magic_fire_cone";
+			case CORROSION_CONE: return "magic_corrosion_cone";
+			case FOLIAGE_CONE: return "magic_foliage_cone";
+			case FORCE_CONE: return "magic_force_cone";
+			case SHADOW_CONE: return "magic_shadow_cone";
+			case RAINBOW_CONE: return "magic_rainbow_cone";
+			case EARTH_CONE: return "magic_earth_cone";
+			case WARD_CONE: return "magic_ward_cone";
+			case PURPLE_CONE: return "magic_purple_cone";
+			case SPARK_CONE: return "magic_spark_cone";
+			case BLOOD_CONE: return "magic_blood_cone";
+			default: return "magic_white";
+		}
+	}
+
+	@Override public void draw() {
+		super.draw();
+		if (observedAppearance == null || !Game.observer.observesVisualCues() || Dungeon.level == null) return;
+		for (com.watabou.noosa.Gizmo child : childrenSnapshot()) {
+			if (!(child instanceof Visual)) continue;
+			Visual particle = (Visual)child;
+			if (!Float.isFinite(particle.x) || !Float.isFinite(particle.y) || particle.x < 0 || particle.y < 0) continue;
+			int x = (int)(particle.x / DungeonTilemap.SIZE), y = (int)(particle.y / DungeonTilemap.SIZE);
+			if (x >= Dungeon.level.width() || y >= Dungeon.level.height()) continue;
+			GameScene.observeMovingVisualDraw(particle, new com.watabou.noosa.VisualCue(observedAppearance,
+					y*Dungeon.level.width()+x));
+		}
 	}
 	
 	public void size( float size ) {

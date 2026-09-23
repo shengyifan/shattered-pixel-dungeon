@@ -70,6 +70,10 @@ public class RipperSprite extends MobSprite {
 		play( prep );
 	}
 
+	@Override protected String renderedStateCue() {
+		return curAnim == prep ? "ripper_leap_preparation" : null;
+	}
+
 	@Override
 	public void jump( int from, int to, float height, float duration,  Callback callback ) {
 		super.jump( from, to, height, duration, callback );

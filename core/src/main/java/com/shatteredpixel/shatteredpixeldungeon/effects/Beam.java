@@ -35,6 +35,8 @@ public class Beam extends Image {
 	private  float duration;
 	
 	private float timeLeft;
+	protected String visualKind;
+	private com.watabou.noosa.VisualCue observation;
 
 	private Beam(PointF s, PointF e, Effects.Type asset, float duration) {
 		super( Effects.get( asset ) );
@@ -50,6 +52,14 @@ public class Beam extends Image {
 		scale.x = (float)Math.sqrt( dx * dx + dy * dy ) / width;
 		
 		timeLeft = this.duration = duration;
+		visualKind = asset == Effects.Type.DEATH_RAY ? "death_ray"
+				: asset == Effects.Type.HEALTH_RAY ? "health_ray" : "light_ray";
+	}
+
+	/** Origin and endpoint of this existing beam, published only after it is actually drawn. */
+	public Beam observeDraw(int from, int to) {
+		if (Game.observer.observesVisualCues()) observation = new com.watabou.noosa.VisualCue(visualKind, to, from, null);
+		return this;
 	}
 
 	public static class DeathRay extends Beam{
@@ -68,6 +78,7 @@ public class Beam extends Image {
 		public SunRay(PointF s, PointF e){
 			super(s, e, Effects.Type.LIGHT_RAY, 1f);
 			tint(1, 1, 0.25f, 1);
+			super.visualKind = "sun_ray";
 		}
 	}
 
@@ -95,5 +106,7 @@ public class Beam extends Image {
 		Blending.setLightMode();
 		super.draw();
 		Blending.setNormalMode();
+		if (observation != null && texture != null && buffer != null && Game.observer.observesVisualCues())
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this, observation);
 	}
 }

@@ -208,6 +208,7 @@ public class Group extends Gizmo {
 
 		if (index != -1) {
 			members.set( index, null );
+			g.observationDetached();
 			g.parent = null;
 			return g;
 		} else {
@@ -219,6 +220,7 @@ public class Group extends Gizmo {
 	public synchronized Gizmo remove( Gizmo g ) {
 		if (members.remove( g )) {
 			length--;
+			g.observationDetached();
 			g.parent = null;
 			return g;
 		} else {
@@ -231,6 +233,7 @@ public class Group extends Gizmo {
 		if (index != -1) {
 			members.set( index, newOne );
 			newOne.parent = this;
+			oldOne.observationDetached();
 			oldOne.parent = null;
 			return newOne;
 		} else {
@@ -291,6 +294,7 @@ public class Group extends Gizmo {
 		for (int i=0; i < length; i++) {
 			Gizmo g = members.get( i );
 			if (g != null) {
+				g.observationDetached();
 				g.parent = null;
 			}
 		}

@@ -104,6 +104,10 @@ public class DM300Sprite extends MobSprite {
 		play( charge );
 	}
 
+	@Override protected String renderedStateCue() {
+		return curAnim == charge ? "dm300_charging" : null;
+	}
+
 	public void slam( int cell ){
 		turnTo( ch.pos , cell );
 		play( slam );

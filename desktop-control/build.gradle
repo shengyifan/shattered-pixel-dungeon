@@ -80,7 +80,7 @@ tasks.register('generateBuildCatalog') {
         def output = new File(catalogDirectory.get().asFile, 'control-build.json')
         output.parentFile.mkdirs()
         output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName,
-            cli_version: 'CLI.7.0.0', protocol_version: 7, audit_schema_version: 10, java_source: '11', build_java: System.getProperty('java.version'),
+            cli_version: 'CLI.7.0.1', protocol_version: 7, audit_schema_version: 10, java_source: '11', build_java: System.getProperty('java.version'),
             sqlite_jdbc: '3.53.4.0', entries: entries])
     }
 }
@@ -172,7 +172,7 @@ tasks.register('packageMacArm64', Exec) {
             '--main-class', 'com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher',
             '--dest', dest.get().asFile, '--icon', project(':desktop').file('src/main/assets/icons/mac.icns'),
             '--mac-package-identifier', appPackageName + '.apple',
-            '--add-modules', 'java.base,java.desktop,java.sql,java.logging,java.management,jdk.unsupported,jdk.crypto.cryptoki,jdk.management',
+            '--add-modules', 'java.base,java.desktop,java.sql,java.logging,java.management,java.instrument,jdk.unsupported,jdk.crypto.cryptoki,jdk.management',
             '--java-options', '-XstartOnFirstThread', '--java-options', '--enable-native-access=ALL-UNNAMED',
             '--add-launcher', "spdctl-jvm=${launcher.absolutePath}"
     }

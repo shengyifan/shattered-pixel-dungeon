@@ -41,7 +41,7 @@ import com.watabou.noosa.Image;
 import com.watabou.utils.BArray;
 import com.watabou.utils.PathFinder;
 
-public class QuickSlotButton extends Button {
+public class QuickSlotButton extends Button implements RenderedStatus {
 	
 	private static QuickSlotButton[] instance = new QuickSlotButton[QuickSlot.SIZE];
 	private int slotNum;
@@ -49,7 +49,44 @@ public class QuickSlotButton extends Button {
 	private ItemSlot slot;
 	
 	private Image crossB;
-	private Image crossM;
+	private TargetMarker crossM;
+
+	@Override
+	public java.util.Map<String,Object> renderedStatus() {
+		java.util.Map<String,Object> marker=RenderedAppearance.image(crossB);
+		if(marker.isEmpty())return java.util.Collections.emptyMap();
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		result.put("quickslot",slotNum+1);result.put("targeting_marker",marker);return result;
+	}
+
+	@Override
+	public java.util.Map<String,Object> intentStatus() {
+		if(RenderedAppearance.image(crossB).isEmpty())return java.util.Collections.emptyMap();
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		result.put("quickslot",slotNum+1);result.put("targeting_marker",true);return result;
+	}
+
+	/** The cue is emitted only by this marker's real draw, from matching current sprite geometry. */
+	public static final class TargetMarker extends Image {
+		private java.lang.ref.WeakReference<CharSprite> target=new java.lang.ref.WeakReference<>(null);
+		void target(CharSprite sprite) {
+			if(target.get()!=sprite)target=new java.lang.ref.WeakReference<>(sprite);
+		}
+		public int renderedTargetCell() {
+			CharSprite sprite=target.get();
+			if(sprite==null || !sprite.exists || !sprite.visible || sprite.parent!=parent || parent==null
+					|| Math.abs(x+width()/2f-sprite.x-sprite.width()/2f)>0.5f
+					|| Math.abs(y+height()/2f-sprite.y-sprite.height()/2f)>0.5f)return -1;
+			return sprite.renderedCell();
+		}
+		@Override public void draw() {
+			super.draw();
+			if(com.watabou.noosa.Game.observer.observesVisualCues() && buffer!=null) {
+				int cell=renderedTargetCell();
+				if(cell>=0)GameScene.observeCellVisualDraw(this,new com.watabou.noosa.VisualCue("quickslot_target",cell));
+			}
+		}
+	}
 	
 	public static int targetingSlot = -1;
 	public static Char lastTarget = null;
@@ -154,7 +191,7 @@ public class QuickSlotButton extends Button {
 		crossB.visible = false;
 		add( crossB );
 		
-		crossM = new Image();
+		crossM = new TargetMarker();
 		crossM.copy( crossB );
 	}
 	
@@ -177,6 +214,7 @@ public class QuickSlotButton extends Button {
 	public void update() {
 		super.update();
 		if (targetingSlot != -1 && lastTarget != null && lastTarget.sprite != null){
+			crossM.target(lastTarget.sprite);
 			crossM.point(lastTarget.sprite.center(crossM));
 		}
 	}
@@ -327,6 +365,7 @@ public class QuickSlotButton extends Button {
 			CharSprite sprite = lastTarget.sprite;
 
 			if (sprite.parent != null) {
+				crossM.target(sprite);
 				sprite.parent.addToFront(crossM);
 				crossM.point(sprite.center(crossM));
 			}
@@ -405,6 +444,7 @@ public class QuickSlotButton extends Button {
 			for (QuickSlotButton btn : instance) {
 				btn.crossB.visible = false;
 				btn.crossM.remove();
+				btn.crossM.target(null);
 				targetingSlot = -1;
 			}
 		}

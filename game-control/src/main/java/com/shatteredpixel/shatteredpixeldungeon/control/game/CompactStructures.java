@@ -312,9 +312,21 @@ final class CompactStructures {
         expandSaveScopes(result.get("saved"),scope);
         if(result.get("persistence") instanceof Map) {
             Map<String,Object> persistence=object(result.get("persistence"));
+            if(persistence.containsKey("saves")) {
+                if(!(persistence.get("saves") instanceof List))throw new IllegalArgumentException("Save receipts must be an array");
+                for(Object receipt:(List<?>)persistence.get("saves"))validateReceipt(receipt);
+            }
             for(String field:Arrays.asList("saves","saved"))expandSaveScopes(persistence.get(field),scope);
-            if(persistence.get("saved") instanceof Number)persistence.put("saved",copy(definition(persistence.get("saves"),persistence.get("saved"))));
+            Object saved=persistence.get("saved");
+            if(integral(saved))persistence.put("saved",copy(definition(persistence.get("saves"),saved)));
+            else if(saved!=null)validateReceipt(saved);
         }
+    }
+
+    private static void validateReceipt(Object value) {
+        if(!(value instanceof Map) || !(object(value).get("sid") instanceof String)
+                || ((String)object(value).get("sid")).isEmpty())
+            throw new IllegalArgumentException("Save receipt must be an object with a non-empty sid");
     }
 
     private static Object copy(Object value) {

@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.NdjsonReader;
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.RequestArguments;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.WireNames;
 
 import java.io.*;
@@ -242,31 +243,13 @@ public final class StableController {
         Map<String,Object> request = request(op, scope, intent);
         // Validate the same flat grammar as the direct interface before crossing the child boundary.
         try {
+            RequestArguments.validate(op, intent);
             ControlRequest.parse(JsonCodec.encode(request));
-            validateBindings(request);
         }
         catch (RuntimeException invalid) { return localError("INVALID_INTENT", invalid.getMessage(), request); }
         if (action) pending.put((String)request.get("id"), new Pending(request));
         Map<String,Object> response = exchange(request, responseTimeout);
         return handleResponse(request, response);
-    }
-
-    /** Catch malformed client bindings before they become audited game actions.
-     * Current availability, targets and gameplay constraints remain engine decisions. */
-    private static void validateBindings(Map<String,Object> request) {
-        String op = (String)request.get("op");
-        if (WireNames.parameters(op).contains("ctl") && string(request.get("ctl")) == null)
-            throw new IllegalArgumentException("ctl must be the current control ID string, not a node index or template index");
-        if ("item".equals(op) && string(request.get("loc")) == null)
-            throw new IllegalArgumentException("loc must be a current inventory locator string");
-        if ("move".equals(op) && !WireNames.DIRECTIONS.contains(request.get("dir")))
-            throw new IllegalArgumentException("move requires dir; use op cell with cell for a map target");
-        if ("cell".equals(op)) {
-            Object cell = request.get("cell");
-            if (!(cell instanceof Byte || cell instanceof Short || cell instanceof Integer || cell instanceof Long)
-                    || ((Number)cell).longValue() < 0 || ((Number)cell).longValue() > Integer.MAX_VALUE)
-                throw new IllegalArgumentException("cell must be a non-negative JSON integer within the current map");
-        }
     }
 
     private Map<String,Object> handleResponse(Map<String,Object> request, Map<String,Object> response) throws InterruptedException {
@@ -292,8 +275,8 @@ public final class StableController {
     }
 
     private Map<String,Object> settle(Map<String,Object> intent) throws InterruptedException {
-        for (String key : intent.keySet()) if (!Arrays.asList("op", "rid", "timeout_ms").contains(key))
-            return localError("INVALID_INTENT", "settle accepts only rid and timeout_ms", null);
+        try { RequestArguments.validate("settle", intent); }
+        catch (RuntimeException invalid) { return localError("INVALID_INTENT", invalid.getMessage(), null); }
         long duration = SETTLE_TIMEOUT_MS;
         if (intent.containsKey("timeout_ms")) {
             Object n = intent.get("timeout_ms");

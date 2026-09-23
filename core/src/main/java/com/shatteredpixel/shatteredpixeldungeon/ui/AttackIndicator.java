@@ -37,7 +37,7 @@ import com.watabou.utils.Reflection;
 import java.util.ArrayList;
 
 //FIXME needs a refactor, lots of weird thread interaction here.
-public class AttackIndicator extends Tag {
+public class AttackIndicator extends Tag implements RenderedStatus {
 	
 	private static final float ENABLED	= 1.0f;
 	private static final float DISABLED	= 0.3f;
@@ -47,6 +47,13 @@ public class AttackIndicator extends Tag {
 	private static AttackIndicator instance;
 	
 	private CharSprite sprite = null;
+
+	@Override
+	public synchronized java.util.Map<String,Object> renderedStatus() {
+		java.util.Map<String,Object> icon=RenderedAppearance.image(sprite);
+		// The portrait shows appearance, not which of several identical mobs owns it.
+		return icon.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("target_icon",icon);
+	}
 	
 	private Mob lastTarget;
 	private ArrayList<Mob> candidates = new ArrayList<>();

@@ -50,4 +50,24 @@ class VisualCueProjectionTest {
         assertEquals(-1, VisualCueProjection.gridCell(32,160,16,16,16,10,100));
         assertEquals(-1, VisualCueProjection.gridCell(Float.NaN,32,16,16,16,10,100));
     }
+
+    @Test void transformedQuadCenterAccountsForRotationAroundANoncentralOrigin() {
+        com.watabou.noosa.Visual source=new com.watabou.noosa.Visual(0,0,2,8);
+        source.origin.set(1,8);source.angle=90;
+        VisualCueProjection.Rect bounds=VisualCueProjection.worldBounds(source);
+        assertNotNull(bounds);assertEquals(1,bounds.left,0.0001f);assertEquals(7,bounds.top,0.0001f);
+        assertEquals(9,bounds.right,0.0001f);assertEquals(9,bounds.bottom,0.0001f);
+        assertEquals(5,(bounds.left+bounds.right)/2,0.0001f);
+        assertNotEquals(source.center().x,(bounds.left+bounds.right)/2);
+    }
+
+    @Test void physicalFovFootprintUsesTheDrawTransformAndExclusiveRightAndBottomEdges() {
+        boolean[] visible=new boolean[100];visible[22]=true;
+        VisualCueProjection.Viewport view=new VisualCueProjection.Viewport(16,16,100,100,10,20,2);
+        assertTrue(VisualCueProjection.permitsVisibleFootprint(view.screenRect(44,32,4,4),view,16,10,100,visible));
+        assertFalse(VisualCueProjection.permitsVisibleFootprint(view.screenRect(46,32,4,4),view,16,10,100,visible));
+        assertFalse(VisualCueProjection.permitsVisibleFootprint(view.screenRect(49,32,4,4),view,16,10,100,visible));
+        assertFalse(VisualCueProjection.permitsVisibleFootprint(view.screenRect(-1,32,4,4),view,16,10,100,visible));
+        assertFalse(VisualCueProjection.permitsVisibleFootprint(new VisualCueProjection.Rect(Float.NaN,20,40,40),view,16,10,100,visible));
+    }
 }

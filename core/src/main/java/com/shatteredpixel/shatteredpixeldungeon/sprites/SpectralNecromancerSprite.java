@@ -120,6 +120,10 @@ public class SpectralNecromancerSprite extends MobSprite {
 		play(charging);
 	}
 
+	@Override protected String renderedStateCue() {
+		return curAnim == charging ? "spectral_necromancer_charging" : null;
+	}
+
 	@Override
 	public void zap(int cell) {
 		super.zap(cell);
@@ -129,6 +133,9 @@ public class SpectralNecromancerSprite extends MobSprite {
 			}
 			summoningParticles = CellEmitter.get(((Necromancer) ch).summoningPos);
 			summoningParticles.pour(ShadowParticle.MISSILE, 0.1f);
+			if (com.watabou.noosa.Game.observer.observesVisualCues()) summoningParticles.observeDraw(
+					new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("summoning_shadow", cell,
+							ShadowParticle.MISSILE, ShadowParticle.class));
 			summoningParticles.visible = Dungeon.level.heroFOV[((Necromancer) ch).summoningPos];
 			if (visible || summoningParticles.visible ) Sample.INSTANCE.play( Assets.Sounds.CHARGEUP, 1f, 0.8f );
 		}

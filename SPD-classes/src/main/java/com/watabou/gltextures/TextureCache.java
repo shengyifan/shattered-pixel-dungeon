@@ -32,6 +32,16 @@ public class TextureCache {
 	
 	private static HashMap<Object,SmartTexture> all = new HashMap<>();
 
+	/** Read-only reverse lookup limited to the caller's official asset allowlist. Never loads a texture. */
+	public synchronized static String cachedAssetKey(SmartTexture texture, java.util.Set<String> assets) {
+		String found = null;
+		for (String asset : assets) if (all.get(asset) == texture && texture != null) {
+			if (found != null) return null; // ambiguous identity is not a fabricated resource name
+			found = asset;
+		}
+		return found;
+	}
+
 	public synchronized static SmartTexture createSolid( int color ) {
 		final String key = "1x1:" + color;
 		

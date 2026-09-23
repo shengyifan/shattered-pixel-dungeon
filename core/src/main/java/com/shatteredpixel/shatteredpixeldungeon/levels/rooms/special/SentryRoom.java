@@ -385,9 +385,9 @@ public class SentryRoom extends SpecialRoom {
 			flash();
 			emitter().burst(MagicMissile.WardParticle.UP, 2);
 			if (Actor.findChar(pos) != null){
-				parent.add(new Beam.DeathRay(center(), Actor.findChar(pos).sprite.center()));
+				parent.add(new Beam.DeathRay(center(), Actor.findChar(pos).sprite.center()).observeDraw(ch.pos, pos));
 			} else {
-				parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(pos)));
+				parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(pos)).observeDraw(ch.pos, pos));
 			}
 			Sample.INSTANCE.play( Assets.Sounds.RAY );
 			((Sentry)ch).onZapComplete();
@@ -400,6 +400,9 @@ public class SentryRoom extends SpecialRoom {
 			chargeParticles = centerEmitter();
 			chargeParticles.autoKill = false;
 			chargeParticles.pour(MagicMissile.MagicParticle.ATTRACTING, 0.05f);
+			if (Game.observer.observesVisualCues()) chargeParticles.observeDraw(
+					new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("sentry_charge_particles", ch.pos,
+							MagicMissile.MagicParticle.ATTRACTING, MagicMissile.MagicParticle.class));
 			chargeParticles.on = false;
 
 			if (((Sentry)ch).curChargeDelay != ((Sentry) ch).initialChargeDelay){

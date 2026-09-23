@@ -26,6 +26,8 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.CharHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.OptionSlider;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus;
+import com.shatteredpixel.shatteredpixeldungeon.ui.Banner;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CurrencyIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RadialMenu;
@@ -42,10 +44,12 @@ import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Scene;
 import com.watabou.noosa.TextInput;
+import com.watabou.noosa.Camera;
 import com.watabou.noosa.ui.Component;
 import com.watabou.input.PointerEvent;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance;
+import com.shatteredpixel.shatteredpixeldungeon.control.game.util.WeakIdentityRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,6 +58,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.lang.ref.WeakReference;
 
 /**
  * A semantic view of the live game's existing controls. Call only on a stable render-thread
@@ -62,8 +67,8 @@ import java.util.function.Supplier;
  */
 public final class UiBridge {
     private final Supplier<Scene> sceneSource;
-    private final IdentityHashMap<Gizmo, String> identities = new IdentityHashMap<>();
-    private final IdentityHashMap<Object, Long> callbackIdentities = new IdentityHashMap<>();
+    private final WeakIdentityRegistry<String> identities = new WeakIdentityRegistry<>();
+    private final WeakIdentityRegistry<Long> callbackIdentities = new WeakIdentityRegistry<>();
     private final Map<String, Gizmo> controls = new LinkedHashMap<>();
     private final IdentityHashMap<Gizmo, ScrollPane> entries = new IdentityHashMap<>();
     private final List<Map<String, Object>> nodes = new ArrayList<>();
@@ -76,10 +81,185 @@ public final class UiBridge {
     private CellSelector cellSelector;
     private long nextIdentity = 1;
     private long nextCallbackIdentity = 1;
+    private final WeakIdentityRegistry<DrawnEvidence> drawnEvidence=new WeakIdentityRegistry<>();
+    private final WeakIdentityRegistry<Long> drawingIdentities=new WeakIdentityRegistry<>();
+    private long nextDrawingIdentity=1;
+    private WeakReference<Scene> drawnScene=new WeakReference<>(null);
+    private WeakReference<Gizmo> drawnScope=new WeakReference<>(null);
+    private WeakReference<Camera> drawnCamera=new WeakReference<>(null);
+    private boolean hadDrawnCamera;
+    private boolean readingIntent;
+
+    private static final class DrawnEvidence {
+        final List<Long> bindings;
+        final Map<String,Object> display,text,textIntent,statusIntent;
+        final String rawText;
+        final boolean textVisible,clipped;
+        DrawnEvidence(List<Long> bindings,Map<String,Object> display,Map<String,Object> text,Map<String,Object> textIntent,
+                      Map<String,Object> statusIntent,String rawText,boolean textVisible,boolean clipped){
+            this.bindings=bindings;this.display=display;this.text=text;this.textIntent=textIntent;this.statusIntent=statusIntent;
+            this.rawText=rawText;this.textVisible=textVisible;this.clipped=clipped;
+        }
+    }
 
     public UiBridge() { this(Game::scene); }
 
     UiBridge(Supplier<Scene> sceneSource) { this.sceneSource = sceneSource; }
+
+    /** Only display fields are frozen here: no control callback, hover label, action discovery or model getter. */
+    public void captureDrawnEvidence(){
+        drawnEvidence.clear();
+        Scene current=sceneSource.get();drawnScene=new WeakReference<>(current);
+        drawnCamera=new WeakReference<>(Camera.main);hadDrawnCamera=Camera.main!=null;
+        Gizmo currentScope=displayScope(current);drawnScope=new WeakReference<>(currentScope);
+        if(currentScope!=null)captureDrawn(currentScope);
+    }
+
+    private void captureDrawn(Gizmo owner){
+        if(!shown(owner)||owner instanceof com.watabou.noosa.particles.Emitter)return;
+        if(!(owner instanceof FloatingText)&&captureCandidate(owner)){
+            DrawnEvidence evidence=readDisplay(owner);drawnEvidence.put(owner,evidence);
+        }
+        if(owner instanceof RenderedTextBlock)return;
+        if(owner instanceof Group)for(Gizmo child:((Group)owner).childrenSnapshot())if(child!=null)captureDrawn(child);
+    }
+
+    private static boolean captureCandidate(Gizmo owner){
+        return owner instanceof RenderedStatus||owner instanceof HealthBar||owner instanceof RenderedTextBlock
+                ||owner instanceof BitmapText||owner instanceof Component||owner instanceof ActionArea;
+    }
+
+    private DrawnEvidence readDisplay(Gizmo owner){
+        Map<String,Object> display=new LinkedHashMap<>(),textFields=new LinkedHashMap<>(),intent=new LinkedHashMap<>();
+        RenderedTextBlock.VisibleText fragment=owner instanceof RenderedTextBlock?((RenderedTextBlock)owner).visibleTextFragment():null;
+        String text=fragment==null?visibleText(owner):fragment.visible?fragment.text:null;
+        boolean clipped=fragment!=null?fragment.clipped:clippedDirectText(owner);
+        boolean textVisible=fragment==null||fragment.visible;
+        if(text!=null&&(!text.isEmpty()||clipped))textFields.put("text",TextProvenance.INSTANCE.capture(owner,text,clipped));
+        if(fragment!=null&&fragment.visible)textFields.putAll(fragment.styleData());
+        else if(owner instanceof BitmapText&&!clipped)textFields.put("color",((BitmapText)owner).displayedTextColor());
+        if(clipped)textFields.put("clipped",true);
+        display.putAll(textFields);
+        if(owner instanceof RenderedStatus){
+            display.putAll(((RenderedStatus)owner).renderedStatus());
+            intent.putAll(((RenderedStatus)owner).intentStatus());
+        }
+        if(owner instanceof IconButton&&((IconButton)owner).icon()!=null){
+            boolean dimmed=((IconButton)owner).icon().am<=0.35f;
+            display.put("dimmed",dimmed);intent.put("dimmed",dimmed);
+        }
+        if(owner instanceof HealthBar){
+            Map<String,Object> bars=barFields((HealthBar)owner);display.putAll(bars);intent.putAll(bars);
+        }
+        Map<String,Object> frozenText=freezeEvidence(PublicEnglishProjection.freeze(textFields));
+        Map<String,Object> textIntent=frozenText;
+        if(owner instanceof RenderedTextBlock&&((RenderedTextBlock)owner).hasAnimatedColor()){
+            Map<String,Object> meaning=new LinkedHashMap<>(frozenText);meaning.remove("color");
+            if(meaning.get("styles") instanceof List){
+                List<Object> styles=new ArrayList<>();
+                for(Object raw:(List<?>)meaning.get("styles")){
+                    Map<String,Object> style=new LinkedHashMap<>((Map<String,Object>)raw);style.remove("color");styles.add(style);
+                }
+                meaning.put("styles",styles);
+            }
+            textIntent=freezeEvidence(meaning);
+        }
+        return new DrawnEvidence(bindingFingerprint(owner),freezeEvidence(PublicEnglishProjection.freeze(display)),
+                frozenText,textIntent,freezeEvidence(PublicEnglishProjection.freeze(intent)),text,textVisible,clipped);
+    }
+
+    /** Opaque provenance/presentation maps are evidence too: no mutable caller-owned extension survives. */
+    @SuppressWarnings("unchecked") private static <T>T freezeEvidence(T value){
+        if(value==null||value instanceof String||value instanceof Boolean||value instanceof Byte||value instanceof Short
+                ||value instanceof Integer||value instanceof Long||value instanceof java.math.BigInteger||value instanceof java.math.BigDecimal)return value;
+        if(value instanceof Float||value instanceof Double){
+            if(!Double.isFinite(((Number)value).doubleValue()))throw new IllegalArgumentException("Non-finite drawn UI evidence");
+            return value;
+        }
+        if(value instanceof Map){
+            Map<String,Object> copy=new LinkedHashMap<>();
+            for(Map.Entry<?,?> entry:((Map<?,?>)value).entrySet()){
+                if(!(entry.getKey() instanceof String))throw new IllegalArgumentException("Drawn UI evidence keys must be strings");
+                copy.put((String)entry.getKey(),freezeEvidence(entry.getValue()));
+            }
+            return (T)Collections.unmodifiableMap(copy);
+        }
+        if(value instanceof List){List<Object> copy=new ArrayList<>();for(Object child:(List<?>)value)copy.add(freezeEvidence(child));return (T)Collections.unmodifiableList(copy);}
+        throw new IllegalArgumentException("Drawn UI evidence must contain immutable JSON values only");
+    }
+
+    private static Map<String,Object> barFields(HealthBar bar){
+        int[] pixels=bar.renderedPixelWidths();
+        return pixels.length==3&&pixels[0]>0?map("total_pixels",pixels[0],"health_pixels",pixels[1],
+                "health_and_shield_pixels",pixels[2],"measurement","rendered_pixels"):Collections.emptyMap();
+    }
+
+    private long drawingIdentity(Object owner){
+        if(owner==null)return 0;
+        Long identity=drawingIdentities.get(owner);
+        if(identity==null){identity=nextDrawingIdentity++;drawingIdentities.put(owner,identity);}
+        return identity;
+    }
+
+    private List<Long> bindingFingerprint(Gizmo owner){
+        List<Long> result=new ArrayList<>();appendBindings(owner,result);return Collections.unmodifiableList(result);
+    }
+    private void appendBindings(Gizmo owner,List<Long> result){
+        if(owner==null){result.add(0L);return;}
+        result.add(drawingIdentity(owner));result.add(owner.observationLifetime());
+        result.add(drawingIdentity(owner.parent));result.add(drawingIdentity(com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance.camera(owner)));
+        result.add(owner.exists?1L:0L);result.add(owner.visible?1L:0L);
+        if(owner instanceof Group){
+            List<Gizmo> children=new ArrayList<>();
+            for(Gizmo child:((Group)owner).childrenSnapshot())if(child!=null&&!(child instanceof com.watabou.noosa.particles.Emitter))children.add(child);
+            result.add((long)children.size());for(Gizmo child:children)appendBindings(child,result);
+        }
+        else result.add(-1L);
+    }
+
+    private static Gizmo displayScope(Scene current){
+        if(current==null)return null;
+        Gizmo window=topWindow(current);if(window!=null)return window;
+        InventoryPane selecting=selectingInventory(current);return selecting==null?current:selecting;
+    }
+
+    private boolean matchingDraw(){
+        Scene current=sceneSource.get();Camera camera=drawnCamera.get();
+        return current!=null&&drawnScene.get()==current&&drawnScope.get()==displayScope(current)
+                &&(hadDrawnCamera?camera!=null&&camera==Camera.main:Camera.main==null);
+    }
+
+    private DrawnEvidence evidence(Gizmo owner){
+        DrawnEvidence value=matchingDraw()?drawnEvidence.get(owner):null;
+        if(value!=null&&(!shown(owner)||!value.bindings.equals(bindingFingerprint(owner)))){drawnEvidence.remove(owner);return null;}
+        return value;
+    }
+
+    private void forgetHidden(Gizmo owner){
+        if(owner==null)return;drawnEvidence.remove(owner);
+        if(owner instanceof Group)for(Gizmo child:((Group)owner).childrenSnapshot())forgetHidden(child);
+    }
+
+    /** Meaningful changed display must survive a real draw; decorative animation never holds an input. */
+    public boolean drawnIntentReady(){
+        if(!matchingDraw())return false;
+        return drawnIntentReady(displayScope(sceneSource.get()));
+    }
+    private boolean drawnIntentReady(Gizmo owner){
+        if(owner==null)return true;
+        if(owner instanceof com.watabou.noosa.particles.Emitter)return true;
+        if(!shown(owner)){forgetHidden(owner);return true;}
+        boolean passive=owner instanceof FloatingText||owner instanceof Banner||owner instanceof GameLog||owner instanceof CurrencyIndicator||isGameLogText(owner)
+                ||owner instanceof BitmapText&&owner.parent instanceof CurrencyIndicator;
+        if(!passive&&captureCandidate(owner)){
+            DrawnEvidence live=readDisplay(owner),drawn=evidence(owner);
+            boolean informative=!live.statusIntent.isEmpty()||!live.textIntent.isEmpty();
+            if(informative&&(drawn==null||!drawn.statusIntent.equals(live.statusIntent)||!drawn.textIntent.equals(live.textIntent)))return false;
+        }
+        if(owner instanceof RenderedTextBlock)return true;
+        if(owner instanceof Group)for(Gizmo child:((Group)owner).childrenSnapshot())if(!drawnIntentReady(child))return false;
+        return true;
+    }
 
     public List<Map<String, Object>> describeActions() {
         refresh();
@@ -201,7 +381,9 @@ public final class UiBridge {
      * not also hash the unfiltered public UI into the same intent version.
      */
     public String intentSignature() {
-        Map<String, Object> ui = new LinkedHashMap<>(frozenUi());
+        Map<String,Object> ui;
+        readingIntent=true;
+        try {ui=new LinkedHashMap<>(frozenUi());} finally {readingIntent=false;}
         List<Map<String, Object>> retained = new ArrayList<>();
         for (Map<String, Object> node : nodes) {
             Gizmo control=controls.get(node.get("id"));
@@ -209,7 +391,18 @@ public final class UiBridge {
             // World gold/energy remain protected by the coordinator's decision-state signature.
             // Do not exempt the Inventory button, other numeric text, or nested input controls.
             boolean currencyNotice=control instanceof BitmapText&&control.parent instanceof CurrencyIndicator;
-            if (!(control instanceof FloatingText)&&!isGameLogText(control)&&!currencyNotice) retained.add(node);
+            if (!(control instanceof FloatingText)&&!(control instanceof Banner)&&!isGameLogText(control)&&!currencyNotice) {
+                Map<String,Object> decisionNode=node;
+                if(control!=null&&captureCandidate(control)) {
+                    decisionNode=new LinkedHashMap<>(node);
+                    DrawnEvidence drawn=drawnEvidence.get(control);
+                    if(drawn!=null)for(String key:drawn.display.keySet())decisionNode.remove(key);
+                    DrawnEvidence live=readDisplay(control);
+                    for(String key:live.display.keySet())decisionNode.remove(key);
+                    decisionNode.putAll(live.textIntent);decisionNode.putAll(live.statusIntent);
+                }
+                retained.add(decisionNode);
+            }
         }
         ui.put("controls", retained);
         return signature(ui);
@@ -535,12 +728,12 @@ public final class UiBridge {
     }
 
     private void walk(Gizmo gizmo, String parentId, ScrollPane pane, boolean inUi) {
-        if (!shown(gizmo)) return;
+        if (!shown(gizmo)) {forgetHidden(gizmo);return;}
         RenderedTextBlock.VisibleText floatingFragment=floatingFragment(gizmo);
-        if(gizmo instanceof FloatingText&&floatingFragment==null)return;
-        RenderedTextBlock.VisibleText logFragment = gizmo instanceof RenderedTextBlock && !(gizmo instanceof FloatingText)
-                ? ((RenderedTextBlock)gizmo).visibleTextFragment() : null;
-        if (logFragment != null && !logFragment.visible) return;
+        if(gizmo instanceof FloatingText&&floatingFragment==null
+                &&((FloatingText)gizmo).displayedAppearance()==null)return;
+        DrawnEvidence drawn=gizmo instanceof FloatingText?null:readingIntent&&captureCandidate(gizmo)?readDisplay(gizmo):evidence(gizmo);
+        if(gizmo instanceof RenderedTextBlock&&!(gizmo instanceof FloatingText)&&(drawn==null||!drawn.textVisible))return;
         boolean ui = inUi || gizmo instanceof Component || gizmo instanceof Window || gizmo instanceof ActionArea;
         String role = role(gizmo, pane);
         String nodeId = parentId;
@@ -551,28 +744,28 @@ public final class UiBridge {
             if (parentId != null) node.put("parent", parentId);
             Map<String,Object> visibleValues=new LinkedHashMap<>();
             visibleTextSignature.put(nodeId,visibleValues);
-            String text = floatingFragment!=null?floatingFragment.text:logFragment == null ? visibleText(gizmo) : logFragment.text;
-            boolean clipped=floatingFragment != null && floatingFragment.clipped
-                    || logFragment != null && logFragment.clipped || clippedDirectText(gizmo);
+            String text = floatingFragment!=null?floatingFragment.text:drawn==null?null:drawn.rawText;
+            boolean clipped=floatingFragment != null && floatingFragment.clipped||drawn!=null&&drawn.clipped;
             // Match the public text boundary: null and an unclipped empty string both
             // mean no visible text. Native label initialization must not expire intent.
-            if(text!=null&&(!text.isEmpty()||clipped))visibleValues.put("text",gizmo instanceof BitmapText && clipped ? "clipped_bitmap" : text);
-            if (text != null && (!text.isEmpty()||clipped)) node.put("text", TextProvenance.INSTANCE.capture(gizmo,text,clipped));
+            String liveText=visibleText(gizmo);boolean liveClipped=clippedDirectText(gizmo);
+            if(liveText!=null&&(!liveText.isEmpty()||liveClipped))visibleValues.put("text",gizmo instanceof BitmapText&&liveClipped?"clipped_bitmap":liveText);
+            if (gizmo instanceof FloatingText) {
+                if(text!=null&&(!text.isEmpty()||clipped))node.put("text",TextProvenance.INSTANCE.capture(gizmo,text,clipped));
+                Map<String,Object> appearance=((FloatingText)gizmo).displayedAppearance();
+                if(appearance!=null) node.putAll(appearance);
+                if(floatingFragment==null&&appearance!=null&&appearance.containsKey("icon"))node.put("presentation","floating_text");
+            } else if(drawn!=null)node.putAll(drawn.display);
             if(clipped)node.put("clipped",true);
             if(floatingFragment!=null&&!floatingFragment.clipped)
                 node.put("presentation","floating_text");
             if(floatingFragment!=null&&floatingFragment.clipped)node.put("clipped",true);
-            if (logFragment != null && logFragment.clipped) node.put("clipped", true);
             if (gizmo instanceof Button) {
                 Button button = (Button) gizmo;
                 String label = buttonLabel(button);
                 if (label != null && !label.isEmpty()) node.put("label", label);
                 if (button.keyAction() != null) node.put("shortcut_action", button.keyAction().name());
-                if (button instanceof IconButton && ((IconButton) button).icon() != null) {
-                    // Some controls (notably cleric spells) are visually dimmed but remain
-                    // clickable to explain a failed precondition. Do not conflate this with active.
-                    node.put("dimmed", ((IconButton) button).icon().am <= 0.35f);
-                }
+                // Dimmed appearance comes from the completed draw; active/ops remain live capabilities.
                 List<String> gestures = gestures(button);
                 node.put("gestures", gestures);
                 if (gizmo.isActive() && !gestures.isEmpty()) addAction("ui.activate", nodeId, node, "gestures", gestures);
@@ -623,13 +816,6 @@ public final class UiBridge {
             }
             if (gizmo instanceof CheckBox) node.put("checked", ((CheckBox) gizmo).checked());
             if (gizmo instanceof HealthBar) {
-                int[] pixels = ((HealthBar) gizmo).renderedPixelWidths();
-                if (pixels.length == 3 && pixels[0] > 0) {
-                    node.put("total_pixels", pixels[0]);
-                    node.put("health_pixels", pixels[1]);
-                    node.put("health_and_shield_pixels", pixels[2]);
-                    node.put("measurement", "rendered_pixels");
-                }
                 // Association only; values above come from laid-out visuals, never HP/HT.
                 if (gizmo instanceof CharHealthIndicator && currentlyVisible(((CharHealthIndicator) gizmo).target())) {
                     node.put("cell", ((CharHealthIndicator) gizmo).target().pos);
@@ -663,6 +849,7 @@ public final class UiBridge {
         if (gizmo instanceof Window) return "window";
         if (gizmo instanceof RightClickMenu) return "context_menu";
         if (gizmo instanceof HealthBar) return "health_bar";
+        if (gizmo instanceof RenderedStatus) return "status";
         if (gizmo instanceof RenderedTextBlock || gizmo instanceof BitmapText) return "text";
         if (pane != null && gizmo instanceof Component && hasMethod(gizmo.getClass(), "onClick", float.class, float.class)) {
             // Compound rows such as changelog groups dispatch to their individual buttons.
@@ -709,9 +896,10 @@ public final class UiBridge {
             BitmapText text=(BitmapText)gizmo;
             com.watabou.noosa.Camera camera=null;
             for(Gizmo node=gizmo;node!=null&&camera==null;node=node.parent)camera=node.camera;
-            return camera==null||camera.scroll==null||text.angle!=0||text.origin.x!=0||text.origin.y!=0
-                    ||text.x<camera.scroll.x||text.y<camera.scroll.y
-                    ||text.x+text.width()>camera.scroll.x+camera.width||text.y+text.height()>camera.scroll.y+camera.height;
+            Camera.DrawnTransform transform=camera!=null&&camera.scroll!=null?camera.observedTransform():null;
+            return transform==null||text.angle!=0||text.origin.x!=0||text.origin.y!=0
+                    ||text.x<transform.scrollX||text.y<transform.scrollY
+                    ||text.x+text.width()>transform.scrollX+transform.width||text.y+text.height()>transform.scrollY+transform.height;
         }
         if(gizmo instanceof Group)for(Gizmo child:((Group)gizmo).childrenSnapshot())
             if(shown(child)&&(child instanceof RenderedTextBlock||child instanceof BitmapText)&&clippedDirectText(child))return true;

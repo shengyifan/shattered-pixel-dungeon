@@ -59,6 +59,10 @@ public class GhoulSprite extends MobSprite {
 		play(crumple);
 	}
 
+	@Override protected String renderedStateCue() {
+		return curAnim == crumple ? "downed_ghoul" : null;
+	}
+
 	@Override
 	public void die() {
 		if (curAnim == crumple){

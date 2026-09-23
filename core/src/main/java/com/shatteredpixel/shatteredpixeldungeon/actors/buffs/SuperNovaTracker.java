@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.RadialVisualCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
@@ -37,6 +38,8 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Halo;
+import com.watabou.noosa.VisualCue;
+import com.watabou.gltextures.SmartTexture;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Point;
@@ -181,6 +184,29 @@ public class SuperNovaTracker extends Buff {
 	}
 
 	public class NovaVFX extends Halo {
+
+		private final SmartTexture nativeHaloTexture = texture;
+
+		/** This known gradient's drawn pixels, never the tracker's countdown or planned blast. */
+		public boolean renderedHaloContributes() {
+			if (texture == null || texture != nativeHaloTexture || texture.bitmap == null
+					|| frame == null || frame.left != 0 || frame.top != 0 || frame.right != 1 || frame.bottom != 1
+					|| width != 2*RADIUS+1 || height != 2*RADIUS+1
+					|| texture.width != 2*RADIUS+1 || texture.height != 2*RADIUS+1
+					|| !Float.isFinite(am) || !Float.isFinite(aa)) return false;
+			float centerAlpha = (texture.getPixel(RADIUS, RADIUS) >>> 24) / 255f;
+			float edgeAlpha = (texture.getPixel(0, 0) >>> 24) / 255f;
+			return centerAlpha * am + aa > 0 || edgeAlpha * am + aa > 0;
+		}
+
+		@Override
+		public void draw() {
+			super.draw();
+			if (texture != null && buffer != null && Game.observer.observesVisualCues() && renderedHaloContributes()) {
+				VisualCue cue = RadialVisualCue.capture(this, "supernova_halo", "halo", RADIUS);
+				if (cue != null) GameScene.observeHaloVisualDraw(this, cue);
+			}
+		}
 
 		@Override
 		public void update() {

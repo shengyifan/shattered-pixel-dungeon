@@ -937,6 +937,8 @@ public class CavesBossLevel extends Level {
 			super.use( emitter );
 			energySourceSprite = null;
 			emitter.pour(DIRECTED_SPARKS, 0.08f);
+			if (com.watabou.noosa.Game.observer.observesVisualCues()) emitter.observeDraw(
+					new com.shatteredpixel.shatteredpixeldungeon.effects.ParticleMotionCue("electricity_flow", SparkParticle.class));
 		}
 
 	}

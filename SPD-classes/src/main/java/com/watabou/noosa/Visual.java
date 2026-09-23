@@ -51,6 +51,14 @@ public class Visual extends Gizmo {
 	
 	public float angle;
 	public float angularSpeed;
+	private long renderedLifetime;
+
+	/** Render-object reuse boundary; no actor identity or gameplay state is involved. */
+	@Override public void revive() {
+		super.revive(); renderedLifetime++;
+	}
+
+	public final long renderedLifetime() { return renderedLifetime; }
 
 	private float lastX, lastY, lastW, lastH, lastA;
 	private PointF lastScale = new PointF(), lastOrigin = new PointF();
@@ -190,6 +198,15 @@ public class Visual extends Gizmo {
 	
 	public float alpha() {
 		return am + aa;
+	}
+
+	/** RGB of a white rendered glyph under the current color transform, excluding opacity. */
+	public int displayedTextColor() {
+		return displayChannel(rm + ra) << 16 | displayChannel(gm + ga) << 8 | displayChannel(bm + ba);
+	}
+
+	private static int displayChannel(float value) {
+		return Math.round(Math.max(0f, Math.min(1f, value)) * 255f);
 	}
 	
 	public void invert() {

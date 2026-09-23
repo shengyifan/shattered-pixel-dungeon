@@ -84,7 +84,11 @@ public class SacrificialFire extends Blob {
 							Char ch = Actor.findChar( cell+k );
 							if (ch != null){
 								if (Dungeon.level.heroFOV[cell+k] && ch.buff( Marked.class ) == null) {
-									CellEmitter.get(cell+k).burst( SacrificialParticle.FACTORY, 5 );
+									com.watabou.noosa.particles.Emitter emitter = CellEmitter.get(cell+k);
+									emitter.burst(SacrificialParticle.FACTORY, 5);
+									if (com.watabou.noosa.Game.observer.observesVisualCues()) emitter.observeDraw(
+											new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("sacrificial_mark_particles", cell+k,
+													SacrificialParticle.FACTORY, SacrificialParticle.class));
 								}
 								Buff.prolong( ch, Marked.class, Marked.DURATION );
 							}
@@ -113,6 +117,7 @@ public class SacrificialFire extends Blob {
 	public void use( BlobEmitter emitter ) {
 		super.use( emitter );
 		curEmitter = emitter;
+		if (com.watabou.noosa.Game.observer.observesVisualCues()) emitter.observeParticleMetric("sacrificial_flames");
 
 		//a bit brittle, assumes only one tile of sacrificial fire can exist per floor
 		int max = 6 + Dungeon.depth * 4;

@@ -171,7 +171,7 @@ class RenderedBoundaryTest {
     private boolean ready()throws Exception{return (Boolean)invoke("renderedBoundaryReady");}
     @SuppressWarnings("unchecked") private Map<String,Object> visualState()throws Exception{return (Map<String,Object>)invoke("visualState");}
     private Object invoke(String name)throws Exception{Method m=GameController.class.getDeclaredMethod(name);m.setAccessible(true);return m.invoke(controller);}
-    private GameController.State capture()throws Exception{Method m=GameController.class.getDeclaredMethod("capture",boolean.class);m.setAccessible(true);return (GameController.State)m.invoke(controller,false);}
+    private GameController.State capture()throws Exception{controller.afterDraw();Method m=GameController.class.getDeclaredMethod("capture",boolean.class);m.setAccessible(true);return (GameController.State)m.invoke(controller,false);}
     private static Field field(Class<?> c,String name)throws Exception{Field f=c.getDeclaredField(name);f.setAccessible(true);return f;}
     private static final class IdentityLevel extends Level{
         @Override protected boolean build(){return false;}

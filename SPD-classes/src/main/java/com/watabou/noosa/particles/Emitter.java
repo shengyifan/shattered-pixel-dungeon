@@ -60,6 +60,8 @@ public class Emitter extends Group {
 		default void resetObservation() {}
 	}
 	private DrawObserver drawObserver;
+	private Object observedDrawEpisode;
+	public Object observedDrawEpisode() { return observedDrawEpisode; }
 	public void observeDraw(DrawObserver observer) {
 		drawObserver = observer;
 		if (observer != null) observer.resetObservation();
@@ -106,6 +108,7 @@ public class Emitter extends Group {
 	}
 
 	public void startDelayed( Factory factory, float interval, int quantity, float delay ) {
+		observedDrawEpisode = Game.observer.observesVisualCues() ? new Object() : null;
 		this.factory = factory;
 		this.lightMode = factory.lightMode();
 
@@ -160,6 +163,7 @@ public class Emitter extends Group {
 	@Override
 	public void revive() {
 		drawObserver = null;
+		observedDrawEpisode = Game.observer.observesVisualCues() ? new Object() : null;
 		//ensure certain emitter variables default to true
 		started = false;
 		visible = true;
@@ -202,6 +206,10 @@ public class Emitter extends Group {
 			super.draw();
 		}
 		if (drawObserver != null) drawObserver.afterDraw(this);
+		if (Game.observer.observesVisualCues()) {
+			if (observedDrawEpisode == null) observedDrawEpisode = new Object();
+			Game.observer.onEmitterDraw(this, observedDrawEpisode);
+		}
 	}
 	
 	abstract public static class Factory {

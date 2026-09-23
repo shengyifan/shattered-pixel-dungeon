@@ -124,6 +124,9 @@ public class ArcaneBomb extends Bomb {
 								Emitter e = CellEmitter.get(i);
 								if (e != null) {
 									e.pour(GooSprite.GooParticle.FACTORY, 0.03f);
+									if (com.watabou.noosa.Game.observer.observesVisualCues()) e.observeDraw(
+											new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("arcane_bomb_warning", i,
+													GooSprite.GooParticle.FACTORY, GooSprite.GooParticle.class));
 									gooWarnEmitters.add(e);
 								}
 							}

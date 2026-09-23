@@ -50,6 +50,7 @@ public class Flare extends Visual {
 	private ShortBuffer indices;
 	
 	private int nRays;
+	private final float visualRadius;
 	
 	public Flare( int nRays, float radius ) {
 		
@@ -59,6 +60,7 @@ public class Flare extends Visual {
 		texture = TextureCache.createGradient( gradient );
 		
 		this.nRays = nRays;
+		this.visualRadius = radius;
 		
 		angle = 45;
 		angularSpeed = 180;
@@ -164,6 +166,16 @@ public class Flare extends Visual {
 			Blending.setNormalMode();
 		} else {
 			drawRays();
+		}
+		if (Game.observer.observesVisualCues() && texture != null && com.shatteredpixel.shatteredpixeldungeon.Dungeon.level != null
+				&& Float.isFinite(x) && Float.isFinite(y) && x >= 0 && y >= 0) {
+			int width = com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.width();
+			int column = (int)(x / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
+			int row = (int)(y / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
+			if (column < width && row < com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.height())
+				com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeRadialVisualDraw(this,
+						new com.watabou.noosa.VisualCue("flare", row*width+column, null, null, displayedTextColor(), null,
+								java.util.Collections.singletonMap("rays", nRays)), visualRadius);
 		}
 	}
 	

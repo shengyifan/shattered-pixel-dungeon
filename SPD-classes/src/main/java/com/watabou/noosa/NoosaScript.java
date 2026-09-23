@@ -44,6 +44,12 @@ public class NoosaScript extends Script {
 	public Attribute aUV;
 	
 	private Camera lastCamera;
+	private Camera.DrawnTransform submittedCameraTransform;
+
+	private void cameraWasDrawn(int count) {
+		if(count>0&&Game.observer.observesVisualCues()&&lastCamera!=null)
+			lastCamera.recordRenderedTransform(submittedCameraTransform);
+	}
 	
 	public NoosaScript() {
 
@@ -83,6 +89,7 @@ public class NoosaScript extends Script {
 
 		Quad.releaseIndices();
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, size, Gdx.gl20.GL_UNSIGNED_SHORT, indices );
+		cameraWasDrawn(size);
 		Quad.bindIndices();
 	}
 
@@ -95,6 +102,7 @@ public class NoosaScript extends Script {
 		aUV.vertexPointer( 2, 4, vertices );
 		
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE, Gdx.gl20.GL_UNSIGNED_SHORT, 0 );
+		cameraWasDrawn(Quad.SIZE);
 	}
 
 	public void drawQuad( Vertexbuffer buffer ) {
@@ -109,6 +117,7 @@ public class NoosaScript extends Script {
 		buffer.release();
 		
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE, Gdx.gl20.GL_UNSIGNED_SHORT, 0 );
+		cameraWasDrawn(Quad.SIZE);
 	}
 	
 	public void drawQuadSet( FloatBuffer vertices, int size ) {
@@ -124,6 +133,7 @@ public class NoosaScript extends Script {
 		aUV.vertexPointer( 2, 4, vertices );
 		
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE * size, Gdx.gl20.GL_UNSIGNED_SHORT, 0 );
+		cameraWasDrawn(size);
 	}
 
 	public void drawQuadSet( Vertexbuffer buffer, int length, int offset ){
@@ -142,6 +152,7 @@ public class NoosaScript extends Script {
 		buffer.release();
 		
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE * length, Gdx.gl20.GL_UNSIGNED_SHORT, Quad.SIZE * Short.SIZE/8 * offset );
+		cameraWasDrawn(length);
 	}
 	
 	public void lighting( float rm, float gm, float bm, float am, float ra, float ga, float ba, float aa ) {
@@ -151,6 +162,7 @@ public class NoosaScript extends Script {
 	
 	public void resetCamera() {
 		lastCamera = null;
+		submittedCameraTransform=null;
 	}
 	
 	public void camera( Camera camera ) {
@@ -160,6 +172,7 @@ public class NoosaScript extends Script {
 		if (camera != lastCamera && camera.matrix != null) {
 			lastCamera = camera;
 			uCamera.valueM4( camera.matrix );
+			submittedCameraTransform=Game.observer.observesVisualCues()?camera.submittedTransform():null;
 
 			if (!camera.fullScreen) {
 				Gdx.gl20.glEnable( Gdx.gl20.GL_SCISSOR_TEST );

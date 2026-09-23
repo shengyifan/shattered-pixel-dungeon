@@ -71,7 +71,22 @@ public class ControlRequestTest {
             assertRejected("INVALID_REQUEST","{\"v\":7,\"id\":\"q\",\"op\":\""+op+"\",\"view\":\"full\"}");
     }
     private static String request(String version, String op) {
-        return "{\"v\":" + version + ",\"id\":\"request\",\"op\":\"" + op + "\"}";
+        String arguments="";
+        switch(op) {
+            case "move": arguments=",\"dir\":\"N\""; break;
+            case "cell": arguments=",\"cell\":0"; break;
+            case "item": arguments=",\"loc\":\"bag.0\""; break;
+            case "req": case "cancel": arguments=",\"rid\":\"t1.1\""; break;
+            case "click": case "select": case "scroll": arguments=",\"ctl\":\"c1\""; break;
+            case "choose": arguments=",\"ctl\":\"c1\",\"opt\":0"; break;
+            case "text": arguments=",\"ctl\":\"c1\",\"text\":\"\""; break;
+            case "value": arguments=",\"ctl\":\"c1\",\"value\":0"; break;
+            case "zoom": arguments=",\"zoom\":0"; break;
+            case "bind_slot": arguments=",\"ctl\":\"c1\",\"slot\":1"; break;
+            case "bind_key": arguments=",\"ctl\":\"c1\",\"keycode\":1"; break;
+            default: break;
+        }
+        return "{\"v\":" + version + ",\"id\":\"request\",\"op\":\"" + op + "\"" + arguments + "}";
     }
     private static void assertRejected(String code, String raw) {
         ProtocolException failure = assertThrows(ProtocolException.class, () -> ControlRequest.parse(raw));

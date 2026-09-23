@@ -73,7 +73,7 @@ public class FlashBangBomb extends Bomb {
 			int damage = Math.round(Random.NormalIntRange(4 + Dungeon.scalingDepth(), 12 + 3*Dungeon.scalingDepth()) / 4f);
 			ch.damage(damage, new Electricity());
 			if (ch.isAlive()) Buff.prolong(ch, Paralysis.class, Paralysis.DURATION);
-			arcs.add(new Lightning.Arc(DungeonTilemap.tileCenterToWorld(cell), ch.sprite.center()));
+			arcs.add(new Lightning.Arc(DungeonTilemap.tileCenterToWorld(cell), ch.sprite.center()).observeDraw("lightning_arc", cell, ch.pos));
 
 			if (ch == Dungeon.hero){
 				GameScene.flash(0x80FFFFFF);

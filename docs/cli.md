@@ -1,8 +1,10 @@
 # spdctl control interface
 
-Current release: **CLI.7.0.0 / protocol 7 / audit schema 10**, base game **3.3.8**.
+Current release: **CLI.7.0.1 / protocol 7 / audit schema 10**, base game **3.3.8**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI 7 implementation and validation](cli7-implementation.md) and the repository [agent working agreements](../AGENTS.md).
 Protocol 7 introduces same-frame action sharing and record templates without removing public information. The [complete-frame study](cli-complete-frame-token-study-20260920.md), [depth-9 token study](cli-token-study-d9-20260920.md), [CLI.6.1.0 readability audit](cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md), and CLI 6 validation reports remain historical evidence, not current protocol instructions.
+
+CLI.7.0.1 adds [rendered combat observations](cli-combat-visuals.md), fixes asynchronous quit delivery and UI identity retention, and strengthens Java/Python validation. Its source coverage ledger and renderer fixtures have different evidence scopes; a static route inventory is not a completed playthrough.
 
 ## Start an independent v7 profile
 
@@ -46,4 +48,4 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 ## Validation boundary
 
-Use current v7 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later patch. Test profiles and generated JSON live in ignored build directories. Current package validation is in the [2026-09-21 clean rebuild](cli-rebuild-7.0.0-20260921.md); protocol implementation and original corpus measurements are in [CLI 7 implementation](cli7-implementation.md). There are no cross-frame dictionaries, map/inventory/log deltas, short scalar encodings or GUI semantic pruning in this release.
+Use current v7 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later patch. Test profiles and generated JSON live in ignored build directories. Current package validation is in the [CLI.7.0.1 acceptance report](cli-rebuild-7.0.1-20260923.md); protocol implementation and original corpus measurements are in [CLI 7 implementation](cli7-implementation.md). There are no cross-frame dictionaries, map/inventory/log deltas, short scalar encodings or GUI semantic pruning in this release.

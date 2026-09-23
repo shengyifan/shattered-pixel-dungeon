@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.ProtectionDomain;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import org.objectweb.asm.*;
@@ -60,6 +61,10 @@ public final class EngineBoundaryAgent {
                                     if(begin())hit("after-register");
                                     if(name.equals(STORE)&&method.equals("markExecuting"))hit("after-intent");
                                     if(name.equals(CONTROLLER)&&method.equals("perform"))hit("after-callback");
+                                    if(name.equals(CONTROLLER)&&method.equals("perform")&&selected.equals("slow-quit")){
+                                        super.visitVarInsn(Opcodes.ALOAD,1);
+                                        super.visitMethodInsn(Opcodes.INVOKESTATIC,"EngineBoundaryAgent","holdQuit","(Ljava/util/Map;)V",false);
+                                    }
                                     if(name.equals(STORE)&&method.equals("complete"))hit("after-result-before-output");
                                 }
                                 super.visitInsn(opcode);
@@ -85,6 +90,11 @@ public final class EngineBoundaryAgent {
         catch(Exception failure){throw new AssertionError(failure);}
     }
 
+    /** Delay only a selected native quit after it has saved and set its exit intent. */
+    public static void holdQuit(Map<?,?> args){
+        if("app.quit".equals(args.get("action")))hit("slow-quit");
+    }
+
     public static void hit(String stage){
         if(!selected.equals(stage)||!selectedRequest||!reached.compareAndSet(false,true))return;
         try {
@@ -95,7 +105,13 @@ public final class EngineBoundaryAgent {
                 while(bytes.hasRemaining())output.write(bytes);
                 output.force(true);
             }
-            while(true)LockSupport.parkNanos(1_000_000_000L);
+            if(selected.equals("slow-quit")){
+                long deadline=System.nanoTime()+120_000_000_000L;
+                while(!Files.isRegularFile(directory.resolve("barrier.release"))){
+                    if(System.nanoTime()>deadline)throw new AssertionError("Timed out waiting to release test-only slow quit");
+                    LockSupport.parkNanos(10_000_000L);
+                }
+            }else while(true)LockSupport.parkNanos(1_000_000_000L);
         }catch(Exception failure){throw new AssertionError("Cannot record test barrier",failure);}
     }
 }

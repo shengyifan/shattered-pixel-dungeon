@@ -312,7 +312,7 @@ public class BuffIndicator extends Component {
 		return !buffsHidden;
 	}
 
-	private static class BuffButton extends IconButton {
+	private static class BuffButton extends IconButton implements RenderedStatus {
 
 		private Buff buff;
 
@@ -321,6 +321,23 @@ public class BuffIndicator extends Component {
 
 		public Image grey; //only for small
 		public BitmapText text; //only for large
+
+		@Override public java.util.Map<String,Object> renderedStatus() {
+			java.util.Map<String,Object> result=new LinkedHashMap<>();
+			if (!(icon instanceof BuffIcon) || !RenderedAppearance.fullyVisible(icon)) return result;
+			result.put("icon",((BuffIcon)icon).renderedIcon());
+			if(grey!=null&&grey.parent==this&&grey.exists&&grey.visible&&grey.alpha()>0
+					&&grey.x==icon.x&&grey.y==icon.y&&Float.isFinite(grey.height())) {
+					float zoom=RenderedAppearance.camera(icon).observedTransform().zoom;
+				int total=Math.round(icon.height()*zoom);
+				int covered=Math.max(0,Math.min(total,Math.round(grey.height()*zoom)));
+				java.util.Map<String,Object> overlay=new LinkedHashMap<>();
+				overlay.put("axis","vertical");overlay.put("total_pixels",total);
+				overlay.put("covered_pixels",covered);overlay.put("measurement","rendered_pixels");
+				result.put("icon_overlay",overlay);
+			}
+			return result;
+		}
 
 		public BuffButton( Buff buff, boolean large ){
 			super( new BuffIcon(buff, large));

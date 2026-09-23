@@ -131,6 +131,9 @@ public class StyledButton extends Button {
 	public void textColor( int value ) {
 		text.hardlight( value );
 	}
+
+	/** For explicitly decorative native pulses, never ordinary warning or choice colors. */
+	public void animatedTextColor(int value){text.animatedColor(value);}
 	
 	public void icon( Image icon ) {
 		if (this.icon != null) {

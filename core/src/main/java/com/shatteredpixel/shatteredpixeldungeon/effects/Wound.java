@@ -34,6 +34,7 @@ public class Wound extends Image {
 	private static final float TIME_TO_FADE = 1f;
 	
 	private float time;
+	private int visualCell = -1;
 	
 	public Wound() {
 		super( Effects.get( Effects.Type.WOUND ) );
@@ -43,6 +44,7 @@ public class Wound extends Image {
 	
 	public void reset( int p ) {
 		revive();
+		visualCell = p;
 
 		x = (p % Dungeon.level.width()) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - width) / 2;
 		y = (p / Dungeon.level.width()) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - height) / 2;
@@ -52,12 +54,21 @@ public class Wound extends Image {
 
 	public void reset(Visual v) {
 		revive();
+		visualCell = v instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite
+				? ((com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite)v).renderedCell() : -1;
 
 		point(v.center(this));
 
 		time = TIME_TO_FADE;
 	}
 	
+	@Override public void draw() {
+		super.draw();
+		if (visualCell >= 0 && texture != null && buffer != null && Game.observer.observesVisualCues())
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,
+					new com.watabou.noosa.VisualCue("wound_mark", visualCell, null, null, displayedTextColor()));
+	}
+
 	@Override
 	public void update() {
 		super.update();

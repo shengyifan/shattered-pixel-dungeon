@@ -31,6 +31,11 @@ import com.watabou.utils.RectF;
 public class BlobEmitter extends Emitter {
 	
 	private Blob blob;
+	private String observedParticleMetric;
+
+	/** Renderer annotation selected by the visible source, independent of blob amount or timing. */
+	public void observeParticleMetric(String kind) { observedParticleMetric = kind; }
+	public String observedParticleMetric() { return observedParticleMetric; }
 	
 	public BlobEmitter( Blob blob ) {
 		
