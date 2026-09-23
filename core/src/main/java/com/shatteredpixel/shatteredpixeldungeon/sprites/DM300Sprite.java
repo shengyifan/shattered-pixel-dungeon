@@ -38,6 +38,7 @@ public class DM300Sprite extends MobSprite {
 
 	private Animation charge;
 	private Animation slam;
+	private Animation superchargedIdle, superchargedRun, superchargedAttack;
 
 	private Emitter superchargeSparks;
 	
@@ -64,6 +65,11 @@ public class DM300Sprite extends MobSprite {
 
 		attack = new Animation( 15, false );
 		attack.frames( frames, c+3, c+4, c+5 );
+
+		// Bind the public alternate frame families selected here, rather than querying the actor during observation.
+		superchargedIdle = enraged ? idle : null;
+		superchargedRun = enraged ? run : null;
+		superchargedAttack = enraged ? attack : null;
 
 		//unaffected by enrage state
 
@@ -105,7 +111,11 @@ public class DM300Sprite extends MobSprite {
 	}
 
 	@Override protected String renderedStateCue() {
-		return curAnim == charge ? "dm300_charging" : null;
+		if (curAnim == null) return null;
+		if (curAnim == charge) return "dm300_charging";
+		if (curAnim == superchargedIdle || curAnim == superchargedRun || curAnim == superchargedAttack)
+			return "dm300_supercharged";
+		return null;
 	}
 
 	public void slam( int cell ){

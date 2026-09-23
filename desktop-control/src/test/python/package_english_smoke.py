@@ -15,14 +15,13 @@ import sqlite3
 import subprocess
 import time
 import uuid
-import protocol7
+import protocol8
 import zipfile
 
 from english_protocol_smoke import activate, assert_english, checked_state, english_inventory, execute, public_events, stop
 from machine_smoke import Client, reach_game, finish_tutorial
 from language_matrix_smoke import validate as validate_sources
 from package_smoke import emergency_snapshot, receive
-from test_ui import configure_test_ui
 
 
 def write_json(path, value):
@@ -40,9 +39,8 @@ def environment():
 def new_profile(output, name):
     profile = output / name
     profile.mkdir()
-    configure_test_ui(profile)
-    write_json(profile / "test_fixture.json", {"test_fixture": True, "counts_as_win": False,
-               "fixture": "package-english", "setup": "Only Chinese/windowed preferences; no game state or save injection"})
+    write_json(output / (name + "-test_fixture.json"), {"test_fixture": True, "counts_as_win": False,
+               "fixture": "package-english", "setup": "Empty profile uses the packaged CLI defaults; no settings, game state or save injection"})
     return profile
 
 
@@ -79,7 +77,7 @@ def verify_bundle(bundle, expected_cli):
                 help_resources.append(archive.read("cli-help.md"))
     assert len(catalogs) == 1 and catalogs[0]["cli_version"] == expected_cli, catalogs
     catalog = catalogs[0]
-    assert (catalog["protocol_version"], catalog["audit_schema_version"], catalog["game_version"]) == (7, 10, "3.3.8"), catalog
+    assert (catalog["protocol_version"], catalog["audit_schema_version"], catalog["game_version"]) == (8, 11, "3.3.8"), catalog
     source_help = (Path(__file__).resolve().parents[4] / "docs/cli-help.md").read_bytes()
     assert help_resources == [source_help], "The package must contain exactly the authoritative help bytes"
     help_entries = [entry for entry in catalog["entries"] if entry["path"] == "docs/cli-help.md"]
@@ -88,9 +86,9 @@ def verify_bundle(bundle, expected_cli):
     cli = bundle / "Contents/MacOS/spdctl"
     assert subprocess.check_output([str(cli), "--help"], env=environment(), timeout=20) == source_help
     version = subprocess.check_output([str(cli), "--version"], env=environment(), timeout=20).decode().strip()
-    assert version == expected_cli + " (protocol 7, game 3.3.8)", version
+    assert version == expected_cli + " (protocol 8, game 3.3.8)", version
     return {"architecture": architecture, "build_id": catalogs[0]["build_id"],
-            "cli_version": expected_cli, "version_output": version, "protocol_version": 7, "audit_schema_version": 10,
+            "cli_version": expected_cli, "version_output": version, "protocol_version": 8, "audit_schema_version": 11,
             "help_source_resource_output_identical": True, "help_catalog_sha256_verified": True,
             "code_signature_verified": True, "test_classes_absent": True}
 
@@ -133,7 +131,7 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
     command = [str(cli), "run", "--machine", "--data-dir", str(profile),
                "--no-terminal", "--trace-dir", str(output / "transport")]
     frames = []
-    stderr = (profile / "native-stderr.log").open("ab")
+    stderr = (profile.parent / (profile.name + "-native-stderr.log")).open("ab")
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr, env=env)
     try:
         def exchange(frame):
@@ -143,13 +141,15 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             result = receive(process)
             assert_english(result)
             return result
-        hello = exchange(b'{"v":7,"id":"package-info","op":"info"}\r\n')
+        hello = exchange(b'{"v":8,"id":"package-info","op":"info"}\r\n')
         assert hello["ok"] and hello["result"]["build_id"] == expected_build
         assert hello["result"]["cli_version"] == expected_cli
         scope = hello["result"]["scope_id"]
-        invalid = exchange(b'{"v":7,"id":"package-invalid-encoding","op":"state","x":"\xff"}\n')
+        old = exchange(b'{"v":7,"id":"package-old-protocol","op":"info"}\n')
+        assert old["protocol_version"] == 8 and old["error"] == {"code": "UNSUPPORTED_PROTOCOL"}, old
+        invalid = exchange(b'{"v":8,"id":"package-invalid-encoding","op":"state","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = protocol7.wire_bytes(protocol7.request("state.get", request_id="package-state", scope=scope))
+        query = protocol8.wire_bytes(protocol8.request("state.get", request_id="package-state", scope=scope))
         observed = exchange(query)
         assert observed["ok"], observed
         mode = display(observed["result"])
@@ -168,11 +168,11 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             process.terminate()
             process.wait(timeout=10)
         stderr.close()
-    final = protocol7.wire_bytes(protocol7.request("state.get", request_id="package-final-frame", scope=scope))[:-1]
+    final = protocol8.wire_bytes(protocol8.request("state.get", request_id="package-final-frame", scope=scope))[:-1]
     restarted = subprocess.run(command, input=final, capture_output=True, env=env, timeout=45)
     lines = restarted.stdout.splitlines()
     assert restarted.returncode == 0 and len(lines) == 1, (restarted.returncode, restarted.stderr, lines)
-    response = protocol7.response(json.loads(lines[0]))
+    response = protocol8.response(json.loads(lines[0]))
     assert response["ok"]
     assert_english(response)
     display(response["result"])
@@ -181,7 +181,7 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
         with sqlite3.connect((profile / "audit" / (side + ".sqlite3")).as_uri() + "?mode=ro", uri=True) as db:
             wire = db.execute("SELECT raw_bytes,raw_format FROM exchanges ORDER BY sequence").fetchall()
             assert [row[0] for row in wire] == frames
-            assert [row[1] for row in wire] == ["utf8-lf", "invalid-utf8", "utf8-lf", "utf8-lf", "utf8-eof"]
+            assert [row[1] for row in wire] == ["utf8-lf", "utf8-lf", "invalid-utf8", "utf8-lf", "utf8-lf", "utf8-eof"]
             if side == "internal":
                 runtime = json.loads(db.execute("SELECT text FROM logs WHERE channel='runtime.environment' ORDER BY sequence LIMIT 1").fetchone()[0])
                 assert runtime["os_arch"] == "aarch64" and runtime["build_id"] == expected_build, runtime
@@ -191,6 +191,7 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
     result = {"case_id": "package.english_raw_pipe", "verified": True, "profile": str(profile),
             "gui_display": mode, "jvm": jvm, "exact_frames_checked": len(frames), "runtime": runtime,
             "profile_lock_rejects_second_process": True, "malformed_utf8_recovery": True,
+            "protocol7_rejected_by_protocol8_runtime": True,
             "rejected_profile_emergency_unchanged": True, "spurious_emergency_recovery_absent": True,
             "duplicate_id_rejected": True, "eof_has_no_push": True, "final_frame_without_newline": True,
             "database_checks": audit_health(profile)}
@@ -205,8 +206,8 @@ class PackageClient(Client):
         self.responses = []
         self.uncertain = False
         self.last_state = None
-        self.trace = (profile / "public-trace.jsonl").open("a")
-        self.stderr = (profile / "native-stderr.log").open("ab")
+        self.trace = (profile.parent / (profile.name + "-public-trace.jsonl")).open("a")
+        self.stderr = (profile.parent / (profile.name + "-native-stderr.log")).open("ab")
         self.process = subprocess.Popen([str(cli), "run", "--machine", "--data-dir", str(profile),
                                          "--no-terminal", "--trace-dir", str(profile.parent / "transport")],
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.stderr, env=env)
@@ -245,7 +246,10 @@ def settings_confirmation(client):
     for control in [None] + candidates:
         state = checked_state(client)
         controls = state["observation"]["ui"]["controls"]
-        checks = [node for node in controls if (node.get("label") or node.get("text", "")).casefold() == "fullscreen" and "checked" in node]
+        checks = [node for node in controls if "checked" in node and any(
+            isinstance(label, str) and label.casefold() == "fullscreen"
+            for label in [node.get("label"), node.get("text")]
+            + [operation.get("label") for operation in node.get("ops", []) or []])]
         if checks:
             assert len(checks) == 1 and checks[0]["checked"] is False
             confirmation = {"original_fullscreen_checkbox_checked": False, "display": display(state)}
@@ -258,10 +262,13 @@ def settings_confirmation(client):
 
 def original_food_pair(profile, english_event, scope):
     with sqlite3.connect((profile / "audit/internal.sqlite3").as_uri() + "?mode=ro", uri=True) as db:
+        # Only this disposable fixture audit may resolve its own opaque public handle.
+        binding = db.execute("SELECT canonical FROM public_handles WHERE kind='scope' AND handle=?", (scope,)).fetchone()
+        assert binding is not None, "Fixture event scope has no exact public-handle binding"
         original = []
         for (text,) in db.execute("SELECT text FROM logs WHERE channel='displayed_text_original'"):
             value = json.loads(text)
-            if value["scope_id"] == scope and value["kind"] == "game.log" \
+            if value["scope_id"] == binding[0] and value["kind"] == "game.log" \
                     and value.get("event_sequence") == english_event["sequence"] \
                     and value["original_display"]["occurred_at"] == english_event["data"]["occurred_at"]:
                 original.append(value["original_display"])
@@ -363,7 +370,7 @@ def main():
                         help="Reuse an unchanged-build successful raw case; preserves its original profile and report")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging7.0" / ("english-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging8.0" / ("english-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录 with spaces" / args.bundle.name
     shutil.copytree(args.bundle.resolve(), bundle, symlinks=True)
@@ -373,7 +380,7 @@ def main():
     try:
         if args.reuse_raw_result:
             source = args.reuse_raw_result.resolve()
-            assert source.is_relative_to((root / "desktop-control/build/fixtures/packaging7.0").resolve())
+            assert source.is_relative_to((root / "desktop-control/build/fixtures/packaging8.0").resolve())
             raw = json.loads(source.read_text())
             assert raw["verified"] is True and raw["case_id"] == "package.english_raw_pipe"
             assert raw["runtime"]["build_id"] == binary["build_id"], "A different production build must rerun the raw case"

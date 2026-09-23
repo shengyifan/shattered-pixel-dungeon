@@ -22,10 +22,16 @@
 package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.VisualCue;
 import com.watabou.utils.GameMath;
 
 public class StatueSprite extends MobSprite {
+	private SmartTexture armorAppearanceTexture;
+	private TextureFilm armorAppearanceFrames;
 	
 	public StatueSprite() {
 		super();
@@ -33,6 +39,8 @@ public class StatueSprite extends MobSprite {
 		texture( Assets.Sprites.STATUE );
 		
 		TextureFilm frames = new TextureFilm( texture, 12, 15 );
+		armorAppearanceTexture = texture;
+		armorAppearanceFrames = frames;
 		
 		idle = new Animation( 2, true );
 		idle.frames( frames, 0, 0, 0, 0, 0, 1, 1 );
@@ -47,6 +55,33 @@ public class StatueSprite extends MobSprite {
 		die.frames( frames, 11, 12, 13, 14, 15, 15 );
 		
 		play( idle );
+	}
+
+	@Override
+	public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (!Game.observer.observesVisualCues()) return;
+		VisualCue cue = renderedArmorCue(renderedCell());
+		if (cue != null) GameScene.observeCellVisualDraw(this, cue);
+	}
+
+	/** The selected native frame describes an armor appearance, never the backing armor item. */
+	protected VisualCue renderedArmorCue(int cell) {
+		if (cell < 0 || !exists || !visible || !Float.isFinite(alpha()) || alpha() <= 0) return null;
+		int tier = -1;
+		if (texture != null && texture == armorAppearanceTexture && frame != null && armorAppearanceFrames != null) {
+			for (int candidate = 0; candidate < tierFrames.length; candidate++) {
+				int last = candidate == 0 ? 15 : 10; // The shared death animation is armorless.
+				for (int offset = 0; offset <= last; offset++) {
+					com.watabou.utils.RectF known = armorAppearanceFrames.get(tierFrames[candidate] + offset);
+					if (known != null && frame.left == known.left && frame.top == known.top
+							&& frame.right == known.right && frame.bottom == known.bottom) tier = candidate;
+				}
+			}
+		}
+		java.util.Map<String,Object> state = tier >= 0 ? java.util.Collections.singletonMap("tier", tier)
+				: com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("tier", "statue_armor");
+		return new VisualCue("statue_armor", cell, null, null, null, null, state);
 	}
 
 	private static int[] tierFrames = {0, 21, 32, 43, 54, 65};

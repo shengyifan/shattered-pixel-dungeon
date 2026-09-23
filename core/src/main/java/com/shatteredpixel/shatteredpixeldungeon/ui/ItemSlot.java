@@ -38,23 +38,61 @@ import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Image;
 import com.watabou.utils.Rect;
 
-public class ItemSlot extends Button implements RenderedStatus {
+public class ItemSlot extends Button implements GameplayStatus {
 
-	@Override public java.util.Map<String,Object> renderedStatus() {
+	/** Only these exact native method bodies are reviewed as stack quantity displays. */
+	private static boolean quantityStatus(Class<?> type) {
+		try {
+			Class<?> declaration = type.getMethod("status").getDeclaringClass();
+			return declaration == Item.class || declaration == MissileWeapon.class;
+		} catch (ReflectiveOperationException | SecurityException unavailable) {
+			return false;
+		}
+	}
+
+	@Override public java.util.Map<String,Object> gameplayStatus() {
+		java.util.Map<String,Object> shown=new java.util.LinkedHashMap<>();
+		java.util.List<String> flags=new java.util.ArrayList<>();
+		for(java.util.Map.Entry<String,BitmapText> entry:renderedTextComponents().entrySet()) {
+			BitmapText component=entry.getValue();String value=component.text();
+			if(value==null||value.isEmpty()||!RenderedAppearance.fullyVisible(component))continue;
+			shown.put(entry.getKey(),value);
+			if("status".equals(entry.getKey())&&java.util.Objects.equals(value,semanticStatusText)) {
+				if(semanticStatusFlag!=null)flags.add(semanticStatusFlag);
+				if(semanticStatusKind!=null)shown.put("status_kind",semanticStatusKind);
+			}
+			if("extra".equals(entry.getKey())&&java.util.Objects.equals(value,semanticStrengthText)&&semanticStrength!=null) {
+				java.util.Map<String,Object> strength=new java.util.LinkedHashMap<>();
+				strength.put("value",semanticStrength);strength.put("estimated",semanticStrengthEstimated);
+				if(semanticStrengthInsufficient)strength.put("insufficient",true);
+				if(semanticStrengthMastered)strength.put("mastered",true);
+				shown.put("strength",strength);
+			}
+			if("level".equals(entry.getKey())&&java.util.Objects.equals(value,semanticLevelText)&&semanticLevelFlag!=null)flags.add(semanticLevelFlag);
+		}
+		if(sprite!=null&&!GameplayIcons.image(sprite).isEmpty()) {
+			java.util.Map<String,Object> glow=sprite.gameplayGlow();if(!glow.isEmpty())shown.put("glow",glow);
+			shown.putAll(sprite.gameplayItemStatus());
+		}
+		java.util.Map<String,Object> badge=GameplayIcons.image(itemIcon);
+		if(!badge.isEmpty())shown.put("badge",badge);
+		if(!flags.isEmpty())shown.put("flags",flags);
 		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
-		java.util.Map<String,Object> main=RenderedAppearance.image(sprite),badge=RenderedAppearance.image(itemIcon);
-		if(!main.isEmpty())result.put("item_icon",main);
-		if(!badge.isEmpty())result.put("item_badge",badge);
+		if(!shown.isEmpty())result.put("shown",shown);
+		if(item==null) {
+			java.util.Map<String,Object> icon=GameplayIcons.image(sprite);
+			if(!icon.isEmpty())result.put("icon",icon);
+		}
 		return result;
 	}
 
-	@Override public java.util.Map<String,Object> intentStatus() {
-		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
-		java.util.Map<String,Object> main=RenderedAppearance.intentImage(sprite,true,false),badge=RenderedAppearance.intentImage(itemIcon,true,true);
-		if(!main.isEmpty())result.put("item_icon",main);
-		if(!badge.isEmpty())result.put("item_badge",badge);
-		return result;
-	}
+	@Override public Object gameplaySubject() { return item; }
+
+	@Override public java.util.Map<String,BitmapText> gameplayTextComponents() { return renderedTextComponents(); }
+
+	private String semanticStatusText,semanticStatusFlag,semanticStatusKind,semanticStrengthText,semanticLevelText,semanticLevelFlag;
+	private Integer semanticStrength;
+	private boolean semanticStrengthEstimated,semanticStrengthInsufficient,semanticStrengthMastered;
 
 	public static final int DEGRADED	= 0xFF4444;
 	public static final int UPGRADED	= 0x44FF44;
@@ -266,6 +304,9 @@ public class ItemSlot extends Button implements RenderedStatus {
 	protected boolean emptyPlaceholderDecoration(com.watabou.noosa.Gizmo child) { return false; }
 
 	public void updateText(){
+		semanticStatusText=semanticStatusFlag=semanticStatusKind=semanticStrengthText=semanticLevelText=semanticLevelFlag=null;
+		semanticStrength=null;
+		semanticStrengthEstimated=semanticStrengthInsufficient=semanticStrengthMastered=false;
 
 		if (itemIcon != null){
 			remove(itemIcon);
@@ -280,12 +321,14 @@ public class ItemSlot extends Button implements RenderedStatus {
 		}
 
 		status.text( item.status() );
+		if(quantityStatus(item.getClass()))semanticStatusKind="quantity";
 
 		//thrown weapons on their last use show quantity in orange, unless they are single-use
 		if (item instanceof MissileWeapon
 				&& ((MissileWeapon) item).durabilityLeft() <= 50f
 				&& ((MissileWeapon) item).durabilityLeft() <= ((MissileWeapon) item).durabilityPerUse()){
 			status.hardlight(WARNING);
+			semanticStatusFlag="last_use";
 		} else {
 			status.resetColor();
 		}
@@ -302,18 +345,23 @@ public class ItemSlot extends Button implements RenderedStatus {
 			if (item.levelKnown){
 				int str = item instanceof Weapon ? ((Weapon)item).STRReq() : ((Armor)item).STRReq();
 				extra.text( Messages.format( Messages.literal(TXT_STRENGTH), str ) );
+				semanticStrength=str;
 				if (Dungeon.hero != null && str > Dungeon.hero.STR()) {
 					extra.hardlight( DEGRADED );
+					semanticStrengthInsufficient=true;
 				} else if (item instanceof Weapon && ((Weapon) item).masteryPotionBonus){
 					extra.hardlight( MASTERED );
+					semanticStrengthMastered=true;
 				} else if (item instanceof Armor && ((Armor) item).masteryPotionBonus) {
 					extra.hardlight( MASTERED );
+					semanticStrengthMastered=true;
 				} else {
 					extra.resetColor();
 				}
 			} else {
 				int str = item instanceof Weapon ? ((Weapon)item).STRReq(0) : ((Armor)item).STRReq(0);
 				extra.text( Messages.format( Messages.literal(TXT_TYPICAL_STR), str ) );
+				semanticStrength=str;semanticStrengthEstimated=true;
 				extra.hardlight( WARNING );
 			}
 			extra.measure();
@@ -336,19 +384,24 @@ public class ItemSlot extends Button implements RenderedStatus {
 						|| (item instanceof Armor && ((Armor) item).curseInfusionBonus)
 							|| (item instanceof Wand && ((Wand) item).curseInfusionBonus)){
 						level.hardlight(CURSE_INFUSED);
+					semanticLevelFlag="curse_infused";
 					} else {
 						level.hardlight(UPGRADED);
+					semanticLevelFlag="upgraded";
 					}
 				} else {
 					level.hardlight( DEGRADED );
+				semanticLevelFlag="degraded";
 				}
 			} else {
 				level.hardlight(buffedLvl > trueLvl ? ENHANCED : WARNING);
+				semanticLevelFlag=buffedLvl>trueLvl?"enhanced":"reduced";
 			}
 		} else {
 			level.text( null );
 		}
 
+		semanticStatusText=status.text();semanticStrengthText=extra.text();semanticLevelText=level.text();
 		layout();
 	}
 	

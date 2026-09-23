@@ -80,7 +80,7 @@ public class SuperNovaTracker extends Buff {
 
 		if (turnsLeft > 0){
 
-			FloatingText.show(p.x, p.y, pos, Messages.concat(turnsLeft, Messages.literal("...")), CharSprite.WARNING);
+			FloatingText.showOnCell(p.x, p.y, pos, Messages.concat(turnsLeft, Messages.literal("...")), CharSprite.WARNING);
 			halo.radius(5 + 2*(10-turnsLeft));
 			halo.alpha(1.25f - 0.075f*turnsLeft);
 			halo.point(p.x, p.y);
@@ -200,9 +200,8 @@ public class SuperNovaTracker extends Buff {
 		}
 
 		@Override
-		public void draw() {
-			super.draw();
-			if (texture != null && buffer != null && Game.observer.observesVisualCues() && renderedHaloContributes()) {
+		public void observeGameplayVisuals() {
+			if (texture != null && Game.observer.observesVisualCues() && renderedHaloContributes()) {
 				VisualCue cue = RadialVisualCue.capture(this, "supernova_halo", "halo", RADIUS);
 				if (cue != null) GameScene.observeHaloVisualDraw(this, cue);
 			}

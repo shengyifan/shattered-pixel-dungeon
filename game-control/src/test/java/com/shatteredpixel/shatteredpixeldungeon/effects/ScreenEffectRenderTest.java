@@ -125,22 +125,15 @@ class ScreenEffectRenderTest {
         }
     }
 
-    @Test void exactCameraTransformChangesClippingAndHudIntersectionWithoutChangingWorldParticleCell() throws Exception {
-        try(Environment env=new Environment()) {
-            env.camera.commit(0,0);env.camera.recordRenderedTransform(env.camera.submittedTransform());
-            Image source=env.icon();source.camera=env.camera;source.x=0;source.y=20;
-            assertFalse(RenderedAppearance.image(source).isEmpty());
-            Method bounds=VisualCueCollector.class.getDeclaredMethod("screenBounds",Gizmo.class,Camera.class);bounds.setAccessible(true);
-            VisualCueProjection.Rect before=(VisualCueProjection.Rect)bounds.invoke(null,source,env.camera);
-            env.camera.commit(3,0);env.camera.recordRenderedTransform(env.camera.submittedTransform());
-            assertTrue(RenderedAppearance.image(source).isEmpty(),"Shake clips the left edge that nominal scroll would accept");
-            source.x=32;VisualCueProjection.Rect shifted=(VisualCueProjection.Rect)bounds.invoke(null,source,env.camera);
-            assertEquals(29,shifted.left,.0001);
-            Camera.DrawnTransform transform=env.camera.observedTransform();
-            assertEquals(36,transform.screenToWorldX((shifted.left+shifted.right)/2f),.0001);
-            VisualCueProjection.Viewport viewport=new VisualCueProjection.Viewport(transform.scrollX,transform.scrollY,transform.width,transform.height,transform.x,transform.y,transform.zoom);
-            assertFalse(VisualCueProjection.permitsScreenBounds(shifted,viewport,Collections.singletonList(new VisualCueProjection.Rect(28,20,30,28))),"Actual shaken pixels intersect HUD");
-            assertEquals(0,before.left,.0001);
+    @Test void gameplayWorldFootprintIsIndependentOfCameraShakeAndHud() throws Exception {
+        try(Environment env=new Environment()){
+            Visual source=new Visual(32,32,8,8);
+            List<Integer> before=VisualCueProjection.worldFootprint(source,10,100,16);
+            assertEquals(Collections.singletonList(22),before);
+            env.camera.commit(30,20);env.camera.recordRenderedTransform(env.camera.submittedTransform());
+            env.camera.scroll.set(500,500);env.camera.zoom=4;env.camera.visible=false;
+            assertEquals(before,VisualCueProjection.worldFootprint(source,10,100,16));
+            assertNull(source.camera,"Semantic geometry must not populate camera caches");
         }
     }
 

@@ -40,7 +40,7 @@ class UiDrawEvidenceTest {
             Map<String,Object> drawn = onlyText(bridge.describeUi());
             String serialized = JsonCodec.encode(drawn);
             assertEquals(ResourceTextFixture.english(first), drawn.get("text"));
-            assertEquals(0xFFFFFF, drawn.get("color"));
+            assertFalse(drawn.containsKey("tone"), "Ordinary white text has no semantic tone override");
             assertTrue(bridge.drawnIntentReady());
 
             // Simulate Game.step updating native fields after Game.draw, before response capture.
@@ -50,7 +50,7 @@ class UiDrawEvidenceTest {
             bridge.captureDrawnEvidence();
             Map<String,Object> next = onlyText(bridge.describeUi());
             assertEquals(ResourceTextFixture.english(second), next.get("text"));
-            assertEquals(0, next.get("color"), "Visible black is a value, not a missing-color default");
+            assertEquals("black", next.get("tone"), "Visible black retains its named distinction without RGB");
             assertTrue(bridge.drawnIntentReady());
             assertEquals(serialized, JsonCodec.encode(drawn), "A later draw cannot rewrite already returned evidence");
         }
@@ -84,21 +84,21 @@ class UiDrawEvidenceTest {
             assertNoDisplayText(bridge.describeUi());
             bridge.captureDrawnEvidence();
             Map<String,Object> drawn = onlyText(bridge.describeUi());
-            List<?> styles = (List<?>)drawn.get("styles");
+            List<?> styles = (List<?>)drawn.get("spans");
             assertEquals(2, styles.size());
             assertEquals(ResourceTextFixture.english(blocking), ((Map<?,?>)styles.get(0)).get("text"));
             assertEquals(ResourceTextFixture.english(defense), ((Map<?,?>)styles.get(1)).get("text"));
-            assertEquals(0xFF8800, ((Map<?,?>)styles.get(1)).get("color"));
+            assertEquals("orange", ((Map<?,?>)styles.get(1)).get("tone"));
             assertEquals("complete", PublicEnglishProjection.presentation(drawn).get("status"));
 
-            block.setDisplayed(singleStyle(ResourceTextFixture.literal("Updated"), 0x44FF44, false));
+            block.setDisplayed(singleStyle(ResourceTextFixture.literal("Updated"), 0x00FF00, false));
             assertEquals(drawn, onlyText(bridge.describeUi()));
             assertFalse(bridge.drawnIntentReady());
             bridge.captureDrawnEvidence();
             Map<String,Object> next = onlyText(bridge.describeUi());
             assertEquals("Updated", next.get("text"));
-            assertEquals(0x44FF44, next.get("color"));
-            assertFalse(next.containsKey("styles"), "Old multi-color style runs must not survive a uniform new draw");
+            assertEquals("green", next.get("tone"));
+            assertFalse(next.containsKey("spans"), "Old multi-color style runs must not survive a uniform new draw");
             assertTrue(bridge.drawnIntentReady());
         }
     }
@@ -114,7 +114,7 @@ class UiDrawEvidenceTest {
             bridge.captureDrawnEvidence();
             Map<String,Object> clipped = onlyText(bridge.describeUi());
             assertEquals(true, clipped.get("clipped"));
-            assertEquals(0xFF8800, clipped.get("color"));
+            assertEquals("orange", clipped.get("tone"));
             assertFalse(JsonCodec.encode(clipped).contains("secret"), "A new clipped draw cannot inherit the old complete source");
             assertEquals("Visible secret", full.get("text"));
         }
@@ -156,15 +156,15 @@ class UiDrawEvidenceTest {
             assertEquals(intent,bridge.intentSignature());
             assertEquals(first,onlyText(bridge.describeUi()),"Even decorative colors remain tied to their own completed draw");
             bridge.captureDrawnEvidence();
-            assertEquals(0xFFFF00,onlyText(bridge.describeUi()).get("color"));
+            assertEquals("yellow",onlyText(bridge.describeUi()).get("tone"));
             assertEquals(intent,bridge.intentSignature());
 
             block.hardlight(0xFF8800);block.setDisplayed(singleStyle(source,0xFF8800,false));
             assertFalse(block.hasAnimatedColor(),"Ordinary warning colors clear the producer's animation annotation");
             assertFalse(bridge.drawnIntentReady());assertNotEquals(intent,bridge.intentSignature());
-            assertEquals(0xFFFF00,onlyText(bridge.describeUi()).get("color"));
+            assertEquals("yellow",onlyText(bridge.describeUi()).get("tone"));
             bridge.captureDrawnEvidence();
-            assertEquals(0xFF8800,onlyText(bridge.describeUi()).get("color"));assertTrue(bridge.drawnIntentReady());
+            assertEquals("orange",onlyText(bridge.describeUi()).get("tone"));assertTrue(bridge.drawnIntentReady());
 
             block.animatedColor(0xFF8800);bridge.captureDrawnEvidence();
             String beforeTextChange=bridge.intentSignature();
@@ -226,7 +226,7 @@ class UiDrawEvidenceTest {
     private static void assertNoDisplayText(Map<String,Object> ui) {
         for(Object raw : (List<?>)ui.get("controls")) {
             Map<?,?> node = (Map<?,?>)raw;
-            assertFalse(node.containsKey("text"));assertFalse(node.containsKey("color"));assertFalse(node.containsKey("styles"));
+            assertFalse(node.containsKey("text"));assertFalse(node.containsKey("color"));assertFalse(node.containsKey("styles"));assertFalse(node.containsKey("spans"));assertFalse(node.containsKey("tone"));
         }
     }
 }

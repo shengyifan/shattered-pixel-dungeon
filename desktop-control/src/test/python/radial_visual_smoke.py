@@ -8,18 +8,16 @@ initial halo. Synthetic renderer state is limited to the explicit halo-edge fixt
 import argparse
 import copy
 import json
-import math
 from pathlib import Path
 import time
 import traceback
 import uuid
 
 from fixture_smoke import FixtureClient, act, assert_gui_environment, close_choices, freeze_runtime, norm
-from protocol7 import pages
+from protocol8 import pages
 
 
 CASES = ("supernova-halo", "supernova-halo-edge", "blast-radius-1", "blast-radius-3", "blast-radius-6")
-APPEARANCE_FIELDS = {"shape", "center_world", "size", "radius_world", "scale", "angle", "alpha_transform"}
 
 
 class RadialFixtureClient(FixtureClient):
@@ -92,129 +90,114 @@ def drawn_samples(history, kind):
             for cue in event["data"]["cues"] if cue["kind"] == kind]
 
 
-def pair(value):
-    assert isinstance(value, list) and len(value) == 2, value
-    assert all(type(number) in (int, float) and math.isfinite(number) for number in value), value
-    return value
-
-
-def close(actual, expected):
-    assert math.isclose(actual, expected, rel_tol=2e-5, abs_tol=2e-5), (actual, expected)
-
-
-def check_appearance(cue, shape):
-    assert set(cue) <= {"kind", "cell", "color", "appearance"}, cue
+def check_appearance(state, cue, shape):
+    """The disclosed cells are the known visual extent, not an attack prediction."""
+    assert {"kind", "cell", "appearance"} <= set(cue) <= {"kind", "cell", "appearance"}, cue
     appearance = cue["appearance"]
-    assert set(appearance) == APPEARANCE_FIELDS, appearance
-    assert appearance["shape"] == shape and appearance["angle"] == 0, appearance
-    pair(appearance["center_world"])
-    width, height = pair(appearance["size"])
-    radius_x, radius_y = pair(appearance["radius_world"])
-    scale_x, scale_y = pair(appearance["scale"])
-    multiply, add = pair(appearance["alpha_transform"])
-    assert min(width, height, radius_x, radius_y, scale_x, scale_y) > 0, appearance
-    extent, radius = (257, 128) if shape == "halo" else (16, 8)
-    close(width, extent * scale_x); close(height, extent * scale_y)
-    close(radius_x, radius * scale_x); close(radius_y, radius * scale_y)
-    return appearance, multiply, add
-
-
-def check_current_footprint(state, cue):
-    """Use this frame's public map, never another revision or a fixture's hidden level."""
-    grid = state["observation"]["map"]
-    visible = {cell["cell"] for cell in grid["cells"] if cell["visibility"] == "visible"}
-    appearance = cue["appearance"]
-    x, y = appearance["center_world"]; width, height = appearance["size"]
-    assert cue["cell"] == math.floor(y / 16) * grid["width"] + math.floor(x / 16), cue
-    for row in range(math.floor((y - height / 2) / 16), math.ceil((y + height / 2) / 16)):
-        for column in range(math.floor((x - width / 2) / 16), math.ceil((x + width / 2) / 16)):
-            assert row * grid["width"] + column in visible, {"unseen_draw_footprint": cue, "column": column, "row": row}
+    assert appearance["shape"] == shape and appearance["coverage"] == "visual_extent", appearance
+    cells = appearance["cells"]
+    assert isinstance(cells, list) and cells and all(type(cell) is int for cell in cells), appearance
+    assert cue["cell"] in cells and len(cells) == len(set(cells)), cue
+    visible = {cell["cell"] for cell in state["observation"]["map"]["cells"]
+               if cell["visibility"] == "visible"}
+    assert set(cells) <= visible, {"unknown_visual_cells": sorted(set(cells) - visible)}
+    assert not {"center_world", "size", "radius_world", "scale", "angle", "alpha_transform"} & set(appearance)
+    if "partial" in appearance:
+        assert appearance["partial"] is True
+    return cells
 
 
 def assert_retained(before, after):
     indexed = {event["sequence"]: event for event in after}
-    assert all(indexed.get(event["sequence"]) == event for event in before), "Observed history changed after the draw faded"
+    assert all(indexed.get(event["sequence"]) == event for event in before), "Observed history changed after the cue faded"
 
 
 def check_halo(client, name, initial):
     initial_halos = cues(initial, "supernova_halo")
     assert initial_halos, {"missing_from_entry_response": name, "cues": cues(initial)}
-    for cue in initial_halos:
-        appearance, multiply, add = check_appearance(cue, "halo")
-        check_current_footprint(initial, cue)
-        if name.endswith("-edge"):
-            assert (multiply, add) == (-1, 1), appearance
-        else:
-            assert multiply > 0 and add == 0, appearance
+    known_sets = [check_appearance(initial, cue, "halo") for cue in initial_halos]
+    # "-edge" prepares the native inverted-alpha gradient edge, not a fog boundary.
+    # The Java fixture verifies that renderer condition; only observed FOV clipping sets partial.
     before = events(client)
     history = drawn_samples(before, "supernova_halo")
-    assert history, "Initial native halo draw is absent from public history"
-
+    assert history, "Initial native halo is absent from public history"
     if name == "supernova-halo":
-        assert any(event["kind"] == "game.visual" and any(cue["kind"] == "red_target" for cue in event["data"]["cues"])
-                   for event in before), "The native tick's temporary target markers were not observed"
+        assert any(event["kind"] == "game.visual" and any(cue["kind"] == "red_target"
+                   for cue in event["data"]["cues"]) for event in before), before
         countdown = [entry for event in before if event["kind"] == "game.floating_text"
                      for entry in event["data"]["entries"] if entry.get("text") == "10..."]
-        assert countdown, "The native tick's temporary countdown text was not observed"
+        assert countdown, "Native countdown occurrence missing"
     else:
         countdown = []
-
-    # TargetedCell fades in two seconds; FloatingText fades in one. No game turn is advanced.
     time.sleep(2.3)
     persistent = client.state()
     surviving = cues(persistent, "supernova_halo")
     assert surviving, {"persistent_native_halo_missing": cues(persistent)}
     assert not cues(persistent, "red_target"), cues(persistent)
-    assert not any(node.get("presentation") == "floating_text" and node.get("text") == "10..."
-                   for node in persistent["observation"]["ui"]["controls"]), persistent["observation"]["ui"]
+    assert not any(entry.get("kind") == "floating" and entry.get("text") == "10..."
+                   for entry in persistent["observation"]["ui"].get("feedback", []))
     for cue in surviving:
-        _, multiply, add = check_appearance(cue, "halo")
-        check_current_footprint(persistent, cue)
-        if name.endswith("-edge"):
-            assert (multiply, add) == (-1, 1), cue
+        check_appearance(persistent, cue, "halo")
+    # Once the initial target/text have faded, observe native halo pulsation without
+    # advancing actors. Keep the original frames in public-trace.jsonl for diagnosis.
+    passive = [persistent]
+    passive_rows = [{"revision": persistent["state_version"], "halos": surviving}]
+    for _ in range(8):
+        time.sleep(.07)
+        sample = client.state()
+        passive.append(sample)
+        passive_rows.append({"revision": sample["state_version"], "halos": cues(sample, "supernova_halo")})
+    unchanged_world = all(sample["observation"][key] == persistent["observation"][key]
+                          for sample in passive for key in ("hero", "map", "inventory", "visible_entities"))
+    passive_report = {"test_fixture": True, "no_actions": True, "same_world": unchanged_world,
+                      "revisions": [sample["state_version"] for sample in passive], "samples": passive_rows}
+    (client.profile / "halo-passive-observations.json").write_text(json.dumps(passive_report, indent=2) + "\n")
+    assert unchanged_world, {"read_only_halo_probe_changed_world": passive_report}
+    assert len(set(passive_report["revisions"])) == 1, {"halo_pulse_changed_intent": passive_report}
+    persistent = passive[-1]
     after = events(client); assert_retained(before, after)
-
     menu = next(node for node in persistent["observation"]["ui"]["controls"]
                 if str(node.get("shortcut_action", "")).lower() == "back")
     modal = act(client, "ui.activate", control=menu["id"])
-    assert modal["observation"]["ui"]["modal"] and cues(modal) == [], cues(modal)
+    assert modal["observation"]["ui"]["modal"] and cues(modal, "supernova_halo"), cues(modal)
     restored = act(client, "ui.back")
-    assert cues(restored, "supernova_halo"), {"missing_from_restore_action_response": cues(restored)}
+    assert cues(restored, "supernova_halo"), cues(restored)
     for cue in cues(restored, "supernova_halo"):
-        check_current_footprint(restored, cue)
-
-    return {"kind": "supernova_halo", "initial_response_cues": initial_halos,
-            "persistent_response_revision": persistent["state_version"], "persistent_response_cues": surviving,
+        check_appearance(restored, cue, "halo")
+    return {"kind": "supernova_halo", "initial_known_cell_sets": known_sets,
+            "persistent_response_revision": persistent["state_version"],
             "native_countdown_history": countdown, "initial_halo_history_count": len(history),
-            "transient_draw_history_retained": True, "modal_suppresses_current_cues": True,
-            "restored_in_action_response": True, "late_state_not_used_to_repair_missing_initial_warning": True,
-            "native_gradient_sample_checked_by_fixture": name.endswith("-edge"),
-            "evidence_kind": "explicit_native_renderer_alpha_boundary" if name.endswith("-edge") else "native_tracker_tick_and_renderer"}
+            "transient_history_retained": True, "modal_keeps_known_extent": True,
+            "passive_halo_revisions": passive_report["revisions"],
+            "inverted_alpha_edge_fixture": name.endswith("-edge"),
+            "partial_known_extent": any(cue["appearance"].get("partial") is True for cue in initial_halos),
+            "late_state_not_used_to_repair_missing_initial_warning": True}
 
 
 def check_wave(client, name, initial):
-    configured = int(name.rsplit("-", 1)[1])  # Fixture condition only; never read from a game observation.
     before = events(client)
     samples = drawn_samples(before, "blast_wave")
     assert samples, {"transient_native_draw_missing_from_history": name, "entry_cues": cues(initial)}
+    # Event snapshots contain only currently known cells. The fixture's radius is
+    # not copied into the wire and these cells are not a hidden blast area.
+    event_cells = []
+    visible = {cell["cell"] for cell in initial["observation"]["map"]["cells"]
+               if cell["visibility"] == "visible"}
     for sample in samples:
-        appearance, multiply, add = check_appearance(sample["cue"], "ring")
-        assert 0 < multiply < 1 and add == 0, sample
-        # Validate the actual native update's scale/alpha relationship. The report
-        # retains only the sampled current dimensions, never a fabricated final frame.
-        for scale in appearance["scale"]:
-            close(scale, (1 - multiply) * configured)
+        appearance = sample["cue"]["appearance"]
+        assert appearance["shape"] == "ring" and appearance["coverage"] == "visual_extent", sample
+        assert appearance["cells"] and set(appearance["cells"]) <= visible, sample
+        assert not {"radius_world", "size", "scale", "alpha_transform", "configured_radius"} & set(appearance)
+        event_cells.append(appearance["cells"])
     for cue in cues(initial, "blast_wave"):
-        check_current_footprint(initial, cue)
+        check_appearance(initial, cue, "ring")
     time.sleep(.3)
     faded = client.state()
     assert not cues(faded, "blast_wave"), cues(faded)
     after = events(client); assert_retained(before, after)
-    return {"kind": "blast_wave", "native_draw_samples": samples,
-            "actual_sample_count": len(samples), "drawn_width_range": [min(sample["cue"]["appearance"]["size"][0] for sample in samples),
-                                                                       max(sample["cue"]["appearance"]["size"][0] for sample in samples)],
-            "configured_maximum_absent_from_wire": True, "faded_from_current_state": True,
-            "transient_draw_history_retained": True, "evidence_kind": "prepared_native_blast_and_renderer",
+    return {"kind": "blast_wave", "known_visual_cells_by_occurrence": event_cells,
+            "sample_count": len(samples), "configured_radius_not_published": True,
+            "faded_from_current_state": True, "transient_history_retained": True,
             "late_state_not_used_to_repair_missing_initial_warning": True}
 
 

@@ -74,6 +74,9 @@ public class LotusSprite extends MobSprite {
 				if (!Dungeon.level.solid[i] && l.inRange(i)) {
 					Emitter e = CellEmitter.get(i);
 					e.pour(LeafParticle.LEVEL_SPECIFIC, 0.5f);
+					if (com.watabou.noosa.Game.observer.observesVisualCues()) e.observeDraw(
+							new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("lotus_range", i,
+									LeafParticle.LEVEL_SPECIFIC, LeafParticle.class));
 					grassVfx.add(e);
 				}
 			}

@@ -6,10 +6,10 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.WireNames;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Test-only request builder: canonical fake-engine arguments become actual V7 wire bytes.
+/** Test-only request builder: canonical fake-engine arguments become actual V8 wire bytes.
  * Responses are deliberately never expanded: assertions inspect the production wire output. */
-public final class V7Requests {
-    private V7Requests() { }
+public final class V8Requests {
+    private V8Requests() { }
     public static String encode(AuditStore store, Map<String,Object> canonical) {
         if(canonical.containsKey("v")) return JsonCodec.encode(handles(store, canonical));
         Map<String,Object> wire = new LinkedHashMap<>();

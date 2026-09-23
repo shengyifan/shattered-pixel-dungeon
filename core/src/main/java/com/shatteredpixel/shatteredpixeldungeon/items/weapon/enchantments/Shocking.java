@@ -25,10 +25,13 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.BArray;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.PathFinder;
@@ -82,7 +85,11 @@ public class Shocking extends Weapon.Enchantment {
 	
 	public static void arc( Char attacker, Char defender, int dist, ArrayList<Char> affected, ArrayList<Lightning.Arc> arcs ) {
 
-		defender.sprite.centerEmitter().burst(SparkParticle.FACTORY, 3);
+		Emitter sparks = defender.sprite.centerEmitter();
+		sparks.burst(SparkParticle.FACTORY, 3);
+		if (Game.observer.observesVisualCues()) sparks.observeDraw(
+				CellParticleCue.forCharacter("electric_sparks", defender.sprite,
+						SparkParticle.FACTORY, SparkParticle.class));
 		defender.sprite.flash();
 
 		ArrayList<Char> hitThisArc = new ArrayList<>();

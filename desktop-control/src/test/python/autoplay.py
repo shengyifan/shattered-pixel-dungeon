@@ -17,7 +17,7 @@ import uuid
 
 from machine_smoke import Client
 from client_result import ActionResult, settle_action
-import protocol7
+import protocol8
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -214,14 +214,14 @@ class PublicClient(Client):
                 raise Checkpoint("maximum_action_requests_reached")
             self.action_count += 1
         request_id = request_id or f"{self.prefix}-{self.counter + 1:d}"
-        self.log("request", request=protocol7.request(op, args, request_id, scope or self.scope, version or self.version),
+        self.log("request", request=protocol8.request(op, args, request_id, scope or self.scope, version or self.version),
                  action_number=self.action_count, cleanup=self.cleanup)
         response = super().request(op, args, request_id, scope, version)
         self.log("response", response=self.last_wire_response)
         if op == "action.execute":
             self.last_operation_response = response
         data = response.get("result")
-        if protocol7.is_live_operation(op) and response.get("ok") and isinstance(data, dict) and "observation" in data:
+        if protocol8.is_live_operation(op) and response.get("ok") and isinstance(data, dict) and "observation" in data:
             self.last_state = data
             current_file = self.profile / "current-state-public.json"
             staged = self.profile / "current-state-public.json.tmp"
@@ -473,7 +473,7 @@ class Policy:
                     if record.get("kind") != "response":
                         continue
                     wire_response = record.get("response", {})
-                    decoded = protocol7.response(wire_response) if "v" in wire_response else wire_response
+                    decoded = protocol8.response(wire_response) if "v" in wire_response else wire_response
                     data = decoded.get("result", {})
                     if not isinstance(data, dict) or data.get("scope_id") != scope:
                         continue
@@ -499,7 +499,7 @@ class Policy:
                         self.reviewed_optional.add(normalized(record["creature"]["name"]))
                         continue
                     wire_response = record.get("response", {})
-                    decoded = protocol7.response(wire_response) if "v" in wire_response else wire_response
+                    decoded = protocol8.response(wire_response) if "v" in wire_response else wire_response
                     data = decoded.get("result", {})
                     if isinstance(data, dict) and "observation" in data:
                         observed_scope = data.get("scope_id")

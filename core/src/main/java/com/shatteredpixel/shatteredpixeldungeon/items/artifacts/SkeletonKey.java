@@ -550,6 +550,8 @@ public class SkeletonKey extends Artifact {
 		public void use(BlobEmitter emitter) {
 			super.use( emitter );
 			emitter.pour(SpectralWallParticle.FACTORY, 0.02f );
+			if (com.watabou.noosa.Game.observer.observesVisualCues()) emitter.observeDraw(
+					new com.shatteredpixel.shatteredpixeldungeon.effects.SpectralWallCue(emitter));
 		}
 
 		@Override

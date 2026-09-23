@@ -3,6 +3,8 @@ package com.shatteredpixel.shatteredpixeldungeon.control.game;
 import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -27,6 +29,9 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.OptionSlider;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Banner;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CurrencyIndicator;
@@ -95,10 +100,12 @@ public final class UiBridge {
         final Map<String,Object> display,text,textIntent,statusIntent;
         final String rawText;
         final boolean textVisible,clipped;
+        final WeakReference<Object> subject;
         DrawnEvidence(List<Long> bindings,Map<String,Object> display,Map<String,Object> text,Map<String,Object> textIntent,
-                      Map<String,Object> statusIntent,String rawText,boolean textVisible,boolean clipped){
+                      Map<String,Object> statusIntent,String rawText,boolean textVisible,boolean clipped,Object subject){
             this.bindings=bindings;this.display=display;this.text=text;this.textIntent=textIntent;this.statusIntent=statusIntent;
             this.rawText=rawText;this.textVisible=textVisible;this.clipped=clipped;
+            this.subject=new WeakReference<>(subject);
         }
     }
 
@@ -113,6 +120,18 @@ public final class UiBridge {
         drawnCamera=new WeakReference<>(Camera.main);hadDrawnCamera=Camera.main!=null;
         Gizmo currentScope=displayScope(current);drawnScope=new WeakReference<>(currentScope);
         if(currentScope!=null)captureDrawn(currentScope);
+        if(current instanceof GameScene&&currentScope!=current)captureWorldHealth(current);
+    }
+
+    private void captureWorldHealth(Gizmo owner){
+        if(owner==null||!owner.exists||owner instanceof com.watabou.noosa.particles.Emitter||owner instanceof RenderedTextBlock)return;
+        if(worldHealth(owner)&&shown(owner))drawnEvidence.put(owner,readDisplay(owner));
+        if(owner instanceof Group)for(Gizmo child:((Group)owner).childrenSnapshot())captureWorldHealth(child);
+    }
+
+    private static boolean worldHealth(Gizmo owner){
+        return (owner instanceof CharHealthIndicator||owner instanceof TargetHealthIndicator)
+                &&nativeSubject(owner) instanceof Char&&currentlyVisible((Char)nativeSubject(owner));
     }
 
     private void captureDrawn(Gizmo owner){
@@ -136,25 +155,22 @@ public final class UiBridge {
         boolean clipped=fragment!=null?fragment.clipped:clippedDirectText(owner);
         boolean textVisible=fragment==null||fragment.visible;
         if(text!=null&&(!text.isEmpty()||clipped))textFields.put("text",TextProvenance.INSTANCE.capture(owner,text,clipped));
-        if(fragment!=null&&fragment.visible)textFields.putAll(fragment.styleData());
-        else if(owner instanceof BitmapText&&!clipped)textFields.put("color",((BitmapText)owner).displayedTextColor());
+        if(fragment!=null&&fragment.visible)textFields.putAll(semanticTextStyle(owner,fragment));
+        else if(owner instanceof BitmapText&&!clipped&&text!=null&&!text.isEmpty()
+                &&!semanticTextComponent(owner))textFields.putAll(textTone(owner,((BitmapText)owner).displayedTextColor()));
         if(clipped)textFields.put("clipped",true);
         display.putAll(textFields);
         if(owner instanceof RenderedStatus){
-            display.putAll(((RenderedStatus)owner).renderedStatus());
-            intent.putAll(((RenderedStatus)owner).intentStatus());
+            display.putAll(semanticStatus(((RenderedStatus)owner).renderedStatus()));
+            intent.putAll(semanticStatus(((RenderedStatus)owner).intentStatus()));
         }
-        if(owner instanceof IconButton&&((IconButton)owner).icon()!=null){
-            boolean dimmed=((IconButton)owner).icon().am<=0.35f;
-            display.put("dimmed",dimmed);intent.put("dimmed",dimmed);
-        }
-        if(owner instanceof HealthBar){
+        if(owner instanceof HealthBar&&!(owner instanceof GameplayStatus)){
             Map<String,Object> bars=barFields((HealthBar)owner);display.putAll(bars);intent.putAll(bars);
         }
         Map<String,Object> frozenText=freezeEvidence(PublicEnglishProjection.freeze(textFields));
         Map<String,Object> textIntent=frozenText;
         if(owner instanceof RenderedTextBlock&&((RenderedTextBlock)owner).hasAnimatedColor()){
-            Map<String,Object> meaning=new LinkedHashMap<>(frozenText);meaning.remove("color");
+            Map<String,Object> meaning=new LinkedHashMap<>(frozenText);meaning.remove("color");meaning.remove("tone");meaning.remove("spans");
             if(meaning.get("styles") instanceof List){
                 List<Object> styles=new ArrayList<>();
                 for(Object raw:(List<?>)meaning.get("styles")){
@@ -165,7 +181,60 @@ public final class UiBridge {
             textIntent=freezeEvidence(meaning);
         }
         return new DrawnEvidence(bindingFingerprint(owner),freezeEvidence(PublicEnglishProjection.freeze(display)),
-                frozenText,textIntent,freezeEvidence(PublicEnglishProjection.freeze(intent)),text,textVisible,clipped);
+                frozenText,textIntent,freezeEvidence(PublicEnglishProjection.freeze(intent)),text,textVisible,clipped,nativeSubject(owner));
+    }
+
+    private static Map<String,Object> semanticTextStyle(Gizmo owner,RenderedTextBlock.VisibleText fragment){
+        if(fragment.styles.isEmpty())return Collections.emptyMap();
+        int color=fragment.styles.get(0).color;boolean uniform=true;
+        for(RenderedTextBlock.VisibleStyle run:fragment.styles)uniform&=run.color==color;
+        if(uniform)return textTone(owner,color);
+        List<Object> spans=new ArrayList<>();boolean informative=false;
+        for(RenderedTextBlock.VisibleStyle run:fragment.styles){
+            Map<String,Object> span=new LinkedHashMap<>(textTone(owner,run.color));
+            informative|=!span.isEmpty();span.put("text",TextProvenance.INSTANCE.capture(null,run.text,fragment.clipped));
+            if(fragment.clipped)span.put("clipped",true);spans.add(span);
+        }
+        return informative?map("spans",spans):Collections.emptyMap();
+    }
+
+    private static Map<String,Object> textTone(Gizmo owner,int color){
+        Map<String,Object> tone=isGameLogText(owner)?GameplayIcons.logTone(color):GameplayIcons.textTone(color);
+        return "white".equals(tone.get("tone"))||"info".equals(tone.get("tone"))||"normal".equals(tone.get("tone"))?Collections.emptyMap():tone;
+    }
+
+    private static boolean semanticTextComponent(Gizmo owner){
+        return owner.parent instanceof GameplayStatus&&((GameplayStatus)owner.parent).gameplayTextComponents().containsValue(owner);
+    }
+
+    /** Native adapters provide meanings; legacy drawing attributes never enter readiness or public data. */
+    private static Map<String,Object> semanticStatus(Map<String,Object> source){
+        Map<String,Object> result=new LinkedHashMap<>();
+        boolean unmapped=false;
+        for(Map.Entry<String,Object> entry:source.entrySet()){
+            if(Arrays.asList("atlas","frame_pixels","texture_size","flip_horizontal","flip_vertical","angle","scale","tint","alpha",
+                    "color","opacity","styles").contains(entry.getKey())){unmapped=true;continue;}
+            Object value=entry.getValue();
+            if(value instanceof Map&&!Arrays.asList("text_sources","text_origins","presentation","pres").contains(entry.getKey()))
+                value=semanticStatus((Map<String,Object>)value);
+            result.put(entry.getKey(),value);
+        }
+        if(unmapped){
+            Map<String,Object> presentation=result.get("presentation") instanceof Map?new LinkedHashMap<>((Map<String,Object>)result.get("presentation")):new LinkedHashMap<>();
+            List<Object> diagnostics=presentation.get("diagnostics") instanceof List?new ArrayList<>((List<?>)presentation.get("diagnostics")):new ArrayList<>();
+            diagnostics.add(map("field","unmapped_indicator","code","unmapped_indicator"));
+            presentation.put("status","partial");presentation.put("diagnostics",diagnostics);
+            result.put("unmapped_indicator",true);result.put("presentation",presentation);
+        }
+        return result;
+    }
+
+    private static Object nativeSubject(Gizmo owner){
+        if(owner instanceof GameplayStatus)return ((GameplayStatus)owner).gameplaySubject();
+        if(owner instanceof ItemSlot)return ((ItemSlot)owner).displayedItem();
+        if(owner instanceof CharHealthIndicator)return ((CharHealthIndicator)owner).target();
+        if(owner instanceof TargetHealthIndicator)return ((TargetHealthIndicator)owner).target();
+        return null;
     }
 
     /** Opaque provenance/presentation maps are evidence too: no mutable caller-owned extension survives. */
@@ -190,8 +259,8 @@ public final class UiBridge {
 
     private static Map<String,Object> barFields(HealthBar bar){
         int[] pixels=bar.renderedPixelWidths();
-        return pixels.length==3&&pixels[0]>0?map("total_pixels",pixels[0],"health_pixels",pixels[1],
-                "health_and_shield_pixels",pixels[2],"measurement","rendered_pixels"):Collections.emptyMap();
+        return pixels.length==3&&pixels[0]>0?map("health_estimate",map("samples",Collections.singletonList(
+                map("total",pixels[0],"filled",pixels[1],"with_shield",pixels[2],"basis","displayed")))):Collections.emptyMap();
     }
 
     private long drawingIdentity(Object owner){
@@ -211,10 +280,17 @@ public final class UiBridge {
         result.add(owner.exists?1L:0L);result.add(owner.visible?1L:0L);
         if(owner instanceof Group){
             List<Gizmo> children=new ArrayList<>();
-            for(Gizmo child:((Group)owner).childrenSnapshot())if(child!=null&&!(child instanceof com.watabou.noosa.particles.Emitter))children.add(child);
+            for(Gizmo child:((Group)owner).childrenSnapshot())if(semanticBinding(child))children.add(child);
             result.add((long)children.size());for(Gizmo child:children)appendBindings(child,result);
         }
         else result.add(-1L);
+    }
+
+    private static boolean semanticBinding(Gizmo owner){
+        if(owner==null||owner instanceof com.watabou.noosa.particles.Emitter)return false;
+        if(captureCandidate(owner))return true;
+        if(owner instanceof Group)for(Gizmo child:((Group)owner).childrenSnapshot())if(semanticBinding(child))return true;
+        return false;
     }
 
     private static Gizmo displayScope(Scene current){
@@ -231,7 +307,10 @@ public final class UiBridge {
 
     private DrawnEvidence evidence(Gizmo owner){
         DrawnEvidence value=matchingDraw()?drawnEvidence.get(owner):null;
-        if(value!=null&&(!shown(owner)||!value.bindings.equals(bindingFingerprint(owner)))){drawnEvidence.remove(owner);return null;}
+        if(value!=null&&(!shown(owner)||!value.bindings.equals(bindingFingerprint(owner))||value.subject.get()!=nativeSubject(owner))){drawnEvidence.remove(owner);return null;}
+        if(value!=null&&!value.statusIntent.isEmpty()&&readDisplay(owner).statusIntent.isEmpty()){
+            drawnEvidence.remove(owner);return null;
+        }
         return value;
     }
 
@@ -298,6 +377,7 @@ public final class UiBridge {
 
     private UiProjectionHints projectionHints(Map<String, Object> observation) {
         IdentityHashMap<Item, String> locators = publicItemLocators(observation);
+        IdentityHashMap<Object,Map<String,Object>> subjects=publicSubjects(observation,locators);
         Map<String, Map<String, Object>> byId = new LinkedHashMap<>();
         for (Map<String, Object> node : nodes) byId.put((String) node.get("id"), node);
         Map<String, UiProjectionHints.Node> hints = new LinkedHashMap<>();
@@ -325,7 +405,9 @@ public final class UiBridge {
                 ItemSlot slot = (ItemSlot) control;
                 empty = emptyItemPlaceholder(slot);
                 locator = locators.get(slot.displayedItem());
-                for (Map.Entry<String, BitmapText> entry : slot.renderedTextComponents().entrySet()) {
+            }
+            if(control instanceof GameplayStatus){
+                for (Map.Entry<String, BitmapText> entry : ((GameplayStatus)control).gameplayTextComponents().entrySet()) {
                     BitmapText child = entry.getValue();
                     String childId = identities.get(child);
                     Map<String, Object> childNode = byId.get(childId);
@@ -333,8 +415,14 @@ public final class UiBridge {
                             && childNode.containsKey("text")) display.put(entry.getKey(), childId);
                 }
             }
-            if (empty || !owned.isEmpty() || locator != null || !display.isEmpty())
-                hints.put(nodeId, new UiProjectionHints.Node(empty, owned, locator, display));
+            DrawnEvidence drawn=control==null?null:evidence(control);
+            Object nativeObject=readingIntent?nativeSubject(control):drawn==null?null:drawn.subject.get();
+            Map<String,Object> subject=subjects.get(nativeObject);
+            String feedback=control instanceof FloatingText?"floating":control instanceof Banner?"banner":isGameLogText(control)?"log":null;
+            boolean actionable=false;
+            for(Map<String,Object> action:actions)if(nodeId.equals(action.get("control"))){actionable=true;break;}
+            if (empty || !owned.isEmpty() || locator != null || !display.isEmpty() || subject!=null || feedback!=null || actionable)
+                hints.put(nodeId, new UiProjectionHints.Node(empty, owned, locator, display,subject,feedback,actionable));
         }
         return new UiProjectionHints(hints);
     }
@@ -357,7 +445,47 @@ public final class UiBridge {
             Item item = PlayerObservation.resolveItem(Dungeon.hero, locator);
             if (item != null) locators.put(item, locators.containsKey(item) ? null : locator);
         }
+        Object entities=observation.get("visible_entities");
+        if(entities instanceof List&&Dungeon.level!=null&&Dungeon.level.heaps!=null)for(Object raw:(List<?>)entities){
+            if(!(raw instanceof Map)||!(((Map<?,?>)raw).get("item") instanceof Map))continue;
+            Map<?,?> entity=(Map<?,?>)raw,item=(Map<?,?>)entity.get("item");Object cell=entity.get("cell"),locator=item.get("locator");
+            if(!(cell instanceof Number)||!(locator instanceof String)||!locator.equals("floor."+((Number)cell).intValue()))continue;
+            com.shatteredpixel.shatteredpixeldungeon.items.Heap heap=Dungeon.level.heaps.get(((Number)cell).intValue());
+            if(heap!=null&&heap.seen&&!heap.items.isEmpty()){
+                Item first=heap.items.getFirst();locators.put(first,locators.containsKey(first)?null:(String)locator);
+            }
+        }
         return locators;
+    }
+
+    /** Build only associations to rows already present in this observation, never identify by display name. */
+    private static IdentityHashMap<Object,Map<String,Object>> publicSubjects(Map<String,Object> observation,IdentityHashMap<Item,String> locators){
+        IdentityHashMap<Object,Map<String,Object>> result=new IdentityHashMap<>();
+        for(Map.Entry<Item,String> item:locators.entrySet())if(item.getValue()!=null)result.put(item.getKey(),map("kind","item","loc",item.getValue()));
+        if(observation.get("hero") instanceof Map&&Dungeon.hero!=null){
+            result.put(Dungeon.hero,map("kind","hero"));
+            addBuffSubjects(result,Dungeon.hero,((Map<?,?>)observation.get("hero")).get("buffs"),null);
+        }
+        if(observation.get("visible_entities") instanceof List&&Dungeon.level!=null&&Dungeon.level.mobs!=null){
+            List<?> entities=(List<?>)observation.get("visible_entities");
+            for(int index=0;index<entities.size();index++){
+                if(!(entities.get(index) instanceof Map))continue;Map<?,?> entity=(Map<?,?>)entities.get(index);
+                if(!"character".equals(entity.get("kind"))||!(entity.get("cell") instanceof Number))continue;
+                int cell=((Number)entity.get("cell")).intValue();Mob found=null;
+                for(Mob mob:Dungeon.level.mobs)if(mob.pos==cell){if(found!=null){found=null;break;}found=mob;}
+                if(found==null)continue;
+                result.put(found,map("kind","entity","index",index));addBuffSubjects(result,found,entity.get("buffs"),index);
+            }
+        }
+        return result;
+    }
+
+    private static void addBuffSubjects(IdentityHashMap<Object,Map<String,Object>> subjects,Char owner,Object publicBuffs,Integer entity){
+        if(!(publicBuffs instanceof List))return;
+        List<Buff> visible=new ArrayList<>();for(Buff buff:owner.buffs())if(buff.icon()!=BuffIndicator.NONE)visible.add(buff);
+        if(visible.size()!=((List<?>)publicBuffs).size())return;
+        for(int index=0;index<visible.size();index++)subjects.put(visible.get(index),entity==null
+                ?map("kind","hero_buff","index",index):map("kind","entity_buff","entity",entity,"index",index));
     }
 
     private Map<String,Object> inspectedItemKnowledge() {
@@ -674,6 +802,7 @@ public final class UiBridge {
             if (selecting != null) scope = selecting;
         }
         walk(scope, null, null, false);
+        if(scene instanceof GameScene&&scope!=scene){appendWorldHealth(scene);appendWorldFeedback(scene);}
         actions.add(map("action", "ui.back"));
         if (scope == scene && (scene instanceof TitleScene || scene instanceof HeroSelectScene)) {
             actions.add(map("action", "ui.reveal"));
@@ -689,6 +818,28 @@ public final class UiBridge {
                 actions.add(map("action", "cell.cancel"));
             }
         }
+    }
+
+    private void appendWorldHealth(Gizmo owner){
+        if(owner==null||!owner.exists||owner instanceof com.watabou.noosa.particles.Emitter||owner instanceof RenderedTextBlock)return;
+        if(worldHealth(owner)&&shown(owner)&&!controls.containsKey(id(owner))){
+            DrawnEvidence displayed=readingIntent?readDisplay(owner):evidence(owner);
+            if(displayed!=null){Map<String,Object> node=map("id",id(owner),"role","health_bar","enabled",false);
+                node.putAll(displayed.display);nodes.add(node);controls.put(id(owner),owner);}
+        }
+        if(owner instanceof Group)for(Gizmo child:((Group)owner).childrenSnapshot())appendWorldHealth(child);
+    }
+
+    /** The world collector certified these native anchored messages; a modal window cannot erase them. */
+    private void appendWorldFeedback(Gizmo owner){
+        if(owner==null||!owner.exists||owner instanceof com.watabou.noosa.particles.Emitter)return;
+        if(owner instanceof FloatingText){
+            FloatingText text=(FloatingText)owner;
+            if(!controls.containsKey(id(owner))&&(text.displayedText()!=null||text.displayedAppearance()!=null))walk(owner,null,null,false);
+            return;
+        }
+        if(owner instanceof RenderedTextBlock)return;
+        if(owner instanceof Group)for(Gizmo child:((Group)owner).childrenSnapshot())appendWorldFeedback(child);
     }
 
     private void discover(Gizmo gizmo) {
@@ -753,7 +904,7 @@ public final class UiBridge {
             if (gizmo instanceof FloatingText) {
                 if(text!=null&&(!text.isEmpty()||clipped))node.put("text",TextProvenance.INSTANCE.capture(gizmo,text,clipped));
                 Map<String,Object> appearance=((FloatingText)gizmo).displayedAppearance();
-                if(appearance!=null) node.putAll(appearance);
+                if(appearance!=null) node.putAll(semanticStatus(appearance));
                 if(floatingFragment==null&&appearance!=null&&appearance.containsKey("icon"))node.put("presentation","floating_text");
             } else if(drawn!=null)node.putAll(drawn.display);
             if(clipped)node.put("clipped",true);
@@ -894,6 +1045,7 @@ public final class UiBridge {
         if(gizmo instanceof RenderedTextBlock)return ((RenderedTextBlock)gizmo).visibleTextFragment().clipped;
         if(gizmo instanceof BitmapText) {
             BitmapText text=(BitmapText)gizmo;
+            if(text.text()==null||text.text().isEmpty())return false;
             com.watabou.noosa.Camera camera=null;
             for(Gizmo node=gizmo;node!=null&&camera==null;node=node.parent)camera=node.camera;
             Camera.DrawnTransform transform=camera!=null&&camera.scroll!=null?camera.observedTransform():null;
@@ -972,7 +1124,8 @@ public final class UiBridge {
     private static boolean currentlyVisible(Char target) {
         return target != null && Dungeon.level != null && target.pos >= 0
                 && Dungeon.level.heroFOV != null && target.pos < Dungeon.level.heroFOV.length
-                && Dungeon.level.heroFOV[target.pos] && target.sprite != null && target.sprite.visible;
+                && Dungeon.level.heroFOV[target.pos] && target.sprite != null && target.sprite.exists && target.sprite.visible
+                && Float.isFinite(target.sprite.am+target.sprite.aa) && target.sprite.am+target.sprite.aa>0;
     }
 
     private Gizmo requireControl(Map<String, Object> args) {

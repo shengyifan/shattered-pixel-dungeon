@@ -41,7 +41,7 @@ import com.watabou.noosa.Image;
 import com.watabou.utils.BArray;
 import com.watabou.utils.PathFinder;
 
-public class QuickSlotButton extends Button implements RenderedStatus {
+public class QuickSlotButton extends Button implements GameplayStatus {
 	
 	private static QuickSlotButton[] instance = new QuickSlotButton[QuickSlot.SIZE];
 	private int slotNum;
@@ -52,15 +52,7 @@ public class QuickSlotButton extends Button implements RenderedStatus {
 	private TargetMarker crossM;
 
 	@Override
-	public java.util.Map<String,Object> renderedStatus() {
-		java.util.Map<String,Object> marker=RenderedAppearance.image(crossB);
-		if(marker.isEmpty())return java.util.Collections.emptyMap();
-		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
-		result.put("quickslot",slotNum+1);result.put("targeting_marker",marker);return result;
-	}
-
-	@Override
-	public java.util.Map<String,Object> intentStatus() {
+	public java.util.Map<String,Object> gameplayStatus() {
 		if(RenderedAppearance.image(crossB).isEmpty())return java.util.Collections.emptyMap();
 		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
 		result.put("quickslot",slotNum+1);result.put("targeting_marker",true);return result;
@@ -79,9 +71,8 @@ public class QuickSlotButton extends Button implements RenderedStatus {
 					|| Math.abs(y+height()/2f-sprite.y-sprite.height()/2f)>0.5f)return -1;
 			return sprite.renderedCell();
 		}
-		@Override public void draw() {
-			super.draw();
-			if(com.watabou.noosa.Game.observer.observesVisualCues() && buffer!=null) {
+		@Override public void observeGameplayVisuals() {
+			if(com.watabou.noosa.Game.observer.observesVisualCues()) {
 				int cell=renderedTargetCell();
 				if(cell>=0)GameScene.observeCellVisualDraw(this,new com.watabou.noosa.VisualCue("quickslot_target",cell));
 			}

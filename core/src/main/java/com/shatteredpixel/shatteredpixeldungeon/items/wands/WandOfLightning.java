@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -85,7 +86,7 @@ public class WandOfLightning extends DamageWand {
 
 		for (Char ch : affected){
 			if (ch == Dungeon.hero) PixelScene.shake( 2, 0.3f );
-			ch.sprite.centerEmitter().burst( SparkParticle.FACTORY, 3 );
+			GameplayBurst.burstForCharacter(ch.sprite.centerEmitter(), SparkParticle.FACTORY, 3, "electric_sparks", ch.sprite, false);
 			ch.sprite.flash();
 
 			wandProc(ch, chargesPerCast());
@@ -188,7 +189,7 @@ public class WandOfLightning extends DamageWand {
 			arc(ch);
 		} else {
 			arcs.add( new Lightning.Arc(curUser.sprite.center(), DungeonTilemap.raisedTileCenterToWorld(bolt.collisionPos)).observeDraw("lightning_arc", curUser.pos, bolt.collisionPos));
-			CellEmitter.center( cell ).burst( SparkParticle.FACTORY, 3 );
+			GameplayBurst.burst(CellEmitter.center(cell), SparkParticle.FACTORY, 3, "electric_sparks", cell, false);
 		}
 
 		//don't want to wait for the effect before processing damage.

@@ -57,9 +57,9 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 	
 	private Callback callback;
 
-	@Override public void draw() {
-		super.draw();
-		if(!Game.observer.observesVisualCues()||buffer==null)return;
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if(!Game.observer.observesVisualCues())return;
 		VisualCue cue=renderedProjectileCue();
 		if(cue!=null)GameScene.observeMovingVisualDraw(this,cue);
 	}
@@ -67,7 +67,7 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 	/** Measures the currently displayed projectile only; no Item, callback, or planned destination. */
 	public VisualCue renderedProjectileCue() {
 		if(Dungeon.level==null||Dungeon.level.width()<=0)return null;
-		java.util.Map<String,Object> appearance=RenderedAppearance.image(this);
+		java.util.Map<String,Object> appearance=com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons.worldImage(this);
 		if(appearance.isEmpty())return null;
 		// Native setup rotates around the image center. Do not guess for another anchor.
 		if(origin.x!=width/2f||origin.y!=height/2f)return null;
@@ -75,7 +75,8 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 		if(!Float.isFinite(centerX+centerY)||centerX<0||centerY<0)return null;
 		int column=(int)(centerX/DungeonTilemap.SIZE),row=(int)(centerY/DungeonTilemap.SIZE);
 		if(column>=Dungeon.level.width()||row>=Dungeon.level.height())return null;
-		return new VisualCue("missile_projectile",row*Dungeon.level.width()+column,null,null,null,alpha(),appearance);
+		return new VisualCue("missile_projectile",row*Dungeon.level.width()+column,null,null,null,null,
+				appearance);
 	}
 
 	@Override

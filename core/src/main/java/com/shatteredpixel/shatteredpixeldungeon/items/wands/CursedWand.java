@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
@@ -339,7 +340,7 @@ public class CursedWand {
 			tryForWandProc(Actor.findChar(bolt.collisionPos), origin);
 			for (int i : PathFinder.NEIGHBOURS9){
 				if (!Dungeon.level.solid[bolt.collisionPos+i]){
-					CellEmitter.get(bolt.collisionPos+i).start(Speck.factory(Speck.BUBBLE), 0.25f, 40);
+					GameplayBurst.start(CellEmitter.get(bolt.collisionPos+i), Speck.factory(Speck.BUBBLE), 0.25f, 40, "bubble_burst", bolt.collisionPos+i, false);
 				}
 			}
 			return true;
@@ -486,11 +487,11 @@ public class CursedWand {
 					toDamage = user;
 				}
 				toHeal.HP = Math.min(toHeal.HT, toHeal.HP + damage/2);
-				toHeal.sprite.emitter().burst(Speck.factory(Speck.HEALING), 3);
+				GameplayBurst.burstForCharacter(toHeal.sprite.emitter(), Speck.factory(Speck.HEALING), 3, "healing_specks", toHeal.sprite, false);
 				toHeal.sprite.showStatusWithIcon( CharSprite.POSITIVE, Integer.toString(damage/2), FloatingText.HEALING );
 
 				toDamage.damage(damage, new CursedWand());
-				toDamage.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);
+				GameplayBurst.startForCharacter(toDamage.sprite.emitter(), ShadowParticle.UP, 0.05f, 10, "shadow_burst", toDamage.sprite, false);
 
 				if (toDamage == Dungeon.hero){
 					Sample.INSTANCE.play(Assets.Sounds.CURSED);
@@ -647,7 +648,11 @@ public class CursedWand {
 			for (Mob mob : Dungeon.level.mobs) {
 				mob.beckon( user.pos );
 			}
-			user.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
+			com.watabou.noosa.particles.Emitter alarm = user.sprite.centerEmitter();
+			alarm.start(Speck.factory(Speck.SCREAM), 0.3f, 3);
+			if (com.watabou.noosa.Game.observer.observesVisualCues()) alarm.observeDraw(
+					com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue.forCharacter(
+							"cursed_alarm", user.sprite, Speck.factory(Speck.SCREAM), Speck.class));
 			if (positiveOnly){
 				Buff.affect(user, ScrollOfChallenge.ChallengeArena.class).setup(user.pos);
 				Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );
@@ -810,7 +815,7 @@ public class CursedWand {
 						continue;
 					}
 
-					CellEmitter.get(i).burst(FlameParticle.FACTORY, 10);
+					GameplayBurst.burst(CellEmitter.get(i), FlameParticle.FACTORY, 10, "flame_burst", i, false);
 					if (Actor.findChar(i) != null){
 						Char ch = Actor.findChar(i);
 						Burning burning = Buff.affect(ch, Burning.class);
@@ -901,29 +906,29 @@ public class CursedWand {
 							Burning burning = Buff.affect(ch, Burning.class);
 							burning.reignite(ch);
 							ch.damage(dmg, burning);
-							ch.sprite.emitter().burst(FlameParticle.FACTORY, 20);
+							GameplayBurst.burstForCharacter(ch.sprite.emitter(), FlameParticle.FACTORY, 20, "flame_burst", ch.sprite, false);
 							break;
 						case 1:
 							ch.damage(dmg, new Frost());
 							if (ch.isAlive()) Buff.affect(ch, Frost.class, Frost.DURATION);
-							Splash.at( ch.sprite.center(), 0xFFB2D6FF, 20 );
+							GameplayBurst.splash(ch.sprite.center(), 0xFFB2D6FF, 20, "frost_burst", ch.pos, false);
 							break;
 						case 2:
 							Poison poison = Buff.affect(ch, Poison.class);
 							poison.set(3 + Dungeon.scalingDepth() / 2);
 							ch.damage(dmg, poison);
-							ch.sprite.emitter().burst(PoisonParticle.SPLASH, 20);
+							GameplayBurst.burstForCharacter(ch.sprite.emitter(), PoisonParticle.SPLASH, 20, "poison_burst", ch.sprite, false);
 							break;
 						case 3:
 							Ooze ooze = Buff.affect(ch, Ooze.class);
 							ooze.set(Ooze.DURATION);
 							ch.damage(dmg, ooze);
-							Splash.at( ch.sprite.center(), 0x000000, 20 );
+							GameplayBurst.splash(ch.sprite.center(), 0x000000, 20, "dark_splash", ch.pos, false);
 							break;
 						case 4:
 							ch.damage(dmg, new Electricity());
 							if (ch.isAlive()) Buff.affect(ch, Paralysis.class, Paralysis.DURATION);
-							ch.sprite.emitter().burst(SparkParticle.FACTORY, 20);
+							GameplayBurst.burstForCharacter(ch.sprite.emitter(), SparkParticle.FACTORY, 20, "magic_sparks", ch.sprite, false);
 							break;
 					}
 
@@ -987,7 +992,7 @@ public class CursedWand {
 			Buff.affect(user, TimeStasis.class, 100f);
 			Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 
-			user.sprite.emitter().burst(Speck.factory(Speck.STEAM), 10);
+			GameplayBurst.burstForCharacter(user.sprite.emitter(), Speck.factory(Speck.STEAM), 10, "steam_burst", user.sprite, false);
 			GLog.w(Messages.get(CursedWand.class, "petrify"));
 
 			return true;
@@ -1068,7 +1073,7 @@ public class CursedWand {
 			mimic.alignment = Char.Alignment.ENEMY;
 			//play vfx/sfx manually as mimic isn't in the scene yet
 			Sample.INSTANCE.play(Assets.Sounds.MIMIC, 1, 0.85f);
-			CellEmitter.get(mimic.pos).burst(Speck.factory(Speck.STAR), 10);
+			GameplayBurst.burst(CellEmitter.get(mimic.pos), Speck.factory(Speck.STAR), 10, "star_burst", mimic.pos, false);
 			mimic.items.clear();
 			GameScene.add(mimic);
 
@@ -1244,7 +1249,11 @@ public class CursedWand {
 			for (int i = 0; i < PathFinder.distance.length; i++) {
 				if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 					if (!Dungeon.level.solid[i] || Dungeon.level.passable[i]) {
-						CellEmitter.floor(i).burst(PitfallParticle.FACTORY4, 8);
+						com.watabou.noosa.particles.Emitter warning = CellEmitter.floor(i);
+						warning.burst(PitfallParticle.FACTORY4, 8);
+						if (com.watabou.noosa.Game.observer.observesVisualCues()) warning.observeDraw(
+								new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("pitfall_warning", i,
+										PitfallParticle.FACTORY4, PitfallParticle.class));
 						positions.add(i);
 					}
 				}

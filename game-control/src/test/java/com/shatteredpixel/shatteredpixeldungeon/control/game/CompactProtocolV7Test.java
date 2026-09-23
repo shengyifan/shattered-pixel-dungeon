@@ -112,7 +112,7 @@ public class CompactProtocolV7Test {
         Map<String,Object> before=records("a"),after=records("b");
         before.put("activity",map("rid","old"));before.put("saved",map("sid","p1"));
         Map<String,Object> opaque=map("ui",map("node_shapes",Arrays.asList(Arrays.asList("id")),"nodes",Arrays.asList(Arrays.asList(0,"opaque"))));
-        Map<String,Object> frame=map("v",7,"s","s-live","rev","r-live","data",map("before",before,"after",after,"raw",opaque,"reply",opaque));
+        Map<String,Object> frame=map("v",8,"s","s-live","rev","r-live","data",map("before",before,"after",after,"raw",opaque,"reply",opaque));
         Object expected=CompactStructures.expandPure(frame);CompactStructures.compact(frame);
         Map<String,Object> data=object(frame.get("data"));
         assertTrue(object(data.get("before")).containsKey("act_templates"));
@@ -174,7 +174,7 @@ public class CompactProtocolV7Test {
                     assertEquals(before,JsonCodec.encode(input));
                 }
         Map<String,Object> earlier=records("a"),later=records("b");later.put("inv_templates",Collections.emptyList());
-        Map<String,Object> envelope=map("v",7,"data",map("before",earlier,"after",later));
+        Map<String,Object> envelope=map("v",8,"data",map("before",earlier,"after",later));
         String before=JsonCodec.encode(envelope);
         assertThrows(IllegalArgumentException.class,()->CompactStructures.compact(envelope));
         assertEquals(before,JsonCodec.encode(envelope));

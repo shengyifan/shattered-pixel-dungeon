@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -74,7 +75,7 @@ public class WandOfTransfusion extends DamageWand {
 	public void onZap(Ballistica beam) {
 
 		for (int c : beam.subPath(0, beam.dist))
-			CellEmitter.center(c).burst( BloodParticle.BURST, 1 );
+			GameplayBurst.burst(CellEmitter.center(c), BloodParticle.BURST, 1, "blood_burst", c, false);
 
 		int cell = beam.collisionPos;
 
@@ -103,7 +104,7 @@ public class WandOfTransfusion extends DamageWand {
 				
 				ch.HP += healing;
 				
-				ch.sprite.emitter().burst(Speck.factory(Speck.HEALING), 2 + buffedLvl() / 2);
+				GameplayBurst.burstForCharacter(ch.sprite.emitter(), Speck.factory(Speck.HEALING), 2 + buffedLvl() / 2, "healing_specks", ch.sprite, true);
 				if (healing > 0) {
 					ch.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healing), FloatingText.HEALING);
 				}
@@ -130,12 +131,12 @@ public class WandOfTransfusion extends DamageWand {
 					Charm charm = Buff.affect(ch, Charm.class, Charm.DURATION/2f);
 					charm.object = curUser.id();
 					charm.ignoreHeroAllies = true;
-					ch.sprite.centerEmitter().start( Speck.factory( Speck.HEART ), 0.2f, 3 );
+					GameplayBurst.startForCharacter(ch.sprite.centerEmitter(), Speck.factory(Speck.HEART), 0.2f, 3, "heart_specks", ch.sprite, false);
 				
 				//harms the undead
 				} else {
 					ch.damage(damageRoll(), this);
-					ch.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10 + buffedLvl());
+					GameplayBurst.startForCharacter(ch.sprite.emitter(), ShadowParticle.UP, 0.05f, 10 + buffedLvl(), "shadow_burst", ch.sprite, true);
 					Sample.INSTANCE.play(Assets.Sounds.BURNING);
 				}
 
@@ -166,7 +167,7 @@ public class WandOfTransfusion extends DamageWand {
 			Buff.affect(attacker, Barrier.class).setShield(shieldToGive);
 			attacker.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shieldToGive), FloatingText.SHIELDING);
 			GLog.p( Messages.get(this, "charged") );
-			attacker.sprite.emitter().burst(BloodParticle.BURST, 20);
+			GameplayBurst.burstForCharacter(attacker.sprite.emitter(), BloodParticle.BURST, 20, "blood_burst", attacker.sprite, false);
 		}
 	}
 

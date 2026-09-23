@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -147,17 +149,17 @@ public class ScrollOfUpgrade extends InventoryScroll {
 	}
 	
 	public static void upgrade( Hero hero ) {
-		hero.sprite.emitter().start( Speck.factory( Speck.UP ), 0.2f, 3 );
+		GameplayBurst.startForCharacter(hero.sprite.emitter(), Speck.factory(Speck.UP), 0.2f, 3, "upward_specks", hero.sprite, true);
 	}
 
 	public static void weakenCurse( Hero hero ){
 		GLog.p( Messages.get(ScrollOfUpgrade.class, "weaken_curse") );
-		hero.sprite.emitter().start( ShadowParticle.UP, 0.05f, 5 );
+		GameplayBurst.startForCharacter(hero.sprite.emitter(), ShadowParticle.UP, 0.05f, 5, "upward_shadows", hero.sprite, true);
 	}
 
 	public static void removeCurse( Hero hero ){
 		GLog.p( Messages.get(ScrollOfUpgrade.class, "remove_curse") );
-		hero.sprite.emitter().start( ShadowParticle.UP, 0.05f, 10 );
+		GameplayBurst.startForCharacter(hero.sprite.emitter(), ShadowParticle.UP, 0.05f, 10, "upward_shadows", hero.sprite, true);
 		Badges.validateClericUnlock();
 	}
 	

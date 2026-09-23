@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.stones;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -61,11 +63,11 @@ public class StoneOfFlock extends Runestone {
 				sheep.pos = i;
 				GameScene.add(sheep);
 				Dungeon.level.occupyCell(sheep);
-				CellEmitter.get(i).burst(Speck.factory(Speck.WOOL), 4);
+				GameplayBurst.burst(CellEmitter.get(i), Speck.factory(Speck.WOOL), 4, "wool_puff", i, false);
 			}
 		}
 
-		CellEmitter.get(cell).burst(Speck.factory(Speck.WOOL), 4);
+		GameplayBurst.burst(CellEmitter.get(cell), Speck.factory(Speck.WOOL), 4, "wool_puff", cell, false);
 		Sample.INSTANCE.play(Assets.Sounds.PUFF);
 		Sample.INSTANCE.play(Assets.Sounds.SHEEP);
 		

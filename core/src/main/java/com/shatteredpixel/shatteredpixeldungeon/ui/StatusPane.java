@@ -45,7 +45,7 @@ import com.watabou.noosa.ui.Component;
 import com.watabou.utils.ColorMath;
 import com.watabou.utils.GameMath;
 
-public class StatusPane extends Component implements RenderedStatus {
+public class StatusPane extends Component implements GameplayStatus {
 
 	private NinePatch bg;
 	private Image avatar;
@@ -76,20 +76,14 @@ public class StatusPane extends Component implements RenderedStatus {
 	private CircleArc counter;
 
 	@Override
-	public java.util.Map<String,Object> renderedStatus() {
-		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
-		java.util.Map<String,Object> progress=RenderedAppearance.arc(counter),portrait=RenderedAppearance.image(avatar);
-		if(!progress.isEmpty())result.put("turn_progress",progress);
-		if(!portrait.isEmpty())result.put("hero_portrait",portrait);
-		return result;
+	public java.util.Map<String,Object> gameplayStatus() {
+		java.util.Map<String,Object> progress=RenderedAppearance.arc(counter);
+		if(progress.isEmpty())return java.util.Collections.emptyMap();
+		return java.util.Collections.singletonMap("turn_progress",
+				java.util.Collections.singletonMap("sweep",progress.get("sweep")));
 	}
 
-	@Override
-	public java.util.Map<String,Object> intentStatus() {
-		java.util.Map<String,Object> progress=RenderedAppearance.arc(counter);
-		// Health and talents already have semantic fields. Their portrait blinking is presentation only.
-		return progress.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("turn_progress",progress);
-	}
+	@Override public Object gameplaySubject() { return Dungeon.hero; }
 
 	private boolean large;
 

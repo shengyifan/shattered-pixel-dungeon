@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop.store;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.Identifiers;
@@ -32,7 +33,7 @@ import java.util.UUID;
  * The caller must hold the profile's exclusive process lock for this store's entire lifetime.
  */
 public final class AuditStore implements AutoCloseable {
-    public static final int SCHEMA_VERSION = 10;
+    public static final int SCHEMA_VERSION = 11;
     private final Path publicPath;
     private final Path internalPath;
     private Connection writer;
@@ -103,7 +104,7 @@ public final class AuditStore implements AutoCloseable {
                 throw new AuditException("AUDIT_PAIR_MISMATCH", "The audit database identities differ", null);
         } catch (AuditException error) { throw error; }
         catch (Exception error) {
-            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 7 requires an intact schema-10 audit pair; use a new profile", error);
+            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 8 requires an intact schema-11 audit pair; use a new profile", error);
         }
     }
 
@@ -118,7 +119,7 @@ public final class AuditStore implements AutoCloseable {
                 if ("profile_id".equals(rows.getString(1))) profile = rows.getString(2);
             }
             if (!Integer.toString(SCHEMA_VERSION).equals(version) || profile == null || profile.isEmpty())
-                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 7 requires schema 10 and never migrates older audit databases; use a new profile", null);
+                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 8 requires schema 11 and never migrates older audit databases; use a new profile", null);
             // A version marker cannot authorize silently rebuilding missing audit tables.
             try (Statement shape = reader.createStatement()) {
                 for (String sql : new String[]{
@@ -224,8 +225,8 @@ public final class AuditStore implements AutoCloseable {
 
     public synchronized String beginSession(String bootId,String buildId,String cliVersion,int protocolVersion){
         if(activeSession!=null)throw new IllegalStateException("A session is already active");
-        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=7)
-            throw new IllegalArgumentException("Session build, CLI version and protocol 7 metadata are required");
+        if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=ControlRequest.PROTOCOL_VERSION)
+            throw new IllegalArgumentException("Session build, CLI version and protocol 8 metadata are required");
         String id=UUID.randomUUID().toString(),started=now();
         transaction(()->{
             for(String schema:schemas()){
@@ -795,7 +796,7 @@ public final class AuditStore implements AutoCloseable {
             for (String[] request : unfinished) {
                 String recovered=now();
                 String status = "EXECUTING".equals(request[2]) ? "UNKNOWN" : "NOT_EXECUTED";
-                String response = JsonCodec.encode(Values.map("v", 7, "id", request[1], "s", aliases.get(handleKey("scope",request[0])), "err", status));
+                String response = JsonCodec.encode(Values.map("v", ControlRequest.PROTOCOL_VERSION, "id", request[1], "s", aliases.get(handleKey("scope",request[0])), "err", status));
                 for (String schema : schemas()) {
                     try (PreparedStatement s = writer.prepareStatement("UPDATE " + schema + ".requests SET status=?,response_json=?,updated_at=?,presentation_status='complete' WHERE scope_id=? AND id=? AND status IN ('RECEIVED','EXECUTING')")) {
                         s.setString(1, status); s.setString(2, response); s.setString(3, recovered);

@@ -24,7 +24,7 @@ public final class ParticleMotionCue implements Emitter.DrawObserver {
         this.particleType = particleType;
     }
 
-    @Override public void afterDraw(Emitter source) {
+    @Override public void observeState(Emitter source) {
         if (!Game.observer.observesVisualCues() || Dungeon.level == null) return;
         for (Gizmo child : source.childrenSnapshot()) {
             if (!particleType.isInstance(child)) continue;

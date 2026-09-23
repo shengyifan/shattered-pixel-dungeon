@@ -285,54 +285,6 @@
       "count": 1
     },
     {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "floatingTextDrawn",
-      "kind": "PLUS",
-      "expression": "kind + \":\" + cell",
-      "reason": "Internal visual cue lookup key.",
-      "count": 1
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "floatingTextDrawn",
-      "kind": "PLUS",
-      "expression": "kind + \":\"",
-      "reason": "Internal visual cue lookup key.",
-      "count": 1
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "offer",
-      "kind": "PLUS",
-      "expression": "kind + \":\" + cell",
-      "reason": "Internal visual cue lookup key.",
-      "count": 1
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "offer",
-      "kind": "PLUS",
-      "expression": "kind + \":\"",
-      "reason": "Internal visual cue lookup key.",
-      "count": 1
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "finishDraw",
-      "kind": "PLUS",
-      "expression": "cue.kind + \":\" + cue.cell",
-      "reason": "Internal visual cue lookup key.",
-      "count": 2
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "finishDraw",
-      "kind": "PLUS",
-      "expression": "cue.kind + \":\"",
-      "reason": "Internal visual cue lookup key.",
-      "count": 2
-    },
-    {
       "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
       "method": "storeInBundle",
       "kind": "PLUS",
@@ -1197,14 +1149,6 @@
       "count": 2
     },
     {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
-      "method": "visibleTextFragment",
-      "kind": "NEW_CLASS",
-      "expression": "new StringBuilder()",
-      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
-      "count": 2
-    },
-    {
       "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/utils/DungeonSeed.java",
       "method": "convertFromCode",
       "kind": "METHOD_INVOCATION",
@@ -1309,102 +1253,6 @@
       "count": 1
     },
     {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "cue.kind + \":\" + cue.cell",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "cue.kind + \":\"",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\" + cue.opacity",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\"",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\"",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\" + cue.sourceCell + \":\"",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\" + cue.sourceCell",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
-      "method": "cueKey",
-      "kind": "PLUS",
-      "expression": "key + \":\"",
-      "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
-      "method": "visibleTextFragment",
-      "kind": "PLUS",
-      "expression": "previous.text + separator + word.text()",
-      "count": 1,
-      "reason": "Visible color-run composition; the complete fragment is registered as a displayed markup segment, and clipped fragments retain explicit unavailable provenance."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
-      "method": "visibleTextFragment",
-      "kind": "PLUS",
-      "expression": "previous.text + separator",
-      "count": 1,
-      "reason": "Visible color-run composition; the complete fragment is registered as a displayed markup segment, and clipped fragments retain explicit unavailable provenance."
-    },
-    {
       "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/MagicMissile.java",
       "method": "appearance",
       "kind": "PLUS",
@@ -1413,12 +1261,358 @@
       "reason": "Protocol rendering-kind identifier for the already selected native Speck drawing branch; not localized display text or a model identity."
     },
     {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/Icons.java",
+      "method": "get",
+      "kind": "METHOD_INVOCATION",
+      "expression": "type.name().toLowerCase(java.util.Locale.ROOT)",
+      "count": 1,
+      "reason": "Stable English icon symbol from the native enum and exact displayed atlas frame; not a translated display string."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayGlow.java",
+      "method": "selected",
+      "kind": "METHOD_INVOCATION",
+      "expression": "hint.substring(\"explosive_\".length())",
+      "reason": "Extracts cool/warm/hot from an explicitly selected native explosive glow hint already checked against the fixed allowed variants; an English semantic enum, not displayed prose.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "imageSymbol",
+      "kind": "PLUS",
+      "expression": "\"item_\" + name",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "imageSymbol",
+      "kind": "PLUS",
+      "expression": "classes[index] + \"_avatar\"",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "imageSymbol",
+      "kind": "PLUS",
+      "expression": "forms[index / 10] + \"_fist_portrait\"",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "imageSymbol",
+      "kind": "PLUS",
+      "expression": "forms[index / 14] + \"_elemental_portrait\"",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "buffSymbol",
+      "kind": "PLUS",
+      "expression": "\"buff_\" + name",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "hero",
+      "kind": "PLUS",
+      "expression": "\"hero_\" + name",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "itemBadge",
+      "kind": "PLUS",
+      "expression": "\"item_badge_\" + name",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "spell",
+      "kind": "PLUS",
+      "expression": "\"spell_\" + names[displayedIndex]",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "hitOrMiss",
+      "kind": "PLUS",
+      "expression": "\"hit_\" + hit[index - 36]",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "hitOrMiss",
+      "kind": "PLUS",
+      "expression": "\"armor_piercing_hit_\" + hit[index - 54]",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "hitOrMiss",
+      "kind": "PLUS",
+      "expression": "\"miss_\" + miss[index - 72]",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "constants",
+      "kind": "METHOD_INVOCATION",
+      "expression": "field.getName().toLowerCase(Locale.ROOT)",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "portraits",
+      "kind": "PLUS",
+      "expression": "field.getName().toLowerCase(Locale.ROOT) + \"_portrait\"",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "method": "portraits",
+      "kind": "METHOD_INVOCATION",
+      "expression": "field.getName().toLowerCase(Locale.ROOT)",
+      "reason": "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "textFragment",
+      "kind": "NEW_CLASS",
+      "expression": "new StringBuilder()",
+      "reason": "Tracked visible-fragment composition shared by ordinary UI and already-certified FOV floating anchors; preserves original text/source segments and explicit partial provenance without creating hidden arguments.",
+      "count": 2
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "textFragment",
+      "kind": "PLUS",
+      "expression": "previous.text + separator + word.text()",
+      "reason": "Tracked visible-fragment composition shared by ordinary UI and already-certified FOV floating anchors; preserves original text/source segments and explicit partial provenance without creating hidden arguments.",
+      "count": 1
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "textFragment",
+      "kind": "PLUS",
+      "expression": "previous.text + separator",
+      "reason": "Tracked visible-fragment composition shared by ordinary UI and already-certified FOV floating anchors; preserves original text/source segments and explicit partial provenance without creating hidden arguments.",
+      "count": 1
+    }
+  ],
+  "retired_entries": [
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "floatingTextDrawn",
+      "kind": "PLUS",
+      "expression": "kind + \":\" + cell",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1,
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "floatingTextDrawn",
+      "kind": "PLUS",
+      "expression": "kind + \":\"",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1,
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "offer",
+      "kind": "PLUS",
+      "expression": "kind + \":\" + cell",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1,
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "offer",
+      "kind": "PLUS",
+      "expression": "kind + \":\"",
+      "reason": "Internal visual cue lookup key.",
+      "count": 1,
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "finishDraw",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\" + cue.cell",
+      "reason": "Internal visual cue lookup key.",
+      "count": 2,
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "finishDraw",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\"",
+      "reason": "Internal visual cue lookup key.",
+      "count": 2,
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "visibleTextFragment",
+      "kind": "NEW_CLASS",
+      "expression": "new StringBuilder()",
+      "reason": "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.",
+      "count": 2,
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\" + cue.cell",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "cue.kind + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\" + cue.opacity",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\" + cue.sourceCell",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "method": "cueKey",
+      "kind": "PLUS",
+      "expression": "key + \":\"",
+      "count": 1,
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "visibleTextFragment",
+      "kind": "PLUS",
+      "expression": "previous.text + separator + word.text()",
+      "count": 1,
+      "reason": "Visible color-run composition; the complete fragment is registered as a displayed markup segment, and clipped fragments retain explicit unavailable provenance.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedTextBlock.java",
+      "method": "visibleTextFragment",
+      "kind": "PLUS",
+      "expression": "previous.text + separator",
+      "count": 1,
+      "reason": "Visible color-run composition; the complete fragment is registered as a displayed markup segment, and clipped fragments retain explicit unavailable provenance.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
+    },
+    {
       "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
       "method": "cueKey",
       "kind": "PLUS",
       "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\" + cue.opacity + \":\" + cue.appearance",
       "count": 1,
-      "reason": "Internal visual cue lookup key."
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
     },
     {
       "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
@@ -1426,15 +1620,9 @@
       "kind": "PLUS",
       "expression": "key + \":\" + cue.sourceCell + \":\" + cue.direction + \":\" + cue.color + \":\" + cue.opacity + \":\"",
       "count": 1,
-      "reason": "Internal visual cue lookup key."
-    },
-    {
-      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/Icons.java",
-      "method": "get",
-      "kind": "METHOD_INVOCATION",
-      "expression": "type.name().toLowerCase(java.util.Locale.ROOT)",
-      "count": 1,
-      "reason": "Stable English icon symbol from the native enum and exact displayed atlas frame; not a translated display string."
+      "reason": "Internal visual cue lookup key.",
+      "retired_in": "CLI.8.0.0",
+      "retirement_reason": "Renderer lookup-key construction was removed, or tracked visible-fragment composition moved to the shared textFragment implementation."
     }
   ]
 }

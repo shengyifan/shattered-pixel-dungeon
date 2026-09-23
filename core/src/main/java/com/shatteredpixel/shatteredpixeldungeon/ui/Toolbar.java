@@ -697,23 +697,21 @@ public class Toolbar extends Component {
 		}
 	};
 	
-	private static class Tool extends Button implements RenderedStatus {
+	private static class Tool extends Button implements GameplayStatus {
 		
 		private static final int BGCOLOR = 0x7B8073;
 		
 		private Image base;
 		private Image icon;
 
-		@Override public java.util.Map<String,Object> renderedStatus() {
-			java.util.Map<String,Object> appearance=RenderedAppearance.image(icon);
-			return appearance.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("icon",appearance);
+		private String gameplayIcon;
+
+		@Override public java.util.Map<String,Object> gameplayStatus() {
+			if(RenderedAppearance.image(icon).isEmpty())return java.util.Collections.emptyMap();
+			java.util.Map<String,Object> meaning=gameplayIcon==null?GameplayIcons.image(icon):java.util.Collections.singletonMap("symbol",gameplayIcon);
+			return java.util.Collections.singletonMap("icon",meaning);
 		}
 
-		@Override public java.util.Map<String,Object> intentStatus() {
-			java.util.Map<String,Object> appearance=RenderedAppearance.intentImage(icon,true,true);
-			return appearance.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("icon",appearance);
-		}
-		
 		public Tool( int x, int y, int width, int height ) {
 			super();
 
@@ -733,6 +731,7 @@ public class Toolbar extends Component {
 			add(icon);
 
 			icon.frame( x, y, width, height);
+			gameplayIcon=y==0&&width==16&&height==16?(x==176?"wait":x==192?"examine":x==160?"inventory":null):null;
 		}
 		
 		@Override
@@ -829,21 +828,18 @@ public class Toolbar extends Component {
 
 		private Image[] icons = new Image[4];
 		private Item[] items = new Item[4];
+		private boolean[] previewPlaceholders = new boolean[4];
 
-		@Override public java.util.Map<String,Object> renderedStatus() { return displayedPreviews(false); }
-		@Override public java.util.Map<String,Object> intentStatus() { return displayedPreviews(true); }
-
-		private java.util.Map<String,Object> displayedPreviews(boolean intent) {
+		@Override public java.util.Map<String,Object> gameplayStatus() {
 			java.util.List<Object> previews=new java.util.ArrayList<>();
-			for(Image image:icons) {
-				java.util.Map<String,Object> appearance=RenderedAppearance.image(image);
-				if(intent&&!appearance.isEmpty()) {
-					Object alpha=appearance.get("alpha");
-					appearance=RenderedAppearance.intentImage(image,true,false);
-					appearance.put("alpha",alpha); // a faint placeholder differs from an available preview
+			for(int i=0;i<icons.length;i++) {
+				Image image=icons[i];
+				java.util.Map<String,Object> meaning=GameplayIcons.image(image);
+				if(!meaning.isEmpty()) {
+					meaning=new java.util.LinkedHashMap<>(meaning);
+					if(previewPlaceholders!=null&&previewPlaceholders[i])meaning.put("placeholder",true);
 				}
-				// Null means this fixed visual position has no fully visible icon, never an invented item.
-				previews.add(appearance.isEmpty()?null:appearance);
+				previews.add(meaning.isEmpty()?null:meaning);
 			}
 			return java.util.Collections.singletonMap("preview_icons",previews);
 		}
@@ -892,6 +888,7 @@ public class Toolbar extends Component {
 				} else {
 					items[i] = Dungeon.quickslot.getItem(slot);
 				}
+				previewPlaceholders[i]=false;
 				if (icons[i] != null){
 					icons[i].killAndErase();
 					icons[i] = null;
@@ -899,7 +896,9 @@ public class Toolbar extends Component {
 				if (items[i] != null){
 					icons[i] = new ItemSprite(items[i]);
 					icons[i].scale.set(PixelScene.align(0.45f));
-					if (Dungeon.quickslot.isPlaceholder(slot)) icons[i].alpha(0.29f);
+					if (Dungeon.quickslot.isPlaceholder(slot)) {
+						icons[i].alpha(0.29f);previewPlaceholders[i]=true;
+					}
 					add(icons[i]);
 				}
 				slot += slotDir;

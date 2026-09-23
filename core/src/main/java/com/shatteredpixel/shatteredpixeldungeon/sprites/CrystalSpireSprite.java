@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
 import com.watabou.noosa.TextureFilm;
 
 public abstract class CrystalSpireSprite extends MobSprite {
+	private com.watabou.gltextures.SmartTexture spireAppearanceTexture;
 
 	{
 		perspectiveRaise = 7 / 16f; //7 pixels
@@ -41,6 +42,7 @@ public abstract class CrystalSpireSprite extends MobSprite {
 
 	public CrystalSpireSprite(){
 		texture( Assets.Sprites.CRYSTAL_SPIRE );
+		spireAppearanceTexture=texture;
 
 		TextureFilm frames = new TextureFilm( texture, 24, 41 );
 
@@ -88,14 +90,30 @@ public abstract class CrystalSpireSprite extends MobSprite {
 		updateIdle();
 	}
 
-	@Override public void draw() {
-		super.draw();
-		if (!com.watabou.noosa.Game.observer.observesVisualCues() || texture == null || buffer == null) return;
-		int cell = renderedCell();
-		java.util.Map<String,Object> image = com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance.image(this);
-		if (cell >= 0 && !image.isEmpty())
-			GameScene.observeCellVisualDraw(this, new com.watabou.noosa.VisualCue("crystal_spire_appearance", cell,
-					null, null, null, null, image));
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (!com.watabou.noosa.Game.observer.observesVisualCues() || texture == null) return;
+		com.watabou.noosa.VisualCue cue=renderedSpireCue(renderedCell());
+		if(cue!=null)GameScene.observeCellVisualDraw(this,cue);
+	}
+
+	/** The complete selected native frame includes its row; no spawner health is queried here. */
+	protected com.watabou.noosa.VisualCue renderedSpireCue(int cell) {
+		if(cell<0||!exists||!visible||!Float.isFinite(alpha())||alpha()<=0)return null;
+		int displayed=-1;
+		if(frame!=null&&texture!=null&&texture==spireAppearanceTexture&&texture.width>=24&&texture.height>=41) {
+			float left=frame.left*texture.width,top=frame.top*texture.height;
+			float right=frame.right*texture.width,bottom=frame.bottom*texture.height;
+			int columns=texture.width/24,rows=texture.height/41;
+			int column=Math.round(left/24f),row=Math.round(top/41f);
+			if(column>=0&&column<columns&&row>=0&&row<rows&&left==column*24&&top==row*41
+					&&right==(column+1)*24&&bottom==(row+1)*41)displayed=row*columns+column-texOffset();
+		}
+		java.util.Map<String,Object> state;
+		if (displayed >= 0 && displayed <= 4) state = java.util.Collections.singletonMap("stage",
+				new String[]{"intact", "cracked", "damaged", "heavily_damaged", "destroyed"}[displayed]);
+		else state = com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("stage", "crystal_damage_stage");
+		return new com.watabou.noosa.VisualCue("crystal_spire_state", cell,null,null,null,null,state);
 	}
 
 	boolean wasVisible = false;

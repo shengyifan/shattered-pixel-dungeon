@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.EyeSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.GhoulSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.NecromancerSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.SpectralNecromancerSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.DM300Sprite;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.MovieClip;
 import com.watabou.noosa.Visual;
@@ -61,6 +62,13 @@ class CombatVisualCueTest {
         posture(SpectralNecromancerSprite.class, SpectralNecromancerSprite.class, "charging", "spectral_necromancer_charging");
     }
 
+    @Test void dm300SuperchargedIdleRunAndAttackAreSelectedWithoutBackingBossFlags() throws Exception {
+        for(String animation:Arrays.asList("superchargedIdle","superchargedRun","superchargedAttack"))
+            posture(DM300Sprite.class,DM300Sprite.class,animation,"dm300_supercharged");
+        posture(DM300Sprite.class,DM300Sprite.class,"charge","dm300_charging");
+        assertTrue(GameplayVisualKinds.affectsIntent("dm300_supercharged"));
+    }
+
     private static void posture(Class<? extends CharSprite> concrete, Class<?> owner, String name, String expected) throws Exception {
         Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
         Field singleton = unsafeClass.getDeclaredField("theUnsafe"); singleton.setAccessible(true);
@@ -75,37 +83,12 @@ class CombatVisualCueTest {
         current.set(sprite, new MovieClip.Animation(1, true)); assertNull(cue.invoke(sprite));
     }
 
-    @Test void onlyAttachedNontransparentDrawnSourcesEnterTheCollector() throws Exception {
-        Camera previous = Camera.main;
-        Camera.main = new Camera(0, 0, 160, 160, 1);
-        try {
-            GameScene scene = new GameScene();
-            VisualCueCollector collector = new VisualCueCollector(scene);
-            set(collector, "collecting", true);
-            Visual source = new Visual(32, 32, 4, 4) { @Override public boolean isVisible() { return visible; } };
-            VisualCue cue = new VisualCue("test_draw", 22, null, "east");
-            collector.cellVisualDrawn(source, cue);
-            assertTrue(((Map<?,?>)get(collector, "offered")).isEmpty());
-            scene.add(source); source.am = 0;
-            collector.cellVisualDrawn(source, cue);
-            assertTrue(((Map<?,?>)get(collector, "offered")).isEmpty());
-            source.am = 1;
-            collector.cellVisualDrawn(source, cue);
-            assertEquals(Collections.singletonList(cue), new java.util.ArrayList<>(((Map<?,?>)get(collector, "offered")).values()));
-            assertNull(source.camera, "An observation must not fill camera caches");
-        } finally { Camera.main = previous; }
-    }
-
-    @Test void oneFullyVisibleContributorSufficesButEverySegmentOfAnArcMustFit() throws Exception {
-        Method permits = VisualCueCollector.class.getDeclaredMethod("permitsCueBounds", List.class,
-                VisualCueProjection.Viewport.class, List.class); permits.setAccessible(true);
-        VisualCueProjection.Viewport viewport = new VisualCueProjection.Viewport(0, 0, 100, 100, 0, 0, 1);
-        VisualCueProjection.Rect visible = new VisualCueProjection.Rect(20,20,30,30);
-        VisualCueProjection.Rect outside = new VisualCueProjection.Rect(95,20,105,30);
-        assertEquals(false, permits.invoke(null, Collections.singletonList(Arrays.asList(visible, outside)), viewport, Collections.emptyList()));
-        assertEquals(true, permits.invoke(null, Arrays.asList(Collections.singletonList(outside), Collections.singletonList(visible)), viewport, Collections.emptyList()));
-        assertEquals(false, permits.invoke(null, Collections.singletonList(Collections.singletonList(visible)), viewport,
-                Collections.singletonList(new VisualCueProjection.Rect(29,29,40,40))));
+    @Test void onlyAttachedNontransparentKnownSourcesEnterTheCollector() throws Exception {
+        GameplayVisualTraversalTest.Fixture f=new GameplayVisualTraversalTest.Fixture();
+        Visual source=new Visual(32,32,4,4);VisualCue cue=new VisualCue("test_draw",22,null,"east");
+        f.collector.cellVisualDrawn(source,cue);assertTrue(f.cues().isEmpty());
+        f.scene.add(source);source.am=0;f.collector.cellVisualDrawn(source,cue);assertTrue(f.cues().isEmpty());
+        source.am=1;f.collector.cellVisualDrawn(source,cue);assertEquals(Collections.singletonList(cue),f.cues());assertNull(source.camera);
     }
 
     @Test void motionRequiresConsecutiveEligibleDrawsAndCannotCrossPoolLifetimes() throws Exception {
@@ -117,9 +100,9 @@ class CombatVisualCueTest {
             VisualCueProjection.Viewport view=new VisualCueProjection.Viewport(0,0,160,160,0,0,1);
             assertNull(motionFrame(collector,source,view,Collections.emptyList()).direction);
             source.x+=2;assertEquals("east",motionFrame(collector,source,view,Collections.emptyList()).direction);
-            source.x+=2;assertNull(motionFrame(collector,source,view,Collections.singletonList(new VisualCueProjection.Rect(30,30,60,60))));
-            source.x+=2;assertNull(motionFrame(collector,source,view,Collections.emptyList()).direction,
-                    "A hidden prior position cannot disclose motion after reappearing");
+            source.x+=2;assertEquals("east",motionFrame(collector,source,view,Collections.singletonList(new VisualCueProjection.Rect(30,30,60,60))).direction);
+            source.x+=2;assertEquals("east",motionFrame(collector,source,view,Collections.emptyList()).direction,
+                    "Screen occlusion cannot erase known world motion");
             source.revive();source.x+=2;assertNull(motionFrame(collector,source,view,Collections.emptyList()).direction,
                     "Pool reuse is a new visual, not motion from the previous particle");
             Camera.main.scroll.x=16;
@@ -147,19 +130,19 @@ class CombatVisualCueTest {
             assertNull(motionFrame(collector,particle,view,Collections.emptyList()).direction,
                     "Reappearing must start a new eligible observation sequence");
             particle.x=46;
-            assertNull(motionFrame(collector,particle,view,Collections.emptyList()),
-                    "A footprint partly crossing into the hidden cell is conservatively omitted");
+            assertNull(motionFrame(collector,particle,view,Collections.emptyList()).direction,
+                    "The known fragment stays present, but hidden geometry must not seed a motion measurement");
         } finally {Camera.main=previous;}
     }
 
     @SuppressWarnings("unchecked")
     private static VisualCue motionFrame(VisualCueCollector collector,Visual source,VisualCueProjection.Viewport view,
                                          List<VisualCueProjection.Rect> blockers) throws Exception {
-        ((Map<?,?>)get(collector,"offered")).clear();((Map<?,?>)get(collector,"cueBounds")).clear();
+        ((Map<?,?>)get(collector,"offered")).clear();
         ((List<?>)get(collector,"movingObservations")).clear();
         collector.movingVisualDrawn(source,new VisualCue("motion",22));
-        Method finish=VisualCueCollector.class.getDeclaredMethod("finishMovingDraws",VisualCueProjection.Viewport.class,List.class);
-        finish.setAccessible(true);finish.invoke(collector,view,blockers);
+        Method finish=VisualCueCollector.class.getDeclaredMethod("finishMovingDraws");
+        finish.setAccessible(true);finish.invoke(collector);
         Map<String,VisualCue> offered=(Map<String,VisualCue>)get(collector,"offered");
         return offered.isEmpty()?null:offered.values().iterator().next();
     }

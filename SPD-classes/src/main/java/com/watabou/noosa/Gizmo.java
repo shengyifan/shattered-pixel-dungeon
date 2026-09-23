@@ -58,6 +58,10 @@ public class Gizmo {
 	
 	public void draw() {
 	}
+
+	/** Pure observation of an existing presentation source, independent of camera clipping. */
+	public void observeGameplayVisuals() {
+	}
 	
 	public void kill() {
 		Game.observer.onTextReleased(this);

@@ -294,12 +294,17 @@ public class BrokenSeal extends Item {
 
 		@Override
 		public String iconTextDisplay() {
+			return iconTextDisplayInfo().text;
+		}
+
+		@Override
+		public IconTextDisplay iconTextDisplayInfo() {
 			if (shielding() > 0){
-				return Integer.toString(shielding());
+				return new IconTextDisplay(Integer.toString(shielding()),"shield");
 			} else if (coolingDown() || cooldown < 0){
-				return Integer.toString(cooldown);
+				return new IconTextDisplay(Integer.toString(cooldown),"cooldown");
 			} else {
-				return "";
+				return new IconTextDisplay("",null);
 			}
 		}
 

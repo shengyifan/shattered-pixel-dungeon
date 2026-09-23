@@ -1,4 +1,4 @@
-"""Protocol 7 wire client and explicit test-only canonical assertion projection.
+"""Protocol 8 wire client and explicit test-only canonical assertion projection.
 
 The engine accepts only the compact protocol. Existing scenario assertions use
 canonical names locally; this module never sends their old envelopes or invents
@@ -32,11 +32,11 @@ def is_live_operation(op):
 
 
 def request(op, args=None, request_id=None, scope=None, version=None):
-    """Encode a scenario request as an actual flat protocol-7 request."""
+    """Encode a scenario request as an actual flat protocol-8 request."""
     params = dict(args or {})
     action = params.pop("action", None) if op == "action.execute" else None
     wire_op = TO_OP.get(action if action is not None else op, action or op)
-    wire = {"v": 7, "id": request_id, "op": wire_op}
+    wire = {"v": 8, "id": request_id, "op": wire_op}
     if scope is not None:
         wire["s"] = scope
     if action is not None or wire_op in OPS.keys() - QUERY_OPS:
@@ -163,7 +163,7 @@ def _map(value):
 
 
 def _item_defaults(item):
-    """Expand documented v7 defaults, retaining unknown versus inapplicable."""
+    """Expand documented v8 defaults, retaining unknown versus inapplicable."""
     for field, default in (("quantity", 1), ("equipped", False), ("available", True), ("type_known", True)):
         item.setdefault(field, default)
     item.setdefault("details_via", "ui.activate")
@@ -204,19 +204,18 @@ def state(value, scope=None, version=None):
     for node in observation.get("ui", {}).get("controls", []):
         node.setdefault("enabled", True)
         node.setdefault("dimmed", False)
-        # The global action list is authoritative and complete in protocol 7.
-        # Never invent a missing capability from node appearance or metadata.
-        node.pop("ops", None)
+        # Keep each node's current operation references alongside the complete
+        # global action list; never invent a capability from appearance.
     result["observation"] = observation
     return result
 
 
 def response(wire, op=None):
-    """Decode real v7 bytes into a test-only assertion view, never a wire log."""
-    if wire.get("v") != 7:
-        raise AssertionError({"expected_protocol_7": wire})
+    """Decode real v8 bytes into a test-only assertion view, never a wire log."""
+    if wire.get("v") != 8:
+        raise AssertionError({"expected_protocol_8": wire})
     wire = expand_structures(wire)
-    result = {"protocol_version": 7, "id": wire.get("id"), "scope_id": wire.get("s"),
+    result = {"protocol_version": 8, "id": wire.get("id"), "scope_id": wire.get("s"),
               "ok": "err" not in wire}
     if "st" in wire:
         result["status"] = wire["st"]
@@ -283,13 +282,13 @@ def pages(client, op, scope=None, after=0, limit=100):
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "client"))
-from spdctl_client import DecodeError, expand_structures as _expand_v7
+from spdctl_client import DecodeError, expand_structures as _expand_v8
 
 
 def expand_structures(value, scope=None, version=None):
-    """Expand one v7 frame, then restore only its own documented bindings."""
+    """Expand one v8 frame, then restore only its own documented bindings."""
     try:
-        result = _expand_v7(value, scope, version, bindings=True)
+        result = _expand_v8(value, scope, version, bindings=True)
     except DecodeError as error:
         raise AssertionError(str(error)) from error
 

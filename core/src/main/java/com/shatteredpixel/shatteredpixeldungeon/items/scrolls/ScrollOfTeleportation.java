@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -29,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
@@ -39,6 +42,8 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.BArray;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
@@ -284,7 +289,10 @@ public class ScrollOfTeleportation extends Scroll {
 		}
 
 		if (Dungeon.level.heroFOV[ch.pos] && ch != Dungeon.hero ) {
-			CellEmitter.get(ch.pos).start(Speck.factory(Speck.LIGHT), 0.2f, 3);
+			Emitter departure = CellEmitter.get(ch.pos);
+			departure.start(Speck.factory(Speck.LIGHT), 0.2f, 3);
+			if (Game.observer.observesVisualCues()) departure.observeDraw(
+					new CellParticleCue("teleport_departure", ch.pos, Speck.factory(Speck.LIGHT), Speck.class));
 		}
 
 		ch.move( pos, false );
@@ -299,7 +307,7 @@ public class ScrollOfTeleportation extends Scroll {
 		}
 
 		if (Dungeon.level.heroFOV[pos] || ch == Dungeon.hero ) {
-			ch.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.2f, 3);
+			GameplayBurst.startForCharacter(ch.sprite.emitter(), Speck.factory(Speck.LIGHT), 0.2f, 3, "arrival_light", ch.sprite, false);
 		} else {
 			if (Camera.main.followTarget() == ch.sprite){
 				//clear the follow in this case as the teleport target is going out of vision

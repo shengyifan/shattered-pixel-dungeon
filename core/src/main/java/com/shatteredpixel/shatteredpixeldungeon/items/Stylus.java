@@ -102,7 +102,8 @@ public class Stylus extends Item {
 		armor.inscribe();
 		
 		curUser.sprite.operate(curUser.pos);
-		curUser.sprite.centerEmitter().start(PurpleParticle.BURST, 0.05f, 10);
+		com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.startForCharacter(
+				curUser.sprite.centerEmitter(), PurpleParticle.BURST, 0.05f, 10, "purple_specks", curUser.sprite, false);
 		Enchanting.show(curUser, armor);
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 		

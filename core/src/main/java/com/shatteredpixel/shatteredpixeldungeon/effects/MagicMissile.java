@@ -310,8 +310,8 @@ public class MagicMissile extends Emitter {
 		}
 	}
 
-	@Override public void draw() {
-		super.draw();
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
 		if (observedAppearance == null || !Game.observer.observesVisualCues() || Dungeon.level == null) return;
 		for (com.watabou.noosa.Gizmo child : childrenSnapshot()) {
 			if (!(child instanceof Visual)) continue;

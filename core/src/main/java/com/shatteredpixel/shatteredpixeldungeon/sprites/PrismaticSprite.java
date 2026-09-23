@@ -55,9 +55,9 @@ public class PrismaticSprite extends MirrorSprite {
 	}
 
 	@Override
-	public void draw() {
-		super.draw();
-		if (Game.observer.observesVisualCues() && texture != null && buffer != null) {
+	public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (Game.observer.observesVisualCues() && texture != null) {
 			VisualCue cue = renderedPrismaticCue(renderedCell());
 			if (cue != null) GameScene.observeCellVisualDraw(this, cue);
 		}
@@ -67,7 +67,8 @@ public class PrismaticSprite extends MirrorSprite {
 	protected VisualCue renderedPrismaticCue(int cell) {
 		float opacity = alpha();
 		if (cell < 0 || !paused || !Float.isFinite(opacity) || opacity <= 0) return null;
-		return new VisualCue("prismatic_image_paused", cell, null, null, null, Math.min(1f, opacity));
+		return new VisualCue("prismatic_image_paused", cell, null, null, null, null,
+				java.util.Collections.singletonMap("fading", opacity < 1f));
 	}
 
 	@Override

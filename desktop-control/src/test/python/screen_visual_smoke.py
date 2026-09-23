@@ -6,7 +6,7 @@ from pathlib import Path
 import time
 import combat_visual_smoke as runner
 from fixture_smoke import freeze_runtime
-from protocol7 import pages
+from protocol8 import pages
 
 
 def events(client):
@@ -15,38 +15,27 @@ def events(client):
 
 def test_case(client, name):
     initial = client.last_state
+    observation = initial["observation"]
+    assert observation["hero"]["cell"] >= 0 and observation["map"]["cells"]
+    assert initial["actions"], "The fixture must still advertise real gameplay operations"
+    if name in {"screen-flash-below-modal", "screen-flash-above-modal"}:
+        assert observation["ui"]["modal"], observation["ui"]
+        assert any("Screen-effect occlusion fixture" in str(node.get("text", ""))
+                   for node in observation["ui"]["controls"]), observation["ui"]
     before = events(client)
-    values = [effect for event in before for effect in event["data"]["screen_effects"]]
-    expected_color = {"screen-flash-additive": 0xFF8040, "screen-flash-normal": 0x904020,
-                      "screen-flash-above-modal": 0xFFFFFF, "screen-flash-below-modal": 0xFFFFFF}.get(name)
-    if name == "screen-flash-below-modal":
-        assert not any(effect.get("color") == expected_color for effect in values), values
-    elif name == "screen-shake":
-        matches = [effect for effect in values if effect["kind"] == "camera_displacement"]
-        assert matches, before
-        assert all(any(value != 0 for value in effect["offset_pixels"]) for effect in matches), matches
-        assert all("visible_reference_cell" in effect for effect in matches), matches
-    else:
-        matches = [effect for effect in values if effect["kind"] == "screen_overlay" and effect.get("color") == expected_color]
-        assert matches, before
-        blend = "normal" if name == "screen-flash-normal" else "additive"
-        assert all(effect["blend"] == blend and 0 < effect["opacity"] <= 128 / 255 + 0.0001 for effect in matches), matches
-    for event in before:
-        data = event["data"]
-        assert data["format"] == "sampled_display_snapshot_v1" and data["sample_period_ms"] == 250, data
-        for effect in data["screen_effects"]:
-            assert not {"duration", "magnitude", "cause", "episode"} & set(effect), effect
+    assert before == [], "Decorative flash/shake event output is retired"
+    assert "screen_effects" not in observation["visual_cues"]
+    assert "metrics" not in observation["visual_cues"]
     time.sleep(1.25)
     final = client.state()
-    current = final["observation"]["visual_cues"]
-    assert current.get("screen_effects") == [] and current.get("screen_effects_at"), current
-    after = events(client)
-    by_sequence = {event["sequence"]: event for event in after}
-    assert all(by_sequence.get(event["sequence"]) == event for event in before), "Historical screen samples must not be rewritten"
-    if name != "screen-flash-below-modal":
-        assert any(event["data"]["screen_effects"] == [] for event in after), after
-    return {"native_scene": name, "screen_history": after, "ended_as_no_longer_observed": True,
-            "initial_revision": initial["state_version"], "final_revision": final["state_version"]}
+    assert final["state_version"] == initial["state_version"], "Decorative lifetime changed action binding"
+    assert final["observation"]["hero"]["cell"] == observation["hero"]["cell"]
+    assert final["observation"]["hero"]["hp"] == observation["hero"]["hp"]
+    assert not events(client), "Decorative animation leaked into protocol events"
+    assert "screen_effects" not in final["observation"]["visual_cues"]
+    return {"native_scene": name, "gameplay_frame_complete": True,
+            "decorative_screen_output_absent": True,
+            "action_binding_stable": True, "initial_revision": initial["state_version"]}
 
 
 def main():

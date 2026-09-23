@@ -138,7 +138,8 @@ public class ArcaneResin extends Item {
 
 					curUser.sprite.operate(curUser.pos);
 					Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
-					curUser.sprite.emitter().start( Speck.factory( Speck.UP ), 0.2f, 3 );
+					com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.startForCharacter(
+							curUser.sprite.emitter(), Speck.factory(Speck.UP), 0.2f, 3, "upward_specks", curUser.sprite, false);
 
 					curUser.spendAndNext(Actor.TICK);
 					GLog.p(Messages.get(ArcaneResin.class, "apply"));

@@ -75,9 +75,9 @@ public class SacrificialParticle extends PixelParticle.Shrinking {
 	}
 
 	@Override
-	public void draw() {
-		super.draw();
-		if (!Game.observer.observesVisualCues() || texture == null || buffer == null
+	public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (!Game.observer.observesVisualCues() || texture == null
 				|| !(parent instanceof BlobEmitter) || Dungeon.level == null) return;
 		String kind = ((BlobEmitter)parent).observedParticleMetric();
 		if (kind == null || !Float.isFinite(observedOriginX) || !Float.isFinite(observedOriginY)

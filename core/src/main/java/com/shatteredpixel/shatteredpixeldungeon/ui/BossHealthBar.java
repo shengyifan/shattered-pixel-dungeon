@@ -38,7 +38,7 @@ import com.watabou.noosa.particles.Emitter;
 import com.watabou.noosa.ui.Component;
 import com.watabou.utils.Callback;
 
-public class BossHealthBar extends Component implements RenderedStatus {
+public class BossHealthBar extends Component implements GameplayStatus {
 
 	private Image bar;
 
@@ -61,20 +61,15 @@ public class BossHealthBar extends Component implements RenderedStatus {
 
 	private boolean large;
 
-	@Override
-	public synchronized java.util.Map<String,Object> renderedStatus() {
-		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
-		java.util.Map<String,Object> icon=RenderedAppearance.image(skull);
-		if(!icon.isEmpty())result.put("boss_icon",icon);
-		// Red tint is already visible phase feedback; do not consult boss AI or blood.on.
-		return result;
-	}
+	private boolean displayedWarning;
 
 	@Override
-	public synchronized java.util.Map<String,Object> intentStatus() {
-		java.util.Map<String,Object> icon=RenderedAppearance.intentImage(skull,false,true);
-		return icon.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("boss_icon",icon);
+	public synchronized java.util.Map<String,Object> gameplayStatus() {
+		if(RenderedAppearance.image(skull).isEmpty())return java.util.Collections.emptyMap();
+		return java.util.Collections.singletonMap("shown",java.util.Collections.singletonMap("boss_warning",displayedWarning));
 	}
+
+	@Override public Object gameplaySubject() { return boss; }
 
 	public BossHealthBar() {
 		super();
@@ -217,6 +212,7 @@ public class BossHealthBar extends Component implements RenderedStatus {
 					bringToFront(blood);
 					blood.pos(skull);
 					blood.on = bleeding;
+					displayedWarning = bleeding;
 				}
 
 				if (shield <= 0){
@@ -249,6 +245,7 @@ public class BossHealthBar extends Component implements RenderedStatus {
 								instance.skull.destroy();
 							}
 							instance.skull = boss.sprite();
+							instance.displayedWarning = false;
 							instance.add(instance.skull);
 						}
 						if (instance.buffs != null){

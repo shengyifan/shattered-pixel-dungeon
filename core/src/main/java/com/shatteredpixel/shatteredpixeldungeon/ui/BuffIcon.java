@@ -36,10 +36,14 @@ public class BuffIcon extends Image {
 
 	private final boolean large;
 	private int displayedIndex;
+	private boolean displayedConservedDamageGradient;
 
-	public java.util.Map<String,Object> renderedIcon() {
-		return RenderedAppearance.icon(this, large ? "buff_large" : "buff_small", displayedIndex);
+	/** Meaning of the icon already selected by refresh, without calling Buff getters. */
+	public java.util.Map<String,Object> gameplayIcon() {
+		return GameplayIcons.buff(displayedIndex,this,displayedConservedDamageGradient);
 	}
+
+	public java.util.Map<String,Object> renderedIcon() { return gameplayIcon(); }
 
 	public BuffIcon(Buff buff, boolean large){
 		super( large ? Assets.Interfaces.BUFFS_LARGE : Assets.Interfaces.BUFFS_SMALL );
@@ -56,10 +60,12 @@ public class BuffIcon extends Image {
 	public void refresh(Buff buff){
 		refresh(buff.icon());
 		buff.tintIcon(this);
+		displayedConservedDamageGradient = buff instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Kinetic.ConservedDamage;
 	}
 
 	public void refresh(int icon){
 		displayedIndex = icon;
+		displayedConservedDamageGradient = false;
 		if (large){
 			if (largeFilm == null) largeFilm = new TextureFilm(texture, LRG_SIZE, LRG_SIZE);
 			frame(largeFilm.get(icon));

@@ -287,6 +287,9 @@ com.shatteredpixel.shatteredpixeldungeon.ui.CurrencyIndicator
 com.shatteredpixel.shatteredpixeldungeon.ui.CustomNoteButton
 com.shatteredpixel.shatteredpixeldungeon.ui.DangerIndicator
 com.shatteredpixel.shatteredpixeldungeon.ui.GameLog
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons$ItemBadges
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons$Items
 com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon
 com.shatteredpixel.shatteredpixeldungeon.ui.Icons
 com.shatteredpixel.shatteredpixeldungeon.ui.InventoryPane

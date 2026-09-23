@@ -163,6 +163,8 @@ public class MineEntrance extends CaveRoom {
 		public Tilemap create() {
 			Tilemap v = super.create();
 			v.map(mapSimpleImage(0, 1, TEX_WIDTH), 3);
+			if (com.watabou.noosa.Game.observer.observesVisualCues()) v.observeDraw(
+					com.shatteredpixel.shatteredpixeldungeon.effects.TerrainVisualCue.mineExit());
 			return v;
 		}
 

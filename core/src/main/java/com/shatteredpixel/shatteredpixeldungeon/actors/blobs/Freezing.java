@@ -132,7 +132,8 @@ public class Freezing extends Blob {
 		}
 		
 		if (Dungeon.level.heroFOV[cell]) {
-			CellEmitter.get( cell ).start( SnowParticle.FACTORY, 0.2f, 6 );
+			com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.start(
+					CellEmitter.get(cell), SnowParticle.FACTORY, 0.2f, 6, "freezing_snow", cell, false);
 			return true;
 		} else {
 			return false;

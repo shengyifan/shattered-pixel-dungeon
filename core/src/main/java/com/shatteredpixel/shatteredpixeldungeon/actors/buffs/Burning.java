@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Thief;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -43,6 +44,8 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
@@ -144,10 +147,16 @@ public class Burning extends Buff implements Hero.Doom {
 				Item item = ((Thief) target).item;
 
 				if (!item.unique && item instanceof Scroll) {
-					target.sprite.emitter().burst( ElmoParticle.FACTORY, 6 );
+					Emitter reaction = target.sprite.emitter();
+					reaction.burst( ElmoParticle.FACTORY, 6 );
+					if (Game.observer.observesVisualCues()) reaction.observeDraw(
+							CellParticleCue.forCharacter("carried_item_reaction", target.sprite, ElmoParticle.FACTORY, ElmoParticle.class));
 					((Thief)target).item = null;
 				} else if (item instanceof MysteryMeat) {
-					target.sprite.emitter().burst( ElmoParticle.FACTORY, 6 );
+					Emitter reaction = target.sprite.emitter();
+					reaction.burst( ElmoParticle.FACTORY, 6 );
+					if (Game.observer.observesVisualCues()) reaction.observeDraw(
+							CellParticleCue.forCharacter("carried_item_reaction", target.sprite, ElmoParticle.FACTORY, ElmoParticle.class));
 					((Thief)target).item = new ChargrilledMeat();
 				}
 

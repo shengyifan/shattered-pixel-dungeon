@@ -92,7 +92,8 @@ public class KingsCrown extends Item {
 		detach(hero.belongings.backpack);
 		Catalog.countUse( getClass() );
 
-		hero.sprite.emitter().burst( Speck.factory( Speck.CROWN), 12 );
+		com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.burstForCharacter(
+				hero.sprite.emitter(), Speck.factory(Speck.CROWN), 12, "crown_specks", hero.sprite, false);
 		hero.spend(Actor.TICK);
 		hero.busy();
 

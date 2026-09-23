@@ -32,6 +32,40 @@ public class MimicSprite extends MobSprite {
 
 	protected Animation hiding;
 
+	private transient Object gameplayMotionMap,gameplayMotionParent;
+	private transient com.watabou.utils.RectF gameplayPreviousFrame;
+	private transient boolean gameplayMotionObserved;
+
+	private void resetGameplayMotion() {
+		gameplayMotionMap=gameplayMotionParent=null;gameplayPreviousFrame=null;gameplayMotionObserved=false;
+	}
+
+	@Override public void revive() { super.revive();resetGameplayMotion(); }
+
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if(!com.watabou.noosa.Game.observer.observesVisualCues())return;
+		com.watabou.noosa.VisualCue cue=gameplayContainerCue();
+		if(cue!=null)com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,cue);
+	}
+
+	/** Recognizes observed lid motion only; an indistinguishable static disguise has no extra marker. */
+	public com.watabou.noosa.VisualCue gameplayContainerCue() {
+		com.shatteredpixel.shatteredpixeldungeon.levels.Level level=com.shatteredpixel.shatteredpixeldungeon.Dungeon.level;
+		int cell=renderedCell();com.watabou.utils.RectF current=frame();
+		if(!exists||!visible||!Float.isFinite(alpha())||alpha()<=0||parent==null||level==null||cell<0
+				||level.heroFOV==null||cell>=level.heroFOV.length||!level.heroFOV[cell]
+				||hiding==null||curAnim!=hiding||current==null) {
+			resetGameplayMotion();return null;
+		}
+		if(gameplayMotionMap!=level||gameplayMotionParent!=parent)resetGameplayMotion();
+		if(gameplayPreviousFrame!=null&&(current.left!=gameplayPreviousFrame.left||current.top!=gameplayPreviousFrame.top
+				||current.right!=gameplayPreviousFrame.right||current.bottom!=gameplayPreviousFrame.bottom))gameplayMotionObserved=true;
+		gameplayPreviousFrame=new com.watabou.utils.RectF(current.left,current.top,current.right,current.bottom);
+		gameplayMotionMap=level;gameplayMotionParent=parent;
+		return gameplayMotionObserved?new com.watabou.noosa.VisualCue("animated_container",cell):null;
+	}
+
 	{
 		//adjust shadow slightly to account for 1 empty bottom pixel (used for border while hiding)
 		perspectiveRaise    = 5 / 16f; //5 pixels
@@ -75,6 +109,7 @@ public class MimicSprite extends MobSprite {
 	
 	@Override
 	public void linkVisuals(Char ch) {
+		resetGameplayMotion();
 		super.linkVisuals(ch);
 		if (ch.alignment == Char.Alignment.NEUTRAL) {
 			hideMimic(ch);

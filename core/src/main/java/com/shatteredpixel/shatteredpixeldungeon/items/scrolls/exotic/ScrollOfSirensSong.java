@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -81,14 +83,14 @@ public class ScrollOfSirensSong extends ExoticScroll {
 
 			} else {
 
-				curUser.sprite.centerEmitter().start( Speck.factory( Speck.HEART ), 0.2f, 5 );
+				GameplayBurst.startForCharacter(curUser.sprite.centerEmitter(), Speck.factory(Speck.HEART), 0.2f, 5, "heart_specks", curUser.sprite, false);
 				Sample.INSTANCE.play( Assets.Sounds.CHARMS );
 				Sample.INSTANCE.playDelayed( Assets.Sounds.LULLABY, 0.1f );
 
 				for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
 					if (Dungeon.level.heroFOV[mob.pos] && mob != target && mob.alignment != Char.Alignment.ALLY) {
 						Buff.affect( mob, Charm.class, Charm.DURATION ).object = curUser.id();
-						mob.sprite.centerEmitter().start( Speck.factory( Speck.HEART ), 0.2f, 5 );
+						GameplayBurst.startForCharacter(mob.sprite.centerEmitter(), Speck.factory(Speck.HEART), 0.2f, 5, "heart_specks", mob.sprite, false);
 					}
 				}
 
@@ -100,7 +102,7 @@ public class ScrollOfSirensSong extends ExoticScroll {
 						Buff.affect( target, Charm.class, Charm.DURATION ).object = curUser.id();
 
 					}
-					target.sprite.centerEmitter().burst( Speck.factory( Speck.HEART ), 10 );
+					GameplayBurst.burstForCharacter(target.sprite.centerEmitter(), Speck.factory(Speck.HEART), 10, "heart_specks", target.sprite, false);
 				} else {
 					GLog.w(Messages.get(ScrollOfSirensSong.class, "no_target"));
 				}

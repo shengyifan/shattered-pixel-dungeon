@@ -27,19 +27,25 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.gltextures.SmartTexture;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.VisualCue;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.tweeners.AlphaTweener;
 
 public class WardSprite extends MobSprite {
 
 	private Animation tierIdles[] = new Animation[7];
+	private SmartTexture wardAppearanceTexture;
+	private float selectedChargeBrightness = 1;
 
 	public WardSprite(){
 		super();
 
 		texture(Assets.Sprites.WARDS);
+		wardAppearanceTexture = texture;
 
 		tierIdles[1] = new Animation( 1, true );
 		tierIdles[1].frames(texture.uvRect(0, 0, 9, 10));
@@ -98,12 +104,53 @@ public class WardSprite extends MobSprite {
 	@Override
 	public void resetColor() {
 		super.resetColor();
+		selectedChargeBrightness = 1;
 		if (ch instanceof WandOfWarding.Ward){
 			WandOfWarding.Ward ward = (WandOfWarding.Ward) ch;
 			if (ward.tier <= 3){
-				brightness(Math.max(0.2f, 1f - (ward.totalZaps / (float)(2*ward.tier-1))));
+				selectedChargeBrightness = Math.max(0.2f, 1f - (ward.totalZaps / (float)(2*ward.tier-1)));
+				brightness(selectedChargeBrightness);
 			}
 		}
+	}
+
+	@Override
+	public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (!Game.observer.observesVisualCues()) return;
+		VisualCue cue = renderedWardCue(renderedCell());
+		if (cue != null) GameScene.observeCellVisualDraw(this, cue);
+	}
+
+	@Override
+	protected boolean gameplayTintOwned() { return true; }
+
+	/** Current native form and its selected brightness, without consulting a Ward or remaining shots. */
+	protected VisualCue renderedWardCue(int cell) {
+		if (cell < 0 || !exists || !visible || !Float.isFinite(alpha()) || alpha() <= 0) return null;
+		int tier = -1;
+		if (texture != null && texture == wardAppearanceTexture && frame != null) {
+			for (int candidate = 1; candidate < tierIdles.length; candidate++) {
+				com.watabou.utils.RectF known = tierIdles[candidate].frames[0];
+				if (frame.left == known.left && frame.top == known.top
+						&& frame.right == known.right && frame.bottom == known.bottom) tier = candidate;
+			}
+		}
+		java.util.Map<String,Object> state = new java.util.LinkedHashMap<>();
+		if (tier < 0) {
+			state.putAll(com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("tier", "ward_form"));
+		} else {
+			state.put("tier", tier);
+			if (tier <= 3) {
+				if (Float.isFinite(selectedChargeBrightness) && selectedChargeBrightness >= 0.2f && selectedChargeBrightness <= 1) {
+					state.put("charge", java.util.Map.of("fraction",
+							com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.displayedChannel(selectedChargeBrightness), "basis", "displayed_brightness"));
+				} else {
+					state.putAll(com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("charge", "ward_charge"));
+				}
+			}
+		}
+		return new VisualCue("ward_state", cell, null, null, null, null, state);
 	}
 
 	public void linkVisuals(Char ch ){

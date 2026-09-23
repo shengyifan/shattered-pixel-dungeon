@@ -142,6 +142,8 @@ public class AmbitiousImpRoom extends SpecialRoom {
 		public Tilemap create() {
 			Tilemap v = super.create();
 			v.map(mapSimpleImage(0, 0, TEX_WIDTH), 5);
+			if (Game.observer.observesVisualCues()) v.observeDraw(
+					com.shatteredpixel.shatteredpixeldungeon.effects.TerrainVisualCue.vaultEntrance());
 			return v;
 		}
 
@@ -195,6 +197,8 @@ public class AmbitiousImpRoom extends SpecialRoom {
 			vis.x = tileX*SIZE;
 			vis.y = tileY*SIZE;
 			vis.map(mapSimpleImage(5, 1, TEX_WIDTH), 3);
+			if (Game.observer.observesVisualCues()) vis.observeDraw(
+					com.shatteredpixel.shatteredpixeldungeon.effects.TerrainVisualCue.vaultBarrier());
 			return vis;
 		}
 

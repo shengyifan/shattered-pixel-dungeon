@@ -60,7 +60,7 @@ public final class EnglishCorpusProbe {
     @SuppressWarnings("unchecked")
     public void inspect(Map<String, Object> response, Map<String, Object> sample) {
         frames++;
-        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 7;
+        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 8;
         if (compactFrame) response=(Map<String,Object>)CompactProtocol.expandStructures(response);
         compactDiagnostics.clear();
         if (compactFrame) { compactFrames++; collectCompactDiagnostics(response, "/response"); }
@@ -225,7 +225,7 @@ public final class EnglishCorpusProbe {
                 ((Number) value.get("frequency")).longValue()).reversed());
         return map("test_only", true, "source", "closed_fixture_public_responses_only",
                 "projection_context", "complete_public_ui_and_leaf_node_metadata",
-                "frames", frames, "protocol_7_frames", compactFrames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
+                "frames", frames, "protocol_8_frames", compactFrames, "string_occurrences", strings, "unique_translation_inputs", cache.size(),
                 "translated_occurrences", translated, "unavailable_occurrences", failures,
                 "partial_occurrences", partials, "unique_issues", result.size(),
                 "issue_occurrences_by_scene", sceneOccurrences, "issues", result,

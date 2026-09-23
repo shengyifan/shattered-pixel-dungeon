@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
@@ -84,7 +86,7 @@ public class Ankh extends Item {
 
 
 				Sample.INSTANCE.play( Assets.Sounds.DRINK );
-				CellEmitter.get(hero.pos).start(Speck.factory(Speck.LIGHT), 0.2f, 3);
+				GameplayBurst.start(CellEmitter.get(hero.pos), Speck.factory(Speck.LIGHT), 0.2f, 3, "light_specks", hero.pos, false);
 				hero.sprite.operate( hero.pos );
 			}
 		}

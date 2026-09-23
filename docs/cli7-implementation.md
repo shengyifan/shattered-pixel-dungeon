@@ -8,7 +8,7 @@ rejected, without migration or changes to their original history. The game remai
 3.3.8. Generated request counter suffixes remain decimal.
 
 Protocol 7 introduced same-frame action sharing and common-field record
-templates. CLI.7.0.1 adds [rendered combat evidence and reliability fixes](cli-combat-visuals.md)
+templates. CLI.7.0.1 adds [rendered combat evidence and reliability fixes](cli7-rendered-combat-visuals.md)
 without changing those encoding boundaries. There are no deltas, previous-frame dictionaries, shortened hero/gesture
 notations, new map encodings, inventory capacity summaries or GUI semantic pruning.
 The exact source transport remains separate from client expansion.

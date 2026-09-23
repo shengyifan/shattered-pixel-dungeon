@@ -75,7 +75,11 @@ public class GnollRockfallTrap extends RockfallTrap {
 		for (int cell : rockCells){
 
 			if (Dungeon.level.heroFOV[ cell ]){
-				CellEmitter.get( cell - Dungeon.level.width() ).start(Speck.factory(Speck.ROCK), 0.07f, 10);
+				com.watabou.noosa.particles.Emitter rocks = CellEmitter.get(cell - Dungeon.level.width());
+				rocks.start(Speck.factory(Speck.ROCK), 0.07f, 10);
+				if (com.watabou.noosa.Game.observer.observesVisualCues()) rocks.observeDraw(
+						new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("rockfall_impact", cell,
+								Speck.factory(Speck.ROCK), Speck.class));
 				seen = true;
 			}
 

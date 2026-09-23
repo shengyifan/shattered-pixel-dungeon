@@ -82,15 +82,15 @@ public class SpellSprite extends Image {
 		passed = 0;
 	}
 
-	@Override public void draw() {
-		super.draw();
-		if (!Game.observer.observesVisualCues() || texture == null || buffer == null || visualIndex < 0
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (!Game.observer.observesVisualCues() || texture == null || visualIndex < 0
 				|| target == null || target.sprite == null) return;
 		int cell = target.sprite.renderedCell();
 		if (cell >= 0 && Math.abs(x-(target.sprite.center().x-SIZE/2f)) <= 2f
 				&& Math.abs(y-(target.sprite.y-SIZE)) <= 2f)
 			GameScene.observeCellVisualDraw(this, new com.watabou.noosa.VisualCue("spell_icon", cell, null, null,
-					displayedTextColor(), null, java.util.Map.of("atlas", "spell_icons", "frame", visualIndex)));
+					null, null, com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons.spell(visualIndex)));
 	}
 	
 	@Override

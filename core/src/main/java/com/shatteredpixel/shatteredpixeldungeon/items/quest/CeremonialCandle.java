@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.quest;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -111,10 +113,11 @@ public class CeremonialCandle extends Item {
 	@Override
 	public Emitter emitter() {
 		if (aflame) {
-			Emitter emitter = new Emitter();
+			com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter emitter = new com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter();
 			emitter.pos(6, 0);
 			emitter.fillTarget = false;
 			emitter.pour(ElmoParticle.FACTORY, 0.25f);
+			emitter.observeLitCandle();
 			return emitter;
 		}
 		return super.emitter();
@@ -193,7 +196,7 @@ public class CeremonialCandle extends Item {
 			}
 
 			for (int i : PathFinder.NEIGHBOURS9){
-				CellEmitter.get(ritualPos+i).burst(ElmoParticle.FACTORY, 10);
+				GameplayBurst.burst(CellEmitter.get(ritualPos+i), ElmoParticle.FACTORY, 10, "green_flame_burst", ritualPos+i, false);
 			}
 			Sample.INSTANCE.play(Assets.Sounds.BURNING);
 		}

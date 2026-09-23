@@ -70,7 +70,8 @@ public class HolyBomb extends Bomb {
 		
 		for (Char ch : affected){
 			if (ch.properties().contains(Char.Property.UNDEAD) || ch.properties().contains(Char.Property.DEMONIC)){
-				ch.sprite.emitter().start( ShadowParticle.UP, 0.05f, 10 );
+				com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.startForCharacter(
+						ch.sprite.emitter(), ShadowParticle.UP, 0.05f, 10, "holy_shadow_burst", ch.sprite, false);
 				
 				//bomb deals an additional 50% damage to unholy enemies
 				int damage = Math.round(Random.NormalIntRange( Dungeon.scalingDepth()+4, 12 + 3*Dungeon.scalingDepth() ) * 0.5f);

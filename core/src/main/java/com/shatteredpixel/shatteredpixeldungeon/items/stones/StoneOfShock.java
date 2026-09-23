@@ -64,11 +64,13 @@ public class StoneOfShock extends Runestone {
 			}
 		}
 		
-		CellEmitter.center( cell ).burst( SparkParticle.FACTORY, 3 );
+		com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.burst(
+				CellEmitter.center(cell), SparkParticle.FACTORY, 3, "shock_sparks", cell, false);
 		
 		if (hits > 0) {
 			curUser.sprite.parent.addToFront( new Lightning( arcs, null ) );
-			curUser.sprite.centerEmitter().burst(EnergyParticle.FACTORY, 10);
+			com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.burstForCharacter(
+					curUser.sprite.centerEmitter(), EnergyParticle.FACTORY, 10, "shock_energy", curUser.sprite, false);
 			Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );
 			
 			curUser.belongings.charge(1f + hits);

@@ -89,7 +89,8 @@ public class Recycle extends InventorySpell {
 			Dungeon.level.drop(result, curUser.pos).sprite.drop();
 		}
 		Transmuting.show(curUser, item, result);
-		curUser.sprite.emitter().start(Speck.factory(Speck.CHANGE), 0.2f, 10);
+		com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.startForCharacter(
+				curUser.sprite.emitter(), Speck.factory(Speck.CHANGE), 0.2f, 10, "change_specks", curUser.sprite, false);
 	}
 	
 	@Override

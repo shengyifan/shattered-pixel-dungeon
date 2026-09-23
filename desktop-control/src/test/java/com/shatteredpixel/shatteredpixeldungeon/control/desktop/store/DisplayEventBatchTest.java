@@ -30,18 +30,19 @@ public class DisplayEventBatchTest {
         Path root = temporary.newFolder("display-batch-fixture").toPath();
         String privateText = "PRIVATE_DISPLAY_SENTINEL: \"original\"\\line\n";
         try (AuditStore store = new AuditStore(root)) {
-            String session = store.beginSession("batch-boot", "batch-fixture", "CLI.7.0.1", 7);
+            String session = store.beginSession("batch-boot", "batch-fixture", "CLI.8.0.0", 8);
             long after = Long.parseLong(scalar(store.publicDatabase(), "SELECT max(sequence) FROM events"));
             BigInteger before = generation(store.publicDatabase());
             assertDurability(store);
-            String[] kinds = {"game.log", "game.floating_text", "game.visual", "game.visual_metrics",
-                    "game.banner", "game.screen", "game.visual"};
+            String[] kinds = {"game.log", "game.floating_text", "game.visual", "game.visual",
+                    "game.banner", "game.floating_text", "game.visual"};
             List<AuditStore.DisplayEventWrite> batch = new ArrayList<>();
             List<String> expectedJson = new ArrayList<>();
             List<Map<String, Object>> originals = new ArrayList<>();
             for (int i = 0; i < kinds.length; i++) {
                 Map<String, Object> data = Values.map("text", "Visible \"text\"\\line\n", "number", i,
-                        "nested", Values.list(Values.map("cell", 17, "color", 0xff8800), null, false));
+                        "nested", Values.list(Values.map("cell", 17, "count", 2,
+                                "flags", Values.list("warning")), null, false));
                 if (i == 4) data.put("presentation", Values.map("status", "partial",
                         "diagnostics", Values.list(Values.map("path", "text", "reason", "fixture diagnostic"))));
                 Map<String, Object> original = i == 0 || i == 1 || i == 4
@@ -92,7 +93,8 @@ public class DisplayEventBatchTest {
 
     @Test public void constructionFreezesNestedPublicAndOriginalData() throws Exception {
         try (AuditStore store = new AuditStore(temporary.newFolder("immutable-display-fixture").toPath())) {
-            Map<String, Object> nested = Values.map("color", 123, "cell", 42);
+            Map<String, Object> nested = Values.map("count", 3, "cell", 42,
+                    "flags", Values.list("warning"));
             List<Object> positions = new ArrayList<>(Arrays.asList(nested, null));
             Map<String, Object> data = Values.map("text", "Before", "positions", positions);
             Map<String, Object> originalNested = Values.map("text", "PRIVATE_BEFORE");

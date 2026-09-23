@@ -25,7 +25,7 @@ personal saves and private gameplay audit data were not used.
 ## Implementation
 
 The public boundary and field details are documented in
-[rendered combat observations](cli-combat-visuals.md). The main changes are:
+[rendered combat observations](cli7-rendered-combat-visuals.md). The main changes are:
 
 - Charge/downed/facing evidence, summons, delayed rocks, pylon electricity and
   flow, beams/projectiles/chains, trap and arena/beacon markers, loot flares,

@@ -42,6 +42,11 @@ public interface RuntimeObserver {
         onVisualCues(runId,levelIdentity,depth,cues,true);
     }
     default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues, boolean presentationReady) {}
+    /** Private source occurrence identity for event onsets; it must never be serialized into public observations. */
+    default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues,
+                              boolean presentationReady, Object occurrences) {
+        onVisualCues(runId, levelIdentity, depth, cues, presentationReady);
+    }
     /** Quantitative display noise from the same completed draw; separate from discrete visual cues. */
     default void onVisualMetrics(String runId,Object levelIdentity,int depth,List<VisualMetric> metrics,java.util.Set<Object> visibleEpisodes) {}
     /** Existing emitter children have finished drawing; its opaque episode is only a sampling key. */

@@ -396,7 +396,8 @@ public class UnstableSpellbook extends Artifact {
 						hero.busy();
 						hero.spend( 2f );
 						Sample.INSTANCE.play(Assets.Sounds.BURNING);
-						hero.sprite.emitter().burst( ElmoParticle.FACTORY, 12 );
+						com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.burstForCharacter(
+								hero.sprite.emitter(), ElmoParticle.FACTORY, 12, "green_flame_burst", hero.sprite, false);
 
 						scrolls.remove(i);
 						item.detach(hero.belongings.backpack);

@@ -30,7 +30,7 @@ public class CompactProtocolV5Test {
         assertEquals(Arrays.asList("external"),object(output.get("text_origins")).get("item_info.ht"));
         assertEquals(Arrays.asList(map("field","sub_name","code","display_warning")),object(output.get("pres")).get("diag"));
         for(String field:Arrays.asList("schema","raw","reply","original_payload"))assertSame(input.get(field),output.get(field));
-        assertEquals(7,CompactProtocol.failure("q","s","FAILURE").get("v"));
+        assertEquals(8,CompactProtocol.failure("q","s","FAILURE").get("v"));
         assertEquals(WireNames.fields(),CompactProtocol.info().get("aliases"));
     }
 
@@ -187,7 +187,7 @@ public class CompactProtocolV5Test {
         assertEquals(9,ids(object(CompactProtocol.project(input,false,true))).size());
     }
 
-    @Test public void displayedItemFieldsAddBindingsWithoutDroppingTextOriginsOrChildIdentity() {
+    @Test public void wireProjectionRetainsProtectedChildrenWithoutSynthesizingOldDisplayFields() {
         Map<String,Object> status=map("id","status","parent","item","role","text","text","4/20");
         Map<String,Object> strength=map("id","strength","parent","item","role","text","text","14?","text_sources",map("text",map("kind","literal","origin","external","value","14?")),"text_diagnostics",map("text","display_warning"));
         Map<String,Object> item=map("id","item","role","button","label","Waterskin","text","4/20\n14?");
@@ -199,10 +199,9 @@ public class CompactProtocolV5Test {
         Map<String,Object> reply=CompactProtocol.success("q","s","completed",input,true,false),play=object(reply.get("data"));
         assertEquals(Arrays.asList("item","status","strength"),ids(play));Map<String,Object> projected=node(play,"item");
         assertEquals("inventory:1",projected.get("loc"));assertEquals("Waterskin",projected.get("label"));assertEquals("4/20\n14?",projected.get("text"));
-        Map<String,Object> fields=object(projected.get("display"));assertEquals("4/20",fields.get("status"));assertEquals("14?",fields.get("extra"));
-        assertEquals(map("extra",Arrays.asList("external")),fields.get("text_origins"));
-        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[0].display.extra","code","display_warning"),
-                map("field","$.data.ui.nodes[2].text","code","display_warning")),object(reply.get("pres")).get("diag"));
+        assertFalse(projected.containsKey("display"));
+        assertEquals(map("text",Arrays.asList("external")),node(play,"strength").get("text_origins"));
+        assertEquals(Arrays.asList(map("field","$.data.ui.nodes[2].text","code","display_warning")),object(reply.get("pres")).get("diag"));
         assertEquals(Arrays.asList(map("op","click","gestures",Arrays.asList("click","long"))),projected.get("ops"));
         Map<String,Object> actions=object(CompactProtocol.project(map("ui",ui),false));assertEquals("Waterskin",node(actions,"item").get("label"));
         inventory.put("name","waterskin");assertEquals("Waterskin",node(object(CompactProtocol.project(input,false)),"item").get("label"));

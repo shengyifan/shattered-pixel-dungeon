@@ -39,7 +39,8 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance;
-import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RightClickMenu;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -131,7 +132,7 @@ public class WndClericSpells extends Window {
 
 	}
 
-	public class SpellButton extends IconButton implements RenderedStatus {
+	public class SpellButton extends IconButton implements GameplayStatus {
 
 		ClericSpell spell;
 		HolyTome tome;
@@ -139,10 +140,14 @@ public class WndClericSpells extends Window {
 
 		NinePatch bg;
 
+		private boolean displayedFreeCast;
+
 		@Override
-		public java.util.Map<String,Object> renderedStatus() {
-			java.util.Map<String,Object> appearance=RenderedAppearance.image(icon);
-			return appearance.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("spell_icon",appearance);
+		public java.util.Map<String,Object> gameplayStatus() {
+			java.util.Map<String,Object> symbol=GameplayIcons.image(icon);
+			if(symbol.isEmpty())return java.util.Collections.emptyMap();
+			java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+			result.put("spell_icon",symbol);result.put("free_cast",displayedFreeCast);return result;
 		}
 
 		public SpellButton(ClericSpell spell, HolyTome tome, boolean info){
@@ -156,6 +161,7 @@ public class WndClericSpells extends Window {
 				icon.alpha( 0.3f );
 			} else if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.hero) == 0){
 				icon.brightness(3);
+				displayedFreeCast=true;
 			}
 
 			bg = Chrome.get(Chrome.Type.TOAST);
@@ -165,18 +171,22 @@ public class WndClericSpells extends Window {
 		@Override
 		protected void onPointerDown() {
 			super.onPointerDown();
+			displayedFreeCast=false;
 			if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.hero) == 0){
 				icon.brightness(4);
+				displayedFreeCast=true;
 			}
 		}
 
 		@Override
 		protected void onPointerUp() {
 			super.onPointerUp();
+			displayedFreeCast=false;
 			if (!tome.canCast(Dungeon.hero, spell)){
 				icon.alpha( 0.3f );
 			} else if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.hero) == 0){
 				icon.brightness(3);
+				displayedFreeCast=true;
 			}
 		}
 

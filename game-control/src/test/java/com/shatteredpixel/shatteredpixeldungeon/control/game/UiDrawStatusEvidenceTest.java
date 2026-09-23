@@ -4,7 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
-import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus;
 import com.watabou.gltextures.SmartTexture;
 import com.watabou.noosa.*;
 import com.watabou.noosa.particles.Emitter;
@@ -29,83 +29,83 @@ class UiDrawStatusEvidenceTest {
     @Test void allConstructorsRequireACompletedCaptureBeforePublishingRenderedFields()throws Exception{
         StatusButton button=new StatusButton(false);scene.add(button);
         assertFalse(bridge.drawnIntentReady());
-        assertNoField(bridge.describeUi(),"sample_icon");
+        assertNoField(bridge.describeUi(),"sample_status");
         assertEquals("Visible choice",node(bridge.describeUi(),"button").get("label"));
         assertTrue(bridge.describeActions().stream().anyMatch(action->"ui.activate".equals(action.get("action"))));
         bridge.captureDrawnEvidence();
-        assertTrue(bridge.drawnIntentReady());assertTrue(node(bridge.describeUi(),"button").containsKey("sample_icon"));
+        assertTrue(bridge.drawnIntentReady());assertTrue(node(bridge.describeUi(),"button").containsKey("sample_status"));
         Game previous=Game.instance;
         try {
             Game instance=FloatingAppearanceTest.allocate(Game.class);FloatingAppearanceTest.field(instance,Game.class,"scene",scene);Game.instance=instance;
-            UiBridge defaultBridge=new UiBridge();assertNoField(defaultBridge.describeUi(),"sample_icon");
-            defaultBridge.captureDrawnEvidence();assertTrue(node(defaultBridge.describeUi(),"button").containsKey("sample_icon"));
+            UiBridge defaultBridge=new UiBridge();assertNoField(defaultBridge.describeUi(),"sample_status");
+            defaultBridge.captureDrawnEvidence();assertTrue(node(defaultBridge.describeUi(),"button").containsKey("sample_status"));
         } finally {Game.instance=previous;}
     }
 
-    @Test void nativeImageTintAndFrameStayAtTheDrawnSampleWhileLiveMeaningRequiresAnotherDraw(){
+    @Test void semanticSelectionStaysAtTheDrawnSampleWhileLiveMeaningRequiresAnotherDraw(){
         StatusButton button=new StatusButton(false);scene.add(button);bridge.captureDrawnEvidence();
-        Map<String,Object> frozen=node(bridge.frozenUi(),"button");Object before=frozen.get("sample_icon");
+        Map<String,Object> frozen=node(bridge.frozenUi(),"button");Object before=frozen.get("sample_status");
         String intent=bridge.intentSignature();
-        button.image.hardlight(0xFF0000);button.image.frame(new RectF(.25f,0,.5f,.25f));
-        assertEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));
+        button.selected=true;
+        assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
         assertFalse(bridge.drawnIntentReady());assertNotEquals(intent,bridge.intentSignature());
         assertEquals(0,button.clicks,"Neither capture nor readiness may invoke callbacks");
         bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
-        assertNotEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));
-        assertEquals(before,frozen.get("sample_icon"),"Earlier frozen observations remain independent");
+        assertNotEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
+        assertEquals(before,frozen.get("sample_status"),"Earlier frozen observations remain independent");
     }
 
-    @Test void passiveFrameAndOpacityUpdatesDoNotBlockIntentButStillNeedADrawToChangePixels(){
+    @Test void ordinaryFrameAndOpacityNeverChangePublicSemanticFieldsOrReadiness(){
         StatusButton button=new StatusButton(true);scene.add(button);bridge.captureDrawnEvidence();
-        Object before=node(bridge.frozenUi(),"button").get("sample_icon");String intent=bridge.intentSignature();
+        Object before=node(bridge.frozenUi(),"button").get("sample_status");String intent=bridge.intentSignature();
         button.image.alpha(.35f);button.image.frame(new RectF(.25f,0,.5f,.25f));
         assertTrue(bridge.drawnIntentReady());assertEquals(intent,bridge.intentSignature());
-        assertEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));
-        bridge.captureDrawnEvidence();assertNotEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));
+        assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
+        bridge.captureDrawnEvidence();assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
         button.selected=true;assertFalse(bridge.drawnIntentReady());
         assertNotEquals(intent,bridge.intentSignature(),"The explicit passive override still retains selection meaning");
         bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
     }
 
-    @Test void equalValuedChildReplacementAndDetachInvalidateTheOwnersOldRenderedRecord(){
+    @Test void decorativeChildReplacementDoesNotInvalidateEqualSemanticFactsAndMissingFactsDisappear(){
         StatusButton button=new StatusButton(false);scene.add(button);bridge.captureDrawnEvidence();
-        Object before=node(bridge.frozenUi(),"button").get("sample_icon");
+        Object before=node(bridge.frozenUi(),"button").get("sample_status");
         Image old=button.image;button.remove(old);button.image=image();button.add(button.image);
-        assertEquals(before,button.renderedStatus().get("sample_icon"),"The replacement intentionally has equal pixels");
-        assertNoField(bridge.describeUi(),"sample_icon");assertFalse(bridge.drawnIntentReady());
-        bridge.captureDrawnEvidence();assertEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));
-        button.remove(button.image);assertNoField(bridge.describeUi(),"sample_icon");
+        assertEquals(before,button.renderedStatus().get("sample_status"),"The replacement intentionally has equal pixels");
+        assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));assertTrue(bridge.drawnIntentReady());
+        bridge.captureDrawnEvidence();assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
+        button.remove(button.image);assertNoField(bridge.describeUi(),"sample_status");
         assertTrue(bridge.drawnIntentReady(),"An empty optional status cannot hold the render boundary");
-        button.add(button.image);assertNoField(bridge.describeUi(),"sample_icon");assertFalse(bridge.drawnIntentReady());
-        bridge.captureDrawnEvidence();assertTrue(node(bridge.describeUi(),"button").containsKey("sample_icon"));
+        button.add(button.image);assertNoField(bridge.describeUi(),"sample_status");assertFalse(bridge.drawnIntentReady());
+        bridge.captureDrawnEvidence();assertTrue(node(bridge.describeUi(),"button").containsKey("sample_status"));
     }
 
-    @Test void recycledVisualLifetimeCannotBorrowTheSameInstancesOldPixels(){
+    @Test void decorativeVisualLifetimeDoesNotExpireSemanticInput(){
         StatusButton button=new StatusButton(false);scene.add(button);bridge.captureDrawnEvidence();
         long lifetime=button.image.renderedLifetime();button.image.revive();assertTrue(button.image.renderedLifetime()>lifetime);
-        assertNoField(bridge.describeUi(),"sample_icon");assertFalse(bridge.drawnIntentReady());
-        bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());assertTrue(node(bridge.describeUi(),"button").containsKey("sample_icon"));
+        assertTrue(node(bridge.describeUi(),"button").containsKey("sample_status"));assertTrue(bridge.drawnIntentReady());
+        bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());assertTrue(node(bridge.describeUi(),"button").containsKey("sample_status"));
     }
 
     @Test void aHiddenOrDetachedOwnerNeedsAnotherCaptureWhenShownAgain(){
         StatusButton button=new StatusButton(false);scene.add(button);bridge.captureDrawnEvidence();
-        button.visible=false;assertNoField(bridge.describeUi(),"sample_icon");assertTrue(bridge.drawnIntentReady(),"A newly hidden node cannot hold the render boundary");
-        button.visible=true;assertNoField(bridge.describeUi(),"sample_icon");assertFalse(bridge.drawnIntentReady());
+        button.visible=false;assertNoField(bridge.describeUi(),"sample_status");assertTrue(bridge.drawnIntentReady(),"A newly hidden node cannot hold the render boundary");
+        button.visible=true;assertNoField(bridge.describeUi(),"sample_status");assertFalse(bridge.drawnIntentReady());
         bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
-        button.image.visible=false;assertNoField(bridge.describeUi(),"sample_icon");
-        button.image.visible=true;assertNoField(bridge.describeUi(),"sample_icon");
-        bridge.captureDrawnEvidence();assertTrue(node(bridge.describeUi(),"button").containsKey("sample_icon"));
-        scene.remove(button);assertNoField(bridge.describeUi(),"sample_icon");scene.add(button);
-        assertNoField(bridge.describeUi(),"sample_icon");bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
+        button.image.visible=false;assertNoField(bridge.describeUi(),"sample_status");
+        button.image.visible=true;assertNoField(bridge.describeUi(),"sample_status");
+        bridge.captureDrawnEvidence();assertTrue(node(bridge.describeUi(),"button").containsKey("sample_status"));
+        scene.remove(button);assertNoField(bridge.describeUi(),"sample_status");scene.add(button);
+        assertNoField(bridge.describeUi(),"sample_status");bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
     }
 
     @Test void replacingTheSceneCannotReuseRenderedEvidenceEvenForTheSameAttachedObject(){
         StatusButton button=new StatusButton(false);scene.add(button);bridge.captureDrawnEvidence();
         Scene previous=scene;scene=new Scene();scene.add(button);
-        assertNoField(bridge.describeUi(),"sample_icon");assertFalse(bridge.drawnIntentReady());
+        assertNoField(bridge.describeUi(),"sample_status");assertFalse(bridge.drawnIntentReady());
         bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
-        scene=previous;scene.add(button);assertNoField(bridge.describeUi(),"sample_icon");
-        bridge.captureDrawnEvidence();assertTrue(node(bridge.describeUi(),"button").containsKey("sample_icon"));
+        scene=previous;scene.add(button);assertNoField(bridge.describeUi(),"sample_status");
+        bridge.captureDrawnEvidence();assertTrue(node(bridge.describeUi(),"button").containsKey("sample_status"));
     }
 
     @Test void realBuffButtonGreyMaskCannotPublishItsPostDrawPixelHeight()throws Exception{
@@ -119,15 +119,15 @@ class UiDrawStatusEvidenceTest {
         FloatingAppearanceTest.field(button,type,"grey",grey);
         FloatingAppearanceTest.field(button,type,"buff",new Buff(){@Override public String name(){return ResourceTextFixture.literal("Observed buff");}});
         scene.add(button);bridge.captureDrawnEvidence();Map<String,Object> drawn=node(bridge.frozenUi(),"button");
-        assertEquals(2,((Map<?,?>)drawn.get("icon_overlay")).get("covered_pixels"));
+        assertEquals(2,((Map<?,?>)((Map<?,?>)drawn.get("shown")).get("progress")).get("covered"));
         grey.height=5;icon.hardlight(0xFF0000);
-        assertEquals(drawn.get("icon_overlay"),node(bridge.frozenUi(),"button").get("icon_overlay"));
-        assertEquals(drawn.get("icon"),node(bridge.frozenUi(),"button").get("icon"));assertFalse(bridge.drawnIntentReady());
+        assertEquals(((Map<?,?>)drawn.get("shown")).get("progress"),((Map<?,?>)node(bridge.frozenUi(),"button").get("shown")).get("progress"));
+        assertFalse(bridge.drawnIntentReady());
         bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
-        assertEquals(5,((Map<?,?>)node(bridge.describeUi(),"button").get("icon_overlay")).get("covered_pixels"));
+        assertEquals(5,((Map<?,?>)((Map<?,?>)node(bridge.describeUi(),"button").get("shown")).get("progress")).get("covered"));
     }
 
-    @Test void nativeIconButtonDimmedThresholdAndImageAlphaDescribeTheSameCompletedDraw(){
+    @Test void ordinaryIconAlphaDoesNotAlterEnabledStateOrInputFreshness(){
         IconButton button=new IconButton(){
             @Override protected void createChildren(){}
             @Override protected void layout(){}
@@ -135,15 +135,12 @@ class UiDrawStatusEvidenceTest {
             @Override protected void onClick(){}
         };
         Image icon=image();icon.alpha(.36f);button.icon(icon);scene.add(button);bridge.captureDrawnEvidence();
-        Map<String,Object> drawn=node(bridge.frozenUi(),"button");Object appearance=drawn.get("icon");
-        assertEquals(false,drawn.get("dimmed"));assertEquals(.36f,((Map<?,?>)appearance).get("alpha"));
+        Map<String,Object> drawn=node(bridge.frozenUi(),"button");
+        assertFalse(drawn.containsKey("dimmed"));assertEquals(true,drawn.get("enabled"));
         String intent=bridge.intentSignature();icon.alpha(.35f);
-        Map<String,Object> afterStep=node(bridge.frozenUi(),"button");
-        assertEquals(false,afterStep.get("dimmed"));assertEquals(appearance,afterStep.get("icon"));
-        assertFalse(bridge.drawnIntentReady());assertNotEquals(intent,bridge.intentSignature());
+        assertTrue(bridge.drawnIntentReady());assertEquals(intent,bridge.intentSignature());
         bridge.captureDrawnEvidence();Map<String,Object> next=node(bridge.frozenUi(),"button");
-        assertEquals(true,next.get("dimmed"));assertEquals(.35f,((Map<?,?>)next.get("icon")).get("alpha"));
-        assertTrue(bridge.drawnIntentReady());assertEquals(false,drawn.get("dimmed"));
+        assertEquals(drawn,next);assertFalse(next.toString().contains("alpha"));
     }
 
     @Test void ownerKillAndReviveWithTheSameChildrenRequiresNewDisplayEvidence(){
@@ -151,20 +148,20 @@ class UiDrawStatusEvidenceTest {
         Image sameChild=button.image;long lifetime=button.observationLifetime();
         button.kill();button.revive();sameChild.revive();
         assertSame(sameChild,button.childrenSnapshot().get(0));assertTrue(button.observationLifetime()>lifetime);
-        assertNoField(bridge.describeUi(),"sample_icon");assertFalse(bridge.drawnIntentReady());
+        assertNoField(bridge.describeUi(),"sample_status");assertFalse(bridge.drawnIntentReady());
         bridge.captureDrawnEvidence();assertTrue(bridge.drawnIntentReady());
-        assertTrue(node(bridge.describeUi(),"button").containsKey("sample_icon"));
+        assertTrue(node(bridge.describeUi(),"button").containsKey("sample_status"));
     }
 
     @Test void decorativeEmitterAttachmentParticleChurnAndReuseDoNotInvalidateAnUnchangedControl(){
         StatusButton button=new StatusButton(false);scene.add(button);bridge.captureDrawnEvidence();
-        Object before=node(bridge.frozenUi(),"button").get("sample_icon");String intent=bridge.intentSignature();
+        Object before=node(bridge.frozenUi(),"button").get("sample_status");String intent=bridge.intentSignature();
         Emitter decoration=new Emitter();button.add(decoration);Image particle=image();decoration.add(particle);
-        assertEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));assertTrue(bridge.drawnIntentReady());
+        assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));assertTrue(bridge.drawnIntentReady());
         particle.kill();particle.revive();decoration.remove(particle);decoration.add(image());decoration.add(image());
-        decoration.revive();assertEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));
+        decoration.revive();assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
         assertTrue(bridge.drawnIntentReady());assertEquals(intent,bridge.intentSignature());
-        button.remove(decoration);assertEquals(before,node(bridge.frozenUi(),"button").get("sample_icon"));
+        button.remove(decoration);assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
         assertTrue(bridge.drawnIntentReady());assertEquals(intent,bridge.intentSignature());
     }
 
@@ -195,21 +192,31 @@ class UiDrawStatusEvidenceTest {
         assertEquals("partial",capturedPresentation.get("status"),"New capture must not rewrite the previous observation");
     }
 
+    @Test void semanticIconContainersSurviveAndOnlyUnmappedDrawingChildrenBecomePartial(){
+        StatusButton button=new StatusButton(false);scene.add(button);
+        for(String field:List.of("target_icon","item_icon","item_badge","hero_portrait"))button.metadata.put(field,map("symbol","native_symbol"));
+        bridge.captureDrawnEvidence();Map<String,Object> semantic=node(bridge.describeUi(),"button");
+        for(String field:List.of("target_icon","item_icon","item_badge","hero_portrait"))assertEquals(map("symbol","native_symbol"),semantic.get(field));
+        button.metadata.put("target_icon",map("atlas","unsupported_asset","frame_pixels",List.of(0,0,8,8)));
+        bridge.captureDrawnEvidence();Map<?,?> unmapped=(Map<?,?>)node(bridge.describeUi(),"button").get("target_icon");
+        assertFalse(unmapped.containsKey("atlas"));assertFalse(unmapped.containsKey("frame_pixels"));assertEquals(true,unmapped.get("unmapped_indicator"));
+        assertEquals("partial",((Map<?,?>)unmapped.get("presentation")).get("status"));
+    }
+
     /** Has real native Image state, but intentionally performs no GL draw or input registration. */
-    private static final class StatusButton extends Button implements RenderedStatus {
+    private static final class StatusButton extends Button implements GameplayStatus {
         Image image=image();final boolean passive;boolean selected;int clicks;
         final Map<String,Object> metadata=new LinkedHashMap<>();
         StatusButton(boolean passive){this.passive=passive;camera=new Camera(0,0,100,100,1);add(image);}
         @Override protected void createChildren(){}
         @Override protected String hoverText(){return ResourceTextFixture.literal("Visible choice");}
         @Override protected void onClick(){clicks++;}
-        @Override public Map<String,Object> renderedStatus(){
+        @Override public Map<String,Object> gameplayStatus(){
             if(image.parent!=this||!image.visible||!image.exists)return Collections.emptyMap();
-            RectF frame=image.frame();Map<String,Object> result=map("sample_icon",map("frame",List.of(frame.left,frame.top,frame.right,frame.bottom),
-                    "color",image.displayedTextColor(),"alpha",image.alpha(),"selected",selected));
+            Map<String,Object> result=map("sample_status",map("selected",selected));
             result.putAll(metadata);return result;
         }
-        @Override public Map<String,Object> intentStatus(){return passive?map("sample_icon",map("selected",selected)):renderedStatus();}
+        @Override public Map<String,Object> gameplayIntentStatus(){return gameplayStatus();}
     }
     private static Image image(){
         try {SmartTexture texture=FloatingAppearanceTest.allocate(SmartTexture.class);texture.width=texture.height=32;

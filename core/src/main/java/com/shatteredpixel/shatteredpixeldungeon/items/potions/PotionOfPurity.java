@@ -72,7 +72,8 @@ public class PotionOfPurity extends Potion {
 				}
 				
 				if (Dungeon.level.heroFOV[i]) {
-					CellEmitter.get( i ).burst( Speck.factory( Speck.DISCOVER ), 2 );
+					com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.burst(
+							CellEmitter.get(i), Speck.factory(Speck.DISCOVER), 2, "purity_discovery", i, false);
 				}
 				
 			}

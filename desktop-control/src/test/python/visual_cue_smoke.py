@@ -9,7 +9,7 @@ import uuid
 
 from fixture_smoke import FixtureClient, assert_gui_environment, close_choices, freeze_runtime, reach_game
 from low_frequency_smoke import act
-from protocol7 import pages
+from protocol8 import pages
 
 
 def visual(state):
@@ -22,7 +22,7 @@ def kind_cells(state, kind):
 
 def wait_result(client, kind, fixture):
     result = act(client, "wait")
-    assert visual(result)["status"] == "last_rendered", visual(result)
+    assert visual(result)["status"] == "last_observed", visual(result)
     if not kind_cells(result, kind):
         # Diagnostic only. A later query must never make this test pass.
         immediate = visual(result)
@@ -33,8 +33,9 @@ def wait_result(client, kind, fixture):
                               "later_diagnostic_only": visual(late)})
     visible = {tile["cell"] for tile in result["observation"]["map"]["cells"] if tile["visibility"] == "visible"}
     assert all(cue["cell"] in visible for cue in visual(result)["cues"])
-    assert all({"kind", "cell"} <= set(cue) <= {"kind", "cell", "source_cell", "direction", "color", "opacity", "appearance"}
+    assert all({"kind", "cell"} <= set(cue) <= {"kind", "cell", "source_cell", "direction", "appearance"}
                for cue in visual(result)["cues"]), visual(result)
+    assert all("color" not in cue and "opacity" not in cue for cue in visual(result)["cues"])
     return result
 
 
@@ -84,12 +85,11 @@ def test_goo(client):
     assert all(distance(cell) <= 2 for cell in cells)
     events = read_visual_events(client)
     assert any(any(cue["kind"] == "black_goo_droplets" for cue in event["data"]["cues"]) for event in events)
-    # The actual menu covers the map. Its free open/close path must not crash on
-    # erased Group slots or publish cues through a modal surface.
+    # A modal changes available operations but not the known world warning.
     menu = next(node for node in warning["observation"]["ui"]["controls"]
                 if str(node.get("shortcut_action", "")).lower() == "back")
     blocked = act(client, "ui.activate", control=menu["id"])
-    assert blocked["observation"]["ui"]["modal"] and visual(blocked)["cues"] == []
+    assert blocked["observation"]["ui"]["modal"] and kind_cells(blocked, "black_goo_droplets")
     reopened = act(client, "ui.back")
     assert not reopened["observation"]["ui"]["modal"] and kind_cells(reopened, "black_goo_droplets")
     assert visual(reopened)["map_context"] == visual(warning)["map_context"]
@@ -101,7 +101,7 @@ def test_goo(client):
     return {"native_boss": "Goo", "displayed_boss_name": goo["name"], "expanded_particle_cells_in_final_wait_response": sorted(cells),
             "outer_ring_actually_drawn": True, "native_tail_cells_after_attack": sorted(tail),
             "warning_cleared_after_native_attack_and_natural_render_fade": True,
-            "modal_suppression_and_reappearance_verified": True,
+            "modal_keeps_known_warning": True,
             "no_pump_or_fov_refresh_from_observer": True}
 
 
@@ -112,7 +112,7 @@ def test_hidden(client):
     after = act(client, "wait")
     elapsed = time.monotonic() - start
     assert elapsed < 10, {"hidden_source_incorrectly_delayed_response": elapsed}
-    assert visual(after)["status"] == "last_rendered" and not kind_cells(after, "black_goo_droplets")
+    assert visual(after)["status"] == "last_observed" and not kind_cells(after, "black_goo_droplets")
     assert after["observation"]["hero"]["cell"] == before["observation"]["hero"]["cell"]
     return {"synthetic_render_source_only": True, "hidden_source_initial_emission_delay_seconds": 60,
             "public_wait_response_seconds": elapsed, "hidden_no_drawable_source_did_not_wait": True,
@@ -149,7 +149,7 @@ def test_frozen(client):
     close_choices(client)
     time.sleep(1.2)
     ready = client.state()
-    assert frozen(ready) and visual(ready)["status"] == "last_rendered"
+    assert frozen(ready) and visual(ready)["status"] == "last_observed"
     target = next(e for e in ready["observation"]["visible_entities"] if e.get("context_action") == "attack")
     resumed = act(client, "cell.select", cell=target["cell"])
     assert not frozen(resumed), "The native attack must end TimeBubble, without test-side thawing"
@@ -163,7 +163,8 @@ def test_bomb(client):
     first = wait_result(client, "bomb_smoke", "Tengu native bomb")
     anchor = kind_cells(first, "bomb_countdown_3")
     assert len(anchor) == 1, {"native_first_countdown_missing_in_final_response": visual(first)}
-    assert any(n.get("text") == "3..." for n in first["observation"]["ui"]["controls"]), "Cue must match the original displayed literal"
+    assert any(n.get("kind") == "floating" and n.get("text") == "3..."
+               for n in first["observation"]["ui"]["feedback"]), "Cue must match current feedback"
     smoke = kind_cells(first, "bomb_smoke")
     assert anchor <= smoke
     history = read_visual_events(client)
@@ -177,18 +178,32 @@ def test_bomb(client):
     assert shown_three in read_visual_events(client)
     menu = next(n for n in faded["observation"]["ui"]["controls"] if str(n.get("shortcut_action", "")).lower() == "back")
     modal = act(client, "ui.activate", control=menu["id"])
-    assert modal["observation"]["ui"]["modal"] and visual(modal)["cues"] == []
+    assert modal["observation"]["ui"]["modal"] and kind_cells(modal, "bomb_smoke")
     restored = act(client, "ui.back")
     assert kind_cells(restored, "bomb_smoke")
     offscreen = act(client, "view.pan", x=5000, y=5000)
-    assert not any(c["kind"].startswith("bomb_") for c in visual(offscreen)["cues"]), visual(offscreen)
+    assert kind_cells(offscreen, "bomb_smoke"), visual(offscreen)
+    # Keep the exact child wire frame from this pan's own settled observation.
+    # This isolated fixture artifact supports a within-frame token contribution
+    # check; it is never used to choose another game action.
+    pan_wire = bytes(client.last_recv_bytes)
+    pan_request = dict(client.last_wire_request)
+    pan_frame = json.loads(pan_wire)
+    assert pan_frame["v"] == 8 and pan_frame["id"] == client.last_wire_response["id"]
+    assert pan_request["id"] == pan_frame["id"] and pan_request["op"] in {"pan", "state"}
+    assert pan_request.get("view", "play") == "play" and pan_request.get("src") is not True
+    assert pan_frame.get("s") == offscreen["scope_id"] and pan_frame.get("rev") == offscreen["state_version"]
+    assert any(cue["kind"] == "bomb_smoke" for cue in pan_frame["data"]["cues"]["cues"]), pan_frame["id"]
+    pan_wire_path = client.profile / "offscreen-pan-response.raw"
+    pan_wire_path.write_bytes(pan_wire)
     restored = act(client, "view.pan", x=-5000, y=-5000)
     assert kind_cells(restored, "bomb_smoke"), visual(restored)
     numbered = []
     for number in (2, 1):
         state = act(client, "wait")
         assert kind_cells(state, "bomb_countdown_" + str(number)) == anchor, visual(state)
-        assert any(n.get("text") == str(number) + "..." for n in state["observation"]["ui"]["controls"])
+        assert any(n.get("kind") == "floating" and n.get("text") == str(number) + "..."
+                   for n in state["observation"]["ui"]["feedback"])
         numbered.append(number)
     exploded = act(client, "wait")
     # Native tail particles are permitted while they still draw, even after the
@@ -202,7 +217,8 @@ def test_bomb(client):
     return {"native_boss": "Tengu", "smoke_cells_in_final_throw_response": sorted(smoke),
             "countdown_anchor_from_draw": next(iter(anchor)), "native_countdowns_in_final_action_responses": [3] + numbered,
             "ui_literals_equal_cue_mapping": True, "faded_countdown_not_reconstructed": True,
-            "modal_and_offscreen_suppression": True, "native_tail_cells_after_explosion": sorted(tail),
+            "modal_and_camera_keep_known_warning": True, "native_tail_cells_after_explosion": sorted(tail),
+            "offscreen_pan_wire": str(pan_wire_path), "offscreen_pan_wire_request": pan_request,
             "cleared_after_natural_render_fade": True, "all_displayed_numbers_retained_in_history": True}
 
 

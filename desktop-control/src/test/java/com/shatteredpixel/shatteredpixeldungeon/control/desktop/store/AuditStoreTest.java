@@ -83,8 +83,8 @@ public class AuditStoreTest {
             assertEquals("UNKNOWN", unknown.get("status"));
             String publicScope=store.publicHandle("scope","run:a");
             assertEquals("run:a",store.resolveHandle("scope",publicScope));
-            assertEquals(Values.map("v", 7L, "id", "action", "s", publicScope, "err", "UNKNOWN"), unknown.get("response"));
-            assertEquals(Values.map("v", 7L, "id", "queued", "s", publicScope, "err", "NOT_EXECUTED"),
+            assertEquals(Values.map("v", 8L, "id", "action", "s", publicScope, "err", "UNKNOWN"), unknown.get("response"));
+            assertEquals(Values.map("v", 8L, "id", "queued", "s", publicScope, "err", "NOT_EXECUTED"),
                     store.getRequest("run:a", "queued").get("response"));
             assertNull(unknown.get("after_snapshot"));
             assertNotNull(unknown.get("before_snapshot"));
@@ -247,7 +247,7 @@ public class AuditStoreTest {
                 s.execute("UPDATE metadata SET value='1' WHERE key='schema_version'");
             }
         }
-        AuditSchemaTenTest.assertRejectedWithoutChanges(root);
+        AuditSchemaElevenTest.assertRejectedWithoutChanges(root);
     }
 
     @Test public void realProcessCrashAfterAnExternalEffectIsUnknownAndNeverReplayable() throws Exception {

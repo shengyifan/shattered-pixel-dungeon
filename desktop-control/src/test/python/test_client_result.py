@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from client_result import ActionResult, settle_action
 from machine_smoke import Client
-import protocol7
+import protocol8
 
 
 def initial(status="in_progress", **fields):
@@ -67,15 +67,15 @@ class ClientResultTest(unittest.TestCase):
         client.process = Mock(stdin=io.BytesIO())
         client.scope, client.version, client.counter, client.prefix = "menu:original", "r1", 0, "finite"
         replies = [
-            {"v": 7, "id": "finite-1", "s": "menu:original", "st": "in_progress",
+            {"v": 8, "id": "finite-1", "s": "menu:original", "st": "in_progress",
              "data": {"phase": "resolving", "snapshot_status": "last_stable"}},
-            {"v": 7, "id": "finite-2", "s": "menu:original", "st": "completed",
+            {"v": 8, "id": "finite-2", "s": "menu:original", "st": "completed",
              "data": {"id": "finite-1", "st": "COMPLETED", "save": [{"receipt_id": "saved"}]}},
-            {"v": 7, "id": "finite-3", "s": "run:new", "rev": "r2", "st": "completed",
-             "data": {"cli_version": "CLI.7.0.0"}},
-            {"v": 7, "id": "finite-4", "s": "run:new", "rev": "r3", "st": "completed",
+            {"v": 8, "id": "finite-3", "s": "run:new", "rev": "r2", "st": "completed",
+             "data": {"cli_version": "CLI.8.0.0"}},
+            {"v": 8, "id": "finite-4", "s": "run:new", "rev": "r3", "st": "completed",
              "data": {"phase": "player_ready", "scene": "game"}}]
-        client.buffer = b"".join(protocol7.wire_bytes(reply) for reply in replies)
+        client.buffer = b"".join(protocol8.wire_bytes(reply) for reply in replies)
         result = client.act("ui.activate", control="start")
         sent = [json.loads(line) for line in client.process.stdin.getvalue().splitlines()]
         self.assertEqual(["click", "req", "info", "state"], [request["op"] for request in sent])
@@ -170,11 +170,11 @@ class ClientResultTest(unittest.TestCase):
         client = object.__new__(Client)
         client.process = Mock(stdin=io.BytesIO())
         client.scope, client.version, client.counter, client.prefix = "run:new", "latest", 0, "history"
-        old = {"v": 7, "id": "old", "s": "menu:old", "rev": "older", "st": "completed",
+        old = {"v": 8, "id": "old", "s": "menu:old", "rev": "older", "st": "completed",
                "data": {"scene": "title"}}
-        wire = {"v": 7, "id": "query", "s": "run:new", "st": "completed",
+        wire = {"v": 8, "id": "query", "s": "run:new", "st": "completed",
                 "data": {"id": "old", "st": "COMPLETED", "reply": old}}
-        client.buffer = protocol7.wire_bytes(wire)
+        client.buffer = protocol8.wire_bytes(wire)
         result = client.request("request.get", {"target_id": "old", "get": ["reply"]}, request_id="query")
         self.assertEqual("older", result["result"]["response"]["result"]["state_version"])
         self.assertEqual(("run:new", "latest"), (client.scope, client.version))

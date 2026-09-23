@@ -57,6 +57,7 @@ public class ItemSprite extends MovieClip {
 	public Heap heap;
 	
 	private Glowing glowing;
+	private boolean gameplayGlowBound;
 	//FIXME: a lot of this emitter functionality isn't very well implemented.
 	//right now I want to ship 0.3.0, but should refactor in the future.
 	protected Emitter emitter;
@@ -120,6 +121,7 @@ public class ItemSprite extends MovieClip {
 		dropInterval = 0;
 		
 		heap = null;
+		gameplayGlowBound=false;
 		if (emitter != null) {
 			emitter.killAndErase();
 			emitter = null;
@@ -258,11 +260,58 @@ public class ItemSprite extends MovieClip {
 	
 	public synchronized void glow( Glowing glowing ){
 		this.glowing = glowing;
+		gameplayGlowBound=glowing!=null;
 		if (glowing == null) resetColor();
+	}
+
+	/** Reads the glow already selected for this sprite, never the backing item/enchantment. */
+	public synchronized java.util.Map<String,Object> gameplayGlow() {
+		if(!gameplayGlowBound||glowing==null||!exists||!visible||!Float.isFinite(alpha())||alpha()<=0)
+			return java.util.Collections.emptyMap();
+		return com.shatteredpixel.shatteredpixeldungeon.ui.GameplayGlow.selected(glowing.color,glowing.gameplayHint);
+	}
+
+	/** The status belongs to the currently attached emitter and its exact native selection episode. */
+	public java.util.Map<String,Object> gameplayItemStatus() {
+		if(!exists||!visible||!Float.isFinite(alpha())||alpha()<=0
+				||!(emitter instanceof com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter))return java.util.Collections.emptyMap();
+		return ((com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter)emitter).gameplayStatus(this);
+	}
+
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if(!com.watabou.noosa.Game.observer.observesVisualCues())return;
+		com.watabou.noosa.VisualCue cue=gameplayGlowCue();
+		if(cue!=null)GameScene.observeCellVisualDraw(this,cue);
+		cue=gameplayItemStatusCue();if(cue!=null)GameScene.observeCellVisualDraw(this,cue);
+	}
+
+	public com.watabou.noosa.VisualCue gameplayGlowCue() {
+		int cell=gameplayHeapCell();if(cell<0)return null;
+		java.util.Map<String,Object> meaning=gameplayGlow();if(meaning.isEmpty())return null;
+		return new com.watabou.noosa.VisualCue("item_glow",cell,null,null,null,null,meaning);
+	}
+
+	public com.watabou.noosa.VisualCue gameplayItemStatusCue() {
+		int cell=gameplayHeapCell();if(cell<0)return null;
+		java.util.Map<String,Object> meaning=gameplayItemStatus();if(meaning.isEmpty())return null;
+		return new com.watabou.noosa.VisualCue("item_status",cell,null,null,null,null,meaning);
+	}
+
+	private int gameplayHeapCell() {
+		// Missiles and UI previews have no heap binding and own their distinct observation paths.
+		if(heap==null||dropInterval>0||parent==null||Dungeon.level==null||Dungeon.level.width()<=0)return -1;
+		float center=x+width()*0.5f,bottom=y+height()+DungeonTilemap.SIZE*perspectiveRaise;
+		int column=Math.round(center/DungeonTilemap.SIZE-0.5f),row=Math.round(bottom/DungeonTilemap.SIZE)-1;
+		if(column<0||column>=Dungeon.level.width()||row<0||row>=Dungeon.level.height()
+				||!Float.isFinite(center+bottom)||Math.abs(center-(column+0.5f)*DungeonTilemap.SIZE)>2f
+				||Math.abs(bottom-(row+1f)*DungeonTilemap.SIZE)>2f)return -1;
+		return row*Dungeon.level.width()+column;
 	}
 
 	@Override
 	public void kill() {
+		gameplayGlowBound=false;
 		super.kill();
 		if (emitter != null) {
 			emitter.on = false;
@@ -399,6 +448,14 @@ public class ItemSprite extends MovieClip {
 		public float green;
 		public float blue;
 		public float period;
+		private String gameplayHint;
+
+		/** Names an already selected native display branch; never accepts a hidden numeric quantity. */
+		public Glowing gameplayHint(String hint) {
+			if(!java.util.Arrays.asList("explosive_cool","explosive_warm","explosive_hot","resin_fortified").contains(hint))
+				throw new IllegalArgumentException("Unknown native glow meaning");
+			gameplayHint=hint;return this;
+		}
 		
 		public Glowing( int color ) {
 			this( color, 1f );

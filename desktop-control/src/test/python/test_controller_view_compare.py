@@ -7,17 +7,24 @@ from controller_package_smoke import lossless_views_check, normalized_public_fra
 
 
 def frame():
-    return {"v": 7, "id": "t1.7", "s": "s1", "rev": "r1", "st": "completed", "data": {
-        "hero": {"talents": [{"name": "Unspent", "points": 0, "desc": "Full description"}]},
-        "inv": [{"loc": "bag.0", "name": "Known item", "desc": "A public warning"}],
-        "acts": [{"op": "wait"}], "ui": {"nodes": [{"id": "c1", "text": "1", "color": 0,
-            "icon": {"atlas": "floating_text", "index": 0}, "future": [None, False, 0]}]},
-        "cues": {"status": "last_rendered", "map_context": "m1", "cues": [],
-            "screen_effects": [{"kind": "screen_overlay", "color": 0, "opacity": 0.71362746}],
-            "screen_effects_at": "2026-09-23T00:00:00.123456789Z",
-            "metrics": [{"cell": 0, "kind": "cell_particles", "rendered_particles": 2,
-                         "appearance": {"color": 123, "alpha": 0.45}}],
-            "metrics_at": "2026-09-23T00:00:00.123456789Z"}}}
+    return {"v": 8, "id": "t1.7", "s": "s1", "rev": "r1", "st": "completed", "data": {
+        "hero": {"talents": [{"name": "Unspent", "points": 0, "desc": "Full description"}],
+                 "turn_progress": {"sweep": 0.25}, "buffs": [
+                     {"name": "Haste", "shown": {"counter": "0"}}]},
+        "inv": [{"loc": "bag.0", "name": "Known item", "desc": "A public warning",
+                 "shown": {"status": "1", "flags": ["equipped"]}}],
+        "entities": [{"kind": "character", "cell": 6, "name": "Rat",
+                      "health_estimate": {"samples": [{"total": 16, "filled": 3,
+                                                        "with_shield": 4, "basis": "displayed"}]}}],
+        "acts": [{"op": "wait"}], "ui": {"nodes": [{"id": "c1", "text": "1",
+            "subject": {"kind": "item", "loc": "bag.0"},
+            "icon": {"symbol": "potion"}, "future": [None, False, 0]}],
+            "feedback": [{"kind": "log", "text": "A warning", "tone": "warning"},
+                         {"kind": "floating", "text": "1", "cell": 0,
+                          "id": "f2", "occurred_at": "2026-09-23T00:00:00.123456789Z"}]},
+        "cues": {"status": "last_observed", "map_context": "m1", "cues": [
+            {"kind": "sprite_state", "cell": 6,
+             "appearance": {"style": "golden_glow", "paused": True}}]}}}
 
 
 class FakeClient:
@@ -62,7 +69,7 @@ class ControllerViewCompareTest(unittest.TestCase):
         self.assertEqual(source["data"]["cues"], replay.call_args.args[1]["data"]["cues"])
         self.assertTrue(result["same_frozen_input"])
         self.assertTrue(result["exact_src_full_reconstruction"])
-        self.assertTrue(result["rendered_visuals_and_timestamps_preserved"])
+        self.assertTrue(result["semantic_facts_and_occurrences_preserved"])
         self.assertEqual("t1.7", result["source_request_id"])
         self.assertIn("host JVM", result["component_replay"]["classification"])
         self.assertEqual(original, source)
@@ -71,22 +78,25 @@ class ControllerViewCompareTest(unittest.TestCase):
         source = frame()
         replayed = replay_fixture(source)
         for mode in replayed:
-            replayed[mode]["data"]["cues"]["screen_effects"][0]["opacity"] = 0.49835175
+            replayed[mode]["data"]["cues"]["cues"][0]["appearance"]["style"] = "icy"
         with self.assertRaisesRegex(AssertionError, "Frozen src/full reconstruction differs"):
             self.check(source, replayed)
 
-    def test_visual_and_timestamp_differences_are_never_normalized_away(self):
-        paths = [("cues", "metrics_at"), ("cues", "screen_effects_at"),
-                 ("cues", "metrics", 0, "appearance", "color"),
-                 ("cues", "metrics", 0, "rendered_particles"),
-                 ("cues", "screen_effects", 0, "opacity"), ("ui", "nodes", 0, "icon", "index")]
-        for path in paths:
+    def test_semantic_and_occurrence_differences_are_never_normalized_away(self):
+        changes = [(("cues", "cues", 0, "appearance", "style"), "icy"),
+                   (("cues", "cues", 0, "cell"), 7),
+                   (("hero", "turn_progress", "sweep"), 0.5),
+                   (("entities", 0, "health_estimate", "samples", 0, "with_shield"), 5),
+                   (("ui", "feedback", 1, "occurred_at"), "2026-09-23T00:00:01Z"),
+                   (("ui", "nodes", 0, "icon", "symbol"), "scroll"),
+                   (("inv", 0, "shown", "status"), "2")]
+        for path, replacement in changes:
             source = frame()
             replayed = replay_fixture(source)
             target = replayed["play"]["data"]
             for key in path[:-1]:
                 target = target[key]
-            target[path[-1]] = "changed"
+            target[path[-1]] = replacement
             with self.subTest(path=path), self.assertRaisesRegex(AssertionError, "Same frozen packaged play/full"):
                 self.check(source, replayed)
 
@@ -132,7 +142,7 @@ class ControllerViewCompareTest(unittest.TestCase):
 
     def test_mutating_adapter_is_rejected_before_comparison(self):
         def mutate(client, frozen):
-            frozen["data"]["cues"]["metrics"][0]["appearance"]["color"] = -1
+            frozen["data"]["cues"]["cues"][0]["appearance"]["style"] = "changed"
             return replay_fixture(frozen), {}
         with self.assertRaisesRegex(AssertionError, "adapter changed its frozen input"):
             self.check(side_effect=mutate)

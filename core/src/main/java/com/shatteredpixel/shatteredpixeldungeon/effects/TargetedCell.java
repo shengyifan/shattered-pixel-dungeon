@@ -47,9 +47,9 @@ public class TargetedCell extends Image {
 	}
 
 	@Override
-	public void draw() {
-		super.draw();
-		if (redTarget && texture != null && buffer != null && Game.observer.observesVisualCues()) {
+	public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (redTarget && texture != null && Game.observer.observesVisualCues()) {
 			GameScene.observeTargetedCellDraw(this, visualCell);
 		}
 	}

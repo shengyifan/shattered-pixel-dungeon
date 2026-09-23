@@ -14,7 +14,6 @@ import uuid
 
 from controller_package_smoke import ControllerClient, reach_warrior, save_receipts, validate_trace, write_json
 from package_english_smoke import environment as clean_environment
-from test_ui import configure_test_ui
 
 
 def wait_for(check, message, timeout=10):
@@ -45,12 +44,12 @@ def instrumentable_runtime(bundle):
             "runtime_java_version": properties.get("JAVA_VERSION", "").strip('"')}
 
 
-def arm_next_request(client, profile):
+def arm_next_request(client, barrier_directory):
     requests = complete_frames(client.trace_session() / "send.raw")
     sequence = max((int(item["id"].split(".")[1]) for item in requests
                     if item["id"].startswith(client.prefix + ".")), default=0)
     request_id = client.prefix + "." + str(sequence + 1)
-    (profile / "barrier.armed").write_text(request_id, encoding="utf-8")
+    (barrier_directory / "barrier.armed").write_text(request_id, encoding="utf-8")
     return request_id
 
 
@@ -81,21 +80,22 @@ def main():
     output = root / "desktop-control/build/fixtures" / ("slow-quit-package-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     profile = output / "profile"
-    configure_test_ui(profile)
-    write_json(profile / "test_fixture.json", {"test_fixture": True, "counts_as_win": False,
+    profile.mkdir()
+    write_json(output / "test_fixture.json", {"test_fixture": True, "counts_as_win": False,
                "fixture": "packaged-slow-quit", "instrumented": True,
-               "setup": "Chinese/windowed preferences and a test-only delay after native quit; no save injection"})
+               "setup": "Empty profile with packaged defaults and a test-only delay after native quit; no save injection"})
     agent = output / "test-only-engine-boundaries.jar"
     shutil.copy2(args.agent.resolve(), agent)
     cli = args.bundle.resolve() / "Contents/MacOS/spdctl"
     assert cli.is_file(), cli
     environment = clean_environment()
-    option = f"-javaagent:{agent}=slow-quit;{profile}"
+    option = f"-javaagent:{agent}=slow-quit;{output}"
     assert '"' not in option, "The JVM option path cannot contain a double quote"
     environment["JAVA_TOOL_OPTIONS"] = '"' + option + '"'
     report = {"result": "running", "test_fixture": True, "counts_as_win": False,
               "instrumented_packaged_lifecycle": True, "ordinary_package_smoke": False,
               "bundle": str(args.bundle.resolve()), "profile": str(profile), "artifacts": str(output),
+              "barrier_directory": str(output),
               "instrumentable_runtime": runtime_check,
               "personal_profile_or_audit_reads": False, "save_or_game_state_injection": False}
     client = None
@@ -105,7 +105,7 @@ def main():
         _, report["scenes"] = reach_warrior(client)
         for _ in range(6):
             client.state()
-            request_id = arm_next_request(client, profile)
+            request_id = arm_next_request(client, output)
             initial = client.unwrap(client.request({"op": "quit", "rev": client.revision}))
             if initial.get("err") == "STALE_STATE":
                 rejected = client.settle(initial)
@@ -114,7 +114,7 @@ def main():
             break
         else:
             raise AssertionError("Could not dispatch a current quit")
-        marker = profile / "barrier.reached"
+        marker = output / "barrier.reached"
         wait_for(marker.exists, "The native quit callback did not reach the barrier")
         assert marker.read_text().splitlines()[0] == "slow-quit"
         # Both production deadlines are 30 seconds. A controller timeout may precede
@@ -139,7 +139,7 @@ def main():
         assert pending.get("st") == "pending" or pending.get("err") == "RESPONSE_TIMEOUT", pending
         assert pending["outcome"]["data"]["st"] == "EXECUTING", pending
         assert client.process.poll() is None, "Packaged process exited before its terminal receipt"
-        (profile / "barrier.release").write_text("release native quit\n", encoding="utf-8")
+        (output / "barrier.release").write_text("release native quit\n", encoding="utf-8")
         settled = settle_finished(client, request_id)
         report["save_receipts"] = save_receipts({"initial": initial, "settled": settled,
                                                 "request_scope": initial["s"]})
@@ -156,7 +156,7 @@ def main():
         raise
     finally:
         # Release only this fixture barrier, even when an assertion fails.
-        (profile / "barrier.release").write_text("fixture cleanup\n", encoding="utf-8")
+        (output / "barrier.release").write_text("fixture cleanup\n", encoding="utf-8")
         if client is not None:
             client.cleanup()
         write_json(output / "result.json", report)

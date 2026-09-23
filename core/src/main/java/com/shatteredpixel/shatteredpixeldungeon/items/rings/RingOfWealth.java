@@ -175,16 +175,16 @@ public class RingOfWealth extends Ring {
 			default:
 				break; //do nothing
 			case 1:
-				new Flare(6, 20).color(0x00FF00, true).show(vis, 3f);
+				new Flare(6, 20).color(0x00FF00, true).observeLootTier(1).show(vis, 3f);
 				break;
 			case 2:
-				new Flare(6, 24).color(0x00AAFF, true).show(vis, 3.33f);
+				new Flare(6, 24).color(0x00AAFF, true).observeLootTier(2).show(vis, 3.33f);
 				break;
 			case 3:
-				new Flare(6, 28).color(0xAA00FF, true).show(vis, 3.67f);
+				new Flare(6, 28).color(0xAA00FF, true).observeLootTier(3).show(vis, 3.67f);
 				break;
 			case 4:
-				new Flare(6, 32).color(0xFFAA00, true).show(vis, 4f);
+				new Flare(6, 32).color(0xFFAA00, true).observeLootTier(4).show(vis, 4f);
 				break;
 		}
 		latestDropTier = 0;

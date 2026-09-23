@@ -17,11 +17,11 @@ import java.util.stream.Stream;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.Assert.*;
 
-public class AuditSchemaTenTest {
+public class AuditSchemaElevenTest {
     @Rule public TemporaryFolder temporary = new TemporaryFolder();
 
     @Test public void everyOlderSchemaIsRejectedBeforeAnyDatabaseOrSidecarChanges() throws Exception {
-        for (int version = 1; version <= 9; version++) {
+        for (int version = 1; version <= 10; version++) {
             Path root = temporary.newFolder("schema-" + version).toPath();
             for (String name : new String[]{"public", "internal"}) {
                 try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + root.resolve(name + ".sqlite3"));
@@ -36,8 +36,8 @@ public class AuditSchemaTenTest {
         }
     }
 
-    @Test public void completeSchemaNinePairIsRejectedWithoutRecoveringItsPendingRequests() throws Exception {
-        Path root = temporary.newFolder("complete-schema-nine").toPath();
+    @Test public void completeSchemaTenPairIsRejectedWithoutRecoveringItsPendingRequests() throws Exception {
+        Path root = temporary.newFolder("complete-schema-ten").toPath();
         try (AuditStore store = new AuditStore(root)) {
             String scope = store.menuScope();
             AuditStore.Attempt pending = store.begin(scope, "pending-old-action", "wait", "old-wire-evidence");
@@ -47,7 +47,7 @@ public class AuditSchemaTenTest {
         for (String name : new String[]{"public", "internal"}) {
             try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + root.resolve(name + ".sqlite3"));
                  Statement statement = db.createStatement()) {
-                statement.execute("UPDATE metadata SET value='9' WHERE key='schema_version'");
+                statement.execute("UPDATE metadata SET value='10' WHERE key='schema_version'");
             }
         }
         assertRejectedWithoutChanges(root);
@@ -72,15 +72,28 @@ public class AuditSchemaTenTest {
         assertRejectedWithoutChanges(two, "AUDIT_PAIR_MISSING");
     }
 
-    @Test public void launcherRejectsSchemaNineBeforeLocksDefaultsAndEmergencyFiles() throws Exception {
+    @Test public void launcherRejectsSchemaTenBeforeLocksDefaultsAndEmergencyFiles() throws Exception {
         Path profile=temporary.newFolder("isolated-old-profile").toPath();
         Path audit=profile.resolve("audit");
         try(AuditStore ignored=new AuditStore(audit)) { }
         for(String name:new String[]{"public","internal"})
             try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+audit.resolve(name+".sqlite3"));Statement statement=db.createStatement()) {
-                statement.execute("UPDATE metadata SET value='9' WHERE key='schema_version'");
+                statement.execute("UPDATE metadata SET value='10' WHERE key='schema_version'");
             }
         Files.writeString(profile.resolve("test_fixture.txt"),"Isolated prior-schema fixture; not a personal game profile.");
+        assertLauncherRejectedWithoutChanges(profile,"AUDIT_SCHEMA_UNSUPPORTED");
+    }
+
+    @Test public void unauditedSettingsAndSaveFixtureAreRejectedBeforeAnyProfileWrites() throws Exception {
+        Path profile=temporary.newFolder("isolated-unaudited-profile").toPath();
+        // Deliberate stand-ins only: the launcher checks directory provenance, not save contents.
+        Files.writeString(profile.resolve("settings.xml"),"fixture settings must remain unchanged");
+        Files.createDirectories(profile.resolve("game1"));
+        Files.writeString(profile.resolve("game1").resolve("game.dat"),"isolated fixture, not a game save");
+        assertLauncherRejectedWithoutChanges(profile,"CLI_PROFILE_UNSUPPORTED");
+    }
+
+    private static void assertLauncherRejectedWithoutChanges(Path profile,String expectedCode) throws Exception {
         Map<String,byte[]> before=files(profile);
         Map<String,java.nio.file.attribute.FileTime> times=modifiedTimes(profile);
         java.util.LinkedHashSet<String> classpath=new java.util.LinkedHashSet<>();
@@ -95,29 +108,31 @@ public class AuditSchemaTenTest {
                 com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec.class,
                 org.sqlite.JDBC.class})
             classpath.add(Path.of(type.getProtectionDomain().getCodeSource().getLocation().toURI()).toString());
-        Process child=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","java").toString(),
-                "--enable-native-access=ALL-UNNAMED","-cp",String.join(java.io.File.pathSeparator,classpath),
-                "com.shatteredpixel.shatteredpixeldungeon.control.desktop.SpdctlLauncher",
-                "run","--machine","--data-dir",profile.toString()).redirectErrorStream(true).start();
-        try {
-            assertTrue("Rejected profile launch must finish",child.waitFor(20,java.util.concurrent.TimeUnit.SECONDS));
-            String output=new String(child.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);
-            assertEquals(output,1,child.exitValue());
-            assertTrue(output,output.contains("AUDIT_SCHEMA_UNSUPPORTED"));
-        } finally { if(child.isAlive())child.destroyForcibly(); }
-        Map<String,byte[]> after=files(profile);
-        assertEquals(before.keySet(),after.keySet());
-        for(Map.Entry<String,byte[]> entry:before.entrySet())assertArrayEquals(entry.getKey(),entry.getValue(),after.get(entry.getKey()));
-        assertEquals("Rejected launch cannot touch profile directory timestamps",times,modifiedTimes(profile));
+        for(String mode:new String[]{"run","control"}) {
+            Process child=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","java").toString(),
+                    "--enable-native-access=ALL-UNNAMED","-cp",String.join(java.io.File.pathSeparator,classpath),
+                    "com.shatteredpixel.shatteredpixeldungeon.control.desktop.SpdctlLauncher",
+                    mode,"--machine","--data-dir",profile.toString()).redirectErrorStream(true).start();
+            try {
+                assertTrue("Rejected profile launch must finish",child.waitFor(20,java.util.concurrent.TimeUnit.SECONDS));
+                String output=new String(child.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);
+                assertEquals(output,1,child.exitValue());
+                assertTrue(output,output.contains(expectedCode));
+            } finally { if(child.isAlive())child.destroyForcibly(); }
+            Map<String,byte[]> after=files(profile);
+            assertEquals(before.keySet(),after.keySet());
+            for(Map.Entry<String,byte[]> entry:before.entrySet())assertArrayEquals(entry.getKey(),entry.getValue(),after.get(entry.getKey()));
+            assertEquals("Rejected launch cannot touch profile directory timestamps",times,modifiedTimes(profile));
+        }
     }
 
-    @Test public void freshSchemaTenSeparatesRequestExecutionFromWirePresentation() throws Exception {
+    @Test public void freshSchemaElevenSeparatesRequestExecutionFromWirePresentation() throws Exception {
         Path root = temporary.newFolder().toPath();
         try (AuditStore store = new AuditStore(root)) {
             String scope = store.menuScope();
             AuditStore.Attempt attempt = store.begin(scope, "partial", "action.execute", "{}");
             store.markExecuting(attempt, "v1", map("before", true), map("private", "before"));
-            Map<String,Object> partial = map("v", 7L, "st", "completed", "pres", map("st", "partial"));
+            Map<String,Object> partial = map("v", 8L, "st", "completed", "pres", map("st", "partial"));
             store.complete(attempt, "COMPLETED", partial, map("canonical", "unrendered"), map("private", "after"), null);
             store.event(scope, "game.log", map("entries", java.util.Collections.emptyList(), "presentation", map("status", "partial")));
             assertEquals("COMPLETED", store.getRequest(scope, "partial").get("status"));
@@ -127,7 +142,7 @@ public class AuditSchemaTenTest {
             for (Path file : new Path[]{store.publicDatabase(), store.internalDatabase()}) {
                 try (Connection db = DriverManager.getConnection("jdbc:sqlite:" + file); Statement statement = db.createStatement()) {
                     try (ResultSet rows = statement.executeQuery("SELECT value FROM metadata WHERE key='schema_version'")) {
-                        assertTrue(rows.next()); assertEquals("10", rows.getString(1));
+                        assertTrue(rows.next()); assertEquals("11", rows.getString(1));
                     }
                     for (String table : new String[]{"requests", "exchanges", "events"}) {
                         try (ResultSet rows = statement.executeQuery("SELECT presentation_status FROM " + table)) {
@@ -142,7 +157,7 @@ public class AuditSchemaTenTest {
         }
     }
 
-    @Test public void aSchemaTenMarkerCannotRecreateMissingAuditTables() throws Exception {
+    @Test public void aSchemaElevenMarkerCannotRecreateMissingAuditTables() throws Exception {
         Path root=temporary.newFolder().toPath();
         try(AuditStore ignored=new AuditStore(root)) { }
         for(String name:new String[]{"public","internal"})
@@ -157,9 +172,9 @@ public class AuditSchemaTenTest {
             String scope = store.menuScope();
             AuditStore.Attempt attempt = store.begin(scope, "pending", "action.execute", "{}");
             store.markExecuting(attempt, "v1", map(), map());
-            Map<String,Object> first = map("v", 7L, "st", "in_progress", "pres", map("st", "partial"));
+            Map<String,Object> first = map("v", 8L, "st", "in_progress", "pres", map("st", "partial"));
             store.respondPending(attempt, first, map(), map());
-            Map<String,Object> last = map("v", 7L, "st", "completed");
+            Map<String,Object> last = map("v", 8L, "st", "completed");
             store.settle(attempt, "COMPLETED", last, map(), map(), null);
             assertEquals(last, store.getRequest(scope, "pending").get("response"));
             assertEquals("complete", store.getRequest(scope, "pending").get("presentation_status"));

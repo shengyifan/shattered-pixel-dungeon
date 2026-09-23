@@ -62,7 +62,11 @@ public class PitfallTrap extends Trap {
 		ArrayList<Integer> positions = new ArrayList<>();
 		for (int i : PathFinder.NEIGHBOURS9){
 			if (!Dungeon.level.solid[pos+i] || Dungeon.level.passable[pos+i]){
-				CellEmitter.floor(pos+i).burst(PitfallParticle.FACTORY4, 8);
+				com.watabou.noosa.particles.Emitter warning = CellEmitter.floor(pos+i);
+				warning.burst(PitfallParticle.FACTORY4, 8);
+				if (com.watabou.noosa.Game.observer.observesVisualCues()) warning.observeDraw(
+						new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("pitfall_warning", pos+i,
+								PitfallParticle.FACTORY4, PitfallParticle.class));
 				positions.add(pos+i);
 			}
 		}
@@ -100,7 +104,11 @@ public class PitfallTrap extends Trap {
 						continue;
 					}
 
-					CellEmitter.floor(cell).burst(PitfallParticle.FACTORY8, 12);
+					com.watabou.noosa.particles.Emitter collapse = CellEmitter.floor(cell);
+					collapse.burst(PitfallParticle.FACTORY8, 12);
+					if (com.watabou.noosa.Game.observer.observesVisualCues()) collapse.observeDraw(
+							new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("pitfall_collapse", cell,
+									PitfallParticle.FACTORY8, PitfallParticle.class));
 
 					Char ch = Actor.findChar(cell);
 					//don't trigger on flying chars, or immovable neutral chars

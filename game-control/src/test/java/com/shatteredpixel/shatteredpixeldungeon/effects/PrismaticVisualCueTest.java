@@ -17,9 +17,9 @@ class PrismaticVisualCueTest {
         sprite.alpha(1f);assertNull(appearance.invoke(sprite,12));
         sprite.paused=true;
         VisualCue opaque=(VisualCue)appearance.invoke(sprite,12);
-        assertEquals("prismatic_image_paused",opaque.kind);assertEquals(1f,opaque.opacity);
+        assertEquals("prismatic_image_paused",opaque.kind);assertNull(opaque.opacity);assertEquals(false,opaque.appearance.get("fading"));
         sprite.alpha(.75f);VisualCue faded=(VisualCue)appearance.invoke(sprite,12);
-        assertEquals(.75f,faded.opacity);assertNotEquals(opaque,faded);
+        assertNull(faded.opacity);assertEquals(true,faded.appearance.get("fading"));assertNotEquals(opaque,faded);
         assertNull(appearance.invoke(sprite,-1));
         sprite.alpha(Float.NaN);assertNull(appearance.invoke(sprite,12));
         sprite.alpha(0f);assertNull(appearance.invoke(sprite,12));

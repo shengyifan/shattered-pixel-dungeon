@@ -39,18 +39,18 @@ def test_patterns(client):
     # Existing cell examination remains a normal semantic route while the
     # custom visual is registered; no hidden trap name is copied into a cue.
     info = act(client, "cell.select", cell=min(first_cells), mode="examine")
-    assert info["observation"]["ui"]["modal"] and visual(info)["cues"] == []
+    assert info["observation"]["ui"]["modal"] and kind_cells(info, KIND) & first_cells
     assert any(n.get("text") == "Poison Dart Trap" for n in info["observation"]["ui"]["controls"])
     restored = act(client, "ui.back")
     assert kind_cells(restored, KIND) & first_cells
     restored_cells = kind_cells(restored, KIND)
     menu = next(n for n in restored["observation"]["ui"]["controls"] if str(n.get("shortcut_action", "")).lower() == "back")
     blocked = act(client, "ui.activate", control=menu["id"])
-    assert blocked["observation"]["ui"]["modal"] and visual(blocked)["cues"] == []
+    assert blocked["observation"]["ui"]["modal"] and kind_cells(blocked, KIND) & first_cells
     restored = act(client, "ui.back")
     assert kind_cells(restored, KIND) & first_cells
     outside = act(client, "view.pan", x=5000, y=5000)
-    assert not kind_cells(outside, KIND)
+    assert kind_cells(outside, KIND) & first_cells
     restored = act(client, "view.pan", x=-5000, y=-5000)
     assert kind_cells(restored, KIND) & first_cells
     # The original pattern fades after two actor turns plus its real-time
@@ -73,8 +73,8 @@ def test_patterns(client):
             "first_pattern_after_actual_modal_close": sorted(restored_cells),
             "second_pattern_in_final_zap_response": sorted(second_cells),
             "native_damage_jump_created_both_patterns": True, "no_post_setup_test_pattern_replacement": True,
-            "actual_cell_examine_and_modal_suppression": True, "offscreen_suppression_and_restore": True,
-            "native_turn_delay_and_alpha_fade": True, "faded_hidden_traps_not_reconstructed": True,
+            "actual_cell_examine_and_modal_keep_known_pattern": True, "camera_keeps_known_pattern": True,
+            "native_turn_delay_and_presentation_fade": True, "faded_hidden_traps_not_reconstructed": True,
             "old_pattern_history_retained": True, "replacement_uses_current_draw_only": True}
 
 

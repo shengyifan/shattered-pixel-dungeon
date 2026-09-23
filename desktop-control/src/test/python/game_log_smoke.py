@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import time
 import uuid
-from protocol7 import pages
+from protocol8 import pages
 import zipfile
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game, act
 from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json

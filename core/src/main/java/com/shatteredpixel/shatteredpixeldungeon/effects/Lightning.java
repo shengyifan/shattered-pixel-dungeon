@@ -161,8 +161,8 @@ public class Lightning extends Group {
 			return this;
 		}
 
-		@Override public void draw() {
-			super.draw();
+		@Override public void observeGameplayVisuals() {
+			super.observeGameplayVisuals();
 			if (observation != null && Game.observer.observesVisualCues())
 				com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeLinkedVisualDraw(arc1, arc2, observation);
 		}

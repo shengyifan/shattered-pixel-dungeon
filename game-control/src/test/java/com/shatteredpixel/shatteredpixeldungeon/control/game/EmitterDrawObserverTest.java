@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EmitterDrawObserverTest {
-    @Test void observerRunsAfterActualVisibleChildrenAndIsClearedOnReuse() {
+    @Test void semanticObserverRunsIndependentlyOfNativeChildrenAndIsClearedOnReuse() {
         Emitter emitter = new Emitter();
         List<String> order = new ArrayList<>();
         emitter.add(new Gizmo() { @Override public void draw() { order.add("drawn-child"); } });
@@ -24,6 +24,8 @@ class EmitterDrawObserverTest {
         hidden.visible = false; emitter.add(hidden);
         emitter.observeDraw(e -> order.add("after-draw"));
         emitter.draw();
+        assertEquals(Arrays.asList("drawn-child"), order);
+        emitter.observeGameplayVisuals();
         assertEquals(Arrays.asList("drawn-child", "after-draw"), order);
         order.clear(); emitter.revive(); emitter.draw();
         assertEquals(Arrays.asList("drawn-child"), order);

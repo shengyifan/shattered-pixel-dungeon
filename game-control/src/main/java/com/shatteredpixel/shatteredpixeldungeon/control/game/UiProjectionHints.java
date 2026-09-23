@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Capture-local evidence for the compact UI view. These hints are deliberately not map entries:
- * JSON, audit snapshots and intent signatures contain the original complete public UI only.
+ * Capture-local evidence for the gameplay UI merge. These hints are deliberately not map entries:
+ * JSON and audit snapshots contain public semantic values, never this ownership bookkeeping.
  * No hint retains a game object, callback, mutable source or information absent from that capture.
  */
 public final class UiProjectionHints {
@@ -23,13 +23,26 @@ public final class UiProjectionHints {
         public final String locator;
         /** Display field to an existing child control ID; text and provenance stay in that child. */
         public final Map<String, String> displayChildren;
+        /** Public same-frame association proved from the native subject identity. */
+        public final Map<String, Object> subject;
+        public final String feedbackKind;
+        public final boolean actionable;
 
         public Node(boolean emptyPlaceholder, List<String> ownedTextChildren, String locator,
                     Map<String, String> displayChildren) {
+            this(emptyPlaceholder, ownedTextChildren, locator, displayChildren, null, null, false);
+        }
+
+        public Node(boolean emptyPlaceholder, List<String> ownedTextChildren, String locator,
+                    Map<String, String> displayChildren, Map<String, Object> subject,
+                    String feedbackKind, boolean actionable) {
             this.emptyPlaceholder = emptyPlaceholder;
             this.ownedTextChildren = Collections.unmodifiableList(new ArrayList<>(ownedTextChildren));
             this.locator = locator;
             this.displayChildren = Collections.unmodifiableMap(new LinkedHashMap<>(displayChildren));
+            this.subject = subject == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(subject));
+            this.feedbackKind = feedbackKind;
+            this.actionable = actionable;
         }
     }
 

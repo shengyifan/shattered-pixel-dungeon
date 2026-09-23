@@ -52,6 +52,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
@@ -150,6 +151,7 @@ public class FloatingText extends RenderedTextBlock {
 	private Map<String,Object> displayedAppearance;
 	private Map<String,Object> lastPublishedAppearance;
 	private int displayedIconIndex = -1;
+	private Map<String,Object> gameplayTone = Collections.emptyMap();
 
 	private static final SparseArray<ArrayList<FloatingText>> stacks = new SparseArray<>();
 	
@@ -165,11 +167,11 @@ public class FloatingText extends RenderedTextBlock {
 		displayedAppearance = null;
 		lastPublishedAppearance = null;
 		displayedIconIndex = -1;
+		gameplayTone = Collections.emptyMap();
 		super.revive();
 	}
 
-	@Override public void draw() {
-		super.draw();
+	@Override public void observeGameplayVisuals() {
 		if (Game.observer.observesVisualCues())
 			GameScene.observeFloatingTextDraw(this, observationCell);
 		else displayedText = null;
@@ -189,17 +191,17 @@ public class FloatingText extends RenderedTextBlock {
 	}
 
 	void recordDisplayedAppearance(java.util.function.Predicate<Visual> uncovered, boolean cellVisible) {
-		VisibleText fragment = visibleTextFragment(word -> word.hasRenderableText()
-				&& Float.isFinite(word.am + word.aa) && word.am + word.aa > 0 && uncovered.test(word));
+		java.util.function.Predicate<RenderedText> eligible=word -> word.hasRenderableText()
+				&& Float.isFinite(word.am + word.aa) && word.am + word.aa > 0 && uncovered.test(word);
+		VisibleText fragment = cellVisible && observationCell >= 0 ? anchoredTextFragment(eligible) : visibleTextFragment(eligible);
 		displayedText = fragment.visible && !fragment.text.isEmpty() ? fragment : null;
-		Map<String,Object> appearance = new LinkedHashMap<>(fragment.styleData());
+		Map<String,Object> appearance = new LinkedHashMap<>();
+		if(displayedText!=null)appearance.putAll(gameplayTone);
 		if (cellVisible && observationCell >= 0) appearance.put("cell", observationCell);
 		if (icon != null && icon.parent == this && icon.exists && icon.visible && icon.texture != null
 				&& icon.width() > 0 && icon.height() > 0 && Float.isFinite(icon.alpha()) && icon.alpha() > 0
 				&& displayedIconIndex >= 0 && uncovered.test(icon)) {
-			Map<String,Object> descriptor = new LinkedHashMap<>();
-			descriptor.put("atlas", "floating_text"); descriptor.put("index", displayedIconIndex);
-			appearance.put("icon", Collections.unmodifiableMap(descriptor));
+			appearance.put("icon", GameplayIcons.floating(displayedIconIndex));
 		}
 		displayedAppearance = displayedText != null || appearance.containsKey("icon")
 				? Collections.unmodifiableMap(appearance) : null;
@@ -218,12 +220,15 @@ public class FloatingText extends RenderedTextBlock {
 	}
 
 	/** Only already-renderable, fully visible words qualify. No timer or status model is read. */
-	public String visibleCueText() {
+	public String visibleCueText() { return visibleCueText(false); }
+
+	/** The collector certifies the current FOV anchor before selecting the anchored path. */
+	public String visibleCueText(boolean knownAnchor) {
 		if (words == null || words.isEmpty()) return null;
 		for (RenderedText word : words) {
 			if (word == null || !word.hasRenderableText() || !Float.isFinite(word.am + word.aa) || word.am + word.aa <= 0) return null;
 		}
-		VisibleText fragment = visibleTextFragment();
+		VisibleText fragment = knownAnchor && observationCell >= 0 ? anchoredTextFragment(null) : visibleTextFragment();
 		return fragment.visible && !fragment.clipped ? fragment.text : null;
 	}
 	
@@ -300,6 +305,7 @@ public class FloatingText extends RenderedTextBlock {
 
 		text( text );
 		hardlight( color );
+		gameplayTone = GameplayIcons.feedback(color);
 
 		if (iconIdx != NO_ICON){
 			displayedIconIndex = iconIdx;

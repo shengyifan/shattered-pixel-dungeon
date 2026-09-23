@@ -1,4 +1,4 @@
-"""Offline protocol-7 records/action sharing checks; no game or profile I/O."""
+"""Offline protocol-8 records/action sharing checks; no game or profile I/O."""
 import copy
 import sys
 import unittest
@@ -6,12 +6,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "client"))
 from spdctl_client import DecodeError, decode_client_response, decode_wire_response, expand_structures
-import protocol7
+import protocol8
 from historical_v6_client import decode_wire_response as decode_historical_v6
 
 
 def frame(data, identifier="q", **extra):
-    return {"v": 7, "id": identifier, "s": "s2", "rev": "r7", "st": "completed", "data": data, **extra}
+    return {"v": 8, "id": identifier, "s": "s2", "rev": "r7", "st": "completed", "data": data, **extra}
 
 
 def sample():
@@ -31,14 +31,14 @@ def sample():
     }
 
 
-class Protocol7StructuresTest(unittest.TestCase):
+class Protocol8StructuresTest(unittest.TestCase):
     def test_activity_is_bound_before_copying_referenced_operations(self):
         data = {"activity": {"rid": "original"}, "acts": [{"op": "cancel", "ctl": "c1"}],
                 "ui": {"nodes": [{"id": "c1", "ops": [0]}]}}
         original = frame(data, rev="a1")
         pure = expand_structures(original)
         self.assertEqual({"op": "cancel"}, pure["data"]["ui"]["nodes"][0]["ops"][0])
-        for decoded in (decode_wire_response(original).data, protocol7.expand_structures(original)["data"]):
+        for decoded in (decode_wire_response(original).data, protocol8.expand_structures(original)["data"]):
             self.assertEqual({"op": "cancel", "rev": "a1", "rid": "original"},
                              decoded["ui"]["nodes"][0]["ops"][0])
             self.assertEqual("a1", decoded["acts"][0]["rev"])
@@ -200,7 +200,7 @@ class Protocol7StructuresTest(unittest.TestCase):
 
     def test_old_wire_and_old_structures_are_rejected_not_compatibly_decoded(self):
         with self.assertRaises(DecodeError):
-            decode_wire_response({"v": 6, "id": "old", "st": "completed"})
+            decode_wire_response({"v": 7, "id": "old", "st": "completed"})
         for key in ("node_shapes", "op_defs"):
             with self.subTest(key=key), self.assertRaises(DecodeError):
                 decode_wire_response(frame({"ui": {key: [], "nodes": []}}))
@@ -209,12 +209,12 @@ class Protocol7StructuresTest(unittest.TestCase):
 
     def test_canonical_scenario_helper_keeps_complete_actions_and_does_not_invent(self):
         expected = ["Click", "Long", None]
-        result = protocol7.response(frame(sample()))["result"]
+        result = protocol8.response(frame(sample()))["result"]
         self.assertEqual(expected, [a.get("label") for a in result["actions"]])
         no_actions = {"ui": {"nodes": [{"id": "c1", "ops": [{"op": "click"}]}]}}
-        self.assertEqual([], protocol7.response(frame(no_actions))["result"]["actions"])
-        self.assertEqual({"v": 7, "id": "t1.10", "op": "move", "s": "s1", "rev": "r1", "dir": "N"},
-                         protocol7.request("action.execute", {"action": "move.step", "direction": "north"}, "t1.10", "s1", "r1"))
+        self.assertEqual([], protocol8.response(frame(no_actions))["result"]["actions"])
+        self.assertEqual({"v": 8, "id": "t1.10", "op": "move", "s": "s1", "rev": "r1", "dir": "N"},
+                         protocol8.request("action.execute", {"action": "move.step", "direction": "north"}, "t1.10", "s1", "r1"))
 
 
 if __name__ == "__main__":

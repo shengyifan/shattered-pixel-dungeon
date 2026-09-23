@@ -16,19 +16,70 @@ public final class CombatVisualInventory {
     private static final Set<String> OBSERVATION_TYPES=new HashSet<>(Arrays.asList(
             "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
             "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueProjection",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayVisualKinds",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.SpectralWallCue",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.particles.SpectralWallParticle",
             "com.shatteredpixel.shatteredpixeldungeon.effects.ScreenEffectCollector",
             "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.TerrainVisualCue",
             "com.shatteredpixel.shatteredpixeldungeon.effects.ParticleMotionCue",
             "com.shatteredpixel.shatteredpixeldungeon.effects.RadialVisualCue",
             "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance",
             "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayGlow",
             "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayObservation",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayEvidence",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection",
             "com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.Fader",
             "com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.PixelCamera",
             "com.watabou.noosa.VisualCue", "com.watabou.noosa.VisualMetric",
             "com.watabou.noosa.ScreenEffect", "com.watabou.noosa.RuntimeObserver",
             "com.watabou.noosa.Game", "com.watabou.noosa.Gizmo", "com.watabou.noosa.Group", "com.watabou.noosa.Camera",
             "com.watabou.noosa.NoosaScript", "com.watabou.noosa.NoosaScriptNoLighting"));
+    private static final Set<String> SEMANTIC_CATALOGS=new HashSet<>(Arrays.asList(
+            "com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon",
+            "com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet",
+            "com.shatteredpixel.shatteredpixeldungeon.Assets.Sprites",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayVisualKinds"));
+    /* Include field initializers/constants used by source adapters, not only method bodies. */
+    private static final Set<String> SEMANTIC_BOUNDARIES=new HashSet<>(Arrays.asList(
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayObservation",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayEvidence",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter",
+            "com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.SpectralWallCue",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.particles.SpectralWallParticle",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.Flare",
+            "com.watabou.noosa.RuntimeObserver",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.ParticleMotionCue",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.TerrainVisualCue",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayGlow",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock",
+            "com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText",
+            "com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite",
+            "com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff",
+            "com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal.WarriorShield",
+            "com.shatteredpixel.shatteredpixeldungeon.items.Item",
+            "com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot"));
     private static final Set<String> STATE_FIELDS=new HashSet<>(Arrays.asList(
             "visible","on","scale","angle","curAnim","flipHorizontal","flipVertical",
             "rm","gm","bm","am","ra","ga","ba","aa","frame","x","y","width","height"));
@@ -36,8 +87,10 @@ public final class CombatVisualInventory {
             "effect","effectOverFog","addSprite","addToBack","status","ripple","emitter","centerEmitter",
             "bottomEmitter","cellEmitter","burst","pour","start","play","frame","texture","turnTo",
             "addState","removeState","hardlight","tint","color","alpha","showStatus","showStatusWithIcon",
-            "showOnCell","markVisual","resetObservation","observeCellVisualDraw","observeLinkedVisualDraw",
+            "showOnCell","markVisual","resetObservation","observeCellVisualDraw","observeLinkedVisualDraw","observeTerrainVisual",
             "shake","flash","fadeIn","animatedTextColor","animatedColor"));
+    private static final Set<String> GAMEPLAY_BURST_PRODUCERS=new HashSet<>(Arrays.asList(
+            "burst","start","burstForCharacter","startForCharacter","spriteBurst","splash"));
     private static final Set<String> VISUAL_MUTATIONS=new HashSet<>(Arrays.asList(
             "add","addToBack","front","back","bringToFront","sendToBack","erase","remove","clear",
             "draw","update","reset","revive","kill","killAndErase","destroy","fx","frame","texture",
@@ -47,7 +100,9 @@ public final class CombatVisualInventory {
             "showStatus","showStatusWithIcon","show","showOnCell","burst","pour","start","emit","pourExplode"));
     private static final Set<String> CALLBACKS=new HashSet<>(Arrays.asList(
             "draw","update","fx","emit","reset","revive","kill","destroy","link","createChildren","layout",
-            "icon","tintIcon","iconFadePercent","iconTextDisplay","tileDesc","tileName","image","renderedStateCue"));
+            "icon","tintIcon","iconFadePercent","iconTextDisplay","tileDesc","tileName","image","renderedStateCue",
+            "observeGameplayVisuals","gameplayStatus","gameplayIntentStatus","gameplaySubject",
+            "auraFact","lootFact","iconTextDisplayInfo","quantityStatus"));
     private static Trees trees;
     private static Types types;
     private static Elements elements;
@@ -56,6 +111,16 @@ public final class CombatVisualInventory {
     private static Path root;
     private static final List<Map<String,Object>> records=new ArrayList<>();
     private static final Map<String,Integer> occurrences=new HashMap<>();
+
+    /* Keep javac attribution and source-position snippets on the same immutable bytes. */
+    private static final class SnapshotSourceFile extends SimpleJavaFileObject {
+        private final String contents;
+        SnapshotSourceFile(Path path)throws java.io.IOException {
+            super(path.toUri(),JavaFileObject.Kind.SOURCE);
+            contents=Files.readString(path,StandardCharsets.UTF_8);
+        }
+        @Override public CharSequence getCharContent(boolean ignoreEncodingErrors){return contents;}
+    }
 
     private static boolean subtype(TypeMirror mirror,String target) {
         TypeElement parent=elements.getTypeElement(target);
@@ -70,7 +135,9 @@ public final class CombatVisualInventory {
     }
     private static String snippet(Tree node) {
         long start=trees.getSourcePositions().getStartPosition(unit,node),end=trees.getSourcePositions().getEndPosition(unit,node);
-        return start<0||end<start ? node.toString() : source.substring((int)start,(int)end);
+        if(start<0||end<start)return node.toString();
+        if(end>source.length())throw new IllegalStateException("Source positions exceed the parsed snapshot for "+unit.getSourceFile().getName());
+        return source.substring((int)start,(int)end);
     }
     private static void record(TreePath path,String kind,String sink) {
         Tree node=path.getLeaf();
@@ -88,6 +155,7 @@ public final class CombatVisualInventory {
         String file=root.relativize(Paths.get(unit.getSourceFile().toUri())).toString();
         String expression=snippet(node).replaceAll("\\s+"," ").trim();
         if(node instanceof ClassTree)expression=((ClassTree)node).getKind()+" "+owner;
+        if(kind.equals("semantic_catalog")||kind.equals("source_boundary"))body=snippet(node);
         if(node instanceof MethodTree){MethodTree m=(MethodTree)node;expression=m.getReturnType()+" "+m.getName()+m.getParameters();}
         try{
             String identity=digest(file+"\n"+owner+"\n"+method+"\n"+kind+"\n"+sink+"\n"+expression);
@@ -106,22 +174,29 @@ public final class CombatVisualInventory {
         DiagnosticCollector<JavaFileObject> diagnostics=new DiagnosticCollector<>();
         try(StandardJavaFileManager manager=compiler.getStandardFileManager(diagnostics,null,StandardCharsets.UTF_8)){
             List<Path> paths=new ArrayList<>();
-            for(String tree:Arrays.asList("core","SPD-classes"))try(Stream<Path> stream=Files.walk(root.resolve(tree+"/src/main/java"))){
+            for(String tree:Arrays.asList("core","SPD-classes","game-control"))try(Stream<Path> stream=Files.walk(root.resolve(tree+"/src/main/java"))){
                 paths.addAll(stream.filter(p->p.toString().endsWith(".java")).sorted().collect(Collectors.toList()));
             }
             for(int i=2;i<args.length;i++)paths.add(Paths.get(args[i]));
-            String sourcepath=Stream.of("core","SPD-classes","services").map(p->root.resolve(p+"/src/main/java").toString()).collect(Collectors.joining(java.io.File.pathSeparator));
+            String sourcepath=Stream.of("core","SPD-classes","services","game-control").map(p->root.resolve(p+"/src/main/java").toString()).collect(Collectors.joining(java.io.File.pathSeparator));
             List<String> options=Arrays.asList("-proc:none","-implicit:none","-encoding","UTF-8","-Xlint:none","-Xprefer:source","-classpath",args[1],"-sourcepath",sourcepath);
-            JavacTask task=(JavacTask)compiler.getTask(null,manager,diagnostics,options,null,manager.getJavaFileObjectsFromPaths(paths));
+            List<JavaFileObject> snapshots=new ArrayList<>(paths.size());
+            for(Path path:paths)snapshots.add(new SnapshotSourceFile(path));
+            JavacTask task=(JavacTask)compiler.getTask(null,manager,diagnostics,options,null,snapshots);
             List<CompilationUnitTree> units=new ArrayList<>();task.parse().forEach(units::add);task.analyze();
             trees=Trees.instance(task);types=task.getTypes();elements=task.getElements();
             long errors=diagnostics.getDiagnostics().stream().filter(d->d.getKind()==Diagnostic.Kind.ERROR).count();
             if(errors>0){for(Diagnostic<?> d:diagnostics.getDiagnostics())if(d.getKind()==Diagnostic.Kind.ERROR)System.err.println(d);throw new IllegalStateException("Unresolved visual source types: "+errors);}
-            for(CompilationUnitTree current:units){unit=current;source=Files.readString(Paths.get(unit.getSourceFile().toUri()));
+            for(CompilationUnitTree current:units){unit=current;source=unit.getSourceFile().getCharContent(true).toString();
                 new TreePathScanner<Void,Void>(){
                     @Override public Void visitClass(ClassTree node,Void ignored){
                         TypeMirror type=trees.getTypeMirror(getCurrentPath());
                         if(visual(type))record(getCurrentPath(),"visual_type",type.toString());
+                        Element symbol=trees.getElement(getCurrentPath());
+                        if(symbol!=null&&SEMANTIC_CATALOGS.contains(symbol.toString()))
+                            record(getCurrentPath(),"semantic_catalog",symbol.toString());
+                        if(symbol!=null&&SEMANTIC_BOUNDARIES.contains(symbol.toString()))
+                            record(getCurrentPath(),"source_boundary",symbol.toString());
                         return super.visitClass(node,ignored);
                     }
                     @Override public Void visitNewClass(NewClassTree node,Void ignored){
@@ -136,14 +211,20 @@ public final class CombatVisualInventory {
                             String method=node.getName().toString();
                             boolean displayAccessor=visual(symbol.getEnclosingElement().asType())
                                     &&(method.startsWith("rendered")||method.startsWith("displayed")||method.equals("intentStatus"));
-                            if(displayAccessor||OBSERVATION_TYPES.stream().anyMatch(type->owner.equals(type)||owner.startsWith(type+".")))
+                            if(displayAccessor||OBSERVATION_TYPES.stream().anyMatch(type->owner.equals(type)||owner.startsWith(type+"."))
+                                    ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene")
+                                            &&method.equals("observeSpectralWall")
+                                    ||(owner.equals("com.shatteredpixel.shatteredpixeldungeon.items.Item")
+                                            ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon"))
+                                            &&method.equals("status"))
                                 record(getCurrentPath(),"observation_boundary",owner+"."+node.getName());
                         }
                         if(CALLBACKS.contains(node.getName().toString())&&symbol!=null){
                             TypeMirror owner=symbol.getEnclosingElement().asType();
                             if(visual(owner)||subtype(owner,"com.watabou.noosa.particles.Emitter.Factory")
                                     ||subtype(owner,"com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff")
-                                    ||subtype(owner,"com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap"))
+                                    ||subtype(owner,"com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap")
+                                    ||subtype(owner,"com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus"))
                                 record(getCurrentPath(),"callback",symbol.getEnclosingElement()+"."+node.getName());
                         }
                         return super.visitMethod(node,ignored);
@@ -153,7 +234,10 @@ public final class CombatVisualInventory {
                         if(symbol instanceof ExecutableElement){
                             String name=symbol.getSimpleName().toString(),owner=symbol.getEnclosingElement().toString();
                             boolean rendered=visual(symbol.getEnclosingElement().asType());
-                            if(rendered&&VISUAL_MUTATIONS.contains(name)||PRODUCERS.contains(name)&&(owner.startsWith("com.shatteredpixel.")||owner.startsWith("com.watabou.")))
+                            if(rendered&&VISUAL_MUTATIONS.contains(name)
+                                    ||PRODUCERS.contains(name)&&(owner.startsWith("com.shatteredpixel.")||owner.startsWith("com.watabou."))
+                                    ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst")
+                                            &&GAMEPLAY_BURST_PRODUCERS.contains(name))
                                 record(getCurrentPath(),"call",owner+"."+name);
                             if(node.getMethodSelect() instanceof MemberSelectTree){
                                 Tree receiver=((MemberSelectTree)node.getMethodSelect()).getExpression();

@@ -290,6 +290,7 @@ class GameSnapshotterTest {
         Rat rat = new Rat(); rat.pos = 6; level.mobs.add(rat);
         CharSprite sprite = allocateFixture(CharSprite.class);
         sprite.exists = sprite.alive = sprite.visible = true;
+        sprite.am = 1;
         EmoIcon.Sleep sleep = allocateFixture(EmoIcon.Sleep.class);
         sleep.exists = sleep.alive = sleep.visible = true;
         set(sprite, CharSprite.class, "emo", sleep); rat.sprite = sprite;
@@ -307,6 +308,20 @@ class GameSnapshotterTest {
                 PlayerObservation.capture(hero, level, "game").get("visible_entities");
         assertEquals("interact", changed.get(0).get("context_action"));
         assertNull(changed.get(0).get("emotion"));
+    }
+
+    @Test
+    void fieldOfViewDoesNotRevealAnExplicitlyHiddenPresentationButCameraPositionDoesNotCropIt() throws Exception {
+        Hero hero=hero();FixtureLevel level=new FixtureLevel();Dungeon.level=level;
+        level.visited[6]=level.heroFOV[6]=true;
+        Rat rat=new Rat();rat.pos=6;level.mobs.add(rat);
+        CharSprite sprite=allocateFixture(CharSprite.class);
+        sprite.exists=sprite.alive=sprite.visible=true;rat.sprite=sprite;
+        assertTrue(((List<?>)PlayerObservation.capture(hero,level,"game").get("visible_entities")).isEmpty());
+        sprite.am=1;sprite.x=100000;
+        assertEquals(1,((List<?>)PlayerObservation.capture(hero,level,"game").get("visible_entities")).size());
+        sprite.visible=false;
+        assertTrue(((List<?>)PlayerObservation.capture(hero,level,"game").get("visible_entities")).isEmpty());
     }
 
     @Test

@@ -31,9 +31,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.particles.Emitter;
 
 public class Blindweed extends Plant {
 	
@@ -60,7 +63,10 @@ public class Blindweed extends Plant {
 		}
 		
 		if (Dungeon.level.heroFOV[pos]) {
-			CellEmitter.get( pos ).burst( Speck.factory( Speck.LIGHT ), 4 );
+			Emitter activation = CellEmitter.get( pos );
+			activation.burst( Speck.factory( Speck.LIGHT ), 4 );
+			if (Game.observer.observesVisualCues()) activation.observeDraw(
+					new CellParticleCue("plant_activation", pos, Speck.factory(Speck.LIGHT), Speck.class));
 		}
 	}
 	

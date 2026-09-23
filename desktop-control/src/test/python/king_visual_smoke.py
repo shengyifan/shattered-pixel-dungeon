@@ -24,11 +24,11 @@ def test_visible(client):
     shown = cues(waiting)
     assert {cue["kind"] for cue in shown} == KINDS, visual(waiting)
     assert len({cue["cell"] for cue in shown}) == 4
-    assert all(set(cue) == {"kind", "cell"} for cue in shown)
+    assert all({"kind", "cell"} <= set(cue) <= {"kind", "cell", "appearance"} for cue in shown)
     menu = next(node for node in waiting["observation"]["ui"]["controls"]
                 if str(node.get("shortcut_action", "")).lower() == "back")
     covered = act(client, "ui.activate", control=menu["id"])
-    assert covered["observation"]["ui"]["modal"] and not cues(covered)
+    assert covered["observation"]["ui"]["modal"] and {cue["kind"] for cue in cues(covered)} == KINDS
     restored = act(client, "ui.back")
     assert {cue["kind"] for cue in cues(restored)} == KINDS
     old_entities = {e.get("name") for e in before["observation"]["visible_entities"]}
@@ -48,8 +48,8 @@ def test_visible(client):
     historical = read_visual_events(client)
     assert KINDS <= {cue["kind"] for event in historical for cue in event["data"]["cues"]}
     assert cleared["observation"]["hero"] == spawned["observation"]["hero"]
-    return {"all_four_drawn_styles_in_final_wait": shown,
-            "modal_suppression_and_original_back": True,
+    return {"all_four_semantic_warnings_in_final_wait": shown,
+            "modal_keeps_known_warnings_and_original_back": True,
             "four_original_minions_spawned": sorted(entities - old_entities),
             "actual_tail_at_spawn_response": tail, "natural_tail_disappearance": True,
             "shown_styles_preserved_in_history": True, "private_timer_or_summon_type_published": False}

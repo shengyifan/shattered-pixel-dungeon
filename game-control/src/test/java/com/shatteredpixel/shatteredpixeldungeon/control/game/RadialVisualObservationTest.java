@@ -26,85 +26,53 @@ import static org.junit.jupiter.api.Assertions.*;
 class RadialVisualObservationTest {
     @BeforeAll static void resources() { GameSnapshotterTest.resourceOnlyRuntime(); }
 
-    @Test void novaPublishesOnlyAfterItsNativeImageDrawAndPreservesTheGradientAlphaTransform() throws Exception {
-        try (DrawFixture fixture = new DrawFixture()) {
-            DrawnNova halo = fixture.halo();
-            fixture.begin(); fixture.finish(); assertTrue(fixture.cues.isEmpty(), "Construction is not draw evidence");
-            halo.am = -1; halo.aa = 1;
-            assertEquals(0, halo.alpha()); assertTrue(halo.renderedHaloContributes());
-            VisualCue edge = fixture.draw(halo);
-            assertEquals(1, fixture.shader.draws);
-            assertEquals("supernova_halo", edge.kind);
-            assertEquals(Arrays.asList(-1f, 1f), edge.appearance.get("alpha_transform"));
-            assertEquals(Arrays.asList(12f, 12f), edge.appearance.get("radius_world"));
-            assertEquals(Arrays.asList(257f * 12f / 128f, 257f * 12f / 128f), edge.appearance.get("size"));
-            assertEquals(Arrays.asList(80f, 80f), edge.appearance.get("center_world"));
-            assertNull(edge.opacity, "A gradient cannot be represented by white-pixel alpha alone");
-            assertThrows(UnsupportedOperationException.class, () -> edge.appearance.put("turnsLeft", 10));
-            halo.am = halo.aa = 0; assertNull(fixture.draw(halo));
-            halo.am = 1; halo.aa = -.95f;
-            assertNull(fixture.draw(halo), "Synthetic halo's maximum texture alpha is below .95");
+    @Test void novaRetainsKnownExtentWithoutNativeDrawOrShaderParameters() throws Exception {
+        try(DrawFixture fixture=new DrawFixture()){
+            DrawnNova halo=fixture.halo();fixture.begin();fixture.finish();
+            assertEquals(1,fixture.cues.size(),"An offscreen source need not execute a native draw");
+            assertEquals(0,fixture.shader.draws);
+            halo.am=-1;halo.aa=1;assertTrue(halo.renderedHaloContributes());
+            VisualCue edge=fixture.draw(halo);assertEquals("supernova_halo",edge.kind);
+            assertEquals("visual_extent",edge.appearance.get("coverage"));
+            assertTrue(edge.appearance.get("cells") instanceof List<?>);
+            for(String field:Arrays.asList("alpha_transform","radius_world","size","center_world","scale","angle"))
+                assertFalse(edge.appearance.containsKey(field));
+            assertNull(edge.color);assertNull(edge.opacity);
+            halo.am=halo.aa=0;assertNull(fixture.draw(halo));
+            halo.am=1;halo.aa=-.95f;assertNull(fixture.draw(halo));
         }
     }
-
-    @Test void novaNeverReadsTheCountdownOrBackingRadiusAndRejectsChangedTextureOrUndrawnImage() throws Exception {
-        try (DrawFixture fixture = new DrawFixture()) {
-            DrawnNova halo = fixture.halo();
-            VisualCue first = fixture.draw(halo);
-            set(halo.owner, SuperNovaTracker.class, "turnsLeft", -900);
-            set(halo, Halo.class, "radius", 999f);
-            assertEquals(first, fixture.draw(halo), "Only already applied scale/alpha belong to this frame");
-            halo.scale.set(halo.scale.x * 2); assertNotEquals(first, fixture.draw(halo));
-            SmartTexture nativeTexture = halo.texture;
-            halo.texture = fixture.effectTexture; assertNull(fixture.draw(halo));
-            halo.texture = null; int before = fixture.shader.draws;
-            assertNull(fixture.draw(halo)); assertEquals(before, fixture.shader.draws);
-            halo.texture = nativeTexture; set(halo, Image.class, "buffer", null); set(halo, Image.class, "dirty", false);
-            assertNull(fixture.draw(halo)); assertEquals(before, fixture.shader.draws);
+    @Test void observationDoesNotReadOrAdvanceTheCountdownOrFutureRadius() throws Exception {
+        try(DrawFixture fixture=new DrawFixture()){
+            DrawnNova halo=fixture.halo();VisualCue first=fixture.draw(halo);
+            set(halo.owner,SuperNovaTracker.class,"turnsLeft",-900);set(halo,Halo.class,"radius",999f);
+            assertEquals(first,fixture.draw(halo));assertEquals(-900,get(halo.owner,SuperNovaTracker.class,"turnsLeft"));
+            halo.scale.set(halo.scale.x*3);assertNotEquals(first,fixture.draw(halo));
+            halo.texture=fixture.effectTexture;assertNull(fixture.draw(halo));halo.texture=null;assertNull(fixture.draw(halo));
         }
     }
-
-    @Test void novaAndWaveRequireFullActualBoundsFovAttachmentAndNoOverlay() throws Exception {
-        try (DrawFixture fixture = new DrawFixture()) {
-            DrawnNova halo = fixture.halo(); assertNotNull(fixture.draw(halo));
-            halo.visible = false; assertNull(fixture.draw(halo)); halo.visible = true;
-            fixture.scene.erase(halo); assertNull(fixture.draw(halo)); fixture.scene.add(halo);
-            // The center remains visible; one peripheral quad cell is hidden.
-            fixture.level.heroFOV[4 + 4 * fixture.level.width()] = false;
-            assertNull(fixture.draw(halo)); Arrays.fill(fixture.level.heroFOV, true);
-            Camera.main.scroll.x = 70;
-            assertNull(fixture.draw(halo), "The visible center tile cannot disclose a partially clipped halo");
-            Camera.main.scroll.x = 0;
-            // The quad begins at 67.953125; overlap its rim while leaving the center tile uncovered.
-            fixture.cover = new Visual(68, 68, 2, 2); fixture.cover.camera = PixelScene.uiCamera;
-            fixture.scene.add(fixture.cover); assertNull(fixture.draw(halo));
-            fixture.cover.visible = false; assertNotNull(fixture.draw(halo));
-            DrawnWave wave = fixture.wave(6); wave.scale.set(1.5f);
-            assertNotNull(fixture.draw(wave));
-            fixture.level.heroFOV[4 + 4 * fixture.level.width()] = false;
-            assertNull(fixture.draw(wave));
+    @Test void viewportAndUiCannotHideKnownExtentAndFogReturnsOnlyPartialCells() throws Exception {
+        try(DrawFixture fixture=new DrawFixture()){
+            DrawnNova halo=fixture.halo();VisualCue first=fixture.draw(halo);assertNotNull(first);
+            Camera.main.scroll.x=700;assertEquals(first,fixture.draw(halo));
+            fixture.cover=new Visual(68,68,40,40);fixture.cover.camera=PixelScene.uiCamera;fixture.scene.add(fixture.cover);
+            assertEquals(first,fixture.draw(halo));
+            fixture.level.heroFOV[4+4*fixture.level.width()]=false;
+            VisualCue partial=fixture.draw(halo);assertNotNull(partial);assertEquals(true,partial.appearance.get("partial"));
+            assertFalse(((List<?>)partial.appearance.get("cells")).contains(68));
+            Arrays.fill(fixture.level.heroFOV,false);assertNull(fixture.draw(halo));
+            Arrays.fill(fixture.level.heroFOV,true);halo.visible=false;assertNull(fixture.draw(halo));
+            halo.visible=true;fixture.scene.erase(halo);assertNull(fixture.draw(halo));
         }
     }
-
-    @Test void blastRetainsCurrentRadiusSizeScaleAndOpacityButNeverConfiguredFinalSize() throws Exception {
-        try (DrawFixture fixture = new DrawFixture()) {
-            List<VisualCue> observed = new ArrayList<>();
-            for (float configured : new float[]{1, 3, 6}) {
-                DrawnWave wave = fixture.wave(configured);
-                assertNull(fixture.draw(wave), "The reset zero-size image has no visible extent");
-                wave.scale.set(configured / 2f); wave.alpha(.5f);
-                VisualCue cue = fixture.draw(wave); observed.add(cue);
-                assertEquals("blast_wave", cue.kind);
-                assertEquals(Arrays.asList(8f * configured, 8f * configured), cue.appearance.get("size"));
-                assertEquals(Arrays.asList(4f * configured, 4f * configured), cue.appearance.get("radius_world"));
-                assertEquals(Arrays.asList(.5f, 0f), cue.appearance.get("alpha_transform"));
-                set(wave, WandOfBlastWave.BlastWave.class, "size", 99f);
-                set(wave, WandOfBlastWave.BlastWave.class, "time", 999f);
-                assertEquals(cue, fixture.draw(wave), "Configured future size/time do not enter observation");
-                assertFalse(cue.appearance.containsKey("duration")); assertFalse(cue.appearance.containsKey("max"));
-                fixture.scene.erase(wave);
-            }
-            assertEquals(3, new HashSet<>(observed).size());
+    @Test void waveUsesCurrentKnownExtentWithoutConfiguredFinalSizeOrTiming() throws Exception {
+        try(DrawFixture fixture=new DrawFixture()){
+            DrawnWave wave=fixture.wave(6);assertNull(fixture.draw(wave));
+            wave.scale.set(1.5f);wave.alpha(.5f);VisualCue cue=fixture.draw(wave);assertNotNull(cue);
+            assertEquals("blast_wave",cue.kind);assertEquals("ring",cue.appearance.get("shape"));
+            set(wave,WandOfBlastWave.BlastWave.class,"size",99f);set(wave,WandOfBlastWave.BlastWave.class,"time",999f);
+            assertEquals(cue,fixture.draw(wave));assertEquals(999f,get(wave,WandOfBlastWave.BlastWave.class,"time"));
+            assertNull(cue.opacity);assertFalse(cue.appearance.containsKey("duration"));
         }
     }
 
@@ -115,6 +83,7 @@ class RadialVisualObservationTest {
         final Level previousLevel = Dungeon.level;
         final String previousRun = Dungeon.runId;
         final Object previousScene;
+        final Object previousActor, previousActorThread;
         final Map<Object,SmartTexture> textures;
         final SmartTexture previousHalo, previousEffects;
         final SampleTexture haloTexture, effectTexture;
@@ -127,6 +96,10 @@ class RadialVisualObservationTest {
 
         @SuppressWarnings("unchecked") DrawFixture() throws Exception {
             previousScene = get(null, GameScene.class, "scene");
+            previousActor=get(null,com.shatteredpixel.shatteredpixeldungeon.actors.Actor.class,"current");
+            previousActorThread=get(null,GameScene.class,"actorThread");
+            set(null,com.shatteredpixel.shatteredpixeldungeon.actors.Actor.class,"current",null);
+            set(null,GameScene.class,"actorThread",null);
             textures = (Map<Object,SmartTexture>)get(null, TextureCache.class, "all");
             haloTexture = texture(257, 257); effectTexture = texture(128, 128);
             previousHalo = textures.put(Halo.class, haloTexture); previousEffects = textures.put(Assets.Effects.EFFECTS, effectTexture);
@@ -158,11 +131,13 @@ class RadialVisualObservationTest {
         }
         void begin() { collector.beginDraw(); }
         void finish() { collector.finishDraw(); }
-        VisualCue draw(Image image) { begin(); image.draw(); finish(); return cues.isEmpty() ? null : cues.get(0); }
+        VisualCue draw(Image image) { begin(); finish(); return cues.isEmpty() ? null : cues.get(0); }
         @Override public void close() throws Exception {
             Game.instance = previousGame; Game.observer = previousObserver; Camera.main = previousCamera;
             PixelScene.uiCamera = previousUiCamera; Dungeon.level = previousLevel; Dungeon.runId = previousRun;
             set(null, GameScene.class, "scene", previousScene);
+            set(null,com.shatteredpixel.shatteredpixeldungeon.actors.Actor.class,"current",previousActor);
+            set(null,GameScene.class,"actorThread",previousActorThread);
             if (previousHalo == null) textures.remove(Halo.class); else textures.put(Halo.class, previousHalo);
             if (previousEffects == null) textures.remove(Assets.Effects.EFFECTS); else textures.put(Assets.Effects.EFFECTS, previousEffects);
         }

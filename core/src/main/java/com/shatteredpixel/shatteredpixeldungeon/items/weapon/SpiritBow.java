@@ -318,10 +318,11 @@ public class SpiritBow extends Weapon {
 		@Override
 		public Emitter emitter() {
 			if (Dungeon.hero.buff(NaturesPower.naturesPowerTracker.class) != null && !sniperSpecial){
-				Emitter e = new Emitter();
+				com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter e = new com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter();
 				e.pos(5, 5);
 				e.fillTarget = false;
 				e.pour(LeafParticle.GENERAL, 0.01f);
+				e.observeNaturePowered();
 				return e;
 			} else {
 				return super.emitter();

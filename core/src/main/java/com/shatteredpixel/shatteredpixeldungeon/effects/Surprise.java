@@ -61,9 +61,9 @@ public class Surprise extends Image {
 		time = TIME_TO_FADE;
 	}
 
-	@Override public void draw() {
-		super.draw();
-		if (visualCell >= 0 && texture != null && buffer != null && Game.observer.observesVisualCues())
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (visualCell >= 0 && texture != null && Game.observer.observesVisualCues())
 			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,
 					new com.watabou.noosa.VisualCue("surprise_mark", visualCell, null, null, displayedTextColor()));
 	}

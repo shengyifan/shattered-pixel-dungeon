@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Switch the original GUI language repeatedly in one protocol-7 fixture JVM.
+"""Switch the original GUI language repeatedly in one protocol-8 fixture JVM.
 
 Targets come from public language/code sources, never native-word matching. Only
 same-version UI postconditions read the isolated assertion stream; no save reads.
@@ -75,7 +75,7 @@ class SwitchClient(MatrixClient):
 
     def request(self, op, args=None, **kwargs):
         response = super().request(op, args, **kwargs)
-        assert response.get("protocol_version") == 7, response
+        assert response.get("protocol_version") == 8, response
         if response.get("ok") and op == "state.get":
             failures = validate(response.get("result"))
             assert not failures, {"op": op, "source_failures": failures[:30]}
@@ -184,7 +184,7 @@ def run(root, classpath, runtime_id, languages):
         hello = client.request("protocol.info")
         assert hello.get("ok"), hello
         metadata = hello["result"]
-        assert hello["protocol_version"] == 7 and metadata["audit_schema_version"] == 10 and metadata["text_language"] == "en", metadata
+        assert hello["protocol_version"] == 8 and metadata["audit_schema_version"] == 11 and metadata["text_language"] == "en", metadata
         report.update(build_id=metadata["build_id"], cli_version=metadata["cli_version"], session_id=metadata["session_id"])
         initial = start_warrior(client)
         assert_gui_checkpoint(profile, initial, "zh")

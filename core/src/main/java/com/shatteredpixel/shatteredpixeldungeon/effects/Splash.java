@@ -54,7 +54,9 @@ public class Splash {
 		fact.color = color;
 		fact.dir = -3.1415926f / 2;
 		fact.cone = 3.1415926f;
+		GameplayBurst.SplashCapture observed = GameplayBurst.beforeSplash(emitter);
 		emitter.burst( fact, n );
+		GameplayBurst.afterSplash(observed, emitter, fact);
 	}
 	
 	public static void at( PointF p, final float dir, final float cone, final int color, int n ) {
@@ -73,7 +75,9 @@ public class Splash {
 		SplashFactory fact = FACTORIES.get(color);fact.color = color;
 		fact.dir = dir;
 		fact.cone = cone;
+		GameplayBurst.SplashCapture observed = GameplayBurst.beforeSplash(emitter);
 		emitter.burst( fact, n );
+		GameplayBurst.afterSplash(observed, emitter, fact);
 	}
 
 	public static void around(Visual v, final int color, int n ) {
@@ -92,7 +96,9 @@ public class Splash {
 		fact.color = color;
 		fact.dir = -3.1415926f / 2;
 		fact.cone = 3.1415926f;
+		GameplayBurst.SplashCapture observed = GameplayBurst.beforeSplash(emitter);
 		emitter.burst( fact, n );
+		GameplayBurst.afterSplash(observed, emitter, fact);
 	}
 
 	public static void at( PointF p, final float dir, final float cone, final int color, int n, float interval ) {
@@ -112,7 +118,9 @@ public class Splash {
 		fact.color = color;
 		fact.dir = dir;
 		fact.cone = cone;
+		GameplayBurst.SplashCapture observed = GameplayBurst.beforeSplash(emitter);
 		emitter.start( fact, interval, n );
+		GameplayBurst.afterSplash(observed, emitter, fact);
 	}
 
 	//each color has its own factory, let's multiple splash effects occur at once

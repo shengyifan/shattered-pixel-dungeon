@@ -8,7 +8,7 @@ import com.watabou.noosa.Tilemap;
 public final class TilemapCue implements Tilemap.DrawObserver {
     private final String kind;
     public TilemapCue(String kind) { this.kind = kind; }
-    @Override public void afterDraw(Tilemap source) {
+    @Override public void observeState(Tilemap source) {
         if (Game.observer.observesVisualCues()) GameScene.observeTilemapDraw(source, kind);
     }
 }

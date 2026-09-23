@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Collections;
 
-public class Banner extends Image implements RenderedStatus {
+public class Banner extends Image implements GameplayStatus {
 
 	private String observationKind;
 	private com.watabou.gltextures.SmartTexture observationTexture;
@@ -60,17 +60,16 @@ public class Banner extends Image implements RenderedStatus {
 		Scene scene=Game.instance==null?null:Game.scene();String kind=displayedKind();
 		if(observed||kind==null||!(scene instanceof GameScene)||Dungeon.runId==null
 				||!RenderedAppearance.uncoveredInScene(this,scene))return;
-		Map<String,Object> appearance=RenderedAppearance.image(this);if(appearance.isEmpty())return;
-		observed=true;Game.observer.onBanner(Dungeon.runId,kind,appearance);
+		observed=true;Game.observer.onBanner(Dungeon.runId,kind,Collections.emptyMap());
 	}
 
-	@Override public Map<String,Object> renderedStatus() {
+	@Override public Map<String,Object> gameplayStatus() {
 		String kind=displayedKind();Scene scene=Game.instance==null?null:Game.scene();
 		if(!observed||kind==null||!(scene instanceof GameScene)||!RenderedAppearance.uncoveredInScene(this,scene))return Collections.emptyMap();
-		Map<String,Object> result=new LinkedHashMap<>();result.put("banner_kind",kind);result.put("banner_appearance",RenderedAppearance.image(this));return result;
+		Map<String,Object> result=new LinkedHashMap<>();result.put("banner_kind",kind);return result;
 	}
 
-	@Override public Map<String,Object> intentStatus(){return Collections.emptyMap();}
+	@Override public Map<String,Object> gameplayIntentStatus(){return Collections.emptyMap();}
 
 	private enum State {
 		FADE_IN, STATIC, FADE_OUT

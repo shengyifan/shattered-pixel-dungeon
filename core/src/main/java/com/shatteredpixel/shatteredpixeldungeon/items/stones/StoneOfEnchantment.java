@@ -66,7 +66,8 @@ public class StoneOfEnchantment extends InventoryStone {
 			
 		}
 		
-		curUser.sprite.emitter().start( Speck.factory( Speck.LIGHT ), 0.1f, 5 );
+		com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.startForCharacter(
+				curUser.sprite.emitter(), Speck.factory(Speck.LIGHT), 0.1f, 5, "light_specks", curUser.sprite, false);
 		Enchanting.show( curUser, item );
 		
 		if (item instanceof Weapon) {

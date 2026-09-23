@@ -33,6 +33,7 @@ public class GnollGeomancerSprite extends MobSprite {
 	boolean isStatue = false;
 
 	private Emitter earthArmor;
+	private Object gameplayArmorEpisode;
 
 	public GnollGeomancerSprite() {
 		super();
@@ -90,6 +91,7 @@ public class GnollGeomancerSprite extends MobSprite {
 			earthArmor.width = width()-(4*scale.x);
 			earthArmor.height = height() - (10*scale.y);
 			earthArmor.pour(EarthParticle.SMALL, 0.15f);
+			gameplayArmorEpisode=earthArmor.observedDrawEpisode();
 		}
 	}
 
@@ -98,6 +100,29 @@ public class GnollGeomancerSprite extends MobSprite {
 			earthArmor.on = false;
 			earthArmor = null;
 		}
+	}
+
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if(!com.watabou.noosa.Game.observer.observesVisualCues())return;
+		com.watabou.noosa.VisualCue armor=gameplayArmorCue();
+		if(armor!=null)com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,armor);
+		int cell=renderedCell();
+		if(cell>=0&&isStatue&&exists&&visible&&alpha()>0)
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,
+					new com.watabou.noosa.VisualCue("geomancer_stone_form",cell));
+	}
+
+	/** The selected native armor emitter, never the actor's sapper/armor state. */
+	public com.watabou.noosa.VisualCue gameplayArmorCue() {
+		int cell=renderedCell();
+		if(cell<0||!exists||!visible||!Float.isFinite(alpha())||alpha()<=0||parent==null
+				||earthArmor==null||!earthArmor.exists||!earthArmor.visible||!earthArmor.on||earthArmor.parent==null
+				||earthArmor.observedDrawEpisode()!=gameplayArmorEpisode)return null;
+		com.watabou.noosa.Gizmo sourceRoot=this,armorRoot=earthArmor;
+		while(sourceRoot.parent!=null)sourceRoot=sourceRoot.parent;
+		while(armorRoot.parent!=null)armorRoot=armorRoot.parent;
+		return sourceRoot==armorRoot?new com.watabou.noosa.VisualCue("gnoll_earth_armor",cell):null;
 	}
 
 	@Override

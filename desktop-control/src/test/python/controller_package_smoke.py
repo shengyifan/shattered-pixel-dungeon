@@ -22,7 +22,7 @@ import time
 import uuid
 import zlib
 
-import protocol7
+import protocol8
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "desktop-control/client"))
 from spdctl_client import decode_wire_response
 
@@ -66,8 +66,8 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.7.0.1", self.hello
-            assert self.hello["data"]["audit_schema_version"] == 10, self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.8.0.0", self.hello
+            assert self.hello["data"]["audit_schema_version"] == 11, self.hello
             self.install(self.hello, "info")
         except Exception:
             self.cleanup()
@@ -89,7 +89,7 @@ class ControllerClient:
         return json.loads(line.decode("utf-8", errors="strict"))
 
     def request(self, intent):
-        encoded = protocol7.wire_bytes(intent)
+        encoded = protocol8.wire_bytes(intent)
         self.send_file.write(encoded)
         self.send_file.flush()
         assert self.process.stdin.write(encoded) == len(encoded)
@@ -104,7 +104,7 @@ class ControllerClient:
     def remember_wire(self, value):
         if not isinstance(value, dict):
             return
-        if value.get("v") == 7 and "id" in value and ("st" in value or "err" in value):
+        if value.get("v") == 8 and "id" in value and ("st" in value or "err" in value):
             self.wire_frames.append(value)
             return
         for field in ("response", "outcome", "observation", "discovery", "initial_error", "original_response", "receipt"):
@@ -117,8 +117,8 @@ class ControllerClient:
         return result["response"] if result.get("controller") == "response" else result
 
     def install(self, result, op):
-        assert result.get("v") == 7 and "err" not in result, result
-        view = protocol7.response(result, op)
+        assert result.get("v") == 8 and "err" not in result, result
+        view = protocol8.response(result, op)
         assert view["ok"], view
         self.scope = result.get("s", self.scope)
         self.revision = result.get("rev", self.revision)
@@ -157,7 +157,7 @@ class ControllerClient:
             self.stale_rejections += 1
             self.state()
             raise StaleAction(op)
-        assert response.get("v") == 7 and "err" not in response, response
+        assert response.get("v") == 8 and "err" not in response, response
         assert response["id"].startswith(self.prefix + "."), response
         if response["st"] == "in_progress":
             # This frame was already written and flushed to action-events before any settle command.
@@ -308,9 +308,9 @@ def native_operation(client, operation):
 def save_receipts(action):
     if "settled" in action:
         frame = action["settled"]["outcome"]
-        rows = protocol7.expand_structures(frame)["data"].get("save", [])
+        rows = protocol8.expand_structures(frame)["data"].get("save", [])
     else:
-        frame = protocol7.expand_structures(action["initial"])
+        frame = protocol8.expand_structures(action["initial"])
         rows = frame["data"].get("persistence", {}).get("saves", [])
     assert rows, action
     for receipt in rows:
@@ -333,7 +333,7 @@ def validate_trace(client, decimal_boundary=False):
     previous = 0
     by_id = {}
     for index, (request, response) in enumerate(zip(sent, received)):
-        assert request["v"] == response["v"] == 7 and request["id"] == response["id"], (request, response)
+        assert request["v"] == response["v"] == 8 and request["id"] == response["id"], (request, response)
         assert request["id"] not in by_id, request
         by_id[request["id"]] = response
         if index:
@@ -468,7 +468,7 @@ def normalized_public_frame(frame):
     assert frame == original and decoded.raw == original, "Decoder changed frozen wire evidence"
     result = copy.deepcopy(decoded.frame)
     data = result["data"]
-    assert data.get("cues") == original["data"].get("cues"), "Decoder changed exact rendered visuals"
+    assert data.get("cues") == original["data"].get("cues"), "Decoder changed semantic cues"
     assert "node_templates" not in data.get("ui", {}), "Decoder left packed UI rows"
     if "map" in data:
         for encoding in ("types", "rows", "env", "effect_defs"):
@@ -522,8 +522,8 @@ def lossless_views_check(client):
     """Project exactly one frozen source observation through packaged play/full.
 
     Successive GUI draws can differ without a decision revision change. This
-    check never waits for random animation stability and never removes rendered
-    colors, opacities, particle counts, timestamps, source ASTs or diagnostics.
+    check never waits for animation stability and never removes semantic facts,
+    feedback occurrences, source ASTs or diagnostics.
     """
     source = client.unwrap(client.request({"op": "state", "view": "full", "src": True}))
     client.install(source, "state")
@@ -549,10 +549,10 @@ def lossless_views_check(client):
             "scope": source["s"], "rev": source["rev"], "nodes": len(data["ui"]["nodes"]),
             "ordered_actions": len(data["acts"]), "inventory_items": len(data["inv"]),
             "items_with_description": described, "talents": len(data["hero"]["talents"]),
-            "rendered_visuals_and_timestamps_preserved": True, "component_replay": component,
-            "source_bytes": len(protocol7.wire_bytes(source)),
-            "play_bytes": len(protocol7.wire_bytes(replayed["play"])),
-            "full_bytes": len(protocol7.wire_bytes(replayed["full"]))}
+            "semantic_facts_and_occurrences_preserved": True, "component_replay": component,
+            "source_bytes": len(protocol8.wire_bytes(source)),
+            "play_bytes": len(protocol8.wire_bytes(replayed["play"])),
+            "full_bytes": len(protocol8.wire_bytes(replayed["full"]))}
 
 
 def decimal_request_ids_check(client):
@@ -597,9 +597,74 @@ def source_view_check(client):
     assert all(isinstance(row, dict) for row in data.get("ui", {}).get("nodes", []))
     raw = reply["data"]
     return {"src_true_decoded": True, "source_fields": count, "scope": reply["s"], "rev": reply["rev"],
-            "source_bytes": len(protocol7.wire_bytes(reply)),
+            "source_bytes": len(protocol8.wire_bytes(reply)),
             "templates": {"acts": len(raw.get("act_templates", [])), "inv": len(raw.get("inv_templates", [])),
                           "nodes": len(raw.get("ui", {}).get("node_templates", []))}}
+
+
+def standalone_actions_check(client):
+    """Decode each packaged actions response without a previous state or owner table."""
+    reference = decode_wire_response(client.current).data
+    known_items = {item["loc"]: item for item in reference.get("inv", [])}
+    evidence = []
+    for view in ("play", "full"):
+        reply = client.unwrap(client.request({"op": "actions", "view": view}))
+        original = copy.deepcopy(reply)
+        decoded = decode_wire_response(reply)
+        assert not decoded.is_error, reply
+        data = decoded.data
+        assert not any(key in data for key in ("hero", "inv", "entities")), data.keys()
+        nodes = data.get("ui", {}).get("nodes", [])
+        assert all("subject" not in node for node in nodes), nodes
+        inline = [node["subject_data"] for node in nodes if "subject_data" in node]
+        assert inline and any(isinstance(subject, dict) for subject in inline), nodes
+        compared = 0
+        for subject in inline:
+            if not isinstance(subject, dict):
+                continue  # Decoder requires unresolved_subject partial diagnostics for null.
+            if subject.get("loc") in known_items:
+                known = known_items[subject["loc"]]
+                fields = ("name", "qty", "level", "identified", "cursed", "equipped", "available")
+            elif "class" in subject and "hp" in subject:
+                known = reference["hero"]
+                fields = ("class", "hp", "ht", "level", "depth")
+            else:
+                continue
+            for field in fields:
+                assert subject.get(field) == known.get(field), (view, field, subject, known)
+                compared += 1
+        assert compared, "The actions fixture did not exercise any known inline hero/item facts"
+        # The public decoder validates current inline facts, ops and retired drawing fields.
+        assert reply == original and decoded.raw == original
+        client.last_actions_frame = (reply, data)
+        evidence.append({"view": view, "request_id": reply["id"], "scope": reply["s"],
+                         "rev": reply["rev"], "inline_subjects": len(inline),
+                         "known_facts_compared": compared,
+                         "actions": len(data.get("acts", [])),
+                         "independent_decode_and_semantic_validation": True})
+    return evidence
+
+
+def targeting_cancel_check(client):
+    """Open the real throw selector and cancel it without changing game resources."""
+    before = snapshot(client.state_view)
+    stone = next(item for item in client.state_view["observation"]["inventory"]
+                 if item["name"].casefold() == "throwing stone")
+    opened = client.action("item", loc=stone["locator"])
+    throw = next(action for action in available(client.state_view, "ui.activate")
+                 if action.get("label", "").casefold() == "throw")
+    aiming = client.action("click", ctl=throw["control"])
+    assert available(client.state_view, "cell.cancel"), client.state_view
+    actions = standalone_actions_check(client)
+    action_frame, action_data = client.last_actions_frame
+    advertised = next(action for action in action_data["acts"] if action.get("op") == "untarget")
+    client.scope, client.revision = action_frame["s"], action_frame["rev"]
+    cancelled = client.action(advertised["op"])
+    assert snapshot(client.state_view) == before, "Cancelling native targeting changed hero or inventory"
+    return {"opened_request": opened["initial"]["id"], "aiming_request": aiming["initial"]["id"],
+            "cancel_request": cancelled["initial"]["id"], "hero_inventory_unchanged": True,
+            "executed_from_actions_request": action_frame["id"], "executed_revision": action_frame["rev"],
+            "targeting_actions": actions}
 
 
 def inventory_round_trip_check(client):
@@ -669,17 +734,18 @@ def main():
     parser.add_argument("--bundle", type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures" / ("cli7-controller-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures" / ("cli8-controller-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     profile = output / "fresh 中文 profile"
     assert not profile.exists()
     cli = args.bundle.resolve() / "Contents/MacOS/spdctl"
     assert cli.is_file(), cli
     environment = dict(os.environ)
-    environment.pop("JAVA_HOME", None)
+    for key in ("JAVA_HOME", "JDK_HOME", "JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS", "CLASSPATH"):
+        environment.pop(key, None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.7.0.1 (protocol 7, game 3.3.8)", version
+    assert version == "CLI.8.0.0 (protocol 8, game 3.3.8)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}
@@ -691,7 +757,9 @@ def main():
         report["lossless_views"] = lossless_views_check(first)
         report["decimal_request_ids"] = decimal_request_ids_check(first)
         report["source_view"] = source_view_check(first)
+        report["standalone_actions"] = standalone_actions_check(first)
         report["inventory_round_trip"] = inventory_round_trip_check(first)
+        report["targeting_cancel"] = targeting_cancel_check(first)
         before = snapshot(initial)
         assert before["hero"]["depth"] == 1 and before["hero"]["level"] == 1, before
         saved = native_operation(first, "save")

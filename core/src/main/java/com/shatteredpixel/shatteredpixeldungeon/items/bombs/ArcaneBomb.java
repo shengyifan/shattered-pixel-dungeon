@@ -73,7 +73,11 @@ public class ArcaneBomb extends Bomb {
 		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), explosionRange() );
 		for (int i = 0; i < PathFinder.distance.length; i++) {
 			if (PathFinder.distance[i] < Integer.MAX_VALUE) {
-				CellEmitter.get(i).burst(ElmoParticle.FACTORY, 10);
+				com.watabou.noosa.particles.Emitter flames = CellEmitter.get(i);
+				flames.burst(ElmoParticle.FACTORY, 10);
+				if (com.watabou.noosa.Game.observer.observesVisualCues()) flames.observeDraw(
+						new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("arcane_blast", i,
+								ElmoParticle.FACTORY, ElmoParticle.class));
 				Char ch = Actor.findChar(i);
 				if (ch != null){
 					affected.add(ch);

@@ -19,7 +19,7 @@ def frame(op, *, descriptor=None, node=None):
     if node is not None:
         action["ctl"] = "c1"
         data["ui"] = {"nodes": [{"id": "c1", **node, "ops": [0]}]}
-    return decode_wire_response({"v": 7, "id": "t1.2", "s": "s1", "rev": "r1",
+    return decode_wire_response({"v": 8, "id": "t1.2", "s": "s1", "rev": "r1",
                                  "st": "completed", "data": data})
 
 
@@ -41,7 +41,7 @@ class IntentValidationTest(unittest.TestCase):
         for value in (math.nan, math.inf, -math.inf, 10**400):
             with self.subTest(value=str(value)), self.assertRaises(IntentError):
                 validate_intent(None, {"op": "pan", "x": value})
-        for intent in ({"op": "state", "v": 7}, {"op": "settle", "id": "mine"}, None,
+        for intent in ({"op": "state", "v": 8}, {"op": "settle", "id": "mine"}, None,
                        {"op": "unknown"}, {"op": []}):
             with self.subTest(intent=intent), self.assertRaises(IntentError):
                 validate_intent(None, intent)
@@ -119,7 +119,7 @@ class IntentValidationTest(unittest.TestCase):
 
 class DecodeEvidenceBoundaryTest(unittest.TestCase):
     def test_environment_alias_cannot_overwrite_an_already_decoded_cell(self):
-        bad = {"v": 7, "id": "t1.9", "s": "s1", "st": "completed", "data": {
+        bad = {"v": 8, "id": "t1.9", "s": "s1", "st": "completed", "data": {
             "map": {"w": 1, "h": 1, "types": [{}], "rows": [[0, 0, "0", "v"]],
                     "env": {"0": [{"desc": "first"}], "00": [{"desc": "second"}]}}}}
         with self.assertRaises(DecodeError) as raised:
@@ -129,10 +129,10 @@ class DecodeEvidenceBoundaryTest(unittest.TestCase):
 
     def test_malformed_environment_preserves_direct_and_settle_evidence(self):
         for cell in ("²", "١", "9" * 5000, "1"):
-            bad = {"v": 7, "id": "t1.3", "s": "s1", "rev": "r1", "st": "completed", "data": {
+            bad = {"v": 8, "id": "t1.3", "s": "s1", "rev": "r1", "st": "completed", "data": {
                 "map": {"w": 1, "h": 1, "types": [{}], "rows": [[0, 0, "0", "v"]], "env": {cell: []}}}}
             wrapper = {"controller": "settle", "st": "completed", "rid": "t1.1", "request": {"id": "t1.1", "op": "rest"},
-                       "outcome": {"v": 7, "id": "t1.2", "s": "s1", "st": "completed", "data": {"id": "t1.1", "st": "COMPLETED"}},
+                       "outcome": {"v": 8, "id": "t1.2", "s": "s1", "st": "completed", "data": {"id": "t1.1", "st": "COMPLETED"}},
                        "observation": bad}
             before = copy.deepcopy(wrapper)
             for decoder, value in ((decode_wire_response, bad), (decode_client_response, wrapper)):
@@ -148,7 +148,7 @@ class DecodeEvidenceBoundaryTest(unittest.TestCase):
 
     def test_save_index_types_and_receipts_remain_distinct(self):
         for invalid in (True, False, 0.0, -0.5, -1, 2, "0", [], {}):
-            value = {"v": 7, "id": "t1.1", "s": "s1", "st": "completed", "data": {
+            value = {"v": 8, "id": "t1.1", "s": "s1", "st": "completed", "data": {
                 "persistence": {"saves": [{"sid": "p1"}, {"sid": "p2"}], "saved": invalid}}}
             with self.subTest(invalid=invalid), self.assertRaises(DecodeError) as raised:
                 decode_wire_response(value)

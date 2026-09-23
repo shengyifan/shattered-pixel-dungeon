@@ -106,7 +106,11 @@ public class Beam extends Image {
 		Blending.setLightMode();
 		super.draw();
 		Blending.setNormalMode();
-		if (observation != null && texture != null && buffer != null && Game.observer.observesVisualCues())
+
+	}
+
+	@Override public void observeGameplayVisuals() {
+		if (observation != null && texture != null && Game.observer.observesVisualCues())
 			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this, observation);
 	}
 }

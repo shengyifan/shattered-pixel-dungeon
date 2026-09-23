@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BlastParticle;
@@ -39,9 +41,9 @@ import com.watabou.utils.Random;
 
 public class Explosive extends Weapon.Enchantment {
 
-	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing( 0x000000 );
-	private static ItemSprite.Glowing WARM = new ItemSprite.Glowing( 0x000000, 0.5f );
-	private static ItemSprite.Glowing HOT = new ItemSprite.Glowing( 0x000000, 0.25f );
+	private static ItemSprite.Glowing BLACK = new ItemSprite.Glowing( 0x000000 ).gameplayHint("explosive_cool");
+	private static ItemSprite.Glowing WARM = new ItemSprite.Glowing( 0x000000, 0.5f ).gameplayHint("explosive_warm");
+	private static ItemSprite.Glowing HOT = new ItemSprite.Glowing( 0x000000, 0.25f ).gameplayHint("explosive_hot");
 	private int durability = 100;
 
 	@Override
@@ -60,12 +62,12 @@ public class Explosive extends Weapon.Enchantment {
 		if (currentDurability > 50 && durability <= 50){
 			attacker.sprite.showStatus(CharSprite.WARNING, Messages.get(this, "warm"));
 			GLog.w(Messages.get(this, "desc_warm"));
-			attacker.sprite.emitter().burst(SmokeParticle.FACTORY, 4);
+			GameplayBurst.burstForCharacter(attacker.sprite.emitter(), SmokeParticle.FACTORY, 4, "smoke_burst", attacker.sprite, false);
 			Item.updateQuickslot();
 		} else if (currentDurability > 10 && durability <= 10){
 			attacker.sprite.showStatus(CharSprite.WARNING, Messages.get(this, "hot"));
 			GLog.n(Messages.get(this, "desc_hot"));
-			attacker.sprite.emitter().burst(BlastParticle.FACTORY, 5);
+			GameplayBurst.burstForCharacter(attacker.sprite.emitter(), BlastParticle.FACTORY, 5, "blast_burst", attacker.sprite, false);
 			Item.updateQuickslot();
 		} else if (durability <= 0) {
 			//explosion position is the closest adjacent cell to the defender

@@ -310,6 +310,11 @@ public final class PlayerObservation {
             boolean rememberedDisguise = mob instanceof Mimic && mob.alignment == Char.Alignment.NEUTRAL && mob.state == mob.PASSIVE
                     && ((Mimic) mob).stealthy() && flag(level.visited, mob.pos);
             if (mob.pos == hero.pos || (!flag(level.heroFOV, mob.pos) && !rememberedDisguise)) continue;
+            // FOV alone does not reveal a presentation deliberately hidden by its native producer
+            // (for example the City's boss before its reveal fade). Camera clipping is unrelated.
+            if (!rememberedDisguise && mob.sprite != null
+                    && (!mob.sprite.exists || !mob.sprite.visible || !Float.isFinite(mob.sprite.am+mob.sprite.aa)
+                    || mob.sprite.am+mob.sprite.aa <= 0)) continue;
             if (mob instanceof Mimic && mob.alignment == Char.Alignment.NEUTRAL) {
                 // A disguised mob must have the same public shape as a displayed container.
                 // Ebony's displayed outline does not disclose that it is a treasure container.

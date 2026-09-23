@@ -56,7 +56,9 @@ public class Emitter extends Group {
 
 	/** Optional renderer-only observer. Called after the existing children have been drawn. */
 	public interface DrawObserver {
-		void afterDraw(Emitter emitter);
+		default void afterDraw(Emitter emitter) {}
+		/** Reads existing children only; must not emit, update, draw, or invoke callbacks. */
+		void observeState(Emitter emitter);
 		default void resetObservation() {}
 	}
 	private DrawObserver drawObserver;
@@ -67,6 +69,9 @@ public class Emitter extends Group {
 		if (observer != null) observer.resetObservation();
 	}
 	public boolean isEmitting(Factory expected) { return on && factory == expected; }
+	@Override public void observeGameplayVisuals() {
+		if (drawObserver != null) drawObserver.observeState(this);
+	}
 	
 	public void pos( float x, float y ) {
 		pos( x, y, 0, 0 );
@@ -206,10 +211,6 @@ public class Emitter extends Group {
 			super.draw();
 		}
 		if (drawObserver != null) drawObserver.afterDraw(this);
-		if (Game.observer.observesVisualCues()) {
-			if (observedDrawEpisode == null) observedDrawEpisode = new Object();
-			Game.observer.onEmitterDraw(this, observedDrawEpisode);
-		}
 	}
 	
 	abstract public static class Factory {

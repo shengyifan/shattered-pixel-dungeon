@@ -59,7 +59,11 @@ public class Swiftness extends Armor.Glyph {
 		} else {
 			if (owner.sprite != null){
 				int particles = 1 + (int)Random.Float(1+level/5f);
-				owner.sprite.emitter().startDelayed(Speck.factory(Speck.YELLOW_LIGHT), 0.02f, particles, 0.05f);
+				com.watabou.noosa.particles.Emitter signal = owner.sprite.emitter();
+				signal.startDelayed(Speck.factory(Speck.YELLOW_LIGHT), 0.02f, particles, 0.05f);
+				if (com.watabou.noosa.Game.observer.observesVisualCues()) signal.observeDraw(
+						com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue.forCharacter(
+								"glyph_swiftness_active", owner.sprite, Speck.factory(Speck.YELLOW_LIGHT), Speck.class));
 			}
 			return (1.2f + 0.04f * level) * genericProcChanceMultiplier(owner);
 		}

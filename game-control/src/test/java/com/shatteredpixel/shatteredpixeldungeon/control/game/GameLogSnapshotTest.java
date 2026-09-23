@@ -8,7 +8,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GameLogSnapshotTest {
-    @Test void sameRunReconstructionDeduplicatesButNewRunAndChangedColorsDoNot(){
+    @Test void sameRunReconstructionDeduplicatesButNewRunAndChangedMessageTonesDoNot(){
         GameController controller=new GameController(null,"menu:test",error->{throw new AssertionError(error);});
         String label=controller.onTextResource("Upgrade","windows.wndupgrade.upgrade","en",new Object[0]);
         List<RuntimeObserver.LogEntry> text=List.of(new RuntimeObserver.LogEntry(label,0xffffff));
@@ -29,7 +29,7 @@ class GameLogSnapshotTest {
         GameController.GameLogSnapshot event=controller.pollGameLog();
         assertEquals("防御",event.entries.get(0).text);
         assertThrows(UnsupportedOperationException.class,()->event.entries.clear());
-        Map<String,Object> data=event.data();assertEquals("display_snapshot_v2",data.get("format"));
+        Map<String,Object> data=event.data();assertEquals("gameplay_log_snapshot_v1",data.get("format"));
         Map<?,?> line=(Map<?,?>)((List<?>)data.get("entries")).get(0);
         assertTrue(TextProvenance.isToken((Map<?,?>)line.get("text")));
         Map<String,Object> displayed=PublicEnglishProjection.copy(data);

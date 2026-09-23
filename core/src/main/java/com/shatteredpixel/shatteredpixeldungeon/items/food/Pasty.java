@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.food;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -143,7 +145,7 @@ public class Pasty extends Food {
 				if (target != null){
 					Buff.affect(target, Charm.class, 5f).object = hero.id();
 				}
-				hero.sprite.emitter().burst(RainbowParticle.BURST, 15);
+				GameplayBurst.burstForCharacter(hero.sprite.emitter(), RainbowParticle.BURST, 15, "rainbow_burst", hero.sprite, false);
 				break;
 			case SHATTEREDPD_BIRTHDAY:
 			case PD_BIRTHDAY:

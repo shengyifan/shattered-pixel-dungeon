@@ -29,9 +29,9 @@ final class CompactStructures {
             validateEncodingRoot(root.get("data"));return;
         }
         for(String reserved:Arrays.asList("act_templates","inv_templates"))
-            if(root.containsKey(reserved))throw new IllegalArgumentException("Reserved protocol 7 structure field: "+reserved);
+            if(root.containsKey(reserved))throw new IllegalArgumentException("Reserved protocol 8 structure field: "+reserved);
         if(root.get("ui") instanceof Map && object(root.get("ui")).containsKey("node_templates"))
-            throw new IllegalArgumentException("Reserved protocol 7 structure field: ui.node_templates");
+            throw new IllegalArgumentException("Reserved protocol 8 structure field: ui.node_templates");
         for(String snapshot:Arrays.asList("before","after"))validateEncodingRoot(root.get(snapshot));
     }
 

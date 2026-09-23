@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -88,14 +90,14 @@ public class Heap implements Bundlable {
 			break;
 		case REMAINS:
 		case SKELETON:
-			CellEmitter.center( pos ).start(Speck.factory(Speck.RATTLE), 0.1f, 3);
+			GameplayBurst.start(CellEmitter.center(pos), Speck.factory(Speck.RATTLE), 0.1f, 3, "heap_rattle", pos, false);
 			break;
 		default:
 		}
 		
 		if (haunted){
 			if (Wraith.spawnAt( pos ) == null) {
-				hero.sprite.emitter().burst( ShadowParticle.CURSE, 6 );
+				GameplayBurst.burstForCharacter(hero.sprite.emitter(), ShadowParticle.CURSE, 6, "heap_shadows", hero.sprite, false);
 				hero.damage( hero.HP / 2, this );
 				if (!hero.isAlive()){
 					Dungeon.fail(Wraith.class);
@@ -345,12 +347,12 @@ public class Heap implements Bundlable {
 	}
 	
 	public static void burnFX( int pos ) {
-		CellEmitter.get( pos ).burst( ElmoParticle.FACTORY, 6 );
+		GameplayBurst.burst(CellEmitter.get(pos), ElmoParticle.FACTORY, 6, "heap_flames", pos, false);
 		Sample.INSTANCE.play( Assets.Sounds.BURNING );
 	}
 	
 	public static void evaporateFX( int pos ) {
-		CellEmitter.get( pos ).burst( Speck.factory( Speck.STEAM ), 5 );
+		GameplayBurst.burst(CellEmitter.get(pos), Speck.factory(Speck.STEAM), 5, "heap_steam", pos, false);
 	}
 	
 	public boolean isEmpty() {

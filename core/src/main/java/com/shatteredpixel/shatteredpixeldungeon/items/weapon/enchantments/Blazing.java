@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -60,7 +61,7 @@ public class Blazing extends Weapon.Enchantment {
 				}
 			}
 			
-			defender.sprite.emitter().burst( FlameParticle.FACTORY, level + 1 );
+			GameplayBurst.burstForCharacter(defender.sprite.emitter(), FlameParticle.FACTORY, level + 1, "flame_burst", defender.sprite, true);
 			
 		}
 

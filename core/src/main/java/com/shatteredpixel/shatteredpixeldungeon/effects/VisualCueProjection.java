@@ -6,6 +6,45 @@ import java.util.List;
 
 /** Pure conservative geometry used by the draw observer; it never discovers a map or predicts an attack. */
 final class VisualCueProjection {
+    static boolean knownCell(int cell, int length, boolean[] visible) {
+        return cell >= 0 && cell < length && visible != null && cell < visible.length && visible[cell];
+    }
+
+    /** Existing transformed quad intersected with map cells, independent of camera and without source writes. */
+    static java.util.List<Integer> worldFootprint(Visual source, int width, int length, float tileSize) {
+        java.util.List<Integer> result = new java.util.ArrayList<>();
+        Rect bounds = worldBounds(source);
+        if (bounds == null || width <= 0 || length <= 0 || length % width != 0 || tileSize <= 0) return result;
+        float[] px = new float[4], py = new float[4];
+        double radians = Math.toRadians(source.angle);
+        float cosine = (float)Math.cos(radians), sine = (float)Math.sin(radians);
+        int[] corners = {0, 1, 3, 2};
+        for (int i=0;i<4;i++) {
+            int corner=corners[i];
+            float x=(((corner&1)==0?0:source.width)-source.origin.x)*source.scale.x;
+            float y=(((corner&2)==0?0:source.height)-source.origin.y)*source.scale.y;
+            px[i]=source.x+source.origin.x+x*cosine-y*sine;
+            py[i]=source.y+source.origin.y+x*sine+y*cosine;
+        }
+        int x0=Math.max(0,(int)Math.floor(bounds.left/tileSize));
+        int y0=Math.max(0,(int)Math.floor(bounds.top/tileSize));
+        int x1=Math.min(width-1,(int)Math.ceil(bounds.right/tileSize)-1);
+        int y1=Math.min(length/width-1,(int)Math.ceil(bounds.bottom/tileSize)-1);
+        for(int y=y0;y<=y1;y++)for(int x=x0;x<=x1;x++) {
+            float left=x*tileSize,top=y*tileSize,right=left+tileSize,bottom=top+tileSize;
+            boolean separate=false;
+            for(int edge=0;edge<4&&!separate;edge++) {
+                int next=(edge+1)%4;float ax=-(py[next]-py[edge]),ay=px[next]-px[edge];
+                float pmin=Float.POSITIVE_INFINITY,pmax=Float.NEGATIVE_INFINITY;
+                for(int i=0;i<4;i++){float p=px[i]*ax+py[i]*ay;pmin=Math.min(pmin,p);pmax=Math.max(pmax,p);}
+                float q1=left*ax+top*ay,q2=right*ax+top*ay,q3=right*ax+bottom*ay,q4=left*ax+bottom*ay;
+                float qmin=Math.min(Math.min(q1,q2),Math.min(q3,q4)),qmax=Math.max(Math.max(q1,q2),Math.max(q3,q4));
+                separate=pmax<=qmin||qmax<=pmin;
+            }
+            if(!separate)result.add(y*width+x);
+        }
+        return result;
+    }
     static final class Rect {
         final float left, top, right, bottom;
         Rect(float left, float top, float right, float bottom) {

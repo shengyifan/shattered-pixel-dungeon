@@ -51,6 +51,52 @@ public class Flare extends Visual {
 	
 	private int nRays;
 	private final float visualRadius;
+	private int observedLootTier;
+	private boolean observedCharacterAura;
+	public Flare observeCharacterAura() { observedCharacterAura = true; return this; }
+
+	/** Attaches the public branch selected by the loot-flare renderer, never an item or drop counter. */
+	public Flare observeLootTier(int tier) {
+		if (tier >= 1 && tier <= 4) observedLootTier = tier;
+		return this;
+	}
+
+	@Override public void observeGameplayVisuals() {
+		if (!Game.observer.observesVisualCues() || (observedLootTier == 0 && !observedCharacterAura) || texture == null
+				|| com.shatteredpixel.shatteredpixeldungeon.Dungeon.level == null
+				|| !Float.isFinite(x+y) || x < 0 || y < 0) return;
+		int width = com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.width();
+		int column = (int)(x / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
+		int row = (int)(y / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
+		if (column >= width || row >= com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.height()) return;
+		if (observedLootTier != 0) com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeRadialVisualDraw(this,
+				new com.watabou.noosa.VisualCue("loot_flare", row*width+column, null, null, null, null, lootFact()), visualRadius);
+		if (observedCharacterAura) com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeRadialVisualDraw(this,
+				new com.watabou.noosa.VisualCue("character_aura", row*width+column, null, null, null, null, auraFact()), visualRadius);
+	}
+
+	java.util.Map<String,Object> auraFact() {
+		int color = displayedTextColor();
+		String variant = null;
+		if (nRays == 4 && color == 0xFF8800) variant = "blazing";
+		if (nRays == 4 && color == 0x8800FF) variant = "projecting";
+		if (nRays == 5 && color == 0x00FF00) variant = "anti_magic";
+		if (nRays == 5 && color == 0x0088FF) variant = "giant";
+		if (nRays == 6 && color == 0xFFFF00) variant = "blessed";
+		if (nRays == 6 && color == 0xFF2222) variant = "growing";
+		if (nRays == 5 && color == 0xFFFF00) variant = "invulnerable";
+		return variant != null ? java.util.Collections.singletonMap("variant", variant)
+				: com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("variant", "character_aura");
+	}
+
+	java.util.Map<String,Object> lootFact() {
+		if (observedLootTier == 0) return null;
+		int[] colors = {0x00FF00, 0x00AAFF, 0xAA00FF, 0xFFAA00};
+		boolean selected = nRays == 6 && visualRadius == 16 + observedLootTier * 4
+				&& displayedTextColor() == colors[observedLootTier - 1];
+		return selected ? java.util.Collections.singletonMap("tier", observedLootTier)
+				: com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("tier", "loot_flare");
+	}
 	
 	public Flare( int nRays, float radius ) {
 		
@@ -166,16 +212,6 @@ public class Flare extends Visual {
 			Blending.setNormalMode();
 		} else {
 			drawRays();
-		}
-		if (Game.observer.observesVisualCues() && texture != null && com.shatteredpixel.shatteredpixeldungeon.Dungeon.level != null
-				&& Float.isFinite(x) && Float.isFinite(y) && x >= 0 && y >= 0) {
-			int width = com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.width();
-			int column = (int)(x / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
-			int row = (int)(y / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
-			if (column < width && row < com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.height())
-				com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeRadialVisualDraw(this,
-						new com.watabou.noosa.VisualCue("flare", row*width+column, null, null, displayedTextColor(), null,
-								java.util.Collections.singletonMap("rays", nRays)), visualRadius);
 		}
 	}
 	

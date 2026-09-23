@@ -30,9 +30,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PoisonParticle;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.particles.Emitter;
 
 public class Sorrowmoss extends Plant {
 
@@ -55,7 +58,10 @@ public class Sorrowmoss extends Plant {
 		}
 		
 		if (Dungeon.level.heroFOV[pos]) {
-			CellEmitter.center( pos ).burst( PoisonParticle.SPLASH, 3 );
+			Emitter activation = CellEmitter.center( pos );
+			activation.burst( PoisonParticle.SPLASH, 3 );
+			if (Game.observer.observesVisualCues()) activation.observeDraw(
+					new CellParticleCue("plant_activation", pos, PoisonParticle.SPLASH, PoisonParticle.class));
 		}
 	}
 	

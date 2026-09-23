@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -183,10 +184,10 @@ public class WandOfFireblast extends DamageWand {
 			Blob fire = Dungeon.level.blobs.get(Fire.class);
 
 			//explode, dealing damage to enemies in 3x3, and clearing all fire
-			CellEmitter.center(defender.pos).burst(BlastParticle.FACTORY, 30);
+			GameplayBurst.burst(CellEmitter.center(defender.pos), BlastParticle.FACTORY, 30, "blast_burst", defender.pos, false);
 			if (fire != null) {
 				for (int i : PathFinder.NEIGHBOURS9) {
-					CellEmitter.get(defender.pos + i).burst(SmokeParticle.FACTORY, 4);
+					GameplayBurst.burst(CellEmitter.get(defender.pos + i), SmokeParticle.FACTORY, 4, "smoke_burst", defender.pos + i, false);
 					if (Fire.volumeAt(defender.pos+i, Fire.class) > 0){
 						Dungeon.level.destroy(defender.pos + i);
 						GameScene.updateMap(defender.pos + i);

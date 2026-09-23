@@ -123,6 +123,15 @@ public class RenderedTextBlock extends Component {
 
 	/** Optional draw-time restriction, used for words later covered by another visible layer. */
 	protected synchronized VisibleText visibleTextFragment(java.util.function.Predicate<RenderedText> completeWord) {
+		return textFragment(completeWord,false);
+	}
+
+	/** Only a source with a certified current-FOV world anchor may use this camera-independent path. */
+	protected synchronized VisibleText anchoredTextFragment(java.util.function.Predicate<RenderedText> completeWord) {
+		return textFragment(completeWord,true);
+	}
+
+	private VisibleText textFragment(java.util.function.Predicate<RenderedText> completeWord,boolean anchored) {
 		StringBuilder result = new StringBuilder(), separators = new StringBuilder();
 		List<VisibleStyle> styles = new ArrayList<>();
 		boolean clipped = false, visible = false, omitted = false;
@@ -145,12 +154,14 @@ public class RenderedTextBlock extends Component {
 			// A positive layout rectangle alone does not draw letters: RenderedText.draw
 			// needs a font, and zero effective shader opacity cannot expose its contents.
 			boolean paintable = word.hasRenderableText() && Float.isFinite(alpha) && alpha > 0;
-			boolean intersects = shown && paintable && camera != null && transform != null && width > 0 && height > 0
-					&& word.angle == 0 && word.origin.x == 0 && word.origin.y == 0
+			boolean layout = shown && paintable && width > 0 && height > 0
+					&& Float.isFinite(word.x+word.y+width+height)
+					&& word.angle == 0 && word.origin.x == 0 && word.origin.y == 0;
+			boolean intersects = layout && (anchored || camera != null && transform != null
 					&& word.x < transform.scrollX + transform.width && word.x + width > transform.scrollX
-					&& word.y < transform.scrollY + transform.height && word.y + height > transform.scrollY;
-			boolean complete = intersects && word.x >= transform.scrollX && word.y >= transform.scrollY
-					&& word.x + width <= transform.scrollX + transform.width && word.y + height <= transform.scrollY + transform.height;
+					&& word.y < transform.scrollY + transform.height && word.y + height > transform.scrollY);
+			boolean complete = intersects && (anchored || word.x >= transform.scrollX && word.y >= transform.scrollY
+					&& word.x + width <= transform.scrollX + transform.width && word.y + height <= transform.scrollY + transform.height);
 			complete &= completeWord == null || completeWord.test(word);
 			visible |= intersects;
 			if (complete && word.text() != null) {

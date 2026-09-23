@@ -208,7 +208,6 @@ public class GameScene extends PixelScene {
 	private ActionIndicator action;
 	private ResumeIndicator resume;
 	private com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector visualCueCollector;
-	private com.shatteredpixel.shatteredpixeldungeon.effects.ScreenEffectCollector screenEffectCollector;
 
 	@Override
 	public void draw() {
@@ -217,16 +216,13 @@ public class GameScene extends PixelScene {
 			return;
 		}
 		if (visualCueCollector == null) visualCueCollector = new com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector(this);
-		if (screenEffectCollector == null) screenEffectCollector = new com.shatteredpixel.shatteredpixeldungeon.effects.ScreenEffectCollector(this);
 		visualCueCollector.beginDraw();
-		screenEffectCollector.beginDraw();
 		super.draw();
 		visualCueCollector.finishDraw();
-		screenEffectCollector.finishDraw();
 	}
 
 	public static void observeScreenOverlayDraw(com.watabou.noosa.Image source,Object episode,int solidArgb,boolean additive) {
-		if(scene!=null&&scene.screenEffectCollector!=null)scene.screenEffectCollector.overlayDrawn(source,episode,solidArgb,additive);
+		// Screen color and camera effects carry no additional gameplay facts in CLI 8.
 	}
 
 	/** Optional draw annotations; these never ask the simulation to create or predict effects. */
@@ -268,12 +264,25 @@ public class GameScene extends PixelScene {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.particleEmitterDrawn(source, observation);
 	}
 
+	public static void observeCharacterVisual(com.watabou.noosa.Gizmo source, String kind, int cell) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.characterVisualDrawn(source, kind, cell);
+	}
+
 	public static void observeFloatingTextDraw(FloatingText source, int cell) {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.floatingTextDrawn(source, cell);
 	}
 
 	public static void observeTilemapDraw(com.watabou.noosa.Tilemap source, String kind) {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.tilemapDrawn(source, kind);
+	}
+
+	public static void observeTerrainVisual(com.watabou.noosa.Tilemap source, com.watabou.noosa.VisualCue cue) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.terrainVisualObserved(source, cue);
+	}
+
+	public static void observeSpectralWall(Emitter source,
+			com.shatteredpixel.shatteredpixeldungeon.effects.particles.SpectralWallParticle particle, int cell) {
+		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.spectralWallObserved(source, particle, cell);
 	}
 
 	{

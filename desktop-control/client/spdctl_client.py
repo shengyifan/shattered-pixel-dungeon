@@ -1,10 +1,10 @@
-"""Strict, reusable decoders for ``spdctl`` protocol-7 client output.
+"""Strict, reusable decoders for ``spdctl`` protocol-8 client output.
 
 This module is deliberately transport- and policy-free.  It does not launch the
 game, allocate request IDs, retry operations, replace revisions, or decide which
 game action to take.  It only:
 
-* validates and expands one protocol-7 wire response using that response's own
+* validates and expands one protocol-8 wire response using that response's own
   dictionaries and scoped defaults;
 * separates controller wrappers into their response, outcome, observation,
   discovery, diagnostic, and late-response parts; and
@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 
-PROTOCOL_VERSION = 7
+PROTOCOL_VERSION = 8
 TILE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
 WIRE_STATUSES = {"completed", "awaiting_input", "in_progress", "interrupted"}
 OBSERVATION_FIELDS = {
@@ -169,6 +169,7 @@ def _title_case(text: str) -> str:
 
 def _item(value: Any, path: str) -> Dict[str, Any]:
     item = dict(_generic(_dict(value, path), path))
+    _shown(item.get("shown"), f"{path}.shown") if "shown" in item else None
     for field, default in (
         ("qty", 1), ("equipped", False), ("available", True),
         ("type_known", True), ("via", "click"),
@@ -176,6 +177,124 @@ def _item(value: Any, path: str) -> Dict[str, Any]:
         if field not in item:
             item[field] = _copy(default)
     return item
+
+
+def _shown(value: Any, path: str) -> None:
+    """Check known displayed facts without discarding unknown semantic metadata."""
+    if value is None:
+        return
+    shown = _dict(value, path)
+    _reject_drawing(shown, path)
+    for key in ("status", "extra", "level", "symbol", "variant", "counter"):
+        if key in shown and shown[key] is not None and not isinstance(shown[key], str):
+            raise DecodeError(f"{path}.{key} must be text or null")
+    for key in ("counter_kind", "progress_kind"):
+        if key in shown and (not isinstance(shown[key], str)
+                             or shown[key] not in {"shield", "cooldown"}):
+            raise DecodeError(f"{path}.{key} must be shield or cooldown")
+    if "status_kind" in shown and (not isinstance(shown["status_kind"], str)
+                                   or shown["status_kind"] != "quantity"):
+        raise DecodeError(f"{path}.status_kind must be quantity")
+    if "progress" in shown and shown["progress"] is not None:
+        progress = _dict(shown["progress"], f"{path}.progress")
+        for key in ("covered", "total"):
+            if key not in progress or type(progress[key]) is not int or progress[key] < 0:
+                raise DecodeError(f"{path}.progress.{key} must be a nonnegative integer")
+        if progress["total"] == 0:
+            raise DecodeError(f"{path}.progress.total must be positive")
+        if progress["covered"] > progress["total"]:
+            raise DecodeError(f"{path}.progress.covered exceeds total")
+        if progress.get("basis") != "displayed":
+            raise DecodeError(f"{path}.progress.basis must be displayed")
+    if "strength" in shown and shown["strength"] is not None:
+        strength = _dict(shown["strength"], f"{path}.strength")
+        if type(strength.get("value")) is not int or type(strength.get("estimated")) is not bool:
+            raise DecodeError(f"{path}.strength needs integer value and boolean estimated")
+        for key in ("insufficient", "mastered"):
+            if key in strength and type(strength[key]) is not bool:
+                raise DecodeError(f"{path}.strength.{key} must be boolean")
+    if "flags" in shown and shown["flags"] is not None:
+        for index, flag in enumerate(_list(shown["flags"], f"{path}.flags")):
+            if not isinstance(flag, str):
+                raise DecodeError(f"{path}.flags[{index}] must be text")
+    if "badge" in shown and shown["badge"] is not None:
+        _semantic_icon(shown["badge"], f"{path}.badge")
+    if "charge" in shown and shown["charge"] is not None:
+        charge = _dict(shown["charge"], f"{path}.charge")
+        fraction = charge.get("fraction")
+        if type(fraction) not in (int, float) or not math.isfinite(fraction) or not 0 <= fraction <= 1:
+            raise DecodeError(f"{path}.charge.fraction must be a finite number from 0 to 1")
+        if charge.get("basis") != "displayed_gradient":
+            raise DecodeError(f"{path}.charge.basis must be displayed_gradient")
+    if "boss_warning" in shown and type(shown["boss_warning"]) is not bool:
+        raise DecodeError(f"{path}.boss_warning must be boolean")
+    for key in ("broken_seal", "lit_candle", "nature_powered"):
+        if key in shown and type(shown[key]) is not bool:
+            raise DecodeError(f"{path}.{key} must be boolean")
+    if "glow" in shown and shown["glow"] is not None:
+        _glow(shown["glow"], f"{path}.glow")
+
+
+_RETIRED_DRAWING_FIELDS = {
+    "atlas", "frame_pixels", "texture_size", "flip_horizontal", "flip_vertical",
+    "angle", "scale", "tint", "alpha", "opacity", "rgb",
+}
+
+
+def _reject_drawing(value: Mapping[str, Any], path: str) -> None:
+    for key in _RETIRED_DRAWING_FIELDS & set(value):
+        raise DecodeError(f"{path}.{key} is retired drawing data")
+    if type(value.get("color")) is int:
+        raise DecodeError(f"{path}.color is retired RGB data")
+
+
+def _semantic_icon(value: Any, path: str) -> None:
+    if value is None:
+        return
+    icon = _dict(value, path)
+    _reject_drawing(icon, path)
+    if not isinstance(icon.get("symbol"), str) or not icon["symbol"]:
+        raise DecodeError(f"{path}.symbol must be a non-empty semantic name")
+    if "variant" in icon and icon["variant"] is not None and not isinstance(icon["variant"], str):
+        raise DecodeError(f"{path}.variant must be text or null")
+    if "placeholder" in icon and type(icon["placeholder"]) is not bool:
+        raise DecodeError(f"{path}.placeholder must be boolean")
+    for key in ("broken_seal", "lit_candle", "nature_powered"):
+        if key in icon and type(icon[key]) is not bool:
+            raise DecodeError(f"{path}.{key} must be boolean")
+
+
+def _glow(value: Any, path: str) -> None:
+    glow = _dict(value, path)
+    _reject_drawing(glow, path)
+    if not isinstance(glow.get("variant"), str) or not glow["variant"]:
+        raise DecodeError(f"{path}.variant must be a named glow")
+    if "kind" in glow and (not isinstance(glow["kind"], str)
+                           or glow["kind"] not in {"explosive_heat", "resin_fortified"}):
+        raise DecodeError(f"{path}.kind is not a reviewed glow meaning")
+    if "stage" in glow and (not isinstance(glow["stage"], str)
+                            or glow["stage"] not in {"cool", "warm", "hot"}):
+        raise DecodeError(f"{path}.stage is not a reviewed glow stage")
+
+
+def _text_semantics(value: Mapping[str, Any], path: str) -> None:
+    if "styles" in value:
+        raise DecodeError(f"{path}.styles is retired drawing data")
+    if "tone" in value and value["tone"] is not None and not isinstance(value["tone"], str):
+        raise DecodeError(f"{path}.tone must be a semantic name or null")
+    if "unmapped_indicator" in value and type(value["unmapped_indicator"]) is not bool:
+        raise DecodeError(f"{path}.unmapped_indicator must be boolean")
+    if "spans" in value and value["spans"] is not None:
+        for index, raw in enumerate(_list(value["spans"], f"{path}.spans")):
+            here = f"{path}.spans[{index}]"
+            span = _dict(raw, here)
+            _reject_drawing(span, here)
+            if not isinstance(span.get("text"), str):
+                raise DecodeError(f"{here}.text must be text")
+            if "tone" in span and span["tone"] is not None and not isinstance(span["tone"], str):
+                raise DecodeError(f"{here}.tone must be a semantic name or null")
+            if "clipped" in span and type(span["clipped"]) is not bool:
+                raise DecodeError(f"{here}.clipped must be boolean")
 
 
 def _inventory(value: Any, path: str) -> Tuple[list, Dict[str, Mapping[str, Any]], set]:
@@ -300,12 +419,25 @@ def _expand_observation(value: Mapping[str, Any], path: str,
                         if field not in action and field in activity:
                             action[field] = _copy(activity[field])
     inventory, ambiguous = {}, set()
-    for item in result.get("inv", []) if isinstance(result.get("inv"), list) else []:
+    def add_item(item: Any) -> None:
+        if not isinstance(item, Mapping):
+            return
         locator = item.get("loc")
         if isinstance(locator, str):
             if locator in inventory:
                 ambiguous.add(locator)
             inventory[locator] = item
+    for item in result.get("inv", []) if isinstance(result.get("inv"), list) else []:
+        add_item(item)
+    # Public floor items can be referenced by a node even though they are in
+    # expanded entities rather than inv. Only this frame's definitions qualify.
+    entity_defs = source.get("entity_defs", [])
+    for index, raw_entity in enumerate(source.get("entities", []) if isinstance(source.get("entities"), list) else []):
+        entity = _dict(raw_entity, f"{path}.entities[{index}]")
+        if "def" in entity:
+            entity = _dict(_definition(entity_defs, entity["def"], f"{path}.entities[{index}].def"),
+                           f"{path}.entities[{index}].def")
+        add_item(entity.get("item"))
     if isinstance(source.get("ui"), Mapping):
         ui_source = _dict(source["ui"], f"{path}.ui")
         if "node_shapes" in ui_source or "op_defs" in ui_source:
@@ -323,7 +455,13 @@ def _expand_observation(value: Mapping[str, Any], path: str,
                     if type(label) is int:
                         if label not in (0, 1):
                             raise DecodeError(f"{here}.label has an invalid item-label mode")
+                        subject = node.get("subject")
                         locator = node.get("loc")
+                        if isinstance(subject, Mapping) and subject.get("kind") == "item":
+                            subject_locator = subject.get("loc")
+                            if locator is not None and locator != subject_locator:
+                                raise DecodeError(f"{here}.label contradicts the item subject loc")
+                            locator = subject_locator
                         if not isinstance(locator, str) or locator in ambiguous or locator not in inventory:
                             raise DecodeError(f"{here}.label has no unique same-frame loc binding")
                         name = inventory[locator].get("name")
@@ -342,7 +480,7 @@ def _expand_observation(value: Mapping[str, Any], path: str,
 
 def expand_structures(value: Mapping[str, Any], scope: Optional[str] = None,
                       revision: Optional[str] = None, *, bindings: bool = False) -> Dict[str, Any]:
-    """Expand v7 templates/references only, without semantic defaults or aliases.
+    """Expand v8 templates/references only, without semantic defaults or aliases.
 
     By default no binding defaults are applied. Test adapters may explicitly bind
     current activity before resolving references; frozen children still reset
@@ -471,7 +609,7 @@ def _map(value: Any, path: str) -> Dict[str, Any]:
         raise DecodeError(f"{path}.env refers to cells omitted from rows: {sorted(unknown_environment)}")
 
     result = dict(_generic(source, path))
-    # ``cells`` is not a protocol-7 compact field today.  Preserve it if a
+    # ``cells`` is not a protocol-8 compact field today.  Preserve it if a
     # future frame supplies that unknown field instead of overwriting it.
     result["decoded_cells" if "cells" in source else "cells"] = cells
     return result
@@ -498,6 +636,282 @@ def _entities(data: Mapping[str, Any], path: str) -> list:
             expanded["item"] = _item(expanded["item"], f"{item_path}.item")
         result.append(expanded)
     return result
+
+
+def _buffs(owner: Mapping[str, Any], path: str) -> None:
+    if "buffs" not in owner or owner["buffs"] is None:
+        return
+    for index, raw in enumerate(_list(owner["buffs"], f"{path}.buffs")):
+        here = f"{path}.buffs[{index}]"
+        buff = _dict(raw, here)
+        if "shown" in buff:
+            _shown(buff["shown"], f"{here}.shown")
+
+
+def _turn_progress(value: Any, path: str) -> None:
+    if value is None:
+        return
+    progress = _dict(value, path)
+    _reject_drawing(progress, path)
+    sweep = progress.get("sweep")
+    if type(sweep) not in (int, float) or not math.isfinite(sweep) or not 0 <= sweep <= 1:
+        raise DecodeError(f"{path}.sweep must be a finite number from 0 to 1")
+
+
+def _health_estimate(value: Any, path: str) -> None:
+    if value is None:
+        return
+    estimate = _dict(value, path)
+    for sample_index, sample in enumerate(_list(estimate.get("samples"), f"{path}.samples")):
+        sample_path = f"{path}.samples[{sample_index}]"
+        sample = _dict(sample, sample_path)
+        for key in ("total", "filled", "with_shield"):
+            if type(sample.get(key)) is not int:
+                raise DecodeError(f"{sample_path}.{key} must be an integer")
+        if not (0 < sample["total"] and 0 <= sample["filled"] <= sample["with_shield"] <= sample["total"]):
+            raise DecodeError(f"{sample_path} has inconsistent displayed segments")
+        if sample.get("basis") != "displayed":
+            raise DecodeError(f"{sample_path}.basis must be displayed")
+
+
+def _has_unresolved_subject_diagnostic(node: Mapping[str, Any]) -> bool:
+    presentation = node.get("pres", node.get("presentation"))
+    if not isinstance(presentation, Mapping):
+        return False
+    if presentation.get("st", presentation.get("status")) != "partial":
+        return False
+    diagnostics = presentation.get("diag", presentation.get("diagnostics"))
+    return isinstance(diagnostics, list) and any(
+        isinstance(entry, Mapping) and entry.get("field") == "subject_data"
+        and entry.get("code") == "unresolved_subject" for entry in diagnostics)
+
+
+def _has_unmapped_partial(value: Any, field: str, indicator: str) -> bool:
+    if not isinstance(value, Mapping) or value.get("unmapped_indicator") is not True:
+        return False
+    presentation = value.get("pres", value.get("presentation"))
+    if not isinstance(presentation, Mapping) or presentation.get("st", presentation.get("status")) != "partial":
+        return False
+    diagnostics = presentation.get("diag", presentation.get("diagnostics"))
+    return isinstance(diagnostics, list) and any(
+        isinstance(entry, Mapping) and entry.get("code") == "unmapped_indicator"
+        and entry.get("indicator") == indicator and entry.get("field") == field
+        for entry in diagnostics)
+
+
+def _subject_data(node: Mapping[str, Any], path: str) -> Any:
+    """Actions-only facts are complete here; never resolve them from an older frame."""
+    if "subject" in node:
+        raise DecodeError(f"{path} cannot combine subject_data with a world reference")
+    raw = node["subject_data"]
+    if raw is None:
+        if not _has_unresolved_subject_diagnostic(node):
+            raise DecodeError(f"{path}.subject_data null requires local unresolved_subject partial evidence")
+        return None
+    source = _dict(raw, f"{path}.subject_data")
+    if "loc" in source:
+        if not isinstance(source["loc"], str) or not source["loc"]:
+            raise DecodeError(f"{path}.subject_data.loc must be a non-empty current locator")
+        if "loc" in node and node["loc"] != source["loc"]:
+            raise DecodeError(f"{path}.subject_data contradicts this node loc")
+        facts = _item(source, f"{path}.subject_data")
+    else:
+        facts = dict(_generic(source, f"{path}.subject_data"))
+    if "shown" in facts:
+        _shown(facts["shown"], f"{path}.subject_data.shown")
+    _buffs(facts, f"{path}.subject_data")
+    if "turn_progress" in facts:
+        _turn_progress(facts["turn_progress"], f"{path}.subject_data.turn_progress")
+    if "health_estimate" in facts:
+        _health_estimate(facts["health_estimate"], f"{path}.subject_data.health_estimate")
+    if "item" in facts and facts["item"] is not None:
+        facts["item"] = _item(facts["item"], f"{path}.subject_data.item")
+    return facts
+
+
+def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
+    """Validate current-frame semantic facts and node bindings after all tables expand."""
+    cues = result.get("cues")
+    if cues is not None:
+        cues = _dict(cues, f"{path}.cues")
+        for key in ("metrics", "metrics_at", "screen_effects", "screen_effects_at"):
+            if key in cues:
+                raise DecodeError(f"{path}.cues.{key} is retired drawing data")
+        if not isinstance(cues.get("status"), str) or cues["status"] not in {"last_observed", "not_observed"}:
+            raise DecodeError(f"{path}.cues.status is not a Protocol 8 observation status")
+        for index, raw in enumerate(_list(cues.get("cues"), f"{path}.cues.cues")):
+            here = f"{path}.cues.cues[{index}]"
+            cue = _dict(raw, here)
+            _reject_drawing(cue, here)
+            if not isinstance(cue.get("kind"), str) or not cue["kind"]:
+                raise DecodeError(f"{here}.kind must be a non-empty semantic name")
+            if type(cue.get("cell")) is not int or cue["cell"] < 0:
+                raise DecodeError(f"{here}.cell must be a nonnegative integer")
+            if "source_cell" in cue and (type(cue["source_cell"]) is not int or cue["source_cell"] < 0):
+                raise DecodeError(f"{here}.source_cell must be a nonnegative integer")
+            if "unmapped_indicator" in cue and type(cue["unmapped_indicator"]) is not bool:
+                raise DecodeError(f"{here}.unmapped_indicator must be boolean")
+            appearance = None
+            if "appearance" in cue and cue["appearance"] is not None:
+                appearance_path = f"{here}.appearance"
+                appearance = _dict(cue["appearance"], appearance_path)
+                _reject_drawing(appearance, appearance_path)
+                if "unmapped_indicator" in appearance and type(appearance["unmapped_indicator"]) is not bool:
+                    raise DecodeError(f"{appearance_path}.unmapped_indicator must be boolean")
+                if "nature_powered" in appearance and type(appearance["nature_powered"]) is not bool:
+                    raise DecodeError(f"{appearance_path}.nature_powered must be boolean")
+                if "cells" in appearance:
+                    cells = _list(appearance["cells"], f"{appearance_path}.cells")
+                    if any(type(cell) is not int or cell < 0 for cell in cells):
+                        raise DecodeError(f"{appearance_path}.cells must contain cell indices")
+                if "shape" in appearance:
+                    if not isinstance(appearance["shape"], str) or appearance["shape"] not in {"ring", "halo"} or appearance.get("coverage") != "visual_extent":
+                        raise DecodeError(f"{appearance_path} has invalid radial extent")
+                    if "cells" not in appearance or not cells:
+                        raise DecodeError(f"{appearance_path}.cells must contain known cell indices")
+                if "count" in appearance and (type(appearance["count"]) is not int or appearance["count"] <= 0):
+                    raise DecodeError(f"{appearance_path}.count must be positive")
+                if "symbol" in appearance and (not isinstance(appearance["symbol"], str) or not appearance["symbol"]):
+                    raise DecodeError(f"{appearance_path}.symbol must be a non-empty semantic name")
+                if cue.get("kind") == "item_glow":
+                    _glow(appearance, appearance_path)
+                if cue.get("kind") == "item_status":
+                    for key in ("broken_seal", "lit_candle"):
+                        if key in appearance and type(appearance[key]) is not bool:
+                            raise DecodeError(f"{appearance_path}.{key} must be boolean")
+                if cue.get("kind") in {"ward_state", "statue_armor"} and "tier" in appearance:
+                    if type(appearance["tier"]) is not int or appearance["tier"] < 0:
+                        raise DecodeError(f"{appearance_path}.tier must be a nonnegative integer")
+                if "charge" in appearance and appearance["charge"] is not None:
+                    charge = _dict(appearance["charge"], f"{appearance_path}.charge")
+                    fraction = charge.get("fraction")
+                    if type(fraction) not in (int, float) or not math.isfinite(fraction) or not 0 <= fraction <= 1:
+                        raise DecodeError(f"{appearance_path}.charge.fraction must be from 0 to 1")
+                    if charge.get("basis") != "displayed_brightness":
+                        raise DecodeError(f"{appearance_path}.charge.basis must be displayed_brightness")
+                for key in ("paused", "translucent", "resized", "partial", "fading"):
+                    if key in appearance and type(appearance[key]) is not bool:
+                        raise DecodeError(f"{appearance_path}.{key} must be boolean")
+            if cue.get("kind") in {"ward_state", "statue_armor"} and (
+                    appearance is None or "tier" not in appearance):
+                indicator = "ward_form" if cue["kind"] == "ward_state" else "statue_armor"
+                if not (_has_unmapped_partial(appearance, "tier", indicator)
+                        or _has_unmapped_partial(cue, "tier", indicator)):
+                    raise DecodeError(f"{here}.appearance.tier missing without unmapped partial evidence")
+
+    hero = result.get("hero")
+    if hero is not None:
+        hero = _dict(hero, f"{path}.hero")
+        if "shown" in hero:
+            _shown(hero["shown"], f"{path}.hero.shown")
+        _buffs(hero, f"{path}.hero")
+        if "turn_progress" in hero and hero["turn_progress"] is not None:
+            _turn_progress(hero["turn_progress"], f"{path}.hero.turn_progress")
+
+    entities = result.get("entities", [])
+    if entities is None:
+        entities = []
+    for index, raw in enumerate(_list(entities, f"{path}.entities")):
+        here = f"{path}.entities[{index}]"
+        entity = _dict(raw, here)
+        _reject_drawing(entity, here)
+        if "shown" in entity:
+            _shown(entity["shown"], f"{here}.shown")
+        if "appearance" in entity and entity["appearance"] is not None:
+            _reject_drawing(_dict(entity["appearance"], f"{here}.appearance"),
+                            f"{here}.appearance")
+        _buffs(entity, here)
+        if "health_estimate" in entity:
+            _health_estimate(entity["health_estimate"], f"{here}.health_estimate")
+
+    ui = result.get("ui")
+    if ui is None:
+        return
+    ui = _dict(ui, f"{path}.ui")
+    if "feedback" in ui and ui["feedback"] is not None:
+        for index, raw in enumerate(_list(ui["feedback"], f"{path}.ui.feedback")):
+            here = f"{path}.ui.feedback[{index}]"
+            entry = _dict(raw, here)
+            _reject_drawing(entry, here)
+            _text_semantics(entry, here)
+            if not isinstance(entry.get("kind"), str) or entry["kind"] not in {"log", "floating", "banner"}:
+                raise DecodeError(f"{here}.kind must identify log, floating, or banner feedback")
+            if "text" in entry and entry["text"] is not None and not isinstance(entry["text"], str):
+                raise DecodeError(f"{here}.text must be text or null")
+            if "cell" in entry and entry["cell"] is not None:
+                if type(entry["cell"]) is not int or entry["cell"] < 0:
+                    raise DecodeError(f"{here}.cell must be a nonnegative integer or null")
+            if "icon" in entry:
+                _semantic_icon(entry["icon"], f"{here}.icon")
+
+    # Locators are current observation bindings. A ground item can be carried
+    # by an expanded entity, while backpack/equipment items live in inv.
+    locators: Dict[str, int] = {}
+    for item in result.get("inv", []) if isinstance(result.get("inv"), list) else []:
+        loc = item.get("loc")
+        if isinstance(loc, str):
+            locators[loc] = locators.get(loc, 0) + 1
+    for entity in entities:
+        item = entity.get("item")
+        if isinstance(item, Mapping) and isinstance(item.get("loc"), str):
+            loc = item["loc"]
+            locators[loc] = locators.get(loc, 0) + 1
+
+    for index, raw in enumerate(_list(ui.get("nodes", []), f"{path}.ui.nodes")):
+        here = f"{path}.ui.nodes[{index}]"
+        node = _dict(raw, here)
+        _reject_drawing(node, here)
+        _text_semantics(node, here)
+        if "subject_data" in node:
+            node["subject_data"] = _subject_data(node, here)
+        if "shown" in node:
+            _shown(node["shown"], f"{here}.shown")
+        for key in ("free_cast", "targeting_marker"):
+            if key in node and type(node[key]) is not bool:
+                raise DecodeError(f"{here}.{key} must be boolean")
+        if "quickslot" in node and (type(node["quickslot"]) is not int or node["quickslot"] < 1):
+            raise DecodeError(f"{here}.quickslot must be a positive integer")
+        for icon_key in ("icon", "primary_icon", "secondary_icon", "target_icon", "spell_icon"):
+            if icon_key in node:
+                _semantic_icon(node[icon_key], f"{here}.{icon_key}")
+        if "preview_icons" in node and node["preview_icons"] is not None:
+            for preview_index, icon in enumerate(_list(node["preview_icons"], f"{here}.preview_icons")):
+                if icon is not None:
+                    _semantic_icon(icon, f"{here}.preview_icons[{preview_index}]")
+        if "subject" not in node or node["subject"] is None:
+            continue
+        subject = _dict(node["subject"], f"{here}.subject")
+        kind = subject.get("kind")
+        if kind == "item":
+            if set(subject) != {"kind", "loc"} or not isinstance(subject.get("loc"), str) or not subject["loc"]:
+                raise DecodeError(f"{here}.subject requires an item loc")
+            if "loc" in node and node["loc"] != subject["loc"]:
+                raise DecodeError(f"{here}.subject contradicts this node loc")
+            if locators.get(subject["loc"]) != 1:
+                raise DecodeError(f"{here}.subject has no unique same-frame item binding")
+        elif kind == "hero":
+            if set(subject) != {"kind"} or hero is None:
+                raise DecodeError(f"{here}.subject has no same-frame hero binding")
+        elif kind == "hero_buff":
+            if set(subject) != {"kind", "index"} or type(subject.get("index")) is not int:
+                raise DecodeError(f"{here}.subject requires a hero buff index")
+            buffs = hero.get("buffs") if hero is not None else None
+            if not isinstance(buffs, list) or not 0 <= subject["index"] < len(buffs):
+                raise DecodeError(f"{here}.subject has no same-frame hero buff binding")
+        elif isinstance(kind, str) and kind in {"entity", "entity_buff"}:
+            expected = {"kind", "index"} if kind == "entity" else {"kind", "entity", "index"}
+            if set(subject) != expected:
+                raise DecodeError(f"{here}.subject has invalid {kind} fields")
+            entity_index = subject.get("index") if kind == "entity" else subject.get("entity")
+            if type(entity_index) is not int or not 0 <= entity_index < len(entities):
+                raise DecodeError(f"{here}.subject has no same-frame entity binding")
+            if kind == "entity_buff":
+                buff_index = subject.get("index")
+                buffs = entities[entity_index].get("buffs")
+                if type(buff_index) is not int or not isinstance(buffs, list) or not 0 <= buff_index < len(buffs):
+                    raise DecodeError(f"{here}.subject has no same-frame entity buff binding")
+        else:
+            raise DecodeError(f"{here}.subject has an unknown kind")
 
 
 def _receipt_defaults(receipt: Any, scope: Optional[str], path: str) -> Any:
@@ -580,12 +994,13 @@ def decode_data(value: Mapping[str, Any], scope: Optional[str] = None,
                     saved, scope, "$.data.persistence.saved")
             else:
                 raise DecodeError("$.data.persistence.saved must be a receipt, null, or integer index")
+    _semantic_fields(result, "$.data")
     return result
 
 
 @dataclass(frozen=True)
 class WireResponse:
-    """One validated protocol-7 response and its independently decoded copy."""
+    """One validated protocol-8 response and its independently decoded copy."""
 
     raw: Mapping[str, Any]
     frame: Mapping[str, Any]
@@ -624,14 +1039,14 @@ def decode_wire_response(value: Mapping[str, Any]) -> WireResponse:
 def _decode_wire_response(value: Mapping[str, Any]) -> WireResponse:
     source = _dict(value, "$")
     if type(source.get("v")) is not int or source.get("v") != PROTOCOL_VERSION:
-        raise DecodeError("$.v must be integer protocol version 7")
+        raise DecodeError("$.v must be integer protocol version 8")
     if not isinstance(source.get("id"), str) or not source["id"]:
         raise DecodeError("$.id must be a non-empty string")
     has_status, has_error = "st" in source, "err" in source
     if has_status == has_error:
         raise DecodeError("response must contain exactly one of st or err")
     if has_status and (not isinstance(source["st"], str) or source["st"] not in WIRE_STATUSES):
-        raise DecodeError("$.st is not a protocol-7 response status")
+        raise DecodeError("$.st is not a protocol-8 response status")
     if has_error and (not isinstance(source["err"], str) or not source["err"]):
         raise DecodeError("$.err must be a non-empty string")
 

@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -59,7 +61,7 @@ public class ScrollOfRecharging extends Scroll {
 	public static void charge( Char user ) {
 		if (user.sprite != null) {
 			Emitter e = user.sprite.centerEmitter();
-			if (e != null) e.burst(EnergyParticle.FACTORY, 15);
+			if (e != null) GameplayBurst.burstForCharacter(e, EnergyParticle.FACTORY, 15, "energy_burst", user.sprite, false);
 		}
 	}
 	

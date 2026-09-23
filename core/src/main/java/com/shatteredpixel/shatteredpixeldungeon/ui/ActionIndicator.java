@@ -29,28 +29,20 @@ import com.watabou.input.GameAction;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Visual;
 
-public class ActionIndicator extends Tag implements RenderedStatus {
+public class ActionIndicator extends Tag implements GameplayStatus {
 
 	Visual primaryVis;
 	Visual secondVis;
 
 	@Override
-	public synchronized java.util.Map<String,Object> renderedStatus() {
+	public synchronized java.util.Map<String,Object> gameplayStatus() {
 		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
-		java.util.Map<String,Object> primary=RenderedAppearance.image(primaryVis),secondary=RenderedAppearance.image(secondVis);
+		java.util.Map<String,Object> primary=primaryVis instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite
+				?GameplayIcons.image(primaryVis):GameplayIcons.variantImage(primaryVis);
+		java.util.Map<String,Object> secondary=secondVis instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite
+				?GameplayIcons.image(secondVis):GameplayIcons.variantImage(secondVis);
 		if(!primary.isEmpty())result.put("primary_icon",primary);
 		if(!secondary.isEmpty())result.put("secondary_icon",secondary);
-		return result;
-	}
-
-	@Override
-	public synchronized java.util.Map<String,Object> intentStatus() {
-		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
-		java.util.Map<String,Object> primary=RenderedAppearance.intentImage(primaryVis,true,
-				!(primaryVis instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite));
-		java.util.Map<String,Object> secondary=RenderedAppearance.intentImage(secondVis,true,
-				!(secondVis instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite));
-		if(!primary.isEmpty())result.put("primary_icon",primary);if(!secondary.isEmpty())result.put("secondary_icon",secondary);
 		return result;
 	}
 

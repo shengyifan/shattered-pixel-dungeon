@@ -705,7 +705,11 @@ public class PrisonBossLevel extends Level {
 						&& Actor.findChar(cell) == null) {
 					Level.set(cell, Terrain.SECRET_TRAP);
 					setTrap(new TenguDartTrap().hide(), cell);
-					CellEmitter.get(cell).burst(Speck.factory(Speck.LIGHT), 2);
+					com.watabou.noosa.particles.Emitter spark = CellEmitter.get(cell);
+					spark.burst(Speck.factory(Speck.LIGHT), 2);
+					if (Game.observer.observesVisualCues()) spark.observeDraw(
+							new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("tengu_trap_spark", cell,
+									Speck.factory(Speck.LIGHT), Speck.class));
 				}
 			}
 		}

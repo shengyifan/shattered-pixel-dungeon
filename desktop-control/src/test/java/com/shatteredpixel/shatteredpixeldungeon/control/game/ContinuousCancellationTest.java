@@ -241,13 +241,13 @@ public class ContinuousCancellationTest {
             action(id, version, map("action", "action.cancel", "target_id", target));
         }
         void action(String id, String version, Map<String, Object> args) throws Exception {
-            accept(map("protocol_version", 7, "id", id, "scope_id", SCOPE, "op", "action.execute", "state_version", version, "args", args));
+            accept(map("protocol_version", 8, "id", id, "scope_id", SCOPE, "op", "action.execute", "state_version", version, "args", args));
         }
         void query(String id, String op, Map<String, Object> args) throws Exception {
-            accept(map("protocol_version", 7, "id", id, "scope_id", SCOPE, "op", op, "args", args));
+            accept(map("protocol_version", 8, "id", id, "scope_id", SCOPE, "op", op, "args", args));
         }
         void accept(Map<String, Object> request) throws Exception {
-            session.accept(V7Requests.encode(store, request)).get(2, TimeUnit.SECONDS);
+            session.accept(V8Requests.encode(store, request)).get(2, TimeUnit.SECONDS);
         }
         List<String> lines() throws Exception {
             List<String> result = new ArrayList<>();

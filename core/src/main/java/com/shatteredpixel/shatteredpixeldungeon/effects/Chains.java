@@ -84,8 +84,8 @@ public class Chains extends Group {
 		}
 	}
 
-	@Override public void draw() {
-		super.draw();
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
 		if (!Game.observer.observesVisualCues() || com.shatteredpixel.shatteredpixeldungeon.Dungeon.level == null) return;
 		int width = com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.width();
 		for (Image chain : chains) {

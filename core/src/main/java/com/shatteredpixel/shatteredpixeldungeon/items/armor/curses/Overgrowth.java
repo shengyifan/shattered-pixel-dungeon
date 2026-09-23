@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.armor.curses;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
@@ -54,7 +56,7 @@ public class Overgrowth extends Armor.Glyph {
 			}
 			
 			
-			CellEmitter.get( defender.pos ).burst( LeafParticle.LEVEL_SPECIFIC, 10 );
+			GameplayBurst.burst(CellEmitter.get(defender.pos), LeafParticle.LEVEL_SPECIFIC, 10, "leaf_burst", defender.pos, false);
 			
 		}
 		

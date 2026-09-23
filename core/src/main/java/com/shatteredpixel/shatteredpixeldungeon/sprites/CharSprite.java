@@ -474,7 +474,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 				if (aura != null)   aura.killAndErase();
 				float size = Math.max(width(), height());
 				size = Math.max(size+4, 16);
-				aura = new Flare(auraRays, size);
+				aura = new Flare(auraRays, size).observeCharacterAura();
 				aura.angularSpeed = 90;
 				aura.color(auraColor, true);
 				aura.visible = visible;
@@ -828,13 +828,24 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 		super.draw();
 
-		if (Game.observer.observesVisualCues() && buffer != null && Dungeon.level != null) {
+	}
+
+	@Override public void observeGameplayVisuals() {
+		if (Game.observer.observesVisualCues() && Dungeon.level != null) {
 			String cue = renderedStateCue();
 			int cell=renderedCell();
 			if (cue != null && cell>=0)
 				GameScene.observeCellVisualDraw(this, new com.watabou.noosa.VisualCue(cue, cell));
 			com.watabou.noosa.VisualCue appearance = renderedAppearanceCue(cell);
 			if (appearance != null) GameScene.observeCellVisualDraw(this, appearance);
+			GameScene.observeCharacterVisual(burning, "character_burning", cell);
+			GameScene.observeCharacterVisual(levitation, "character_levitating", cell);
+			GameScene.observeCharacterVisual(chilled, "character_chilled", cell);
+			GameScene.observeCharacterVisual(marked, "character_marked", cell);
+			GameScene.observeCharacterVisual(healing, "character_healing", cell);
+			GameScene.observeCharacterVisual(hearts, "character_hearts", cell);
+			GameScene.observeCharacterVisual(shield, "character_shielded", cell);
+			GameScene.observeCharacterVisual(light, "character_illuminated", cell);
 		}
 	}
 
@@ -846,24 +857,23 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		if (cell < 0 || !Float.isFinite(alpha()) || alpha() <= 0
 				|| !Float.isFinite(scale.x+scale.y+rm+gm+bm+ra+ga+ba)) return null;
 		Map<String,Object> appearance = new LinkedHashMap<>();
-		appearance.put("flip_horizontal", flipHorizontal);
-		appearance.put("flip_vertical", flipVertical);
 		if (paused) appearance.put("paused", true);
-		if (scale.x != 1 || scale.y != 1) appearance.put("scale", Arrays.asList(scale.x, scale.y));
 		String style = renderedTintStyle();
-		if (style != null) appearance.put("tint_style", style);
-		if (rm != 1 || gm != 1 || bm != 1 || ra != 0 || ga != 0 || ba != 0) {
-			Map<String,Object> tint = new LinkedHashMap<>();
-			tint.put("multiply", Arrays.asList(rm,gm,bm));tint.put("add", Arrays.asList(ra,ga,ba));
-			appearance.put("tint", tint);
+		if (style != null) appearance.put("style", style);
+		if (invisible != null && alpha() < 1) appearance.put("invisible", true);
+		if (style == null && !gameplayTintOwned() && flashTime <= 0 && (rm != 1 || gm != 1 || bm != 1 || ra != 0 || ga != 0 || ba != 0)) {
+			appearance.putAll(com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("style", "character_tint"));
 		}
-		Float opacity = alpha() < 1 ? alpha() : null;
-		if (appearance.isEmpty() && opacity == null) return null;
-		return new com.watabou.noosa.VisualCue("sprite_state_appearance", cell, null, null, null, opacity, appearance);
+		if (appearance.isEmpty()) return null;
+		return new com.watabou.noosa.VisualCue("sprite_state", cell, null, null, null, null, appearance);
 	}
+
+	/** A source-specific semantic provider owns its selected tint and its diagnostics. */
+	protected boolean gameplayTintOwned() { return false; }
 
 	/** These controllers animate only a decorative pulse/onset around a constant visible color style. */
 	protected String renderedTintStyle() {
+		if (darkBlock != null && darkBlock.exists && rm == 0.4f && gm == 0.4f && bm == 0.4f) return "darkened";
 		if (glowBlock != null && glowBlock.exists && matchesTint(1.33f,1.33f,0.83f)) return "golden_glow";
 		if (iceBlock != null && iceBlock.exists && matchesTint(0.83f,1.17f,1.33f)) return "icy";
 		return null;

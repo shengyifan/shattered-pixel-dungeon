@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -42,13 +44,13 @@ public class ScrollOfLullaby extends Scroll {
 	public void doRead() {
 
 		detach(curUser.belongings.backpack);
-		curUser.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+		GameplayBurst.startForCharacter(curUser.sprite.centerEmitter(), Speck.factory(Speck.NOTE), 0.3f, 5, "lullaby_notes", curUser.sprite, false);
 		Sample.INSTANCE.play( Assets.Sounds.LULLABY );
 
 		for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
 			if (Dungeon.level.heroFOV[mob.pos]) {
 				Buff.affect( mob, Drowsy.class, Drowsy.DURATION );
-				mob.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+				GameplayBurst.startForCharacter(mob.sprite.centerEmitter(), Speck.factory(Speck.NOTE), 0.3f, 5, "lullaby_notes", mob.sprite, false);
 			}
 		}
 

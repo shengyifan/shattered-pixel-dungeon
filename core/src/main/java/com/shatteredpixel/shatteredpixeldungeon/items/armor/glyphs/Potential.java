@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.EnergyParticle;
@@ -49,7 +51,7 @@ public class Potential extends Glyph {
 
 			int wands = ((Hero) defender).belongings.charge( powerMulti );
 			if (wands > 0) {
-				defender.sprite.centerEmitter().burst(EnergyParticle.FACTORY, 10);
+				GameplayBurst.burstForCharacter(defender.sprite.centerEmitter(), EnergyParticle.FACTORY, 10, "energy_burst", defender.sprite, false);
 			}
 		}
 		

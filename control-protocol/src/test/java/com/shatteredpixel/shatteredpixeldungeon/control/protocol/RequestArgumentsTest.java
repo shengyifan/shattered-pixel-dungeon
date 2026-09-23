@@ -24,7 +24,7 @@ public class RequestArgumentsTest {
             else assertThrows(name,ProtocolException.class,()->RequestArguments.validate(op,intent));
             assertEquals(name,before,JsonCodec.encode(intent));
             if(!"settle".equals(op)) {
-                Map<String,Object> wire=new LinkedHashMap<>(intent);wire.put("v",7);wire.put("id","fixture.1");
+                Map<String,Object> wire=new LinkedHashMap<>(intent);wire.put("v",8);wire.put("id","fixture.1");
                 if(Boolean.TRUE.equals(example.get("valid")))ControlRequest.parse(JsonCodec.encode(wire));
                 else assertThrows(name,ProtocolException.class,()->ControlRequest.parse(JsonCodec.encode(wire)));
             }

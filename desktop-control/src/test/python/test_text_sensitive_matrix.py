@@ -33,7 +33,7 @@ class TextSensitiveMatrixTest(unittest.TestCase):
 
     def test_first_protocol_error_stops_later_requests_before_the_transport(self):
         client, evidence = self.fake_client()
-        failed = {"protocol_version": 7, "ok": False, "error": {"code": "STALE_STATE"}}
+        failed = {"protocol_version": 8, "ok": False, "error": {"code": "STALE_STATE"}}
         with patch.object(matrix.MatrixClient, "request", return_value=failed) as transport:
             with self.assertRaises(AssertionError):
                 client.request("action.execute", {"action": "wait"})
@@ -45,12 +45,12 @@ class TextSensitiveMatrixTest(unittest.TestCase):
 
     def test_explicit_source_states_receive_validation_and_clipped_text_is_allowed(self):
         client, evidence = self.fake_client()
-        missing = {"protocol_version": 7, "ok": True, "result": [{"text": "Unclassified engine text"}]}
+        missing = {"protocol_version": 8, "ok": True, "result": [{"text": "Unclassified engine text"}]}
         with patch.object(matrix.MatrixClient, "request", return_value=missing), self.assertRaises(AssertionError):
             client.request("state.get", {"src": True})
         self.assertIsNotNone(evidence.failure)
         client, evidence = self.fake_client()
-        clipped = {"protocol_version": 7, "ok": True, "result": [{"text": "Partially displayed text", "clipped": True,
+        clipped = {"protocol_version": 8, "ok": True, "result": [{"text": "Partially displayed text", "clipped": True,
                     "text_sources": {"text": None}, "text_diagnostics": {"text": "clipped_text"}}]}
         with patch.object(matrix.MatrixClient, "request", return_value=clipped):
             self.assertEqual(clipped, client.request("state.get", {"src": True}))
@@ -59,14 +59,14 @@ class TextSensitiveMatrixTest(unittest.TestCase):
 
     def test_default_event_prose_does_not_require_omitted_source_trees(self):
         client, evidence = self.fake_client()
-        response = {"protocol_version": 7, "ok": True, "result": [{"text": "An event"}]}
+        response = {"protocol_version": 8, "ok": True, "result": [{"text": "An event"}]}
         with patch.object(matrix.MatrixClient, "request", return_value=response):
             self.assertEqual(response, client.request("events.read"))
         self.assertEqual(0, evidence.source_checks)
 
     def test_actual_gui_language_must_match_the_worker(self):
         client, evidence = self.fake_client()
-        wrong = {"protocol_version": 7, "ok": True, "result": {"observation": {"ui": {
+        wrong = {"protocol_version": 8, "ok": True, "result": {"observation": {"ui": {
             "display": {"language": "zh", "fullscreen": False}}}}}
         with patch.object(matrix.MatrixClient, "request", return_value=wrong), self.assertRaises(AssertionError):
             client.request("state.get")

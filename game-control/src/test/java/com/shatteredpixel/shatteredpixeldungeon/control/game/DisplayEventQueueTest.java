@@ -18,7 +18,7 @@ public class DisplayEventQueueTest {
     @Test public void mixedKindsShareOneBoundedNondestructiveFifo() {
         GameController controller = controller();
         GameController.DisplayEvent visual = event("game.visual", 1);
-        GameController.DisplayEvent screen = event("game.screen_visual", 2);
+        GameController.DisplayEvent screen = event("game.banner", 2);
         GameController.DisplayEvent log = event("game.log", 3);
         controller.enqueueDisplayEvent(visual);
         controller.enqueueDisplayEvent(screen);
@@ -47,7 +47,7 @@ public class DisplayEventQueueTest {
     }
 
     @Test public void publicAndOriginalPayloadsAreDeeplyFrozenAtConstruction() {
-        Map<String, Object> cell = map("cell", 17, "opacity", 0.5);
+        Map<String, Object> cell = map("cell", 17, "count", 5);
         List<Object> samples = new ArrayList<>(Arrays.asList(cell, null, false));
         Map<String, Object> diagnostic = map("code", 123, "offset", 0);
         List<Object> diagnostics = new ArrayList<>(Collections.singletonList(diagnostic));
@@ -57,7 +57,7 @@ public class DisplayEventQueueTest {
         List<Object> parts = new ArrayList<>(Arrays.asList(source, null, true));
         Map<String, Object> original = map("parts", parts);
         String publicJson = JsonCodec.encode(data), originalJson = JsonCodec.encode(original);
-        GameController.DisplayEvent event = new GameController.DisplayEvent("run:queue", "game.screen_visual", data, original);
+        GameController.DisplayEvent event = new GameController.DisplayEvent("run:queue", "game.banner", data, original);
 
         cell.put("cell", 99);
         samples.clear();
@@ -82,7 +82,7 @@ public class DisplayEventQueueTest {
     @Test public void acknowledgementValidatesTheEntireIdentityPrefixBeforeRemovingAnything() {
         GameController controller = controller();
         GameController.DisplayEvent first = event("game.visual", 1);
-        GameController.DisplayEvent second = event("game.screen_visual", 2);
+        GameController.DisplayEvent second = event("game.banner", 2);
         GameController.DisplayEvent third = event("game.log", 3);
         List<GameController.DisplayEvent> expected = Arrays.asList(first, second, third);
         for (GameController.DisplayEvent event : expected) controller.enqueueDisplayEvent(event);
@@ -124,7 +124,7 @@ public class DisplayEventQueueTest {
     @Test public void installingASignalSchedulesAlreadyQueuedWorkWithoutConsumingIt() {
         GameController controller = controller();
         AtomicInteger signals = new AtomicInteger();
-        GameController.DisplayEvent first = event("game.screen_visual", 1);
+        GameController.DisplayEvent first = event("game.banner", 1);
         GameController.DisplayEvent second = event("game.visual", 2);
         controller.enqueueDisplayEvent(first);
         assertEquals(0, signals.get());
@@ -153,7 +153,7 @@ public class DisplayEventQueueTest {
         controller.setDisplaySignal(signals::incrementAndGet);
         assertEquals(0, signals.get());
         GameController.DisplayEvent first = event("game.visual", 1);
-        GameController.DisplayEvent second = event("game.screen_visual", 2);
+        GameController.DisplayEvent second = event("game.banner", 2);
         controller.enqueueDisplayEvent(first);
         controller.enqueueDisplayEvent(second);
         List<GameController.DisplayEvent> finalCut = controller.peekDisplayEvents(100);
@@ -162,7 +162,7 @@ public class DisplayEventQueueTest {
         controller.freezeDisplayEvents();
         controller.enqueueDisplayEvent(event("game.log", 3));
         controller.setDisplaySignal(signals::incrementAndGet);
-        controller.enqueueDisplayEvent(event("game.screen_visual", 4));
+        controller.enqueueDisplayEvent(event("game.banner", 4));
 
         assertEquals(2, signals.get());
         assertTrue(controller.hasDisplayEvents());
@@ -183,7 +183,7 @@ public class DisplayEventQueueTest {
         GameController.GameLogSnapshot firstLog = log(1);
         GameController.GameLogSnapshot secondLog = log(2);
         GameController.GameLogSnapshot thirdLog = log(3);
-        GameController.DisplayEvent screen = event("game.screen_visual", 4);
+        GameController.DisplayEvent screen = event("game.banner", 4);
         GameController.DisplayEvent lastVisual = GameController.DisplayEvent.from(thirdVisual);
         GameController.DisplayEvent lastLog = GameController.DisplayEvent.from(thirdLog);
         controller.enqueueDisplayEvent(GameController.DisplayEvent.from(firstVisual));

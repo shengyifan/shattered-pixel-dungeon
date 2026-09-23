@@ -1,126 +1,73 @@
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
-import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
-import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
-import com.watabou.noosa.Camera;
 import com.watabou.noosa.Visual;
 import com.watabou.noosa.VisualCue;
 import com.watabou.noosa.particles.Emitter;
 import org.junit.jupiter.api.Test;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CellParticleContributorTest {
-    @Test void fallingWarningNeedsAnUncoveredCompleteContributorAndHiddenDrawDoesNotLatchReadiness() throws Exception {
-        try (Fixture fixture = new Fixture()) {
-            assertFalse(fixture.frame(), "An eligible new emitter waits for its first actual particle");
-            // DelayedRockFall raises its emission box above an otherwise visible anchor tile.
-            // Rotation makes native Visual.isVisible permissive even when the quad is above the viewport.
-            Visual outside = fixture.particle(35, 29); outside.angle = 20;
-            assertTrue(outside.isVisible());
-            assertTrue(fixture.frame(), "An entirely clipped source must not hold input indefinitely");
-            assertTrue(fixture.cues().isEmpty());
-            outside.kill();
-            assertFalse(fixture.frame(), "A clipped particle was not recorded as the first visible draw");
-            Visual inside = fixture.particle(35, 36);
-            assertTrue(fixture.frame());
-            assertEquals(Collections.singletonList(new VisualCue("falling_rock_warning", 22)), fixture.cues());
-            inside.kill();
-            assertTrue(fixture.frame(), "Natural particle flicker cannot re-arm the initial wait");
+    @Test void glyphAndAlarmSignalsReadOnlyExistingSpriteCellsAndKnownEpisodeContributors() throws Exception {
+        for(String kind:Arrays.asList("glyph_swiftness_active","glyph_flow_active","glyph_bulk_active","cursed_alarm")){
+            Fixture f=new Fixture();SignalSprite sprite=new SignalSprite();f.scene.add(sprite);
+            assertNull(sprite.ch,"No character, hidden enemy, armor or glyph level is needed");
+            CellParticleCue signal=CellParticleCue.forCharacter(kind,sprite,f.factory,Visual.class);
+            f.emitter.observeDraw(signal);Visual particle=f.particle(35,35);
+            assertTrue(f.frame(signal));assertEquals(Collections.singletonList(new VisualCue(kind,22)),f.cues());
+            assertFalse(GameplayVisualKinds.affectsIntent(kind), "Finite activation feedback is not a persistent mechanic state");
+            sprite.cell=23;particle.x=51;f.level.heroFOV[23]=false;
+            assertTrue(f.frame(signal));assertTrue(f.cues().isEmpty(),"A visible old cell cannot reveal the moving source in fog");
+            f.level.heroFOV[23]=true;assertTrue(f.frame(signal));assertEquals(23,f.cues().get(0).cell);
+            f.emitter.on=false;particle.kill();assertTrue(f.frame(signal));assertTrue(f.cues().isEmpty());
+            particle.revive();sprite.revive();assertTrue(f.frame(signal));assertTrue(f.cues().isEmpty(),"A reused sprite cannot inherit an older signal binding");
+            assertEquals(1,f.emitter.countLiving(),"Sampling does not manufacture extra particles");
         }
     }
-
-    @Test void laterVisibleContributorWinsAfterClippedCoveredOrFoggedCandidates() throws Exception {
-        try (Fixture fixture = new Fixture()) {
-            Visual outside = fixture.particle(35, 29); outside.angle = 20;
-            Visual covered = fixture.particle(35, 51);
-            List<VisualCueProjection.Rect> blockers = Collections.singletonList(new VisualCueProjection.Rect(34, 18, 38, 22));
-            assertTrue(fixture.frame(blockers));
-            assertTrue(fixture.cues().isEmpty(), "Cover outside the anchor tile still hides the particle");
-            fixture.level.heroFOV[32] = false;
-            assertTrue(fixture.frame());
-            assertTrue(fixture.cues().isEmpty(), "An anchor in FOV cannot expose a contributor in a fogged neighboring tile");
-            Visual inside = fixture.particle(36, 36);
-            assertTrue(fixture.frame(blockers));
-            assertEquals(1, fixture.cues().size(), "Do not stop at the first hidden contributor");
-            inside.visible = false;
-            assertTrue(fixture.frame(blockers));
-            assertTrue(fixture.cues().isEmpty());
-            covered.kill(); outside.kill();
-        }
+    private static final class SignalSprite extends com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite {
+        int cell=22;@Override public int renderedCell(){return cell;}
     }
-
-    @Test void hiddenStoppedInactiveAndFrozenSourcesNeverWaitForUnavailablePixels() throws Exception {
-        try (Fixture fixture = new Fixture()) {
-            fixture.level.heroFOV[22] = false;
-            assertTrue(fixture.frame());
-            fixture.level.heroFOV[22] = true;
-            fixture.emitter.on = false; assertTrue(fixture.frame());
-            fixture.emitter.on = true; fixture.emitter.active = false; assertTrue(fixture.frame());
-            fixture.emitter.active = true; fixture.emitter.frozen = true; assertTrue(fixture.frame());
-            assertTrue(fixture.cues().isEmpty());
-        }
+    @Test void firstKnownContributorWaitsNaturallyButOffscreenDoesNotHideIt() throws Exception {
+        Fixture f=new Fixture();assertFalse(f.frame());
+        Visual particle=f.particle(35,29); // Above old camera, still in FOV.
+        assertTrue(f.frame());assertEquals(Collections.singletonList(new VisualCue("falling_rock_warning",22)),f.cues());
+        particle.kill();assertTrue(f.frame(),"Later particle flicker does not rearm the initial wait");
+        assertEquals(1,f.cues().size(),"An ongoing observed warning episode survives natural particle gaps");
+        f.emitter.on=false;assertTrue(f.frame());assertTrue(f.cues().isEmpty(),"Stopped empty source clears the warning");
+        f.emitter.revive();f.emitter.observeDraw(f.observation);f.emitter.startDelayed(f.factory,.1f,0,.1f);
+        assertFalse(f.frame(),"Pool reuse must require a new known presentation");
     }
-
-    private static final class ObservedEmitter extends Emitter {
-        boolean frozen;
-        @Override protected boolean isFrozen() { return frozen; }
+    @Test void hiddenContributorCannotRevealWarningOrLatchFirstKnownAppearance() throws Exception {
+        Fixture f=new Fixture();Visual particle=f.particle(35,51);f.level.heroFOV[32]=false;
+        assertTrue(f.frame(),"A source with only unseen contributors cannot indefinitely hold input");
+        assertTrue(f.cues().isEmpty());particle.kill();assertFalse(f.frame());
+        f.particle(35,36);assertTrue(f.frame());assertEquals(1,f.cues().size());
     }
-
-    private static final class Fixture implements AutoCloseable {
-        final Camera previous = Camera.main;
-        final GameScene scene = new GameScene();
-        final VisualCueCollector collector = new VisualCueCollector(scene);
-        final TestLevel level = new TestLevel();
-        final ObservedEmitter emitter = new ObservedEmitter();
-        final CellParticleCue observation;
-        final VisualCueProjection.Viewport viewport = new VisualCueProjection.Viewport(0,32,160,128,0,0,1);
-        Fixture() throws Exception {
-            Camera.main = new Camera(0,0,160,128,1); Camera.main.scroll.set(0,32);
-            Emitter.Factory factory = new Emitter.Factory() {
-                @Override public void emit(Emitter emitter, int index, float x, float y) { fail("Observation must not emit particles"); }
-            };
-            emitter.startDelayed(factory, .1f, 0, .1f); scene.add(emitter);
-            observation = new CellParticleCue("falling_rock_warning",22,factory,Visual.class);
-            set(collector,"collecting",true); set(collector,"level",level);
-        }
-        Visual particle(float x, float y) {
-            Visual particle = new Visual(x,y,1,1); emitter.add(particle); return particle;
-        }
-        boolean frame() throws Exception { return frame(Collections.emptyList()); }
-        boolean frame(List<VisualCueProjection.Rect> blockers) throws Exception {
-            ((Map<?,?>)get(collector,"offered")).clear(); ((Map<?,?>)get(collector,"cueBounds")).clear();
-            ((List<?>)get(collector,"particleObservations")).clear();
-            collector.particleEmitterDrawn(emitter,observation);
-            Method finish = VisualCueCollector.class.getDeclaredMethod("finishParticleDraws",VisualCueProjection.Viewport.class,List.class);
-            finish.setAccessible(true); return (Boolean)finish.invoke(collector,viewport,blockers);
-        }
-        @SuppressWarnings("unchecked") List<VisualCue> cues() throws Exception {
-            return new ArrayList<>(((Map<String,VisualCue>)get(collector,"offered")).values());
-        }
-        @Override public void close() { Camera.main = previous; }
+    @Test void partialParticleCanContributeKnownFragmentButHiddenAnchorCannotLeak() throws Exception {
+        Fixture f=new Fixture();Visual particle=f.particle(47,35);particle.width=3;f.level.heroFOV[23]=false;
+        assertTrue(f.frame());assertEquals(1,f.cues().size(),"Known part remains visible under infinite window semantics");
+        f.level.heroFOV[22]=false;assertTrue(f.frame());assertTrue(f.cues().isEmpty());
     }
-
-    private static final class TestLevel extends Level {
-        TestLevel() { width=height=10;length=100;heroFOV=new boolean[length];Arrays.fill(heroFOV,true); }
-        @Override protected boolean build(){return false;}
-        @Override protected void createMobs(){}
-        @Override protected void createItems(){}
-        @Override public String tilesTex(){return "";}
-        @Override public String waterTex(){return "";}
+    @Test void stoppedFrozenInactiveAndHiddenSourcesCannotBlock() throws Exception {
+        Fixture f=new Fixture();f.level.heroFOV[22]=false;assertTrue(f.frame());
+        f.level.heroFOV[22]=true;f.emitter.on=false;assertTrue(f.frame());
+        f.emitter.on=true;f.emitter.active=false;assertTrue(f.frame());
+        f.emitter.active=true;f.emitter.frozen=true;assertTrue(f.frame());assertEquals(0,f.emitter.countLiving());
     }
-    private static Object get(Object target,String name) throws Exception {
-        Field field=target.getClass().getDeclaredField(name);field.setAccessible(true);return field.get(target);
-    }
-    private static void set(Object target,String name,Object value) throws Exception {
-        Field field=target.getClass().getDeclaredField(name);field.setAccessible(true);field.set(target,value);
+    private static class ObservedEmitter extends Emitter { boolean frozen;@Override protected boolean isFrozen(){return frozen;} }
+    private static class Fixture extends GameplayVisualTraversalTest.Fixture {
+        final ObservedEmitter emitter=new ObservedEmitter();
+        final Emitter.Factory factory=new Emitter.Factory(){@Override public void emit(Emitter emitter,int index,float x,float y){fail("Observation cannot emit");}};
+        final CellParticleCue observation=new CellParticleCue("falling_rock_warning",22,factory,Visual.class);
+        Fixture()throws Exception{scene.add(emitter);emitter.observeDraw(observation);emitter.startDelayed(factory,.1f,0,.1f);}
+        Visual particle(float x,float y){Visual p=new Visual(x,y,1,1);emitter.add(p);return p;}
+        boolean frame()throws Exception{
+            return frame(observation);
+        }
+        boolean frame(CellParticleCue current)throws Exception{
+            clear();((List<?>)GameplayVisualTraversalTest.get(collector,"particleObservations")).clear();
+            collector.particleEmitterDrawn(emitter,current);
+            return (Boolean)GameplayVisualTraversalTest.method("finishParticleDraws").invoke(collector);
+        }
     }
 }

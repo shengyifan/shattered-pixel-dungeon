@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
@@ -44,7 +46,7 @@ public class Displacing extends Weapon.Enchantment {
 			int oldpos = defender.pos;
 			if (ScrollOfTeleportation.teleportChar(defender)){
 				if (Dungeon.level.heroFOV[oldpos]) {
-					CellEmitter.get( oldpos ).start( Speck.factory( Speck.LIGHT ), 0.2f, 3 );
+					GameplayBurst.start(CellEmitter.get(oldpos), Speck.factory(Speck.LIGHT), 0.2f, 3, "departure_light", oldpos, false);
 				}
 
 				if (defender instanceof Mob && ((Mob) defender).state == ((Mob) defender).HUNTING){

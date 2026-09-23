@@ -1151,6 +1151,12 @@ com.shatteredpixel.shatteredpixeldungeon.ui.DangerIndicator#HEIGHT
 com.shatteredpixel.shatteredpixeldungeon.ui.GameLog#PUNCTUATION
 com.shatteredpixel.shatteredpixeldungeon.ui.GameLog#entries
 com.shatteredpixel.shatteredpixeldungeon.ui.GameLog#textsToAdd
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons#BUFFS
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons#HEROES
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons#ICON_ASSETS
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons#PORTRAITS
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons$ItemBadges#NAMES
+com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons$Items#NAMES
 com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon#film
 com.shatteredpixel.shatteredpixeldungeon.ui.Icons#ALCHEMY
 com.shatteredpixel.shatteredpixeldungeon.ui.Icons#ALEKS

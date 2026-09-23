@@ -1,6 +1,6 @@
 # Public CLI clients and per-frame decoding
 
-## Reusable CLI.7.0.1 reference helper
+## Reusable CLI.8.0.0 reference helper
 
 `desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
 module for consumers of the packaged controller. It does not launch the game,
@@ -8,7 +8,7 @@ read profiles, perform I/O, choose actions, retry requests or replace revisions.
 The packaged `spdctl control --machine` remains the normal game-control entry point
 and does not require Python.
 
-- `decode_wire_response(value)` validates one complete protocol-7 child response.
+- `decode_wire_response(value)` validates one complete protocol-8 child response.
 - `decode_client_response(value)` also understands controller response/error,
   settle and exit wrappers. Inspect `problems` before assuming success. Its
   `current_frame` is only a current observation, never a receipt, historical reply
@@ -30,7 +30,7 @@ activity/cancel bindings before copying referenced operations, then expands
 item labels. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
-CLI.7.0.1 validates static parameters for every action, query and local `settle`,
+CLI.8.0.0 validates static parameters for every action, query and local `settle`,
 including required/extra fields and JSON integer versus boolean/float distinctions.
 An omitted settle rid can select the latest pending action; an explicit invalid
 rid is never treated as omitted. Node/action constraints additionally cover choices,
@@ -41,10 +41,20 @@ Scroll retains native clamping and omitted-axis behavior. Unknown map cells rema
 legal targets where the native operation permits them. Actual key acceptance,
 collision, damage, costs and completion still belong to the game response.
 
-Rendered appearance and sampled display history are retained as data, not inferred
-operations. Current measurements never borrow previous-frame values. Invalid env
-cell conversion, duplicate decimal cell identities and invalid saved references
-raise evidence-preserving DecodeError; they cannot silently overwrite data.
+`inv[].shown`, `buffs[].shown`, `health_estimate`, `hero.turn_progress`, explicit
+`ui.nodes[].subject` references and `ui.feedback` are public semantic facts, not
+inferred operations. The current `data.cues.cues` is scoped to public world/FOV
+evidence, independent of the camera and UI occlusion; semantic event history is
+separate from the current frame. Invalid env cell conversion, duplicate decimal
+cell identities and invalid saved references raise evidence-preserving DecodeError;
+they cannot silently overwrite data. The helper must not infer subjects from names
+or convert shown estimates into hidden exact values.
+
+A standalone `actions` reply omits hero/inventory/entity tables. Its bound UI
+nodes carry direct public target facts in `subject_data` and omit `subject`;
+`subject_data:null` with local `unresolved_subject` partial diagnostics means
+the owner was not uniquely established. A decoder must keep the node's label,
+locator and `ops`, and must not resolve a subject against a previous frame.
 
 If `decode_wire_response()` or `decode_client_response()` fails, `DecodeError.raw`
 retains a deep copy of the parsed failing wire JSON, not the original transport
@@ -96,9 +106,10 @@ Do not execute both representations. Invalid references or control mismatches ar
 decoding errors, not a reason to infer another operation or retry an action.
 Frozen `before/after` snapshots have independent tables and never become a live
 frame. `raw/reply` and source ASTs remain untouched. Full/src keep their field/source
-semantics but do not promise uncompressed records on the wire.
+semantics but do not promise uncompressed records or ordinary renderer detail on
+the wire.
 
-## Historical paused gameplay driver
+## Development gameplay driver and historical pause
 
 正式的模型控制入口现为包内 `spdctl control --machine`，由包内 JVM 维护唯一的机器子进程，不需要此开发脚本或外部 Python。它要求动作携带已经展示的 revision，补全短请求 ID 与作用域，并提供显式 `settle`；不包含战斗或探索策略。
 
@@ -106,7 +117,7 @@ semantics but do not promise uncompressed records on the wire.
 
 该脚本不是“已经能自主通关”的交付物。它有有界探索策略和接受 JSON 意图的持续连接模式，遇到未知生物、重要选择、首领或策略不支持的情况需要重新决策。已发现但未实现的例子是按探险手册钥匙记录优先处理锁门。实际失败和资源消耗没有回滚。
 
-当前开发驱动使用协议 7（CLI.7.0.1 / schema 10），自动请求序号只使用十进制数字。同帧操作引用、记录模板、可见性简写和局部默认值由 `protocol7.py` 按当前手册展开，历史 v4 适配器仅用于显式离线基准。共享 `ActionResult` 将原动作 outcome/receipt 与当前 observation 分开；同步成功直接使用原回复，连续活动只轮询小回执并在成功终态后读一次当前 state，正常路径不读历史 reply。历史诊断不会覆盖当前 scope/revision，成功 quit 后不再查询。
+当前源码中的开发驱动已改用协议 8（CLI.8.0.0 / schema 11），自动请求序号只使用十进制数字。同帧操作引用、记录模板、可见性简写和局部默认值由 `protocol8.py` 按当前手册展开；历史 v4 适配器仅用于显式离线基准。共享 `ActionResult` 将原动作 outcome/receipt 与当前 observation 分开；同步成功直接使用原回复，连续活动只轮询小回执并在成功终态后读一次当前 state，正常路径不读历史 reply。历史诊断不会覆盖当前 scope/revision，成功 quit 后不再查询。此脚本的 CLI8 测试结果仍以 [CLI8 实施记录](cli8-implementation.md)的最终验证为准。
 
 客户端只使用公开协议、自己的公开响应日志和公开状态文件，不读取 `game.dat`、楼层文件或审计数据库。每个动作均使用会话前缀及发送前分配的短计数 ID 和当前版本；进行中的原动作通过新 ID 查询结果，不重发执行。待选物品窗口中的输入异常保留机器连接，避免因开发脚本结束而丢掉已消耗物品的选择机会。
 
@@ -118,6 +129,6 @@ semantics but do not promise uncompressed records on the wire.
 python3 desktop-control/src/test/python/autoplay.py --self-test
 ```
 
-旧批次曾通过离线检查和 Python 编译；协议实施结果见 [CLI 7 实施与验收](cli7-implementation.md)，修复实现及原生夹具结果见 [CLI.7.0.1 验收记录](cli-rebuild-7.0.1-20260923.md)，当前实际包验证与最新清理范围见 [CLI.7.0.1 清理重建](cli-rebuild-7.0.1-clean-20260923.md)。它们验证有限策略分支、取消和保存退出错误处理，不能当作真实规则、全场景覆盖或通关证明。原验收的生成附件已在后续清理中移除，文字结论保留为历史记录。正式 profile 和公开游玩日志曾使用忽略的 `desktop-control/build/playthroughs`，没有随源码提交；这是历史位置，2026-09-19 清理前该目录已不存在。
+旧批次曾通过离线检查和 Python 编译；协议实施结果见 [CLI 7 实施与验收](cli7-implementation.md)，修复实现及原生夹具结果见 [CLI.7.0.1 验收记录](cli-rebuild-7.0.1-20260923.md)，当时实际包验证与清理范围见 [CLI.7.0.1 清理重建](cli-rebuild-7.0.1-clean-20260923.md)。它们验证有限策略分支、取消和保存退出错误处理，不能当作真实规则、全场景覆盖或通关证明。原验收的生成附件已在后续清理中移除，文字结论保留为历史记录。正式 profile 和公开游玩日志曾使用忽略的 `desktop-control/build/playthroughs`，没有随源码提交；这是历史位置，2026-09-19 清理前该目录已不存在。
 
 面向模型的控制器必须及时暴露进行中的可取消观察，不得等动作全部结束后才统一输出。展示应使用同一个已解析响应对象；禁止按固定英文标签过滤、无标记裁图、统一删除危险说明或省略视觉提示。

@@ -8,7 +8,7 @@ import traceback
 import uuid
 
 from fixture_smoke import FixtureClient, act, close_choices, freeze_runtime, reach_game
-from protocol7 import pages
+from protocol8 import pages
 
 
 EXPECTED = {
@@ -19,9 +19,9 @@ EXPECTED = {
     "arcane-bomb": "arcane_bomb_warning", "challenge": "challenge_arena", "beacon": "warp_beacon",
     "golem": "golem_teleport_particles", "ring": "blast_wave",
     "beam": "death_ray", "magic": "magic_fire",
-    "surprise": "surprise_mark", "wound": "wound_mark", "flare": "flare", "spell": "spell_icon",
+    "surprise": "surprise_mark", "wound": "wound_mark", "flare": None, "spell": "spell_icon",
     "dm300": "dm300_charging", "chains": "ethereal_chain_link",
-    "ripper": "ripper_leap_preparation", "spire": "crystal_spire_appearance",
+    "ripper": "ripper_leap_preparation", "spire": "crystal_spire_state",
 }
 
 
@@ -41,6 +41,24 @@ def test_case(client, name):
         assert not any(cue["kind"] == "evil_eye_charging" for cue in cues(final))
         assert not any(cue["kind"] == "evil_eye_charging" for event in events for cue in event["data"]["cues"])
         return {"hidden_sprite_not_published": True}
+
+    if name == "flare":
+        observation = initial["observation"]
+        assert observation["map"]["cells"] and initial["actions"]
+        before = visual_events(client)
+        assert not any(cue["kind"] == "flare" for cue in cues(initial))
+        assert not any(cue["kind"] == "flare" for event in before for cue in event["data"]["cues"])
+        time.sleep(2.2)
+        faded = client.state()
+        assert faded["state_version"] == initial["state_version"], "An ordinary flare's fade must not change an action binding"
+        assert faded["observation"]["hero"]["cell"] == observation["hero"]["cell"]
+        assert faded["observation"]["hero"]["hp"] == observation["hero"]["hp"]
+        retained = visual_events(client)
+        assert all(event in retained for event in before)
+        assert not any(cue["kind"] == "flare" for cue in cues(faded))
+        assert not any(cue["kind"] == "flare" for event in retained for cue in event["data"]["cues"])
+        return {"native_unclassified_flare": True, "decorative_flare_output_absent": True,
+                "action_binding_stable": True, "evidence_kind": "prepared_native_render_source"}
 
     expected = EXPECTED[name]
     if name in {"ghoul", "guardian"}:
@@ -75,11 +93,17 @@ def test_case(client, name):
         assert cue["cell"] in visible, cue
         if "source_cell" in cue:
             assert cue["source_cell"] in visible, cue
-        assert set(cue) <= {"kind", "cell", "source_cell", "direction", "color", "opacity", "appearance"}, cue
+        assert set(cue) <= {"kind", "cell", "source_cell", "direction", "appearance"}, cue
+        assert not {"color", "opacity"} & set(cue), cue
     if name == "pylon":
         assert all("source_cell" in cue for cue in history), history
     if name == "ring":
-        assert all(cue.get("color") == 0xFF8800 for cue in history), history
+        assert all(cue.get("appearance", {}).get("shape") == "ring"
+                   and cue.get("appearance", {}).get("coverage") == "visual_extent"
+                   and cue.get("appearance", {}).get("cells") for cue in history), history
+    if name == "spire":
+        assert all(cue.get("appearance", {}).get("stage") == "damaged" for cue in current), current
+        assert all("crystal_spire_appearance" != cue["kind"] for cue in cues(final)), cues(final)
     if name == "flow":
         assert any("direction" in cue for cue in current), current
         assert all(cue.get("direction") in {None, "east", "southeast", "south", "southwest", "west", "northwest", "north", "northeast"}
@@ -93,7 +117,7 @@ def test_case(client, name):
         menu = next(node for node in later["observation"]["ui"]["controls"]
                     if str(node.get("shortcut_action", "")).lower() == "back")
         modal = act(client, "ui.activate", control=menu["id"])
-        assert modal["observation"]["ui"]["modal"] and cues(modal) == []
+        assert modal["observation"]["ui"]["modal"] and any(cue["kind"] == expected for cue in cues(modal))
         restored = act(client, "ui.back")
         assert any(cue["kind"] == expected for cue in cues(restored)), cues(restored)
     if name in {"checked", "pylon", "ring", "beam", "magic", "surprise", "wound", "flare", "spell", "chains"}:

@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -90,16 +91,16 @@ public class WandOfPrismaticLight extends DamageWand {
 		//three in (5+lvl) chance of failing
 		if (Random.Int(5+buffedLvl()) >= 3) {
 			Buff.prolong(ch, Blindness.class, 2f + (buffedLvl() * 0.333f));
-			ch.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 6 );
+			GameplayBurst.burstForCharacter(ch.sprite.emitter(), Speck.factory(Speck.LIGHT), 6, "light_burst", ch.sprite, false);
 		}
 
 		if (ch.properties().contains(Char.Property.DEMONIC) || ch.properties().contains(Char.Property.UNDEAD)){
-			ch.sprite.emitter().start( ShadowParticle.UP, 0.05f, 10+buffedLvl() );
+			GameplayBurst.startForCharacter(ch.sprite.emitter(), ShadowParticle.UP, 0.05f, 10+buffedLvl(), "shadow_burst", ch.sprite, true);
 			Sample.INSTANCE.play(Assets.Sounds.BURNING);
 
 			ch.damage(Math.round(dmg*1.333f), this);
 		} else {
-			ch.sprite.centerEmitter().burst( RainbowParticle.BURST, 10+buffedLvl() );
+			GameplayBurst.burstForCharacter(ch.sprite.centerEmitter(), RainbowParticle.BURST, 10+buffedLvl(), "rainbow_burst", ch.sprite, true);
 
 			ch.damage(dmg, this);
 		}
@@ -130,7 +131,7 @@ public class WandOfPrismaticLight extends DamageWand {
 				}
 			}
 
-			CellEmitter.center(c).burst( RainbowParticle.BURST, Random.IntRange( 1, 2 ) );
+			GameplayBurst.burst(CellEmitter.center(c), RainbowParticle.BURST, Random.IntRange(1, 2), "rainbow_burst", c, false);
 		}
 		if (noticed)
 			Sample.INSTANCE.play( Assets.Sounds.SECRET );

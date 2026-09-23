@@ -62,7 +62,8 @@ public class ShrapnelBomb extends Bomb {
 		for (int i = 0; i < FOV.length; i++) {
 			if (FOV[i]) {
 				if (Dungeon.level.heroFOV[i] && !Dungeon.level.solid[i]) {
-					CellEmitter.center( i ).burst( BlastParticle.FACTORY, 5 );
+					com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.burst(
+							CellEmitter.center(i), BlastParticle.FACTORY, 5, "shrapnel_blast", i, false);
 				}
 				Char ch = Actor.findChar(i);
 				if (ch != null){

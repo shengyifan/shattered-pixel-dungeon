@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 
-/** Pure protocol 7 projection of already rendered public values. Never observes the engine. */
+/** Pure protocol 8 projection of already rendered public values. Never observes the engine. */
 public final class CompactProtocol {
     private static final Set<String> OPAQUE = new HashSet<>(Arrays.asList(
             "raw", "reply", "schema", "raw_request", "raw_bytes", "request_json", "response_json", "original_payload"));
@@ -20,7 +20,7 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> success(String id,String scope,String status,Object canonicalResult,boolean live,boolean sources,boolean full) {
-        Map<String,Object> response=map("v",7,"id",id);
+        Map<String,Object> response=map("v",8,"id",id);
         Map<?,?> original=canonicalResult instanceof Map?(Map<?,?>)canonicalResult:Collections.emptyMap();
         Object effectiveScope=live && original.get("scope_id")!=null?original.get("scope_id"):scope;
         if(effectiveScope!=null)response.put("s",effectiveScope);
@@ -41,7 +41,7 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> failure(String id,String scope,String code) {
-        Map<String,Object> response=map("v",7,"id",id);
+        Map<String,Object> response=map("v",8,"id",id);
         if(scope!=null)response.put("s",scope);
         response.put("err",code);
         return response;
@@ -344,16 +344,9 @@ public final class CompactProtocol {
                         else if(label.equals(CompactStructures.titleCase(name))) {removeField(node,"label");node.put("label",1);}
                     }
                 }
-                if(!node.containsKey("display"))for(Map.Entry<String,String> display:hint.displayChildren.entrySet()) {
-                    Map<String,Object> child=byId.get(display.getValue());
-                    if(child==null || parents.contains(child.get("id")) || !Objects.equals(node.get("id"),child.get("parent"))
-                            || !passiveText(child,true) || !sameNodeState(child,node) || !(child.get("text") instanceof String))continue;
-                    @SuppressWarnings("unchecked") Map<String,Object> fields=(Map<String,Object>)node.computeIfAbsent("display",ignored->new LinkedHashMap<>());
-                    copyTextField(child,fields,display.getKey());
-                }
             }
-            // Hints add semantic bindings, never erase captured nodes, identities, text or parentage.
-            // Empty slots convey layout/capacity, and repeated child text remains independently addressable.
+            // Native semantic capture already moved shared facts to their owners.
+            // This stage only applies same-frame labels and reversible wire structures.
         }
         for(Map.Entry<String,Object> entry:current.entrySet())
             if(!OPAQUE.contains(entry.getKey()) && !Arrays.asList("text_sources","text_origins","pres").contains(entry.getKey()))
@@ -369,45 +362,6 @@ public final class CompactProtocol {
             for(Object raw:(List<?>)((Map<?,?>)value.get("pres")).get("diag"))
                 if(raw instanceof Map && String.valueOf(((Map<?,?>)raw).get("field")).contains("nodes["))return true;
         return false;
-    }
-
-    private static boolean sameNodeState(Map<String,Object> first,Map<String,Object> second) {
-        return Objects.equals(first.getOrDefault("enabled",true),second.getOrDefault("enabled",true))
-                && Objects.equals(first.getOrDefault("dimmed",false),second.getOrDefault("dimmed",false));
-    }
-
-    private static boolean passiveText(Map<String,Object> node,boolean movableMetadata) {
-        if(!"text".equals(node.get("role")) || Boolean.TRUE.equals(node.get("dimmed")))return false;
-        for(String key:node.keySet()) {
-            if(Arrays.asList("id","role","parent","text","enabled","dimmed").contains(key))continue;
-            if(!movableMetadata || !Arrays.asList("text_sources","text_origins","pres").contains(key))return false;
-            Object metadata=node.get(key);
-            if("pres".equals(key)) {
-                if(!(metadata instanceof Map) || !(((Map<?,?>)metadata).get("diag") instanceof List))return false;
-                List<?> diagnostics=(List<?>)((Map<?,?>)metadata).get("diag");if(diagnostics.isEmpty())return false;
-                for(Object raw:diagnostics)if(!(raw instanceof Map) || !"text".equals(((Map<?,?>)raw).get("field")))return false;
-            } else {
-                if(!(metadata instanceof Map))return false;
-                for(Object field:((Map<?,?>)metadata).keySet())if(!"text".equals(field))return false;
-            }
-        }
-        return true;
-    }
-
-    /** Add a semantic display field while retaining its original node and metadata. */
-    private static void copyTextField(Map<String,Object> source,Map<String,Object> target,String field) {
-        target.put(field,source.get("text"));
-        for(String metadata:Arrays.asList("text_sources","text_origins"))if(source.get(metadata) instanceof Map) {
-            @SuppressWarnings("unchecked") Map<String,Object> fields=(Map<String,Object>)target.computeIfAbsent(metadata,ignored->new LinkedHashMap<>());
-            fields.put(field,((Map<?,?>)source.get(metadata)).get("text"));
-        }
-        if(source.get("pres") instanceof Map) {
-            @SuppressWarnings("unchecked") Map<String,Object> pres=(Map<String,Object>)target.computeIfAbsent("pres",ignored->map("st","partial","diag",new ArrayList<>()));
-            @SuppressWarnings("unchecked") List<Object> diagnostics=(List<Object>)pres.get("diag");
-            for(Object raw:(List<?>)((Map<?,?>)source.get("pres")).get("diag")) {
-                Map<String,Object> diagnostic=new LinkedHashMap<>(cast(raw));diagnostic.put("field",field);diagnostics.add(diagnostic);
-            }
-        }
     }
 
     /** Static rules are discoverable once, instead of duplicated in every state. */
@@ -438,10 +392,11 @@ public final class CompactProtocol {
                         "node_templates","optional local common/fields templates; preserve node count, order, identities and parents; protected nodes remain objects",
                         "ops","integer element copies acts[index] without ctl, which must exactly match this node id; explicit ctl or protected metadata remains inline; missing or invalid references are errors",
                         "label","integer 0 inherits name from the unique current inv item at loc; 1 applies the English item title rule; strings are literal and explicit null remains null",
-                        "identity","all captured node identities and parent bindings are retained and remain current",
+                        "identity","retained semantic controls keep current identities and necessary parent bindings",
                         "actions","acts retains every original operation in order and may use act_templates; decode acts before resolving node ops; no capability is inferred from labels",
-                        "display","optional status/extra/level are exact already displayed ItemSlot text; loc binds the same captured item by identity",
-                        "deduplication","only reversible same-frame operation sharing, record templates, dictionaries, labels and documented defaults; all captured nodes, text, descriptions, talents and action constraints remain",
+                        "shown","native public item and Buff display facts are merged into their same-frame owner; unbound choices stay inline",
+                        "subject_data","standalone actions inline the same-frame public owner facts and remove world references; unresolved targets remain null with partial diagnostics",
+                        "deduplication","same-source duplicate and inert UI leaves are merged before encoding; unique facts, descriptions, talents, provenance and all action constraints remain",
                         "full","explicit default fields and literal labels; src additionally retains source ASTs; all use the same structural encoding; raw/reply stay opaque"),
                 "same_frame",map("activity","omitted activity.rev inherits envelope rev; cancel rev/rid inherit current activity rev/rid",
                         "persistence","omitted receipt s inherits envelope s; omitted src_s inherits that receipt s; integer saved indexes persistence.saves",
@@ -456,33 +411,28 @@ public final class CompactProtocol {
                         "pagination",map("after","exclusive sequence cursor; default 0","until","inclusive fixed upper sequence; omit on the first page",
                                 "limit","1 to 100; default 50","continue","send next as after and keep the returned until",
                                 "end","true when the fixed range is exhausted")),
-                "visuals",map("version","rendered_combat_v1",
-                        "cue_fields",map("kind","English rendering-kind identifier; never inferred AI intent","cell","visible grid anchor or actual occupied particle/projectile cell",
-                                "source_cell","optional independently visible second endpoint","dir","optional N/NE/E/SE/S/SW/W/NW measured from consecutive eligible draws; absent before movement is observed",
-                                "color","optional 24-bit displayed RGB","opacity","optional rendered opacity","appearance","optional immutable atlas/frame/tint/geometry of the actually drawn visual"),
-                        "kinds",Arrays.asList("red_target","black_goo_droplets","evil_eye_charging","downed_ghoul","downed_crystal_guardian",
-                                "necromancer_charging","spectral_necromancer_charging","summoning_bones","summoning_shadow","falling_rock_warning",
-                                "checked_cell","pylon_lightning","electricity_flow","sentry_charge_particles","arcane_bomb_warning","challenge_arena",
-                                "warp_beacon","golem_teleport_particles","lightning_arc","blast_wave","flare","surprise_mark","wound_mark","spell_icon",
-                                "quickslot_target","missile_projectile","noisemaker_alarm","prismatic_image_paused","sacrificial_mark_particles",
-                                "dm300_charging","ripper_leap_preparation","crystal_spire_appearance","death_ray","health_ray","light_ray","sun_ray",
-                                "chain_link","ethereal_chain_link","fading_trap_pattern","bomb_smoke","bomb_countdown_1","bomb_countdown_2","bomb_countdown_3",
-                                "summoning_green_flames","summoning_shadows","summoning_sparks","sprite_state_appearance","supernova_halo"),
-                        "rendering_families","beam, magic particle, spell icon and chain kinds identify visible rendering variants; they are not damage or outcome guarantees",
-                        "gates","actual completed draw, current scene/map, FOV, complete viewport and conservative UI occlusion; partial and through-fog hints remain omitted",
-                        "metrics","optional same-draw metrics and metrics_at: actually drawn particle counts grouped by cell and visible appearance, never level/volume/timer/model quantities",
-                        "screen_effects","same-draw screen overlays and committed camera displacement; screen_effects_at is the actual sample time; empty means not observed, never a predicted timer completion",
-                        "history",map("game.visual","discrete rendered cue snapshots including disappearance",
-                                "game.visual_metrics","explicit sampled_display_snapshot_v1, sample_period_ms=250; current draw counts are exact, history is sampled and new visible emission episodes are immediate",
-                                "game.floating_text","actual displayed occurrences; repeated values after pool reuse remain distinct; fading alone does not duplicate events",
-                                "game.banner","actually displayed boss_slain/game_over occurrence, never inferred from model state",
-                                "game.screen_visual","sampled_display_snapshot_v1 with sample_period_ms=250; visible episode starts/ends immediate, quantitative phases sampled; never configured future duration/magnitude")),
-                "appearance",map("color","RGB of a displayed text glyph; zero is valid black",
-                        "styles","ordered translated visible text/color runs when a text block has several colors; source-shape mismatch remains an explicit diagnostic",
-                        "icon","known atlas and frame/index; optional native tint, alpha, rotation and scale; unknown assets remain explicit partial evidence",
-                        "icon_overlay","actual rendered vertical covered_pixels/total_pixels, not remaining turns",
-                        "hud","spell/item/action/target/boss portraits, quickslot marker and rendered turn_progress; portraits do not disclose hidden target identity",
-                        "intent","public appearance is retained; native idle frames, glow/portrait pulse and passive floating/banner lifetimes do not independently expire an action binding"),
+                "visuals",map("version","gameplay_facts_v1",
+                        "cue_fields",map("kind","public gameplay indicator, not hidden AI intent","cell","currently known grid anchor",
+                                "source_cell","optional independently known endpoint","dir","optional observed eight-way world movement",
+                                "appearance","reviewed semantic details only: symbol, state, known cells, stage or aggregate visible density"),
+                        "gates","current run/map, attached presentation lifetime and FOV; independent of viewport, camera and UI occlusion",
+                        "status",Arrays.asList("last_observed","not_observed"),
+                        "partial_geometry","only known cells and endpoints; unknown coverage remains explicit",
+                        "history",map("game.visual","semantic cue snapshots including disappearance",
+                                "game.floating_text","semantic occurrences; equal values from separate occurrences remain distinct",
+                                "game.banner","public boss_slain/game_over occurrence",
+                                "game.log","public gameplay log text and native message tone")),
+                "gameplay_facts",map("item_shown","additional already-public item display values, estimates and warnings",
+                        "buff_shown","public counters, states and quantized progress; no hidden duration inference",
+                        "health_estimate","distinct samples of public bar segments: total, filled and with_shield; never exact enemy HP",
+                        "turn_progress","public sweep only",
+                        "feedback","ordered current semantic messages, floating occurrences and banners",
+                        "subjects",map("hero","kind:hero","item","kind:item plus current loc","hero_buff","kind:hero_buff plus index",
+                                "entity","kind:entity plus index","entity_buff","kind:entity_buff plus entity and index"),
+                        "references","current observation only; standalone actions inline necessary subject facts",
+                        "views","play/full/src and frozen snapshots share the same semantic content; full/source adds defaults and text provenance, never drawing data",
+                        "unknown","unmapped_indicator is partial evidence, not an omitted hazard or inferred mechanism",
+                        "intent","ordinary animation and feedback lifetimes do not independently expire an action binding"),
                 "coverage",map("status","observation_with_inspection",
                         "details_via",map("equipment_stats_and_buff_durations","click","journal_and_catalogue","click","custom_terrain_descriptions",map("op","cell","mode","examine")),
                         "inspection_policy","Use current nodes and their ops; details are read from displayed windows"));

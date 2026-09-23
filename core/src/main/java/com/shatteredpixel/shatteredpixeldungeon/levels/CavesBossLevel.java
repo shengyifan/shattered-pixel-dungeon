@@ -755,6 +755,8 @@ public class CavesBossLevel extends Level {
 		@Override
 		public Tilemap create() {
 			Tilemap v = super.create();
+			if (Game.observer.observesVisualCues()) v.observeDraw(
+					com.shatteredpixel.shatteredpixeldungeon.effects.TerrainVisualCue.cavesArena());
 			updateState( );
 
 			return v;

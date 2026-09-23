@@ -54,7 +54,7 @@ public class QuitLifecycleTest {
             h.store.ensureScope("run:other","run","other");
             AuditStore.Attempt unrelated=h.store.begin("run:other","quit","action.execute","{}");
             h.store.complete(unrelated,"COMPLETED",map("id","quit","st","completed"),null,null,null);
-            h.sendRaw(V7Requests.encode(h.store,map("protocol_version",7,"scope_id","run:other","id","wrong-scope",
+            h.sendRaw(V8Requests.encode(h.store,map("protocol_version",8,"scope_id","run:other","id","wrong-scope",
                     "op","request.get","args",map("target_id","quit")))+"\n");
             assertEquals("COMPLETED",body(h.receive()).get("st"));assertEquals(0,h.game.exits.get());
             assertEquals("COMPLETED",body(h.request("final","request.get",map("target_id","quit","get",Arrays.asList("reply","raw")))).get("st"));

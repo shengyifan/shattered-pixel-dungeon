@@ -61,6 +61,8 @@ public class SpectralWallParticle extends PixelParticle {
 	};
 
 	private int type = 0; //1-5 for sewers - demon halls
+	private float observedOriginX = Float.NaN, observedOriginY = Float.NaN;
+	private long observedLifetime = -1;
 
 	public SpectralWallParticle() {
 		super();
@@ -72,6 +74,9 @@ public class SpectralWallParticle extends PixelParticle {
 
 	public void reset( float x, float y ) {
 		revive();
+		observedOriginX = x;
+		observedOriginY = y;
+		observedLifetime = observationLifetime();
 
 		type = 1 + Dungeon.depth/5;
 		if (type > 5) type = 5;
@@ -114,6 +119,15 @@ public class SpectralWallParticle extends PixelParticle {
 				color(ColorMath.interpolate(0xa2947d, 0x594847));
 				break;
 		}
+	}
+
+	/** The existing emission's wall cell, never a read of blob coverage or remaining duration. */
+	public int observedWallCell(int width, int length) {
+		if (observedLifetime != observationLifetime() || width <= 0 || length <= 0
+				|| !Float.isFinite(observedOriginX + observedOriginY) || observedOriginX < 0 || observedOriginY < 0) return -1;
+		int column = (int)(observedOriginX / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
+		int row = (int)(observedOriginY / com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE);
+		return column < width && row < length / width ? row * width + column : -1;
 	}
 
 	public void update(){

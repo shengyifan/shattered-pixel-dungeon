@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.bombs;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -86,7 +88,7 @@ public class FlashBangBomb extends Bomb {
 			}
 		}
 
-		CellEmitter.center(cell).burst(SparkParticle.FACTORY, 20);
+		GameplayBurst.burst(CellEmitter.center(cell), SparkParticle.FACTORY, 20, "spark_burst", cell, false);
 		Dungeon.hero.sprite.parent.addToFront(new Lightning(arcs, null));
 		Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );
 	}

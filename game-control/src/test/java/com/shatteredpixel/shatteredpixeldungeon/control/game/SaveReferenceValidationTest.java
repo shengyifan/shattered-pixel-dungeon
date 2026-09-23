@@ -9,7 +9,7 @@ public class SaveReferenceValidationTest {
     @Test public void directAndFrozenSaveReferencesRejectInvalidTypesWithoutChangingEvidence() {
         for(Object invalid:Arrays.asList(false,true,0.0,-0.5,-1,2,"0",Collections.emptyList(),Collections.emptyMap())) {
             Map<String,Object> snapshot=map("persistence",map("saves",Arrays.asList(map("sid","p1"),map("sid","p2")),"saved",invalid));
-            Map<String,Object> frame=map("v",7,"id","query","s","s1","data",snapshot);
+            Map<String,Object> frame=map("v",8,"id","query","s","s1","data",snapshot);
             String original=com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec.encode(frame);
             assertThrows(IllegalArgumentException.class,()->CompactStructures.expand(frame));
             assertEquals(original,com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec.encode(frame));
@@ -21,7 +21,7 @@ public class SaveReferenceValidationTest {
         Map<String,Object> first=map("sid","p1","future",false),second=map("sid","p2","s","s0","src_s",null);
         for(Object saved:Arrays.asList(0,1,null,map("sid","p3","future",Arrays.asList(null,false,0)))) {
             Map<String,Object> snapshot=map("persistence",map("saves",Arrays.asList(first,second),"saved",saved));
-            Map<?,?> frame=(Map<?,?>)CompactStructures.expand(map("v",7,"id","query","s","s1","data",snapshot));
+            Map<?,?> frame=(Map<?,?>)CompactStructures.expand(map("v",8,"id","query","s","s1","data",snapshot));
             Map<?,?> persistence=(Map<?,?>)((Map<?,?>)frame.get("data")).get("persistence");
             List<?> receipts=(List<?>)persistence.get("saves");
             assertEquals("s1",((Map<?,?>)receipts.get(0)).get("s"));assertEquals("s0",((Map<?,?>)receipts.get(1)).get("s"));

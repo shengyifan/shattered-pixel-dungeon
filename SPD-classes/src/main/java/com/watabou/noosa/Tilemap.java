@@ -55,10 +55,18 @@ public class Tilemap extends Visual {
 	private int topLeftUpdating;
 	private int bottomRightUpdating;
 
-	public interface DrawObserver { void afterDraw(Tilemap source); }
+	public interface DrawObserver {
+		default void afterDraw(Tilemap source) {}
+		void observeState(Tilemap source);
+	}
 	public interface DrawnTileVisitor { void tile(float left, float top, float right, float bottom); }
+	public interface PresentationTileVisitor { void tile(int frame, float left, float top, float right, float bottom); }
 	private DrawObserver drawObserver;
 	public void observeDraw(DrawObserver observer) { drawObserver = observer; }
+	public boolean hasPresentationTexture() { return texture != null; }
+	@Override public void observeGameplayVisuals() {
+		if (drawObserver != null) drawObserver.observeState(this);
+	}
 
 	/** Pure geometry from the existing rendered quad buffer; never reads the model's tile data. */
 	public void visitDrawnTiles(DrawnTileVisitor visitor) {
@@ -70,6 +78,24 @@ public class Tilemap extends Visual {
 			float right = quads.get(offset+8), bottom = quads.get(offset+9);
 			if (Float.isFinite(left) && Float.isFinite(top) && Float.isFinite(right) && Float.isFinite(bottom)
 					&& right > left && bottom > top) visitor.tile(left, top, right, bottom);
+		}
+	}
+
+	/** Pure geometry of already selected presentation frames, including sources never drawn on this camera. */
+	public void visitPresentationTiles(DrawnTileVisitor visitor) {
+		if (visitor != null) visitPresentationFrames((frame,left,top,right,bottom) -> visitor.tile(left,top,right,bottom));
+	}
+
+	/** Selected display frames only; no texture upload, model terrain, or needsRender callback is evaluated. */
+	public void visitPresentationFrames(PresentationTileVisitor visitor) {
+		if (data == null || tileset == null || visitor == null || mapWidth <= 0
+				|| !Float.isFinite(cellW + cellH) || cellW <= 0 || cellH <= 0) return;
+		int count = Math.min(size, data.length);
+		for (int cell = 0; cell < count; cell++) {
+			// This API is only for explicitly annotated presentation layers, not model terrain.
+			if (data[cell] < 0 || tileset.get(data[cell]) == null) continue;
+			float left = (cell % mapWidth) * cellW, top = (cell / mapWidth) * cellH;
+			visitor.tile(data[cell], left, top, left + cellW, top + cellH);
 		}
 	}
 

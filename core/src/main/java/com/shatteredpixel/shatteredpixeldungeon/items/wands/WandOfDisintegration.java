@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -113,7 +114,7 @@ public class WandOfDisintegration extends DamageWand {
 				
 			}
 			
-			CellEmitter.center( c ).burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );
+			GameplayBurst.burst(CellEmitter.center(c), PurpleParticle.BURST, Random.IntRange(1, 2), "purple_burst", c, false);
 		}
 		
 		if (terrainAffected) {
@@ -124,7 +125,7 @@ public class WandOfDisintegration extends DamageWand {
 		for (Char ch : chars) {
 			wandProc(ch, chargesPerCast());
 			ch.damage( damageRoll(lvl), this );
-			ch.sprite.centerEmitter().burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );
+			GameplayBurst.burstForCharacter(ch.sprite.centerEmitter(), PurpleParticle.BURST, Random.IntRange(1, 2), "purple_burst", ch.sprite, false);
 			ch.sprite.flash();
 		}
 	}

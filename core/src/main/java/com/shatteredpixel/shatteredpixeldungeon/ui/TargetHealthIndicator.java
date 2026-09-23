@@ -61,6 +61,8 @@ public class TargetHealthIndicator extends HealthBar {
 		}
 	}
 	
+	@Override public Object gameplaySubject() { return target; }
+
 	public Char target() {
 		return target;
 	}

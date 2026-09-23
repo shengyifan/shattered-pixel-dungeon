@@ -29,10 +29,10 @@ public final class SpdctlLauncher {
             return;
         }
         if(args.length==1&&args[0].equals("--version")){
-            protocol.println("CLI.7.0.1 (protocol 7, game 3.3.8)");return;
+            protocol.println("CLI.8.0.0 (protocol 8, game 3.3.8)");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
-                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v7")
+                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v8")
                 :Paths.get(System.getenv("SPDCTL_PROFILE"));
         int exitCode=0;
         boolean profileAccepted=false;
@@ -50,6 +50,12 @@ public final class SpdctlLauncher {
                 else throw new IllegalArgumentException("Unknown launcher argument");
             }
             if(!machine||!profile.isAbsolute())throw new IllegalArgumentException("Machine mode and absolute profile path required");
+            // Reject foreign or unaudited profiles before either the controller child
+            // or this process can create locks, defaults, or emergency reports.
+            boolean freshProfile=CliProfileDefaults.isNewProfile(profile);
+            AuditStore.preflight(profile.resolve("audit"));
+            if(!freshProfile&&!Files.isRegularFile(profile.resolve("audit").resolve("public.sqlite3")))
+                throw new AuditException("CLI_PROFILE_UNSUPPORTED", "CLI 8 requires a new empty profile or an intact schema-11 audit pair; use a new profile", null);
             if(control){
                 int result=StableController.launch(args,profile,System.in,protocol,diagnostics);
                 if(result!=0)System.exit(result);
@@ -57,8 +63,6 @@ public final class SpdctlLauncher {
             }
             // Remember freshness before this launch creates its lock, audit, or other profile files.
             Runnable initializeDefaults=CliProfileDefaults.prepare(profile);
-            // Refuse old or incomplete audit pairs before a profile lock or emergency file can touch them.
-            AuditStore.preflight(profile.resolve("audit"));
             Files.createDirectories(profile);profile=profile.toRealPath();
             System.setProperty("Specification-Title","Shattered Pixel Dungeon");
             System.setProperty("Implementation-Title","com.shatteredpixel.shatteredpixeldungeon");
@@ -110,9 +114,10 @@ public final class SpdctlLauncher {
                 Path emergency=profile.resolve("audit").resolve("emergency");Files.createDirectories(emergency);
                 try(PrintWriter writer=new PrintWriter(Files.newBufferedWriter(emergency.resolve("startup-"+System.currentTimeMillis()+".log"),StandardCharsets.UTF_8))){failure.printStackTrace(writer);}
             }catch(Throwable ignored){}
-            diagnostics.println(control ? StableController.launchDiagnostic(failure) : failure instanceof AuditException
+            diagnostics.println(failure instanceof AuditException
                     ? "spdctl: " + ((AuditException)failure).code + " (" + failure.getMessage() + ")"
-                    : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI 7 profile)");
+                    : control ? StableController.launchDiagnostic(failure)
+                    : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI 8 profile)");
             System.exit(1);
         }
         if(exitCode!=0)System.exit(exitCode);

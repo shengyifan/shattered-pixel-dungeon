@@ -10,7 +10,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
-import protocol7
+import protocol8
 
 
 def receive(process, timeout=40):
@@ -26,7 +26,7 @@ def receive(process, timeout=40):
             if not chunk:
                 raise AssertionError(("unexpected EOF", process.poll(), bytes(data)))
             data.extend(chunk)
-    return protocol7.response(json.loads(data))
+    return protocol8.response(json.loads(data))
 
 
 def emergency_snapshot(profile):
@@ -44,14 +44,12 @@ def main():
     parser.add_argument("--bundle", type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging7.0" / ("raw-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging8.0" / ("raw-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录" / args.bundle.name
     shutil.copytree(args.bundle, bundle, symlinks=True)
     profile = output / "中文 玩家目录 with spaces"
     profile.mkdir()
-    from test_ui import configure_test_ui
-    configure_test_ui(profile)
     cli = bundle / "Contents/MacOS/spdctl"
     checks = {}
     for executable in (cli, cli.with_name("spdctl-jvm"), cli.with_name("Shattered Pixel Dungeon"),
@@ -63,7 +61,8 @@ def main():
     subprocess.run(["/usr/bin/plutil", "-lint", str(bundle / "Contents/Info.plist")], check=True,
                    stdout=subprocess.DEVNULL)
     env = dict(os.environ)
-    env.pop("JAVA_HOME", None)
+    for key in ("JAVA_HOME", "JDK_HOME", "JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS", "CLASSPATH"):
+        env.pop(key, None)
     # No external Java/SQLite/Python executable is needed by the bundled app.
     env["PATH"] = "/usr/bin:/bin"
     command = [str(cli), "run", "--machine", "--data-dir", str(profile),
@@ -77,12 +76,14 @@ def main():
             process.stdin.write(frame)
             process.stdin.flush()
             return receive(process)
-        first = exchange(b'{"v":7,"id":"package-info","op":"info"}\r\n')
+        first = exchange(b'{"v":8,"id":"package-info","op":"info"}\r\n')
         assert first["ok"], first
         scope = first["result"]["scope_id"]
-        invalid = exchange(b'{"v":7,"id":"invalid-encoding","op":"state","x":"\xff"}\n')
+        old = exchange(b'{"v":7,"id":"package-old-protocol","op":"info"}\n')
+        assert old["protocol_version"] == 8 and old["error"] == {"code": "UNSUPPORTED_PROTOCOL"}, old
+        invalid = exchange(b'{"v":8,"id":"invalid-encoding","op":"state","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = protocol7.wire_bytes(protocol7.request("state.get", request_id="中文-query", scope=scope))
+        query = protocol8.wire_bytes(protocol8.request("state.get", request_id="中文-query", scope=scope))
         observed = exchange(query)
         assert observed["ok"], observed
         duplicate = exchange(query)
@@ -102,16 +103,16 @@ def main():
             process.kill()
             process.wait()
         stderr.close()
-    final_frame=protocol7.wire_bytes(protocol7.request("state.get", request_id="package-eof-frame", scope=scope))[:-1]
+    final_frame=protocol8.wire_bytes(protocol8.request("state.get", request_id="package-eof-frame", scope=scope))[:-1]
     restarted=subprocess.run(command,input=final_frame,capture_output=True,env=env,timeout=40)
     assert restarted.returncode==0,(restarted.returncode,restarted.stderr)
     delivered=restarted.stdout.splitlines()
-    assert len(delivered)==1 and protocol7.response(json.loads(delivered[0]))["ok"],delivered
+    assert len(delivered)==1 and protocol8.response(json.loads(delivered[0]))["ok"],delivered
     frames.append(final_frame)
     with sqlite3.connect(profile / "audit/public.sqlite3") as db:
         wire = db.execute("SELECT raw_bytes,raw_format FROM exchanges ORDER BY sequence").fetchall()
         assert [row[0] for row in wire] == frames, [(len(row[0]), row[1]) for row in wire]
-        assert [row[1] for row in wire] == ["utf8-lf", "invalid-utf8", "utf8-lf", "utf8-lf", "utf8-eof"], wire
+        assert [row[1] for row in wire] == ["utf8-lf", "utf8-lf", "invalid-utf8", "utf8-lf", "utf8-lf", "utf8-eof"], wire
         assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         public_tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         assert "exceptions" not in public_tables and "logs" not in public_tables
@@ -125,7 +126,7 @@ def main():
         assert recovered == 0, "A rejected lock contender must not create an emergency report to recover"
     result = {"result": "passed", "bundle": str(bundle), "profile": str(profile), "architecture": checks,
               "runtime": runtime, "frames": len(frames), "checks": ["unicode_bundle_and_profile", "bundled_jvm",
-              "native_sqlite", "exact_wire_bytes", "invalid_utf8_recovery", "duplicate_query", "profile_lock",
+              "native_sqlite", "exact_wire_bytes", "protocol7_rejected_by_protocol8_runtime", "invalid_utf8_recovery", "duplicate_query", "profile_lock",
               "EOF_without_push", "final_frame_without_newline", "lock_conflict_preserves_emergency_tree", "codesign", "plist", "database_integrity", "profile_jvm_crash_path"],
               "not_tested": ["forced_JVM_native_crash", "real_Intel_hardware", "Gatekeeper_notarization"]}
     (output / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))

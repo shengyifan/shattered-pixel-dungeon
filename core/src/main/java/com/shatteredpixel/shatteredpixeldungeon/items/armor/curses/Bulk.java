@@ -45,7 +45,11 @@ public class Bulk extends Armor.Glyph {
 			return 1;
 		} else {
 			if (owner.sprite != null){
-				owner.sprite.emitter().startDelayed(ShadowParticle.UP, 0.02f, 5, 0.05f);
+				com.watabou.noosa.particles.Emitter signal = owner.sprite.emitter();
+				signal.startDelayed(ShadowParticle.UP, 0.02f, 5, 0.05f);
+				if (com.watabou.noosa.Game.observer.observesVisualCues()) signal.observeDraw(
+						com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue.forCharacter(
+								"glyph_bulk_active", owner.sprite, ShadowParticle.UP, ShadowParticle.class));
 			}
 			return 1/3f * genericProcChanceMultiplier(owner);
 		}

@@ -23,11 +23,11 @@ class EmitterMetricObservationTest {
             Emitter.Factory factory=new Emitter.Factory(){@Override public void emit(Emitter emitter,int index,float x,float y){throw new AssertionError("Observation emitted a particle");}};
             source.startDelayed(factory,1f,2,1f);
             source.draw();source.draw();
-            assertEquals(Arrays.asList("native","cue","metric","native","cue","metric"),order);
-            assertSame(episodes.get(0),episodes.get(1));
-            source.startDelayed(factory,1f,2,1f);source.draw();assertNotSame(episodes.get(0),episodes.get(2));
-            source.revive();source.draw();assertNotSame(episodes.get(2),episodes.get(3));
-            Game.observer=RuntimeObserver.NONE;source.draw();assertEquals(4,episodes.size());
+            assertEquals(Arrays.asList("native","native"),order);
+            assertTrue(episodes.isEmpty(), "Generic particle metrics must not be emitted");
+            source.observeGameplayVisuals();assertEquals(Arrays.asList("native","native","cue"),order);
+            source.revive();source.observeGameplayVisuals();assertEquals(3,order.size());
+
         }finally{Game.observer=previous;}
     }
 }

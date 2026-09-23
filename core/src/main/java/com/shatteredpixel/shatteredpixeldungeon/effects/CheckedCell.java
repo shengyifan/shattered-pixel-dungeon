@@ -46,9 +46,9 @@ public class CheckedCell extends Image {
 		alpha = 0.8f;
 	}
 
-	@Override public void draw() {
-		super.draw();
-		if (texture != null && buffer != null && Game.observer.observesVisualCues())
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (texture != null && Game.observer.observesVisualCues())
 			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,
 					new com.watabou.noosa.VisualCue("checked_cell", visualCell));
 	}

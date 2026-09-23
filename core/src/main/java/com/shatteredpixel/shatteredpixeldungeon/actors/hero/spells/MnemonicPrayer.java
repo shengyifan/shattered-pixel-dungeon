@@ -48,6 +48,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.PowerOfMany;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Viscosity;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
@@ -61,7 +62,9 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
 
 public class MnemonicPrayer extends TargetedClericSpell {
 
@@ -126,7 +129,10 @@ public class MnemonicPrayer extends TargetedClericSpell {
 		if (ch.alignment == Char.Alignment.ALLY){
 
 			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP);
-			ch.sprite.emitter().start(Speck.factory(Speck.UP), 0.15f, 4);
+			Emitter prayer = ch.sprite.emitter();
+			prayer.start(Speck.factory(Speck.UP), 0.15f, 4);
+			if (Game.observer.observesVisualCues()) prayer.observeDraw(
+					CellParticleCue.forCharacter("mnemonic_prayer_up", ch.sprite, Speck.factory(Speck.UP), Speck.class));
 
 			for (Buff b : ch.buffs()){
 				if (b.type != Buff.buffType.POSITIVE || b.mnemonicExtended || b.icon() == BuffIndicator.NONE){
@@ -164,7 +170,10 @@ public class MnemonicPrayer extends TargetedClericSpell {
 		} else {
 
 			Sample.INSTANCE.play(Assets.Sounds.DEBUFF);
-			ch.sprite.emitter().start(Speck.factory(Speck.DOWN), 0.15f, 4);
+			Emitter prayer = ch.sprite.emitter();
+			prayer.start(Speck.factory(Speck.DOWN), 0.15f, 4);
+			if (Game.observer.observesVisualCues()) prayer.observeDraw(
+					CellParticleCue.forCharacter("mnemonic_prayer_down", ch.sprite, Speck.factory(Speck.DOWN), Speck.class));
 
 			Buff.affect(ch, GuidingLight.Illuminated.class);
 

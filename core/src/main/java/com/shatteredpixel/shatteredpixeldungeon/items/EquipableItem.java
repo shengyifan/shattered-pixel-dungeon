@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -111,7 +113,7 @@ public abstract class EquipableItem extends Item {
 	}
 
 	public static void equipCursed( Hero hero ) {
-		hero.sprite.emitter().burst( ShadowParticle.CURSE, 6 );
+		GameplayBurst.burstForCharacter(hero.sprite.emitter(), ShadowParticle.CURSE, 6, "curse_shadow_burst", hero.sprite, false);
 		Sample.INSTANCE.play( Assets.Sounds.CURSED );
 	}
 

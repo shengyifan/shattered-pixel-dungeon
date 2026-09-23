@@ -1,4 +1,4 @@
-"""Offline regressions for the reusable public protocol-7 client helpers."""
+"""Offline regressions for the reusable public protocol-8 client helpers."""
 
 import copy
 import sys
@@ -21,7 +21,7 @@ from spdctl_client import (  # noqa: E402
 
 
 def wire(identifier="q1", *, status="completed", scope="s2", revision="r7", data=None):
-    result = {"v": 7, "id": identifier, "s": scope, "rev": revision, "st": status}
+    result = {"v": 8, "id": identifier, "s": scope, "rev": revision, "st": status}
     if data is not None:
         result["data"] = data
     return result
@@ -115,7 +115,7 @@ class SpdctlClientDecoderTest(unittest.TestCase):
                 decode_wire_response(wire(data={"map": dungeon_map}))
 
     def test_error_frames_without_data_are_explicit_not_type_errors(self):
-        raw = {"v": 7, "id": "a", "s": "s2", "err": "STALE_STATE"}
+        raw = {"v": 8, "id": "a", "s": "s2", "err": "STALE_STATE"}
         decoded = decode_wire_response(raw)
         self.assertTrue(decoded.is_error)
         self.assertEqual("STALE_STATE", decoded.error_code)
@@ -127,7 +127,7 @@ class SpdctlClientDecoderTest(unittest.TestCase):
         with self.assertRaises(ClientResponseError):
             result.require_success()
 
-        with_data = {"v": 7, "id": "b", "s": "s2", "err": "EXECUTION_UNKNOWN", "data": {
+        with_data = {"v": 8, "id": "b", "s": "s2", "err": "EXECUTION_UNKNOWN", "data": {
             "persistence": {"saves": [{"sid": "p1"}], "saved": 0},
             "future_error_detail": 0,
         }}
@@ -176,7 +176,7 @@ class SpdctlClientDecoderTest(unittest.TestCase):
         outcome = wire("lookup", revision=None, data={"id": "action", "op": "cell", "st": "COMPLETED",
                                                              "save": [{"sid": "p1"}]})
         outcome.pop("rev")
-        discovery = wire("info", revision="r8", data={"cli_version": "CLI.7.0.0"})
+        discovery = wire("info", revision="r8", data={"cli_version": "CLI.8.0.0"})
         observation = wire("state", revision="r9", data={"phase": "player_ready", "hero": {"cell": 42}})
         result = decode_client_response({
             "controller": "settle", "rid": "action", "s": "s2", "st": "completed",
@@ -200,7 +200,7 @@ class SpdctlClientDecoderTest(unittest.TestCase):
         failed = decode_client_response({
             "controller": "settle", "rid": "a", "s": "s2", "st": "error", "err": "RECOVERY_FAILED",
             "transport_error": {"controller": "error", "err": "RESPONSE_TIMEOUT", "message": "timed out"},
-            "observation": {"v": 7, "id": "state", "s": "s2", "err": "SCOPE_MISMATCH"},
+            "observation": {"v": 8, "id": "state", "s": "s2", "err": "SCOPE_MISMATCH"},
         })
         self.assertFalse(failed.ok)
         self.assertIsNone(failed.current_frame)
@@ -229,7 +229,7 @@ class SpdctlClientDecoderTest(unittest.TestCase):
 
     def test_non_string_statuses_are_decode_errors_not_type_errors(self):
         for malformed in (None, 0, [], {}):
-            frame = {"v": 7, "id": "bad", "st": malformed}
+            frame = {"v": 8, "id": "bad", "st": malformed}
             original = copy.deepcopy(frame)
             with self.subTest(status=malformed), self.assertRaises(DecodeError):
                 decode_wire_response(frame)
@@ -302,7 +302,7 @@ class SpdctlIntentValidationTest(unittest.TestCase):
             {"op": "move", "rev": "r7", "dir": "southeast"},
             {"op": "move", "rev": "r7", "dir": []},
             {"op": "move", "rev": "r7", "dir": "SE", "id": "caller"},
-            {"op": "move", "rev": "r7", "dir": "SE", "v": 7},
+            {"op": "move", "rev": "r7", "dir": "SE", "v": 8},
         ):
             with self.subTest(intent=bad), self.assertRaises(IntentError):
                 validate_intent(frame, bad)

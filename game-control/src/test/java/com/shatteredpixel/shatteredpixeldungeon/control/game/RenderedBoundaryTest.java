@@ -55,24 +55,44 @@ class RenderedBoundaryTest {
         draw(List.of(new VisualCue("red_target",10)));assertNull(controller.pollVisual());
         assertEquals(first,visualState().get("map_context"));
         Level second=new IdentityLevel();Dungeon.level=second;
-        assertFalse(ready());assertEquals("not_rendered",visualState().get("status"));
+        assertFalse(ready());assertEquals("not_observed",visualState().get("status"));
         draw(List.of(new VisualCue("red_target",10)));assertFalse(ready()); // still the old level token
         controller.onVisualCues("a",second,1,List.of());assertFalse(ready());
         String next=controller.pollVisual().mapContext;assertNotEquals(first,next);
         controller.onVisualCues("a",second,1,List.of());assertTrue(ready());
-        Dungeon.runId="b";assertFalse(ready());assertEquals("not_rendered",visualState().get("status"));
+        Dungeon.runId="b";assertFalse(ready());assertEquals("not_observed",visualState().get("status"));
     }
 
-    @Test void purelyRenderedChangesDoNotInvalidateWorldIntentVersion()throws Exception{
-        // No map arrays are needed: these callbacks annotate existing draws, never inspect a level.
+    @Test void activeWarningsInvalidateIntentButSampledVisualMeasurementsDoNot()throws Exception{
         draw(List.of(new VisualCue("red_target",10)));
         GameController.State first=capture();
-        draw(List.of());
-        GameController.State second=capture();
-        assertEquals(first.version,second.version);
-        assertNotEquals(first.publicState.get("visual_cues"),second.publicState.get("visual_cues"));
-        assertNull(controller.latest().publicState.get("occurred_at"));
-        assertEquals(20,Dungeon.hero.HP);
+        draw(List.of());GameController.State cleared=capture();
+        assertNotEquals(first.version,cleared.version,"Changed known danger must invalidate the old decision");
+        draw(List.of(new VisualCue("sacrificial_flames",10,null,null,null,null,Map.of("count",3))));
+        GameController.State measured=capture();
+        assertEquals(cleared.version,measured.version,"Stochastic display measurements do not advance world intent");
+        assertNotEquals(cleared.publicState.get("visual_cues"),measured.publicState.get("visual_cues"));
+        assertNull(controller.latest().publicState.get("occurred_at"));assertEquals(20,Dungeon.hero.HP);
+        draw(List.of(new VisualCue("glyph_swiftness_active",10)));
+        GameController.State spark=capture();
+        draw(List.of());assertEquals(spark.version,capture().version,"A finite glyph feedback fading is not proof its underlying bonus changed");
+        draw(List.of(new VisualCue("quickslot_target",10)));assertNotEquals(spark.version,capture().version);
+    }
+
+    @Test void electricalMotionRemainsObservedWithoutStalingInputWhileRealWarningsStillInvalidateIt()throws Exception{
+        draw(List.of(new VisualCue("electricity_flow",10,null,"east")));
+        GameController.State first=capture();
+        draw(List.of(new VisualCue("electricity_flow",11,null,"northeast"),
+                new VisualCue("electricity_flow",12,null,"east")));
+        GameController.State moving=capture();
+        assertEquals(first.version,moving.version,"Particle birth, displacement and measured direction cannot block wait or quit");
+        assertNotEquals(first.publicState.get("visual_cues"),moving.publicState.get("visual_cues"),
+                "Current observations must retain the changing useful motion information");
+        assertTrue(moving.publicState.get("visual_cues").toString().contains("northeast"));
+        draw(List.of(new VisualCue("electricity_flow",11,null,"north"),new VisualCue("red_target",12)));
+        GameController.State danger=capture();assertNotEquals(moving.version,danger.version);
+        draw(List.of(new VisualCue("electricity_flow",11,null,"west")));
+        assertNotEquals(danger.version,capture().version,"Clearing a real target warning remains an intent change");
     }
 
     @Test void currencyFadePreservesRevisionButActualGoldAndEnergyStillInvalidateIt()throws Exception{
@@ -136,9 +156,9 @@ class RenderedBoundaryTest {
     @Test void semanticCueSnapshotsAreCanonicalAndDetachedFromMutableInput(){
         List<VisualCue> cues=new ArrayList<>(List.of(new VisualCue("red_target",20),new VisualCue("red_target",10),new VisualCue("red_target",20)));
         draw(cues);cues.clear();GameController.VisualSnapshot snapshot=controller.pollVisual();
-        assertEquals(2,snapshot.cues.size());assertEquals(10,snapshot.cues.get(0).cell);
+        assertEquals(3,snapshot.cues.size());assertEquals(10,snapshot.cues.get(0).cell);
         assertThrows(UnsupportedOperationException.class,()->snapshot.cues.clear());
-        draw(List.of(new VisualCue("red_target",10),new VisualCue("red_target",20)));assertNull(controller.pollVisual());
+        draw(List.of(new VisualCue("red_target",10),new VisualCue("red_target",20)));assertNotNull(controller.pollVisual(),"Independent equal indicators retain multiplicity");
         assertFalse(snapshot.data().containsKey("generation"));assertFalse(snapshot.data().containsKey("levelIdentity"));
     }
 

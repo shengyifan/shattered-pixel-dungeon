@@ -57,7 +57,9 @@ public class CurseInfusion extends InventorySpell {
 	@Override
 	protected void onItemSelected(Item item) {
 		
-		CellEmitter.get(curUser.pos).burst(ShadowParticle.UP, 5);
+		int visualCell = curUser.pos;
+		com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.burst(
+				CellEmitter.get(visualCell), ShadowParticle.UP, 5, "shadow_burst", visualCell, false);
 		Sample.INSTANCE.play(Assets.Sounds.CURSED);
 		
 		item.cursed = true;

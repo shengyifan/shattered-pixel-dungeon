@@ -170,7 +170,11 @@ public class Bomb extends Item {
 
 			for (int i : affectedCells){
 				if (Dungeon.level.heroFOV[i]) {
-					CellEmitter.get(i).burst(SmokeParticle.FACTORY, 4);
+					com.watabou.noosa.particles.Emitter smoke = CellEmitter.get(i);
+					smoke.burst(SmokeParticle.FACTORY, 4);
+					if (com.watabou.noosa.Game.observer.observesVisualCues()) smoke.observeDraw(
+							new com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue("bomb_blast", i,
+									SmokeParticle.FACTORY, SmokeParticle.class));
 				}
 
 				if (Dungeon.level.flamable[i]) {

@@ -643,10 +643,11 @@ public class Armor extends EquipableItem {
 	@Override
 	public Emitter emitter() {
 		if (seal == null) return super.emitter();
-		Emitter emitter = new Emitter();
+		com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter emitter = new com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter();
 		emitter.pos(ItemSpriteSheet.film.width(image)/2f + 2f, ItemSpriteSheet.film.height(image)/3f);
 		emitter.fillTarget = false;
 		emitter.pour(Speck.factory( Speck.RED_LIGHT ), 0.6f);
+		emitter.observeBrokenSeal();
 		return emitter;
 	}
 

@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.scrolls;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -146,7 +148,7 @@ public class ScrollOfRemoveCurse extends InventoryScroll {
 		
 		if (procced) {
 			if (hero != null) {
-				hero.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);
+				GameplayBurst.startForCharacter(hero.sprite.emitter(), ShadowParticle.UP, 0.05f, 10, "upward_shadows", hero.sprite, false);
 				hero.updateHT(false); //for ring of might
 				updateQuickslot();
 			}

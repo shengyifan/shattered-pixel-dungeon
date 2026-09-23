@@ -22,14 +22,14 @@ public final class QuitSessionHarness implements AutoCloseable {
 
     public QuitSessionHarness(Path directory)throws Exception{
         store=new AuditStore(directory);store.ensureScope("run:quit","run","quit");
-        store.beginSession("quit-session-fixture","test-build","CLI.7.0.0",7);
+        store.beginSession("quit-session-fixture","test-build","CLI.8.0.0",8);
         session=new MachineSession(store,game,new PrintStream(wire,true,StandardCharsets.UTF_8),50);
         PipedInputStream source=new PipedInputStream(input,65536);
         reader=new Thread(()->session.read(source),"Test machine reader");reader.setDaemon(true);reader.start();
     }
     public void sendRaw(String line)throws IOException{input.write(line.getBytes(StandardCharsets.UTF_8));input.flush();}
     public void send(String id,String op,Map<String,Object> args)throws Exception{
-        sendRaw(V7Requests.encode(store,map("protocol_version",7,"scope_id","run:quit","id",id,"op",op,
+        sendRaw(V8Requests.encode(store,map("protocol_version",8,"scope_id","run:quit","id",id,"op",op,
                 "state_version",game.state.version,"args",args))+"\n");
     }
     public Map<String,Object> receive()throws Exception{

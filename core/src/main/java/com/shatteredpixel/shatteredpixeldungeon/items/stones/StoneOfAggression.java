@@ -53,7 +53,8 @@ public class StoneOfAggression extends Runestone {
 			}
 		}
 
-		CellEmitter.center(cell).start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
+		com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.start(
+				CellEmitter.center(cell), Speck.factory(Speck.SCREAM), 0.3f, 3, "aggression_scream", cell, false);
 		Sample.INSTANCE.play( Assets.Sounds.READ );
 		
 	}

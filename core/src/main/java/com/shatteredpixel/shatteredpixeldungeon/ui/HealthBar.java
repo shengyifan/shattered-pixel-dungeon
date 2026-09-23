@@ -25,7 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.ui.Component;
 
-public class HealthBar extends Component {
+public class HealthBar extends Component implements GameplayStatus {
 
 	private static final int COLOR_BG	= 0xFFCC0000;
 	private static final int COLOR_HP	= 0xFF00EE00;
@@ -69,6 +69,16 @@ public class HealthBar extends Component {
 		Hp.size( width * (float)Math.ceil(health * pixelWidth)/pixelWidth, height );
 	}
 	
+	@Override public java.util.Map<String,Object> gameplayStatus() {
+		int[] pixels=renderedPixelWidths();
+		if(pixels.length!=3 || pixels[0]<=0)return java.util.Collections.emptyMap();
+		java.util.Map<String,Object> sample=new java.util.LinkedHashMap<>();
+		sample.put("total",pixels[0]);sample.put("filled",pixels[1]);sample.put("with_shield",pixels[2]);
+		sample.put("basis","displayed");
+		return java.util.Collections.singletonMap("health_estimate",
+				java.util.Collections.singletonMap("samples",java.util.Collections.singletonList(sample)));
+	}
+
 	public void level( float value ) {
 		level( value, 0f );
 	}

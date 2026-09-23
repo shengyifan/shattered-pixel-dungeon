@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -342,7 +344,7 @@ public class SandalsOfNature extends Artifact {
 
 					Ballistica aim = new Ballistica(curUser.pos, cell, Ballistica.STOP_TARGET);
 					for (int c : aim.subPath(0, aim.dist)){
-						CellEmitter.get( c ).burst( LeafParticle.GENERAL, 6 );
+						GameplayBurst.burst(CellEmitter.get(c), LeafParticle.GENERAL, 6, "leaf_trail", c, false);
 					}
 
 					Splash.at(DungeonTilemap.tileCenterToWorld( cell ), -PointF.PI/2, PointF.PI/2, seedColors.get(curSeedEffect), 6);

@@ -110,6 +110,15 @@ public class Buff extends Actor {
 		return "";
 	}
 
+	/** A native display choice, captured during UI update rather than inferred from text or tint. */
+	public static final class IconTextDisplay {
+		public final String text;
+		public final String kind;
+		public IconTextDisplay(String text,String kind) { this.text=text;this.kind=kind; }
+	}
+
+	public IconTextDisplay iconTextDisplayInfo() { return new IconTextDisplay(iconTextDisplay(),null); }
+
 	//visual effect usually attached to the sprite of the character the buff is attacked to
 	public void fx(boolean on) {
 		//do nothing by default

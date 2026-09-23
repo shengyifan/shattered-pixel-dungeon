@@ -849,7 +849,7 @@ class NativeTransportTest(unittest.TestCase):
         del command[index:index + 2]
         result = subprocess.run(command, input=b"", capture_output=True, env=self.environment, timeout=10)
         self.assertEqual(0, result.returncode, result.stderr)
-        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v7"
+        expected = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v8"
         self.assertEqual(str(expected), json.loads(result.stdout)["profile"])
         self.assertFalse(expected.exists(), "Native profile resolution unexpectedly created game data")
         self.assertEqual(b"previous profile", sentinel.read_bytes())

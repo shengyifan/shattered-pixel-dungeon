@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.spells;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -194,22 +196,22 @@ public class SummonElemental extends Spell {
 			item.detach(Dungeon.hero.belongings.backpack);
 			if (item instanceof PotionOfLiquidFlame) {
 				Sample.INSTANCE.play(Assets.Sounds.BURNING);
-				curUser.sprite.emitter().burst( FlameParticle.FACTORY, 12 );
+				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), FlameParticle.FACTORY, 12, "flame_burst", curUser.sprite, false);
 				summonClass = Elemental.FireElemental.class;
 
 			} else if (item instanceof PotionOfFrost){
 				Sample.INSTANCE.play(Assets.Sounds.SHATTER);
-				curUser.sprite.emitter().burst( MagicMissile.MagicParticle.FACTORY, 12 );
+				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), MagicMissile.MagicParticle.FACTORY, 12, "magic_specks", curUser.sprite, false);
 				summonClass = Elemental.FrostElemental.class;
 
 			} else if (item instanceof ScrollOfRecharging){
 				Sample.INSTANCE.play(Assets.Sounds.ZAP);
-				curUser.sprite.emitter().burst( ShaftParticle.FACTORY, 12 );
+				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), ShaftParticle.FACTORY, 12, "light_shafts", curUser.sprite, false);
 				summonClass = Elemental.ShockElemental.class;
 
 			} else if (item instanceof ScrollOfTransmutation){
 				Sample.INSTANCE.play(Assets.Sounds.READ);
-				curUser.sprite.emitter().burst( RainbowParticle.BURST, 12 );
+				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), RainbowParticle.BURST, 12, "rainbow_burst", curUser.sprite, false);
 				summonClass = Elemental.ChaosElemental.class;
 			}
 

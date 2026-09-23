@@ -66,7 +66,7 @@ public class CompactProtocolLosslessTest {
                 assertTrue("Lost "+field.getKey()+" on node "+i,object(actual.get(i)).containsKey(field.getKey()));
                 assertEquals(field.getValue(),object(actual.get(i)).get(field.getKey()));
             }
-            assertEquals(map("status","0/20","extra","14?"),node(output,1).get("display"));
+            assertFalse("Wire projection must not reconstruct retired display fields",node(output,1).containsKey("display"));
             assertEquals("bag.0",node(output,1).get("loc"));
         }
         assertEquals(untouched,JsonCodec.encode(input));

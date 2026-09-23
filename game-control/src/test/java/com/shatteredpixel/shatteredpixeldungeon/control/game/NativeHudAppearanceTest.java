@@ -31,25 +31,30 @@ class NativeHudAppearanceTest {
                 Image image=Icons.INFO.get();image.x=image.y=10;image.camera=new Camera(0,0,100,100,1);
                 IconButton button=visual(allocate(IconButton.class));set(button,IconButton.class,"icon",image);image.parent=button;
                 Map<?,?> icon=(Map<?,?>)button.renderedStatus().get("icon");
-                assertEquals("info",icon.get("symbol"));assertEquals(Assets.Interfaces.ICONS,icon.get("atlas"));
+                assertEquals("info",icon.get("symbol"));assertFalse(icon.containsKey("atlas"));
                 Map<String,Object> intent=button.intentStatus();image.alpha(.5f);assertEquals(intent,button.intentStatus());
-                image.frame(new RectF(0,0,.05f,.1f));assertFalse(((Map<?,?>)button.renderedStatus().get("icon")).containsKey("symbol"));
-                assertTrue(((Map<?,?>)button.renderedStatus().get("icon")).containsKey("frame_pixels"));
+                image.frame(new RectF(0,0,.05f,.1f));assertEquals("unmapped_indicator",((Map<?,?>)button.renderedStatus().get("icon")).get("symbol"));
+                assertTrue(((Map<?,?>)button.renderedStatus().get("icon")).containsKey("presentation"));
+                assertFalse(((Map<?,?>)button.renderedStatus().get("icon")).containsKey("frame_pixels"));
             } finally {if(previous==null)fixture.cache.remove(Assets.Interfaces.ICONS);else fixture.cache.put(Assets.Interfaces.ICONS,previous);}
         }
     }
 
-    @Test void offPageQuickslotPreviewsPreserveVisibleOrderEmptyPositionsAndPlaceholderAlpha() throws Exception {
+    @Test void offPageQuickslotPreviewsPreserveOrderEmptyPositionsAndSemanticPlaceholder() throws Exception {
         try(Textures fixture=new Textures()) {
             Toolbar.SlotSwapTool swap=visual(allocate(Toolbar.SlotSwapTool.class));
             Image change=fixture.image(),first=fixture.image(),last=fixture.image();change.parent=first.parent=last.parent=swap;
-            first.frame(new RectF(.25f,0,.5f,.25f));last.alpha(.29f);
+            first.frame(new RectF(.5f,0,1f,.5f));last.alpha(.29f);
             set(swap,Toolbar.SlotSwapTool.class,"icons",new Image[]{change,first,null,last});
+            set(swap,Toolbar.SlotSwapTool.class,"previewPlaceholders",new boolean[]{false,false,false,true});
             assertNull(SnapshotFields.read(swap,"items"),"The appearance does not inspect backing quickslot items");
             List<?> previews=(List<?>)swap.renderedStatus().get("preview_icons");assertEquals(4,previews.size());assertNull(previews.get(2));
-            assertEquals(.29f,((Map<?,?>)previews.get(3)).get("alpha"));assertNotEquals(previews.get(0),previews.get(1));
+            assertEquals(true,((Map<?,?>)previews.get(3)).get("placeholder"));
+            assertFalse(((Map<?,?>)previews.get(3)).containsKey("alpha"));assertNotEquals(previews.get(0),previews.get(1));
             Map<String,Object> intent=swap.intentStatus();first.tint(0xCC00FF,.3f);assertEquals(intent,swap.intentStatus());
-            last.alpha(1f);assertNotEquals(intent,swap.intentStatus());last.visible=false;
+            last.alpha(1f);assertEquals(intent,swap.intentStatus());
+            set(swap,Toolbar.SlotSwapTool.class,"previewPlaceholders",new boolean[]{false,false,false,false});
+            assertNotEquals(intent,swap.intentStatus());last.visible=false;
             assertNull(((List<?>)swap.renderedStatus().get("preview_icons")).get(3));
         }
     }
@@ -74,19 +79,21 @@ class NativeHudAppearanceTest {
             banner.alpha(.5f);record.invoke(banner);assertEquals(1,observed.size());assertTrue(banner.intentStatus().isEmpty());
             cover.visible=true;assertTrue(banner.renderedStatus().isEmpty());cover.visible=false;
             banner.show(0xFFFFFF,.3f,5f);record.invoke(banner);assertEquals(2,observed.size(),"A newly shown native instance is a new occurrence");
-            banner.frame(new RectF(.25f,0,.5f,.25f));assertTrue(banner.renderedStatus().isEmpty(),"Changed pixels cannot keep their old semantic kind");
+            banner.frame(new RectF(.5f,0,1f,.5f));assertTrue(banner.renderedStatus().isEmpty(),"Changed pixels cannot keep their old semantic kind");
         } finally {Game.instance=previousGame;Game.observer=previousObserver;Dungeon.runId=previousRun;Camera.main=previousCamera;}
     }
 
-    @Test void clericBrightnessAndAttackPortraitHaveNoModelDependency() throws Exception {
+    @Test void clericFreeCastAndAttackPortraitHaveNoCaptureModelDependency() throws Exception {
         try(Textures fixture=new Textures()) {
             WndClericSpells.SpellButton spell=visual(allocate(WndClericSpells.SpellButton.class));
             Image icon=fixture.image();icon.parent=spell;set(spell,IconButton.class,"icon",icon);
             Map<String,Object> before=spell.renderedStatus();icon.brightness(3f);
-            Map<?,?> highlighted=(Map<?,?>)spell.renderedStatus().get("spell_icon");
+            assertEquals(before,spell.renderedStatus(),"Decorative brightness does not invent free casting");
+            set(spell,WndClericSpells.SpellButton.class,"displayedFreeCast",true);
+            assertEquals(true,spell.renderedStatus().get("free_cast"));
             assertNotEquals(before,spell.renderedStatus());
-            assertEquals(Arrays.asList(3f,3f,3f),((Map<?,?>)highlighted.get("tint")).get("multiply"));
-            assertEquals(Assets.Interfaces.HERO_ICONS,highlighted.get("atlas"));
+            Map<?,?> highlighted=(Map<?,?>)spell.renderedStatus().get("spell_icon");
+            assertEquals("hero_berserker",highlighted.get("symbol"));assertFalse(highlighted.containsKey("tint"));
             assertNull(SnapshotFields.read(spell,"spell"));assertNull(SnapshotFields.read(spell,"tome"));
             AttackIndicator attack=visual(allocate(AttackIndicator.class));
             CharSprite portrait=fixture.sprite();portrait.parent=attack;set(attack,AttackIndicator.class,"sprite",portrait);
@@ -97,16 +104,19 @@ class NativeHudAppearanceTest {
         }
     }
 
-    @Test void actionPairAndBossWarningPreserveTheirCurrentPixels() throws Exception {
+    @Test void actionPairAndBossWarningPreserveTheirSelectedMeaning() throws Exception {
         try(Textures fixture=new Textures()) {
             ActionIndicator action=visual(allocate(ActionIndicator.class));Image primary=fixture.image(),secondary=fixture.image();
-            primary.parent=secondary.parent=action;secondary.frame(new RectF(.25f,0,.5f,.25f));secondary.brightness(.6f);
+            primary.parent=secondary.parent=action;secondary.frame(new RectF(.5f,0,1f,.5f));secondary.brightness(.6f);
             set(action,ActionIndicator.class,"primaryVis",primary);set(action,ActionIndicator.class,"secondVis",secondary);
             Map<String,Object> pair=action.renderedStatus();assertTrue(pair.containsKey("primary_icon"));assertTrue(pair.containsKey("secondary_icon"));
             assertNotEquals(pair.get("primary_icon"),pair.get("secondary_icon"));
             BossHealthBar boss=visual(allocate(BossHealthBar.class));Image skull=fixture.image();skull.parent=boss;set(boss,BossHealthBar.class,"skull",skull);
             Map<String,Object> ordinary=boss.renderedStatus();skull.tint(0xCC0000,.6f);
-            assertNotEquals(ordinary,boss.renderedStatus());assertNull(SnapshotFields.read(boss,"blood"));
+            assertEquals(ordinary,boss.renderedStatus(),"A random tint is not a native boss warning");
+            set(boss,BossHealthBar.class,"displayedWarning",true);assertNotEquals(ordinary,boss.renderedStatus());
+            assertEquals(true,((Map<?,?>)boss.renderedStatus().get("shown")).get("boss_warning"));
+            assertNull(SnapshotFields.read(boss,"blood"));
             assertFalse(boss.renderedStatus().containsKey("phase"));
             skull.x=99;assertTrue(boss.renderedStatus().isEmpty(),"A partially clipped portrait is not a full appearance");
         }
@@ -132,18 +142,20 @@ class NativeHudAppearanceTest {
         try(Textures fixture=new Textures()) {
             BossHealthBar boss=visual(allocate(BossHealthBar.class));Image skull=fixture.image();skull.parent=boss;set(boss,BossHealthBar.class,"skull",skull);
             Map<String,Object> bossIntent=boss.intentStatus(),bossPixels=boss.renderedStatus();
-            skull.frame(new RectF(.25f,0,.5f,.25f));
-            assertNotEquals(bossPixels,boss.renderedStatus());assertEquals(bossIntent,boss.intentStatus());
-            skull.tint(0xCC0000,.6f);assertNotEquals(bossIntent,boss.intentStatus());
+            skull.frame(new RectF(.5f,0,1f,.5f));
+            assertEquals(bossPixels,boss.renderedStatus());assertEquals(bossIntent,boss.intentStatus());
+            skull.tint(0xCC0000,.6f);assertEquals(bossIntent,boss.intentStatus());
+            set(boss,BossHealthBar.class,"displayedWarning",true);assertNotEquals(bossIntent,boss.intentStatus());
             StatusPane status=visual(allocate(StatusPane.class));Image avatar=fixture.image();avatar.parent=status;set(status,StatusPane.class,"avatar",avatar);
             Map<String,Object> statusIntent=status.intentStatus(),statusPixels=status.renderedStatus();avatar.tint(0xFF0000,.5f);
-            assertNotEquals(statusPixels,status.renderedStatus());assertEquals(statusIntent,status.intentStatus());
+            assertEquals(statusPixels,status.renderedStatus());assertEquals(statusIntent,status.intentStatus());
             QuickSlotButton quick=visual(allocate(QuickSlotButton.class));Image marker=fixture.image();marker.parent=quick;set(quick,QuickSlotButton.class,"crossB",marker);
             Map<String,Object> selection=quick.intentStatus(),pixels=quick.renderedStatus();marker.alpha(.5f);
-            assertNotEquals(pixels,quick.renderedStatus());assertEquals(selection,quick.intentStatus());
+            assertEquals(pixels,quick.renderedStatus());assertEquals(selection,quick.intentStatus());
             marker.visible=false;assertNotEquals(selection,quick.intentStatus());
             WndClericSpells.SpellButton spell=visual(allocate(WndClericSpells.SpellButton.class));Image icon=fixture.image();icon.parent=spell;set(spell,IconButton.class,"icon",icon);
-            Map<String,Object> ordinary=spell.intentStatus();icon.brightness(3);assertNotEquals(ordinary,spell.intentStatus());
+            Map<String,Object> ordinary=spell.intentStatus();icon.brightness(3);assertEquals(ordinary,spell.intentStatus());
+            set(spell,WndClericSpells.SpellButton.class,"displayedFreeCast",true);assertNotEquals(ordinary,spell.intentStatus());
         }
     }
 
@@ -166,19 +178,19 @@ class NativeHudAppearanceTest {
         } finally {Dungeon.level=old;}
     }
 
-    @Test void projectileAppearanceContainsOnlyCurrentFrameAndMotionAndFreezesItsValues() throws Exception {
+    @Test void projectileMeaningUsesCurrentWorldPositionAndIgnoresDecoration() throws Exception {
         Level old=Dungeon.level;Dungeon.level=new Grid();
         try(Textures fixture=new Textures()) {
-            MissileSprite missile=visual(allocate(MissileSprite.class));set(missile,Image.class,"frame",new RectF(0,0,.25f,.25f));
+            MissileSprite missile=visual(allocate(MissileSprite.class));set(missile,Image.class,"frame",new RectF(0,0,.5f,.5f));
             missile.texture=fixture.texture;missile.width=8;missile.height=8;missile.x=36;missile.y=36;
             missile.origin.set(4,4);missile.angle=45;missile.speed=new PointF(2,0);
             VisualCue cue=missile.renderedProjectileCue();assertNotNull(cue);assertEquals(22,cue.cell);assertNull(cue.direction,"The collector measures direction only from consecutive visible draws");
-            assertNull(cue.sourceCell);assertEquals(Assets.Interfaces.HERO_ICONS,cue.appearance.get("atlas"));
+            assertNull(cue.sourceCell);assertEquals("hero_berserker",cue.appearance.get("symbol"));assertFalse(cue.appearance.containsKey("atlas"));
             assertThrows(UnsupportedOperationException.class,()->cue.appearance.put("target",99));
-            missile.brightness(3);assertNotEquals(cue,missile.renderedProjectileCue());
+            missile.brightness(3);assertEquals(cue,missile.renderedProjectileCue());
             assertFalse(cue.appearance.containsKey("item"));assertFalse(cue.appearance.containsKey("class"));
             assertNull(SnapshotFields.read(missile,"callback"));
-            missile.x=98;assertNull(missile.renderedProjectileCue());
+            missile.x=98;assertNotNull(missile.renderedProjectileCue(),"World evidence is independent of the real viewport");
             missile.x=36;missile.am=Float.NaN;assertNull(missile.renderedProjectileCue());
         } finally {Dungeon.level=old;}
     }
@@ -186,7 +198,7 @@ class NativeHudAppearanceTest {
     @Test void unknownTextureAndImmutableCueValuesFailConservatively() throws Exception {
         try(Textures fixture=new Textures()) {
             Image image=fixture.image();image.texture=allocate(SmartTexture.class);image.texture.width=image.texture.height=32;
-            Map<String,Object> unknown=RenderedAppearance.image(image);assertEquals(true,unknown.get("asset_unknown"));assertTrue(unknown.containsKey("presentation"));
+            Map<String,Object> unknown=GameplayIcons.image(image);assertEquals("unmapped_indicator",unknown.get("symbol"));assertTrue(unknown.containsKey("presentation"));
             assertFalse(unknown.containsKey("atlas"));
             List<Object> list=new ArrayList<>(Arrays.asList(null,false,0));Map<String,Object> mutable=new LinkedHashMap<>();mutable.put("values",list);
             VisualCue cue=new VisualCue("drawn",1,null,null,null,null,mutable);list.set(2,3);
@@ -211,8 +223,8 @@ class NativeHudAppearanceTest {
             cache=(Map<Object,SmartTexture>)SnapshotFields.read(TextureCache.class,"all");previous=cache.get(Assets.Interfaces.HERO_ICONS);
             texture=allocate(SmartTexture.class);texture.width=texture.height=32;cache.put(Assets.Interfaces.HERO_ICONS,texture);
         }
-        Image image(){Image image=new Image();image.texture=texture;image.frame(new RectF(0,0,.25f,.25f));image.x=image.y=10;image.camera=new Camera(0,0,100,100,1);return image;}
-        CharSprite sprite(){CharSprite sprite=new CharSprite();sprite.texture=texture;sprite.frame(new RectF(0,0,.25f,.25f));sprite.x=sprite.y=10;sprite.camera=new Camera(0,0,100,100,1);return sprite;}
+        Image image(){Image image=new Image();image.texture=texture;image.frame(new RectF(0,0,.5f,.5f));image.x=image.y=10;image.camera=new Camera(0,0,100,100,1);return image;}
+        CharSprite sprite(){CharSprite sprite=new CharSprite();sprite.texture=texture;sprite.frame(new RectF(0,0,.5f,.5f));sprite.x=sprite.y=10;sprite.camera=new Camera(0,0,100,100,1);return sprite;}
         public void close(){if(previous==null)cache.remove(Assets.Interfaces.HERO_ICONS);else cache.put(Assets.Interfaces.HERO_ICONS,previous);}
     }
     private static <T extends Gizmo>T visual(T value){

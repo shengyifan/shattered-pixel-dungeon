@@ -261,9 +261,8 @@ public class WandOfBlastWave extends DamageWand {
 			this.size = size;
 		}
 
-		@Override public void draw() {
-			super.draw();
-			if (texture != null && buffer != null && Game.observer.observesVisualCues()) {
+		@Override public void observeGameplayVisuals() {
+			if (texture != null && Game.observer.observesVisualCues()) {
 				VisualCue cue = RadialVisualCue.capture(this, "blast_wave", "ring", width / 2f);
 				if (cue != null) GameScene.observeCellVisualDraw(this, cue);
 			}

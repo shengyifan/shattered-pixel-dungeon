@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
+
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -150,7 +152,7 @@ public class ChaliceOfBlood extends Artifact {
 			damage = 1;
 		} else {
 			Sample.INSTANCE.play(Assets.Sounds.CURSED);
-			hero.sprite.emitter().burst( ShadowParticle.CURSE, 4+(damage/10) );
+			GameplayBurst.burstForCharacter(hero.sprite.emitter(), ShadowParticle.CURSE, 4+(damage/10), "curse_shadow_burst", hero.sprite, true);
 		}
 
 		hero.damage(damage, this);

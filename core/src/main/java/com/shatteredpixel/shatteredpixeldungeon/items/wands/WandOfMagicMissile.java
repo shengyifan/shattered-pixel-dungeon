@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -62,7 +63,7 @@ public class WandOfMagicMissile extends DamageWand {
 			ch.damage(damageRoll(), this);
 			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f) );
 
-			ch.sprite.burst(0xFFFFFFFF, buffedLvl() / 2 + 2);
+			GameplayBurst.spriteBurst(ch.sprite, 0xFFFFFFFF, buffedLvl() / 2 + 2, "magic_burst", true);
 
 			//apply the magic charge buff if we have another wand in inventory of a lower level, or already have the buff
 			for (Wand.Charger wandCharger : curUser.buffs(Wand.Charger.class)){

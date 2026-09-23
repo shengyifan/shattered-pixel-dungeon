@@ -47,7 +47,8 @@ public class StoneOfDeepSleep extends Runestone {
 			if (c instanceof Mob){
 
 				Buff.affect(c, MagicalSleep.class);
-				c.sprite.centerEmitter().start( Speck.factory( Speck.NOTE ), 0.3f, 5 );
+				com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst.startForCharacter(
+						c.sprite.centerEmitter(), Speck.factory(Speck.NOTE), 0.3f, 5, "deep_sleep_notes", c.sprite, false);
 
 			}
 

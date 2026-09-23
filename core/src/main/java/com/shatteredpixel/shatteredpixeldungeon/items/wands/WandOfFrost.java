@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -91,7 +92,7 @@ public class WandOfFrost extends DamageWand {
 				float chillturns = Math.min(10, ch.buff(Chill.class).cooldown());
 				damage = (int)Math.round(damage * Math.pow(0.9333f, chillturns));
 			} else {
-				ch.sprite.burst( 0xFF99CCFF, buffedLvl() / 2 + 2 );
+				GameplayBurst.spriteBurst(ch.sprite, 0xFF99CCFF, buffedLvl() / 2 + 2, "frost_burst", true);
 			}
 
 			wandProc(ch, chargesPerCast());

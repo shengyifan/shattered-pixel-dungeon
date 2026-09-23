@@ -1,7 +1,7 @@
-# spdctl: compact game control (protocol 7)
+# spdctl: compact game control (protocol 8)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.7.0.1, protocol 7, and base game 3.3.8.
+`spdctl --version` reports CLI.8.0.0, protocol 8, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -86,15 +86,16 @@ There is no network endpoint, background response stream, or attachment to anoth
 Finder-launched instance. Screenshots, window focus and simulated OS input are not
 needed to operate this connection.
 
-Protocol 7 accepts only the short, flat format below. Older request envelopes,
+Protocol 8 accepts only the short, flat format below. Older request envelopes,
 operation names and `args` are rejected. The default profile is now:
 
 ```text
-~/Library/Application Support/Shattered Pixel Dungeon CLI v7/
+~/Library/Application Support/Shattered Pixel Dungeon CLI v8/
 ```
 
-CLI 7 requires an intact schema-10 audit pair. Existing older audit directories are
-rejected before profile writes; they are not migrated or deleted. Use a new profile.
+CLI 8 requires an intact schema-11 audit pair. A nonempty profile without a valid
+schema-11 pair, including any older schema, is rejected before profile writes; it
+is not migrated or deleted. Use a new profile.
 Only genuinely absent or empty profiles receive the windowed Simplified-Chinese,
 skip-introduction/tutorial defaults. Existing settings and ordinary GUI defaults
 remain unchanged; class unlocks, achievements and guidebook progress are not granted.
@@ -105,7 +106,7 @@ remain unchanged; class unlocks, achievements and guidebook progress are not gra
 Start with a unique request ID:
 
 ```json
-{"v":7,"id":"q1","op":"info"}
+{"v":8,"id":"q1","op":"info"}
 ```
 
 `info` reports versions, build identity, current scope/revision, capabilities,
@@ -113,8 +114,13 @@ Start with a unique request ID:
 static `schema` of commands, directions, row-map encoding and inspection rules. Copy the
 returned `s`, then query the current state:
 
+Protocol 8 advertises `gameplay_facts`, `semantic_ui`,
+`semantic_feedback_events` and `world_cues_fov`. The protocol-7 rendered
+appearance, floating-text, particle-metric and screen-visual capabilities are
+not part of this version.
+
 ```json
-{"v":7,"id":"q2","s":"<S>","op":"state"}
+{"v":8,"id":"q2","s":"<S>","op":"state"}
 ```
 
 Replace placeholders and illustrative IDs with values for your own connection.
@@ -128,7 +134,7 @@ rewritten, and existing history keeps its original identities.
 
 | Field | Meaning |
 | --- | --- |
-| `v` | Required integer `7` on every request. |
+| `v` | Required integer `8` on every request. |
 | `id` | Required, caller-generated request identity. Queries also consume IDs. |
 | `s` | Required scope, except `info` discovery requests. |
 | `rev` | Required for game actions; copy the latest live revision exactly. |
@@ -136,14 +142,14 @@ rewritten, and existing history keeps its original identities.
 | `st` | Successful response status: `completed`, `awaiting_input`, `in_progress`, or terminal `interrupted`. |
 | `data` | Response content. Live state has no extra observation wrapper. |
 | `err` | Error code when a request fails. Success has no `err`; there is no `ok` field. |
-| `pres` | Present when rendering is partial, with `st` and field diagnostics `diag`. |
+| `pres` | Present when public presentation is partial, with `st` and field diagnostics `diag`. |
 
 A live response uses the effective scope of its resulting state. Starting or
 resuming a run can change `s`; update from that response. Scope/revision strings are
 opaque: do not generate, shorten or reinterpret them. Restarting invalidates all
 old revisions. Historical queries never return a top-level live `rev`.
 
-Protocol 7 allocates durable typed base36 handles in the selected profile: `s` for
+Protocol 8 allocates durable typed base36 handles in the selected profile: `s` for
 scope, `r` for normal revision, `a` for activity revision, `t` for session, `p` for
 save receipt and `m` for map context (for example `s2`, `r7`, `a3`). They represent
 complete canonical identities, including process epochs, and are never recycled in
@@ -160,23 +166,26 @@ Never treat a completed query as proof that the original action completed.
 ## 3. Read self-contained play and full observations
 
 The default `play` response is self-contained, never a delta or a reference to an
-older map. It includes applicable hero, inventory, map, entities, meaningful UI,
-visual cues, phase, actions and persistence. Decode each reply independently.
+older map. It includes applicable hero, inventory, map, entities, semantic UI,
+world cues, phase, actions and persistence. Decode each reply independently.
 Fields may be absent outside the dungeon; an alchemy/transition response need not
 contain hero, inventory or map. Do not carry missing scene fields forward as live.
 
 `state` and `actions` accept `view:"play"` (default) or `view:"full"`:
 
 ```json
-{"v":7,"id":"q3","s":"<S>","op":"state","view":"full"}
-{"v":7,"id":"q4","s":"<S>","op":"actions","view":"play"}
+{"v":8,"id":"q3","s":"<S>","op":"state","view":"full"}
+{"v":8,"id":"q4","s":"<S>","op":"actions","view":"play"}
 ```
 
-Both views retain item descriptions, the complete talent directory, captured UI
-nodes and their identity/order/parent relationships, and all operation constraints.
-All views use same-frame action sharing and record templates. `full` retains explicit
-UI/item defaults and literal item labels; it is not an uncompressed wire format.
-Both still use protocol-7 row maps and knowledge semantics. Normal action replies use `play`.
+Both views retain item descriptions, the complete talent directory, semantic UI
+facts and all operation constraints. Retained UI nodes keep their identity, order
+and parent relationship; redundant passive display text can move into its public
+subject's `shown`, `health_estimate` or `turn_progress`, or into `ui.feedback`.
+All views use same-frame action sharing and record templates. `full` retains
+explicit UI/item defaults and literal labels where a node needs its own label;
+it is not an uncompressed wire format or a source of ordinary rendering internals.
+Both still use protocol-8 row maps and knowledge semantics. Normal action replies use `play`.
 `state src:true` automatically selects `full`, even if `view:"play"` is supplied.
 Historical `before/after` details use full content and their own independent templates;
 `raw/reply` are immutable. Expand compact records in the client, not the controller.
@@ -194,7 +203,7 @@ The field aliases remain:
 | control / direction / gesture | `ctl` / `dir` / `g` |
 | item locator / original request ID | `loc` / `rid` |
 | option / alternate | `opt` / `alt` |
-| inventory / visible entities / visual cues | `inv` / `entities` / `cues` |
+| inventory / visible entities / world cues | `inv` / `entities` / `cues` |
 | controls / global actions | `nodes` / `acts` |
 | description / quantity / minimum / maximum | `desc` / `qty` / `min` / `max` |
 
@@ -296,7 +305,7 @@ For item records in `inv` or visible floor entities:
 | `cursed` | Not applicable | Player does not know | Known boolean; false means known uncursed |
 
 The redundant item `level_known/curse_known` flags are removed. The independent
-`ui.item_info.level_known` flag remains: it describes the already rendered
+`ui.item_info.level_known` flag remains: it describes the already displayed
 item-info branch and does not reveal an otherwise unknown numeric level.
 If a knowledge pair itself has protected source/partial metadata, its original
 value and explicit knowledge flag are retained together as a diagnostic exception.
@@ -370,7 +379,7 @@ tables. Invalid indexes, duplicate fields, overlapping fields, wrong row widths 
 control mismatches are decoding errors, never partial observations. Protocol 6's
 `op_defs`, `node_shapes` and whole-operation-list indexes are unsupported.
 Boolean and floating-point indexes are invalid. Detailed template validation and
-snapshot boundaries are specified in `docs/cli7-implementation.md`.
+snapshot boundaries are specified in `docs/cli8-implementation.md`.
 
 ```json
 {"acts":[{"op":"click","ctl":"c3"},{"op":"click","ctl":"c4"}],"ui":{"node_templates":[{"common":{"role":"button"},"fields":["id","text","ops"]}],"nodes":[[0,"c3","Drink",[0]],[0,"c4","Throw",[1]]]}}
@@ -379,9 +388,10 @@ snapshot boundaries are specified in `docs/cli7-implementation.md`.
 A current item-bound node may use `label:0` for its inventory item's exact `name`,
 or `label:1` for the game's standard title-case rendering. Resolve using that node's
 current `loc` and this observation's `inv`. Custom, unbound or protected labels stay
-literal. Passive text leaves retain their captured identities and parent links.
-Full/src and frozen before/after retain literal labels and use the same record
-templates and action references. Each frozen snapshot is decoded independently,
+literal. Retained passive text leaves keep their captured identities and parent links.
+Where labels remain, full/src and frozen before/after retain literal labels and
+use the same record templates and action references. Each frozen snapshot is
+decoded independently,
 without inheriting a live envelope's scope/revision. Diagnostic/source-bearing nodes stay
 expanded at unchanged indexes; ancestor-owned diagnostics keep their addressed UI
 subtree expanded. Bars and other game evidence remain.
@@ -405,83 +415,125 @@ reference the same capabilities, not additional actions to execute. Preserve lis
 order and all operation metadata when decoding either form.
 
 Absent `enabled` on a play UI node means true; absent `dimmed` means false.
-Disabled options with informative text, actionable icons without text, item water
-counts/strength estimates, health/status information and clipped/origin/partial
-markers are retained. Play preserves empty nodes, duplicate child text, passive
-identities and all parent relationships. Fixed inventory and dynamic bag slots
-remain because their structure/count is public information. It does not use an
-English-label whitelist or discard disabled/icon-only nodes. Operation parameters,
+Disabled options with informative text, actionable controls without text, item
+water counts/strength estimates, health/status information and
+clipped/origin/partial markers are retained. Retained nodes preserve their
+parents, including needed passive ancestors. Empty placeholders or duplicate
+passive text may be omitted when their public facts are preserved in a subject
+or feedback; protected source/diagnostic nodes stay. Fixed inventory and dynamic
+bag slots remain because their structure/count is public information. The
+projection does not use an English-label whitelist. Operation parameters,
 arguments, modes, units, ranges, labels and unknown extra fields survive both views.
 
-An ItemSlot node can have a current `loc` when its displayed item uniquely matches
-this capture's public inventory. Virtual or ambiguous items remain unbound. Its
-optional `display:{status,extra,level}` contains already displayed strings such as
-`"1/20"`, `"14?"` and `"+2"`; missing hidden text is not reconstructed. Preserve
-question marks and all corresponding metadata. These semantic fields supplement,
-never replace, the captured text nodes. `actions` remains independently
-readable even without an inventory list. Health bars retain rendered pixel widths
-and the visible target cell; they are not hidden exact enemy HP. Full view retains
-the complete UI tree through reversible templates. Do not use unmarked map crops or drop danger descriptions,
-`acts`, `cues`, counts, estimates or bars when presenting an observation to a model.
+An item-bound node may have a current `loc` and a
+`subject:{"kind":"item","loc":"..."}` only when the public item binding is
+unambiguous. Other subject forms are `{"kind":"hero"}`,
+`{"kind":"hero_buff","index":0}`,
+`{"kind":"entity","index":0}` and
+`{"kind":"entity_buff","entity":0,"index":0}`. Indexes refer only to this
+observation. Virtual or ambiguous subjects remain unbound; labels, icons and
+screen positions are never used to guess a subject. Already public item status,
+extra and level text may appear in `inv[].shown`; preserve question marks and
+unknown values. `actions` remains independently readable without an inventory
+list. `health_estimate` reports visible bar samples, not hidden exact HP. Full view
+retains semantic UI facts through reversible templates. Do not use
+unmarked map crops or drop danger descriptions, `acts`, `cues`, shown counts,
+estimates or bars when presenting an observation to a model.
 
 Do not treat a dimmed control as disabled, infer hidden actions, or identify an
 item permanently by its slot/control ID. Locators and node bindings can change
 after a purchase, pickup, sort or UI transition. Use the current observation.
-`actions` returns current UI/actions without repeating the world map. Parameter
-rules are in `info.schema`; current ops supply availability and dynamic constraints.
+`actions` returns current UI/actions without repeating the world map. It has no
+hero, inventory or entity table to resolve a `subject` reference. Instead, a
+bound node contains direct current public target facts in `subject_data` (the
+fact object, without a `kind` wrapper), and omits `subject`. If an owner is
+unknown or ambiguous, `subject_data:null` and local
+`pres:{st:"partial",diag:[...unresolved_subject...]}` retain the uncertainty;
+captured label, `loc`, `ops` and other semantic fields remain. Node-level
+`gestures` may be omitted only when its complete native `ops` already advertises
+them. Parameter rules are in `info.schema`; current ops supply availability and
+dynamic constraints.
 
-### Rendered combat information
+For example, this standalone fragment needs no inventory table:
 
-CLI.7.0.1 adds optional rendered appearance without changing protocol 7 or profile
-schema 10. A cue retains `kind/cell` and may include `source_cell`, `dir`, `color`,
-`opacity` or `appearance`. Endpoints must independently pass visibility checks.
-Directions use N/NE/E/SE/S/SW/W/NW and require consecutive eligible draws; absence
-does not mean stationary. A projectile's cell is its actual drawn location, not
-its destination. English kinds name visual appearances, not guaranteed damage,
-AI decisions or future outcomes. Discovery describes the supported families.
+```json
+{"acts":[{"op":"click","ctl":"c3"}],"ui":{"nodes":[{"id":"c3","subject_data":{"loc":"equipment.armor","name":"Armor"},"ops":[0]}]}}
+```
 
-Text nodes preserve RGB `color` (including black/zero), or ordered `styles` with
-translated text/color runs. Item status strings retain their original types and
-nodes. Icons and HUD may include atlas, frame/index, tint, opacity, rotation,
-rendered Buff `icon_overlay` pixels and `turn_progress` sweep. Native icon symbols
-are retained when their original displayed atlas/frame still match. Unknown
-assets or unmappable translated style fragments remain explicit diagnostics.
-An enemy portrait describes its appearance, not the identity/cell of an unseen
-target. Only the actual map crosshair supplies `quickslot_target` geometry.
+### Semantic combat and UI information
 
-Current `cues` describes the last matching completed draw. Optional `metrics` and
-`metrics_at` retain that same draw's visible particle histogram, with
-`rendered_particles` and optional appearance. These are rendered samples, never
-hidden item levels, blob amounts or remaining timers. `game.visual_metrics`
-history explicitly uses `sampled_display_snapshot_v1` and `sample_period_ms:250`;
-new visible emission episodes and their disappearance are recorded immediately,
-while ordinary histogram motion/color changes are sampled. It is not a recording
-of every intermediate frame. Discrete warnings are not sampled this way.
+CLI.8.0.0 reports public gameplay facts rather than renderer internals. An
+inventory item or buff can carry `shown` with already public status, extra,
+level, symbol, variant or counter strings. A buff may contain
+`progress:{covered,total,basis:"displayed"}`; an item may contain a strength
+estimate, flags or a semantic badge. Source-bound item status may include
+`shown.broken_seal:true`, `shown.lit_candle:true`, or a named `shown.glow`
+variant; FOV-visible heap items may expose the corresponding `item_status`
+world cue. Neither glow pulse timing nor hidden durability/resin quantities
+are reported. `shown.status_kind:"quantity"` marks only an exact, source-bound
+native item quantity display. Matching numeric text alone cannot turn an
+artifact charge or cooldown into a stack count; special or unknown status text
+is retained. Warrior
+Shield buff `shown.counter_kind` and `shown.progress_kind` distinguish
+`shield` from `cooldown` using the selected native display branch. Hero or entity
+`health_estimate.samples` contain visible bar samples
+`{total,filled,with_shield,basis:"displayed"}`; these are not hidden exact HP.
+The hero can carry `turn_progress:{sweep}`. `ui.feedback` is a current list of
+semantic floating, log or banner feedback, separate from event history; an
+icon-only floating occurrence retains its symbol without invented text. Missing
+or partial indicators remain unknown where the game does not provide a sound
+public value. A current `ui.nodes[].subject` links a hero, item, hero buff,
+entity or entity buff only through explicit same-observation references above;
+do not infer a subject from a label or decoration.
 
-`cues.screen_effects` and `screen_effects_at` describe that completed draw's visible
-screen overlays and actual camera displacement. Overlay color, effective opacity,
-blend and screen rectangle come from the drawn overlay, including its texture
-alpha. Camera offsets come from the matrix actually submitted to a nonempty draw,
-including native pixel alignment; requested future shake parameters are absent.
-`game.screen_visual` uses explicitly sampled quantitative snapshots at 250 ms,
-with immediate visible-episode appearance/disappearance. An empty snapshot means
-not currently observed, which can also result from occlusion, not just expiry.
+`data.cues.cues` contains public world cues sampled from existing game sources and
+current map/FOV knowledge. Its `status` is `last_observed` or `not_observed`.
+World-cue scope is independent of camera position, viewport and UI occlusion. A
+cue cannot expose an unseen cell, hidden AI target, future action or remaining
+timer. A cue's optional `appearance` contains reviewed semantic `style`,
+`shape`, `paused`, `stage`, `cells`, `partial`, `count` or `symbol`; drawing
+parameters do not. A radial `shape` such as `ring` or `halo` and
+`coverage:"visual_extent"` describe a visible indicator, not damage
+range; a beam with a hidden endpoint reports only known cells and `partial:true`.
+`ward_state` may report the displayed Ward `tier` and, for tiers 1–3, a
+`charge` fraction with `basis:"displayed_brightness"`; this is not the hidden
+exact use count. Kinetic buff `shown.charge` uses
+`basis:"displayed_gradient"`; both fractions quantize their displayed channel
+to 8 bits before reporting, never a hidden float. `statue_armor` reports the
+displayed armor tier. `crystal_spire_state` reports the selected Blue/Green/Red
+stage as `intact`, `cracked`, `damaged`, `heavily_damaged` or `destroyed`. A current
+Spirit Arrow projectile may carry `nature_powered:true` when its native
+leaf-trail branch is displayed. Reviewed `GameplayBurst` kinds may carry
+`appearance:{count,basis:"observed_particles"}` from actual visible
+contributors, not a requested emission count. The special
+`sacrificial_flames` density cue retains its exact current count too. In
+`game.visual` history, quantity-only changes for counted kinds are sampled at
+250 ms with `sampled_quantities:{<kind>:{sample_period_ms:250}}` when present;
+discrete warnings, onset and disappearance remain immediate. There is no
+`game.visual_metrics` event stream.
+New cue/floating event bodies use `gameplay_snapshot_v1`, banners use
+`gameplay_occurrence_v1`, and gameplay logs use `gameplay_log_snapshot_v1`.
+These are semantic feedback, not visual frame samples. Read
+them through the normal `events` query rather than unsolicited pipe replies.
+`ui.feedback` is current feedback, separate from queried event history. A past
+event is never a current action binding or target.
 
-`events` also retains `game.floating_text` and `game.banner` occurrences. Identical
-floating values after reuse remain distinct; fading alone does not duplicate an
-occurrence. Expired beams, projectiles and text remain historical evidence, never
-current targets. These events are queried normally and are not unsolicited pipe
-replies. Event draining uses finite cuts so ongoing rendering cannot monopolize
-a request; later events remain queued for subsequent draining.
+An unknown native indicator keeps `unmapped_indicator:true` and local partial
+`pres` diagnostics with `field`, `code:"unmapped_indicator"` and a public
+`indicator` variant. Never guess a missing Ward/statue tier or replace existing
+diagnostics with the fallback.
 
-All sources retain conservative current-map/FOV/full-viewport/UI-occlusion gates.
-Partly clipped and through-fog hints can therefore remain unreported. First-draw
-readiness never advances actors to manufacture evidence or waits for hidden or
-frozen emitters. Render-only pulses, idle frames and passive text/banner lifetimes
-do not alone expire action bindings. Meaningful resources, selections, warning
-colors and operation constraints remain protected.
+No new play/full/src observation, event or frozen snapshot includes atlas/frame,
+texture or transform data, RGB/tint/opacity, generic particle histograms, camera shake
+or screen effects. `full` makes defaults/diagnostics explicit and `src` adds public
+source provenance; neither requests ordinary rendered detail. Historical raw
+transport and replies remain byte-for-byte immutable. Preserve public item
+descriptions, text, constraints, semantic bars/counts/estimates and warning facts
+when presenting a response to a model.
 
-See `docs/cli-combat-visuals.md` for the source review and validation boundaries.
+See `docs/cli-combat-visuals.md` for the semantic boundary and
+`docs/cli8-implementation.md` for implementation and validation status. The
+CLI.7.0.1 renderer contract is preserved separately as historical documentation.
 
 The optional repository helper `desktop-control/client/spdctl_client.py` provides
 strict per-frame decoding and intent validation without I/O or gameplay policy.
@@ -494,12 +546,12 @@ does not require Python to launch or operate.
 Full text-source trees are omitted by default. Request them explicitly:
 
 ```json
-{"v":7,"id":"q4","s":"<S>","op":"state","src":true}
+{"v":8,"id":"q4","s":"<S>","op":"state","src":true}
 ```
 
 This returns the sources for that observation's own `rev`, not for an earlier state.
 `text_sources` keys correspond to compact field names; their source AST is unchanged.
-Default observations still retain partial-rendering diagnostics, clipping and
+Default observations still retain partial-presentation diagnostics, clipping and
 recursive user/external-origin markers. Source details do not reveal clipped or
 otherwise undisplayed text/arguments. Presentation quality is independent of action
 completion: never replay an action because its text is partial.
@@ -537,11 +589,11 @@ are top-level. Only execute currently advertised operations and targets.
 Examples:
 
 ```json
-{"v":7,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
-{"v":7,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
-{"v":7,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
-{"v":7,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
-{"v":7,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
+{"v":8,"id":"a1","s":"<S>","rev":"<REV>","op":"move","dir":"N"}
+{"v":8,"id":"a2","s":"<S>","rev":"<REV>","op":"click","ctl":"<CONTROL>"}
+{"v":8,"id":"a3","s":"<S>","rev":"<REV>","op":"cell","cell":123,"mode":"act"}
+{"v":8,"id":"a4","s":"<S>","rev":"<REV>","op":"item","loc":"<LOCATOR>"}
+{"v":8,"id":"a5","s":"<S>","rev":"<REV>","op":"text","ctl":"<CONTROL>","text":"example note"}
 ```
 
 `123` is illustrative, not a predetermined destination. Movement can attack,
@@ -571,7 +623,7 @@ An `in_progress` response is the sole response to that request on the pipe. Do n
 repeat it. Poll its receipt with fresh query IDs:
 
 ```json
-{"v":7,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
+{"v":8,"id":"q5","s":"<ORIGINAL_SCOPE>","op":"req","rid":"<ORIGINAL_ID>"}
 ```
 
 Inspect `data.st`, not the query's outer `st`. `RECEIVED` and `EXECUTING` mean the
@@ -580,7 +632,7 @@ original action remains pending. Normal terminal success is `COMPLETED`,
 its `save` receipts, then obtain one fresh live state:
 
 ```json
-{"v":7,"id":"q6","s":"<CURRENT_SCOPE>","op":"state"}
+{"v":8,"id":"q6","s":"<CURRENT_SCOPE>","op":"state"}
 ```
 
 Do not request historical `get:["reply"]` on the normal successful path. Reserve
@@ -612,11 +664,17 @@ rejected as `BUSY` while execution is pending.
 | `STALE_STATE`, `STALE_ACTIVITY` | The revision is no longer current; reobserve and reconsider. |
 | `SCOPE_MISMATCH`, `UNKNOWN_SCOPE` | Discover the active scope with `info`; keep past scopes for history only. |
 | `ACTION_UNAVAILABLE`, `INVALID_ARGUMENT`, `INVALID_REQUEST` | Inspect current availability and parameter rules. |
-| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every direct frame requires integer `v:7`; old envelopes are unsupported. |
+| `PROTOCOL_VERSION_REQUIRED`, `INVALID_PROTOCOL_VERSION`, `UNSUPPORTED_PROTOCOL` | Every direct frame requires integer `v:8`; old envelopes are unsupported. |
 | `UNKNOWN_REVISION` | The revision handle is unknown or has the wrong identity kind; obtain a current observation. |
 | `EXECUTION_UNKNOWN`, `EXECUTION_UNCERTAIN` | Do not assume failure or replay; preserve uncertainty and inspect the original result. |
 | `AUDIT_UNAVAILABLE` | The audit store failed; new game operations stop. |
 | `SESSION_CLOSING` | A successful quit awaits its original receipt delivery; settle it and wait for exit. |
+
+Before a machine connection exists, the launcher can report
+`AUDIT_SCHEMA_UNSUPPORTED` on stderr for an older paired audit, or
+`CLI_PROFILE_UNSUPPORTED` for a nonempty profile without a valid schema-11
+audit pair. These are startup rejections, not replies to a game request; they
+occur before profile writes. Choose a new CLI v8 profile.
 
 Controller launch/stream failures also emit a stage-specific stderr diagnostic:
 `CONTROLLER_CHILD_START_FAILED`, `CONTROLLER_OUTPUT_FAILED`,
@@ -645,7 +703,7 @@ For explicit diagnosis or verification, use `get` to select `raw`, `reply`,
 used with frozen snapshot details. Example:
 
 ```json
-{"v":7,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
+{"v":8,"id":"q7","s":"<S>","op":"req","rid":"<ID>","get":["before","after","meta"],"src":true}
 ```
 
 `before/after` are frozen public snapshots, not a fresh engine observation. `reply`
@@ -657,8 +715,8 @@ wire response or old snapshot is rewritten to match the current game.
 Read paginated metadata and public events:
 
 ```json
-{"v":7,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
-{"v":7,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
+{"v":8,"id":"q8","s":"<S>","op":"history","after":0,"limit":50}
+{"v":8,"id":"q9","s":"<S>","op":"events","after":0,"limit":50}
 ```
 
 `data` contains `items`, `next` (next `after`, or null), `end`, and a fixed `until`
@@ -674,7 +732,7 @@ report `saved` when available. In-memory action completion and persistence are
 separate facts. Close prompts before `quit`; read its response and await process exit.
 EOF requests ordinary lifecycle shutdown but cannot accept unresolved choices.
 
-Restart with the same v7 profile, perform a new handshake and continue the displayed
+Restart with the same v8 profile, perform a new handshake and continue the displayed
 saved game. Scope and request-ID history persist, but old process revisions do not.
 Do not replay successful actions to make a restored save catch up with history.
 Audit transactions do not include game save files. Public and internal SQLite stores
@@ -763,7 +821,7 @@ import time
 import uuid
 
 launcher = "/absolute/path/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl"
-profile = "/absolute/path/to/new-v7-profile"
+profile = "/absolute/path/to/new-v8-profile"
 process = subprocess.Popen(
     [launcher, "run", "--machine", "--data-dir", profile],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -774,7 +832,7 @@ counter = 0
 def request(op, *, scope=None, rev=None, **params):
     global counter
     counter += 1
-    message = {"v": 7, "id": f"{prefix}.{counter}", "op": op, **params}
+    message = {"v": 8, "id": f"{prefix}.{counter}", "op": op, **params}
     if scope is not None:
         message["s"] = scope
     if rev is not None:
@@ -790,7 +848,7 @@ def request(op, *, scope=None, rev=None, **params):
         response = json.loads(line.decode("utf-8", errors="strict"))
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise RuntimeError(("Invalid complete response; preserve request identity", message["id"])) from error
-    if not isinstance(response, dict) or type(response.get("v")) is not int or response["v"] != 7 or response.get("id") != message["id"]:
+    if not isinstance(response, dict) or type(response.get("v")) is not int or response["v"] != 8 or response.get("id") != message["id"]:
         raise RuntimeError(("Unexpected response identity/version", message["id"], response))
     if ("st" in response) == ("err" in response):
         raise RuntimeError(("Expected exactly one of st or err", message["id"], response))

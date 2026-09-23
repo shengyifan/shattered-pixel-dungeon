@@ -312,7 +312,7 @@ public class BuffIndicator extends Component {
 		return !buffsHidden;
 	}
 
-	private static class BuffButton extends IconButton implements RenderedStatus {
+	private static class BuffButton extends IconButton implements GameplayStatus {
 
 		private Buff buff;
 
@@ -321,22 +321,37 @@ public class BuffIndicator extends Component {
 
 		public Image grey; //only for small
 		public BitmapText text; //only for large
+		private String displayedCounterText,displayedCounterKind;
 
-		@Override public java.util.Map<String,Object> renderedStatus() {
-			java.util.Map<String,Object> result=new LinkedHashMap<>();
-			if (!(icon instanceof BuffIcon) || !RenderedAppearance.fullyVisible(icon)) return result;
-			result.put("icon",((BuffIcon)icon).renderedIcon());
+		@Override public java.util.Map<String,Object> gameplayStatus() {
+			if (!(icon instanceof BuffIcon) || !RenderedAppearance.fullyVisible(icon))return java.util.Collections.emptyMap();
+			java.util.Map<String,Object> shown=new LinkedHashMap<>(((BuffIcon)icon).gameplayIcon());
+			if(text!=null&&text.parent==this&&text.visible&&RenderedAppearance.fullyVisible(text)
+					&&text.text()!=null&&!text.text().isEmpty()) {
+				shown.put("counter",text.text());
+				if(displayedCounterKind!=null&&java.util.Objects.equals(text.text(),displayedCounterText))
+					shown.put("counter_kind",displayedCounterKind);
+			}
 			if(grey!=null&&grey.parent==this&&grey.exists&&grey.visible&&grey.alpha()>0
 					&&grey.x==icon.x&&grey.y==icon.y&&Float.isFinite(grey.height())) {
-					float zoom=RenderedAppearance.camera(icon).observedTransform().zoom;
+				com.watabou.noosa.Camera camera=RenderedAppearance.camera(icon);
+				float zoom=camera==null?0:camera.observedTransform().zoom;
 				int total=Math.round(icon.height()*zoom);
-				int covered=Math.max(0,Math.min(total,Math.round(grey.height()*zoom)));
-				java.util.Map<String,Object> overlay=new LinkedHashMap<>();
-				overlay.put("axis","vertical");overlay.put("total_pixels",total);
-				overlay.put("covered_pixels",covered);overlay.put("measurement","rendered_pixels");
-				result.put("icon_overlay",overlay);
+				if(total>0) {
+					int covered=Math.max(0,Math.min(total,Math.round(grey.height()*zoom)));
+					java.util.Map<String,Object> progress=new LinkedHashMap<>();
+					progress.put("covered",covered);progress.put("total",total);progress.put("basis","displayed");
+					shown.put("progress",progress);
+					if(displayedCounterKind!=null)shown.put("progress_kind",displayedCounterKind);
+				}
 			}
-			return result;
+			return java.util.Collections.singletonMap("shown",shown);
+		}
+
+		@Override public Object gameplaySubject() { return buff; }
+
+		@Override public java.util.Map<String,BitmapText> gameplayTextComponents() {
+			return text!=null&&text.parent==this?java.util.Collections.singletonMap("counter",text):java.util.Collections.emptyMap();
 		}
 
 		public BuffButton( Buff buff, boolean large ){
@@ -360,8 +375,10 @@ public class BuffIndicator extends Component {
 
 		public void updateIcon(){
 			((BuffIcon)icon).refresh(buff);
+			Buff.IconTextDisplay counter=buff.iconTextDisplayInfo();
+			displayedCounterText=counter.text;displayedCounterKind=counter.kind;
 			//round up to the nearest pixel if <50% faded, otherwise round down
-			if (!large || buff.iconTextDisplay().isEmpty()) {
+			if (!large || counter.text.isEmpty()) {
 				text.visible = false;
 				grey.visible = true;
 				float fadeHeight = GameMath.gate(0, buff.iconFadePercent(), 1) * icon.height();
@@ -371,14 +388,14 @@ public class BuffIndicator extends Component {
 				} else {
 					grey.scale.set(icon.width(), (float) Math.floor(zoom * fadeHeight) / zoom);
 				}
-			} else if (!buff.iconTextDisplay().isEmpty()) {
+			} else if (!counter.text.isEmpty()) {
 				text.visible = true;
 				grey.visible = false;
 				if (buff.type == Buff.buffType.POSITIVE)        text.hardlight(CharSprite.POSITIVE);
 				else if (buff.type == Buff.buffType.NEGATIVE)   text.hardlight(CharSprite.NEGATIVE);
 				text.alpha(0.7f);
 
-				text.text(buff.iconTextDisplay());
+				text.text(counter.text);
 				text.measure();
 			}
 		}

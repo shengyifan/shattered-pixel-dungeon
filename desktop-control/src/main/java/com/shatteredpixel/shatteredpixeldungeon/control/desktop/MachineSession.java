@@ -44,11 +44,6 @@ public final class MachineSession implements AutoCloseable {
             for(int i=0;i<128&&(value=pollBanner())!=null;i++)batch.add(value);return batch;
         }
         default GameController.VisualSnapshot pollVisual(){return null;}
-        default GameController.VisualMetricSnapshot pollVisualMetrics(){return null;}
-        default List<GameController.VisualMetricSnapshot> takeVisualMetrics(){
-            List<GameController.VisualMetricSnapshot> batch=new ArrayList<>();GameController.VisualMetricSnapshot value;
-            for(int i=0;i<128&&(value=pollVisualMetrics())!=null;i++)batch.add(value);return batch;
-        }
         default List<GameController.VisualSnapshot> takeVisuals(){
             List<GameController.VisualSnapshot> batch=new ArrayList<>();GameController.VisualSnapshot value;
             for(int i=0;i<128&&(value=pollVisual())!=null;i++)batch.add(value);return batch;
@@ -68,7 +63,6 @@ public final class MachineSession implements AutoCloseable {
             while(batch.size()<limit&&(value=pollFloatingText())!=null)batch.add(GameController.DisplayEvent.from(value));
             while(batch.size()<limit&&(value=pollBanner())!=null)batch.add(GameController.DisplayEvent.from(value));
             while(batch.size()<limit&&(value=pollVisual())!=null)batch.add(GameController.DisplayEvent.from(value));
-            while(batch.size()<limit&&(value=pollVisualMetrics())!=null)batch.add(GameController.DisplayEvent.from(value));
             return batch;
         }
         default void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events){}
@@ -134,8 +128,6 @@ public final class MachineSession implements AutoCloseable {
             public GameController.BannerSnapshot pollBanner(){return game.pollBanner();}
             public List<GameController.BannerSnapshot> takeBanners(){return game.takeBanners();}
             public GameController.VisualSnapshot pollVisual(){return game.pollVisual();}
-            public GameController.VisualMetricSnapshot pollVisualMetrics(){return game.pollVisualMetrics();}
-            public List<GameController.VisualMetricSnapshot> takeVisualMetrics(){return game.takeVisualMetrics();}
             public List<GameController.VisualSnapshot> takeVisuals(){return game.takeVisuals();}
             public List<GameController.FloatingSnapshot> takeFloatingTexts(){return game.takeFloatingTexts();}
             public List<GameController.GameLogSnapshot> takeGameLogs(){return game.takeGameLogs();}
@@ -227,14 +219,14 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("cli_version","CLI.7.0.1","game_version","3.3.8",
+                    result=map("cli_version","CLI.8.0.0","game_version","3.3.8",
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
                             "session_id",store.sessionId(),"audit_schema_version",AuditStore.SCHEMA_VERSION,"text_language","en","text_format","resource-v1",
                             "request_prefix",handles.session(store.sessionId()),
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
                             "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation","persistent_handles",
-                                    "rendered_combat_visuals","rendered_ui_appearance","floating_text_events","visual_metrics","banner_events","strict_intents","quit_receipt_exit"),
+                                    "gameplay_facts","semantic_ui","semantic_feedback_events","world_cues_fov","strict_intents","quit_receipt_exit"),
                             "schema",CompactProtocol.info());break;
                 case "state.get":result=publicStateResult(state);break;
                 case "actions.list":result=pending!=null||cancelling!=null||executionUncertain?publicStateResult(state):actionState(state);break;
@@ -579,7 +571,7 @@ public final class MachineSession implements AutoCloseable {
     }
     private static Map<String,Object> actionState(GameController.State state){
         return map("scope_id",state.scopeId,"state_version",state.version,"phase",state.phase,
-                "observation",map("ui",state.publicState.get("ui")),"actions",state.actions);
+                "observation",map("ui",com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayObservation.uiForActions(state.publicState)),"actions",state.actions);
     }
     private static Map<String,Object> page(List<Map<String,Object>> rows,int limit,long until){
         boolean more=rows.size()>limit;

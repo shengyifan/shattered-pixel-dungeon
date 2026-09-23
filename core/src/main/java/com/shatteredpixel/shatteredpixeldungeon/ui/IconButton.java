@@ -26,21 +26,13 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
 
-public class IconButton extends Button implements RenderedStatus {
+public class IconButton extends Button implements GameplayStatus {
 	
 	protected Image icon;
 
-	@Override public java.util.Map<String,Object> renderedStatus() {
-		java.util.Map<String,Object> appearance=RenderedAppearance.image(icon);
-		return appearance.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("icon",appearance);
-	}
-
-	@Override public java.util.Map<String,Object> intentStatus() {
-		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>(renderedStatus());
-		// Specialized Buff/Spell controls own their distinct semantic records and overlays.
-		if(result.containsKey("icon")&&result.get("icon").equals(RenderedAppearance.image(icon)))
-			result.put("icon",RenderedAppearance.intentImage(icon,true,true));
-		return result;
+	@Override public java.util.Map<String,Object> gameplayStatus() {
+		java.util.Map<String,Object> meaning=GameplayIcons.image(icon);
+		return meaning.isEmpty()?java.util.Collections.emptyMap():java.util.Collections.singletonMap("icon",meaning);
 	}
 	
 	public IconButton(){
