@@ -118,6 +118,6 @@ semantics but do not promise uncompressed records on the wire.
 python3 desktop-control/src/test/python/autoplay.py --self-test
 ```
 
-旧批次曾通过离线检查和 Python 编译；协议实施结果见 [CLI 7 实施与验收](cli7-implementation.md)，当前修复和包验证见 [CLI.7.0.1 验收记录](cli-rebuild-7.0.1-20260923.md)。它们验证有限策略分支、取消和保存退出错误处理，不能当作真实规则、全场景覆盖或通关证明。正式 profile 和公开游玩日志曾使用忽略的 `desktop-control/build/playthroughs`，没有随源码提交；这是历史位置，2026-09-19 清理前该目录已不存在。上一批清理范围见 [CLI.7.0.0 清理重建](cli-rebuild-7.0.0-20260921.md)。
+旧批次曾通过离线检查和 Python 编译；协议实施结果见 [CLI 7 实施与验收](cli7-implementation.md)，修复实现及原生夹具结果见 [CLI.7.0.1 验收记录](cli-rebuild-7.0.1-20260923.md)，当前实际包验证与最新清理范围见 [CLI.7.0.1 清理重建](cli-rebuild-7.0.1-clean-20260923.md)。它们验证有限策略分支、取消和保存退出错误处理，不能当作真实规则、全场景覆盖或通关证明。原验收的生成附件已在后续清理中移除，文字结论保留为历史记录。正式 profile 和公开游玩日志曾使用忽略的 `desktop-control/build/playthroughs`，没有随源码提交；这是历史位置，2026-09-19 清理前该目录已不存在。
 
 面向模型的控制器必须及时暴露进行中的可取消观察，不得等动作全部结束后才统一输出。展示应使用同一个已解析响应对象；禁止按固定英文标签过滤、无标记裁图、统一删除危险说明或省略视觉提示。

@@ -1,5 +1,13 @@
 # CLI.7.0.1 implementation and macOS acceptance, 2026-09-23
 
+> Historical implementation acceptance. The later user-authorized
+> [2026-09-23 clean rebuild](cli-rebuild-7.0.1-clean-20260923.md) removed the original
+> generated build outputs, fixture profiles and JSON reports from their workspace
+> paths. All build-directory links, process results, counts and hashes below
+> describe this original acceptance snapshot; those paths are no longer current
+> workspace evidence. The clean rebuild report records the current package and
+> its separately executed verification.
+
 This batch adds public evidence for combat visuals, repairs asynchronous quit
 completion, removes UI identity-table object retention, and tightens Java and
 Python validation. It retains protocol 7, audit schema 10, the independent CLI v7
@@ -230,13 +238,15 @@ normal/additive rendering, actual submitted displacement, draw-order occlusion,
 history and the end of observed effects. Ending an observed episode due to
 occlusion does not imply that its underlying animation ended.
 
-The fixture JSON is retained under the ignored build directories. It is local
-validation evidence, not a shipped public profile or a gameplay achievement.
+The fixture JSON was retained under the ignored build directories until the
+subsequent clean rebuild. It was local validation evidence, not a shipped public
+profile or a gameplay achievement.
 
 ## Retained failures and corrections
 
-Failures remain in their original reports; successful retries are additional
-records rather than edits that turn an earlier failure into a pass.
+Failures were retained in their original reports until the subsequent clean
+rebuild; successful retries were additional records rather than edits that turned
+an earlier failure into a pass.
 
 | Earlier evidence | Observed failure | Correction and later evidence |
 | --- | --- | --- |
@@ -277,7 +287,7 @@ remain visible; failures are not suppressed. The 133 directly compiled UI and
 draw-boundary tests are a targeted repeat subset, not additional distinct Java
 tests to add to 677.
 
-Two preceding attempts remain recorded. One exposed a missing `markup_segment`
+Two preceding attempts were recorded. One exposed a missing `markup_segment`
 test-matrix entry and a real inherited-partial-provenance loss, now fixed with a
 failing-before/passing-after regression. The other detected the new report link
 before the report file had been written; the final full build verifies the link.

@@ -123,7 +123,7 @@ for these checks; the production client remains v7-only. Both corpus totals pass
 the combined-token reduction gate. Earlier 24.60% research results included other
 codecs and are not claimed for this release.
 
-Metrics, per-frame costs, original/combined examples and complete replay files are
+Metrics, per-frame costs, original/combined examples and complete replay files were
 generated under the ignored `desktop-control/build/cli7-token-study-20260920/`.
 
 ## Historical package and regression validation (2026-09-20)
@@ -131,7 +131,10 @@ generated under the ignored `desktop-control/build/cli7-token-study-20260920/`.
 The following build identity, help byte count and fixture paths belong to the
 implementation acceptance. Those generated artifacts have been cleaned. The
 subsequent [CLI.7.0.0 rebuild](cli-rebuild-7.0.0-20260921.md) is also historical;
-current package evidence is in the [CLI.7.0.1 acceptance report](cli-rebuild-7.0.1-20260923.md).
+current package evidence is in the [CLI.7.0.1 clean rebuild report](cli-rebuild-7.0.1-clean-20260923.md).
+The [CLI.7.0.1 implementation acceptance report](cli-rebuild-7.0.1-20260923.md)
+retains the earlier implementation and native fixture results; its original
+generated attachments were removed during the subsequent clean rebuild.
 
 The final no-cache/rerun/offline Gradle gate completed all 34 tasks successfully:
 **558 Java tests** (control-protocol 18, game-control 348, desktop-control 192),
@@ -178,7 +181,8 @@ Actual-package isolated checks:
 - Viewer checks preserve exact plain payload text and raw files, with bold restricted
   to SEND/RECV headers. All successfully started game sessions exit normally.
 
-Generated evidence is under these ignored fixture directories:
+Generated evidence was written under these ignored fixture directories, which
+have since been cleaned:
 
 - `desktop-control/build/fixtures/cli7-controller-a7a1f967375e48eca9c129ed6dd58286/`
 - `desktop-control/build/fixtures/packaging7.0/raw-81706453497a4e0992d205b276e20d7e/`

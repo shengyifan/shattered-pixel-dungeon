@@ -6,6 +6,7 @@
 
 ## CLI.7.0.1
 
+- Records the [2026-09-23 clean macOS rebuild](docs/cli-rebuild-7.0.1-clean-20260923.md), removal of previous generated build artifacts and runtime issue JSON, and fresh package verification. The original implementation acceptance remains historical evidence after its generated attachments are removed; this cleanup does not change CLI, protocol, schema or runtime behavior.
 - Adds render-backed combat warnings, charge/downed poses, facing, beam/lightning/projectile paths, summon/rock/bomb/arena markers, icon/color/shape evidence, HUD state and transient display history. Capture retains conservative current-scene/FOV/viewport/occlusion gates and never publishes hidden AI targets, timers or configured particle quantities.
 - Preserves actual floating text color/icon/cell, native item/Buff/ability/target/boss/quickslot appearance, ordered translated color runs, and current rendered quantitative samples. Sampled histories are explicitly labeled; raw transport and existing historical replies remain immutable. See [rendered combat observations](docs/cli-combat-visuals.md).
 - Keeps asynchronous quit queryable until the exact original terminal receipt is delivered, then exits once. Unrelated queries cannot complete shutdown, uncertain outcomes stay uncertain, and EOF cannot replay a dispatched quit.
