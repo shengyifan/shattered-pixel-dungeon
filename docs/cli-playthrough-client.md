@@ -26,8 +26,11 @@ functions. Preserve the transport bytes independently of any display limit. A
 packed node starts with a template index, not a control ID; the helper first expands
 the current observation's `act_templates` and `inv_templates`, restores applicable
 activity/cancel bindings before copying referenced operations, then expands
-`ui.node_templates` and node operation references into `acts`, before resolving
-item labels. All views use this representation. Null, false, zero,
+`ui.node_templates` and resolves node operation references from `acts` and item
+labels from same-frame inventory or floor entities. It expands entity/effect
+dictionaries and scoped defaults before validating semantic `subject` references
+against complete current hero/item/entity/buff facts. Ambiguous or missing subjects
+are decoding errors. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
 CLI.8.0.0 validates static parameters for every action, query and local `settle`,
@@ -55,6 +58,11 @@ nodes carry direct public target facts in `subject_data` and omit `subject`;
 `subject_data:null` with local `unresolved_subject` partial diagnostics means
 the owner was not uniquely established. A decoder must keep the node's label,
 locator and `ops`, and must not resolve a subject against a previous frame.
+The helper validates `subject`; it leaves the explicit reference in the decoded
+node rather than replacing it with another copy of its owner. `subject_data` is
+already inline. A textless node can carry its useful label in a resolved `ops`
+entry, so selecting controls by `node.text` alone is incomplete. Preserve the
+operation's constraints and use only its advertised gesture.
 
 If `decode_wire_response()` or `decode_client_response()` fails, `DecodeError.raw`
 retains a deep copy of the parsed failing wire JSON, not the original transport
@@ -108,6 +116,14 @@ Frozen `before/after` snapshots have independent tables and never become a live
 frame. `raw/reply` and source ASTs remain untouched. Full/src keep their field/source
 semantics but do not promise uncompressed records or ordinary renderer detail on
 the wire.
+
+Complete known-map rows and public world cues are independent of the viewport;
+modal UI still limits available actions. Decision-relevant warning changes can
+invalidate revisions, while decorative refreshes and completed-action feedback do
+not. For example, `electricity_flow` reports particle motion; `map.env` identifies
+the stable electrical hazard. Its animation alone is not a new decision binding.
+Use the response's actual `rev` and reobserve after a definite stale rejection;
+never infer a replacement revision from cue or event differences.
 
 ## Development gameplay driver and historical pause
 

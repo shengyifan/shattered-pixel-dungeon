@@ -1,5 +1,10 @@
 # CLI.8.0.0 semantic observation implementation
 
+Historical implementation acceptance: the generated attachments referenced below
+were removed from the workspace in the user-requested
+[2026-09-24 clean rebuild](cli-rebuild-8.0.0-clean-20260924.md). The dated results
+remain an implementation record; use that rebuild report for the current package.
+
 Status on 2026-09-24: the full Python, Java, static source-review and clean
 ARM64 build gates passed on flow build
 `35742561a7b6ae17c8db504c9ce58d7f6ba838ef65f33a1df8ea1549cfffae7c`.

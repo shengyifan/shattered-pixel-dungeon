@@ -43,6 +43,8 @@
 
 ## 测试输入和输出
 
+2026-09-24 的 [CLI.8.0.0 清理重建记录](cli-rebuild-8.0.0-clean-20260924.md) 记录当前文档校准、旧 build 和运行问题 JSON 清理及新包验收。CLI8 实施记录中旧生成附件的路径只作为历史记录；当前产物以该重建记录为准。
+
 静态源码基线保存在 [game-control/src/test/resources/cli-ui-coverage.json](../game-control/src/test/resources/cli-ui-coverage.json)，由Java清单生成器、回归检查和Python职业矩阵读取。它描述源代码输入入口，不是游戏存档或某次运行结果；基线内容本次没有改变。
 
 新测试的原始JSON/NDJSON、profile、数据库和结构化报告应写入被忽略的build输出目录，不再作为历史结果JSON平铺提交到docs。需要提交的验证结论使用简洁Markdown，明确版本、范围、结果和限制。已有专项Markdown保留为历史说明，配套旧JSON引用已解除。

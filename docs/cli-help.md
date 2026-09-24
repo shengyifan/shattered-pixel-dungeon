@@ -238,6 +238,9 @@ Every map has `w`, `h`, `types` and `rows`; absent `env` means no current enviro
 effects. Each row is `[y,x_start,tiles,visibility]`, one contiguous known segment.
 Rows are sorted by y/x. Unknown gaps are omitted and must never be filled as walls
 or safe floor. Multiple segments can occur on the same row.
+The complete known floor is returned on every observation, including explored
+cells outside the window or behind UI. Live enemies and danger cues still follow
+their public visibility rules; explored terrain does not reveal unseen enemies.
 
 For at most 64 types, `tiles` is a string indexing this message's `types` with:
 
@@ -371,12 +374,22 @@ Templates use deterministic first occurrence and are emitted only when the compl
 fragment, including the table, has fewer UTF-8 JSON bytes. Token savings are measured
 separately. JSON object member order is not semantic; array order always is.
 
-Expand `acts` and `inv` templates first, then restore applicable activity/cancel
-`rev/rid` bindings before copying referenced node operations. Expand UI node templates,
-resolve ordered operation references and item labels, then apply remaining scoped
-defaults. This order does not depend on JSON field order. References cannot borrow another frame or snapshot's
-tables. Invalid indexes, duplicate fields, overlapping fields, wrong row widths and
-control mismatches are decoding errors, never partial observations. Protocol 6's
+Decode one observation with these dependencies, regardless of JSON field order:
+
+1. Expand its `acts` and `inv` templates. Restore applicable activity/cancel
+   `rev/rid` bindings before copying any referenced operation.
+2. Expand entity/effect dictionaries and map rows, and restore scoped item facts.
+   Item bindings can come from `inv` or an expanded floor entity's `item`.
+3. Expand UI node templates; resolve ordered `ops` and item `label` references.
+   Restore UI/save defaults against this response's own scope and revision.
+4. Validate every semantic `subject` against these complete current facts, or
+   validate standalone `subject_data` directly. Keep references explicit; they
+   do not establish permanent object identities.
+
+References cannot borrow another frame or snapshot's tables. Invalid indexes,
+ambiguous item bindings, duplicate fields, overlapping fields, wrong row widths,
+missing subjects and control mismatches are decoding errors, never partial
+observations. Protocol 6's
 `op_defs`, `node_shapes` and whole-operation-list indexes are unsupported.
 Boolean and floating-point indexes are invalid. Detailed template validation and
 snapshot boundaries are specified in `docs/cli8-implementation.md`.
@@ -385,9 +398,10 @@ snapshot boundaries are specified in `docs/cli8-implementation.md`.
 {"acts":[{"op":"click","ctl":"c3"},{"op":"click","ctl":"c4"}],"ui":{"node_templates":[{"common":{"role":"button"},"fields":["id","text","ops"]}],"nodes":[[0,"c3","Drink",[0]],[0,"c4","Throw",[1]]]}}
 ```
 
-A current item-bound node may use `label:0` for its inventory item's exact `name`,
+A current item-bound node may use `label:0` for its bound item's exact `name`,
 or `label:1` for the game's standard title-case rendering. Resolve using that node's
-current `loc` and this observation's `inv`. Custom, unbound or protected labels stay
+current `loc` (or its item `subject.loc`) and this observation's `inv` or floor
+entity `item`. The binding must be unique. Custom, unbound or protected labels stay
 literal. Retained passive text leaves keep their captured identities and parent links.
 Where labels remain, full/src and frozen before/after retain literal labels and
 use the same record templates and action references. Each frozen snapshot is
@@ -413,6 +427,9 @@ make a node actionable without an actual op. `acts` retains the complete adverti
 action list in its original order, including node-bound operations. Node `ops`
 reference the same capabilities, not additional actions to execute. Preserve list
 order and all operation metadata when decoding either form.
+An operation's `label` can be the useful button text even when its node has no
+`text` or `label`. Inspect resolved `ops` as well as node text and explicit subject
+facts; never discard a textless control or invent a click from a label alone.
 
 Absent `enabled` on a play UI node means true; absent `dimmed` means false.
 Disabled options with informative text, actionable controls without text, item
@@ -489,7 +506,9 @@ do not infer a subject from a label or decoration.
 `data.cues.cues` contains public world cues sampled from existing game sources and
 current map/FOV knowledge. Its `status` is `last_observed` or `not_observed`.
 World-cue scope is independent of camera position, viewport and UI occlusion. A
-cue cannot expose an unseen cell, hidden AI target, future action or remaining
+live cue follows current FOV; source-reviewed static terrain indicators may also
+use already visited or mapped cells where the native display exposes them. A
+cue cannot expose an unknown cell, hidden AI target, future action or remaining
 timer. A cue's optional `appearance` contains reviewed semantic `style`,
 `shape`, `paused`, `stage`, `cells`, `partial`, `count` or `symbol`; drawing
 parameters do not. A radial `shape` such as `ring` or `halo` and
@@ -517,6 +536,12 @@ These are semantic feedback, not visual frame samples. Read
 them through the normal `events` query rather than unsolicited pipe replies.
 `ui.feedback` is current feedback, separate from queried event history. A past
 event is never a current action binding or target.
+Decision-relevant warnings and states participate in revision validation;
+decorative refreshes and completed-action feedback do not. In particular,
+`electricity_flow` is observed particle motion, while `map.env` owns the stable
+electrical hazard cells. Its animation alone does not invalidate a decision.
+Always use the displayed `rev`; clients must not predict or synthesize revisions
+from cue/event differences.
 
 An unknown native indicator keeps `unmapped_indicator:true` and local partial
 `pres` diagnostics with `field`, `code:"unmapped_indicator"` and a public

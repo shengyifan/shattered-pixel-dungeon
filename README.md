@@ -7,8 +7,9 @@ the [CLI8 implementation and validation ledger](docs/cli8-implementation.md).
 [Semantic combat observations](docs/cli-combat-visuals.md) describe public
 gameplay facts and FOV-scoped world cues. [CLI 7 implementation](docs/cli7-implementation.md),
 the [CLI.7.0.1 clean package report](docs/cli-rebuild-7.0.1-clean-20260923.md),
-and earlier token studies remain historical evidence for their own versions;
-CLI8 package validation is pending.
+and earlier token studies remain historical evidence for their own versions.
+The [CLI.8.0.0 clean rebuild record](docs/cli-rebuild-8.0.0-clean-20260924.md)
+records the current documentation refresh, generated-data cleanup and package checks.
 
 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://watabou.itch.io/).
 
