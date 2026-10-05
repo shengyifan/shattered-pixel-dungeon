@@ -151,7 +151,7 @@ class SemanticObservationWireTest(unittest.TestCase):
             (lambda d: d["hero"]["buffs"][0]["shown"]["progress"].update(total=0), "progress"),
             (lambda d: d["inv_templates"][0]["common"]["shown"]["charge"].update(fraction=False), "charge"),
             (lambda d: d["entity_defs"][0]["health_estimate"]["samples"][0].update(
-                with_shield=17), "health_estimate"),
+                with_shield=18), "health_estimate"),
             (lambda d: d["ui"].update(feedback=[{"kind": "floating", "cell": False}]), "feedback"),
         ]
         for mutate, pattern in mutations:

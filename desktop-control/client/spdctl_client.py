@@ -14,6 +14,11 @@ game action to take.  It only:
 The original input is retained on every returned object.  Unknown fields,
 explicit ``None``/``False``/``0`` values, text/source metadata, and literal labels
 are copied rather than normalized away.
+
+Displayed health bars allow one segment of foreground overhang: the CLI 8
+producer rounds the background width but rounds foreground widths up.  This
+bounded rendering tolerance preserves the reported samples without clamping
+them or interpreting them as exact health values.
 """
 
 from __future__ import annotations
@@ -668,7 +673,13 @@ def _health_estimate(value: Any, path: str) -> None:
         for key in ("total", "filled", "with_shield"):
             if type(sample.get(key)) is not int:
                 raise DecodeError(f"{sample_path}.{key} must be an integer")
-        if not (0 < sample["total"] and 0 <= sample["filled"] <= sample["with_shield"] <= sample["total"]):
+        # HealthBar.layout uses ceil for foreground pixels, while its exported
+        # background width uses round.  A fractional width (e.g. 21 1/3) can
+        # therefore produce 21/4/22, or even 21/22/22 at full health.  Permit
+        # only this one-segment overhang; retain every original value and keep
+        # the ordering, integer, and positive-total checks strict.
+        if not (0 < sample["total"]
+                and 0 <= sample["filled"] <= sample["with_shield"] <= sample["total"] + 1):
             raise DecodeError(f"{sample_path} has inconsistent displayed segments")
         if sample.get("basis") != "displayed":
             raise DecodeError(f"{sample_path}.basis must be displayed")
