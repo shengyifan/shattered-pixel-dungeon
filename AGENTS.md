@@ -1,6 +1,7 @@
 # Project working agreements
 
 - Read `docs/cli-help.md` before operating or changing `spdctl`. It is the authoritative English protocol manual and the bundled `--help` source. Keep this file concise; put detailed schemas and validation results in `docs/`.
+- Before planning gameplay or reviewing a playthrough, consult `memory/README.md` for recorded lessons. Historical coordinates, handles, resources and outcomes are evidence only; re-observe the current game before deciding an action.
 - Use CLI.8.0.0, protocol 8 and the currently advertised capabilities. New default profiles use the independent CLI v8 directory and schema 11; reject older or ambiguous nonempty profiles before writes, without migration or deletion.
 - Keep CLI requests, responses, help, diagnostics and test output English. The ordinary game GUI may remain Simplified Chinese and windowed.
 - Prefer the packaged `spdctl control --machine` controller during gameplay; it owns one `run --machine` child and its serial NDJSON connection. Direct clients must likewise retain one process. Do not read personal game saves or private audit state to choose actions. Isolated, explicitly marked test fixtures are separate from gameplay evidence.
