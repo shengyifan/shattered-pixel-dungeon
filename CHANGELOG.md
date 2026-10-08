@@ -4,6 +4,13 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
 
+## CLI.8.0.1
+
+- Separates a settle call's waiting budget from each sent request's non-renewable response deadline. Budget exhaustion yields explicit pending metadata; resuming a nonterminal receipt returns control without replaying a query or immediately starting another poll. Real transport failures, strict revisions, action outcomes and quit receipts remain distinct.
+- Retains already publicly revealed red attack warnings until native completion or cancellation across all reviewed producers, clipped to current FOV. Marker fade no longer stales decisions; shield semantics end at native removal while the GUI halo still fades. No hidden targets, timers, saved warning state or gameplay rule changes are introduced.
+- Adds safe current-frame access, controlled map-input failures and structured intent diagnostics to the optional transport-free Python client. Decodes pending metadata without inventing connection state, retains the bounded displayed-health rounding tolerance and never corrects or resends an intent.
+- Adds a constrained `macArm64OutputSubdir` packaging option so a versioned app image can be validated without replacing the running default bundle. Protocol 8, schema 11, the independent v8 profile and base game 3.3.8 remain unchanged. See [implementation and validation](docs/cli-8.0.1-recovery-validation.md).
+
 ## CLI.8.0.0
 
 - Refreshes current protocol guidance and records the [2026-09-24 clean macOS rebuild](docs/cli-rebuild-8.0.0-clean-20260924.md), including removal of previous generated artifacts and runtime issue JSON. CLI/protocol/schema versions and runtime implementation remain unchanged in this documentation/rebuild batch.

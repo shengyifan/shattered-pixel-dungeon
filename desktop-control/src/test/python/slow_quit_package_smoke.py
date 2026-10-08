@@ -53,19 +53,50 @@ def arm_next_request(client, barrier_directory):
     return request_id
 
 
+def assert_settled_quit(settled, request_id):
+    assert settled.get("controller") == "settle" and settled.get("st") == "completed", settled
+    assert "err" not in settled and settled.get("rid") == request_id, settled
+    assert "observation" not in settled and "discovery" not in settled, settled
+    outcome = settled["outcome"]["data"]
+    assert outcome["id"] == request_id and outcome["op"] == "quit", settled
+    assert outcome["st"] == "COMPLETED", settled
+    return settled
+
+
+def assert_pending_quit(result, request_id):
+    assert result.get("st") == "pending", result
+    if result.get("controller") == "exit":
+        assert result.get("err") == "CHILD_EXIT_TIMEOUT", result
+        assert_settled_quit(result["outcome"], request_id)
+        return
+    assert result.get("controller") == "settle" and "err" not in result, result
+    assert result.get("rid") == request_id and result.get("stage") == "receipt", result
+    assert "observation" not in result and "discovery" not in result, result
+    reason = result.get("pending_reason")
+    assert reason in {"action_pending", "budget_exhausted", "response_pending"}, result
+    if reason == "response_pending":
+        query = result["pending_request"]
+        assert query.get("v") == 8 and query.get("op") == "req", result
+        assert query.get("rid") == request_id and query.get("s") == result.get("s"), result
+        assert isinstance(query.get("id"), str) and query["id"] and query["id"] != request_id, result
+    else:
+        assert "pending_request" not in result, result
+    if "outcome" in result:
+        outcome = result["outcome"]["data"]
+        assert outcome["id"] == request_id and outcome["op"] == "quit", result
+        assert outcome["st"] in {"RECEIVED", "EXECUTING"}, result
+
+
 def settle_finished(client, request_id):
     for _ in range(12):
         result = client.request({"op": "settle", "rid": request_id, "timeout_ms": 5000})
         client.settle_calls += 1
-        if result.get("st") == "pending" or result.get("err") in {"RESPONSE_TIMEOUT", "CHILD_EXIT_TIMEOUT"}:
+        if result.get("st") == "pending":
+            assert_pending_quit(result, request_id)
             continue
         assert result.get("st") == "completed" and "err" not in result, result
         settled = result.get("outcome") if result.get("controller") == "exit" else result
-        assert settled.get("controller") == "settle", settled
-        assert "observation" not in settled and "discovery" not in settled, settled
-        assert settled["outcome"]["data"]["id"] == request_id, settled
-        assert settled["outcome"]["data"]["st"] == "COMPLETED", settled
-        return settled
+        return assert_settled_quit(settled, request_id)
     raise AssertionError("Released packaged quit did not finish")
 
 
@@ -136,7 +167,8 @@ def main():
         client.events.flush()
         pending = client.request({"op": "settle", "rid": request_id, "timeout_ms": 1000})
         client.settle_calls += 1
-        assert pending.get("st") == "pending" or pending.get("err") == "RESPONSE_TIMEOUT", pending
+        assert_pending_quit(pending, request_id)
+        assert pending.get("controller") == "settle", pending
         assert pending["outcome"]["data"]["st"] == "EXECUTING", pending
         assert client.process.poll() is None, "Packaged process exited before its terminal receipt"
         (output / "barrier.release").write_text("release native quit\n", encoding="utf-8")
@@ -149,6 +181,7 @@ def main():
         for failure in ("CHILD_STDIN_BROKEN", "SHUTDOWN_TIMEOUT", "FORCED_TERMINATION", "DRAIN_TIMEOUT"):
             assert failure not in statuses, failure
         report.update(result="passed", initial_in_progress_exposed=True, receipt_while_blocked="EXECUTING",
+                      bounded_settle_pending_reason=pending["pending_reason"],
                       terminal_receipt="COMPLETED", exit_code=client.process.returncode,
                       no_unsolicited_reply=True, no_state_after_quit=True, barrier_stack=marker.read_text().splitlines())
     except Exception as failure:

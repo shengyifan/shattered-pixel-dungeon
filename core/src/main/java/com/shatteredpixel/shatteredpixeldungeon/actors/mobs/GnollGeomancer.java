@@ -37,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.DarkGold;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
@@ -91,6 +92,7 @@ public class GnollGeomancer extends Mob {
 
 	private int[] throwingRocksFromPos = null;
 	private int throwingRockToPos = -1; //only need 1 to pos, it's always the same.
+	private PendingWarning[] throwingWarnings;
 
 	private int sapperID = -1;
 	private int[] sapperSpawns = null;
@@ -111,15 +113,20 @@ public class GnollGeomancer extends Mob {
 
 		if (throwingRocksFromPos != null){
 			boolean attacked = false;
-			for (int rock : throwingRocksFromPos) {
+			for (int i = 0; i < throwingRocksFromPos.length; i++) {
+				int rock = throwingRocksFromPos[i];
+				PendingWarning warning = throwingWarnings == null ? null : throwingWarnings[i];
 				if (rock != -1 && Dungeon.level.map[rock] == Terrain.MINE_BOULDER) {
 					attacked = true;
-					GnollGeomancer.doRockThrowAttack(this, rock, throwingRockToPos);
+					GnollGeomancer.doRockThrowAttack(this, rock, throwingRockToPos, warning);
+				} else if (warning != null) {
+					warning.cancel();
 				}
 			}
 
 			throwingRocksFromPos = null;
 			throwingRockToPos = -1;
+			throwingWarnings = null;
 
 			spend(TICK);
 			return !attacked;
@@ -600,16 +607,18 @@ public class GnollGeomancer extends Mob {
 						lastAbilityWasRockfall = false;
 						throwingRocksFromPos = new int[]{-1, -1, -1};
 						throwingRockToPos = aim.collisionPos;
+						throwingWarnings = new PendingWarning[throwingRocksFromPos.length];
 
 						//do up to 3 thrown rock attacks at once, depending on HP
 						for (int i = 0; i < 3 - curbracket; i++){
 							if (aim == null) break;
 
 							throwingRocksFromPos[i] = aim.sourcePos;
+							throwingWarnings[i] = PendingWarning.begin(GnollGeomancer.this);
 
 							Ballistica warnPath = new Ballistica(aim.sourcePos, aim.collisionPos, Ballistica.STOP_SOLID);
 							for (int j : warnPath.subPath(0, warnPath.dist)){
-								sprite.parent.add(new TargetedCell(j, 0xFF0000));
+								sprite.parent.add(new TargetedCell(j, 0xFF0000, throwingWarnings[i]));
 							}
 
 							aim = GnollGeomancer.prepRockThrowAttack(enemy, GnollGeomancer.this);
@@ -682,6 +691,11 @@ public class GnollGeomancer extends Mob {
 	private static ArrayList<Char> knockedChars = new ArrayList<>();
 
 	public static void doRockThrowAttack( Char source, int from, int to ){
+		doRockThrowAttack(source, from, to, null);
+	}
+
+	public static void doRockThrowAttack( Char source, int from, int to, PendingWarning warning ){
+		if (warning != null) warning.commit();
 
 		Level.set(from, Terrain.EMPTY);
 		GameScene.updateMap(from);
@@ -734,6 +748,7 @@ public class GnollGeomancer extends Mob {
 							Dungeon.level.pressCell(rockPath.collisionPos);
 						}
 
+						if (warning != null) warning.complete();
 						rocksInFlight--;
 						if (rocksInFlight <= 0) {
 							rocksInFlight = 0;
@@ -797,11 +812,13 @@ public class GnollGeomancer extends Mob {
 				pos++;
 			}
 		}
+		GnollRockFall rockFall = new GnollRockFall();
 		for (int i : rockCells){
-			source.sprite.parent.add(new TargetedCell(i, 0xFF0000));
+			source.sprite.parent.add(new TargetedCell(i, 0xFF0000, rockFall.warning()));
 		}
 		//don't want to overly punish players with slow move or attack speed
-		Buff.append(source, GnollRockFall.class, GameMath.gate(TICK, (int)Math.ceil(target.cooldown()), 3*TICK)).setRockPositions(rockCells);
+		rockFall.attachDelayed(source, GameMath.gate(TICK, (int)Math.ceil(target.cooldown()), 3*TICK));
+		rockFall.setRockPositions(rockCells);
 
 		source.sprite.attack(target.pos, new Callback() {
 			@Override

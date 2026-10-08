@@ -461,11 +461,13 @@ public class DM300 extends Mob {
 				pos++;
 			}
 		}
+		FallingRockBuff rockFall = new FallingRockBuff();
 		for (int i : rockCells){
-			sprite.parent.add(new TargetedCell(i, 0xFF0000));
+			sprite.parent.add(new TargetedCell(i, 0xFF0000, rockFall.warning()));
 		}
 		//don't want to overly punish players with slow move or attack speed
-		Buff.append(this, FallingRockBuff.class, GameMath.gate(TICK, (int)Math.ceil(target.cooldown()), 3*TICK)).setRockPositions(rockCells);
+		rockFall.attachDelayed(this, GameMath.gate(TICK, (int)Math.ceil(target.cooldown()), 3*TICK));
+		rockFall.setRockPositions(rockCells);
 
 	}
 

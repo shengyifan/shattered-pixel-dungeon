@@ -13,7 +13,10 @@ import java.util.stream.*;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 
 public final class CombatVisualInventory {
+    // Observe native lifecycle call sites as well as the registry's declarations and fields.
+    private static final String PENDING_WARNING="com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning";
     private static final Set<String> OBSERVATION_TYPES=new HashSet<>(Arrays.asList(
+            PENDING_WARNING,
             "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
             "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueProjection",
             "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayVisualKinds",
@@ -53,6 +56,8 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayVisualKinds"));
     /* Include field initializers/constants used by source adapters, not only method bodies. */
     private static final Set<String> SEMANTIC_BOUNDARIES=new HashSet<>(Arrays.asList(
+            PENDING_WARNING,
+            PENDING_WARNING+".Suspension",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayObservation",
@@ -214,6 +219,8 @@ public final class CombatVisualInventory {
                             if(displayAccessor||OBSERVATION_TYPES.stream().anyMatch(type->owner.equals(type)||owner.startsWith(type+"."))
                                     ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene")
                                             &&method.equals("observeSpectralWall")
+                                    ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite")
+                                            &&method.equals("processStateRemoval")
                                     ||(owner.equals("com.shatteredpixel.shatteredpixeldungeon.items.Item")
                                             ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon"))
                                             &&method.equals("status"))
@@ -234,7 +241,8 @@ public final class CombatVisualInventory {
                         if(symbol instanceof ExecutableElement){
                             String name=symbol.getSimpleName().toString(),owner=symbol.getEnclosingElement().toString();
                             boolean rendered=visual(symbol.getEnclosingElement().asType());
-                            if(rendered&&VISUAL_MUTATIONS.contains(name)
+                            if(owner.equals(PENDING_WARNING)||owner.startsWith(PENDING_WARNING+".")
+                                    ||rendered&&VISUAL_MUTATIONS.contains(name)
                                     ||PRODUCERS.contains(name)&&(owner.startsWith("com.shatteredpixel.")||owner.startsWith("com.watabou."))
                                     ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst")
                                             &&GAMEPLAY_BURST_PRODUCERS.contains(name))

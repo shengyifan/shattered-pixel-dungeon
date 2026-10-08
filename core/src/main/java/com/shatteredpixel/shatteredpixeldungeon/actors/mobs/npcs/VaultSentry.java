@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CheckedCell;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ConeAOE;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -56,6 +57,7 @@ public class VaultSentry extends NPC {
 
 	public int scansAfterCooldown = 1;
 	private int scansMade = 0;
+	private PendingWarning scanWarning;
 
 	//warning is unnecessary in some configurations where patterns are obvious.
 	public boolean giveWarning = false;
@@ -97,6 +99,11 @@ public class VaultSentry extends NPC {
 				SFXLastPlayed = ShatteredPixelDungeon.realTime;
 			}
 
+			if (scanWarning != null) {
+				scanWarning.complete();
+				scanWarning = null;
+			}
+
 			scanDirIdx++;
 			if (scanDirIdx >= scanDirs.length) {
 				scanDirIdx = 0;
@@ -123,7 +130,8 @@ public class VaultSentry extends NPC {
 
 				for (int cell : scan.cells) {
 					if (Dungeon.level.heroFOV[cell]) {
-						sprite.parent.add(new TargetedCell(cell, 0xFF0000));
+						if (scanWarning == null || !scanWarning.isPending()) scanWarning = PendingWarning.begin(this);
+						sprite.parent.add(new TargetedCell(cell, 0xFF0000, scanWarning));
 					}
 				}
 			}

@@ -1,6 +1,6 @@
 # Public CLI clients and per-frame decoding
 
-## Reusable CLI.8.0.0 reference helper
+## Reusable CLI.8.0.1 reference helper
 
 `desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
 module for consumers of the packaged controller. It does not launch the game,
@@ -13,13 +13,19 @@ and does not require Python.
   settle and exit wrappers. Inspect `problems` before assuming success. Its
   `current_frame` is only a current observation, never a receipt, historical reply
   or late response; original evidence remains separately accessible and in `raw`.
+- `result.require_current_frame()` returns a decoded current observation or raises
+  `ClientResponseError`. Original errors take precedence; an otherwise successful
+  result without an observation reports `NO_CURRENT_FRAME`. `require_success()`
+  alone does not promise an observation, map, actionable revision or saved action.
 - `validate_intent(current_frame, intent)` checks an explicit proposed controller
   intent against that frame's exact revision, scope and advertised operations. It
   does not modify or send the intent. This rejects a `select` for a click-only
   button and a `move` while only a modal choice is available.
 - `map_cell(current_frame, cell)` returns the decoded known cell or `None` for an
   unknown gap. Coordinates use that frame's `w`, rows and terrain dictionary.
-  It does not decide whether a cell is passable or promise successful travel.
+  It rejects absent/invalid frames, error replies and receipts with `IntentError`;
+  a valid observation without a map still returns `None`. It does not decide
+  whether a cell is passable or promise successful travel.
 
 Read transport through LF and parse the complete JSON object before using these
 functions. Preserve the transport bytes independently of any display limit. A
@@ -33,16 +39,32 @@ against complete current hero/item/entity/buff facts. Ambiguous or missing subje
 are decoding errors. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
-CLI.8.0.0 validates static parameters for every action, query and local `settle`,
+CLI.8.0.1 validates static parameters for every action, query and local `settle`,
 including required/extra fields and JSON integer versus boolean/float distinctions.
-An omitted settle rid can select the latest pending action; an explicit invalid
-rid is never treated as omitted. Node/action constraints additionally cover choices,
+An omitted settle rid resumes the owner of an outstanding query first, otherwise
+the latest pending action; an explicit invalid rid is never treated as omitted.
+Node/action constraints additionally cover choices,
 slider/zoom ranges, binding slots and text submission. Text length is measured in
 UTF-16 code units, matching the game. A proposed operation must satisfy one complete
 advertised descriptor; constraints from different descriptors are not combined.
 Scroll retains native clamping and omitted-axis behavior. Unknown map cells remain
 legal targets where the native operation permits them. Actual key acceptance,
 collision, damage, costs and completion still belong to the game response.
+
+`IntentError` remains a `ValueError` and additionally exposes `code`, `operation`,
+`fields`, `expected` and an independent `raw_intent` copy. Diagnostics identify
+invalid direction values, all unsupported fields, missing cancellation IDs and
+binding mismatches. Directions are exactly `N NE E SE S SW W NW`; the helper never
+corrects spelling, removes fields, fills IDs or rebinds revisions automatically.
+
+New settle pending wrappers expose `pending_reason`, `stage` and, only when a
+query response remains outstanding, `pending_request`. The decoder validates
+these explicit fields and preserves their evidence without maintaining a
+connection or cross-response state machine. Their absence in older wrappers
+means unknown, not idle. An ordinary budget yield adds no `problems`, but a
+pending result still does not satisfy `require_success()`. Queries and settle
+remain syntactically valid without a current observation. A successful state
+query never clears controller pending-action bookkeeping.
 
 `inv[].shown`, `buffs[].shown`, `health_estimate`, `hero.turn_progress`, explicit
 `ui.nodes[].subject` references and `ui.feedback` are public semantic facts, not
@@ -63,6 +85,13 @@ node rather than replacing it with another copy of its owner. `subject_data` is
 already inline. A textless node can carry its useful label in a resolved `ops`
 entry, so selecting controls by `node.text` alone is incomplete. Preserve the
 operation's constraints and use only its advertised gesture.
+
+Displayed health samples retain their original integers. Foreground ceil and
+background round can create a one-segment overhang: `21/4/22` and a full bar such
+as `21/22/22` are valid. The exact constraint is positive `total` and
+`0 <= filled <= with_shield <= total + 1`, with `basis:"displayed"`. Larger
+overhangs, booleans, floats and reversed ordering remain decoding errors. This
+does not infer exact HP, clamp public values or relax other semantic validation.
 
 If `decode_wire_response()` or `decode_client_response()` fails, `DecodeError.raw`
 retains a deep copy of the parsed failing wire JSON, not the original transport
@@ -133,7 +162,7 @@ never infer a replacement revision from cue or event differences.
 
 该脚本不是“已经能自主通关”的交付物。它有有界探索策略和接受 JSON 意图的持续连接模式，遇到未知生物、重要选择、首领或策略不支持的情况需要重新决策。已发现但未实现的例子是按探险手册钥匙记录优先处理锁门。实际失败和资源消耗没有回滚。
 
-当前源码中的开发驱动已改用协议 8（CLI.8.0.0 / schema 11），自动请求序号只使用十进制数字。同帧操作引用、记录模板、可见性简写和局部默认值由 `protocol8.py` 按当前手册展开；历史 v4 适配器仅用于显式离线基准。共享 `ActionResult` 将原动作 outcome/receipt 与当前 observation 分开；同步成功直接使用原回复，连续活动只轮询小回执并在成功终态后读一次当前 state，正常路径不读历史 reply。历史诊断不会覆盖当前 scope/revision，成功 quit 后不再查询。此脚本的 CLI8 测试结果仍以 [CLI8 实施记录](cli8-implementation.md)的最终验证为准。
+当前源码中的开发驱动已改用协议 8（CLI.8.0.1 / schema 11），自动请求序号只使用十进制数字。同帧操作引用、记录模板、可见性简写和局部默认值由 `protocol8.py` 按当前手册展开；历史 v4 适配器仅用于显式离线基准。共享 `ActionResult` 将原动作 outcome/receipt 与当前 observation 分开；同步成功直接使用原回复，连续活动只轮询小回执并在成功终态后读一次当前 state，正常路径不读历史 reply。历史诊断不会覆盖当前 scope/revision，成功 quit 后不再查询。此脚本的 CLI8 测试结果仍以 [CLI8 实施记录](cli8-implementation.md)的最终验证为准。
 
 客户端只使用公开协议、自己的公开响应日志和公开状态文件，不读取 `game.dat`、楼层文件或审计数据库。每个动作均使用会话前缀及发送前分配的短计数 ID 和当前版本；进行中的原动作通过新 ID 查询结果，不重发执行。待选物品窗口中的输入异常保留机器连接，避免因开发脚本结束而丢掉已消耗物品的选择机会。
 

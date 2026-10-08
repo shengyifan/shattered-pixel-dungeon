@@ -392,6 +392,7 @@ public abstract class Actor implements Bundlable {
 	public static synchronized void remove( Actor actor ) {
 		
 		if (actor != null) {
+			com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.cancelOwnedBy(actor);
 			all.remove( actor );
 			chars.remove( actor );
 			actor.onRemove();

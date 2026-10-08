@@ -59,7 +59,7 @@ public class Cli8SessionTest {
                 assertFalse(last(wire).containsKey("err"));
                 Map<?,?> hello = (Map<?,?>) last(wire).get("data");
                 assertEquals(8L, last(wire).get("v")); assertEquals(11L, hello.get("audit_schema_version"));
-                assertEquals("CLI.8.0.0", hello.get("cli_version"));
+                assertEquals("CLI.8.0.1", hello.get("cli_version"));
             }
         }
     }
@@ -95,7 +95,7 @@ public class Cli8SessionTest {
 
     @Test public void certifiedActionWithMissingTextKeepsItsSaveLogsAndAllowsTheNextAction() throws Exception {
         try (AuditStore store = new AuditStore(temporary.newFolder().toPath())) {
-            store.ensureScope("run:a", "run", "a"); store.beginSession("cli4-presentation","fixture-build","CLI.8.0.0",8);
+            store.ensureScope("run:a", "run", "a"); store.beginSession("cli4-presentation","fixture-build","CLI.8.0.1",8);
             FakeGame game = new FakeGame(); ByteArrayOutputStream wire = new ByteArrayOutputStream();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(wire, true, "UTF-8"), 1000)) {
                 send(store, session, request("act", "action.execute", "v1", map("action", "wait")));
@@ -146,7 +146,7 @@ public class Cli8SessionTest {
         java.nio.file.Path profile=temporary.newFolder().toPath();
         Map<String,Object> recorded;
         try(AuditStore store=new AuditStore(profile)) {
-            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.8.0.0",8);
+            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.8.0.1",8);
             com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance provenance=
                     new com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance(key->"Recorded %d");
             String source=provenance.onTextResource("当时显示17","fixture.recorded","zh",new Object[]{17});
@@ -158,7 +158,7 @@ public class Cli8SessionTest {
             store.endSession("CLOSED","finished");
         }
         try(AuditStore store=new AuditStore(profile)) {
-            store.beginSession("new-boot","new-build","CLI.8.0.0",8);
+            store.beginSession("new-boot","new-build","CLI.8.0.1",8);
             FakeGame game=new FakeGame();game.failObservation=true;
             ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {

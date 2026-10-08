@@ -13,7 +13,8 @@ import time
 import traceback
 import uuid
 
-from fixture_smoke import FixtureClient, act, assert_gui_environment, close_choices, freeze_runtime, norm
+from fixture_smoke import (FixtureClient, act, assert_gui_environment, close_choices,
+                           fixture_java_prefix, freeze_fixture_runtime, norm)
 from protocol8 import pages
 
 
@@ -133,12 +134,13 @@ def check_halo(client, name, initial):
     persistent = client.state()
     surviving = cues(persistent, "supernova_halo")
     assert surviving, {"persistent_native_halo_missing": cues(persistent)}
-    assert not cues(persistent, "red_target"), cues(persistent)
+    assert cues(persistent, "red_target") == cues(initial, "red_target"), cues(persistent)
+    assert persistent["state_version"] == initial["state_version"], "Native marker fade cannot end the pending nova warning"
     assert not any(entry.get("kind") == "floating" and entry.get("text") == "10..."
                    for entry in persistent["observation"]["ui"].get("feedback", []))
     for cue in surviving:
         check_appearance(persistent, cue, "halo")
-    # Once the initial target/text have faded, observe native halo pulsation without
+    # After the initial target image/text fade, observe the retained warning and halo pulsation without
     # advancing actors. Keep the original frames in public-trace.jsonl for diagnosis.
     passive = [persistent]
     passive_rows = [{"revision": persistent["state_version"], "halos": surviving}]
@@ -201,15 +203,17 @@ def check_wave(client, name, initial):
             "late_state_not_used_to_repair_missing_initial_warning": True}
 
 
-def run_one(root, classpath, runtime_id, name):
+def run_one(root, classpath, runtime_id, name, execution=None):
     profile = root / "desktop-control/build/fixtures" / ("radialvisual-" + name + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
-    command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
+    command = fixture_java_prefix(execution) + ["-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
                "com.shatteredpixel.shatteredpixeldungeon.control.desktop.FixtureLauncher", "--fixture", "combatvisual:" + name]
     client = RadialFixtureClient(command, profile)
     report = {"test_fixture": True, "counts_as_win": False, "fixture": name,
               "runtime_id": runtime_id, "profile": str(profile.relative_to(root))}
+    if execution is not None:
+        report["execution"] = execution
     try:
         hello = client.request("protocol.info"); assert hello["ok"], hello
         report.update(build_id=hello["result"]["build_id"], cli_version=hello["result"]["cli_version"])
@@ -243,15 +247,18 @@ def run_one(root, classpath, runtime_id, name):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cases", default=",".join(CASES))
+    parser.add_argument("--bundle", type=Path,
+                        help="Use this app's production JAR with isolated test fixtures and an explicitly reported host JVM")
     args = parser.parse_args()
     cases = args.cases.split(",")
     if not cases or any(name not in CASES for name in cases):
         parser.error("Unknown radial fixture case")
     root = Path(__file__).resolve().parents[4]
-    classpath, runtime_id = freeze_runtime(root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip())
-    results = [run_one(root, classpath, runtime_id, name) for name in cases]
+    classpath, runtime_id, execution = freeze_fixture_runtime(
+        root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip(), args.bundle)
+    results = [run_one(root, classpath, runtime_id, name, execution=execution) for name in cases]
     report = {"test_fixture": True, "counts_as_win": False, "runtime_id": runtime_id,
-              "total": len(results), "passed": sum(result["ok"] for result in results), "results": results}
+              "execution": execution, "total": len(results), "passed": sum(result["ok"] for result in results), "results": results}
     destination = root / "desktop-control/build/fixtures" / runtime_id / "radial-visual-results.json"
     destination.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({"report": str(destination), "passed": report["passed"], "total": report["total"]}), flush=True)

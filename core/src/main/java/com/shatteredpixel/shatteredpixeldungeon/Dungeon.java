@@ -237,6 +237,7 @@ public class Dungeon {
 	}
 	
 	public static void init() {
+		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear();
 		runId = nextRunId == null ? java.util.UUID.randomUUID().toString() : nextRunId;
 		nextRunId = null;
 		runIdentityNeedsSave = false;
@@ -306,6 +307,7 @@ public class Dungeon {
 	public static Level newLevel() {
 		
 		Dungeon.level = null;
+		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.synchronizeScope();
 		Actor.clear();
 		
 		Level level;
@@ -413,6 +415,7 @@ public class Dungeon {
 	}
 	
 	public static void resetLevel() {
+		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear();
 		
 		Actor.clear();
 		
@@ -487,6 +490,7 @@ public class Dungeon {
 		PathFinder.setMapSize(level.width(), level.height());
 		
 		Dungeon.level = level;
+		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.synchronizeScope();
 		hero.pos = pos;
 
 		if (hero.buff(AscensionChallenge.class) != null){
@@ -748,6 +752,7 @@ public class Dungeon {
 	}
 	
 	public static void loadGame( int save, boolean fullLoad ) throws IOException {
+		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear();
 		
 		Bundle bundle = FileUtils.bundleFromFile( GamesInProgress.gameFile( save ) );
 		runIdentityNeedsSave = !bundle.contains("run_uuid");
@@ -855,6 +860,7 @@ public class Dungeon {
 	public static Level loadLevel( int save ) throws IOException {
 		
 		Dungeon.level = null;
+		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.synchronizeScope();
 		Actor.clear();
 
 		Bundle bundle = FileUtils.bundleFromFile( GamesInProgress.depthFile( save, depth, branch ));
@@ -903,6 +909,7 @@ public class Dungeon {
 			updateLevelExplored();
 			Statistics.gameWon = false;
 			Rankings.INSTANCE.submit( false, cause );
+			com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.endRun();
 			com.watabou.noosa.Game.observer.onRunEnded(runId, false);
 		}
 	}
@@ -915,6 +922,7 @@ public class Dungeon {
 		hero.belongings.identify();
 
 		Rankings.INSTANCE.submit( true, cause );
+		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.endRun();
 		com.watabou.noosa.Game.observer.onRunEnded(runId, true);
 	}
 

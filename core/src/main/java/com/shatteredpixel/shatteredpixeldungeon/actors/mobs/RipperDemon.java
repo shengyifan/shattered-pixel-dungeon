@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -113,6 +114,7 @@ public class RipperDemon extends Mob {
 	protected boolean act() {
 		if (state == WANDERING){
 			leapPos = -1;
+			cancelLeapWarning();
 		}
 
 		AiState lastState = state;
@@ -133,6 +135,14 @@ public class RipperDemon extends Mob {
 
 	private int leapPos = -1;
 	private float leapCooldown = 0;
+	private PendingWarning leapWarning;
+
+	private void cancelLeapWarning() {
+		if (leapWarning != null) {
+			leapWarning.cancel();
+			leapWarning = null;
+		}
+	}
 
 	public class Hunting extends Mob.Hunting {
 
@@ -145,6 +155,7 @@ public class RipperDemon extends Mob {
 
 				if (rooted){
 					leapPos = -1;
+					cancelLeapWarning();
 					return true;
 				}
 
@@ -176,6 +187,7 @@ public class RipperDemon extends Mob {
 					//if no valid position, cancel the leap
 					if (bouncepos == -1) {
 						leapPos = -1;
+						cancelLeapWarning();
 						return true;
 					} else {
 						endPos = bouncepos;
@@ -185,6 +197,9 @@ public class RipperDemon extends Mob {
 				}
 
 				//do leap
+				final PendingWarning warning = leapWarning;
+				leapWarning = null;
+				if (warning != null) warning.commit();
 				sprite.visible = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[leapPos] || Dungeon.level.heroFOV[endPos];
 				sprite.jump(pos, leapPos, new Callback() {
 					@Override
@@ -209,6 +224,7 @@ public class RipperDemon extends Mob {
 						leapPos = -1;
 						sprite.idle();
 						Dungeon.level.occupyCell(RipperDemon.this);
+						if (warning != null) warning.complete();
 						next();
 					}
 				});
@@ -260,7 +276,9 @@ public class RipperDemon extends Mob {
 						spend(GameMath.gate(attackDelay(), (int)Math.ceil(enemy.cooldown()), 3*attackDelay()));
 						if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[leapPos]){
 							GLog.w(Messages.get(RipperDemon.this, "leap"));
-							sprite.parent.addToBack(new TargetedCell(leapPos, 0xFF0000));
+							cancelLeapWarning();
+							leapWarning = PendingWarning.begin(RipperDemon.this);
+							sprite.parent.addToBack(new TargetedCell(leapPos, 0xFF0000, leapWarning));
 							((RipperSprite)sprite).leapPrep( leapPos );
 							Dungeon.hero.interrupt();
 						}

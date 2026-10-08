@@ -6,6 +6,7 @@ It never supplies a destination, hidden target, inventory locator or action choi
 These artificially prepared runs are not victory evidence.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -599,7 +600,7 @@ def run_one(root, classpath, fixture, runtime_id):
     return report
 
 
-def freeze_runtime(root, classpath):
+def freeze_runtime(root, classpath, *, copy_all=False):
     """Keep Gradle rebuilds in other tasks from rewriting jars beneath a live JVM."""
     runtime_id = "runtime-" + uuid.uuid4().hex
     directory = root / "desktop-control/build/fixtures" / runtime_id
@@ -608,7 +609,7 @@ def freeze_runtime(root, classpath):
     sources = []
     for index, value in enumerate(classpath.split(os.pathsep)):
         source = Path(value).resolve()
-        if source.exists() and source.is_relative_to(root):
+        if source.exists() and (copy_all or source.is_relative_to(root)):
             destination = directory / (str(index) + "-" + source.name)
             if source.is_dir():
                 shutil.copytree(source, destination)
@@ -623,6 +624,128 @@ def freeze_runtime(root, classpath):
             frozen.append(str(source))  # versioned Gradle dependency cache artifacts are immutable
     (directory / "test-runtime.json").write_text(json.dumps({"test_fixture": True, "runtime_id": runtime_id, "copies": sources}, indent=2) + "\n")
     return os.pathsep.join(frozen), runtime_id
+
+
+def runtime_sha256(path):
+    """Hash one file or an ordered directory tree without launching a process."""
+    path = Path(path)
+    digest = hashlib.sha256()
+    files = sorted(candidate for candidate in path.rglob("*") if candidate.is_file()) if path.is_dir() else [path]
+    for candidate in files:
+        if path.is_dir():
+            digest.update(candidate.relative_to(path).as_posix().encode() + b"\0")
+        with candidate.open("rb") as source:
+            for block in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(block)
+        if path.is_dir():
+            digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def freeze_fixture_runtime(root, classpath, bundle=None):
+    """Freeze a test runtime, optionally taking all production code from one app JAR.
+
+    The bundle mode deliberately uses a host Java executable and FixtureLauncher.
+    It exercises packaged production code with test-only scenario injection, not
+    the ordinary spdctl launcher or the application's bundled JVM.
+    """
+    root = Path(root).resolve()
+    execution = {"mode": "repository_test_runtime", "ordinary_spdctl_launch": False,
+                 "test_only_launcher": "com.shatteredpixel.shatteredpixeldungeon.control.desktop.FixtureLauncher"}
+    if bundle is None:
+        frozen, runtime_id = freeze_runtime(root, classpath)
+        return frozen, runtime_id, execution
+
+    bundle = Path(bundle).expanduser().resolve()
+    app_directory = bundle / "Contents/app"
+    config = app_directory / "spdctl-jvm.cfg"
+    config_bytes = config.read_bytes()
+    section, jar_values = None, []
+    for line in config_bytes.decode("utf-8").splitlines():
+        line = line.strip()
+        if line.startswith("[") and line.endswith("]"):
+            section = line
+        elif section == "[Application]" and line.startswith("app.classpath="):
+            jar_values.append(line.partition("=")[2])
+    if len(jar_values) != 1 or not jar_values[0].startswith("$APPDIR/"):
+        raise ValueError("Bundle configuration must name exactly one APPDIR production JAR")
+    jar_name = jar_values[0][len("$APPDIR/"):]
+    if Path(jar_name).name != jar_name or not jar_name.endswith(".jar"):
+        raise ValueError("Bundle classpath must name one direct application JAR")
+    production_jar = (app_directory / jar_name).resolve()
+    if production_jar.parent != app_directory.resolve() or not production_jar.is_file():
+        raise ValueError("Bundle production JAR must exist inside Contents/app")
+    with zipfile.ZipFile(production_jar) as archive:
+        required = {
+            "com/shatteredpixel/shatteredpixeldungeon/control/desktop/SpdctlLauncher.class",
+            "com/shatteredpixel/shatteredpixeldungeon/scenes/GameScene.class",
+            "com/badlogic/gdx/Gdx.class",
+        }
+        if not required <= set(archive.namelist()):
+            raise ValueError("Bundle JAR is missing required production runtime classes")
+
+    entries = [Path(value).resolve() for value in classpath.split(os.pathsep) if value]
+    test_classes = (root / "desktop-control/build/classes/java/test").resolve()
+    test_resources = (root / "desktop-control/build/resources/test").resolve()
+    launcher_class = test_classes / "com/shatteredpixel/shatteredpixeldungeon/control/desktop/FixtureLauncher.class"
+    if test_classes not in entries or not launcher_class.is_file():
+        raise ValueError("Compile the existing fixture test classes before selecting a bundle")
+    fixtures = [test_classes]
+    if test_resources in entries and test_resources.is_dir():
+        fixtures.append(test_resources)
+    # No host production classes, repository production JARs or Gradle dependency
+    # fallback can hide a missing/obsolete production class in the selected app.
+    selected = [production_jar, *fixtures]
+    java_value = str(Path(os.environ["JAVA_HOME"]) / "bin/java") if os.environ.get("JAVA_HOME") else shutil.which("java")
+    if not java_value or not Path(java_value).is_file() or not os.access(java_value, os.X_OK):
+        raise ValueError("A host Java executable is required for bundled production fixture tests")
+    java = Path(java_value).resolve()
+    java_identity = {"source": "host", "executable": str(java), "sha256": runtime_sha256(java),
+                     "bundled_jvm_used": False, "jvm_image_frozen": False}
+    release = java.parent.parent / "release"
+    if release.is_file():
+        java_identity.update(release_file=str(release), release_sha256=runtime_sha256(release),
+                             release=release.read_text())
+    source_hashes = [runtime_sha256(path) for path in selected]
+    frozen, runtime_id = freeze_runtime(root, os.pathsep.join(str(path) for path in selected), copy_all=True)
+    frozen_entries = [Path(value) for value in frozen.split(os.pathsep)]
+    for source, destination, digest in zip(selected, frozen_entries, source_hashes):
+        if runtime_sha256(destination) != digest:
+            raise ValueError(f"Runtime source changed while freezing: {source}")
+    runtime_directory = root / "desktop-control/build/fixtures" / runtime_id
+    config_copy = runtime_directory / "bundle-spdctl-jvm.cfg"
+    config_copy.write_bytes(config_bytes)
+    bundle_identity = {"path": str(bundle), "config": str(config),
+                       "config_sha256": runtime_sha256(config_copy), "frozen_config": str(config_copy)}
+    plist = bundle / "Contents/Info.plist"
+    if plist.is_file():
+        plist_copy = runtime_directory / "bundle-Info.plist"
+        shutil.copy2(plist, plist_copy)
+        bundle_identity.update(info_plist_sha256=runtime_sha256(plist_copy), frozen_info_plist=str(plist_copy))
+    execution.update(
+        mode="packaged_production_with_test_fixtures", bundle=bundle_identity, java=java_identity,
+        production_jar={"source": str(production_jar), "frozen": str(frozen_entries[0]), "sha256": source_hashes[0]},
+        classpath=[{"source": str(source), "frozen": str(destination), "sha256": digest,
+                    "role": "packaged_production" if index == 0 else "test_fixture"}
+                   for index, (source, destination, digest) in enumerate(zip(selected, frozen_entries, source_hashes))],
+        excluded_host_classpath=[str(entry) for entry in entries if entry not in fixtures],
+        java_environment_removed=["JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS", "CLASSPATH"],
+    )
+    manifest_path = runtime_directory / "test-runtime.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["execution"] = execution
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+    return frozen, runtime_id, execution
+
+
+def fixture_java_prefix(execution=None):
+    """Select the recorded host Java without ambient injected JVM/classpath options."""
+    if not execution or execution.get("mode") != "packaged_production_with_test_fixtures":
+        return ["java"]
+    command = ["/usr/bin/env"]
+    for name in execution["java_environment_removed"]:
+        command.extend(["-u", name])
+    return command + [execution["java"]["executable"]]
 
 
 def main():

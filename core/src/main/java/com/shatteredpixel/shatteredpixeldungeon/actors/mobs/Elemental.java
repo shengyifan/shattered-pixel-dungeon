@@ -38,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLiquidFlame;
@@ -267,6 +268,7 @@ public abstract class Elemental extends Mob {
 		}
 
 		private int targetingPos = -1;
+		private PendingWarning fireballWarning;
 
 		@Override
 		protected boolean act() {
@@ -275,6 +277,7 @@ public abstract class Elemental extends Mob {
 				//account for bolt hitting walls, in case position suddenly changed
 				targetingPos = new Ballistica( pos, targetingPos, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET ).collisionPos;
 				if (sprite != null && (sprite.visible || Dungeon.level.heroFOV[targetingPos])) {
+					if (fireballWarning != null) fireballWarning.commit();
 					sprite.zap( targetingPos );
 					return false;
 				} else {
@@ -285,6 +288,7 @@ public abstract class Elemental extends Mob {
 
 				if (state != HUNTING){
 					targetingPos = -1;
+					cancelFireballWarning();
 				}
 
 				return super.act();
@@ -319,10 +323,12 @@ public abstract class Elemental extends Mob {
 
 				if (!candidates.isEmpty()){
 					targetingPos = Random.element(candidates);
+					cancelFireballWarning();
 
 					for (int i : PathFinder.NEIGHBOURS9){
 						if (!Dungeon.level.solid[targetingPos + i]) {
-							sprite.parent.addToBack(new TargetedCell(targetingPos + i, 0xFF0000));
+							if (fireballWarning == null || !fireballWarning.isPending()) fireballWarning = PendingWarning.begin(this);
+							sprite.parent.addToBack(new TargetedCell(targetingPos + i, 0xFF0000, fireballWarning));
 						}
 					}
 
@@ -339,6 +345,7 @@ public abstract class Elemental extends Mob {
 			} else {
 
 				if (sprite != null && (sprite.visible || Dungeon.level.heroFOV[targetingPos])) {
+					if (fireballWarning != null) fireballWarning.commit();
 					sprite.zap( targetingPos );
 					return false;
 				} else {
@@ -378,7 +385,18 @@ public abstract class Elemental extends Mob {
 			}
 
 			targetingPos = -1;
+			if (fireballWarning != null) {
+				fireballWarning.complete();
+				fireballWarning = null;
+			}
 			rangedCooldown = Random.NormalIntRange( 3, 5 );
+		}
+
+		private void cancelFireballWarning() {
+			if (fireballWarning != null) {
+				fireballWarning.cancel();
+				fireballWarning = null;
+			}
 		}
 
 		@Override

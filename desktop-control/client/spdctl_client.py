@@ -48,7 +48,8 @@ GLOBAL_OPERATIONS = {
     "cancel", "back", "reveal", "zoom", "pan", "untarget",
 }
 QUERY_OPERATIONS = {"info", "state", "actions", "req", "history", "events", "settle"}
-DIRECTIONS = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"}
+DIRECTION_ORDER = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+DIRECTIONS = set(DIRECTION_ORDER)
 
 # These values are evidence or nested historical payloads, not another live
 # compact frame to merge into the containing response.
@@ -95,7 +96,28 @@ class DecodeError(ValueError):
 
 
 class IntentError(ValueError):
-    """A proposed intent is not mechanically bound to the supplied frame."""
+    """A rejected intent with diagnostic fields; never a corrected request."""
+
+    def __init__(self, message: str, *, code: str = "INVALID_INTENT",
+                 operation: Optional[str] = None, fields: Sequence[str] = (),
+                 expected: Any = None):
+        super().__init__(message)
+        self.code = code
+        self.operation = operation
+        self.fields = tuple(fields)
+        self.expected = copy.deepcopy(expected)
+        self.raw_intent: Any = None
+        self._intent_attached = False
+
+    def preserve_intent(self, value: Any) -> None:
+        if self._intent_attached:
+            return
+        self.raw_intent = copy.deepcopy(value)
+        self._intent_attached = True
+        if self.operation is None and isinstance(value, Mapping):
+            operation = value.get("op")
+            if isinstance(operation, str):
+                self.operation = operation
 
 
 class ClientResponseError(RuntimeError):
@@ -1097,6 +1119,21 @@ class ClientResponse:
     problems: Tuple[ClientProblem, ...] = ()
 
     @property
+    def pending_reason(self) -> Optional[str]:
+        """The controller's explicit settle reason; absence remains unknown."""
+        return self.raw.get("pending_reason") if self.controller == "settle" else None
+
+    @property
+    def stage(self) -> Optional[str]:
+        """The controller's explicit settle stage, never inferred from a reply."""
+        return self.raw.get("stage") if self.controller == "settle" else None
+
+    @property
+    def pending_request(self) -> Optional[Mapping[str, Any]]:
+        """A copy of the outstanding internal query, not a request to resend."""
+        return _copy(self.raw.get("pending_request")) if self.controller == "settle" else None
+
+    @property
     def current_frame(self) -> Optional[WireResponse]:
         # A settle wrapper's receipt/outcome and discovery are never the current
         # gameplay observation.  Only its explicit observation can be installed.
@@ -1122,12 +1159,60 @@ class ClientResponse:
         return self.response is None or not self.response.is_error
 
     def require_success(self) -> "ClientResponse":
+        """Require this result's success, not a frame or the original action's success."""
         if not self.ok:
             problems = self.problems or (
                 ClientProblem("controller", str(self.raw.get("err", "NOT_COMPLETED")), self.raw),
             )
             raise ClientResponseError(problems)
         return self
+
+    def require_current_frame(self) -> WireResponse:
+        """Require an error-free result with a current observation, not actionability."""
+        self.require_success()
+        frame = self.current_frame
+        if frame is None:
+            raise ClientResponseError((
+                ClientProblem("current_frame", "NO_CURRENT_FRAME", _copy(self.raw)),
+            ))
+        return frame
+
+
+def _validate_settle_pending(source: Mapping[str, Any]) -> None:
+    fields = {"pending_reason", "stage", "pending_request"} & set(source)
+    if not fields:
+        return
+    if source.get("st") != "pending":
+        raise DecodeError("settle pending fields require st pending")
+    if not {"pending_reason", "stage"} <= fields:
+        raise DecodeError("settle pending fields require both pending_reason and stage")
+    if source["pending_reason"] not in (
+            "action_pending", "budget_exhausted", "response_pending"):
+        raise DecodeError("settle pending_reason is not a supported reason")
+    if source["stage"] not in ("receipt", "discovery", "observation"):
+        raise DecodeError("settle stage is not a supported stage")
+    if source["pending_reason"] == "action_pending" and source["stage"] != "receipt":
+        raise DecodeError("settle pending_reason action_pending requires stage receipt")
+    if source.get("pending_reason") == "response_pending" and "pending_request" not in source:
+        raise DecodeError("settle pending_reason response_pending requires pending_request")
+    if "pending_request" in source:
+        if source.get("pending_reason") != "response_pending":
+            raise DecodeError("settle pending_request requires pending_reason response_pending")
+        request = _dict(source["pending_request"], "$.pending_request")
+        if type(request.get("v")) is not int or request.get("v") != PROTOCOL_VERSION:
+            raise DecodeError("$.pending_request.v must be integer protocol version 8")
+        if not isinstance(request.get("id"), str) or not request["id"]:
+            raise DecodeError("$.pending_request.id must be a non-empty string")
+        stage_operations = {"receipt": "req", "discovery": "info", "observation": "state"}
+        if request.get("op") not in tuple(stage_operations.values()):
+            raise DecodeError("$.pending_request.op must be an internal settle query")
+        if request["op"] != stage_operations[source["stage"]]:
+            raise DecodeError("$.pending_request.op does not match the settle stage")
+        if source["stage"] == "receipt":
+            for field in ("rid", "s"):
+                if (not isinstance(request.get(field), str) or not request[field]
+                        or request[field] != source.get(field)):
+                    raise DecodeError(f"$.pending_request.{field} must match the original settle {field}")
 
 
 def _wire_stage(value: Any, stage: str,
@@ -1211,6 +1296,7 @@ def _decode_client_response(value: Mapping[str, Any]) -> ClientResponse:
         if response is None:
             raise DecodeError("controller:response has no wire response")
     elif controller == "settle":
+        _validate_settle_pending(source)
         outcome = _wire_stage(source.get("outcome"), "outcome", problems)
         observation = _wire_stage(source.get("observation"), "observation", problems)
         discovery = _wire_stage(source.get("discovery"), "discovery", problems)
@@ -1267,8 +1353,17 @@ def _decode_client_response(value: Mapping[str, Any]) -> ClientResponse:
 
 def map_cell(frame: WireResponse, cell: int) -> Optional[Mapping[str, Any]]:
     """Return one known decoded cell; unknown map gaps remain ``None``."""
+    if not isinstance(frame, WireResponse):
+        raise IntentError("map_cell requires a decoded current WireResponse",
+                          code="NO_CURRENT_FRAME" if frame is None else "INVALID_FRAME",
+                          fields=("current_frame",), expected="WireResponse observation")
+    if frame.is_error or not frame.is_observation:
+        raise IntentError("map_cell requires a current observation, not an error or receipt",
+                          code="INVALID_FRAME", fields=("current_frame",),
+                          expected="WireResponse observation")
     if type(cell) is not int:
-        raise IntentError("cell must be an integer")
+        raise IntentError("cell must be an integer", code="INVALID_VALUE",
+                          fields=("cell",), expected="integer")
     data = frame.data
     dungeon_map = data.get("map") if isinstance(data, Mapping) else None
     if not isinstance(dungeon_map, Mapping):
@@ -1292,12 +1387,16 @@ class IntentValidation:
 def _current_wire(value: Any) -> WireResponse:
     if isinstance(value, ClientResponse):
         if value.problems:
-            raise IntentError("client response contains unresolved errors or transport diagnostics")
+            raise IntentError("client response contains unresolved errors or transport diagnostics",
+                              code="UNRESOLVED_RESPONSE", fields=("current_frame",))
         value = value.current_frame
     if not isinstance(value, WireResponse):
-        raise IntentError("current_frame must be a decoded current WireResponse")
+        raise IntentError("current_frame must be a decoded current WireResponse",
+                          code="NO_CURRENT_FRAME" if value is None else "INVALID_FRAME",
+                          fields=("current_frame",), expected="WireResponse observation")
     if value.is_error or not value.is_observation:
-        raise IntentError("current_frame is not an actionable live observation")
+        raise IntentError("current_frame is not a live observation", code="INVALID_FRAME",
+                          fields=("current_frame",), expected="WireResponse observation")
     return value
 
 
@@ -1321,7 +1420,8 @@ def _utf16_length(value: str) -> int:
 
 def _intent_identifier(value: Any, field: str, maximum: int = 2**31 - 1) -> None:
     if not isinstance(value, str) or not value or _utf16_length(value) > maximum:
-        raise IntentError(f"{field} must be a valid non-empty identifier")
+        raise IntentError(f"{field} must be a valid non-empty identifier", code="INVALID_VALUE",
+                          fields=(field,), expected="non-empty identifier")
     try:
         value.encode("utf-16-le")
     except UnicodeEncodeError as error:
@@ -1344,7 +1444,8 @@ def _intent_boolean(value: Any, field: str) -> None:
 
 def _intent_choice(value: Any, field: str, choices: Sequence[str]) -> None:
     if not isinstance(value, str) or value not in choices:
-        raise IntentError(f"{field} has an unsupported value")
+        raise IntentError(f"{field} must be one of {', '.join(choices)}", code="INVALID_VALUE",
+                          fields=(field,), expected=tuple(choices))
 
 
 def _intent_number(value: Any, field: str) -> None:
@@ -1360,14 +1461,30 @@ def _intent_number(value: Any, field: str) -> None:
 
 def _validate_intent_syntax(source: Mapping[str, Any]) -> str:
     """Static peer of protocol RequestArguments; no current-frame or gameplay assumptions."""
-    if "v" in source or "id" in source:
-        raise IntentError("controller intents must not contain v or id")
+    try:
+        return _check_intent_syntax(source)
+    except IntentError as error:
+        error.preserve_intent(source)
+        raise
+
+
+def _check_intent_syntax(source: Mapping[str, Any]) -> str:
+    if not isinstance(source, Mapping):
+        raise IntentError("intent must be an object")
+    if any(not isinstance(field, str) for field in source):
+        raise IntentError("intent field names must be strings", code="INVALID_FIELD")
     op = source.get("op")
     if not isinstance(op, str) or op not in _PARAMETERS:
         raise IntentError("intent.op is not a known controller operation")
     envelope = {"op"} if op == "settle" else {"op", "s", "rev"}
-    if set(source) - envelope - set(_PARAMETERS[op]):
-        raise IntentError(f"intent contains an unsupported field for {op}")
+    unsupported = tuple(sorted(set(source) - envelope - set(_PARAMETERS[op])))
+    if unsupported:
+        envelope_order = ("op",) if op == "settle" else ("op", "s", "rev")
+        allowed = envelope_order + tuple(sorted(_PARAMETERS[op]))
+        ownership = "; the controller owns v and id" if {"v", "id"} & set(unsupported) else ""
+        raise IntentError(f"{op} does not accept fields: {', '.join(unsupported)}; "
+                          f"allowed fields: {', '.join(allowed)}{ownership}",
+                          code="UNSUPPORTED_FIELDS", fields=unsupported, expected=allowed)
     for field in ("s", "rev"):
         if field in source:
             _intent_identifier(source[field], field, 256)
@@ -1384,7 +1501,10 @@ def _validate_intent_syntax(source: Mapping[str, Any]) -> str:
     if "view" in source:
         _intent_choice(source["view"], "view", ("play", "full"))
     if op == "move":
-        _intent_choice(source.get("dir"), "dir", tuple(DIRECTIONS))
+        if "dir" not in source:
+            raise IntentError("move requires dir", code="MISSING_FIELD", fields=("dir",),
+                              expected=DIRECTION_ORDER)
+        _intent_choice(source["dir"], "dir", DIRECTION_ORDER)
     elif op == "cell":
         _intent_integer(source.get("cell"), "cell", 0)
         if "mode" in source:
@@ -1392,7 +1512,12 @@ def _validate_intent_syntax(source: Mapping[str, Any]) -> str:
     elif op == "item":
         _intent_identifier(source.get("loc"), "loc")
     elif op in ("cancel", "req"):
-        _intent_identifier(source.get("rid"), "rid", 128)
+        if "rid" not in source:
+            message = ("cancel requires rid from the currently advertised cancel binding"
+                       if op == "cancel" else "req requires rid")
+            raise IntentError(message, code="MISSING_FIELD", fields=("rid",),
+                              expected="non-empty original request identifier")
+        _intent_identifier(source["rid"], "rid", 128)
     elif op == "click" and "g" in source:
         _intent_choice(source["g"], "g", ("click", "right", "middle", "long"))
     elif op == "choose":
@@ -1508,6 +1633,14 @@ def validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentVali
     not need a current frame; they are returned unchanged after rejecting the
     controller-owned ``v``/``id`` fields.
     """
+    try:
+        return _validate_intent(current_frame, intent)
+    except IntentError as error:
+        error.preserve_intent(intent)
+        raise
+
+
+def _validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentValidation:
     if not isinstance(intent, Mapping):
         raise IntentError("intent must be an object")
     source = intent
@@ -1523,10 +1656,12 @@ def validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentVali
     if not isinstance(revision, str) or not revision:
         raise IntentError("current frame has no actionable rev")
     if source.get("rev") != revision:
-        raise IntentError("intent.rev must exactly equal the displayed current rev")
+        raise IntentError("intent.rev must exactly equal the displayed current rev",
+                          code="BINDING_MISMATCH", fields=("rev",), expected={"rev": revision})
     scope = frame.frame.get("s")
     if "s" in source and source["s"] != scope:
-        raise IntentError("intent.s does not match the displayed current scope")
+        raise IntentError("intent.s does not match the displayed current scope",
+                          code="BINDING_MISMATCH", fields=("s",), expected={"s": scope})
 
     data = frame.data or {}
     advertised = []
@@ -1561,11 +1696,14 @@ def validate_intent(current_frame: Any, intent: Mapping[str, Any]) -> IntentVali
             raise IntentError("operation is not advertised in this frame")
 
     if op == "cancel":
+        bindings = tuple({key: descriptor[key] for key in ("rid", "rev") if key in descriptor}
+                         for descriptor in advertised)
         advertised = [descriptor for descriptor in advertised
                       if descriptor.get("rid") == source.get("rid")
                       and descriptor.get("rev") == source.get("rev")]
         if not advertised:
-            raise IntentError("cancel must use the advertised activity rid and rev")
+            raise IntentError("cancel must use the advertised activity rid and rev",
+                              code="BINDING_MISMATCH", fields=("rid", "rev"), expected=bindings)
 
     advertised = [descriptor for descriptor in advertised
                   if _descriptor_accepts(op, descriptor, node, source)]

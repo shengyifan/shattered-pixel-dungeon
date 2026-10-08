@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.GnollSapperSprite;
@@ -62,6 +63,7 @@ public class GnollSapper extends Mob {
 
 	public int throwingRockFromPos = -1;
 	public int throwingRockToPos = -1;
+	private PendingWarning throwingWarning;
 
 	public void linkPartner(Char c){
 		losePartner();
@@ -132,11 +134,14 @@ public class GnollSapper extends Mob {
 			boolean attacked = Dungeon.level.map[throwingRockFromPos] == Terrain.MINE_BOULDER;
 
 			if (attacked) {
-				GnollGeomancer.doRockThrowAttack(this, throwingRockFromPos, throwingRockToPos);
+				GnollGeomancer.doRockThrowAttack(this, throwingRockFromPos, throwingRockToPos, throwingWarning);
+			} else if (throwingWarning != null) {
+				throwingWarning.cancel();
 			}
 
 			throwingRockFromPos = -1;
 			throwingRockToPos = -1;
+			throwingWarning = null;
 
 			spend(TICK);
 			return !attacked;
@@ -195,10 +200,11 @@ public class GnollSapper extends Mob {
 						lastAbilityWasRockfall = false;
 						throwingRockFromPos = aim.sourcePos;
 						throwingRockToPos = aim.collisionPos;
+						throwingWarning = PendingWarning.begin(GnollSapper.this);
 
 						Ballistica warnPath = new Ballistica(aim.sourcePos, aim.collisionPos, Ballistica.STOP_SOLID);
 						for (int i : warnPath.subPath(0, warnPath.dist)){
-							sprite.parent.add(new TargetedCell(i, 0xFF0000));
+							sprite.parent.add(new TargetedCell(i, 0xFF0000, throwingWarning));
 						}
 
 						Dungeon.hero.interrupt();

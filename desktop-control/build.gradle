@@ -80,7 +80,7 @@ tasks.register('generateBuildCatalog') {
         def output = new File(catalogDirectory.get().asFile, 'control-build.json')
         output.parentFile.mkdirs()
         output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName,
-            cli_version: 'CLI.8.0.0', protocol_version: 8, audit_schema_version: 11, java_source: '11', build_java: System.getProperty('java.version'),
+            cli_version: 'CLI.8.0.1', protocol_version: 8, audit_schema_version: 11, java_source: '11', build_java: System.getProperty('java.version'),
             sqlite_jdbc: '3.53.4.0', entries: entries])
     }
 }
@@ -155,10 +155,23 @@ tasks.register('release', Jar) {
 tasks.register('packageMacArm64', Exec) {
     dependsOn release
     dependsOn buildNativeTransport
-    def dest = layout.buildDirectory.dir('app-macos-arm64')
+    def subdir = providers.gradleProperty('macArm64OutputSubdir').orElse('app-macos-arm64').get()
+    // Packaging replaces this directory. Its namespace must not overlap staging,
+    // native binaries or frozen runtime images which may belong to a running JVM.
+    if (subdir.length() > 128 || !(subdir ==~ /app-macos-arm64(?:-[A-Za-z0-9][A-Za-z0-9._-]*)?/))
+        throw new GradleException('macArm64OutputSubdir must be app-macos-arm64 or app-macos-arm64-<safe suffix> (at most 128 characters)')
+    def dest = layout.buildDirectory.dir(subdir)
+    inputs.property('macArm64OutputSubdir', subdir)
     doFirst {
         if (!System.getProperty('os.name').toLowerCase().contains('mac') || System.getProperty('os.arch') != 'aarch64')
             throw new GradleException('Native Apple Silicon JDK required')
+        def buildRoot = layout.buildDirectory.get().asFile
+        def destination = dest.get().asFile
+        if (java.nio.file.Files.isSymbolicLink(buildRoot.toPath())
+                || java.nio.file.Files.isSymbolicLink(destination.toPath())
+                || (destination.exists() && !destination.isDirectory())
+                || destination.canonicalFile.parentFile != buildRoot.canonicalFile)
+            throw new GradleException('macArm64OutputSubdir must resolve directly inside the non-symlink build directory')
         def staging = layout.buildDirectory.dir('package-input').get().asFile
         delete staging
         staging.mkdirs()

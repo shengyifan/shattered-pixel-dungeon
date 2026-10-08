@@ -7,7 +7,8 @@ import time
 import traceback
 import uuid
 
-from fixture_smoke import FixtureClient, assert_gui_environment, close_choices, freeze_runtime, reach_game
+from fixture_smoke import (FixtureClient, assert_gui_environment, close_choices,
+                           fixture_java_prefix, freeze_fixture_runtime, reach_game)
 from low_frequency_smoke import act
 from protocol8 import pages
 
@@ -54,19 +55,27 @@ def test_red(client):
     seen = [event for event in events if any(cue["kind"] == "red_target" for cue in event["data"]["cues"])]
     assert seen, events
     historical = seen[-1]
-    # Native TargetedCell fades in real render time. No second game action is issued.
+    # Native TargetedCell fades in real render time; its public attack episode remains pending.
     time.sleep(2.3)
     faded = client.state()
-    assert not kind_cells(faded, "red_target"), visual(faded)
+    assert kind_cells(faded, "red_target") == cells, visual(faded)
     assert faded["observation"]["hero"] == warning["observation"]["hero"]
+    assert faded["state_version"] == warning["state_version"], "Marker fade must not invalidate an unresolved warning"
     later_events = read_visual_events(client)
     assert historical in later_events, "A displayed warning must remain in public event history"
-    assert any(event["sequence"] > historical["sequence"]
-               and not any(cue["kind"] == "red_target" for cue in event["data"]["cues"]) for event in later_events)
+    assert not any(event["sequence"] > historical["sequence"]
+                   and not any(cue["kind"] == "red_target" for cue in event["data"]["cues"]) for event in later_events)
     assert visual(faded)["map_context"] == visual(warning)["map_context"]
+    resolved = act(client, "wait")
+    assert not kind_cells(resolved, "red_target"), visual(resolved)
+    assert resolved["state_version"] != faded["state_version"], "Native attack resolution must still invalidate intent"
+    final_events = read_visual_events(client)
+    assert historical in final_events, "Attack resolution cannot rewrite earlier public evidence"
+    assert any(event["sequence"] > historical["sequence"]
+               and not any(cue["kind"] == "red_target" for cue in event["data"]["cues"]) for event in final_events)
     return {"native_boss": "YogDzewa", "red_cells_in_final_wait_response": sorted(cells),
-            "render_fade_does_not_reconstruct_ai_target_list": True,
-            "seen_warning_retained_in_public_history": True, "red_target_absent_in_later_draw_event": True,
+            "pending_warning_survives_native_fade_with_same_revision": True,
+            "seen_warning_retained_in_public_history": True, "red_target_cleared_after_native_resolution": True,
             "game_action_after_warning_before_fade": False}
 
 
@@ -233,16 +242,18 @@ def test_bomb_hidden(client):
             "hidden_smoke_and_number_not_published": True, "hidden_no_drawable_did_not_block": True}
 
 
-def run_one(root, classpath, runtime_id, name, test=None):
+def run_one(root, classpath, runtime_id, name, test=None, execution=None):
     profile = root / "desktop-control/build/fixtures" / ("visual-" + name + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
-    command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
+    command = fixture_java_prefix(execution) + ["-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
                "com.shatteredpixel.shatteredpixeldungeon.control.desktop.FixtureLauncher", "--fixture", "lowfreq:visual-" + name]
     client = FixtureClient(command, profile)
     report = dict(test_fixture=True, counts_as_win=False, fixture="visual-" + name,
                   profile=str(profile.relative_to(root)), runtime_id=runtime_id,
                   completion_assertions="final_action_response")
+    if execution is not None:
+        report["execution"] = execution
     try:
         hello = client.request("protocol.info")
         assert hello["ok"], hello
@@ -279,14 +290,17 @@ def run_one(root, classpath, runtime_id, name, test=None):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cases", default="red,goo,hidden,frozen")
+    parser.add_argument("--bundle", type=Path,
+                        help="Use this app's production JAR with isolated test fixtures and an explicitly reported host JVM")
     args = parser.parse_args()
     cases = args.cases.split(",")
     assert all(case in {"red", "goo", "hidden", "frozen", "bomb", "bomb-hidden"} for case in cases)
     root = Path(__file__).resolve().parents[4]
-    classpath, runtime_id = freeze_runtime(root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip())
-    results = [run_one(root, classpath, runtime_id, name) for name in cases]
+    classpath, runtime_id, execution = freeze_fixture_runtime(
+        root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip(), args.bundle)
+    results = [run_one(root, classpath, runtime_id, name, execution=execution) for name in cases]
     report = dict(test_fixture=True, counts_as_win=False, runtime_id=runtime_id,
-                  total=len(results), passed=sum(row["ok"] for row in results), results=results)
+                  execution=execution, total=len(results), passed=sum(row["ok"] for row in results), results=results)
     (root / "desktop-control/build/fixtures" / runtime_id / "visual-cue-results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     if not all(row["ok"] for row in results):
         raise SystemExit(1)

@@ -18,18 +18,26 @@ public class QuitControllerSessionTest {
     @Test public void asyncQuitExposesPendingThenSettlesActualReceiptAndWaitsForExit()throws Exception{
         try(QuitSessionHarness session=new QuitSessionHarness(temporary.newFolder().toPath())){
             SessionTransport transport=new SessionTransport(session);
-            StableController controller=new StableController(transport,1000);
+            StableController controller=new StableController(transport,StableController.RESPONSE_TIMEOUT_MS);
             Map<String,Object> hello=controller.handshake();
             Map<String,Object> initial=controller.accept(map("op","quit","rev",hello.get("rev")));
             assertEquals("in_progress",initial.get("st"));assertTrue(session.reader.isAlive());
             Map<String,Object> pending=controller.accept(map("op","settle","timeout_ms",1000));
-            // A bounded settle may have sent its next receipt just before the deadline.
-            // That query stays in flight and must resume after completion, without replay.
-            if(!"pending".equals(pending.get("st")))assertEquals(pending.toString(),"RESPONSE_TIMEOUT",pending.get("err"));
+            // A receipt sent near the call deadline remains a normal pending
+            // exchange, not a transport timeout, and resumes without replay.
+            assertEquals(pending.toString(),"pending",pending.get("st"));
+            assertFalse(pending.containsKey("err"));
             assertEquals("EXECUTING",body(object(pending.get("outcome"))).get("st"));
             assertEquals(0,transport.exitWaits);
             session.game.completeQuit();
             Map<String,Object> complete=controller.accept(map("op","settle"));
+            // A query queued while quit was executing may still report that
+            // boundary. Resuming it deliberately returns control before polling.
+            if("pending".equals(complete.get("st"))) {
+                assertEquals("action_pending",complete.get("pending_reason"));
+                assertFalse(complete.containsKey("pending_request"));
+                complete=controller.accept(map("op","settle"));
+            }
             assertEquals("completed",complete.get("st"));assertEquals(0,complete.get("exit_code"));
             assertEquals("COMPLETED",body(object(complete.get("outcome"))).get("st"));
             assertEquals(1,((List<?>)body(object(complete.get("outcome"))).get("save")).size());

@@ -21,9 +21,9 @@ public final class VisualCueCollector {
     private Gizmo observingSource;
     /** Identity-only observer metadata. It contains no public payload, changing measurement, or clock. */
     private static final class SourceOccurrence {
-        final Gizmo source; final long lifetime; final Object episode;
-        SourceOccurrence(Gizmo source){
-            this.source=source;this.lifetime=source.observationLifetime();
+        final Object source; final long lifetime; final Object episode;
+        SourceOccurrence(Object source){
+            this.source=source;this.lifetime=source instanceof Gizmo?((Gizmo)source).observationLifetime():0;
             this.episode=source instanceof Emitter?((Emitter)source).observedDrawEpisode():null;
         }
         @Override public int hashCode(){return 31*(31*System.identityHashCode(source)+Long.hashCode(lifetime))+System.identityHashCode(episode);}
@@ -32,7 +32,7 @@ public final class VisualCueCollector {
     }
     private static final class CueIdentity {
         final SourceOccurrence occurrence; final VisualCue cue;
-        CueIdentity(Gizmo source,VisualCue cue){this.occurrence=new SourceOccurrence(source);this.cue=cue;}
+        CueIdentity(Object source,VisualCue cue){this.occurrence=new SourceOccurrence(source);this.cue=cue;}
         @Override public int hashCode(){return 31*occurrence.hashCode()+cue.hashCode();}
         @Override public boolean equals(Object value){return value instanceof CueIdentity
                 &&occurrence.equals(((CueIdentity)value).occurrence)&&cue.equals(((CueIdentity)value).cue);}
@@ -80,6 +80,7 @@ public final class VisualCueCollector {
             }
             collecting=true;
             try { collectSources(scene); } finally { collecting=false; }
+            finishPendingWarnings();
             finishMovingDraws();
             boolean ready=finishParticleDraws();
             for(Map.Entry<String,Set<Visual>> entry:densities.entrySet()){
@@ -93,7 +94,7 @@ public final class VisualCueCollector {
                     .thenComparing(c->c.direction,Comparator.nullsFirst(Comparator.naturalOrder()))
                     .thenComparing(c->c.appearance==null?"":c.appearance.toString()));
             lastPublished=Collections.unmodifiableList(cues);
-            // A complete empty frame is still a generation; it clears disappeared warnings.
+            // Complete frames include pending public warnings even after their marker images fade.
             frameObserver.onVisualCues(runId,level,depth,lastPublished,ready,occurrenceKey());
             for(FloatingText text:drawnTexts)if(floatingAttached(text)&&known(text.observationCell())){
                 text.recordDisplayedAppearance(word->floatingPart(text,word),true);
@@ -119,7 +120,7 @@ public final class VisualCueCollector {
         return level!=null&&(known(cell)||VisualCueProjection.knownCell(cell,level.length(),level.visited)
                 ||VisualCueProjection.knownCell(cell,level.length(),level.mapped));
     }
-    private void add(Gizmo source,VisualCue cue){offered.put(new CueIdentity(source,cue),cue);}
+    private void add(Object source,VisualCue cue){offered.put(new CueIdentity(source,cue),cue);}
     private Object occurrenceKey(){
         Set<SourceOccurrence> occurrences=new LinkedHashSet<>();
         for(CueIdentity identity:offered.keySet())occurrences.add(identity.occurrence);
@@ -128,7 +129,15 @@ public final class VisualCueCollector {
     private VisualCue semantic(VisualCue cue){
         return new VisualCue(cue.kind,cue.cell,cue.sourceCell,cue.direction,null,null,cue.appearance);
     }
-    public void targetDrawn(Visual source,int cell){cellVisualDrawn(source,new VisualCue("red_target",cell));}
+    public void targetDrawn(Visual source,int cell){
+        if(source instanceof TargetedCell&&((TargetedCell)source).warning!=null){
+            if(collecting&&drawable(source)&&known(cell))((TargetedCell)source).warning.remember(cell);
+        }else cellVisualDrawn(source,new VisualCue("red_target",cell));
+    }
+    private void finishPendingWarnings(){
+        for(TargetedCell.PendingWarning warning:TargetedCell.PendingWarning.current())
+            for(int cell:warning.cells())if(known(cell))add(warning,new VisualCue("red_target",cell));
+    }
     public void cellVisualDrawn(Visual source,VisualCue cue){
         if(!collecting||!drawable(source))return;
         if(cue.sourceCell!=null){linkedFragments(Collections.singletonList(source),cue);return;}

@@ -41,6 +41,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
@@ -219,10 +220,11 @@ public class ChaoticCenser extends Trinket {
 		if (!candidateCells.isEmpty()) {
 			Integer targetCell = Random.chances(candidateCells);
 			if (targetCell != null) {
-				Buff.affect(Dungeon.hero, GasSpewer.class, Dungeon.hero.cooldown()).set(targetCell, gasToSpawn, (int)gasQuantity);
+				GasSpewer spewer = Buff.affect(Dungeon.hero, GasSpewer.class, Dungeon.hero.cooldown());
+				spewer.set(targetCell, gasToSpawn, (int)gasQuantity);
 				GLog.w(Messages.get(ChaoticCenser.class, "spew", Messages.titleCase(Messages.get(gasToSpawn, "name")) ));
 				if (target.sprite != null && target.sprite.parent != null) {
-					target.sprite.parent.addToBack(new TargetedCell(targetCell, 0xFF0000));
+					target.sprite.parent.addToBack(new TargetedCell(targetCell, 0xFF0000, spewer.warning()));
 				}
 				return true;
 			}
@@ -241,8 +243,17 @@ public class ChaoticCenser extends Trinket {
 
 		private Class<?extends Blob> gasType;
 		private int gasQuantity;
+		private PendingWarning pendingWarning;
+
+		private PendingWarning warning() {
+			if (pendingWarning == null) pendingWarning = PendingWarning.begin(this);
+			if (target == null) pendingWarning.cancel();
+			return pendingWarning;
+		}
 
 		public void set( int targetCell, Class<?extends Blob> gasType, int gasQuantity){
+			if (pendingWarning != null) pendingWarning.cancel();
+			pendingWarning = null;
 			this.targetCell = targetCell;
 
 			depth = Dungeon.depth;
@@ -265,6 +276,9 @@ public class ChaoticCenser extends Trinket {
 
 				MagicMissile.boltFromChar(Dungeon.hero.sprite.parent, MISSILE_VFX.get(gasType), Dungeon.hero.sprite, targetCell, null);
 				Sample.INSTANCE.play(Assets.Sounds.GAS);
+				if (pendingWarning != null) pendingWarning.complete();
+			} else if (pendingWarning != null) {
+				pendingWarning.cancel();
 			}
 
 			detach();

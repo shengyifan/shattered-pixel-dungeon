@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.EarthParticle;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
@@ -42,6 +43,19 @@ public class DelayedRockFall extends FlavourBuff {
 
 	private int[] rockPositions;
 	private ArrayList<Emitter> rockEmitters = new ArrayList<>();
+	private PendingWarning pendingWarning;
+
+	public PendingWarning warning() {
+		if (pendingWarning == null) pendingWarning = PendingWarning.begin(this);
+		return pendingWarning;
+	}
+
+	/** Matches Buff.append's attachment and delay, after the native markers are added. */
+	public void attachDelayed( Char target, float duration ) {
+		boolean attached = attachTo(target);
+		spend(duration * target.resist(getClass()));
+		if (!attached && pendingWarning != null) pendingWarning.cancel();
+	}
 
 	public void setRockPositions( List<Integer> rockPositions ) {
 		this.rockPositions = new int[rockPositions.size()];
@@ -54,6 +68,7 @@ public class DelayedRockFall extends FlavourBuff {
 
 	@Override
 	public boolean act() {
+		if (pendingWarning != null) pendingWarning.commit();
 		for (int i : rockPositions){
 			CellEmitter.get( i ).start( Speck.factory( Speck.ROCK ), 0.07f, 10 );
 
@@ -68,6 +83,7 @@ public class DelayedRockFall extends FlavourBuff {
 		PixelScene.shake( 3, 0.7f );
 		Sample.INSTANCE.play(Assets.Sounds.ROCKS);
 
+		if (pendingWarning != null) pendingWarning.complete();
 		detach();
 		return super.act();
 	}

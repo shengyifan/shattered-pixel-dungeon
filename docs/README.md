@@ -6,8 +6,9 @@
 
 - [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
 - [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
-- [CLI.8.0.0 实施与验证记录](cli8-implementation.md)：协议 8、schema 11、独立 v8 profile、先前 Java／静态检查及最新修复后待重跑的门槛。
-- [CLI.8.0.0 语义战斗观察](cli-combat-visuals.md)：公开状态、UI 反馈及按 FOV 覆盖的世界提示。
+- [CLI.8.0.1 恢复与预警修复](cli-8.0.1-recovery-validation.md)：结算软预算、真实预警生命周期、Python 防误用及独立版本目录打包。
+- [CLI.8.0.0 实施与验证记录](cli8-implementation.md)：协议 8 首版实施及当时验证证据。
+- [CLI.8.0.1 语义战斗观察](cli-combat-visuals.md)：公开状态、UI 反馈及按 FOV 覆盖的世界提示。
 - [完整单帧响应的 token 研究](cli-complete-frame-token-study-20260920.md)：CLI 7 之前的离线研究；原测量包含未部署候选，不能当作 CLI8 收益。
 - [代理操作约定](../AGENTS.md)：当前协议解码、操作、记录和发布要求。
 
@@ -43,7 +44,8 @@
 
 ## 测试输入和输出
 
-2026-09-24 的 [CLI.8.0.0 清理重建记录](cli-rebuild-8.0.0-clean-20260924.md) 记录当前文档校准、旧 build 和运行问题 JSON 清理及新包验收。CLI8 实施记录中旧生成附件的路径只作为历史记录；当前产物以该重建记录为准。
+2026-09-24 的 [CLI.8.0.0 清理重建记录](cli-rebuild-8.0.0-clean-20260924.md) 保留当时清理及包验收证据。
+当前修复和版本目录产物见 [CLI.8.0.1 验证记录](cli-8.0.1-recovery-validation.md)；旧生成附件路径只作为历史记录。
 
 静态源码基线保存在 [game-control/src/test/resources/cli-ui-coverage.json](../game-control/src/test/resources/cli-ui-coverage.json)，由Java清单生成器、回归检查和Python职业矩阵读取。它描述源代码输入入口，不是游戏存档或某次运行结果；基线内容本次没有改变。
 

@@ -705,6 +705,10 @@ public final class GameController implements RuntimeObserver {
         GameSnapshotter.Capture captured=snapshotter.capture();
         Map<String,Object> pub=new LinkedHashMap<>(captured.publicState);
         boolean active=runActive();
+        // Dungeon retains the old Level in menus. A true menu scope ends observer-only warning
+        // knowledge; same-level GameScene rebuilds and in-run alchemy/transition scenes do not.
+        if(!active&&!(Game.scene() instanceof GameScene))
+            com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear();
         Map<String,Object> uiState=ui.frozenUi(active?captured.publicState:Collections.emptyMap());
         pub.put("ui",uiState);
         if(Game.scene() instanceof GameScene)pub.put("visual_cues",visualState());

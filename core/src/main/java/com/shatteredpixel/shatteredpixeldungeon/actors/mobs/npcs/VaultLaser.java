@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.WardSprite;
@@ -53,6 +54,7 @@ public class VaultLaser extends NPC {
 
 	public int shotsAfterCooldown = 1;
 	private int shotsFired = 0;
+	private PendingWarning beamWarning;
 
 	//warning is unnecessary in some configurations where patterns are obvious.
 	public boolean giveWarning = true;
@@ -86,6 +88,11 @@ public class VaultLaser extends NPC {
 				}
 			}
 
+			if (beamWarning != null) {
+				beamWarning.complete();
+				beamWarning = null;
+			}
+
 			laserDirIdx++;
 			if (laserDirIdx >= laserDirs.length){
 				laserDirIdx = 0;
@@ -106,7 +113,8 @@ public class VaultLaser extends NPC {
 			Ballistica nextBeam = new Ballistica(pos, laserDirs[laserDirIdx], Ballistica.STOP_SOLID);
 			for (int cell : nextBeam.subPath(1, nextBeam.dist)){
 				if (Dungeon.level.heroFOV[cell]) {
-					sprite.parent.add(new TargetedCell(cell, 0xFF0000));
+					if (beamWarning == null || !beamWarning.isPending()) beamWarning = PendingWarning.begin(this);
+					sprite.parent.add(new TargetedCell(cell, 0xFF0000, beamWarning));
 				}
 			}
 

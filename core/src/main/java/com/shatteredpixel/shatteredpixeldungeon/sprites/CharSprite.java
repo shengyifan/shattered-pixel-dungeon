@@ -567,6 +567,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 			case SHIELDED:
 				if (shield != null) {
 					shield.putOut();
+					shield = null;
 				}
 				break;
 			case HEARTS:

@@ -201,6 +201,7 @@ public class Ratmogrify extends ArmorAbility {
 
 		public void setup(Mob original) {
 			this.original = original;
+			com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.transferOwnedBy(original, this);
 			original.clearTime();
 
 			HP = original.HP;
@@ -236,6 +237,7 @@ public class Ratmogrify extends ArmorAbility {
 			if (timeLeft <= 0){
 				Mob original = getOriginal();
 				this.original = null;
+				com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.transferOwnedBy(this, original);
 				GameScene.add(original);
 
 				EXP = 0;
@@ -256,6 +258,7 @@ public class Ratmogrify extends ArmorAbility {
 		}
 
 		public void makeAlly() {
+			com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.cancelOwnedBy(this);
 			allied = true;
 			alignment = Alignment.ALLY;
 			timeLeft = Float.POSITIVE_INFINITY;

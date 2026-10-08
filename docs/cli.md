@@ -1,6 +1,6 @@
 # spdctl control interface
 
-Current contract: **CLI.8.0.0 / protocol 8 / audit schema 11**, base game **3.3.8**.
+Current contract: **CLI.8.0.1 / protocol 8 / audit schema 11**, base game **3.3.8**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI8 implementation](cli8-implementation.md) and the repository [agent working agreements](../AGENTS.md).
 Protocol 8 keeps complete same-frame action sharing and record templates and changes
 combat/UI reporting to [semantic public facts](cli-combat-visuals.md). The
@@ -8,12 +8,24 @@ combat/UI reporting to [semantic public facts](cli-combat-visuals.md). The
 implementation](cli7-implementation.md), earlier token studies and validation
 reports remain historical evidence, not current protocol instructions.
 
+CLI.8.0.1 separates settle call budgets from response deadlines, retains publicly
+revealed attack warnings until native resolution, and strengthens the optional
+Python client's safe-access diagnostics. See the [patch validation record](cli-8.0.1-recovery-validation.md).
+
 ## Start an independent v8 profile
 
 ```sh
 ./bin/spdctl control --machine
 "desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app/Contents/MacOS/spdctl" control --machine
 ```
+
+The packaging task accepts `-PmacArm64OutputSubdir=<app-output-name>` to build a
+separate app image without replacing the default one. CLI.8.0.1 was validated
+in `app-macos-arm64-cli-8.0.1` and is delivered in the original `app-macos-arm64`
+directory at the user's request, with the previous image retained as a backup.
+The name must be `app-macos-arm64` or `app-macos-arm64-<safe suffix>` (at most
+128 characters); paths, internal build directories and symlink destinations are
+rejected. Existing running games are not restarted or upgraded in place.
 
 The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v8/`. Earlier profiles remain untouched. A nonempty profile without a valid schema-11 audit pair, including an older schema, is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty profiles receive the existing windowed Chinese/new-profile defaults.
 

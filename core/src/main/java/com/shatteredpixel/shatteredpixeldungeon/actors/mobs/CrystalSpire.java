@@ -36,6 +36,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
@@ -82,6 +83,7 @@ public class CrystalSpire extends Mob {
 	private static final int ABILITY_CD = 15;
 
 	private ArrayList<ArrayList<Integer>> targetedCells = new ArrayList<>();
+	private PendingWarning waveWarning;
 
 	@Override
 	protected boolean act() {
@@ -168,10 +170,15 @@ public class CrystalSpire extends Mob {
 
 			PixelScene.shake( 1, 0.7f );
 			Sample.INSTANCE.play( Assets.Sounds.SHATTER );
+			if (waveWarning != null) {
+				waveWarning.complete();
+				waveWarning = null;
+			}
 
 			if (!targetedCells.isEmpty()){
 				for (int i : targetedCells.get(0)){
-					sprite.parent.add(new TargetedCell(i, 0xFF0000));
+					if (waveWarning == null || !waveWarning.isPending()) waveWarning = PendingWarning.begin(this);
+					sprite.parent.add(new TargetedCell(i, 0xFF0000, waveWarning));
 				}
 			}
 
@@ -191,7 +198,8 @@ public class CrystalSpire extends Mob {
 				}
 
 				for (int i : targetedCells.get(0)){
-					sprite.parent.add(new TargetedCell(i, 0xFF0000));
+					if (waveWarning == null || !waveWarning.isPending()) waveWarning = PendingWarning.begin(this);
+					sprite.parent.add(new TargetedCell(i, 0xFF0000, waveWarning));
 				}
 
 				abilityCooldown += ABILITY_CD;
@@ -212,6 +220,7 @@ public class CrystalSpire extends Mob {
 
 	private void diamondAOEAttack(){
 		targetedCells.clear();
+		cancelWaveWarning();
 
 		ArrayList<Integer> aoeCells = new ArrayList<>();
 		aoeCells.add(Dungeon.hero.pos);
@@ -243,6 +252,7 @@ public class CrystalSpire extends Mob {
 
 	private void lineAttack(){
 		targetedCells.clear();
+		cancelWaveWarning();
 
 		ArrayList<Integer> lineCells = new ArrayList<>();
 		Ballistica aim = new Ballistica(pos, Dungeon.hero.pos, Ballistica.WONT_STOP);
@@ -262,6 +272,13 @@ public class CrystalSpire extends Mob {
 				lineCells.addAll(spreadDiamondAOE(lineCells));
 				targetedCells.add(lineCells);
 			}
+		}
+	}
+
+	private void cancelWaveWarning() {
+		if (waveWarning != null) {
+			waveWarning.cancel();
+			waveWarning = null;
 		}
 	}
 

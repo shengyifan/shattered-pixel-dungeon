@@ -36,6 +36,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
@@ -151,6 +152,7 @@ public class YogDzewa extends Mob {
 	}
 
 	private ArrayList<Integer> targetedCells = new ArrayList<>();
+	private PendingWarning beamWarning;
 
 	@Override
 	public int attackSkill(Char target) {
@@ -241,6 +243,10 @@ public class YogDzewa extends Mob {
 					}
 				}
 				targetedCells.clear();
+				if (beamWarning != null) {
+					beamWarning.complete();
+					beamWarning = null;
+				}
 			}
 
 			if (abilityCooldown <= 0){
@@ -275,7 +281,8 @@ public class YogDzewa extends Mob {
 				for (int i : targetedCells){
 					Ballistica b = new Ballistica(pos, i, Ballistica.WONT_STOP);
 					for (int p : b.path){
-						sprite.parent.add(new TargetedCell(p, 0xFF0000));
+						if (beamWarning == null || !beamWarning.isPending()) beamWarning = PendingWarning.begin(this);
+						sprite.parent.add(new TargetedCell(p, 0xFF0000, beamWarning));
 						affectedCells.add(p);
 					}
 				}

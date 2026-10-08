@@ -1,5 +1,8 @@
 # CLI.8.0.0 semantic observation implementation
 
+This page preserves the CLI.8.0.0 implementation and its historical validation.
+The current patch is documented in [CLI.8.0.1 recovery and warning validation](cli-8.0.1-recovery-validation.md).
+
 Historical implementation acceptance: the generated attachments referenced below
 were removed from the workspace in the user-requested
 [2026-09-24 clean rebuild](cli-rebuild-8.0.0-clean-20260924.md). The dated results

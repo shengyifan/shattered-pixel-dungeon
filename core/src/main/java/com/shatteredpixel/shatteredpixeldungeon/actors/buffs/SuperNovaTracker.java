@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.RadialVisualCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -56,6 +57,7 @@ public class SuperNovaTracker extends Buff {
 
 	private boolean[] fieldOfView;
 	private NovaVFX halo;
+	private PendingWarning pendingWarning;
 
 	private static final int DIST = 8;
 
@@ -63,6 +65,8 @@ public class SuperNovaTracker extends Buff {
 	public boolean act() {
 
 		if (branch != Dungeon.branch || depth != Dungeon.depth){
+			if (pendingWarning != null) pendingWarning.cancel();
+			pendingWarning = null;
 			spend(TICK);
 			return true;
 		}
@@ -90,6 +94,7 @@ public class SuperNovaTracker extends Buff {
 		ShadowCaster.castShadow(c.x, c.y, Dungeon.level.width(), fieldOfView, Dungeon.level.solid, Math.min(DIST, 11-turnsLeft));
 
 		if (turnsLeft <= 0){
+			if (pendingWarning != null) pendingWarning.commit();
 			detach();
 			halo.killAndErase();
 
@@ -120,11 +125,13 @@ public class SuperNovaTracker extends Buff {
 				}
 			}
 			GameScene.updateMap();
+			if (pendingWarning != null) pendingWarning.complete();
 
 		} else {
+			if (pendingWarning == null || !pendingWarning.isPending()) pendingWarning = PendingWarning.begin(this);
 			for (int i = 0; i < Dungeon.level.length(); i++){
 				if (fieldOfView[i]){
-					target.sprite.parent.add(new TargetedCell(i, 0xFF0000));
+					target.sprite.parent.add(new TargetedCell(i, 0xFF0000, pendingWarning));
 				}
 			}
 		}

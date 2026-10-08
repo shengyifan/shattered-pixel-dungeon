@@ -34,6 +34,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.Pow
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.DirectableAlly;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -94,18 +95,22 @@ public class Stasis extends ClericSpell {
 		MagicMissile.boltFromChar(hero.sprite.parent, MagicMissile.LIGHT_MISSILE, ally.sprite, hero.pos, null);
 
 		LinkedHashSet<Buff> buffs = ally.buffs();
-		Actor.remove(ally);
-		ally.sprite.killAndErase();
-		ally.sprite = null;
-		Dungeon.level.mobs.remove(ally);
-		for (Buff b : buffs){
-			if (b.type == Buff.buffType.POSITIVE || b.revivePersists) {
-				ally.add(b);
+		try (PendingWarning.Suspension warnings = PendingWarning.suspendOwnedBy(ally)) {
+			Actor.remove(ally);
+			ally.sprite.killAndErase();
+			ally.sprite = null;
+			Dungeon.level.mobs.remove(ally);
+			for (Buff b : buffs){
+				if (b.type == Buff.buffType.POSITIVE || b.revivePersists) {
+					ally.add(b);
+				}
 			}
-		}
-		ally.clearTime();
+			ally.clearTime();
 
-		Buff.prolong(hero, StasisBuff.class, 30 + 30*hero.pointsInTalent(Talent.STASIS)).stasisAlly = (Mob)ally;
+			StasisBuff holder = Buff.prolong(hero, StasisBuff.class, 30 + 30*hero.pointsInTalent(Talent.STASIS));
+			holder.stasisAlly = (Mob)ally;
+			if (holder.target == hero) warnings.transferTo(holder);
+		}
 		Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
 
 		if (hero.buff(LifeLink.class) != null && hero.buff(LifeLink.class).object == ally.id()){
@@ -161,7 +166,7 @@ public class Stasis extends ClericSpell {
 				spawnPoints.add(target.pos + PathFinder.NEIGHBOURS8[Random.Int(8)]);
 			}
 			stasisAlly.pos = Random.element(spawnPoints);
-			GameScene.add(stasisAlly);
+			GameScene.add(releaseAlly());
 
 			if (stasisAlly instanceof DirectableAlly){
 				((DirectableAlly) stasisAlly).clearDefensingPos();
@@ -178,6 +183,12 @@ public class Stasis extends ClericSpell {
 		}
 
 		Mob stasisAlly;
+
+		/** Both native return routes restore the existing episode, never saved targeting coordinates. */
+		public Mob releaseAlly() {
+			PendingWarning.transferOwnedBy(this, stasisAlly);
+			return stasisAlly;
+		}
 
 		private static final String ALLY = "ally";
 

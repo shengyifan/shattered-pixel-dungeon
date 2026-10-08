@@ -29,6 +29,7 @@ public final class StableController {
     private static final Set<String> HISTORY = new HashSet<>(Arrays.asList("req", "history", "events"));
     private final Transport transport;
     private final long responseTimeout;
+    private final Clock clock;
     private final Map<String,String> displayedRevisions = new LinkedHashMap<>();
     private final LinkedHashMap<String,Pending> pending = new LinkedHashMap<>();
     private final Map<String,Pending> lateRequests = new LinkedHashMap<>();
@@ -40,8 +41,16 @@ public final class StableController {
     private boolean quitting, exited;
 
     StableController(Transport transport, long responseTimeout) {
+        this(transport, responseTimeout, new Clock() {
+            public long nanoTime() { return System.nanoTime(); }
+            public void sleep(long millis) throws InterruptedException { Thread.sleep(millis); }
+        });
+    }
+
+    StableController(Transport transport, long responseTimeout, Clock clock) {
         this.transport = transport;
         this.responseTimeout = responseTimeout;
+        this.clock = clock;
     }
 
     static int launch(String[] args, Path profile, InputStream input, PrintStream output) throws Exception {
@@ -249,10 +258,10 @@ public final class StableController {
         catch (RuntimeException invalid) { return localError("INVALID_INTENT", invalid.getMessage(), request); }
         if (action) pending.put((String)request.get("id"), new Pending(request));
         Map<String,Object> response = exchange(request, responseTimeout);
-        return handleResponse(request, response);
+        return handleResponse(request, response, responseTimeout);
     }
 
-    private Map<String,Object> handleResponse(Map<String,Object> request, Map<String,Object> response) throws InterruptedException {
+    private Map<String,Object> handleResponse(Map<String,Object> request, Map<String,Object> response, long exitWaitBudget) throws InterruptedException {
         String op = (String)request.get("op"), id = (String)request.get("id");
         Pending action = pending.get(id);
         if (isLocalError(response)) {
@@ -269,7 +278,7 @@ public final class StableController {
         observe(op, response);
         if ("quit".equals(op) && !response.containsKey("err") && TERMINAL.contains(String.valueOf(response.get("st")).toUpperCase(Locale.ROOT))) {
             quitting = true;
-            return awaitQuit(response, responseTimeout);
+            return awaitQuit(response, exitWaitBudget);
         }
         return response;
     }
@@ -284,7 +293,7 @@ public final class StableController {
                 return localError("INVALID_INTENT", "timeout_ms must be an integer from 1 to 5000", null);
             duration = ((Number)n).longValue();
         }
-        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(duration);
+        long deadline = deadlineAfter(duration);
         if (quitting) return awaitQuit(null, remaining(deadline));
         String id = string(intent.get("rid"));
         if (inFlight != null && inFlight.pendingOwner == null) {
@@ -292,35 +301,48 @@ public final class StableController {
             if (id != null && !id.equals(original.get("id")))
                 return localError("RESPONSE_PENDING", "Receive the outstanding frame before settling another request", original);
             Pending unresolved = pending.get(original.get("id"));
-            Map<String,Object> response = receive(unresolved == null ? remaining(deadline) : 1);
+            Received received = receiveUntil(deadline);
+            if (received.yielded())
+                return localError("RESPONSE_PENDING", "The outstanding initial response has not arrived; use settle", original);
+            Map<String,Object> response = received.response;
             if (!isLocalError(response)) {
                 // The delayed initial reply is shown before any polling or other operation.
-                return handleResponse(original, response);
+                return handleResponse(original, response, remaining(deadline));
             }
             if (unresolved == null || !"RESPONSE_TIMEOUT".equals(response.get("err")) || transport.hasPartialFrame())
                 return response;
             // Exceptional recovery only: query the original identity, never resend its action.
             // The byte reader retains any later complete original reply for independent delivery.
-            unresolved.transportError = response;
+            if (unresolved.transportError == null) unresolved.transportError = response;
             lateRequests.put((String)original.get("id"), unresolved);
             inFlight = null;
             id = (String)original.get("id");
         }
+        if (id == null && inFlight != null && inFlight.pendingOwner != null)
+            id = (String)inFlight.pendingOwner.request.get("id");
         if (id == null) for (String candidate : pending.keySet()) id = candidate;
         Pending action = pending.get(id);
         if (action == null) return localError("NO_PENDING_ACTION", "There is no pending action with this rid", null);
+        if (inFlight != null && inFlight.pendingOwner != action)
+            return localError("RESPONSE_PENDING", "Receive the outstanding frame before settling another request", inFlight.request);
+        boolean resumedReceipt = inFlight != null && "req".equals(inFlight.request.get("op"));
         Map<String,Object> result = map("controller", "settle", "rid", id, "s", action.request.get("s"));
         if (action.transportError != null) result.put("transport_error", action.transportError);
         if (action.initial != null && action.initial.containsKey("err")) result.put("initial_error", action.initial);
-        do {
+        if (action.lastReceipt != null) result.put("outcome", action.lastReceipt);
+        if (action.discovery != null) result.put("discovery", action.discovery);
+        while (true) {
             if (action.receipt == null) {
-                Map<String,Object> receipt = stageExchange(action, "req", (String)action.request.get("s"), map("rid", id), remaining(deadline));
+                Received received = stageExchange(action, "req", (String)action.request.get("s"), map("rid", id), deadline);
+                if (received.yielded()) return settlePending(result, "receipt", "budget_exhausted");
+                Map<String,Object> receipt = received.response;
                 if (isLocalError(receipt) || receipt.containsKey("err")) {
                     if ("quit".equals(action.request.get("op")) && action.lateOriginal != null
                             && !action.lateOriginal.containsKey("err")
                             && TERMINAL.contains(String.valueOf(action.lateOriginal.get("st")).toUpperCase(Locale.ROOT))) {
                         result.put("original_response", action.lateOriginal);
                         result.put("receipt", receipt);
+                        result.put("st", "completed");
                         pending.remove(id); quitting = true;
                         return awaitQuit(result, remaining(deadline));
                     }
@@ -329,11 +351,15 @@ public final class StableController {
                 Map<String,Object> body = object(receipt.get("data"));
                 if (!id.equals(body.get("id")) || !Objects.equals(action.request.get("op"), body.get("op")))
                     return settleFailure(result, "receipt", localError("INVALID_RECEIPT", "Receipt identity does not match the original action", action.request));
+                action.lastReceipt = receipt;
                 result.put("outcome", receipt);
                 String status = string(body.get("st"));
                 if ("RECEIVED".equals(status) || "EXECUTING".equals(status)) {
-                    if (remaining(deadline) <= 100) { result.put("st", "pending"); return result; }
-                    Thread.sleep(Math.min(100, remaining(deadline))); continue;
+                    // Receiving a query left by the preceding call must release the
+                    // serial channel, not fill the next budget with another poll.
+                    if (resumedReceipt || remaining(deadline) <= 100)
+                        return settlePending(result, "receipt", "action_pending");
+                    clock.sleep(Math.min(100, remaining(deadline))); continue;
                 }
                 if (!TERMINAL.contains(status)) {
                     result.put("st", "error");
@@ -346,39 +372,51 @@ public final class StableController {
             }
             result.put("outcome", action.receipt);
             if ("quit".equals(action.request.get("op"))) {
+                // The action is settled even while the separate process exit is
+                // still pending. Keep the nested wrapper valid for every reader.
+                result.put("st", "completed");
                 pending.remove(id); quitting = true;
                 return awaitQuit(result, remaining(deadline));
             }
             if (action.discover && action.discovery == null) {
-                if (remaining(deadline) == 0) { result.put("st", "pending"); return result; }
-                Map<String,Object> discovery = stageExchange(action, "info", null, Collections.emptyMap(), remaining(deadline));
+                Received received = stageExchange(action, "info", null, Collections.emptyMap(), deadline);
+                if (received.yielded()) return settlePending(result, "discovery", "budget_exhausted");
+                Map<String,Object> discovery = received.response;
                 if (isLocalError(discovery) || discovery.containsKey("err")) return settleFailure(result, "discovery", discovery);
                 action.discovery = discovery;
                 observe("info", discovery);
             }
             if (action.discovery != null) result.put("discovery", action.discovery);
-            if (remaining(deadline) == 0) { result.put("st", "pending"); return result; }
-            Map<String,Object> observation = stageExchange(action, "state", currentScope, Collections.emptyMap(), remaining(deadline));
+            Received received = stageExchange(action, "state", currentScope, Collections.emptyMap(), deadline);
+            if (received.yielded()) return settlePending(result, "observation", "budget_exhausted");
+            Map<String,Object> observation = received.response;
             if (isLocalError(observation) || observation.containsKey("err")) return settleFailure(result, "observation", observation);
             observe("state", observation);
             result.put("observation", observation);
             result.put("st", "completed");
             pending.remove(id);
             return result;
-        } while (remaining(deadline) > 0);
-        result.put("st", "pending");
-        return result;
+        }
     }
 
-    private Map<String,Object> stageExchange(Pending owner, String op, String scope, Map<String,Object> args, long timeout) throws InterruptedException {
+    private Received stageExchange(Pending owner, String op, String scope, Map<String,Object> args, long deadline) throws InterruptedException {
         if (inFlight == null) {
+            if (expired(deadline)) return Received.yield();
             Map<String,Object> request = request(op, scope, args);
-            inFlight = new Exchange(request, owner);
-            return writeAndReceive(timeout);
+            inFlight = new Exchange(request, owner, deadlineAfter(responseTimeout));
+            return writeAndReceive(deadline);
         }
         if (inFlight.pendingOwner != owner || !op.equals(inFlight.request.get("op")))
-            return localError("RESPONSE_PENDING", "A different recovery response remains outstanding", inFlight.request);
-        return receive(timeout);
+            return Received.of(localError("RESPONSE_PENDING", "A different recovery response remains outstanding", inFlight.request));
+        return receiveUntil(deadline);
+    }
+
+    private Map<String,Object> settlePending(Map<String,Object> result, String stage, String reason) {
+        result.put("st", "pending");
+        result.put("pending_reason", inFlight == null ? reason : "response_pending");
+        result.put("stage", stage);
+        if (inFlight != null) result.put("pending_request", inFlight.request);
+        return result;
     }
 
     private static Map<String,Object> settleFailure(Map<String,Object> result, String stage, Map<String,Object> failure) {
@@ -405,33 +443,45 @@ public final class StableController {
 
     private Map<String,Object> exchange(Map<String,Object> request, long timeout) throws InterruptedException {
         if (inFlight != null) return localError("RESPONSE_PENDING", "An earlier response is still outstanding", inFlight.request);
-        inFlight = new Exchange(request, null);
-        return writeAndReceive(timeout);
+        inFlight = new Exchange(request, null, deadlineAfter(timeout));
+        return writeAndReceive(inFlight.responseDeadline).response;
     }
 
-    private Map<String,Object> writeAndReceive(long timeout) throws InterruptedException {
+    private Received writeAndReceive(long deadline) throws InterruptedException {
         try { transport.send(JsonCodec.encode(inFlight.request) + "\n"); }
-        catch (IOException failure) { return localError("WRITE_UNCERTAIN", "Request write failed; its ID is retained and will not be replayed", inFlight.request); }
-        return receive(timeout);
+        catch (IOException failure) { return Received.of(localError("WRITE_UNCERTAIN", "Request write failed; its ID is retained and will not be replayed", inFlight.request)); }
+        return receiveUntil(deadline);
     }
 
-    private Map<String,Object> receive(long timeout) throws InterruptedException {
-        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.max(1, timeout));
+    private Received receiveUntil(long deadline) throws InterruptedException {
         while (true) {
-            Frame frame = transport.receive(Math.max(1, remaining(deadline)));
-            if (frame == null) return localError("RESPONSE_TIMEOUT", "The original response remains outstanding; use settle", inFlight.request);
-            if (frame.eof) return localError("CHILD_EOF", "Child output ended before the outstanding response was established", inFlight.request);
+            // A complete frame already queued wins over elapsed deadlines. In
+            // particular, a caller can resume after a long pause without losing it.
+            Frame frame = transport.receive(0);
+            if (frame == null) {
+                long now = clock.nanoTime();
+                if (inFlight.responseDeadline - now <= 0) {
+                    if (inFlight.timeoutError == null)
+                        inFlight.timeoutError = localError("RESPONSE_TIMEOUT", "The original response remains outstanding; use settle", inFlight.request);
+                    return Received.of(inFlight.timeoutError);
+                }
+                if (deadline - now <= 0) return Received.yield();
+                long wait = Math.min(waitMillis(deadline, now), waitMillis(inFlight.responseDeadline, now));
+                frame = transport.receive(wait);
+                if (frame == null) continue;
+            }
+            if (frame.eof) return Received.of(localError("CHILD_EOF", "Child output ended before the outstanding response was established", inFlight.request));
             Map<String,Object> original = inFlight.request;
             // Recover an invalid initial action through its receipt, but never abandon a recovery query.
             if (frame.error != null) {
                 if (inFlight.pendingOwner == null) inFlight = null;
-                return localError(frame.error, "Invalid complete child frame; preserve the original request identity", original);
+                return Received.of(localError(frame.error, "Invalid complete child frame; preserve the original request identity", original));
             }
             Map<String,Object> response;
             try { response = JsonCodec.decode(frame.text); }
             catch (RuntimeException malformed) {
                 if (inFlight.pendingOwner == null) inFlight = null;
-                return localError("INVALID_RESPONSE_JSON", "Invalid complete child JSON; establish the original request's outcome", original);
+                return Received.of(localError("INVALID_RESPONSE_JSON", "Invalid complete child JSON; establish the original request's outcome", original));
             }
             boolean valid = Long.valueOf(ControlRequest.PROTOCOL_VERSION).equals(response.get("v"))
                     && (response.containsKey("st") != response.containsKey("err"))
@@ -449,26 +499,24 @@ public final class StableController {
                     // while currentScope deliberately still belongs to the last displayed live frame.
                     if (!response.containsKey("err") && ("resolving".equals(phase) || "cancelling".equals(phase)))
                         late.discover = true;
-                    if (remaining(deadline) == 0)
-                        return localError("RESPONSE_TIMEOUT", "The receipt response remains outstanding after a late original reply", original);
                     continue;
                 }
                 Map<String,Object> error = localError("RESPONSE_ID_MISMATCH", "Unexpected child identity; the expected response remains outstanding", original);
                 error.put("unexpected_response", response);
-                return error;
+                return Received.of(error);
             }
             if (!valid) {
                 if (inFlight.pendingOwner == null) inFlight = null;
-                return localError("INVALID_RESPONSE", "Child frame must contain protocol 8, matching id, and either st or err", original);
+                return Received.of(localError("INVALID_RESPONSE", "Child frame must contain protocol 8, matching id, and either st or err", original));
             }
             inFlight = null;
-            return response;
+            return Received.of(response);
         }
     }
 
     private Map<String,Object> awaitQuit(Map<String,Object> response, long timeout) throws InterruptedException {
         if (response != null) quitOutcome = response;
-        Integer code = transport.awaitExit(Math.max(1, timeout));
+        Integer code = transport.awaitExit(timeout);
         if (code == null) return map("controller", "exit", "st", "pending", "err", "CHILD_EXIT_TIMEOUT", "outcome", quitOutcome);
         exited = true;
         if (code != 0) return map("controller", "exit", "st", "error", "err", "CHILD_EXIT_FAILED", "exit_code", code, "outcome", quitOutcome);
@@ -478,7 +526,13 @@ public final class StableController {
         return response == null ? map("controller", "exit", "st", "completed", "exit_code", code, "outcome", quitOutcome) : quitOutcome;
     }
 
-    private static long remaining(long deadline) { return Math.max(0, TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime())); }
+    private long deadlineAfter(long millis) { return clock.nanoTime() + TimeUnit.MILLISECONDS.toNanos(millis); }
+    private boolean expired(long deadline) { return deadline - clock.nanoTime() <= 0; }
+    private long remaining(long deadline) { return Math.max(0, TimeUnit.NANOSECONDS.toMillis(deadline - clock.nanoTime())); }
+    private static long waitMillis(long deadline, long now) {
+        long nanos = deadline - now;
+        return nanos <= 0 ? 0 : 1 + (nanos - 1) / TimeUnit.MILLISECONDS.toNanos(1);
+    }
     private static String string(Object value) { return value instanceof String && !((String)value).isEmpty() ? (String)value : null; }
     @SuppressWarnings("unchecked") private static Map<String,Object> object(Object value) { return value instanceof Map ? (Map<String,Object>)value : Collections.emptyMap(); }
     private static boolean isLocalError(Map<String,Object> value) { return "error".equals(value.get("controller")); }
@@ -490,7 +544,7 @@ public final class StableController {
 
     private static final class Pending {
         final Map<String,Object> request;
-        Map<String,Object> initial, receipt, discovery, transportError, lateOriginal;
+        Map<String,Object> initial, receipt, lastReceipt, discovery, transportError, lateOriginal;
         // Until a trustworthy initial phase arrives, the operation might have crossed scopes.
         boolean discover = true;
         Pending(Map<String,Object> request) { this.request = request; }
@@ -498,7 +552,23 @@ public final class StableController {
     private static final class Exchange {
         final Map<String,Object> request;
         final Pending pendingOwner;
-        Exchange(Map<String,Object> request, Pending pendingOwner) { this.request = request; this.pendingOwner = pendingOwner; }
+        final long responseDeadline;
+        Map<String,Object> timeoutError;
+        Exchange(Map<String,Object> request, Pending pendingOwner, long responseDeadline) {
+            this.request = request; this.pendingOwner = pendingOwner; this.responseDeadline = responseDeadline;
+        }
+    }
+    private static final class Received {
+        final Map<String,Object> response;
+        private Received(Map<String,Object> response) { this.response = response; }
+        static Received of(Map<String,Object> response) { return new Received(response); }
+        static Received yield() { return new Received(null); }
+        boolean yielded() { return response == null; }
+    }
+
+    interface Clock {
+        long nanoTime();
+        void sleep(long millis) throws InterruptedException;
     }
 
     interface Transport {

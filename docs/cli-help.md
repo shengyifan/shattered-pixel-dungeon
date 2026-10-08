@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 8)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.8.0.0, protocol 8, and base game 3.3.8.
+`spdctl --version` reports CLI.8.0.1, protocol 8, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -47,11 +47,31 @@ Queries default to the current scope; history queries can name an explicit known
 
 An initial `in_progress` is emitted immediately. Local `settle` (not the gameplay
 `wait`) polls only small receipts at 100 ms intervals, up to 5 seconds by default;
-`timeout_ms` is 1–5000. It defaults to the latest pending action when `rid` is omitted.
+`timeout_ms` is 1–5000 and bounds this call's waiting budget, not the lifetime of
+an already sent query. Each sent request has its own non-renewable response
+deadline (30 seconds by default). With an omitted `rid`, settle first resumes
+the owner of an outstanding internal query, otherwise the latest pending action.
 Its `controller:"settle"` wrapper keeps `outcome` (the original action's receipt),
 optional `discovery`, and `observation` (fresh current state) separate. `st:"pending"`
 means more settling or cancellation may follow, not permission to repeat the action.
 Use the nested observation's own `s/rev`, not the wrapper's original request scope.
+An exhausted call budget returns `st:"pending"` without a transport error. New
+pending wrappers include `stage:"receipt"|"discovery"|"observation"` and:
+
+| `pending_reason` | Meaning |
+| --- | --- |
+| `action_pending` | A complete `RECEIVED/EXECUTING` receipt is known; no internal response is outstanding. |
+| `budget_exhausted` | No response is outstanding, but the next stage has not been sent within this call's budget. |
+| `response_pending` | An internal query was sent and its complete response is still outstanding. |
+
+Only `response_pending` carries `pending_request`, the exact internal query.
+Resume it through settle; never send that object again. The latest complete
+receipt, if any, remains `outcome`. On resuming an outstanding query, a received
+nonterminal receipt yields control immediately instead of starting another poll.
+Until that response is consumed, other queries and cancellation remain blocked
+by `RESPONSE_PENDING`. A real response-deadline expiry is still `RESPONSE_TIMEOUT`;
+later settle calls do not extend it, although an already arrived late frame can
+be received. EOF, malformed frames and uncertain writes remain errors.
 The bundled controller must finish pending actions through `settle`; manually
 querying `req` or `state` does not clear its pending-action bookkeeping. An explicit
 `rid` must identify an action submitted by this controller.
@@ -479,7 +499,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.8.0.0 reports public gameplay facts rather than renderer internals. An
+CLI.8.0.1 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength
@@ -495,6 +515,8 @@ Shield buff `shown.counter_kind` and `shown.progress_kind` distinguish
 `shield` from `cooldown` using the selected native display branch. Hero or entity
 `health_estimate.samples` contain visible bar samples
 `{total,filled,with_shield,basis:"displayed"}`; these are not hidden exact HP.
+Foreground ceil and background round may differ by one segment: preserve the
+integers and accept `0 <= filled <= with_shield <= total + 1` with positive total.
 The hero can carry `turn_progress:{sweep}`. `ui.feedback` is a current list of
 semantic floating, log or banner feedback, separate from event history; an
 icon-only floating occurrence retains its symbol without invented text. Missing
@@ -508,6 +530,13 @@ current map/FOV knowledge. Its `status` is `last_observed` or `not_observed`.
 World-cue scope is independent of camera position, viewport and UI occlusion. A
 live cue follows current FOV; source-reviewed static terrain indicators may also
 use already visited or mapped cells where the native display exposes them. A
+`red_target` is an already publicly observed warning whose native attack has not
+completed or been cancelled. Its marker can fade without clearing the warning
+or independently changing `rev`. Only previously exposed cells within current
+FOV are retained; hidden targets, later waves and remaining timers are never
+reconstructed. Independent attacks at the same cell remain distinct. The record
+is process-local, cleared with its run/level scope, and never restored from saves.
+A same-level UI/scene rebuild does not end an otherwise pending warning. A
 cue cannot expose an unknown cell, hidden AI target, future action or remaining
 timer. A cue's optional `appearance` contains reviewed semantic `style`,
 `shape`, `paused`, `stage`, `cells`, `partial`, `count` or `symbol`; drawing

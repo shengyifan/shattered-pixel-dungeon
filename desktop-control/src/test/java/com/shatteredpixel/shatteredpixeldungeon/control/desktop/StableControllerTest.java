@@ -6,8 +6,12 @@ import org.junit.Test;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
@@ -418,9 +422,9 @@ public class StableControllerTest {
         assertEquals("REQUEST_NOT_FOUND", missing.get("err"));
         assertTrue(missing.containsKey("transport_error"));
         child.answer(q -> null);
-        assertEquals("RESPONSE_TIMEOUT", controller.accept(map("op", "settle", "timeout_ms", 1)).get("err"));
+        assertEquals("response_pending", controller.accept(map("op", "settle", "timeout_ms", 1)).get("pending_reason"));
         int count = child.sent.size();
-        assertEquals("RESPONSE_TIMEOUT", controller.accept(map("op", "settle", "timeout_ms", 1)).get("err"));
+        assertEquals("response_pending", controller.accept(map("op", "settle", "timeout_ms", 1)).get("pending_reason"));
         assertEquals(count, child.sent.size());
         child.frames.add(frame(receipt(child.sent.get(count - 1), "wait", "UNKNOWN", null)));
         assertEquals("ACTION_UNKNOWN", controller.accept(map("op", "settle")).get("err"));
@@ -434,7 +438,7 @@ public class StableControllerTest {
         child.rawAnswers.add(new StableController.Frame("{malformed}", null, false));
         assertEquals("INVALID_RESPONSE_JSON", controller.accept(map("op", "settle")).get("err"));
         assertEquals(Arrays.asList("info", "wait", "req"), child.ops());
-        assertEquals("RESPONSE_TIMEOUT", controller.accept(map("op", "settle", "timeout_ms", 1)).get("err"));
+        assertEquals("response_pending", controller.accept(map("op", "settle", "timeout_ms", 1)).get("pending_reason"));
         assertEquals(Arrays.asList("info", "wait", "req"), child.ops());
         child.frames.add(frame(receipt(child.sent.get(2), "wait", "UNKNOWN", null)));
         assertEquals("ACTION_UNKNOWN", controller.accept(map("op", "settle")).get("err"));
@@ -465,7 +469,7 @@ public class StableControllerTest {
         child.answer(q -> success(q, "s1", "a2", "in_progress", map("phase", "continuous_activity")));
         controller.accept(map("op", "rest", "rev", "r1"));
         child.answer(q -> null);
-        assertEquals("RESPONSE_TIMEOUT", controller.accept(map("op", "settle", "timeout_ms", 1)).get("err"));
+        assertEquals("response_pending", controller.accept(map("op", "settle", "timeout_ms", 1)).get("pending_reason"));
         child.frames.add(frame(receipt(child.sent.get(2), "rest", "COMPLETED", null)));
         child.answer(q -> success(q, "s1", "r2", "completed", map()));
         assertEquals("completed", controller.accept(map("op", "settle")).get("st"));
@@ -479,7 +483,8 @@ public class StableControllerTest {
         child.answer(q -> receipt(q, "rest", "COMPLETED", map("sid", "p8")));
         child.answer(q -> null);
         Map<String,Object> timeout = controller.accept(map("op", "settle"));
-        assertEquals("RESPONSE_TIMEOUT", timeout.get("err"));
+        assertEquals("response_pending", timeout.get("pending_reason"));
+        assertFalse(timeout.containsKey("err"));
         assertTrue(timeout.containsKey("outcome"));
         child.frames.add(frame(success(child.sent.get(3), "s1", "r2", "completed", map())));
         Map<String,Object> resumed = controller.accept(map("op", "settle"));
@@ -510,6 +515,59 @@ public class StableControllerTest {
         assertEquals("INTERRUPTED", object(object(result.get("outcome")).get("data")).get("st"));
     }
 
+    @Test public void omittedRidResumesOutstandingOwnerBeforeNewerPendingCancellation() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        child.answer(q -> success(q, "s1", "a2", "in_progress", map("phase", "continuous_activity")));
+        controller.accept(map("op", "rest", "rev", "r1"));
+        child.answer(q -> success(q, "s1", null, "in_progress", map("phase", "cancelling")));
+        controller.accept(map("op", "cancel", "rev", "a2", "rid", "t3.1"));
+        Map<String,Object> first = controller.accept(map("op", "settle", "rid", "t3.1", "timeout_ms", 1));
+        assertEquals("response_pending", first.get("pending_reason"));
+        int sent = child.sent.size();
+        child.frames.add(frame(receipt(child.sent.get(sent - 1), "rest", "EXECUTING", null)));
+        Map<String,Object> resumed = controller.accept(map("op", "settle"));
+        assertEquals("t3.1", resumed.get("rid"));
+        assertEquals("action_pending", resumed.get("pending_reason"));
+        assertFalse(resumed.containsKey("pending_request"));
+        assertEquals(sent, child.sent.size());
+    }
+
+    @Test public void partialInternalQueriesAcrossBudgetsKeepTheirOwnerAndCompletedStages() throws Exception {
+        for (String delayed : Arrays.asList("receipt", "discovery", "observation")) {
+            Fake child = new Fake(); StableController controller = boot(child);
+            child.answer(q -> success(q, "s1", null, "in_progress", map("phase", "resolving")));
+            controller.accept(map("op", "wait", "rev", "r1"));
+            if (!"receipt".equals(delayed)) child.answer(q -> receipt(q, "wait", "COMPLETED", map("sid", "p8")));
+            if ("observation".equals(delayed))
+                child.answer(q -> success(q, "s2", "r2", "completed", map("request_prefix", "t3")));
+            child.partial = true;
+            Map<String,Object> first = controller.accept(map("op", "settle", "timeout_ms", 1));
+            assertEquals(delayed, first.get("stage"));
+            assertEquals("response_pending", first.get("pending_reason"));
+            int sent = child.sent.size();
+            Map<String,Object> query = child.sent.get(sent - 1);
+            Map<String,Object> second = controller.accept(map("op", "settle", "timeout_ms", 1));
+            assertEquals(first.get("pending_request"), second.get("pending_request"));
+            assertEquals(first.get("outcome"), second.get("outcome"));
+            assertEquals(sent, child.sent.size());
+            assertTrue(child.partial);
+            child.partial = false;
+            if ("receipt".equals(delayed)) {
+                child.frames.add(frame(receipt(query, "wait", "COMPLETED", map("sid", "p8"))));
+                child.answer(q -> success(q, "s2", "r2", "completed", map("request_prefix", "t3")));
+            } else if ("discovery".equals(delayed)) {
+                child.frames.add(frame(success(query, "s2", "r2", "completed", map("request_prefix", "t3"))));
+            }
+            if (!"observation".equals(delayed))
+                child.answer(q -> success(q, "s2", "r2", "completed", map()));
+            else child.frames.add(frame(success(query, "s2", "r2", "completed", map())));
+            Map<String,Object> done = controller.accept(map("op", "settle"));
+            assertEquals("completed", done.get("st"));
+            assertEquals("p8", object(((List<?>)object(object(done.get("outcome")).get("data")).get("save")).get(0)).get("sid"));
+            assertEquals(Arrays.asList("info", "wait", "req", "info", "state"), child.ops());
+        }
+    }
+
     @Test public void quitWaitsForExitAndNeverQueriesState() throws Exception {
         Fake child = new Fake(); StableController controller = boot(child);
         child.answer(q -> success(q, "s1", "r2", "completed", map("persistence", map("saves", Arrays.asList(map("sid", "p7"))))));
@@ -528,12 +586,36 @@ public class StableControllerTest {
         Map<String,Object> waiting = controller.accept(map("op", "settle"));
         assertEquals("CHILD_EXIT_TIMEOUT", waiting.get("err"));
         assertTrue(object(waiting.get("outcome")).containsKey("outcome"));
+        assertEquals("completed", object(waiting.get("outcome")).get("st"));
+        assertExitPendingDecodesInPython(waiting);
         child.exitCode = 0;
         Map<String,Object> done = controller.accept(map("op", "settle"));
         assertEquals("completed", done.get("st"));
         Map<String,Object> settled = object(done.get("outcome"));
         assertEquals("completed", settled.get("st"));
         assertEquals("p9", object(((List<?>)object(object(settled.get("outcome")).get("data")).get("save")).get(0)).get("sid"));
+        assertEquals(Arrays.asList("info", "quit", "req"), child.ops());
+    }
+
+    @Test public void terminalQuitReceiptAtBudgetBoundaryDoesNotAddWaitOrPostQuitQueries() throws Exception {
+        Fake child = new Fake(); StableController controller = boot(child);
+        child.answer(q -> success(q, "s1", null, "in_progress", map("phase", "resolving")));
+        controller.accept(map("op", "quit", "rev", "r1"));
+        child.answer(q -> {
+            child.sleep(1);
+            return receipt(q, "quit", "COMPLETED", map("sid", "p9"));
+        });
+        Map<String,Object> waiting = controller.accept(map("op", "settle", "timeout_ms", 1));
+        assertEquals("exit", waiting.get("controller"));
+        assertEquals("pending", waiting.get("st"));
+        assertEquals("completed", object(waiting.get("outcome")).get("st"));
+        assertEquals(TimeUnit.MILLISECONDS.toNanos(1), child.nanoTime());
+        assertEquals(1, child.exitWaits);
+        child.exitCode = 0;
+        Map<String,Object> done = controller.accept(map("op", "settle", "timeout_ms", 1));
+        assertEquals("completed", done.get("st"));
+        Map<String,Object> outcome = object(object(done.get("outcome")).get("outcome"));
+        assertEquals("p9", object(((List<?>)object(outcome.get("data")).get("save")).get(0)).get("sid"));
         assertEquals(Arrays.asList("info", "quit", "req"), child.ops());
     }
 
@@ -579,10 +661,19 @@ public class StableControllerTest {
 
     @Test public void streamTimeoutRetainsFragmentAndInvalidUtf8IsRejected() throws Exception {
         PipedInputStream in = new PipedInputStream(); PipedOutputStream out = new PipedOutputStream(in);
-        StableController.StreamTransport child = new StableController.StreamTransport(in, new ByteArrayOutputStream(), null);
+        CountDownLatch processedFirstChunk = new CountDownLatch(1);
+        InputStream observed = new FilterInputStream(in) {
+            int reads;
+            @Override public int read(byte[] bytes, int offset, int length) throws IOException {
+                if (++reads == 2) processedFirstChunk.countDown();
+                return super.read(bytes, offset, length);
+            }
+        };
+        StableController.StreamTransport child = new StableController.StreamTransport(observed, new ByteArrayOutputStream(), null);
         byte[] snow = "雪".getBytes(StandardCharsets.UTF_8);
         out.write(snow, 0, 1); out.flush();
-        assertNull(child.receive(5));
+        assertTrue("The reader must process the first byte before checking partial state", processedFirstChunk.await(1, TimeUnit.SECONDS));
+        assertNull(child.receive(0));
         assertTrue(child.hasPartialFrame());
         out.write(snow, 1, 2); out.write('\n'); out.flush();
         assertEquals("雪", child.receive(1000).text);
@@ -596,9 +687,47 @@ public class StableControllerTest {
     private static StableController boot(Fake child) throws Exception {
         return boot(child,"t3");
     }
+
+    /** Decode the controller's actual wrapper, not a separately maintained Python fixture. */
+    private static void assertExitPendingDecodesInPython(Map<String,Object> result) throws Exception {
+        Path root = Paths.get("").toAbsolutePath();
+        while (root != null && !Files.isDirectory(root.resolve("desktop-control/client"))) root = root.getParent();
+        assertNotNull("Repository client must be available to the offline contract test", root);
+        String script = String.join("\n",
+                "import copy,json,sys",
+                "sys.path.insert(0,sys.argv[1])",
+                "from spdctl_client import decode_client_response",
+                "source=json.load(sys.stdin); before=copy.deepcopy(source)",
+                "result=decode_client_response(source)",
+                "assert result.controller=='exit' and source['st']=='pending'",
+                "assert source['outcome']['controller']=='settle' and source['outcome']['st']=='completed'",
+                "assert result.current_frame is None and not result.ok",
+                "assert result.outcome.data['id']=='t3.1' and result.outcome.data['st']=='COMPLETED'",
+                "assert result.outcome.data['save'][0]['sid']=='p9'",
+                "assert 'CHILD_EXIT_TIMEOUT' in {problem.code for problem in result.problems}",
+                "assert source==before and result.raw==before",
+                "print('PASS: controller exit pending preserves completed quit receipt in Python')");
+        ProcessBuilder builder = new ProcessBuilder("python3", "-c", script,
+                root.resolve("desktop-control/client").toString()).redirectErrorStream(true);
+        builder.environment().put("PYTHONDONTWRITEBYTECODE", "1");
+        Process process = builder.start();
+        try {
+            process.getOutputStream().write(JsonCodec.encode(result).getBytes(StandardCharsets.UTF_8));
+            process.getOutputStream().close();
+            assertTrue("Offline decoder did not terminate", process.waitFor(20, TimeUnit.SECONDS));
+            ByteArrayOutputStream captured = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096]; int count;
+            while ((count = process.getInputStream().read(buffer)) != -1) captured.write(buffer, 0, count);
+            String output = new String(captured.toByteArray(), StandardCharsets.UTF_8);
+            assertEquals(output, 0, process.exitValue());
+            assertTrue(output, output.startsWith("PASS:"));
+        } finally {
+            if (process.isAlive()) process.destroyForcibly();
+        }
+    }
     private static StableController boot(Fake child,String prefix) throws Exception {
         child.answer(q -> success(q, "s1", "r1", "completed", map("request_prefix", prefix)));
-        StableController controller = new StableController(child, 1);
+        StableController controller = new StableController(child, StableController.RESPONSE_TIMEOUT_MS, child);
         assertEquals("completed", controller.handshake().get("st"));
         return controller;
     }
@@ -614,13 +743,14 @@ public class StableControllerTest {
     @SuppressWarnings("unchecked") private static Map<String,Object> object(Object value) { return (Map<String,Object>)value; }
     private static StableController.Frame frame(Map<String,Object> value) { return new StableController.Frame(JsonCodec.encode(value), null, false); }
 
-    private static final class Fake implements StableController.Transport {
+    private static final class Fake implements StableController.Transport, StableController.Clock {
         final List<Map<String,Object>> sent = new ArrayList<>();
         final Deque<Function<Map<String,Object>,Map<String,Object>>> answers = new ArrayDeque<>();
         final Deque<StableController.Frame> frames = new ArrayDeque<>(), rawAnswers = new ArrayDeque<>();
         boolean failWrite, partial;
         Integer exitCode;
         int exitWaits;
+        long now;
         void answer(Function<Map<String,Object>,Map<String,Object>> response) { answers.add(response); }
         List<String> ops() { List<String> ops = new ArrayList<>(); for (Map<String,Object> q : sent) ops.add((String)q.get("op")); return ops; }
         @Override public void send(String frame) throws IOException {
@@ -629,8 +759,18 @@ public class StableControllerTest {
             if (!rawAnswers.isEmpty()) frames.add(rawAnswers.remove());
             else if (!answers.isEmpty()) { Map<String,Object> response = answers.remove().apply(q); if (response != null) frames.add(frame(response)); }
         }
-        @Override public StableController.Frame receive(long timeoutMillis) { return frames.poll(); }
-        @Override public Integer awaitExit(long timeoutMillis) { exitWaits++; return exitCode; }
+        @Override public StableController.Frame receive(long timeoutMillis) {
+            StableController.Frame result = frames.poll();
+            if (result == null) sleep(timeoutMillis);
+            return result;
+        }
+        @Override public Integer awaitExit(long timeoutMillis) {
+            exitWaits++;
+            if (exitCode == null) sleep(timeoutMillis);
+            return exitCode;
+        }
+        @Override public long nanoTime() { return now; }
+        @Override public void sleep(long millis) { now += TimeUnit.MILLISECONDS.toNanos(millis); }
         @Override public void closeInput() { }
         @Override public boolean hasPartialFrame() { return partial; }
     }
