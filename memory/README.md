@@ -3,6 +3,49 @@
 这里保存本项目的实玩复盘和可复用经验。当前用户指令、`AGENTS.md` 和
 [`docs/cli-help.md`](../docs/cli-help.md) 优先；历史 memory 不替代当前观测。
 
+## 给接手游戏的 AI
+
+1. 先读当前用户要求、[AGENTS](../AGENTS.md)和[英文协议手册](../docs/cli-help.md)。
+2. 按[项目内游玩 skill](../skills/pixel-dungeon-run-assistance/SKILL.md)建立当前楼层、资源和战术计划。
+   它已适配CLI.8.0.1的公开协议，替换了原skill的存档读取和GUI键鼠流程。
+3. 按需读取下表资料；不用加载所有历史记录。继续游戏必须从授权连接获取当前观察，
+   文件、旧坐标或旧会话句柄不能代替当前 `s/rev`。
+
+| 资料 | 何时读取 |
+| --- | --- |
+| [项目全局记忆摘录](references/project-knowledge.md) | 需要控制边界、恢复原则和已有证据习惯时 |
+| [战士天赋与构筑笔记](references/warrior-talents-v3.3.8.md) | 分配天赋、选子职业／护甲能力时；历史数值须对当前源码与装备核实 |
+| [本局通关复盘](2026-10-08-warrior-playthrough-retrospective.md) | 路线、弹道、首领阶段、资源损耗与失误检查 |
+| [CLI维护 skill](../skills/shattered-pixel-dungeon-cli-release/SKILL.md) | 用户要求排障或修复控制器／客户端时 |
+| [PTY启动历史](references/cli6-controller-pty-history.md) | 研究终端管道问题时；CLI6的旧版本与临时方案不能替代当前手册 |
+| [血条修复与暂停历史](references/health-rounding-and-pause-history.md) | 理解解码失败、原动作结果、保留进程与暂停之间的边界 |
+
+## 只读公开观察工具
+
+以下脚本从本局用过的临时辅助脚本迁入，入口和依赖都在项目内。只读取显式提供的完整公开
+JSON响应文件或stdin，不启动游戏、不发送意图、不读取存档／audit，也不自动刷新输入文件。
+支持单个wire回复、控制器wrapper，以及旧中继的 `{seq,response}` 公开记录；`seq`仅保留为历史元数据。
+代码仍调用正式[Python客户端](../desktop-control/client/spdctl_client.py)独立解码。
+
+在项目根目录运行（`/path/to/public-response.json`由调用者提供）：
+
+```sh
+python3 skills/pixel-dungeon-run-assistance/scripts/map.py --response /path/to/public-response.json
+python3 skills/pixel-dungeon-run-assistance/scripts/cells.py --response /path/to/public-response.json 123 4,5
+python3 skills/pixel-dungeon-run-assistance/scripts/ray.py --response /path/to/public-response.json --target 123 --op projectile
+```
+
+- [map.py](../skills/pixel-dungeon-run-assistance/scripts/map.py)：完整已知地图、图例、全部实体／环境／公开预警；`--json`保留完整解码观察。
+- [cells.py](../skills/pixel-dungeon-run-assistance/scripts/cells.py)：按cell或零起始x,y精查同帧地形、全部实体和预警，避免手工把门墙错算一格。
+- [ray.py](../skills/pixel-dungeon-run-assistance/scripts/ray.py)：按仓库Ballistica源码计算三种有条件几何；未知格停止预测，源码hash变化要求重新审查。
+
+`--response -`从stdin读取；脚本可以从其他工作目录以其实际路径启动，不需要本机用户名或安装全局skill。
+文件只是冻结观察，输出不会产生新绑定或证明动作已执行。弹道工具不覆盖Yog穿墙射线、所有物品覆写、
+射程、范围伤害或隐形占位；几何可达不等于命中、有效或安全。
+
+来源、复制方式、原文件SHA-256及未迁入内容见[迁入清单](IMPORTS.md)。
+历史副本中的外部路径仅为出处，使用这些资料不要求那些文件存在。
+
 ## 已保存复盘
 
 - [2026-10-08：战士通关的决策失误与经验](2026-10-08-warrior-playthrough-retrospective.md)

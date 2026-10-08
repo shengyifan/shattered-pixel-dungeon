@@ -13,6 +13,14 @@ records this patch's implementation and validation. The
 [CLI.8.0.0 clean rebuild record](docs/cli-rebuild-8.0.0-clean-20260924.md)
 remains historical package evidence.
 
+For AI-controlled playthroughs, read the [project-local memory](memory/README.md)
+and [gameplay skill](skills/pixel-dungeon-run-assistance/SKILL.md). They include
+portable read-only public-map/cell/ballistics helpers, versioned Warrior notes,
+and the completed-run retrospective. Requested CLI diagnosis has a separate
+[maintenance skill](skills/shattered-pixel-dungeon-cli-release/SKILL.md).
+The [import record](memory/IMPORTS.md) identifies copied sources and historical
+limits; these resources do not require the original machine's personal memory.
+
 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://watabou.itch.io/).
 
 Shattered Pixel Dungeon currently compiles for Android, iOS, and Desktop platforms. You can find official releases of the game on:

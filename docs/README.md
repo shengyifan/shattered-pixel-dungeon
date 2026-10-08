@@ -11,6 +11,7 @@
 - [CLI.8.0.1 语义战斗观察](cli-combat-visuals.md)：公开状态、UI 反馈及按 FOV 覆盖的世界提示。
 - [完整单帧响应的 token 研究](cli-complete-frame-token-study-20260920.md)：CLI 7 之前的离线研究；原测量包含未部署候选，不能当作 CLI8 收益。
 - [代理操作约定](../AGENTS.md)：当前协议解码、操作、记录和发布要求。
+- [项目内 AI 游玩资料](../memory/README.md)：本地skills、只读地图／弹道工具、战士构筑笔记、通关复盘及来源记录。
 
 ## 历史版本记录
 
