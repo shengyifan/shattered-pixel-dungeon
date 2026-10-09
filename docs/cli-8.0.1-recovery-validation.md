@@ -1,5 +1,10 @@
 # CLI.8.0.1 recovery and warning lifecycle
 
+> Historical implementation evidence. The later user-requested
+> [CLI.8.0.2 clean rebuild](cli-8.0.2-cleanup-validation.md#clean-rebuild-2026-10-09)
+> removed the generated attachments and old application backups named below.
+> Their paths remain historical citations, not current files or runtime dependencies.
+
 CLI.8.0.1 keeps protocol 8, audit schema 11, the independent v8 profile and game
 3.3.8. This patch changes controller recovery, semantic observation lifetime and
 the optional Python client's diagnostics; it does not change native combat,

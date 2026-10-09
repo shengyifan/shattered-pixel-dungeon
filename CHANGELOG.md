@@ -6,6 +6,8 @@
 
 ## CLI.8.0.2
 
+- Records the [2026-10-09 clean rebuild](docs/cli-8.0.2-cleanup-validation.md#clean-rebuild-2026-10-09): removes all previous project build products and app backups, executes a fresh Java/Python/ARM64 gate, and verifies the default-path package and isolated controller/quit lifecycles. Runtime source and version numbers remain unchanged.
+
 - Fixes the shared smoke client's asynchronous quit lifecycle: establish the original completed receipt before waiting for process exit, without a post-quit state query.
 - Repairs historical token-study entrypoints with a pinned v7 decoder isolated from the current v8 client, explicit corpus/baseline/output inputs and source-preserving output validation; removes an unreferenced legacy measurement entrypoint.
 - Removes retired CLI7 screen-effect and generic metric production plumbing. HUD visibility and turn sweep no longer construct unused pixel/color payloads; current semantic world cues, particle counts and public visibility remain intact.

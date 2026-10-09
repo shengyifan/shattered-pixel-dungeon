@@ -5,6 +5,59 @@ CLI.8.0.2 keeps protocol 8, audit schema 11, the independent v8 profile and game
 CLI7 observation plumbing and aligns the current source-review evidence. Native
 combat, game rules and public protocol meanings are unchanged.
 
+## Clean rebuild 2026-10-09
+
+After the implementation validation below, the user explicitly requested removal
+of all earlier project build products and application backups, followed by a fresh
+macOS CLI build and Git push. The runtime source remains commit
+`7cf7cf234cc0f301a13a454064de8b19ce3d6c5c`; this rebuild does not change CLI,
+protocol, schema or game versions.
+
+Before rebuilding, 14 ignored generated directories and the generated
+`ios/robovm.properties` file were deleted after checking that no cleanup root was
+a symlink and no tracked input was inside it. They contained 12,059 regular files
+and 1,637,452,281 logical bytes. This includes every previous app image/backup,
+fixture, frozen runtime and validation attachment under the project build trees,
+the project-local `.gradle` cache and Python bytecode caches. Nested links were
+unlinked without following them. Personal profiles, external transport logs,
+tracked source and build-tool inputs, and global dependency/JDK installations
+were not removed. Gradle regenerates the iOS properties file during configuration.
+
+The complete Java/package gate ran with `--no-build-cache --rerun-tasks --offline
+--no-daemon --console=plain`: all 38 actionable tasks executed, and all 819 Java
+tests passed without failures or skips. Python discovery passed 354 desktop tests,
+8 source-inventory tests and 21 gameplay-helper tests. The first concurrent desktop
+Python run reached a source-inventory test before Gradle wrote its required test
+classpath; rerunning after that writer completed passed the entire suite. No
+runtime source fix or test exclusion was needed.
+
+The freshly built default bundle is
+`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`, with **no old
+application backups retained**. It reports `CLI.8.0.2 (protocol 8, game 3.3.8)`.
+Its 3,358 catalog entries, snapshot resources, ARM64 binaries, exact help bytes
+and strict deep ad-hoc signature checks pass. The three retired production types
+and test launchers/agents remain absent. Both build ID and application JAR bytes
+are identical to the implementation build recorded below:
+
+- Build ID: `3764bd99c7b1ac37437ceb731c082f8dcf0ef74b19df86aace38ece55dbbe999`
+- App JAR SHA-256: `b6edfbdf928e534c1e4a36eeb1fef36781b7107ee75beaa17e19ffd0d8ff3bd9`
+
+Fresh isolated ordinary-controller and instrumented slow-quit package checks
+passed using the native CLI and bundled JVM. The ordinary case covered two
+sessions, 36 wire requests, four save receipts, old-revision rejection and matching
+saved/reopened fixture state. The slow-quit case retained the original receipt
+lifecycle and issued no post-quit state query. The earlier 21-case native visual
+validation below belongs to the same JAR bytes; it was not rerun or counted as a
+new visual sweep during this build-only task.
+
+Current generated evidence is under `desktop-control/build/clean-rebuild-20261009/`:
+`cleanup.json`, `full-gate.log`, `java-test-totals.json`, `python-suite-final.log`,
+`source-gate-python-suite.log`, `gameplay-helper-suite.log`, `package-identity.json`,
+`controller-package.log` and `slow-quit-package.log`. Those runtime logs identify
+only fresh labeled fixture profiles and raw transport. Earlier generated evidence
+paths and backup paths in the implementation record below have been removed;
+they are retained as historical citations, not claims that the files still exist.
+
 ## Changes and scope
 
 - The shared smoke client resolves the original successful quit receipt before
@@ -27,7 +80,7 @@ combat, game rules and public protocol meanings are unchanged.
   The recent [8.0.1 recovery record](cli-8.0.1-recovery-validation.md), upstream
   build guides and user-requested project-local gameplay memory/skills remain.
 
-## Validation
+## Initial implementation validation
 
 The complete Java/ARM64 gate passed, including all source-review checks, without
 failed or skipped tests:
@@ -71,7 +124,7 @@ a valid measurement unless `--require-smaller` is explicitly selected. Output
 symlink, overlap and optional-wire protection are separately covered by offline
 entrypoint regressions.
 
-## Actual package and native fixtures
+## Initial implementation package and native fixtures
 
 The emitted and delivered executable reports
 `CLI.8.0.2 (protocol 8, game 3.3.8)`. Printed help, bundled help and the source manual
@@ -86,7 +139,7 @@ are test launchers/agents. Ad-hoc signing is not notarized distribution.
 - Build ID: `3764bd99c7b1ac37437ceb731c082f8dcf0ef74b19df86aace38ece55dbbe999`
 - App JAR SHA-256: `b6edfbdf928e534c1e4a36eeb1fef36781b7107ee75beaa17e19ffd0d8ff3bd9`
 - Delivered bundle: `desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`
-- Previous-image backup: `desktop-control/build/app-macos-arm64-backup-before-8.0.2-20261009-1a36287a/Shattered Pixel Dungeon.app`
+- Previous-image backup at initial delivery (subsequently removed by the clean rebuild above): `desktop-control/build/app-macos-arm64-backup-before-8.0.2-20261009-1a36287a/Shattered Pixel Dungeon.app`
 
 The ordinary packaged controller smoke passes both before and after delivery:
 two isolated sessions, 36 wire requests, four save receipts, old-revision rejection
@@ -108,17 +161,17 @@ All native runtime checks use newly created, explicitly labeled isolated profile
 The existing personal game/controller is not queried, closed or restarted. This
 batch does not read personal saves or private audit databases.
 
-The requested final bundle directory remains
-`desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`. An isolated
-`app-macos-arm64-cli-8.0.2` staging directory permits validation before delivery;
-the previous default image is preserved as a backup when the validated image is
-placed at the original path. New Java code applies on the next launch, not as a
-hot update to an existing process.
+The initial delivery used `app-macos-arm64-cli-8.0.2` staging, then placed the
+validated image at `desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`
+and retained the previous default as a backup. The later clean rebuild above
+supersedes that backup-retention decision. New Java code applies on the next
+launch, not as a hot update to an existing process.
 
-The previous launcher's, JAR's and runtime descriptor's hashes are unchanged in
-the backup. The new JAR hash is identical before/after delivery, and actual
-version/help/signature checks and a new isolated controller smoke pass at the
-original path. Existing older backups and local game data were not cleaned.
+At initial delivery, the previous launcher's, JAR's and runtime descriptor's hashes
+were unchanged in the backup. The new JAR hash matched before/after delivery, and
+version/help/signature checks plus an isolated controller smoke passed at the
+original path. Older backups were retained then and removed by the later explicit
+clean-build request; personal game data was not cleaned.
 
 ## Maintained documentation and evidence files
 
@@ -129,8 +182,8 @@ the new architecture and this report, plus the preceding 8.0.1 repair record.
 Maintained repository links resolve. Upstream build-guide links outside this CLI
 cleanup retain their existing upstream conventions.
 
-Local generated evidence is under
-`desktop-control/build/validation-cli-8.0.2-20261009/`:
+Initial generated evidence was under the following directory, subsequently removed
+by the clean rebuild above: `desktop-control/build/validation-cli-8.0.2-20261009/`:
 
 - `full-gate-final.log`, `java-test-totals.json`, `python-suite.log`,
   `source-gate-python-suite.log`, `gameplay-helper-suite.log`
@@ -140,9 +193,10 @@ Local generated evidence is under
 - `controller-package.log`, `controller-package-delivered.log`, `slow-quit-package.log`
 - `packaged-visual-results.json`, `packaged-visuals.log`, `run_packaged_visuals.py`
 
-Source inventory comparison and retirement details are also in
+Initial source inventory comparison and retirement details were also in
 `game-control/build/combat-visual/cleanup-802/checked.json` and `review-summary.json`.
-Runtime logs identify independent fixture profiles and preserved raw transport.
+These earlier generated files have been removed; current source checks are freshly
+generated under `game-control/build/combat-visual/` by the new gate.
 
 ## History and reproducibility
 
