@@ -26,6 +26,8 @@ import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Button;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.watabou.input.KeyBindings;
@@ -160,13 +162,18 @@ public class WndTabbed extends Window {
 		select( tab );
 	}
 	
-	protected class Tab extends Button {
+	protected class Tab extends Button implements GameplayStatus {
 		
 		protected final int CUT = 5;
 		
 		protected boolean selected;
 		
 		protected NinePatch bg;
+
+		@Override
+		public java.util.Map<String,Object> gameplayStatus() {
+			return java.util.Collections.singletonMap("selected", selected);
+		}
 		
 		@Override
 		protected void layout() {
@@ -245,12 +252,33 @@ public class WndTabbed extends Window {
 		
 		protected Image icon;
 		private RectF defaultFrame;
+		private com.watabou.gltextures.SmartTexture copiedTexture;
+		private java.util.Map<String,Object> copiedMeaning = java.util.Collections.emptyMap();
 		
 		public IconTab( Image icon ){
 			super();
 			
+			// Image.copy intentionally keeps native rendering, but erases SymbolImage's identity.
+			copiedMeaning = GameplayIcons.copiedImage(icon);
 			this.icon.copy(icon);
 			this.defaultFrame = icon.frame();
+			this.copiedTexture = this.icon.texture;
+		}
+
+		@Override
+		public java.util.Map<String,Object> gameplayStatus() {
+			java.util.Map<String,Object> result = new java.util.LinkedHashMap<>(super.gameplayStatus());
+			RectF frame = icon == null ? null : icon.frame();
+			// Native layout may crop the top of an unselected tab. Do not reuse this binding
+			// for a replacement texture/frame or an icon the native display has hidden.
+			if (icon != null && icon.parent == this && GameplayIcons.displayed(icon, false)
+					&& icon.texture == copiedTexture && frame != null && defaultFrame != null
+					&& frame.left == defaultFrame.left && frame.right == defaultFrame.right
+					&& frame.bottom == defaultFrame.bottom && frame.top >= defaultFrame.top
+					&& frame.top < frame.bottom && !copiedMeaning.isEmpty()) {
+				result.put("icon", copiedMeaning);
+			}
+			return result;
 		}
 		
 		@Override

@@ -544,7 +544,19 @@ def _environment(value: Any, effect_defs: Any, path: str) -> list:
         value = _definition(effect_defs, value, path)
     if not isinstance(value, list):
         raise DecodeError(f"{path} must be an effect array or definition index")
-    return [_generic(effect, f"{path}[{index}]") for index, effect in enumerate(value)]
+    result = []
+    for index, raw in enumerate(value):
+        here = f"{path}[{index}]"
+        effect = dict(_generic(_dict(raw, here), here))
+        if "collision" in effect:
+            collision = _dict(effect["collision"], f"{here}.collision")
+            if not collision or set(collision) - {"passable", "avoid", "solid"}:
+                raise DecodeError(f"{here}.collision must contain partial passable/avoid/solid overrides")
+            for key, flag in collision.items():
+                if type(flag) is not bool:
+                    raise DecodeError(f"{here}.collision.{key} must be boolean")
+        result.append(effect)
+    return result
 
 
 def _map(value: Any, path: str) -> Dict[str, Any]:
@@ -801,6 +813,8 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
                 appearance_path = f"{here}.appearance"
                 appearance = _dict(cue["appearance"], appearance_path)
                 _reject_drawing(appearance, appearance_path)
+                if "lifecycle" in appearance and appearance["lifecycle"] != "unknown":
+                    raise DecodeError(f"{appearance_path}.lifecycle must be unknown")
                 if "unmapped_indicator" in appearance and type(appearance["unmapped_indicator"]) is not bool:
                     raise DecodeError(f"{appearance_path}.unmapped_indicator must be boolean")
                 if "nature_powered" in appearance and type(appearance["nature_powered"]) is not bool:
@@ -914,9 +928,15 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
             node["subject_data"] = _subject_data(node, here)
         if "shown" in node:
             _shown(node["shown"], f"{here}.shown")
-        for key in ("free_cast", "targeting_marker"):
+        for key in ("free_cast", "targeting_marker", "selected"):
             if key in node and type(node[key]) is not bool:
                 raise DecodeError(f"{here}.{key} must be boolean")
+        if "talent_points" in node:
+            points = _dict(node["talent_points"], f"{here}.talent_points")
+            spent = _integer(points.get("spent"), f"{here}.talent_points.spent")
+            maximum = _integer(points.get("max"), f"{here}.talent_points.max")
+            if maximum <= 0 or not 0 <= spent <= maximum:
+                raise DecodeError(f"{here}.talent_points requires 0 <= spent <= max and max > 0")
         if "quickslot" in node and (type(node["quickslot"]) is not int or node["quickslot"] < 1):
             raise DecodeError(f"{here}.quickslot must be a positive integer")
         for icon_key in ("icon", "primary_icon", "secondary_icon", "target_icon", "spell_icon"):

@@ -1,6 +1,6 @@
 # Public CLI clients and per-frame decoding
 
-## Reusable CLI.9.0.1 reference helper
+## Reusable CLI.9.0.2 reference helper
 
 `desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
 module for consumers of the packaged controller. It does not launch the game,
@@ -39,7 +39,7 @@ against complete current hero/item/entity/buff facts. Ambiguous or missing subje
 are decoding errors. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
-CLI.9.0.1 validates static parameters for every action, query and local `settle`,
+CLI.9.0.2 validates static parameters for every action, query and local `settle`,
 including required/extra fields and JSON integer versus boolean/float distinctions.
 An omitted settle rid resumes the owner of an outstanding query first, otherwise
 the latest pending action; an explicit invalid rid is never treated as omitted.
@@ -187,7 +187,7 @@ python3 desktop-control/src/test/python/autoplay.py --self-test
 
 Source/test organization and explicit offline token-study entrypoints are in the
 [current architecture](cli-architecture.md). Executed checks belong in the
-[current validation report](cli-9.0.1-terrain-validation.md), separately from
+[current validation report](cli-9.0.2-expression-validation.md), separately from
 actual playthrough evidence in the [project memory](../memory/README.md).
 Display each complete response using that same parsed object; do not filter by
 fixed English labels, crop the map without marking it, remove descriptions, omit
@@ -202,3 +202,20 @@ The helper never guesses this distinction from a name or neighboring NPC. The
 map/cell helpers retain the complete descriptor; ray geometry uses its reviewed
 terrain identity and keeps unknown gaps unknown. An absent custom presentation
 does not prove that every unreported blocker is absent.
+
+## Current UI and environment semantics
+
+Tabs carry a boolean `selected` (false is retained), and source icon semantics.
+Talent nodes carry `talent_points:{spent,max}` even outside the current game.
+The decoder retains and validates these direct node fields in all views.
+
+Map effects may carry source-reviewed partial `collision` boolean overrides.
+The ray helper applies them before the native previous-cell, solid, character
+and target decisions, without matching description text. Missing mandatory
+overrides for a reviewed blocking kind or conflicting overrides stop prediction
+as unknown. Ordinary unclassified effects do not imply collision changes.
+
+A `red_target` with `appearance.lifecycle:"unknown"` is an observed warning whose
+completion cannot be confirmed. It is retained across display fade within this
+process and level scope. Do not treat it as a proven pending attack or its image
+disappearance as completion. The field survives events and frozen snapshots.

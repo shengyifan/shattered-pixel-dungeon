@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.shatteredpixel.shatteredpixeldungeon.control.game.PendingWarningTest.get;
 import static com.shatteredpixel.shatteredpixeldungeon.control.game.PendingWarningTest.set;
@@ -116,19 +118,155 @@ class Cli9WarningPoolingTest {
         }
     }
 
-    @Test void restoredNativeMarkerOnlyPublishesCurrentDisplayAndNeverReconstructsAnAttack() throws Exception {
+    @Test void restoredNativeMarkerRetainsExplicitUnknownLifecycleAfterFadeWithoutReconstructingAnAttack() throws Exception {
         try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
             TargetedCell saved = new TargetedCell(); saved.reset(22, Actor.now() + 2f);
             Bundle bundle = new Bundle(); saved.storeInBundle(bundle);
             PendingWarning.clear(); TargetedCell.cells.clear();
             TargetedCell restored = new TargetedCell(); restored.restoreFromBundle(bundle);
+            TargetedCell.cells.put(restored.pos, restored); // Native Level.restoreFromBundle registers before scene reset.
             restored.reset(restored.pos, restored.time); f.targetedCells.add(restored);
             f.level.heroFOV[22] = false;
             assertTrue(f.frame().isEmpty());
             f.level.heroFOV[22] = true;
-            assertEquals(List.of(new VisualCue("red_target", 22)), f.frame());
+            List<VisualCue> unknown = List.of(unknownWarning(22));
+            assertEquals(unknown, f.frame());
+            GameController.State displayed = f.capture();
             f.fadeMarkers();
-            assertTrue(f.frame().isEmpty(), "Restored display has no private historical attack ownership");
+            assertEquals(unknown, f.frame(), "Image expiry does not establish an unbound attack's completion");
+            assertEquals(displayed.version, f.capture().version, "A restored marker fade cannot stale intent");
+            f.level.heroFOV[22] = false;
+            assertTrue(f.frame().isEmpty());
+            f.level.heroFOV[22] = true;
+            assertEquals(unknown, f.frame());
+            f.replaceScene();
+            assertEquals(unknown, f.frame(), "Same-level scene rebuilding preserves observed uncertainty");
+            Dungeon.branch++;
+            assertTrue(f.frame().isEmpty(), "Scope changes end process-local uncertainty");
         }
+    }
+
+    @Test void hiddenRestoredMarkersNeverBecomeUnknownWarningsAfterTheyFade() throws Exception {
+        try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
+            TargetedCell marker = GameScene.targetedCell(23, -1f);
+            f.level.heroFOV[23] = false;
+            assertTrue(f.frame().isEmpty());
+            f.fadeMarkers();
+            assertFalse(marker.alive);
+            f.level.heroFOV[23] = true;
+            assertTrue(f.frame().isEmpty(), "Unknown lifecycle does not authorize unseen saved targets");
+        }
+    }
+
+    @Test void trackedOverlapCannotResolveAnUnboundWarningOrDiscloseOwnerMultiplicity() throws Exception {
+        try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
+            GameScene.targetedCell(22, 1f);
+            assertEquals(List.of(unknownWarning(22)), f.frame());
+            PendingWarning tracked = PendingWarning.begin(new PendingWarningTest.Owner());
+            GameScene.targetedCell(22, 2f, tracked);
+            assertEquals(List.of(unknownWarning(22)), f.frame());
+            f.fadeMarkers();
+            tracked.complete();
+            assertEquals(List.of(unknownWarning(22)), f.frame(),
+                    "Another attack's completion cannot prove the unbound source has ended");
+            PendingWarning.endRun();
+            assertTrue(f.frame().isEmpty());
+        }
+    }
+
+    @Test void completedTailStaysClearButNewNativeUnownedPresentationAtSameCellIsUnknown() throws Exception {
+        try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
+            PendingWarning tracked = PendingWarning.begin(new PendingWarningTest.Owner());
+            TargetedCell marker = GameScene.targetedCell(22, 2f, tracked);
+            assertEquals(List.of(new VisualCue("red_target", 22)), f.frame());
+            tracked.complete();
+            assertTrue(marker.alive);
+            assertTrue(f.frame().isEmpty(), "A completed source's image tail is not a new unknown attack");
+            f.replaceScene();
+            assertTrue(f.frame().isEmpty(), "Reattaching native images cannot reinterpret a completed source");
+            assertSame(marker, GameScene.targetedCell(22, 3f));
+            assertEquals(List.of(unknownWarning(22)), f.frame(),
+                    "A real new unbound warning at the same cell must not inherit completed ownership");
+        }
+    }
+
+    @Test void unownedNativePresentationOverAnActiveTrackedOwnerRetainsIndependentUncertainty() throws Exception {
+        try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
+            PendingWarning tracked = PendingWarning.begin(new PendingWarningTest.Owner());
+            TargetedCell marker = GameScene.targetedCell(22, 2f, tracked);
+            assertEquals(List.of(new VisualCue("red_target", 22)), f.frame());
+            assertSame(marker, GameScene.targetedCell(22, 3f));
+            assertEquals(List.of(unknownWarning(22)), f.frame());
+            tracked.complete();
+            f.fadeMarkers();
+            assertEquals(List.of(unknownWarning(22)), f.frame(),
+                    "The still-active older owner cannot claim an unbound new presentation");
+        }
+    }
+
+    @Test void unownedAndTrackedPresentationsBeforeTheFirstFramePreserveBothSourceOrders() throws Exception {
+        for (boolean unownedFirst : List.of(false, true)) {
+            try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
+                PendingWarning tracked = PendingWarning.begin(new PendingWarningTest.Owner());
+                if (unownedFirst) GameScene.targetedCell(22, 1f);
+                GameScene.targetedCell(22, 2f, tracked);
+                if (!unownedFirst) GameScene.targetedCell(22, 1f);
+                assertEquals(List.of(unknownWarning(22)), f.frame());
+                tracked.complete();
+                f.fadeMarkers();
+                assertEquals(List.of(unknownWarning(22)), f.frame(),
+                        "A tracked refresh before observation cannot consume earlier unknown source ancestry");
+            }
+        }
+    }
+
+    @Test void trackedRefreshBeforeRestoredMarkersFirstFrameCannotInventSavedOwnership() throws Exception {
+        try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
+            TargetedCell original = new TargetedCell();
+            original.reset(22, Actor.now() + 2f);
+            Bundle saved = new Bundle();
+            original.storeInBundle(saved);
+            PendingWarning.clear();
+            TargetedCell.cells.clear();
+            TargetedCell restored = new TargetedCell();
+            restored.restoreFromBundle(saved);
+            TargetedCell.cells.put(restored.pos, restored);
+            restored.reset(restored.pos, restored.time);
+            f.targetedCells.add(restored);
+            PendingWarning tracked = PendingWarning.begin(new PendingWarningTest.Owner());
+            assertSame(restored, GameScene.targetedCell(22, 3f, tracked));
+            assertEquals(List.of(unknownWarning(22)), f.frame());
+            tracked.complete();
+            f.fadeMarkers();
+            assertEquals(List.of(unknownWarning(22)), f.frame());
+        }
+    }
+
+    @Test void unknownLifecycleSurvivesFrozenEventsAndEveryObservationView() throws Exception {
+        try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
+            GameScene.targetedCell(22, -1f);
+            f.frame();
+            GameController.VisualSnapshot event = f.controller.pollVisual();
+            assertNotNull(event);
+            Map<?, ?> savedCue = (Map<?, ?>) ((List<?>) event.data().get("cues")).get(0);
+            assertEquals(Map.of("lifecycle", "unknown"), savedCue.get("appearance"));
+            GameController.State frame = f.capture();
+            for (boolean sources : List.of(false, true)) {
+                for (boolean full : List.of(false, true)) {
+                    Map<?, ?> wire = (Map<?, ?>) CompactProtocol.project(frame.publicState, sources, full);
+                    Map<?, ?> cues = (Map<?, ?>) wire.get("cues");
+                    Map<?, ?> cue = (Map<?, ?>) ((List<?>) cues.get("cues")).get(0);
+                    assertEquals(Map.of("lifecycle", "unknown"), cue.get("appearance"));
+                }
+            }
+            PendingWarning.endRun();
+            assertTrue(f.frame().isEmpty());
+            assertEquals(Map.of("lifecycle", "unknown"), savedCue.get("appearance"),
+                    "Current clearing cannot rewrite the frozen event");
+        }
+    }
+
+    private static VisualCue unknownWarning(int cell) {
+        return new VisualCue("red_target", cell, null, null, null, null, Map.of("lifecycle", "unknown"));
     }
 }

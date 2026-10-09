@@ -264,8 +264,64 @@ class BallisticaPortTest(unittest.TestCase):
 
     def test_public_web_sets_dynamic_solid_without_inventing_other_effect_flags(self):
         source = observation()
-        source["data"]["map"]["env"]["17"] = [{"type": "web", "desc": "Public web"}]
+        source["data"]["map"]["env"]["17"] = [{"type": "web", "desc": "Public web", "collision": {"solid": True}}]
         self.assertEqual(17, self.predict(source)["conditional_collision_prediction"]["cell"])
+
+    def test_public_walls_and_eternal_fire_stop_before_target_for_all_profiles(self):
+        for kind in ("light_wall", "key_wall", "eternal_fire"):
+            override = {"passable": False, "avoid": False}
+            if kind != "eternal_fire":
+                override["solid"] = True
+            source = observation()
+            source["data"]["map"]["env"]["17"] = [{"type": kind, "desc": "Exact public description",
+                                                       "collision": override}]
+            for target in (17, 19):
+                for mode in ("projectile", "magicbolt", "solidbeam"):
+                    with self.subTest(kind=kind, target=target, mode=mode):
+                        result = self.predict(source, target, mode)
+                        self.assertEqual(16, result["conditional_collision_prediction"]["cell"])
+                        self.assertFalse(result["predicted_reaches_target_under_assumptions"])
+                        row = result["evaluated_path_including_blocking_probe"][-1]
+                        self.assertEqual(override, row["public_environment_collision_overrides"])
+                        self.assertEqual(kind != "eternal_fire", row["flags"]["solid"])
+
+    def test_partial_collision_overrides_preserve_base_flags_and_compose_without_order(self):
+        source = observation()
+        effects = [{"type": "eternal_fire", "collision": {"passable": False, "avoid": False}},
+                   {"type": "web", "collision": {"solid": True}}]
+        for env in (effects, list(reversed(effects))):
+            source["data"]["map"]["env"]["17"] = env
+            row = self.predict(source)["evaluated_path_including_blocking_probe"][-1]
+            self.assertEqual({"passable": False, "avoid": False, "solid": True}, row["flags"])
+        source["data"]["map"]["rows"][2] = [2, 0, "0002000", "v"]
+        source["data"]["map"]["env"]["17"] = [effects[0]]
+        row = self.predict(source)["evaluated_path_including_blocking_probe"][-1]
+        self.assertTrue(row["flags"]["solid"], "Eternal fire cannot clear a solid door flag")
+
+    def test_conflicting_and_missing_collision_facts_remain_unknown_even_on_target_or_occupant(self):
+        cases = ([{"type": "web", "desc": "Web without a collision observation"}],
+                 [{"type": "web", "collision": {"solid": True}},
+                  {"type": "future_effect", "collision": {"solid": False}}])
+        for effects in cases:
+            for occupied in (False, True):
+                source = observation()
+                source["data"]["map"]["env"]["17"] = effects
+                if occupied:
+                    source["data"]["entities"].append({"kind": "character", "cell": 17, "name": "Rat"})
+                with self.subTest(effects=effects, occupied=occupied):
+                    result = self.predict(source, 17)
+                    self.assertEqual(17, result["first_unknown_stops_prediction"]["cell"])
+                    self.assertIsNone(result["conditional_collision_prediction"])
+                    self.assertIsNone(result["predicted_reaches_target_under_assumptions"])
+
+    def test_ordinary_nonblocking_effects_and_prose_do_not_invent_collision(self):
+        source = observation()
+        source["data"]["map"]["env"]["17"] = [
+            {"type": "fire", "desc": "A wall of text does not make a solid wall."},
+            {"type": "visible_effect", "desc": "Web LightWall KeyWall EternalFire"}]
+        result = self.predict(source)
+        self.assertTrue(result["predicted_reaches_target_under_assumptions"])
+        self.assertIsNone(result["first_unknown_stops_prediction"])
 
     def test_equal_endpoint_preserves_native_northwest_geometry_and_stop_target(self):
         source = observation()
@@ -350,8 +406,7 @@ class BallisticaPortTest(unittest.TestCase):
                 self.assertTrue(result["conditional_collision_prediction"]["conditional"])
                 self.assertIn(17, result["cells_assuming_no_unreported_collision_occupant"])
                 row = next(row for row in result["evaluated_path_including_blocking_probe"] if row["cell"] == 17)
-                self.assertEqual({"passable": True, "avoid": False, "solid": False,
-                                  "public_web_sets_solid": False}, row["flags"])
+                self.assertEqual({"passable": True, "avoid": False, "solid": False}, row["flags"])
                 self.assertNotIn("native_terrain", row)
 
     def test_public_solid_custom_decorations_stop_before_cell_without_occupant(self):
@@ -372,8 +427,7 @@ class BallisticaPortTest(unittest.TestCase):
                                      (collision["cell"], collision["trigger_cell"], collision["reason"]))
                     self.assertFalse(result["predicted_reaches_target_under_assumptions"])
                     row = result["evaluated_path_including_blocking_probe"][-1]
-                    self.assertEqual({"passable": False, "avoid": False, "solid": True,
-                                      "public_web_sets_solid": False}, row["flags"])
+                    self.assertEqual({"passable": False, "avoid": False, "solid": True}, row["flags"])
 
     def test_public_water_actor_or_object_stops_only_stop_chars_profiles(self):
         for occupant in ({"kind": "character", "cell": 17, "name": "rat"},

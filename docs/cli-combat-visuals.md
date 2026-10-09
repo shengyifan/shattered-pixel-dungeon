@@ -1,4 +1,4 @@
-# CLI.9.0.1 semantic combat observations
+# CLI.9.0.2 semantic combat observations
 
 Protocol 9 and audit schema 12 publish player-facing combat facts from existing
 game state and presentation sources. The observation is a complete public snapshot
@@ -113,8 +113,12 @@ or deal a particular amount of damage.
 
 ### Pending red warnings
 
-`red_target` retains an already publicly observed warning until its native attack
-completes or is cancelled. Marker alpha/scale fade is not the attack's lifecycle.
+A lifecycle-bound `red_target` retains an already publicly observed warning until
+its native attack completes or is cancelled. Unbound restored/native markers use
+`appearance.lifecycle:"unknown"`; only actually observed cells enter this
+process-local record, which survives marker fade and same-level scene rebuild but
+ends on a true level/run change. It is not persisted or reconstructed from saved
+targets, and it never claims that a pending attack has completed. Marker alpha/scale fade is not the attack's lifecycle.
 Each native attack episode owns its exposed cells; repeat drawing of one cell
 within that episode is coalesced. Independent owners remain separate internally,
 but public warning cells are deduplicated to match the native pooled marker;
@@ -123,7 +127,7 @@ source/FOV checks are remembered,
 and each new snapshot emits their intersection with current FOV. A warning never
 revealed to the player is not discovered by looking up a private target list.
 
-Episodes follow native completion/cancellation, including rooted Yog delays,
+Bound episodes follow native completion/cancellation, including rooted Yog delays,
 asynchronous landing callbacks, separate crystal waves, individual rocks, delayed
 rock falls, vault scans, nova expansion and gas release. A fired asynchronous
 attack remains pending after its original owner disappears until its callback
@@ -160,4 +164,4 @@ appearance in current observations or new events.
 The source inventory records reviewed routes and source contracts; it does not
 prove producer-specific runtime coverage. Current maintenance and test entrypoints
 are in the [architecture](cli-architecture.md); executed checks and package evidence
-are recorded separately in the [CLI.9.0.1 validation report](cli-9.0.1-terrain-validation.md).
+are recorded separately in the [CLI.9.0.2 validation report](cli-9.0.2-expression-validation.md).

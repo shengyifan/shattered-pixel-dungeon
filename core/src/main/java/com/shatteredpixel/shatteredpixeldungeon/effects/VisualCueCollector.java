@@ -132,12 +132,16 @@ public final class VisualCueCollector {
     public void targetDrawn(Visual source,int cell){
         if(!collecting||!drawable(source)||!known(cell))return;
         if(source instanceof TargetedCell&&((TargetedCell)source).rememberObservedWarnings(cell))return;
-        // Native markers are pooled by cell. Private attack-owner multiplicity is not a public cue.
-        add(scene,new VisualCue("red_target",cell));
     }
     private void finishPendingWarnings(){
+        // One pooled public cell does not disclose owner multiplicity. An unbound restored
+        // marker keeps explicit uncertainty even when an unrelated tracked attack overlaps it.
+        Map<Integer,Boolean> cells=new TreeMap<>();
         for(TargetedCell.PendingWarning warning:TargetedCell.PendingWarning.current())
-            for(int cell:warning.cells())if(known(cell))add(scene,new VisualCue("red_target",cell));
+            for(int cell:warning.cells())if(known(cell))cells.merge(cell,warning.lifecycleKnown(),(a,b)->a&&b);
+        for(Map.Entry<Integer,Boolean> entry:cells.entrySet())
+            add(scene,new VisualCue("red_target",entry.getKey(),null,null,null,null,
+                    entry.getValue()?null:Collections.singletonMap("lifecycle","unknown")));
     }
     public void cellVisualDrawn(Visual source,VisualCue cue){
         if(!collecting||!drawable(source))return;

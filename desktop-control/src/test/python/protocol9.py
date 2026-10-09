@@ -107,12 +107,13 @@ def _value(value):
         elif key == "op":
             result["action"] = OPS.get(child, child) if isinstance(child, str) else _value(child)
         elif key == "pres":
+            # Keep the complete protected diagnostic records (including repeated
+            # fields and additional details); legacy aliases are convenience only.
+            result["pres"] = copy.deepcopy(child)
             if isinstance(child, dict) and isinstance(child.get("diag", []), list):
                 result["translation_status"] = child.get("st")
                 result["text_diagnostics"] = {_path(item["field"]): item["code"]
                                               for item in child.get("diag", [])}
-            else:
-                result["pres"] = copy.deepcopy(child)
         elif key == "dir":
             # Dynamic capability constraints can contain a list/map here. Only a
             # scalar direction is an enum; preserve structured values recursively.

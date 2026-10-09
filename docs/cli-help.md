@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 9)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.9.0.1, protocol 9, and base game 4.0.2.
+`spdctl --version` reports CLI.9.0.2, protocol 9, and base game 4.0.2.
 
 ## 1. Start and keep the connection open
 
@@ -294,6 +294,14 @@ Example segment (the enclosing map supplies dimensions and its complete legend):
 `env` is cell-indexed and complete for this reply, including fire, gas and other
 visible effects. Its value is either an inline effect list or an integer index
 into this map's `effect_defs`, whose entries are complete ordered effect lists. A missing entry means the effect is not currently observed.
+Reviewed environment effects can carry `collision`, a nonempty partial object
+of boolean `passable`, `avoid`, and `solid` overrides. Omitted keys leave public
+base-terrain/other-effect values unchanged; they are not false. `light_wall` and
+`key_wall` set passable/avoid false and solid true; `eternal_fire` sets only
+passable/avoid false; `web` sets only solid true. These facts use the same public
+scope as the effect description, never private combined flag arrays. Descriptions
+remain complete. The current overrides commute; conflicting explicit facts must
+remain uncertain. Other prose/effect types do not imply collision flags.
 No map baselines, references or patches are used. The encoder receives only the
 existing public map projection, never hidden level terrain.
 Exceptional whole-cell/coordinate source annotations that cannot be faithfully
@@ -468,6 +476,12 @@ indexes that response's `persistence.saves`, preserving every distinct receipt.
 not need these omissions. Empty saves never prove a new save, and a recent saved
 receipt does not mean the current action caused it.
 
+Native tabs expose `selected:true|false` and preserve their actual source icon
+meaning in `icon`; selected false is explicit. Talent buttons expose
+`talent_points:{spent,max}` from the native laid-out point fill, including zero,
+even in ranking windows without a current hero table. These are display facts;
+only current `ops` grants an operation. Missing display facts remain unknown.
+
 Only `ops` advertises executable node actions. `{"op":"click"}` means the single
 click gesture; multiple gestures are listed on that operation. Node-level fields do not
 make a node actionable without an actual op. `acts` retains the complete advertised
@@ -526,7 +540,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.9.0.1 reports public gameplay facts rather than renderer internals. An
+CLI.9.0.2 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength
@@ -568,8 +582,8 @@ shadow, including outside FOV. Its `cell`, optional observed `dir` and reviewed
 hidden enemy identity. A shadow can occupy an otherwise unknown terrain cell:
 keep that cue without adding map rows or a live entity. Animation and fade are
 not independent decision revisions. A
-`red_target` is an already publicly observed warning whose native attack has not
-completed or been cancelled. Its marker can fade without clearing the warning
+A bound `red_target` is an already publicly observed warning whose native attack
+has not completed or been cancelled. Its marker can fade without clearing the warning
 or independently changing `rev`. Only previously exposed cells within current
 FOV are retained; hidden targets, later waves and remaining timers are never
 reconstructed. Independent attack owners remain distinct internally; the public
@@ -577,11 +591,20 @@ frame emits one warning per cell, matching the pooled native marker, without
 revealing the number of owners. Only publicly disclosed owners can retain a cell.
 The record
 is process-local, cleared with its run/level scope, and never restored from saves.
+A publicly re-observed marker without a reliable attack source (including a loaded
+native marker) instead carries `appearance:{lifecycle:"unknown"}`. Its observed
+cells remain in each current frame after the image fades, clipped to current FOV,
+until a true level/run scope change. Same-level scene rebuilds keep them. Unknown
+means completion/cancellation cannot be confirmed; it does not assert the native
+attack is still pending. Uncertainty takes precedence when bound and unbound
+sources share a cell. No additional save record is written; another process must
+establish knowledge again from its own public observation. Hidden/unobserved saved
+cells are never reconstructed.
 A same-level UI/scene rebuild does not end an otherwise pending warning. A
 cue cannot expose hidden terrain, an unobserved AI target, future action or
 remaining timer. Only the explicit native shadow source can report an observed
 location without known terrain at that location. A cue's optional `appearance` contains reviewed semantic `style`,
-`shape`, `paused`, `stage`, `cells`, `partial`, `count` or `symbol`; drawing
+`shape`, `paused`, `stage`, `cells`, `partial`, `count`, `symbol` or warning `lifecycle`; drawing
 parameters do not. A radial `shape` such as `ring` or `halo` and
 `coverage:"visual_extent"` describe a visible indicator, not damage
 range; a beam with a hidden endpoint reports only known cells and `partial:true`.

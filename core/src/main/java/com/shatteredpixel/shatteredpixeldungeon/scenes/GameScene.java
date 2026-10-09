@@ -1338,12 +1338,17 @@ public class GameScene extends PixelScene {
 
 	/** Preserve native pooling/timing while binding independent observation-only attack owners. */
 	public static TargetedCell targetedCell(int pos, float delay, TargetedCell.PendingWarning warning){
-		TargetedCell cell = targetedCell(pos, delay);
-		if (cell != null) cell.observeWarning(warning);
+		TargetedCell cell = nativeTargetedCell(pos, delay);
+		if (cell != null) cell.beginWarningPresentation(warning);
 		return cell;
 	}
 
 	public static TargetedCell targetedCell(int pos, float delay){
+		return targetedCell(pos, delay, null);
+	}
+
+	/** Native allocation/reset is shared without temporarily classifying a tracked source as unbound. */
+	private static TargetedCell nativeTargetedCell(int pos, float delay){
 		if (scene != null) {
 			TargetedCell cell;
 			synchronized (TargetedCell.cells) {

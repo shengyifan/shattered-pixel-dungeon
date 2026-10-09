@@ -125,7 +125,7 @@ class Protocol9BaseTest(unittest.TestCase):
 
     def test_info_version_comes_from_envelope_without_inventing_data_field(self):
         wire = {"v": 9, "id": "hello", "s": "menu:1", "rev": "r1", "st": "completed",
-                "data": {"cli_version": "CLI.9.0.1", "audit_schema_version": 12}}
+                "data": {"cli_version": "CLI.9.0.2", "audit_schema_version": 12}}
         response = protocol9.response(wire, "info")
         self.assertEqual(9, response["protocol_version"])
         self.assertNotIn("protocol_version", response["result"])

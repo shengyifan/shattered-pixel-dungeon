@@ -25,7 +25,7 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 
 /** TEST ONLY: prepare before the trigger; never call die/fail/win or construct an ending window. */
 final class EndingScenarioFixtures {
-    static boolean supports(String name){return Arrays.asList("death-ranking","death-restart","amulet-surface","ascension-start").contains(name);}
+    static boolean supports(String name){return Arrays.asList("death-ranking","death-ranking-talents","death-restart","amulet-surface","ascension-start").contains(name);}
 
     static void prepare(String name,Hero hero){
         if(!supports(name))throw new IllegalArgumentException("Unknown ending fixture");
@@ -42,6 +42,13 @@ final class EndingScenarioFixtures {
             return;
         }
         if(!hero.belongings.getAllItems(Ankh.class).isEmpty())throw new IllegalStateException("The source must naturally start without an Ankh");
+        if(name.equals("death-ranking-talents")){
+            // Isolated display fixture: the original death, ranking save/load, and native
+            // TalentsTab must carry distinct allocated values after leaving GameScene.
+            hero.lvl=4;
+            hero.talents.get(0).put(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.HEARTY_MEAL,1);
+            hero.talents.get(0).put(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.VETERANS_INTUITION,2);
+        }
         // Remove competing damage sources from the initial fixture only, so a public
         // wait reaches the original Poison tick rather than an arbitrary enemy hit.
         for(Mob mob:new ArrayList<>(Dungeon.level.mobs)){

@@ -15,6 +15,13 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 public final class CombatVisualInventory {
     // Observe native lifecycle call sites as well as the registry's declarations and fields.
     private static final String PENDING_WARNING="com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning";
+    // The public collision adapter mirrors only these native effect overrides.
+    // Track their exact bodies so a native rule change requires a new semantic review.
+    private static final Set<String> PUBLIC_COLLISION_PRODUCERS=new HashSet<>(Arrays.asList(
+            "com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.WallOfLight.LightWall",
+            "com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SkeletonKey.KeyWall",
+            "com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.MagicalFireRoom.EternalFire",
+            "com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Web"));
     private static final Set<String> OBSERVATION_TYPES=new HashSet<>(Arrays.asList(
             PENDING_WARNING,
             "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
@@ -77,6 +84,9 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter",
             "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons",
             "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayGlow",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.TalentButton",
+            "com.shatteredpixel.shatteredpixeldungeon.windows.WndTabbed.Tab",
+            "com.shatteredpixel.shatteredpixeldungeon.windows.WndTabbed.IconTab",
             "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock",
             "com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText",
             "com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite",
@@ -217,6 +227,10 @@ public final class CombatVisualInventory {
                             boolean displayAccessor=visual(symbol.getEnclosingElement().asType())
                                     &&(method.startsWith("rendered")||method.startsWith("displayed")||method.equals("intentStatus"));
                             if(displayAccessor||OBSERVATION_TYPES.stream().anyMatch(type->owner.equals(type)||owner.startsWith(type+"."))
+                                    ||method.equals("onUpdateCellFlags")&&PUBLIC_COLLISION_PRODUCERS.contains(owner)
+                                    ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell")
+                                            &&(method.equals("beginWarningPresentation")||method.equals("rememberObservedWarnings")
+                                            ||method.equals("restoreFromBundle"))
                                     ||method.equals("presentationFrameAt")
                                             &&(owner.equals("com.watabou.noosa.Tilemap")
                                             ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap"))
@@ -248,6 +262,8 @@ public final class CombatVisualInventory {
                             String name=symbol.getSimpleName().toString(),owner=symbol.getEnclosingElement().toString();
                             boolean rendered=visual(symbol.getEnclosingElement().asType());
                             if(owner.equals(PENDING_WARNING)||owner.startsWith(PENDING_WARNING+".")
+                                    ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell")
+                                            &&name.equals("beginWarningPresentation")
                                     ||rendered&&VISUAL_MUTATIONS.contains(name)
                                     ||PRODUCERS.contains(name)&&(owner.startsWith("com.shatteredpixel.")||owner.startsWith("com.watabou."))
                                     ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst")

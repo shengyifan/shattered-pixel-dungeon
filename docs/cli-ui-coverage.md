@@ -1,4 +1,4 @@
-# CLI.9.0.1 UI 覆盖清单
+# CLI.9.0.2 UI 覆盖清单
 
 清单通过 `./gradlew :game-control:generateUiCoverage` 用 javac AST 解析当前 `core/src/main/java` 与 `SPD-classes/src/main/java`。它扫描命名类、匿名类、嵌套窗口、继承关系、输入回调、物品 actions/execute、职业动作、护甲能力与法术；不加载、初始化或构造任何游戏类。
 
@@ -17,7 +17,7 @@
 
 ## v4.0.2 合入后的静态审查
 
-CLI.9.0.1 / protocol 9 的当前清单解析 **2,876 个类型、1,917 条记录**，其中
+CLI.9.0.2 / protocol 9 的当前清单解析 **2,876 个类型、1,917 条记录**，其中
 **858 条输入方法、160 个窗口、258 个按钮、33 个物品选择器、372 个物品类型**；
 `unmapped_inputs=0`。职业、子职业、护甲能力、法术和武僧招式的类型范围保持下文所列口径。
 
@@ -30,7 +30,7 @@ CLI.9.0.1 新增的一个解析类型是只读 `PublicTerrain`，没有新增或
 本次直接运行已编译的 `UiCoverageInventory` 主类生成清单，仍使用同一 javac 源码解析器；
 没有放宽分类器，也没有通过新建游戏对象来补足清单。生成与审查产物位于忽略目录
 `desktop-control/build/cli9-review/ui-review.json`，包含所有变动记录的前后值、源码指纹和逐文件判定。
-这些是静态证据；本批实际执行的测试和安装包专项以[验证记录](cli-9.0.1-terrain-validation.md)为准。
+这些是静态证据；本批实际执行的测试和安装包专项以[验证记录](cli-9.0.2-expression-validation.md)为准。
 
 | 已审查原生入口 | CLI 9 的访问与约束 |
 |---|---|
@@ -103,4 +103,4 @@ CLI.9.0.1 新增的一个解析类型是只读 `PublicTerrain`，没有新增或
 - 测试夹具只能存在于 test source-set，允许内部布置可复现场景；之后操作必须走同一个 UiBridge 和实际原生窗口。夹具初始化与诊断信息不能出现在公开游戏操作协议。
 - 每个专项证据记录 fixture ID、构建版本、角色/能力、命令、公开前后观察、预期/实际结果；不得将只检查 enum 个数的测试命名成能力可用或通关测试。
 
-当前测试入口见[架构与验证](cli-architecture.md)，本批实际执行范围见[CLI.9.0.1 验证记录](cli-9.0.1-terrain-validation.md)。以上是审查维度，不宣称全部组合已执行。
+当前测试入口见[架构与验证](cli-architecture.md)，本批实际执行范围见[CLI.9.0.2 验证记录](cli-9.0.2-expression-validation.md)。以上是审查维度，不宣称全部组合已执行。

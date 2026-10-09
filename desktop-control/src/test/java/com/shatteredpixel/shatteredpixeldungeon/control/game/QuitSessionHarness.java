@@ -22,7 +22,7 @@ public final class QuitSessionHarness implements AutoCloseable {
 
     public QuitSessionHarness(Path directory)throws Exception{
         store=new AuditStore(directory);store.ensureScope("run:quit","run","quit");
-        store.beginSession("quit-session-fixture","test-build","CLI.9.0.1",9);
+        store.beginSession("quit-session-fixture","test-build","CLI.9.0.2",9);
         session=new MachineSession(store,game,new PrintStream(wire,true,StandardCharsets.UTF_8),50);
         PipedInputStream source=new PipedInputStream(input,65536);
         reader=new Thread(()->session.read(source),"Test machine reader");reader.setDaemon(true);reader.start();

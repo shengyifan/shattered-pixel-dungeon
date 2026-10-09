@@ -4,6 +4,14 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
 
+## CLI.9.0.2
+
+- Adds source-bound native tab icon identities and explicit selected state, plus native laid-out talent point counts in all UI contexts, including ranking windows without a current hero projection.
+- Marks re-observed warnings without reliable lifecycle ownership with `appearance.lifecycle:"unknown"` and retains their known cells after marker fade until true level/run scope exit. This process-local uncertainty is never saved, inferred from private targeting geometry or treated as proof that an attack completed. Bound warning lifecycles retain native completion/cancellation.
+- Publishes source-reviewed partial environment collision overrides for LightWall, KeyWall, EternalFire and Web; the public ray helper applies them in native collision order. It does not parse descriptions or read hidden combined flags.
+- Preserves all new fields through current/default/full/source observations, frozen history, event and Python decoding paths; retains complete diagnostic evidence in the test adapter.
+- Keeps protocol 9, audit schema 12, game 4.0.2/code 922 and the v9 profile. See [expression fixes and validation](docs/cli-9.0.2-expression-validation.md).
+
 ## CLI.9.0.1
 
 - Preserves reviewed native custom-terrain identity, name and description in the default map. Ordinary water remains terrain 29; the publicly presented Smithy basin is solid terrain 39, and its other solid pieces use terrain 23.

@@ -49,6 +49,7 @@ public class TargetedCell extends Image implements Bundlable {
 	public static SparseArray<TargetedCell> cells = new SparseArray<>();
 
 	private final Set<PendingWarning> warningOwners = new LinkedHashSet<>();
+	private boolean unboundPresentation;
 
 	/** Attach observation ownership without changing the native pooled marker. */
 	public void observeWarning(PendingWarning warning) {
@@ -58,15 +59,29 @@ public class TargetedCell extends Image implements Bundlable {
 		}
 	}
 
+	/** A new native warning presentation may reuse a completed marker at the same cell. */
+	public void beginWarningPresentation(PendingWarning warning) {
+		warningOwners.removeIf(previous -> !previous.isPending());
+		if (warning == null) unboundPresentation = true;
+		else observeWarning(warning);
+	}
+
 	/** Called only after the collector validates this actual public marker and its cell. */
 	public boolean rememberObservedWarnings(int cell) {
+		// Native saves retain marker position/time, but not producer identity. Do not guess an
+		// attack from a private target list or mistake this image's fade for attack completion.
+		if (unboundPresentation || warningOwners.isEmpty()) warningOwners.add(PendingWarning.unresolved());
+		unboundPresentation = false;
 		for (PendingWarning warning : warningOwners) warning.remember(cell);
 		return !warningOwners.isEmpty();
 	}
 
 	public void reset( int pos, float time ){
 		// Reusing a marker for another cell/episode never transfers its old attack owners.
-		if (this.pos != pos || cells.get(pos) != this) warningOwners.clear();
+		if (this.pos != pos || cells.get(pos) != this) {
+			warningOwners.clear();
+			unboundPresentation = false;
+		}
 		copy(Icons.get(Icons.TARGET));
 		origin.set( width/2f );
 		camera = null;
@@ -99,17 +114,32 @@ public class TargetedCell extends Image implements Bundlable {
 		private static int scopeDepth, scopeBranch;
 		private Actor owner;
 		private boolean active;
+		private final boolean lifecycleKnown;
 		private final Set<Integer> observedCells = new LinkedHashSet<>();
 
-		private PendingWarning(Actor owner) { this.owner = owner; }
+		private PendingWarning(Actor owner, boolean lifecycleKnown) {
+			this.owner = owner;
+			this.lifecycleKnown = lifecycleKnown;
+		}
 
 		public static synchronized PendingWarning begin(Actor owner) {
+			return begin(owner, true);
+		}
+
+		/** No persisted geometry or owner inference: this records only a newly public source. */
+		private static synchronized PendingWarning unresolved() {
+			return begin(null, false);
+		}
+
+		private static PendingWarning begin(Actor owner, boolean lifecycleKnown) {
 			synchronizeScope();
-			PendingWarning warning = new PendingWarning(owner);
+			PendingWarning warning = new PendingWarning(owner, lifecycleKnown);
 			warning.active = scopeRun != null && scopeLevel != null && !Objects.equals(scopeRun, endedRun);
 			if (warning.active) pending.add(warning);
 			return warning;
 		}
+
+		boolean lifecycleKnown() { return lifecycleKnown; }
 
 		/** The native projectile/callback now owns completion, even if its preparing actor is removed. */
 		public void commit() {
@@ -281,6 +311,8 @@ public class TargetedCell extends Image implements Bundlable {
 	public void restoreFromBundle(Bundle bundle) {
 		pos = bundle.getInt(POS);
 		time = bundle.getInt(TIME);
+		// Only source ancestry, never a remembered cell: admission still requires a new public draw.
+		unboundPresentation = true;
 	}
 
 }

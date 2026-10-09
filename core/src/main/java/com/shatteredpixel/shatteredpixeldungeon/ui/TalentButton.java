@@ -40,7 +40,7 @@ import com.watabou.noosa.particles.Emitter;
 
 import java.util.LinkedHashMap;
 
-public class TalentButton extends Button {
+public class TalentButton extends Button implements GameplayStatus {
 
 	public static final int WIDTH = 20;
 	public static final int HEIGHT = 26;
@@ -54,6 +54,14 @@ public class TalentButton extends Button {
 	Image bg;
 
 	ColorBlock fill;
+	private java.util.Map<String,Object> displayedTalentPoints = java.util.Collections.emptyMap();
+
+	@Override
+	public java.util.Map<String,Object> gameplayStatus() {
+		if (fill == null || fill.parent != this || !GameplayIcons.displayed(fill, true)
+				|| displayedTalentPoints.isEmpty()) return java.util.Collections.emptyMap();
+		return java.util.Collections.singletonMap("talent_points", displayedTalentPoints);
+	}
 
 	public enum Mode {
 		INFO,
@@ -97,7 +105,14 @@ public class TalentButton extends Button {
 
 		fill.x = x+2;
 		fill.y = y + WIDTH - 1;
-		fill.size( pointsInTalent/(float)talent.maxPoints() * (WIDTH-4), 5);
+		int maxPoints = talent.maxPoints();
+		fill.size( pointsInTalent/(float)maxPoints * (WIDTH-4), 5);
+		// These are the exact inputs to this native fill, including ranking windows
+		// without a current hero. Observation must not consult the hero's talent table.
+		java.util.Map<String,Object> points = new java.util.LinkedHashMap<>();
+		points.put("spent", pointsInTalent);
+		points.put("max", maxPoints);
+		displayedTalentPoints = java.util.Collections.unmodifiableMap(points);
 
 		bg.x = x;
 		bg.y = y;

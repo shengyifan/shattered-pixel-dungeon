@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.cleric.AscendedForm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineIntervention;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.WallOfLight;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EbonyMimic;
@@ -36,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SkeletonKey;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Pasty;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
@@ -47,6 +49,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.MagicalFireRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
@@ -395,7 +398,12 @@ public final class PlayerObservation {
             if (!visible && !blob.alwaysVisible) continue;
             if (blob.volume <= 0 || blob.cur == null || cell >= blob.cur.length || blob.cur[cell] <= 0) continue;
             String description = blob.tileDesc();
-            if (description != null) effects.add(map("type", environmentAppearance(blob), "description", description));
+            if (description != null) {
+                Map<String,Object> effect = map("type", environmentAppearance(blob), "description", description);
+                Map<String,Object> collision = publicEnvironmentCollision(blob);
+                if (collision != null) effect.put("collision", collision);
+                effects.add(effect);
+            }
         }
         effects.sort(Comparator.comparing(effect -> ((Map<?, ?>) effect).get("type") + "\n"
                 + ((Map<?, ?>) effect).get("description")));
@@ -403,6 +411,9 @@ public final class PlayerObservation {
     }
 
     private static String environmentAppearance(Blob blob) {
+        if (blob instanceof WallOfLight.LightWall) return "light_wall";
+        if (blob instanceof SkeletonKey.KeyWall) return "key_wall";
+        if (blob instanceof MagicalFireRoom.EternalFire) return "eternal_fire";
         if (blob instanceof Fire || blob instanceof Inferno || blob instanceof SacrificialFire || blob instanceof VaultFlameTraps) return "fire";
         if (blob instanceof ToxicGas || blob instanceof CorrosiveGas || blob instanceof ConfusionGas
                 || blob instanceof ParalyticGas || blob instanceof StenchGas || blob instanceof SmokeScreen || blob instanceof StormCloud) return "gas";
@@ -411,6 +422,21 @@ public final class PlayerObservation {
         if (blob instanceof Web) return "web";
         if (blob instanceof Foliage) return "growth";
         return "visible_effect";
+    }
+
+    /**
+     * Reviewed public effect semantics, after the native inspection visibility gate.
+     * These are partial overrides from the four native onUpdateCellFlags producers,
+     * not a read of Level's private combined flag arrays. Their writes commute;
+     * omission leaves the public base terrain (and other public effects) unchanged.
+     */
+    private static Map<String,Object> publicEnvironmentCollision(Blob blob) {
+        if (blob instanceof WallOfLight.LightWall || blob instanceof SkeletonKey.KeyWall)
+            return map("passable", false, "avoid", false, "solid", true);
+        if (blob instanceof MagicalFireRoom.EternalFire)
+            return map("passable", false, "avoid", false);
+        if (blob instanceof Web) return map("solid", true);
+        return null;
     }
 
     private static String visibleEmotion(Mob mob) {

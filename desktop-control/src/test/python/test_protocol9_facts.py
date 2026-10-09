@@ -13,6 +13,118 @@ from test_health_estimate_rounding import sample
 
 
 class Protocol9FactsTest(unittest.TestCase):
+    def test_unknown_warning_lifecycle_survives_views_events_and_frozen_frames(self):
+        cue = {"kind": "red_target", "cell": 4, "appearance": {"lifecycle": "unknown"}}
+        known = {"kind": "red_target", "cell": 5}
+        cues = {"status": "last_observed", "cues": [cue, known]}
+        for view in ("play", "full", "src"):
+            source = frame({"cues": cues, "before": {"cues": cues}})
+            original = copy.deepcopy(source)
+            decoded = decode_wire_response(source)
+            with self.subTest(view=view):
+                self.assertEqual(cues, decoded.data["cues"])
+                self.assertEqual(cues, decoded.data["before"]["cues"])
+                self.assertEqual(cues, protocol9.response(source)["result"]["observation"]["visual_cues"])
+                self.assertEqual(original, source)
+        event = {"seq": 1, "kind": "visual.cues", "data": cues}
+        source = frame({"items": [event], "next": None, "end": True})
+        decoded = decode_wire_response(source)
+        self.assertEqual([event], decoded.data["items"])
+        self.assertFalse(decoded.is_observation)
+        for value in (False, 0, 1.0, None, "complete", "", [], {}):
+            invalid = copy.deepcopy(cues)
+            invalid["cues"][0]["appearance"]["lifecycle"] = value
+            for bad in (frame({"cues": invalid}), frame({"before": {"cues": invalid}})):
+                with self.subTest(value=value), self.assertRaisesRegex(DecodeError, "lifecycle"):
+                    decode_wire_response(bad)
+
+    def test_test_adapter_retains_complete_protected_diagnostics_in_addition_to_aliases(self):
+        diagnostics = {"st": "partial", "diag": [
+            {"field": "appearance.lifecycle", "code": "first", "source": "public_marker", "detail": False},
+            {"field": "appearance.lifecycle", "code": "second", "details": {"extra": 0}}]}
+        node = {"id": "partial", "ops": [], "pres": diagnostics}
+        source = frame({"ui": {"nodes": [node]}})
+        decoded = decode_wire_response(source)
+        adapted = protocol9.response(source)["result"]["observation"]["ui"]["controls"][0]
+        self.assertEqual(diagnostics, decoded.data["ui"]["nodes"][0]["pres"])
+        self.assertEqual(diagnostics, adapted["pres"])
+        self.assertEqual("partial", adapted["translation_status"])
+        self.assertEqual({"appearance.lifecycle": "second"}, adapted["text_diagnostics"])
+
+    def test_collision_overrides_survive_effect_tables_and_independent_frozen_frames(self):
+        effects = [{"type": "light_wall", "desc": "Public light", "collision": {
+                       "passable": False, "avoid": False, "solid": True}},
+                   {"type": "eternal_fire", "desc": "Public fire", "collision": {
+                       "passable": False, "avoid": False}},
+                   {"type": "web", "desc": "Public web", "collision": {"solid": True}}]
+        for view in ("play", "full", "src"):
+            public_map = {"w": 3, "h": 1, "types": [{"terrain": 1}], "rows": [[0, 0, "000", "v"]],
+                          "effect_defs": [[effect] for effect in effects], "env": {"0": 0, "1": 1, "2": 2}}
+            if view == "src":
+                for definition in public_map["effect_defs"]:
+                    definition[0]["text_sources"] = {"desc": {"kind": "literal", "origin": "external", "value": definition[0]["desc"]}}
+            frozen = copy.deepcopy(public_map)
+            frozen["effect_defs"] = list(reversed(frozen["effect_defs"]))
+            source = frame({"map": public_map, "before": {"s": "old", "rev": "old", "map": frozen}})
+            original = copy.deepcopy(source)
+            with self.subTest(view=view):
+                decoded = decode_wire_response(source)
+                for cell, expected in enumerate(effects):
+                    self.assertEqual(expected, map_cell(decoded, cell)["environment"][0])
+                    self.assertEqual(effects[2 - cell], decoded.data["before"]["map"]["cells"][cell]["environment"][0])
+                self.assertEqual(original, source)
+                self.assertEqual(original, decoded.raw)
+                adapted = protocol9.response(source)["result"]["observation"]["map"]["cells"]
+                self.assertEqual({"solid": True}, adapted[2]["environment"][0]["collision"])
+
+    def test_environment_collision_override_types_are_strict_without_filling_omitted_flags(self):
+        base = {"w": 1, "h": 1, "types": [{"terrain": 1}], "rows": [[0, 0, "0", "v"]]}
+        for value in (None, [], {}, {"solid": 1}, {"solid": 1.0}, {"solid": "true"},
+                      {"solid": None}, {"passable": False, "solid": True, "hidden_flag": False}):
+            current = {**base, "env": {"0": [{"type": "web", "collision": value}]}}
+            for source in (frame({"map": current}), frame({"before": {"map": current}})):
+                original = copy.deepcopy(source)
+                with self.subTest(value=value), self.assertRaisesRegex(DecodeError, "collision") as raised:
+                    decode_wire_response(source)
+                self.assertEqual(original, source)
+                self.assertEqual(original, raised.exception.raw)
+
+    def test_tab_selection_and_talent_points_survive_templates_actions_and_frozen_frames(self):
+        for spent in (0, 1, 2):
+            ui = {"node_templates": [{"common": {"role": "button", "ops": [], "icon": {"symbol": "talent"}},
+                                      "fields": ["id", "selected", "talent_points"]}],
+                  "nodes": [[0, "tab", False, {"spent": spent, "max": 2}]]}
+            before = copy.deepcopy(ui)
+            before["nodes"][0][2] = True
+            before["nodes"][0][3]["spent"] = 2 - spent
+            sources = [frame({"ui": ui, "before": {"ui": before}}),
+                       actions_frame([{"id": "talent", "ops": [], "selected": False,
+                                       "talent_points": {"spent": spent, "max": 2}}])]
+            for source in sources:
+                original = copy.deepcopy(source)
+                decoded = decode_wire_response(source)
+                node = decoded.data["ui"]["nodes"][0]
+                self.assertIs(node["selected"], False)
+                self.assertEqual({"spent": spent, "max": 2}, node["talent_points"])
+                if "before" in decoded.data:
+                    old = decoded.data["before"]["ui"]["nodes"][0]
+                    self.assertIs(old["selected"], True)
+                    self.assertEqual(2 - spent, old["talent_points"]["spent"])
+                self.assertEqual(original, source)
+                self.assertEqual(original, decoded.raw)
+
+    def test_tab_selection_and_talent_points_reject_ambiguous_values(self):
+        invalid = [{"selected": value} for value in (None, 0, 1, 0.0, "false")]
+        invalid += [{"talent_points": value} for value in (None, {}, {"spent": True, "max": 2},
+            {"spent": 1.0, "max": 2}, {"spent": 1, "max": True}, {"spent": -1, "max": 2},
+            {"spent": 3, "max": 2}, {"spent": 0, "max": 0}, {"spent": 1, "max": 2.0})]
+        for facts in invalid:
+            node = {"id": "talent", "ops": [], **facts}
+            for source in (frame({"ui": {"nodes": [node]}}),
+                           frame({"before": {"ui": {"nodes": [node]}}}), actions_frame([node])):
+                with self.subTest(facts=facts), self.assertRaises(DecodeError):
+                    decode_wire_response(source)
+
     def test_custom_terrain_descriptors_survive_views_and_independent_frozen_maps(self):
         water = {"terrain": 29, "name": "Water", "desc": "Ordinary visible water."}
         basin = {"terrain": 39, "name": "Water basin", "desc": "Visible solid basin."}

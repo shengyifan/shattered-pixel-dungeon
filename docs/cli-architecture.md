@@ -1,12 +1,12 @@
-# CLI.9.0.1 architecture and verification
+# CLI.9.0.2 architecture and verification
 
-The maintained contract is **CLI.9.0.1 / protocol 9 / audit schema 12**, with game
+The maintained contract is **CLI.9.0.2 / protocol 9 / audit schema 12**, with game
 **4.0.2** and trace format **1**. The [English help](cli-help.md) defines public
 commands and schemas. [Semantic observations](cli-combat-visuals.md),
 [client guidance](cli-playthrough-client.md) and [cancellation](cli-runtime-cancellation.md)
 explain the relevant boundaries. This document maps those contracts to source and
 verification entrypoints; test counts and package identity belong in the
-[current validation report](cli-9.0.1-terrain-validation.md).
+[current validation report](cli-9.0.2-expression-validation.md).
 
 ## Source responsibilities
 

@@ -50,6 +50,15 @@ public final class GameplayIcons {
         return imageSymbol((Image)source);
     }
 
+    /**
+     * Preserve the public symbol at an existing native Image.copy call, before the source's
+     * subtype is lost. The owning control must gate publication on its actual displayed copy;
+     * selecting a source image alone is not evidence that a control has been displayed.
+     */
+    public static Map<String,Object> copiedImage(Image source) {
+        return source == null ? Collections.emptyMap() : imageSymbol(source);
+    }
+
     private static Map<String,Object> imageSymbol(Image image) {
         if (image.texture == null || image.frame() == null) return Collections.emptyMap();
         String symbol = Icons.displayedSymbol(image);
@@ -460,10 +469,17 @@ public final class GameplayIcons {
     }
 
     private static boolean visible(Visual source) {
+        return displayed(source, false);
+    }
+
+    /** Drawn viewport gate shared by native display bindings; zero-width point fills show zero. */
+    public static boolean displayed(Visual source, boolean allowZeroWidth) {
+        if (source == null) return false;
         if (!present(source)) return false;
         Camera camera = RenderedAppearance.camera(source);
         Camera.DrawnTransform transform = camera == null ? null : camera.observedTransform();
-        if (camera == null || !camera.visible || transform == null || source.width <= 0 || source.height <= 0
+        if (camera == null || !camera.visible || transform == null
+                || (allowZeroWidth ? source.width < 0 : source.width <= 0) || source.height <= 0
                 || !Float.isFinite(source.x + source.y + source.width + source.height + source.angle
                 + source.scale.x + source.scale.y + source.origin.x + source.origin.y)) return false;
         double cosine = Math.cos(Math.toRadians(source.angle)), sine = Math.sin(Math.toRadians(source.angle));
@@ -474,7 +490,7 @@ public final class GameplayIcons {
             if (!Float.isFinite(px + py) || px < transform.scrollX || py < transform.scrollY
                     || px > transform.scrollX + transform.width || py > transform.scrollY + transform.height) return false;
         }
-        return source.scale.x != 0 && source.scale.y != 0;
+        return (allowZeroWidth ? source.scale.x >= 0 : source.scale.x != 0) && source.scale.y != 0;
     }
 
     private static boolean present(Visual source) {

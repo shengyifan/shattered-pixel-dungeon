@@ -72,7 +72,7 @@ class ClientResultTest(unittest.TestCase):
             {"v": 9, "id": "finite-2", "s": "menu:original", "st": "completed",
              "data": {"id": "finite-1", "st": "COMPLETED", "save": [{"receipt_id": "saved"}]}},
             {"v": 9, "id": "finite-3", "s": "run:new", "rev": "r2", "st": "completed",
-             "data": {"cli_version": "CLI.9.0.1"}},
+             "data": {"cli_version": "CLI.9.0.2"}},
             {"v": 9, "id": "finite-4", "s": "run:new", "rev": "r3", "st": "completed",
              "data": {"phase": "player_ready", "scene": "game"}}]
         client.buffer = b"".join(protocol9.wire_bytes(reply) for reply in replies)

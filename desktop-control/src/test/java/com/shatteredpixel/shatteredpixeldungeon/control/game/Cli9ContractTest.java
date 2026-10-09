@@ -223,7 +223,7 @@ public class Cli9ContractTest {
         final MachineSession session;
         Harness(Path profile)throws Exception {
             store=new AuditStore(profile);store.ensureScope("run:test","run","test");
-            store.beginSession("test","test-build","CLI.9.0.1",9);
+            store.beginSession("test","test-build","CLI.9.0.2",9);
             session=new MachineSession(store,game,new PrintStream(bytes,true,"UTF-8"),1000);
         }
         Map<String,Object> send(Map<String,Object> request)throws Exception {

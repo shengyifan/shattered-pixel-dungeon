@@ -67,6 +67,9 @@ def source_model():
             "blast_wave_override": str(JAVA / "items/wands/WandOfBlastWave.java") + ":63",
             "eye_stop_solid": str(JAVA / "actors/mobs/Eye.java") + ":94",
             "public_web_solid": str(JAVA / "actors/blobs/Web.java") + ":104",
+            "public_light_wall_overrides": str(JAVA / "actors/hero/spells/WallOfLight.java") + ":298",
+            "public_key_wall_overrides": str(JAVA / "items/artifacts/SkeletonKey.java") + ":547",
+            "public_eternal_fire_overrides": str(JAVA / "levels/rooms/special/MagicalFireRoom.java") + ":281",
         },
     }
 
@@ -97,6 +100,33 @@ def create_line(source, target, width, height):
             raise ValueError("Unexpected nonterminating line")
     return line, {"step_a": sa, "step_b": sb, "d_a": da, "d_b": db,
                   "initial_error": da // 2, "first_outside_insideMap": cell}
+
+
+def public_collision_flags(cell, terrain_constants, terrain_flags):
+    """Apply explicit public effect overrides without guessing from names or prose.
+
+    Current native producers only write false passability/avoidance and true
+    solidity, so their partial overrides commute. Conflicting future facts do
+    not gain artificial priority from the serialized effect order.
+    """
+    bits = terrain_flags.get(cell.get("terrain"))
+    flags = {key: None if bits is None else bool(bits & terrain_constants[key.upper()])
+             for key in ("passable", "avoid", "solid")}
+    overrides = {}
+    for effect in cell.get("environment", []):
+        collision = effect.get("collision")
+        if collision is None:
+            if effect.get("type") in {"light_wall", "key_wall", "eternal_fire", "web"}:
+                return flags, overrides, "missing_public_environment_collision"
+            continue
+        for key, value in collision.items():
+            if key not in flags or type(value) is not bool:
+                raise ValueError("Invalid public environment collision override")
+            if key in overrides and overrides[key] != value:
+                return flags, overrides, "conflicting_public_environment_collision"
+            overrides[key] = value
+    flags.update(overrides)
+    return flags, overrides, None
 
 
 def predict(frame, target, op, model, requested_source=None):
@@ -149,19 +179,21 @@ def predict(frame, target, op, model, requested_source=None):
             continue
         # CLI.9.0.1 retains publicly presented solid decorations in terrain.
         # Use only this descriptor, never names, nearby actors or private flags.
-        if c is None or c.get("terrain") not in tf:
-            row["flags"] = None
+        flags, overrides, environment_unknown = (public_collision_flags(c, tc, tf)
+                if c is not None else ({key: None for key in ("passable", "avoid", "solid")}, {}, None))
+        row["flags"] = flags
+        row["public_environment_collision_overrides"] = overrides
+        if environment_unknown is not None:
+            unknown = {"cell": q, "index": index, "reason": environment_unknown}
+            break
+        if any(value is None for value in flags.values()):
             if q in collision_occupants and sc:
                 collision = {"cell": q, "trigger_cell": q, "reason": "known_collision_occupant_independent_of_unknown_flags"}
             else:
                 unknown = {"cell": q, "index": index,
                            "reason": "unknown_or_unclassified_terrain"}
             break
-        bits = tf[c["terrain"]]
-        p, av, solid = bool(bits & tc["PASSABLE"]), bool(bits & tc["AVOID"]), bool(bits & tc["SOLID"])
-        web = any(e.get("type") == "web" for e in c.get("environment", []))
-        solid |= web
-        row["flags"] = {"passable": p, "avoid": av, "solid": solid, "public_web_sets_solid": web}
+        p, av, solid = (flags[key] for key in ("passable", "avoid", "solid"))
         if q not in collision_occupants:
             assumptions.append(q)
         if c.get("visibility") != "visible":
@@ -225,7 +257,7 @@ def main():
                       "No gameplay, intent, profile, save or audit access. This prediction proves no execution, hit, effect or save.",
                       "Unknown terrain is not filled in. Absent public collision occupants do not prove absence of invisible or disguised occupants.",
                       "Terrain collision uses only this snapshot's public descriptors, including presented custom decorations. An absent public source never proves absence of an unreported blocker; no private terrain is recovered.",
-                      "Visited/mapped terrain and absent effects may omit off-screen changes. Only public Web adds dynamic solid flags here.",
+                      "Visited/mapped terrain and absent effects may omit off-screen changes. Explicit public environment collision overrides are partial: omitted flags retain the public terrain value. Conflicting or missing reviewed overrides stop prediction.",
                       "MAGIC_BOLT=6 is the base wand rule; BlastWave uses PROJECTILE=7. Other overrides, ranges and effect areas are not modeled.",
                       "SOLIDBEAM=4 is a supplied hypothetical geometric aim. It does not read or predict enemy targets, charge state, cooldowns or movement.",
                       "Yog's WONT_STOP piercing rays are not modeled by any of these three profiles.",
