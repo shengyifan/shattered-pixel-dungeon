@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Historical v5-to-v6 public replay; requires the matching CLI 6 compiled harness.
 
-Current production validation uses cli7_token_benchmark.py. Historical source
-formats and measured results are deliberately unchanged by the protocol upgrade.
+The current runtime uses protocol 8. This entry remains an explicit historical
+comparison; its source formats and measured results are not current validation.
 
 The Java encoder opens only a fresh, labeled isolated handle registry beneath the
 chosen artifact directory. It never opens the source profile, saves or audit data.

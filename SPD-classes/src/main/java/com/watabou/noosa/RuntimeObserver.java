@@ -35,8 +35,6 @@ public interface RuntimeObserver {
                                 String text, boolean clipped, Map<String,Object> appearance) {}
     /** A known graphical combat announcement, emitted once after its unobscured native draw. */
     default void onBanner(String runId,String kind,Map<String,Object> appearance) {}
-    /** Complete current-frame screen effects. Opaque episode identities must never be serialized. */
-    default void onScreenEffects(String runId,Object levelIdentity,int depth,List<ScreenEffect> effects) {}
     /** One completed GameScene draw. The identity token is opaque and must never be serialized. */
     default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues) {
         onVisualCues(runId,levelIdentity,depth,cues,true);
@@ -47,10 +45,6 @@ public interface RuntimeObserver {
                               boolean presentationReady, Object occurrences) {
         onVisualCues(runId, levelIdentity, depth, cues, presentationReady);
     }
-    /** Quantitative display noise from the same completed draw; separate from discrete visual cues. */
-    default void onVisualMetrics(String runId,Object levelIdentity,int depth,List<VisualMetric> metrics,java.util.Set<Object> visibleEpisodes) {}
-    /** Existing emitter children have finished drawing; its opaque episode is only a sampling key. */
-    default void onEmitterDraw(com.watabou.noosa.particles.Emitter source,Object episode) {}
     final class LogEntry {
         public final String text;
         public final int color;

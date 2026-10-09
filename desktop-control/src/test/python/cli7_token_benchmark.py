@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Replay explicit public v6 transports through the production v7 structure codec.
+"""Replay explicit public v6 transports through v7-compatible structure encoding.
 
 Only UI row/operation dictionaries are expanded before replay. Existing map,
 label and binding compression is retained. No game, profile, save or audit is
-opened. Generated files belong in an ignored artifact directory.
+opened. Generated files belong in an ignored artifact directory. The v7 decoder
+is frozen from Git commit 38c21149d84f166db6630a7c7fa220e5851cfd41, not imported
+from the current v8 client. This compares the selected compiled structure codec;
+it is not a claim that an old compiled release or corpus is bundled here.
+Zero savings or growth are valid measured results. Use --require-smaller only
+when intentionally applying the historical per-corpus performance threshold.
 """
 import argparse
 import copy
@@ -12,14 +17,11 @@ import importlib.metadata
 import json
 from pathlib import Path
 import subprocess
-import sys
 from collections import defaultdict
 
 from d9_token_study import equal, distribution, wire
 from standalone_token_study import source_files
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "client"))
-from spdctl_client import decode_wire_response
+from historical_v7_helpers import OLD_COMMIT, load_decoder, validate_research_output
 from historical_v6_client import decode_wire_response as decode_v6
 
 
@@ -79,14 +81,22 @@ def normalized_frame(frame):
     return result
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--d9-trace", type=Path, required=True)
     parser.add_argument("--current-fixture", type=Path, required=True)
     parser.add_argument("--classpath-file", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True,
+                        help="New or empty non-symlink directory, disjoint from all research inputs")
     parser.add_argument("--limit", type=int, default=0)
-    args = parser.parse_args()
+    parser.add_argument("--require-smaller", action="store_true",
+                        help="Require combined tokens to decrease for every selected corpus")
+    args = parser.parse_args(argv)
+    try:
+        args.output = validate_research_output(args.output, input_files=[args.classpath_file],
+                                              input_directories=[args.d9_trace, args.current_fixture])
+    except ValueError as error:
+        parser.error(str(error))
     import tiktoken
     if importlib.metadata.version("tiktoken") != "0.12.0":
         raise RuntimeError("The reference benchmark requires tiktoken==0.12.0")
@@ -95,6 +105,7 @@ def main():
         return len(tokenizer.encode(wire(frame), disallowed_special=()))
 
     args.output.mkdir(parents=True, exist_ok=True)
+    decode_v7 = load_decoder(args.output).decode_wire_response
     records, hashes = [], {}
     for group, root, stop in source_files(args.d9_trace, args.current_fixture):
         send_path, recv_path = root / "send.raw", root / "recv.raw"
@@ -134,7 +145,7 @@ def main():
         expected = normalized_frame(decode_v6(original).frame)
         for mode, frames in candidates.items():
             packet = frames[index]
-            decoded = normalized_frame(decode_wire_response(packet).frame)
+            decoded = normalized_frame(decode_v7(packet).frame)
             if not equal(expected, decoded):
                 raise AssertionError((group, original["id"], mode, "Python decoded public value mismatch"))
             counts[mode] = tokens(packet)
@@ -146,7 +157,11 @@ def main():
             examples[group] = {"original": original, "combined": candidates["combined"][index]}
         if (index + 1) % 500 == 0:
             print(json.dumps({"verified_and_measured": index + 1, "frames": len(records)}), flush=True)
-    report = {"encoder": "production CompactStructures", "protocol": 7,
+    report = {"encoder": "selected compiled CompactStructures", "protocol": 7,
+              "require_smaller": args.require_smaller,
+              "historical_decoder_commit": OLD_COMMIT,
+              "historical_decoder_sha256": hashlib.sha256(
+                  (args.output / "historical_v7_decoder.py").read_bytes()).hexdigest(),
               "measurement": "tiktoken 0.12.0 / o200k_base, complete minified JSON + LF; not billing",
               "boundary": "Historical public content re-encoded structurally, not a new game session; source omissions cannot be reconstructed",
               "frames": len(records), "java_roundtrips": checked, "python_comparisons": checked,
@@ -167,7 +182,7 @@ def main():
     for name, value in (("metrics.json", report), ("per-frame.json", rows), ("examples.json", examples)):
         (args.output / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(report["groups"], indent=2))
-    if not args.limit and any(sum(modes["combined"]) >= sum(modes["baseline"]) for modes in totals.values()):
+    if args.require_smaller and any(sum(modes["combined"]) >= sum(modes["baseline"]) for modes in totals.values()):
         raise AssertionError("Combined token total must be smaller for each corpus")
 
 

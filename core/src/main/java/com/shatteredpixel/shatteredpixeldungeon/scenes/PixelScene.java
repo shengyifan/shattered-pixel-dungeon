@@ -505,7 +505,7 @@ public class PixelScene extends Scene {
 			
 			matrix[12] = -1 + x * invW2 - sx * matrix[0];
 			matrix[13] = +1 - y * invH2 - sy * matrix[5];
-			rememberUnshakenProjection(align(this,scroll.x),align(this,scroll.y));
+			rememberProjectionValidity(align(this,scroll.x),align(this,scroll.y));
 			
 		}
 	}

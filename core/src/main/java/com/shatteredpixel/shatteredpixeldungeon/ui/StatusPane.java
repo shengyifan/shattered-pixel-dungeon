@@ -77,10 +77,10 @@ public class StatusPane extends Component implements GameplayStatus {
 
 	@Override
 	public java.util.Map<String,Object> gameplayStatus() {
-		java.util.Map<String,Object> progress=RenderedAppearance.arc(counter);
-		if(progress.isEmpty())return java.util.Collections.emptyMap();
+		Float sweep=RenderedAppearance.visibleSweep(counter);
+		if(sweep==null)return java.util.Collections.emptyMap();
 		return java.util.Collections.singletonMap("turn_progress",
-				java.util.Collections.singletonMap("sweep",progress.get("sweep")));
+				java.util.Collections.singletonMap("sweep",sweep));
 	}
 
 	@Override public Object gameplaySubject() { return Dungeon.hero; }

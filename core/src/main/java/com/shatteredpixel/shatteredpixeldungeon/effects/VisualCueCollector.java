@@ -241,7 +241,6 @@ public final class VisualCueCollector {
         if(!collecting||!"sacrificial_flames".equals(kind)||!known(cell)||!drawable(source)||!hasKnownFootprint(source))return;
         densities.computeIfAbsent(Integer.toString(cell),ignored->Collections.newSetFromMap(new IdentityHashMap<>())).add(source);
     }
-    public void emitterMetricDrawn(Emitter source,Object episode){} // no generic particle histograms in CLI 8
     public void tilemapDrawn(Tilemap source,String kind){
         if(!collecting||!drawable(source)||!source.hasPresentationTexture()||source.angle!=0||source.scale.x!=1||source.scale.y!=1
                 ||source.origin.x!=0||source.origin.y!=0)return;

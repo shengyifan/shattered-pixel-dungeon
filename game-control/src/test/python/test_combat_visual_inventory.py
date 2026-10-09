@@ -12,7 +12,7 @@ class SemanticReviewGateTest(unittest.TestCase):
             "entries": [{"id": "site:1", "body_digest": "reviewed"}],
         }
         self.reviews = {
-            "format": "combat_visual_reviews_v2",
+            "format": "combat_visual_reviews_v3",
             "runtime_verified_by_inventory": False,
             "semantic_contracts": [{
                 "id": "visible-warning",
@@ -33,7 +33,7 @@ class SemanticReviewGateTest(unittest.TestCase):
                 "visible_evidence": "Native warning mark.",
                 "visibility_gate": "Current FOV and full viewport.",
                 "lifecycle": "It expires with the draw.",
-                "route": "VisualCueCollector data.cues",
+                "route": {"semantic_contract": "visible-warning"},
                 "tests": ["CombatVisualCueTest#visibleWarning"],
                 "sites": [{"id": "site:1", "body_digest": "reviewed"}],
             }],
@@ -84,6 +84,7 @@ class SemanticReviewGateTest(unittest.TestCase):
             "visibility_gate": "Same frame and current FOV.",
             "tests": ["GameSnapshotterTest#visibleEntity"],
         }
+        reviews["groups"][0]["visibility_gate"] = "Same frame and current FOV."
         self.assertTrue(check(self.inventory, reviews)["checked"])
 
     def test_missing_or_duplicate_group_assignment_blocks(self):
@@ -126,6 +127,7 @@ class SemanticReviewGateTest(unittest.TestCase):
         reviews["semantic_contracts"] = []
         reviews["semantic_reviews"][0] = {"classification": "unresolved", "contract": None,
                                           "groups": ["warning"]}
+        reviews["groups"][0]["route"] = {"semantic_contract": None}
         result = check(self.inventory, reviews)
         self.assertFalse(result["checked"])
         self.assertEqual(result["outstanding"], ["site:1"])

@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 8)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.8.0.1, protocol 8, and base game 3.3.8.
+`spdctl --version` reports CLI.8.0.2, protocol 8, and base game 3.3.8.
 
 ## 1. Start and keep the connection open
 
@@ -412,7 +412,7 @@ missing subjects and control mismatches are decoding errors, never partial
 observations. Protocol 6's
 `op_defs`, `node_shapes` and whole-operation-list indexes are unsupported.
 Boolean and floating-point indexes are invalid. Detailed template validation and
-snapshot boundaries are specified in `docs/cli8-implementation.md`.
+snapshot boundaries are specified in `docs/cli-architecture.md`.
 
 ```json
 {"acts":[{"op":"click","ctl":"c3"},{"op":"click","ctl":"c4"}],"ui":{"node_templates":[{"common":{"role":"button"},"fields":["id","text","ops"]}],"nodes":[[0,"c3","Drink",[0]],[0,"c4","Throw",[1]]]}}
@@ -499,7 +499,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.8.0.1 reports public gameplay facts rather than renderer internals. An
+CLI.8.0.2 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength
@@ -586,7 +586,7 @@ descriptions, text, constraints, semantic bars/counts/estimates and warning fact
 when presenting a response to a model.
 
 See `docs/cli-combat-visuals.md` for the semantic boundary and
-`docs/cli8-implementation.md` for implementation and validation status. The
+`docs/cli-architecture.md` for implementation and validation status. The
 CLI.7.0.1 renderer contract is preserved separately as historical documentation.
 
 The optional repository helper `desktop-control/client/spdctl_client.py` provides

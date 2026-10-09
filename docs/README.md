@@ -1,59 +1,45 @@
-# 文档与测试资料
+# Maintained documentation
 
-`docs` 只保留人读的 Markdown 说明。2026-09-12按用户要求删除43份历史 JSON 报告/索引，并把唯一仍被测试代码直接读取的静态基线迁到测试资源目录。旧报告可从Git历史查看；旧原始运行数据已经清空，不能从这些说明恢复存档或审计，也不能将旧结论自动算成CLI.0.9.0的新验证。
+The current CLI contract is **CLI.8.0.2 / protocol 8 / audit schema 11**, with game
+**3.3.8**. Begin with the maintained guides below. Old version numbers, test counts
+and machine-specific output paths in historical material are not current evidence.
 
-## 当前入口
+## CLI and AI playthroughs
 
-- [CLI使用与协议](cli.md)：启动方式、请求ID、状态版本和公开接口。
-- [英文CLI操作手册](cli-help.md)：`spdctl --help`的完整内容来源，随应用打包，包含具体游戏操作示例。
-- [CLI.8.0.1 恢复与预警修复](cli-8.0.1-recovery-validation.md)：结算软预算、真实预警生命周期、Python 防误用及独立版本目录打包。
-- [CLI.8.0.0 实施与验证记录](cli8-implementation.md)：协议 8 首版实施及当时验证证据。
-- [CLI.8.0.1 语义战斗观察](cli-combat-visuals.md)：公开状态、UI 反馈及按 FOV 覆盖的世界提示。
-- [完整单帧响应的 token 研究](cli-complete-frame-token-study-20260920.md)：CLI 7 之前的离线研究；原测量包含未部署候选，不能当作 CLI8 收益。
-- [代理操作约定](../AGENTS.md)：当前协议解码、操作、记录和发布要求。
-- [项目内 AI 游玩资料](../memory/README.md)：本地skills、只读地图／弹道工具、战士构筑笔记、通关复盘及来源记录。
+- [CLI interface](cli.md): startup, profile isolation, controller connection and observations.
+- [English CLI help](cli-help.md): authoritative command and schema manual, bundled verbatim as `spdctl --help`.
+- [Architecture and verification](cli-architecture.md): source responsibilities, public boundaries, review ledgers and reproducible test/research entrypoints.
+- [Public Python client](cli-playthrough-client.md): independent decoding, safe access, intent diagnostics and evidence separation.
+- [Semantic combat observations](cli-combat-visuals.md): public state, UI feedback, FOV-scoped cues and native warning lifetimes.
+- [Continuous actions and cancellation](cli-runtime-cancellation.md): protocol-8 cancellation, settlement and native ordering.
+- [Static UI coverage](cli-ui-coverage.md): inventory generation, reviewed input routes and runtime verification limits.
+- [Agent working agreements](../AGENTS.md): current repository operating and release rules.
+- [Project-local gameplay resources](../memory/README.md): portable skills, read-only map/cell/ballistics tools, Warrior notes and playthrough lessons.
 
-## 历史版本记录
+## Dated validation records
 
-- [CLI.7.0.1 渲染战斗观察](cli7-rendered-combat-visuals.md)：旧版绘制证据的字段、边界及验收范围。
-- [CLI.7.0.1 清理重建记录](cli-rebuild-7.0.1-clean-20260923.md)：当时 macOS ARM64 包及实际验证。
-- [CLI.7.0.0 实施与验收](cli7-implementation.md)：本帧操作共享、记录模板、协议 7、schema 10 与独立 v7 profile。
-- [CLI.7.0.0 清理重建记录](cli-rebuild-7.0.0-20260921.md)：该版本协议文档校准、旧生成物清理和包验证。
-- [CLI.6.1.1 第 9 层实战数据 token 分析](cli-token-study-d9-20260920.md)：早期格式实验、十进制请求序号及该版本包验证；跨帧缓存/增量建议已由完整单帧要求取代。
-- [CLI.6.1.0 可读性与无损响应审查](cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md)：恢复公开信息、图标语义标签、客户端校验与该批包验证边界。
-- [CLI.6.0.1 控制器终端启动修复](cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md)：子进程 stderr 独立管道、共享 PTY 回归及分阶段诊断的历史记录。
-- [CLI.6.0.0 实施与验收](cli6-implementation.md)：协议 6、schema 9、独立 v6 档案、包内稳定控制器、持久短句柄与同帧 UI 压缩；包含该历史批次验证范围和限制。
-- [CLI.6.0.0 清理重建记录](cli-rebuild-6.0.0-20260920.md)：该批次协议文档校准、旧生成数据清理、全新 ARM64 包与验证。
-- [CLI 6 增量评估](cli6-incrementality-evaluation.md)：地图、背包和日志的单独离线评估，未部署增量协议。
-- [CLI.5.0.0 实施与验收](cli5-implementation.md)：该版本的语义压缩和实际验证。
-- [CLI.5.0.0 清理重建记录](cli-rebuild-5.0.0-20260919.md)：该批次旧生成目录清理、ARM64 包与完整性验证、分支推送。
-- [CLI.4.0.1 清理重建记录](cli-rebuild-4.0.1-20260914.md)：删除此前产物及实战故障 JSON 后的全量 ARM64 构建和当前包验证。
-- [CLI.4.0.1 独立终端颜色修复](cli-issues/2026-09-14-cli-4.0.1-terminal-color.md)：专用窗口显式彩色、实际脚本 PTY 与环境回归。
-- [CLI.4.0.0 实现与验收](cli4-implementation.md)：自包含 play/full 回复、行地图、轻量回执流程与严格 v4 目录隔离。
-- [CLI.3.0.1 状态版本修复](cli-issues/2026-09-14-cli-3.0.1-currency-stale-state.md)：两次实战金币提示淡出误拒、空文本签名、旧版复现及回归验证。
-- [CLI.3.0.0 实现与验收](cli3-implementation.md)：短协议、彩色查看器、完整收发、token 基准与实际包验证。
-- [CLI.3.0.0 清理重建记录](cli-rebuild-3.0.0-20260913.md)：该批次删除旧产物及实战故障 JSON、全量 ARM64 构建和包验证。
-- [历史实施记录](cli-implementation.md)：旧版模块、规则边界及验证说明。
-- [CLI.2.1.1 状态边界修复](cli-issues/2026-09-13-cli-2.1.1-stale-state-fixes.md)：击杀后的延迟停用、原教程复验、陈旧状态恢复规则及包验证。
-- [CLI.2.1.0 传输记录与验收](cli-transport.md)：独立终端原文展示、新 profile 默认设置和实际包验证。
-- [CLI.2.0.0 来源改造与验收](cli2-implementation.md)：String 接口、全语言来源与协议 2 / schema 5 的历史验收。
-- [CLI.1.0.1 历史完整重建](cli-rebuild-20260913.md)：该版本的清理范围、全量构建和产物核验。
-- [场景工作计划](cli-scenario-coverage.md)：35个计划场景、11个场景族和146成员的范围/检查方法，不携带旧结果指针。
-- [静态UI覆盖说明](cli-ui-coverage.md)：测试清单的生成方式与使用边界。
-- [CLI.1.0.1 实战异常修复](cli-issues/2026-09-13-fixes-and-validation.md)：教程稳定边界、升级预览和隔离验证结果。
-- [桌面构建说明](getting-started-desktop.md)。
+- [CLI.8.0.2 cleanup validation](cli-8.0.2-cleanup-validation.md): this batch's implementation, executed gates and package evidence.
+- [CLI.8.0.1 recovery and warning fixes](cli-8.0.1-recovery-validation.md): preceding controller, warning-lifecycle and Python repair evidence.
 
-## 测试输入和输出
+Older per-version implementation, rebuild, incident, one-off acceptance and token
+study reports have been removed from the active docs tree. They remain in Git;
+[CHANGELOG](../CHANGELOG.md) links to their fixed pre-cleanup revision. This removes
+obsolete operating instructions without rewriting historical results or the exact
+imported source copies in [memory](../memory/IMPORTS.md).
 
-2026-09-24 的 [CLI.8.0.0 清理重建记录](cli-rebuild-8.0.0-clean-20260924.md) 保留当时清理及包验收证据。
-当前修复和版本目录产物见 [CLI.8.0.1 验证记录](cli-8.0.1-recovery-validation.md)；旧生成附件路径只作为历史记录。
+## Upstream build guides
 
-静态源码基线保存在 [game-control/src/test/resources/cli-ui-coverage.json](../game-control/src/test/resources/cli-ui-coverage.json)，由Java清单生成器、回归检查和Python职业矩阵读取。它描述源代码输入入口，不是游戏存档或某次运行结果；基线内容本次没有改变。
+- [Android](getting-started-android.md)
+- [Desktop](getting-started-desktop.md)
+- [iOS](getting-started-ios.md)
+- [Making your own version](recommended-changes.md)
 
-新测试的原始JSON/NDJSON、profile、数据库和结构化报告应写入被忽略的build输出目录，不再作为历史结果JSON平铺提交到docs。需要提交的验证结论使用简洁Markdown，明确版本、范围、结果和限制。已有专项Markdown保留为历史说明，配套旧JSON引用已解除。
+## Inputs, outputs and evidence
 
-`docs/cli-issues/` 随 Git 提交 Markdown 问题说明与修复结论，本地原始证据由 `.gitignore` 排除。2026-09-13 的 CLI.3.0.0 清理重建按用户要求删除了此前 build 产物，以及两份 `*-public-evidence.json` 和 `evidence/` 下的一份故障 JSON。2026-09-14 的 CLI.4.0.1 清理重建再次删除此前全部 build 产物，并删除后续提取的金币提示故障 JSON 及其临时副本。历史 Markdown 的结果保留，旧 build 路径、冻结运行时及故障附件路径仅作历史记录，不代表本地仍有对应文件。2026-09-19 的 CLI.5.0.0 清理重建又移除了此前全部 build、其中的 fixture 失败 JSON 与基准生成文件；CLI 5 实施记录保留为历史证据。用户日志目录及临时会话中的完整公开传输原文不属于这些故障 JSON 附件，本次没有删除。
-
-英文语料工具只接受显式指定的当前公开trace或已有输入清单，不再依赖已删除的历史报告。
-
-2026-09-12 整理时的验证：5项Java静态清单检查、4项Python显式轨迹选择回归通过；基线迁移前后字节完全相同，法术/武器/武僧枚举仍为27/32/5。当时文档中的JSON链接全部指向有效测试基线，验证生成的本地构建缓存随后清理。这些是该历史批次的结果；CLI8 当前状态见上方实施与验证记录。
+The [UI inventory](../game-control/src/test/resources/cli-ui-coverage.json) and
+[visual-review ledger](../game-control/src/test/resources/combat-visual-reviews.json)
+are reviewed test inputs, not game saves or records of a successful playthrough.
+Generated traces, JSON/NDJSON, profiles, databases and build reports belong in
+ignored build directories. Commit concise validation conclusions with an explicit
+version, build identity, scope and limitations. Do not restore deleted generated
+attachments to make historical paths appear current.

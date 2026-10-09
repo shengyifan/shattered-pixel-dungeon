@@ -7,7 +7,13 @@ historical bytes in the ignored analysis directory; production CLI 8 Java code
 projects the resulting independent canonical frames. Replay cannot recover native
 draw identities or source annotations absent from those old public bytes.
 
-Run: uv run --with tiktoken==0.14.0 python desktop-control/src/test/python/cli8_token_study.py --session /path/to/session
+Run with tiktoken==0.14.0 and the repository history available:
+python desktop-control/src/test/python/cli8_token_study.py --session /path/to/session \
+    --baseline /path/to/baseline.json --output /path/to/isolated-analysis
+
+The explicit baseline supplies send_sha256, recv_sha256, response_count and
+response_tokens.total (o200k_base over each complete JSON line excluding LF).
+It identifies the chosen public corpus; no personal local baseline is assumed.
 """
 
 from __future__ import annotations
@@ -16,27 +22,21 @@ import argparse
 import collections
 import copy
 import hashlib
-import importlib.util
+import importlib.metadata
 import json
 import math
 import os
 import statistics
 import subprocess
-import sys
+from functools import lru_cache
 from pathlib import Path
 
-import tiktoken
+from historical_v7_helpers import (OLD_COMMIT, HISTORICAL, load_decoder,
+                                   load_projection, load_module, decoder_import_binding,
+                                   validate_research_output)
 
 
 ROOT = Path(__file__).resolve().parents[4]
-OUT = ROOT / "desktop-control/build/cli8-token-study-20260924"
-BASELINE = ROOT / "desktop-control/build/cli-token-audit-session-t1/metrics.json"
-OLD_COMMIT = "38c21149d84f166db6630a7c7fa220e5851cfd41"
-HISTORICAL = {
-    "historical_v7_decoder.py": "desktop-control/client/spdctl_client.py",
-    "historical_protocol7.py": "desktop-control/src/test/python/protocol7.py",
-}
-ENCODER = tiktoken.get_encoding("o200k_base")
 DRAWING = {"atlas", "frame_pixels", "texture_size", "flip_horizontal", "flip_vertical",
            "angle", "scale", "tint", "alpha", "opacity", "color", "screen_rect",
            "offset_pixels", "viewport_pixels", "rendered_particles"}
@@ -50,32 +50,14 @@ def digest(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
-def load(name: str, path: Path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def frozen_helpers():
-    OUT.mkdir(parents=True, exist_ok=True)
-    for target, source in HISTORICAL.items():
-        path = OUT / target
-        original = subprocess.run(["git", "show", f"{OLD_COMMIT}:{source}"],
-                                  cwd=ROOT, capture_output=True, check=True).stdout
-        if path.exists():
-            assert path.read_bytes() == original, f"Frozen historical helper drifted: {path}"
-        else:
-            path.write_bytes(original)
-    old_decoder = load("spdctl_client", OUT / "historical_v7_decoder.py")
-    old_helper = load("historical_protocol7", OUT / "historical_protocol7.py")
-    current_decoder = load("spdctl_v8", ROOT / "desktop-control/client/spdctl_client.py")
-    # The historical helper already bound its frozen decoder. Current test
-    # projections import only the current strict decoder from this point on.
-    sys.modules["spdctl_client"] = current_decoder
-    current_helper = load("protocol8_offline_projection",
-                          ROOT / "desktop-control/src/test/python/protocol8.py")
+def frozen_helpers(output):
+    old_decoder = load_decoder(output)
+    old_helper = load_projection(output, old_decoder)
+    current_decoder = load_module("spdctl_research_current_decoder",
+                                 ROOT / "desktop-control/client/spdctl_client.py")
+    with decoder_import_binding(current_decoder):
+        current_helper = load_module("spdctl_research_current_projection",
+                                    ROOT / "desktop-control/src/test/python/protocol8.py")
     return old_decoder, old_helper, current_decoder, current_helper
 
 
@@ -91,8 +73,16 @@ def compact(value):
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
 
+@lru_cache(maxsize=1)
+def tokenizer():
+    import tiktoken
+    if importlib.metadata.version("tiktoken") != "0.14.0":
+        raise RuntimeError("The reference study requires tiktoken==0.14.0")
+    return tiktoken.get_encoding("o200k_base")
+
+
 def token_count(value: str) -> int:
-    return len(ENCODER.encode(value))
+    return len(tokenizer().encode(value))
 
 
 def percentile(values, fraction):
@@ -101,10 +91,20 @@ def percentile(values, fraction):
 
 
 def distribution(values):
+    if not values:
+        return {"count": 0, "total": 0, "mean": None, "median": None, "p95": None, "max": None}
     return {"count": len(values), "total": sum(values),
             "mean": round(statistics.mean(values), 2),
             "median": statistics.median(values), "p95": percentile(values, .95),
             "max": max(values)}
+
+
+def percent_change(before, after):
+    return round((sum(after) / sum(before) - 1) * 100, 3) if sum(before) else None
+
+
+def shown(value, format_spec=","):
+    return "N/A" if value is None else format(value, format_spec)
 
 
 class GraphicLedger:
@@ -204,7 +204,7 @@ def java_projection(input_path, output_path):
             f"Production {name} class is stale; compile current sources before the offline study")
     probe_source = (ROOT / "desktop-control/src/test/java/com/shatteredpixel/"
                     "shatteredpixeldungeon/control/game/Cli8CorpusProbe.java")
-    classes = OUT / "classes"
+    classes = output_path.parent / "classes"
     classes.mkdir(exist_ok=True)
     compiled = subprocess.run(["javac", "-cp", classpath, "-d", str(classes), str(probe_source)],
                               cwd=ROOT, capture_output=True, text=True)
@@ -307,25 +307,42 @@ def offscreen_cue_cost(path: Path, decoder):
     return result
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--session", required=True, type=Path,
                         help="Explicit existing public transport session directory")
+    parser.add_argument("--baseline", required=True, type=Path,
+                        help="Explicit JSON baseline with corpus hashes, response_count and response_tokens.total")
+    parser.add_argument("--output", required=True, type=Path,
+                        help="New or empty non-symlink directory, disjoint from all research inputs")
     parser.add_argument("--offscreen-wire", type=Path,
                         help="Optional exact isolated visual-bomb fixture frame for native cue cost appendix")
-    arguments = parser.parse_args()
+    arguments = parser.parse_args(argv)
     session = arguments.session.resolve()
-    OUT.mkdir(parents=True, exist_ok=True)
-    baseline = json.loads(BASELINE.read_text())
+    input_files = [arguments.baseline]
+    if arguments.offscreen_wire is not None:
+        wire_path = arguments.offscreen_wire.resolve()
+        input_files.extend([wire_path, wire_path.with_name("visual-cue-result.json")])
+    try:
+        output = validate_research_output(arguments.output, input_files=input_files,
+                                          input_directories=[session])
+    except ValueError as error:
+        parser.error(str(error))
+    baseline_raw = arguments.baseline.read_bytes()
+    baseline = json.loads(baseline_raw)
+    frame_count = baseline.get("response_count")
+    if type(frame_count) is not int or frame_count <= 0:
+        raise ValueError("Baseline response_count must be a positive integer")
     send_raw, send_lines = wire_lines(session / "send.raw")
     recv_raw, recv_lines = wire_lines(session / "recv.raw")
     assert digest(send_raw) == baseline["send_sha256"]
     assert digest(recv_raw) == baseline["recv_sha256"]
-    assert len(send_lines) == len(recv_lines) == baseline["response_count"] == 695
+    assert len(send_lines) == len(recv_lines) == frame_count, "Corpus count differs from the explicit baseline"
     requests = [json.loads(line) for line in send_lines]
     responses = [json.loads(line) for line in recv_lines]
     assert all(request["id"] == response["id"] for request, response in zip(requests, responses))
-    old_decoder, old_helper, current_decoder, current_helper = frozen_helpers()
+    output.mkdir(parents=True, exist_ok=True)
+    old_decoder, old_helper, current_decoder, current_helper = frozen_helpers(output)
     ledger = GraphicLedger()
     prepared = []
     for request, response in zip(requests, responses):
@@ -336,11 +353,11 @@ def main():
                          "st": response["st"], "live": "rev" in response,
                          "full": request.get("view") == "full" or request.get("src") is True,
                          "sources": request.get("src") is True, "result": old["result"]})
-    input_path, output_path = OUT / "canonical-input.jsonl", OUT / "candidate-v8.jsonl"
+    input_path, output_path = output / "canonical-input.jsonl", output / "candidate-v8.jsonl"
     input_path.write_text("".join(compact(row) + "\n" for row in prepared))
     provenance = java_projection(input_path, output_path)
     candidate_lines = output_path.read_text().splitlines()
-    assert len(candidate_lines) == 695
+    assert len(candidate_lines) == frame_count, "Projection count differs from the explicit baseline"
     candidate = [json.loads(line) for line in candidate_lines]
     checks = collections.Counter()
     map_depths = collections.Counter()
@@ -371,10 +388,12 @@ def main():
     assert sum(raw_tokens) == baseline["response_tokens"]["total"], "Tokenizer baseline drift"
     assert digest((session / "send.raw").read_bytes()) == baseline["send_sha256"]
     assert digest((session / "recv.raw").read_bytes()) == baseline["recv_sha256"]
+    assert arguments.baseline.read_bytes() == baseline_raw, "Source baseline changed"
     metrics = {
         "classification": "offline_semantic_projection_not_native_capture_or_package",
         "session": str(session), "baseline_commit": OLD_COMMIT,
-        "old_helper_sha256": {name: digest((OUT / name).read_bytes()) for name in HISTORICAL},
+        "baseline_file": str(arguments.baseline.resolve()), "baseline_sha256": digest(baseline_raw),
+        "old_helper_sha256": {name: digest((output / name).read_bytes()) for name in HISTORICAL},
         "raw_send_sha256": digest(send_raw), "raw_recv_sha256": digest(recv_raw),
         "frames": len(responses), "tokenizer": "tiktoken 0.14.0 / o200k_base",
         "measurement": "Each complete JSON line excluding LF; reference tokens, not model billing",
@@ -385,12 +404,13 @@ def main():
         "default_play_raw_v7": distribution(default_raw),
         "default_play_offline_projected_v8": distribution(default_projected),
         "default_play_change_tokens": sum(default_projected) - sum(default_raw),
-        "default_play_change_percent": round((sum(default_projected) / sum(default_raw) - 1) * 100, 3),
-        "comparable_694_raw_v7": distribution(comparable_raw),
-        "comparable_694_offline_projected_v8": distribution(comparable_projected),
+        "default_play_change_percent": percent_change(default_raw, default_projected),
+        "comparable_frames": len(comparable),
+        "comparable_raw_v7": distribution(comparable_raw),
+        "comparable_offline_projected_v8": distribution(comparable_projected),
         "projected_change_tokens": sum(projected_tokens) - sum(raw_tokens),
-        "projected_change_percent": round((sum(projected_tokens) / sum(raw_tokens) - 1) * 100, 3),
-        "comparable_change_percent": round((sum(comparable_projected) / sum(comparable_raw) - 1) * 100, 3),
+        "projected_change_percent": percent_change(raw_tokens, projected_tokens),
+        "comparable_change_percent": percent_change(comparable_raw, comparable_projected),
         "projection_checks": dict(checks), "map_observation_depths": dict(map_depths),
         "projected_tokens_by_op": {op: distribution(values) for op, values in candidate_per_op.items()},
         "unverified_by_replay": [
@@ -399,7 +419,7 @@ def main():
             "Native source annotations for semantic icons, particle meanings and feedback occurrences",
             "Standalone actions-only subject_data snapshots absent from the old request corpus",
             "Same-FOV camera/modal independent cue capture and decision-revision behavior",
-            "Boss, mapped cells and later-depth source scenarios absent from this D1-D3 corpus",
+            "Native scenarios and source details absent from the explicitly selected public corpus",
         ],
         **provenance,
     }
@@ -411,8 +431,8 @@ def main():
                "notes": ["Unclassifiable pixels use explicit unmapped_indicator partial placeholders in the projected frame.",
                          "Removing generic metrics or screen visuals from this replay is not proof that new native semantic producers cover those source mechanisms.",
                          "Candidate size is one source-constrained projection, not a shippable-equivalence bound or a live CLI 8 package measurement."]}
-    (OUT / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n")
-    (OUT / "sidecar.json").write_text(json.dumps(sidecar, ensure_ascii=False, indent=2) + "\n")
+    (output / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n")
+    (output / "sidecar.json").write_text(json.dumps(sidecar, ensure_ascii=False, indent=2) + "\n")
     default_set = set(default_play)
     per_frame = ["ordinal\tid\top\tview_class\traw_bytes\tprojected_bytes\traw_tokens\tprojected_tokens\tcore_check"]
     per_frame += ["\t".join(map(str, (index + 1, response["id"], request["op"],
@@ -422,22 +442,23 @@ def main():
                                     raw_tokens[index], projected_tokens[index],
                                     "not_comparable_info" if request["op"] == "info" else "passed")))
                   for index, (request, response) in enumerate(zip(requests, responses))]
-    (OUT / "frames.tsv").write_text("\n".join(per_frame) + "\n")
+    (output / "frames.tsv").write_text("\n".join(per_frame) + "\n")
     if cue_appendix is not None:
-        (OUT / "offscreen-cue-cost.json").write_text(json.dumps(cue_appendix, ensure_ascii=False, indent=2) + "\n")
+        (output / "offscreen-cue-cost.json").write_text(json.dumps(cue_appendix, ensure_ascii=False, indent=2) + "\n")
     top = sorted(sidecar["rows"], key=lambda row: row["count"], reverse=True)[:18]
-    report = ["# CLI 8 offline semantic projection of 695 CLI 7 transport frames", "",
+    before_default, after_default = distribution(default_raw), distribution(default_projected)
+    report = [f"# CLI 8 offline semantic projection of {frame_count} CLI 7 transport frames", "",
               "This is an offline, source-constrained replay of public transport bytes. No game, save or profile was opened.", "",
               "## Default play frames (primary comparison)", "",
               "These are action responses and state queries using the default `play` view, excluding `info`, `req`, history/events and explicit full/src requests.", "",
               "| Measure | Raw CLI 7 | Offline projected CLI 8 |", "| --- | ---: | ---: |",
               f"| Default play frames | {len(default_play)} | {len(default_play)} |",
               f"| Reference tokens, complete lines without LF | {sum(default_raw):,} | {sum(default_projected):,} |",
-              f"| Mean per frame | {statistics.mean(default_raw):,.2f} | {statistics.mean(default_projected):,.2f} |",
-              f"| P95 per frame | {percentile(default_raw,.95):,} | {percentile(default_projected,.95):,} |",
-              f"| Maximum per frame | {max(default_raw):,} | {max(default_projected):,} |",
-              "", f"Default-play projected change: {metrics['default_play_change_percent']:+.3f}% ({metrics['default_play_change_tokens']:+,} tokens).",
-              "", "## All 695 paired transport frames (context)", "",
+              f"| Mean per frame | {shown(before_default['mean'], ',.2f')} | {shown(after_default['mean'], ',.2f')} |",
+              f"| P95 per frame | {shown(before_default['p95'])} | {shown(after_default['p95'])} |",
+              f"| Maximum per frame | {shown(before_default['max'])} | {shown(after_default['max'])} |",
+              "", f"Default-play projected change: {shown(metrics['default_play_change_percent'], '+.3f')}% ({metrics['default_play_change_tokens']:+,} tokens).",
+              "", f"## All {frame_count} paired transport frames (context)", "",
               "| Measure | Raw CLI 7 | Offline projected CLI 8 |", "| --- | ---: | ---: |",
               f"| Complete RECV frames | {len(responses)} | {len(candidate)} |",
               f"| Reference tokens, complete lines without LF | {sum(raw_tokens):,} | {sum(projected_tokens):,} |",
@@ -445,9 +466,9 @@ def main():
               f"| P95 per frame | {percentile(raw_tokens,.95):,} | {percentile(projected_tokens,.95):,} |",
               f"| Maximum per frame | {max(raw_tokens):,} | {max(projected_tokens):,} |",
               "", f"All-pairs projected change: {metrics['projected_change_percent']:+.3f}% ({metrics['projected_change_tokens']:+,} tokens).",
-              f"For the 694 comparable non-info frames: {metrics['comparable_change_percent']:+.3f}%.",
+              f"For the {len(comparable)} comparable non-info frames: {shown(metrics['comparable_change_percent'], '+.3f')}%.",
               "The same v7 objects reserialized in Python use " + f"{sum(minified_tokens):,} tokens; use that number when isolating serialization effects.",
-              "The single info frame uses the current production static schema but an explicit offline build-identity marker. It is counted for total size and excluded from field equivalence checks.",
+              "Info frames use the current production static schema but an explicit offline build-identity marker. They are counted for total size and excluded from field equivalence checks.",
               "The probe verified at runtime that `CompactProtocol`, `GameplayObservation` and `GameplayEvidence` loaded from current `game-control/build/classes/java/main`, ahead of older fixture jars.",
               "Per-frame raw/projected byte and token counts are in `frames.tsv`.",
               "", "## Correctness checks on the replayable original information", "",
@@ -471,11 +492,11 @@ def main():
                    f"- Removing only {cue_appendix['bomb_smoke_count']} `bomb_smoke` cue rows from a copy of this frame changes the minified count by {cue_appendix['bomb_smoke_marginal_tokens']:,} tokens.",
                    f"- Removing every cue row changes it by {cue_appendix['all_cue_rows_marginal_tokens']:,} tokens; removing the whole `data.cues` block changes it by {cue_appendix['whole_cues_block_marginal_tokens']:,} tokens.",
                    "The three ablations are within-frame counterfactual field contributions, not valid playable responses or an estimate of v7-to-v8 savings. Byte-exact fixture SHA-256 and counts are in `offscreen-cue-cost.json`.", ""]
-    (OUT / "report.md").write_text("\n".join(report))
+    (output / "report.md").write_text("\n".join(report))
     print(json.dumps({"frames": len(responses), "raw_tokens": sum(raw_tokens),
                       "projected_tokens": sum(projected_tokens),
                       "change_percent": metrics["projected_change_percent"],
-                      "checks": dict(checks), "output": str(OUT)}, ensure_ascii=False))
+                      "checks": dict(checks), "output": str(output)}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

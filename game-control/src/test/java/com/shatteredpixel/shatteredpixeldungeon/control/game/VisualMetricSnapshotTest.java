@@ -2,7 +2,6 @@ package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
-import com.watabou.noosa.VisualMetric;
 import com.watabou.noosa.VisualCue;
 import org.junit.jupiter.api.*;
 import java.lang.reflect.Method;
@@ -22,12 +21,19 @@ class VisualMetricSnapshotTest {
     }
     @AfterEach void restore(){Dungeon.level=previousLevel;Dungeon.runId=previousRun;Dungeon.depth=previousDepth;}
 
-    @Test void genericParticleCallbacksCannotCreateCurrentFactsOrHistory()throws Exception{
-        game.onVisualCues("metric-run",level,1,List.of());assertNotNull(game.pollVisual());
-        for(int count:new int[]{1,8,100})game.onVisualMetrics("metric-run",level,1,
-                List.of(new VisualMetric("cell_particles",22,count,map("color",123,"alpha",.5))),Set.of(new Object()));
-        assertFalse(state().containsKey("metrics"));assertFalse(state().containsKey("metrics_at"));
-        assertFalse(game.hasDisplayEvents());assertEquals("last_observed",state().get("status"));
+    @Test void genericParticleFieldsCannotEnterCurrentFactsOrFrozenHistory()throws Exception{
+        VisualCue unexpected=new VisualCue("fixture_indicator",22,null,null,null,null,
+                map("rendered_particles",8,"color",123,"alpha",.5));
+        game.onVisualCues("metric-run",level,1,List.of(unexpected));
+        List<GameController.DisplayEvent> events=game.peekDisplayEvents(8);assertEquals(1,events.size());
+        assertEquals("game.visual",events.get(0).kind);
+        GameController.VisualSnapshot snapshot=game.pollVisual();assertNotNull(snapshot);
+        for(Map<String,Object> data:List.of(state(),snapshot.stateData(),snapshot.data(),events.get(0).data())){
+            String encoded=com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec.encode(data);
+            for(String field:List.of("rendered_particles","color","alpha","metrics","metrics_at"))
+                assertFalse(encoded.contains("\""+field+"\":"),field);
+            assertTrue(encoded.contains("unmapped_indicator"));
+        }
     }
 
     @Test void reviewedDensityIsImmutableSemanticEvidence()throws Exception{

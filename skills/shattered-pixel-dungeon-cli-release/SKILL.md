@@ -15,7 +15,7 @@ The [import record](../../memory/IMPORTS.md) identifies the original material.
 ## Establish the boundary
 
 - Inspect the checkout, branch, worktree and actual launcher version. The present
-  baseline is CLI.8.0.1 / protocol 8 / schema 11 / game 3.3.8; verify it rather than
+  baseline is CLI.8.0.2 / protocol 8 / schema 11 / game 3.3.8; verify it rather than
   treating this line or historical test totals as current package evidence.
 - Preserve the existing game/controller and personal profiles. Never inspect
   personal saves or private audit databases to diagnose gameplay decisions. Use
@@ -46,8 +46,10 @@ resumed through `settle`, not resent or implicitly drained by `state/cancel`.
 
 Useful local evidence routes:
 
-- [CLI.8.0.1 recovery/warning validation](../../docs/cli-8.0.1-recovery-validation.md)
-  and [semantic observations](../../docs/cli-combat-visuals.md) for current behavior.
+- [CLI.8.0.2 cleanup and validation](../../docs/cli-8.0.2-cleanup-validation.md)
+  and [semantic observations](../../docs/cli-combat-visuals.md) for the current batch;
+  [CLI.8.0.1 recovery/warning validation](../../docs/cli-8.0.1-recovery-validation.md)
+  records the preceding lifecycle fixes.
 - [Health rounding and pause history](../../memory/references/health-rounding-and-pause-history.md)
   for the producer/decoder boundary and process-preserving repair example.
 - [CLI6 PTY incident history](../../memory/references/cli6-controller-pty-history.md)

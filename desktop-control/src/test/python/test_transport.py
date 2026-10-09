@@ -839,7 +839,7 @@ class NativeTransportTest(unittest.TestCase):
         self.assertEqual(len(payload), sum(row[4] for row in delivered))
         self.assertIn("EOF_SENT", [row[5] for row in rows if row[2] == "STATUS"])
 
-    def test_default_profile_uses_v7_without_accessing_v6(self):
+    def test_default_profile_uses_v8_without_accessing_v6(self):
         old_profile = self.root / "home/Library/Application Support/Shattered Pixel Dungeon CLI v6"
         old_profile.mkdir(parents=True)
         sentinel = old_profile / "do-not-read-or-change"

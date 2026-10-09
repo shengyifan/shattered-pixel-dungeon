@@ -46,7 +46,7 @@ public final class Cli8CorpusProbe {
                 if (canonical.containsKey("schema")) {
                     canonical = copy(canonical);
                     canonical.put("schema", CompactProtocol.info());
-                    canonical.put("cli_version", "CLI.8.0.1");
+                    canonical.put("cli_version", "CLI.8.0.2");
                     canonical.put("audit_schema_version", 11);
                     canonical.put("build_id", "offline_projection_not_a_build_identity");
                 }

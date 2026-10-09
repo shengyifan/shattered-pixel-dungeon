@@ -42,12 +42,12 @@ Buff 时长和图鉴通过当前 ui 控件的 `ui.activate` 打开游戏本身�
 ## 内部引用图
 
 `InternalGraphSnapshotter.STATIC_ROOTS` 从随包附带的 snapshot-static-roots.txt 读取显式白名单。
-当前 322 个根覆盖演员、物品、楼层、植物、机制、日志、场景、窗口、UI 包及指定根类的全部有状态静态
+当前 325 个根覆盖演员、物品、楼层、植物、机制、日志、场景、窗口、UI 包及指定根类的全部有状态静态
 声明，包括子类和内部类的 private counter/cache；增加 Bones、SPDAction、Holiday、DungeonSeed。
 运行时不扫描类路径，不接受请求指定 root；白名单按已编译源码声明生成并经测试校验。
 
 `src/main/resources/com/shatteredpixel/shatteredpixeldungeon/control/game/snapshot-static-fields.txt`
-列出当前 1353 个非常量静态字段。单元测试比较当前声明，字段新增/删除会要求更新清单，另一个测试扫描模型包的编译声明，使新增有状态类也必须纳入。
+列出当前 1363 个非常量静态字段。单元测试比较当前声明，字段新增/删除会要求更新清单，另一个测试扫描模型包的编译声明，使新增有状态类也必须纳入。
 
 对象图对纳入模型遍历所有继承实例字段，包括 private/transient 字段；循环和共享引用
 用 `$ref` 与 nodes 表保留。枚举保留名称和自有实例字段，避免丢失枚举中的可变状态。
@@ -103,7 +103,7 @@ profile 排除审计和 symlink；未初始化类不被探针初始化；静态�
 
 本轮复核又补充：拟态在 fog 中的持续可见性、Ebony 轮廓分类、无意义消耗品鉴定位、
 灵能弓升级公式、DivineShield 有效条件和缓存读取；只读自建 build/smoke 审计样本验证
-322 根/完整 UI 语义图的 unavailable 为空，实际 profile 路径与当前源码规则一致。
+该历史批次的根清单/完整 UI 语义图的 unavailable 为空，实际 profile 路径与当前源码规则一致。
 
 subclass 为 NONE/null 时 subclass_name=null。WndHero 明确显示原始 STR 与 +/-bonus，
 因此基础力量与当前力量都可公开。Pasty ItemSlot 的完整 UiBridge 查询链已有重复读取回归。

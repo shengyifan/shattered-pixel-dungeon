@@ -7,7 +7,7 @@
 
 1. 先读当前用户要求、[AGENTS](../AGENTS.md)和[英文协议手册](../docs/cli-help.md)。
 2. 按[项目内游玩 skill](../skills/pixel-dungeon-run-assistance/SKILL.md)建立当前楼层、资源和战术计划。
-   它已适配CLI.8.0.1的公开协议，替换了原skill的存档读取和GUI键鼠流程。
+   它已适配当前协议8的公开观察与控制流程，替换了原skill的存档读取和GUI键鼠流程。
 3. 按需读取下表资料；不用加载所有历史记录。继续游戏必须从授权连接获取当前观察，
    文件、旧坐标或旧会话句柄不能代替当前 `s/rev`。
 

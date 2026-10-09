@@ -2,7 +2,15 @@
 
 本项目基于 **Shattered Pixel Dungeon 3.3.8** 扩展 CLI，上游基线为 `7b8b845a7`，游戏版本码为 `896`。CLI 使用 `CLI.主版本.次版本.修订版本`，与游戏版本、协议版本分别记录。
 
-以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。详细说明见 [CLI 文档](docs/cli.md)与[实施记录](docs/cli-implementation.md)；旧运行数据和历史 JSON 已按用户要求清理。
+以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
+
+## CLI.8.0.2
+
+- Fixes the shared smoke client's asynchronous quit lifecycle: establish the original completed receipt before waiting for process exit, without a post-quit state query.
+- Repairs historical token-study entrypoints with a pinned v7 decoder isolated from the current v8 client, explicit corpus/baseline/output inputs and source-preserving output validation; removes an unreferenced legacy measurement entrypoint.
+- Removes retired CLI7 screen-effect and generic metric production plumbing. HUD visibility and turn sweep no longer construct unused pixel/color payloads; current semantic world cues, particle counts and public visibility remain intact.
+- Calibrates the source-review ledger to current semantic contracts and resolvable test evidence, retaining exact source identities, body checks and explicit retirement records.
+- Deletes obsolete per-version and one-off Markdown reports, updates maintained guides, and adds a current architecture entrypoint. Protocol 8, audit schema 11 and game 3.3.8 remain unchanged. See [cleanup and validation](docs/cli-8.0.2-cleanup-validation.md).
 
 ## CLI.8.0.1
 
@@ -13,35 +21,35 @@
 
 ## CLI.8.0.0
 
-- Refreshes current protocol guidance and records the [2026-09-24 clean macOS rebuild](docs/cli-rebuild-8.0.0-clean-20260924.md), including removal of previous generated artifacts and runtime issue JSON. CLI/protocol/schema versions and runtime implementation remain unchanged in this documentation/rebuild batch.
+- Refreshes current protocol guidance and records the [2026-09-24 clean macOS rebuild](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-rebuild-8.0.0-clean-20260924.md), including removal of previous generated artifacts and runtime issue JSON. CLI/protocol/schema versions and runtime implementation remain unchanged in this documentation/rebuild batch.
 - Introduces protocol 8, audit schema 11 and an independent CLI v8 default profile. Old request formats and nonempty profiles without a valid schema-11 audit pair are rejected before writes; existing profiles and raw history are not migrated or rewritten.
 - Replaces CLI.7.0.1 rendered combat and UI payloads with current semantic gameplay facts in play/full/src, new events and frozen snapshots. Inventory and buffs expose public `shown` counts/estimates/progress/flags; health bars expose sampled `health_estimate`; the hero exposes `turn_progress`; state UI exposes `feedback` and explicit same-frame `subject` references. Standalone `actions` inlines current target facts as `subject_data`, with local partial diagnostics for unresolved owners.
 - Keeps the complete ordered action table, node operation references, independent response templates and public map/inventory/hero/entity information. World cues use existing public sources and map/FOV scope independently of camera, viewport and UI occlusion, without hidden AI or timers. Ordinary rendering data, generic particle histograms and screen effects are not part of the new semantic contract; reviewed `GameplayBurst` kinds can carry actual visible contributor counts, alongside the special `sacrificial_flames` density cue; quantity-only history is explicitly sampled at 250 ms.
-- Preserves CLI.7.0.1 rendered behavior as [historical documentation](docs/cli7-rendered-combat-visuals.md). The full Python suite passed 286 tests. The flow build `3574…` passed a clean 37-task Java/ARM64 gate with 774 tests in 120 suites and zero failures, errors or skips; its packaged catalog differs from candidate `d113…` only in `GameplayVisualKinds.class`. Static review passed across 13,517 sites, 4,707 groups and 1,309 files with 218 retired sites accounted for; it is not runtime verification. Candidate build `d113…` passed version/help/catalog/content and local ad-hoc signature checks, 13/13 appearance scenarios with 183 GUI checks, controller/raw/English and instrumented slow-quit fixtures. The final `3574…` package passed exact help/catalog, ARM64/signature and actual info→state→quit readback; its targeted electricity-flow native retest passed 17 GUI checks, superseding the one earlier world-combat failure. Across `d113…` and `3574…`, all 63 logical native scenario identities passed (49 world, 13 appearance, one anchored floating); this is neither a single-build sweep nor a real playthrough. The offline-only token comparison and build boundaries are detailed in [CLI8 implementation](docs/cli8-implementation.md).
+- Preserves CLI.7.0.1 rendered behavior as [historical documentation](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli7-rendered-combat-visuals.md). The full Python suite passed 286 tests. The flow build `3574…` passed a clean 37-task Java/ARM64 gate with 774 tests in 120 suites and zero failures, errors or skips; its packaged catalog differs from candidate `d113…` only in `GameplayVisualKinds.class`. Static review passed across 13,517 sites, 4,707 groups and 1,309 files with 218 retired sites accounted for; it is not runtime verification. Candidate build `d113…` passed version/help/catalog/content and local ad-hoc signature checks, 13/13 appearance scenarios with 183 GUI checks, controller/raw/English and instrumented slow-quit fixtures. The final `3574…` package passed exact help/catalog, ARM64/signature and actual info→state→quit readback; its targeted electricity-flow native retest passed 17 GUI checks, superseding the one earlier world-combat failure. Across `d113…` and `3574…`, all 63 logical native scenario identities passed (49 world, 13 appearance, one anchored floating); this is neither a single-build sweep nor a real playthrough. The offline-only token comparison and build boundaries are detailed in [CLI8 implementation](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli8-implementation.md).
 
 ## CLI.7.0.1
 
-- Records the [2026-09-23 clean macOS rebuild](docs/cli-rebuild-7.0.1-clean-20260923.md), removal of previous generated build artifacts and runtime issue JSON, and fresh package verification. The original implementation acceptance remains historical evidence after its generated attachments are removed; this cleanup does not change CLI, protocol, schema or runtime behavior.
+- Records the [2026-09-23 clean macOS rebuild](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-rebuild-7.0.1-clean-20260923.md), removal of previous generated build artifacts and runtime issue JSON, and fresh package verification. The original implementation acceptance remains historical evidence after its generated attachments are removed; this cleanup does not change CLI, protocol, schema or runtime behavior.
 - Adds render-backed combat warnings, charge/downed poses, facing, beam/lightning/projectile paths, summon/rock/bomb/arena markers, icon/color/shape evidence, HUD state and transient display history. Capture retains conservative current-scene/FOV/viewport/occlusion gates and never publishes hidden AI targets, timers or configured particle quantities.
-- Preserves actual floating text color/icon/cell, native item/Buff/ability/target/boss/quickslot appearance, ordered translated color runs, and current rendered quantitative samples. Sampled histories are explicitly labeled; raw transport and existing historical replies remain immutable. See [rendered combat observations](docs/cli7-rendered-combat-visuals.md).
+- Preserves actual floating text color/icon/cell, native item/Buff/ability/target/boss/quickslot appearance, ordered translated color runs, and current rendered quantitative samples. Sampled histories are explicitly labeled; raw transport and existing historical replies remain immutable. See [rendered combat observations](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli7-rendered-combat-visuals.md).
 - Keeps asynchronous quit queryable until the exact original terminal receipt is delivered, then exits once. Unrelated queries cannot complete shutdown, uncertain outcomes stay uncertain, and EOF cannot replay a dispatched quit.
 - Uses weak UI/control callback identity keys without recycling handles. Static Java/controller validation and Python advertised-constraint validation share cross-language cases; malformed environment/save references retain their failing wire identity and enclosing action context.
 - Adds a source-only, exact-digest combat visual review ledger and isolated renderer/lifecycle regressions. Static classification and shared-sink tests are reported separately from actual native fixtures. Protocol 7, audit schema 10, the independent v7 profile and base game 3.3.8 remain unchanged.
-- Freezes UI appearance between actual draw and update, with attachment/pool invalidation and explicit decorative color-phase exemptions. Final verification passes 677 Java tests, 273 Python tests and 64 isolated native scenarios on one build, plus ordinary and instrumented slow-quit package checks; see the [CLI.7.0.1 acceptance report](docs/cli-rebuild-7.0.1-20260923.md).
+- Freezes UI appearance between actual draw and update, with attachment/pool invalidation and explicit decorative color-phase exemptions. Final verification passes 677 Java tests, 273 Python tests and 64 isolated native scenarios on one build, plus ordinary and instrumented slow-quit package checks; see the [CLI.7.0.1 acceptance report](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-rebuild-7.0.1-20260923.md).
 
 ## CLI.7.0.0
 
-- Synchronizes the help and agent/client guidance with the implemented decode order and strict template rules, distinguishes failing query identities from original action identities, and records the [2026-09-21 clean macOS rebuild](docs/cli-rebuild-7.0.0-20260921.md). This documentation/cleanup batch does not change runtime behavior or increment CLI/protocol/schema versions.
+- Synchronizes the help and agent/client guidance with the implemented decode order and strict template rules, distinguishes failing query identities from original action identities, and records the [2026-09-21 clean macOS rebuild](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-rebuild-7.0.0-20260921.md). This documentation/cleanup batch does not change runtime behavior or increment CLI/protocol/schema versions.
 - Introduces protocol 7, audit schema 10 and an independent CLI v7 profile. Earlier request formats and profile schemas are refused without migration or history rewriting.
 - Shares node operations through exact same-observation references into the complete ordered action list. Replaces old UI shapes/operation-list dictionaries with common-field templates for UI nodes, actions and inventory records.
 - Applies the new representation to play/full/src and independently projected frozen snapshots. Public values, ordered occurrences, unknown/null/false/zero distinctions, node identities/parents, source trees and diagnostic paths remain intact; protected records stay inline.
-- Updates strict Java/Python decoders and active acceptance clients while isolating v6 research readers. The controller preserves compact child bytes and never expands them before forwarding. No cross-frame cache, gameplay changes or semantic UI pruning is included. Validation is recorded in [CLI 7 implementation and validation](docs/cli7-implementation.md).
+- Updates strict Java/Python decoders and active acceptance clients while isolating v6 research readers. The controller preserves compact child bytes and never expands them before forwarding. No cross-frame cache, gameplay changes or semantic UI pruning is included. Validation is recorded in [CLI 7 implementation and validation](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli7-implementation.md).
 
 ## CLI.6.1.1
 
 - Uses decimal digits only for the controller's incrementing request-ID suffix (`t1.9`, `t1.10`, `t1.11`). Failed allocations remain consumed; session prefixes and historical or explicitly supplied identities are unchanged.
 - Adds allocator boundary/restart/failure regressions and an actual-package `.9`/`.10` wire check. Active Python clients explicitly retain decimal allocation. Protocol 6, schema 9 and the v6 profile remain unchanged.
-- Adds reproducible, lossless offline format experiments on the depth-9 public transport corpus, comparing item definitions, row tables, readable sections and explicit delta baselines. These candidate formats are analysis artifacts, not deployed wire changes; see [the measured study](docs/cli-token-study-d9-20260920.md).
+- Adds reproducible, lossless offline format experiments on the depth-9 public transport corpus, comparing item definitions, row tables, readable sections and explicit delta baselines. These candidate formats are analysis artifacts, not deployed wire changes; see [the measured study](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-token-study-d9-20260920.md).
 
 ## CLI.6.1.0
 
@@ -49,50 +57,50 @@
 - Adds native accessible labels to the Stone of Intuition guess icons. This was a UI capture gap present in both play and full, separate from the lossy projection rules found in this audit.
 - Distinguishes a wand shot blocked at its first step from deliberately targeting oneself, using localized native messages without changing combat or charge consumption.
 - Rejects malformed controller bindings before game dispatch and adds a reusable strict observation/result decoder and intent validator. Original errors, pending outcomes, late responses and current observations remain separate; no action is automatically replayed or rebound.
-- Tightens regression comparisons so deleted nodes or fields cannot be normalized away as equivalent. Protocol 6, schema 9, the v6 profile directory and base game 3.3.8 remain unchanged. See [readability and lossless projection audit](docs/cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md) for the verified scope.
+- Tightens regression comparisons so deleted nodes or fields cannot be normalized away as equivalent. Protocol 6, schema 9, the v6 profile directory and base game 3.3.8 remain unchanged. See [readability and lossless projection audit](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-issues/2026-09-20-cli-6.1.0-readability-lossless.md) for the verified scope.
 
 ## CLI.6.0.1
 
 - Fixes default `control --machine` startup on a shared terminal/PTY: the child receives a dedicated stderr pipe, preventing its native relay's `O_NONBLOCK` setting from changing the controller stdout descriptor. Normal startup no longer needs stdout-file redirection.
 - Forwards diagnostic bytes independently of NDJSON processing, with best-effort display and a bounded final drain. Intentionally merged caller stdout/stderr can still mix text; exact child transport records remain separate.
 - Reports sanitized controller failure stages on stderr instead of the generic game startup error; no controller failure log is written into the selected profile.
-- Adds real JVM/native-relay PTY regressions and synchronizes launcher, build metadata, authoritative help and agent agreements. Protocol 6, schema 9, the v6 profile directory and base game 3.3.8 remain unchanged. See [controller terminal startup fix and validation](docs/cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md).
+- Adds real JVM/native-relay PTY regressions and synchronizes launcher, build metadata, authoritative help and agent agreements. Protocol 6, schema 9, the v6 profile directory and base game 3.3.8 remain unchanged. See [controller terminal startup fix and validation](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-issues/2026-09-20-cli-6.0.1-controller-pty-startup.md).
 
 ## CLI.6.0.0
 
-- Refreshes the protocol help and agent agreement against the shipped controller, and records the [2026-09-20 clean macOS rebuild](docs/cli-rebuild-6.0.0-20260920.md), old generated-data removal, package verification and branch push. This documentation-only batch does not change the CLI version or runtime behavior.
+- Refreshes the protocol help and agent agreement against the shipped controller, and records the [2026-09-20 clean macOS rebuild](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-rebuild-6.0.0-20260920.md), old generated-data removal, package verification and branch push. This documentation-only batch does not change the CLI version or runtime behavior.
 - Introduces protocol 6 and schema 9 with durable profile-local typed handles and an independent CLI v6 profile; previous formats are rejected without migration.
 - Adds packaged `control --machine`: short request IDs, exact displayed-revision binding, complete-response validation, interruptible initial observations, bounded receipt settling and uncertainty recovery without action replay.
 - Compacts same-frame UI shapes/operations, verified empty inventory backgrounds, captured item names, passive text identities, repeated characters and redundant activity/save bindings while retaining current decision evidence and protected diagnostics.
 - Uses normal-weight terminal payloads and errors; only numbered SEND/RECV headings are bold, with shared bright-cyan coloring. The child remains the sole raw recorder and viewer owner.
-- Current implementation and executed validation are recorded in [CLI 6 implementation and validation](docs/cli6-implementation.md); map/log incrementality remains a separate evaluation.
+- Current implementation and executed validation are recorded in [CLI 6 implementation and validation](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli6-implementation.md); map/log incrementality remains a separate evaluation.
 
 ## CLI.5.0.0
 
 - Introduces protocol 5 and schema 8 with a separate CLI v5 profile; previous profiles are refused before writes and are never migrated automatically.
 - Unifies ordinary public text-source classification, adds semantic UI bindings/display fields and conservative deduplication, per-observation hazard/effect dictionaries, scoped defaults, uniform visibility and measured field aliases. Full/source and immutable history retain their diagnostic boundaries.
 - Opens independent SEND and RECV + ERROR Terminal windows with selectable streams, shared bold bright syntax colors and unchanged backgrounds. Raw trace format/bytes remain unchanged; opening and viewer lifetimes stay independent of gameplay.
-- Updates authoritative CLI help, agent agreements, current documentation, decoders and isolated tests. See [CLI 5 implementation and validation](docs/cli5-implementation.md) for measured results and acceptance limits.
+- Updates authoritative CLI help, agent agreements, current documentation, decoders and isolated tests. See [CLI 5 implementation and validation](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli5-implementation.md) for measured results and acceptance limits.
 - Fixes the visual observer's uncached scene-camera lookup so a newly created visible particle emitter participates in the existing first-draw readiness check; this preserves the action's immediate bomb warning without advancing particles or changing the waiting protocol.
 
 ## CLI.4.0.1
 
 - 独立 Terminal 查看器的自动打开、`trace open` 和新生成的 `open-viewer.command` 显式使用 `--color always`，避免颜色被查看器继承的 `NO_COLOR`／`TERM=dumb` 自动判定关闭；直接 `trace view` 的 auto/always/never 语义保持。
-- 新增两种实际生成脚本的 PTY 回归，覆盖 `NO_COLOR=1` 和空值、正文去色一致性、原文不变、路径安全与临时脚本自清理。详见 [独立终端颜色修复](docs/cli-issues/2026-09-14-cli-4.0.1-terminal-color.md)。
+- 新增两种实际生成脚本的 PTY 回归，覆盖 `NO_COLOR=1` 和空值、正文去色一致性、原文不变、路径安全与临时脚本自清理。详见 [独立终端颜色修复](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-issues/2026-09-14-cli-4.0.1-terminal-color.md)。
 
 ## CLI.4.0.0
 
 - 协议升级为 4、审计 schema 升为 7，默认使用独立 CLI v4 目录；拒绝旧协议请求，旧审计格式在写入前拒绝，保留旧目录与原始历史。
 - 默认自包含 play 观察采用完整行地图、明确字段默认值、物品知识三态、空文字裁剪和单一操作能力表示；full／来源详情保留完整诊断，危险与额外库存状态不省略。
 - 共享客户端分离原动作结果与当前观察；异步成功使用小回执后的一次 fresh state，正常路径省去历史回复全文，同步成功和退出不额外查询。
-- 新增根目录 AGENTS.md，更新英文 help 与项目文档；生产投影对上轮 1,312 条原始回复测得组合预算减少 56.99%，879 帧地图语义核对通过且地图 tokens 减少 76.73%。详见 [CLI 4.0 记录](docs/cli4-implementation.md)。
+- 新增根目录 AGENTS.md，更新英文 help 与项目文档；生产投影对上轮 1,312 条原始回复测得组合预算减少 56.99%，879 帧地图语义核对通过且地图 tokens 减少 76.73%。详见 [CLI 4.0 记录](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli4-implementation.md)。
 - 429 项 Java、100 项 Python、18 例真实引擎场景通过；实际 ARM64 包的版本、帮助、类内容、签名、独立开局／保存重启、完整收发及 schema 1–6 写入前拒绝验证通过。
 
 ## CLI.3.0.1
 
 - 修复进入楼层、关闭交易窗口后金币提示自然淡出导致的 `STALE_STATE`：保留公开金币／能量提示，仅将其纯显示文字从操作意图签名中排除；实际货币、背包、按钮及回调变化仍使旧版本失效。
 - 修复新场景空文字由 `null` 更新为空字符串时的无界面变化误拒，使内部文字签名与公开可见文字规则一致；非空原文和裁剪保护保留。
-- 新增原生货币计时、完整控制器版本和真实引擎回归，保留旧版复现、两次实战原始证据及根因分析。详见 [CLI.3.0.1 修复记录](docs/cli-issues/2026-09-14-cli-3.0.1-currency-stale-state.md)。
+- 新增原生货币计时、完整控制器版本和真实引擎回归，保留旧版复现、两次实战原始证据及根因分析。详见 [CLI.3.0.1 修复记录](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-issues/2026-09-14-cli-3.0.1-currency-stale-state.md)。
 - 410 项 Java、82 项 Python、六例真实引擎场景通过；ARM64 包版本、帮助、修复类与签名验证通过，实际包完成独立开局／保存重启的四次 JVM 会话和 65 次公开请求，完整收发逐字节一致。
 
 ## CLI.3.0.0
@@ -102,7 +110,7 @@
 - Terminal 只显示 SEND/RECV/ERROR，隐藏 DELIVERED 和正常生命周期；支持 auto/always/never 与流式 JSON 类型高亮。原始字节和索引不变，控制字符安全转义，颜色不进入机器输出。
 - 不增加整条消息字节上限，保留 64 KiB 背压缓冲；单条 16/64 MiB JSON、慢读、UTF-8 分片和无 LF 均完整验证。手册示例完整收发后再选择显示字段，区分外层工具截断。
 - 403 项 Java、82 项 Python 回归通过；12 个真实引擎场景涵盖教程、击杀、持续取消、保存重启和升级确认。固定地牢样本减少 77.66% 字节、70.53% o200k_base tokens；不是所有模型的费用估计。
-- 已重建 ARM64 应用；实际包版本、20,078 字节帮助、签名、管道及颜色验证通过。缺失/空测试 profile 开局/重启共 4 次 JVM 会话，65 次请求、35 次来源检查，SEND/RECV 逐字节一致。详见 [CLI 3.0 实施记录](docs/cli3-implementation.md)。
+- 已重建 ARM64 应用；实际包版本、20,078 字节帮助、签名、管道及颜色验证通过。缺失/空测试 profile 开局/重启共 4 次 JVM 会话，65 次请求、35 次来源检查，SEND/RECV 逐字节一致。详见 [CLI 3.0 实施记录](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli3-implementation.md)。
 
 ## CLI.2.1.1
 
@@ -111,14 +119,14 @@
 - 380 项 Java 测试、60 项 Python 测试通过；新增三项原生指示器生命周期测试。静态 UI 基线仅更新一处行号，回调摘要和入口集合不变。
 - 升级运行入口、握手、构建清单、包内英文帮助及当前文档到 `CLI.2.1.1`；明确仅在确认拒绝、重新观察和重新决策后允许客户端有界恢复，服务端不替换版本重放，UNKNOWN 与进行中的动作不可据此重试。
 - 重建 macOS ARM64 应用；实际包及开发入口版本正确，30,271 字节帮助与源码一致，签名、plist、内置 JVM/SQLite、独立管道与协议错误保护通过。修复相关编译类与已验证运行时一致，测试夹具未进入应用包。
-- 复现、修复及产物验证边界见[两次 STALE_STATE 分析与修复](docs/cli-issues/2026-09-13-cli-2.1.1-stale-state-fixes.md)。
+- 复现、修复及产物验证边界见[两次 STALE_STATE 分析与修复](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-issues/2026-09-13-cli-2.1.1-stale-state-fixes.md)。
 
 ## CLI.2.1.0
 
 - 机器入口增加共用 native 原文记录器，默认打开独立 Terminal 查看完整 SEND / RECV；关闭查看器不结束游戏，可通过 `trace open/view` 重新查看。`--no-terminal` 保留记录，`--trace-dir` 指定独立根目录。
 - 记录实际字节、时间、方向与转发状态，stderr 分流；记录写入故障停止新请求并走原 EOF 退出，不重放动作或伪造响应。查看器对异常控制字节作明确转义，原始文件保持原字节。
 - 仅不存在或为空的新 profile 默认窗口化、简体中文、跳过教程和首次前言；已有设置、职业解锁、成就与旧版本迁移保持原生行为。
-- 协议仍为 2、审计 schema 仍为 5；构建标识新增 native 传输源码、开发入口和构建参数。验证范围与产物记录见[传输记录与验收](docs/cli-transport.md)。
+- 协议仍为 2、审计 schema 仍为 5；构建标识新增 native 传输源码、开发入口和构建参数。验证范围与产物记录见[传输记录与验收](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-transport.md)。
 - 377 项 Java、41 项原有 Python、19 项 native 传输测试和 2 项原文核对器自测通过。缺失／空 profile 实际新局及重启共 4 个 JVM 会话、65 次来源检查；11,276 字节 SEND 和 1,309,373 字节 RECV 逐字节一致。实际包原始管道、原教程、单次消耗、保存历史与启动失败保护通过。
 - 从空构建目录全量重建 macOS ARM64 包，33 个任务全部执行；实际包版本、28,783 字节帮助、签名与内置运行时核验通过。
 - 实际包拒绝旧 schema 1–4 且 profile 内容、修改时间与目录不变。自动 Terminal 原生查看器进程已验证；工具禁止访问 Terminal，真实窗口关闭按钮的人工确认未完成，已在验收记录明确区分。验证结束清除约 197.19 MB 测试数据及复制包。
@@ -135,16 +143,16 @@
 - 保留原版 String 接口，通过中性中央钩子、弱引用身份注册表和不可变来源树追踪最终资源 key；CLI 使用冻结的官方英文模板，移除中文反查与窗口文案签名推断。
 - 文本字段新增 `text_sources`，用户/外部原文保留来源。正文、key 与参数一起经过可见性筛选；裁切与不支持的来源不能泄漏完整模板或参数。
 - 呈现状态和字段诊断独立于动作完成状态，纯文案失败返回安全 key 或英文占位。日志、保存回执和实际发送响应独立落库，历史按原样返回，不依赖当前观察或再次翻译。
-- 原版改动集中于观测钩子、基础控件生命周期和实际丢失来源的局部表达式；不改变游戏规则或原生存档格式。完整验证与构建记录见 [CLI 2.0 实施记录](docs/cli2-implementation.md)。
+- 原版改动集中于观测钩子、基础控件生命周期和实际丢失来源的局部表达式；不改变游戏规则或原生存档格式。完整验证与构建记录见 [CLI 2.0 实施记录](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli2-implementation.md)。
 
 ## CLI.1.0.1
 
-- 2026-09-13 按要求清除 13 处旧构建/生成路径后，从 `7373c07a3` 完整重建 macOS ARM64 CLI；禁用构建缓存和任务复用，31 个任务全部执行、380 项单元测试通过。新包及开发运行时均为 CLI.1.0.1，产物核验和清理范围见[完整重建记录](docs/cli-rebuild-20260913.md)。本次未修改功能源码，CLI 版本不再递增。
+- 2026-09-13 按要求清除 13 处旧构建/生成路径后，从 `7373c07a3` 完整重建 macOS ARM64 CLI；禁用构建缓存和任务复用，31 个任务全部执行、380 项单元测试通过。新包及开发运行时均为 CLI.1.0.1，产物核验和清理范围见[完整重建记录](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-rebuild-20260913.md)。本次未修改功能源码，CLI 版本不再递增。
 - 2026-09-13 按用户约定，每批修复完成后升级 CLI 版本；本批补升修订号为 `CLI.1.0.1`，同步 `--version`、`protocol.info`、构建清单和当前文档。
 - 修复首次教程结束时提前返回稳定状态：原有 2 秒渐显现在声明其尚未完成的交互变化，CLI 等待工具栏、背包及后续绘制就绪后返回；真实陈旧版本仍被拒绝。
 - 修复升级卷轴选择护甲时的 `EXECUTION_UNKNOWN`：完整升级预览中的“防御”按 `Blocking` 解释，同时支持窗口聚合文本，保留强化界面的 `Defense` 及未知文案拒绝。未修改原生升级回调或 UNKNOWN 隔离规则。
 - 380 项单元测试与 6 个隔离真实引擎场景通过：教程两种界面、已/未鉴定卷轴与固定/弹出背包四组合。确认预览不升级、返回和取消遵循原规则、护甲与纹章仅升一级、卷轴只消耗一次，并取得保存回执。
-- 修复功能的 380 项单元测试与六场景验证先在 `CLI.1.0.0` 的修复构建完成；随后补升 `CLI.1.0.1` 并重建本地 macOS ARM64 应用和 `bin/spdctl` 开发运行时，协议仍为 1。各次构建标识和验证范围见[问题修复与验证](docs/cli-issues/2026-09-13-fixes-and-validation.md)。未发布或恢复原故障会话。
+- 修复功能的 380 项单元测试与六场景验证先在 `CLI.1.0.0` 的修复构建完成；随后补升 `CLI.1.0.1` 并重建本地 macOS ARM64 应用和 `bin/spdctl` 开发运行时，协议仍为 1。各次构建标识和验证范围见[问题修复与验证](https://github.com/shengyifan/shattered-pixel-dungeon/blob/bbb7d21de5fe503a125c3719e1c53976a2730dbc/docs/cli-issues/2026-09-13-fixes-and-validation.md)。未发布或恢复原故障会话。
 
 ## CLI.1.0.0
 

@@ -76,9 +76,13 @@ class Client:
                     self.state()
                     response = self.request("action.execute", {"action": "app.quit"})
                     if response.get("ok"):
+                        settled = settle_action(self, response, "app.quit").require_success()
+                        assert settled.status == "completed", settled
                         break
                     if response.get("error", {}).get("code") != "STALE_STATE":
                         raise AssertionError(response)
+                else:
+                    raise AssertionError("Quit did not obtain a current revision")
                 self.process.wait(timeout=20)
         finally:
             if self.process.poll() is None:

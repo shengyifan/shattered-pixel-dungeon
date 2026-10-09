@@ -707,7 +707,7 @@ public class Toolbar extends Component {
 		private String gameplayIcon;
 
 		@Override public java.util.Map<String,Object> gameplayStatus() {
-			if(RenderedAppearance.image(icon).isEmpty())return java.util.Collections.emptyMap();
+			if(!RenderedAppearance.isImageVisible(icon))return java.util.Collections.emptyMap();
 			java.util.Map<String,Object> meaning=gameplayIcon==null?GameplayIcons.image(icon):java.util.Collections.singletonMap("symbol",gameplayIcon);
 			return java.util.Collections.singletonMap("icon",meaning);
 		}

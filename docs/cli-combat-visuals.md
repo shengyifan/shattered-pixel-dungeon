@@ -1,11 +1,11 @@
-# CLI.8.0.1 semantic combat observations
+# CLI.8.0.2 semantic combat observations
 
 Protocol 8 and audit schema 11 publish player-facing combat facts from existing
 game state and presentation sources. The observation is a complete public snapshot
 for its own revision. It does not encode an atlas, frame, texture, transform, RGB
 value, particle histogram, camera movement, screen effect or display timing as a
-substitute for the fact a player needs to decide an action. The former rendered
-contract is preserved as a [historical CLI.7.0.1 record](cli7-rendered-combat-visuals.md).
+substitute for the fact a player needs to decide an action. Source responsibilities
+and verification boundaries are documented in the [current architecture](cli-architecture.md).
 
 ## Current-frame facts
 
@@ -143,6 +143,7 @@ semantics, original action outcomes and save receipts remain separate. Protocol
 8 does not emit generic rendered particle metrics, screen visual samples or raw display
 appearance in current observations or new events.
 
-The source inventory and renderer fixture conclusions in the CLI.7.0.1 document
-apply to that historical renderer contract only. CLI8 implementation, validation
-and package evidence belong in [CLI8 implementation](cli8-implementation.md).
+The source inventory records reviewed routes and source contracts; it does not
+prove producer-specific runtime coverage. Current maintenance and test entrypoints
+are in the [architecture](cli-architecture.md); executed checks and package evidence
+are recorded separately in the [CLI.8.0.2 validation report](cli-8.0.2-cleanup-validation.md).

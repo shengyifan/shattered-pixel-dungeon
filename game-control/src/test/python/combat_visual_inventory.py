@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Attribute every visual source, then require exact, reviewed source-site dispositions."""
 import argparse
+import ast
 from collections import Counter
 import json
 from pathlib import Path
@@ -16,6 +17,9 @@ SEMANTIC_CLASSIFICATIONS = {
     "semantic_required", "redundant", "decorative", "nonvisual", "out_of_scope", "unresolved",
 }
 SEMANTIC_FIELDS = ("owner", "key", "allowed_fields")
+TEST_REFERENCE = re.compile(r"[A-Za-z_$][\w$]*#[A-Za-z_$][\w$]*")
+SOURCE_CHECKS = ["site_identity", "enclosing_body_digest"]
+JAVA_NON_CODE = re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|//[^\n]*|/\*.*?\*/', re.S)
 
 
 def _nonempty_string(value):
@@ -37,35 +41,63 @@ def _reviewed_outputs(outputs, label):
             raise ValueError(label + " needs explicit, unique allowed fields")
 
 
-def _reviewed_tests(tests, label, root):
+class TestReferences:
+    """Read each test source once per check, without caching across source edits."""
+
+    def __init__(self, root):
+        self.java = {}
+        self.python = set()
+        self.resolved = {}
+        for module in ("game-control", "desktop-control"):
+            folder = root / module / "src/test"
+            for candidate in folder.rglob("*.java"):
+                self.java.setdefault(candidate.stem, []).append(candidate)
+            for candidate in (folder / "python").glob("test_*.py"):
+                tree = ast.parse(candidate.read_text(), filename=str(candidate))
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ClassDef):
+                        for method in node.body:
+                            if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                                self.python.add(node.name + "#" + method.name)
+        self.java_text = {}
+
+    def contains(self, reference):
+        if reference not in self.resolved:
+            class_name, method = reference.split("#")
+            found = reference in self.python
+            for candidate in self.java.get(class_name, []):
+                if candidate not in self.java_text:
+                    self.java_text[candidate] = JAVA_NON_CODE.sub(" ", candidate.read_text())
+                # References name test declarations, not a mention, call or comment.
+                declaration = r"\bvoid\s+" + re.escape(method) + r"\s*\("
+                found |= bool(re.search(declaration, self.java_text[candidate]))
+            self.resolved[reference] = found
+        return self.resolved[reference]
+
+
+def _reviewed_tests(tests, label, root, references=None):
     if not isinstance(tests, list) or not tests:
         raise ValueError(label + " needs focused test references")
     for reference in tests:
-        if not _nonempty_string(reference) or not re.fullmatch(r"[A-Za-z_$][\w$]*#[A-Za-z_$][\w$]*", reference):
+        if not _nonempty_string(reference) or not TEST_REFERENCE.fullmatch(reference):
             raise ValueError(label + " needs ClassName#method test references")
         if root is not None:
-            class_name, method = reference.split("#")
-            candidates = list((root / "game-control/src/test").rglob(class_name + ".java"))
-            candidates += list((root / "desktop-control/src/test").rglob(class_name + ".java"))
-            python_tests = list((root / "game-control/src/test/python").glob("test_*.py"))
-            python_tests += list((root / "desktop-control/src/test/python").glob("test_*.py"))
-            found_java = any(re.search(r"\b" + re.escape(method) + r"\s*\(", candidate.read_text())
-                             for candidate in candidates)
-            found_python = any(re.search(r"\bclass\s+" + re.escape(class_name) + r"\b", candidate.read_text())
-                               and re.search(r"\bdef\s+" + re.escape(method) + r"\s*\(", candidate.read_text())
-                               for candidate in python_tests)
-            if not (found_java or found_python):
+            if references is None:
+                references = TestReferences(root)
+            if not references.contains(reference):
                 raise ValueError(label + " has an unresolved test reference: " + reference)
 
 
-def _semantic_contracts(reviews, root=None):
-    if reviews.get("format") != "combat_visual_reviews_v2":
-        raise ValueError("Semantic review ledger must use combat_visual_reviews_v2")
+def _semantic_contracts(reviews, root=None, references=None):
+    if reviews.get("format") != "combat_visual_reviews_v3":
+        raise ValueError("Semantic review ledger must use combat_visual_reviews_v3")
     if reviews.get("runtime_verified_by_inventory") is not False:
         raise ValueError("A source inventory cannot assert runtime verification")
     contracts = reviews.get("semantic_contracts")
     if not isinstance(contracts, list):
         raise ValueError("Missing semantic review contracts")
+    if root is not None and references is None:
+        references = TestReferences(root)
     indexed = {}
     for contract in contracts:
         if not isinstance(contract, dict) or not _nonempty_string(contract.get("id")):
@@ -83,7 +115,7 @@ def _semantic_contracts(reviews, root=None):
             _reviewed_outputs(contract.get("outputs"), identity)
             if not _nonempty_string(contract.get("visibility_gate")):
                 raise ValueError(identity + " needs a visibility gate")
-            _reviewed_tests(contract.get("tests"), identity, root)
+            _reviewed_tests(contract.get("tests"), identity, root, references)
         elif status == "redundant":
             replacement = contract.get("replacement")
             if not isinstance(replacement, dict) or replacement.get("same_frame") is not True:
@@ -91,7 +123,7 @@ def _semantic_contracts(reviews, root=None):
             _reviewed_outputs(replacement.get("outputs"), identity + " replacement")
             if not _nonempty_string(replacement.get("visibility_gate")):
                 raise ValueError(identity + " replacement needs a visibility gate")
-            _reviewed_tests(replacement.get("tests"), identity + " replacement", root)
+            _reviewed_tests(replacement.get("tests"), identity + " replacement", root, references)
         elif status == "out_of_scope" and contract.get("scope") != "noncombat":
             raise ValueError(identity + " must identify its noncombat scope")
         indexed[identity] = contract
@@ -132,6 +164,55 @@ def _semantic_reviews(reviews, contracts):
     return assigned
 
 
+def _retired_contracts(reviews, contracts):
+    retired = reviews.get("retired_contracts", [])
+    if not isinstance(retired, list):
+        raise ValueError("Retired contracts must be an explicit historical list")
+    identities = set()
+    for contract in retired:
+        if not isinstance(contract, dict) or any(not _nonempty_string(contract.get(field))
+                                                for field in ("id", "source_producer", "reason", "retired_in")):
+            raise ValueError("Retired contract needs identity, source, version, and retirement reason")
+        identity = contract["id"]
+        if identity in identities or identity in contracts:
+            raise ValueError("Retired contract duplicated or still live: " + identity)
+        if (contract.get("classification") not in SEMANTIC_CLASSIFICATIONS
+                or contract["classification"] == "unresolved"
+                or not re.fullmatch(r"CLI\.\d+\.\d+\.\d+", contract["retired_in"])):
+            raise ValueError("Retired contract needs its reviewed classification and exact CLI version")
+        identities.add(identity)
+    return identities
+
+
+def _group_evidence(group, contract_id, contracts, root, references):
+    """Current evidence cannot silently contain a historical or free-form witness."""
+    label = group["id"]
+    if group.get("route") != {"semantic_contract": contract_id}:
+        raise ValueError(label + " route must bind its exact current semantic contract")
+    contract = contracts.get(contract_id, {})
+    semantic = contract.get("replacement", contract)
+    if semantic.get("visibility_gate") and group.get("visibility_gate") != semantic["visibility_gate"]:
+        raise ValueError(label + " visibility gate must match its current semantic contract")
+    tests = group.get("tests")
+    if not isinstance(tests, list) or not tests:
+        raise ValueError(label + " needs explicit current test or source-review evidence")
+    for reference in tests:
+        if isinstance(reference, str):
+            _reviewed_tests([reference], label, root, references)
+        elif isinstance(reference, dict) and reference.get("kind") == "semantic_contract":
+            if reference != {"kind": "semantic_contract", "id": contract_id}:
+                raise ValueError(label + " test contract must match its semantic assignment")
+            focused = contract.get("tests") or contract.get("replacement", {}).get("tests")
+            if not focused:
+                raise ValueError(label + " cannot claim tests from a source-only contract")
+        elif reference == {"kind": "source_review", "checks": SOURCE_CHECKS}:
+            # These are the exact mandatory comparisons below, not a waiver of tests.
+            # A source review never establishes producer-specific runtime coverage.
+            continue
+        else:
+            raise ValueError(label + " has untyped or unsupported current evidence")
+
+
 def scan(root, classpath_file, additional=()):
     classpath = classpath_file.read_text().strip()
     source = root / "game-control/src/test/source-text/CombatVisualInventory.java"
@@ -147,7 +228,9 @@ def scan(root, classpath_file, additional=()):
 
 
 def check(inventory, reviews, root=None):
-    contracts = _semantic_contracts(reviews, root)
+    references = TestReferences(root) if root is not None else None
+    contracts = _semantic_contracts(reviews, root, references)
+    retired_contracts = _retired_contracts(reviews, contracts)
     semantic_reviews = _semantic_reviews(reviews, contracts)
     observed = {entry["id"]: entry for entry in inventory["entries"]}
     if len(observed) != len(inventory["entries"]):
@@ -173,7 +256,8 @@ def check(inventory, reviews, root=None):
             raise ValueError("Empty review group")
         if group_id not in semantic_reviews:
             raise ValueError("Review group needs an exact semantic assignment: " + group_id)
-        semantic_status, _, semantic_evidence = semantic_reviews[group_id]
+        semantic_status, contract_id, semantic_evidence = semantic_reviews[group_id]
+        _group_evidence(group, contract_id, contracts, root, references)
         if status in {"covered_current", "covered_history", "covered_inspection"} and semantic_status in {"redundant", "decorative", "nonvisual", "out_of_scope"}:
             if not _nonempty_string(semantic_evidence):
                 raise ValueError("Downgraded visual group needs source-specific semantic evidence: " + group_id)
@@ -210,9 +294,10 @@ def check(inventory, reviews, root=None):
                    or semantic_reviews[group["id"]][0] == "unresolved"]
     outstanding_groups = sorted({expected[identity][1]["id"] for identity in outstanding})
     return {
-        "format": "combat_visual_review_result_v2", "source_files": inventory["source_files"],
+        "format": "combat_visual_review_result_v3", "source_files": inventory["source_files"],
         "sites": len(observed), "review_groups": len(reviews["groups"]),
         "retired_sites": len(retired_ids),
+        "retired_contracts": len(retired_contracts),
         "runtime_verified_by_inventory": False,
         "checked": not (added or removed or changed or outstanding),
         "classifications": dict(classifications),

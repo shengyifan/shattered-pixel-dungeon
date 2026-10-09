@@ -23,7 +23,6 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst",
             "com.shatteredpixel.shatteredpixeldungeon.effects.SpectralWallCue",
             "com.shatteredpixel.shatteredpixeldungeon.effects.particles.SpectralWallParticle",
-            "com.shatteredpixel.shatteredpixeldungeon.effects.ScreenEffectCollector",
             "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
             "com.shatteredpixel.shatteredpixeldungeon.effects.ItemStatusEmitter",
             "com.shatteredpixel.shatteredpixeldungeon.effects.TerrainVisualCue",
@@ -44,8 +43,7 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection",
             "com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.Fader",
             "com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.PixelCamera",
-            "com.watabou.noosa.VisualCue", "com.watabou.noosa.VisualMetric",
-            "com.watabou.noosa.ScreenEffect", "com.watabou.noosa.RuntimeObserver",
+            "com.watabou.noosa.VisualCue", "com.watabou.noosa.RuntimeObserver",
             "com.watabou.noosa.Game", "com.watabou.noosa.Gizmo", "com.watabou.noosa.Group", "com.watabou.noosa.Camera",
             "com.watabou.noosa.NoosaScript", "com.watabou.noosa.NoosaScriptNoLighting"));
     private static final Set<String> SEMANTIC_CATALOGS=new HashSet<>(Arrays.asList(

@@ -158,6 +158,59 @@ class ClientResultTest(unittest.TestCase):
             self.assertEqual("completed", result.status)
             self.assertTrue(all(call.args[0] == "request.get" for call in client.request.call_args_list))
 
+    def finish_client(self, replies):
+        client = object.__new__(Client)
+        client.stderr = io.BytesIO()
+        client.state = Mock(return_value={})
+        client.request = Mock(side_effect=replies)
+        client.last_wire_request = {"id": "action", "s": "menu:original"}
+        client.process = Mock()
+        client.process.poll.return_value = None
+        def exited(**kwargs):
+            client.process.poll.return_value = 0
+            return 0
+        client.process.wait.side_effect = exited
+        return client
+
+    def test_finish_waits_for_original_async_quit_receipt_before_process_exit(self):
+        terminal = receipt("COMPLETED", save=[{"sid": "p1"}])
+        client = self.finish_client([initial(result={"phase": "resolving"}), receipt("EXECUTING"), terminal])
+        with patch("client_result.time.sleep"):
+            client.finish()
+        self.assertEqual(["action.execute", "request.get", "request.get"],
+                         [call.args[0] for call in client.request.call_args_list])
+        for call in client.request.call_args_list[1:]:
+            self.assertEqual({"target_id": "action"}, call.args[1])
+            self.assertEqual("menu:original", call.kwargs["scope"])
+        self.assertIs(terminal["result"], client.last_action_result.outcome)
+        client.state.assert_called_once()
+        client.process.wait.assert_called_once_with(timeout=20)
+        client.process.terminate.assert_not_called()
+        self.assertTrue(client.stderr.closed)
+
+    def test_finish_sync_quit_and_stale_rejection_do_not_poll_or_replay_accepted_quit(self):
+        stale = {"ok": False, "error": {"code": "STALE_STATE"}}
+        for replies in ([initial("completed")], [stale, initial("completed")]):
+            client = self.finish_client(replies)
+            client.finish()
+            self.assertEqual(["action.execute"] * len(replies),
+                             [call.args[0] for call in client.request.call_args_list])
+            self.assertEqual(len(replies), client.state.call_count)
+            client.process.wait.assert_called_once_with(timeout=20)
+            client.process.terminate.assert_not_called()
+
+    def test_finish_preserves_failed_quit_and_never_treats_it_as_successful_exit(self):
+        for terminal in (receipt("REJECTED", err="AUDIT_UNAVAILABLE"),
+                         receipt("INTERRUPTED"), TimeoutError("receipt response")):
+            client = self.finish_client([initial(result={"phase": "resolving"}), terminal])
+            with self.assertRaises((AssertionError, TimeoutError)):
+                client.finish()
+            self.assertEqual(["action.execute", "request.get"],
+                             [call.args[0] for call in client.request.call_args_list])
+            client.process.wait.assert_called_once_with(timeout=10)
+            client.process.terminate.assert_called_once()
+            self.assertTrue(client.stderr.closed)
+
     def test_pending_hook_can_observe_and_cancel_without_replaying_action(self):
         client = self.client([receipt("EXECUTING"), receipt("INTERRUPTED"), observed()])
         callback = Mock()

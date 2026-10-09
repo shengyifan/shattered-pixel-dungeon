@@ -2,8 +2,9 @@
 """Historical protocol-4 to protocol-5 replay analysis.
 
 Reproducing that release requires its matching compiled protocol-5 harness and
-classpath. Current CLI 7 validation uses cli7_token_benchmark.py instead. Shared
-pure comparison helpers here remain covered by unit tests.
+classpath. The current runtime uses protocol 8; this entry is an explicit
+historical comparison, not current package validation. Shared pure comparison
+helpers here remain covered by unit tests.
 
 This program reads only send.raw/recv.raw from the supplied transport directory.
 It does not import a gameplay controller or open profiles, saves or audit databases.

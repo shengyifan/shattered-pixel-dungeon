@@ -9,12 +9,11 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EmitterMetricObservationTest {
-    @Test void metricsRunAfterNativeChildrenAndEpisodeChangesOnlyOnNewEmissionOrReuse(){
+    @Test void semanticObservationRunsSeparatelyAndEpisodesChangeOnlyOnNewEmissionOrReuse(){
         RuntimeObserver previous=Game.observer;
-        List<String> order=new ArrayList<>();List<Object> episodes=new ArrayList<>();
+        List<String> order=new ArrayList<>();
         Game.observer=new RuntimeObserver(){
             @Override public boolean observesVisualCues(){return true;}
-            @Override public void onEmitterDraw(Emitter source,Object episode){order.add("metric");episodes.add(episode);}
         };
         try{
             Emitter source=new Emitter();
@@ -22,11 +21,14 @@ class EmitterMetricObservationTest {
             source.observeDraw(emitter->order.add("cue"));
             Emitter.Factory factory=new Emitter.Factory(){@Override public void emit(Emitter emitter,int index,float x,float y){throw new AssertionError("Observation emitted a particle");}};
             source.startDelayed(factory,1f,2,1f);
-            source.draw();source.draw();
+            Object first=source.observedDrawEpisode();assertNotNull(first);
+            source.draw();source.draw();assertSame(first,source.observedDrawEpisode());
             assertEquals(Arrays.asList("native","native"),order);
-            assertTrue(episodes.isEmpty(), "Generic particle metrics must not be emitted");
             source.observeGameplayVisuals();assertEquals(Arrays.asList("native","native","cue"),order);
-            source.revive();source.observeGameplayVisuals();assertEquals(3,order.size());
+            assertSame(first,source.observedDrawEpisode(),"Read-only observation does not create an emission episode");
+            source.startDelayed(factory,1f,2,1f);Object second=source.observedDrawEpisode();assertNotSame(first,second);
+            source.revive();assertNotSame(second,source.observedDrawEpisode());
+            source.observeGameplayVisuals();assertEquals(3,order.size(),"Reuse clears the previous semantic observer");
 
         }finally{Game.observer=previous;}
     }

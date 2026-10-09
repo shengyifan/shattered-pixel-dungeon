@@ -65,7 +65,7 @@ public class BossHealthBar extends Component implements GameplayStatus {
 
 	@Override
 	public synchronized java.util.Map<String,Object> gameplayStatus() {
-		if(RenderedAppearance.image(skull).isEmpty())return java.util.Collections.emptyMap();
+		if(!RenderedAppearance.isImageVisible(skull))return java.util.Collections.emptyMap();
 		return java.util.Collections.singletonMap("shown",java.util.Collections.singletonMap("boss_warning",displayedWarning));
 	}
 

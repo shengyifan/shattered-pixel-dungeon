@@ -1,16 +1,14 @@
 # spdctl control interface
 
-Current contract: **CLI.8.0.1 / protocol 8 / audit schema 11**, base game **3.3.8**.
-The authoritative interface and complete request examples are in [the English CLI help](cli-help.md), which is bundled verbatim as `spdctl --help`. See [CLI8 implementation](cli8-implementation.md) and the repository [agent working agreements](../AGENTS.md).
-Protocol 8 keeps complete same-frame action sharing and record templates and changes
-combat/UI reporting to [semantic public facts](cli-combat-visuals.md). The
-[CLI.7.0.1 rendered contract](cli7-rendered-combat-visuals.md), [CLI 7
-implementation](cli7-implementation.md), earlier token studies and validation
-reports remain historical evidence, not current protocol instructions.
-
-CLI.8.0.1 separates settle call budgets from response deadlines, retains publicly
-revealed attack warnings until native resolution, and strengthens the optional
-Python client's safe-access diagnostics. See the [patch validation record](cli-8.0.1-recovery-validation.md).
+Current contract: **CLI.8.0.2 / protocol 8 / audit schema 11**, base game **3.3.8**.
+The authoritative interface and complete request examples are in [the English CLI help](cli-help.md),
+which is bundled verbatim as `spdctl --help`. Read the [current architecture](cli-architecture.md)
+for implementation and test boundaries, and the [agent working agreements](../AGENTS.md)
+before changing or operating the controller. Protocol 8 keeps complete same-frame
+action sharing and record templates and reports [semantic public facts](cli-combat-visuals.md).
+The [current validation report](cli-8.0.2-cleanup-validation.md) records the actual
+checks for this batch; the [8.0.1 recovery record](cli-8.0.1-recovery-validation.md)
+is background for settle budgets, warning lifetimes and safe Python access.
 
 ## Start an independent v8 profile
 
@@ -20,12 +18,11 @@ Python client's safe-access diagnostics. See the [patch validation record](cli-8
 ```
 
 The packaging task accepts `-PmacArm64OutputSubdir=<app-output-name>` to build a
-separate app image without replacing the default one. CLI.8.0.1 was validated
-in `app-macos-arm64-cli-8.0.1` and is delivered in the original `app-macos-arm64`
-directory at the user's request, with the previous image retained as a backup.
-The name must be `app-macos-arm64` or `app-macos-arm64-<safe suffix>` (at most
-128 characters); paths, internal build directories and symlink destinations are
-rejected. Existing running games are not restarted or upgraded in place.
+separate app image without replacing the default one. The name must be
+`app-macos-arm64` or `app-macos-arm64-<safe suffix>` (at most 128 characters);
+paths, internal build directories and symlink destinations are rejected.
+Use the delivery path authorized for the task. Existing running games are not
+restarted or upgraded in place by editing Java source or producing a new package.
 
 The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v8/`. Earlier profiles remain untouched. A nonempty profile without a valid schema-11 audit pair, including an older schema, is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty profiles receive the existing windowed Chinese/new-profile defaults.
 
@@ -64,4 +61,10 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 ## Validation boundary
 
-Use current v8 tests and the rebuilt executable. Historical reports describe their own versions; their test counts are not evidence for a later build. Test profiles and generated JSON belong in ignored build directories. The original acceptance is in [CLI8 implementation](cli8-implementation.md); current clean-build tests and actual package readback are in the [2026-09-24 rebuild record](cli-rebuild-8.0.0-clean-20260924.md). Protocol 8 has no cross-frame dictionaries or map/inventory/log deltas; each response remains independently complete. A static source inventory and isolated fixtures do not prove a full game playthrough.
+Use current v8 tests and the rebuilt executable. Test profiles and generated JSON
+belong in ignored build directories. The [architecture](cli-architecture.md)
+identifies the maintained gates; the [CLI.8.0.2 report](cli-8.0.2-cleanup-validation.md)
+records their executed scope and actual package readback. Historical version results
+are not evidence for a later build. Protocol 8 has no cross-frame dictionaries or
+map/inventory/log deltas; each response remains independently complete. A static
+source inventory and isolated fixtures do not prove a full game playthrough.

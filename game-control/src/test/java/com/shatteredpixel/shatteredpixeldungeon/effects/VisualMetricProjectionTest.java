@@ -25,6 +25,6 @@ class VisualMetricProjectionTest {
         GameplayVisualTraversalTest.Fixture f=new GameplayVisualTraversalTest.Fixture();
         Visual source=new Visual(34,34,4,4);f.scene.add(source);
         for(String kind:Arrays.asList("cell_particles","flames","spark","smoke"))f.collector.particleMetricDrawn(source,kind,22);
-        f.collector.emitterMetricDrawn(null,new Object());assertTrue(f.densities().isEmpty());
+        assertTrue(f.densities().isEmpty());
     }
 }

@@ -53,7 +53,7 @@ public class QuickSlotButton extends Button implements GameplayStatus {
 
 	@Override
 	public java.util.Map<String,Object> gameplayStatus() {
-		if(RenderedAppearance.image(crossB).isEmpty())return java.util.Collections.emptyMap();
+		if(!RenderedAppearance.isImageVisible(crossB))return java.util.Collections.emptyMap();
 		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
 		result.put("quickslot",slotNum+1);result.put("targeting_marker",true);return result;
 	}

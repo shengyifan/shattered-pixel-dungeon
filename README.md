@@ -1,17 +1,15 @@
 # Shattered Pixel Dungeon
 
 This branch develops the `spdctl` machine-control interface. The current contract
-is **CLI.8.0.1 / protocol 8 / audit schema 11**. Start with the
-[CLI interface](docs/cli.md), the bundled [English help](docs/cli-help.md), and
-the [CLI8 implementation and validation ledger](docs/cli8-implementation.md).
-[Semantic combat observations](docs/cli-combat-visuals.md) describe public
-gameplay facts and FOV-scoped world cues. [CLI 7 implementation](docs/cli7-implementation.md),
-the [CLI.7.0.1 clean package report](docs/cli-rebuild-7.0.1-clean-20260923.md),
-and earlier token studies remain historical evidence for their own versions.
-The [CLI.8.0.1 recovery and warning report](docs/cli-8.0.1-recovery-validation.md)
-records this patch's implementation and validation. The
-[CLI.8.0.0 clean rebuild record](docs/cli-rebuild-8.0.0-clean-20260924.md)
-remains historical package evidence.
+is **CLI.8.0.2 / protocol 8 / audit schema 11**, with base game **3.3.8**.
+Start with the [CLI interface](docs/cli.md) and bundled [English help](docs/cli-help.md).
+The [current architecture](docs/cli-architecture.md) describes source ownership,
+observation boundaries and verification entrypoints; [semantic combat observations](docs/cli-combat-visuals.md)
+define the public gameplay facts and FOV-scoped world cues.
+The [CLI.8.0.2 validation report](docs/cli-8.0.2-cleanup-validation.md) records this
+batch's evidence, and the [8.0.1 recovery report](docs/cli-8.0.1-recovery-validation.md)
+retains the preceding controller and warning fixes. Earlier implementation,
+rebuild and acceptance reports remain available in Git history.
 
 For AI-controlled playthroughs, read the [project-local memory](memory/README.md)
 and [gameplay skill](skills/pixel-dungeon-run-assistance/SKILL.md). They include

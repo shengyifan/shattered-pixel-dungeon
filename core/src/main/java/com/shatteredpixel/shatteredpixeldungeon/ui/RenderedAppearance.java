@@ -1,8 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
-import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CircleArc;
-import com.watabou.gltextures.TextureCache;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Image;
@@ -11,30 +9,10 @@ import com.watabou.noosa.Group;
 import com.watabou.noosa.ui.Component;
 import com.watabou.noosa.Visual;
 import com.watabou.utils.RectF;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Collections;
 
 /** Reads existing visual properties without resolving camera caches or invoking model getters. */
 public final class RenderedAppearance {
     private RenderedAppearance() {}
-    private static final Set<String> OFFICIAL_ATLASES=officialAtlases();
-
-    private static Set<String> officialAtlases() {
-        Set<String> result=new TreeSet<>();
-        // Only compile-time public resource constants, never a model or arbitrary cache key.
-        for(Class<?> family:new Class<?>[]{Assets.Interfaces.class,Assets.Sprites.class,Assets.Effects.class})
-            for(java.lang.reflect.Field field:family.getFields())if(field.getType()==String.class
-                    &&java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
-                try {result.add((String)field.get(null));}
-                catch(IllegalAccessException impossible){throw new IllegalStateException(impossible);}
-            }
-        return Collections.unmodifiableSet(result);
-    }
-
     public static Camera camera(Gizmo source) {
         for (Gizmo node=source; node!=null; node=node.parent) if(node.camera!=null) return node.camera;
         return null;
@@ -53,70 +31,21 @@ public final class RenderedAppearance {
                 &&source.x+width<=transform.scrollX+transform.width&&source.y+height<=transform.scrollY+transform.height;
     }
 
-    public static Map<String,Object> icon(Visual source,String atlas,int index) {
-        Map<String,Object> result=new LinkedHashMap<>();
-        result.put("atlas",atlas);result.put("index",index);
-        if(source.rm!=1||source.gm!=1||source.bm!=1||source.ra!=0||source.ga!=0||source.ba!=0) {
-            Map<String,Object> tint=new LinkedHashMap<>();
-            tint.put("multiply",Arrays.asList(source.rm,source.gm,source.bm));
-            tint.put("add",Arrays.asList(source.ra,source.ga,source.ba));
-            result.put("tint",tint);
-        }
-        return result;
-    }
-
-    /** Current pixels of an existing image; no callback, item getter, or actor identity lookup. */
-    public static Map<String,Object> image(Visual source) {
-        if(!(source instanceof Image) || !imageFullyVisible(source))return Collections.emptyMap();
+    /** Whether an existing native image passes the complete public visibility gate. */
+    public static boolean isImageVisible(Visual source) {
+        if(!(source instanceof Image) || !imageFullyVisible(source))return false;
         Image image=(Image)source;
-        if(image.texture==null)return Collections.emptyMap();
+        if(image.texture==null)return false;
         RectF frame=image.frame();
-        if(!Float.isFinite(frame.left+frame.top+frame.right+frame.bottom))return Collections.emptyMap();
-        Map<String,Object> result=new LinkedHashMap<>();
-        String atlas=TextureCache.cachedAssetKey(image.texture,OFFICIAL_ATLASES);
-        if(atlas==null) {
-            result.put("asset_unknown",true);
-            Map<String,Object> diagnostic=new LinkedHashMap<>();diagnostic.put("field","asset_unknown");diagnostic.put("code","asset_unknown");
-            Map<String,Object> presentation=new LinkedHashMap<>();presentation.put("status","partial");presentation.put("diagnostics",Collections.singletonList(diagnostic));
-            result.put("presentation",presentation);
-        } else result.put("atlas",atlas);
-        String symbol=Icons.displayedSymbol(image);
-        if(symbol!=null)result.put("symbol",symbol);
-        result.put("frame_pixels",Arrays.asList(frame.left*image.texture.width,frame.top*image.texture.height,
-                frame.right*image.texture.width,frame.bottom*image.texture.height));
-        result.put("texture_size",Arrays.asList(image.texture.width,image.texture.height));
-        result.put("flip_horizontal",image.flipHorizontal);result.put("flip_vertical",image.flipVertical);
-        result.put("angle",source.angle);result.put("scale",Arrays.asList(source.scale.x,source.scale.y));
-        color(result,source);
-        return result;
+        return Float.isFinite(frame.left+frame.top+frame.right+frame.bottom);
     }
 
-    public static Map<String,Object> arc(CircleArc source) {
-        if(source==null || source.origin.x!=0 || source.origin.y!=0)return Collections.emptyMap();
+    /** The currently visible native arc sweep; null means no complete public sample. */
+    public static Float visibleSweep(CircleArc source) {
+        if(source==null || source.origin.x!=0 || source.origin.y!=0)return null;
         float radius=source.radius()*Math.max(Math.abs(source.scale.x),Math.abs(source.scale.y));
-        if(!visibleBounds(source,source.x-radius,source.y-radius,source.x+radius,source.y+radius))return Collections.emptyMap();
-        Map<String,Object> result=new LinkedHashMap<>();
-        result.put("sweep",source.getSweep());result.put("angle",source.angle);
-        color(result,source);return result;
-    }
-
-    /** Stable meaning of an existing icon, distinct from its exact animation sample. */
-    public static Map<String,Object> intentImage(Visual source,boolean frameMatters,boolean tintMatters) {
-        Map<String,Object> result=new LinkedHashMap<>(image(source));
-        for(String field:new String[]{"alpha","angle","scale","flip_horizontal","flip_vertical"})result.remove(field);
-        if(!frameMatters)result.remove("frame_pixels");
-        if(!tintMatters)result.remove("tint");
-        return result;
-    }
-
-    private static void color(Map<String,Object> result,Visual source) {
-        if(!Float.isFinite(source.rm+source.gm+source.bm+source.ra+source.ga+source.ba)) {
-            result.put("color_unknown",true);return;
-        }
-        Map<String,Object> tint=new LinkedHashMap<>();
-        tint.put("multiply",Arrays.asList(source.rm,source.gm,source.bm));
-        tint.put("add",Arrays.asList(source.ra,source.ga,source.ba));
-        result.put("tint",tint);result.put("alpha",source.alpha());
+        if(!visibleBounds(source,source.x-radius,source.y-radius,source.x+radius,source.y+radius))return null;
+        return source.getSweep();
     }
 
     private static boolean imageFullyVisible(Visual source) {

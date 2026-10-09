@@ -247,10 +247,6 @@ public class GameScene extends PixelScene {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.particleMetricDrawn(source, kind, cell);
 	}
 
-	public static void observeEmitterMetricDraw(Emitter source, Object episode) {
-		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.emitterMetricDrawn(source, episode);
-	}
-
 	public static void observeLinkedVisualDraw(com.watabou.noosa.Visual first, com.watabou.noosa.Visual second,
 	                                         com.watabou.noosa.VisualCue cue) {
 		if (scene != null && scene.visualCueCollector != null) scene.visualCueCollector.linkedVisualDrawn(first, second, cue);

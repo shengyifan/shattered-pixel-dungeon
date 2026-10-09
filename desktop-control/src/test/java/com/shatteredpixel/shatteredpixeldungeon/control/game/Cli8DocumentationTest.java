@@ -107,7 +107,7 @@ public class Cli8DocumentationTest {
         hasVersion("Project agreements", agreements, "CLI", protocol);
         hasVersion("Project agreements", agreements, "protocol", protocol);
         hasVersion("Project agreements", agreements, "schema", AuditStore.SCHEMA_VERSION);
-        assertTrue("The current implementation reference must exist", Files.isRegularFile(root().resolve("docs/cli8-implementation.md")));
+        assertTrue("The current architecture reference must exist", Files.isRegularFile(root().resolve("docs/cli-architecture.md")));
     }
 
     @Test public void allSixteenNewAliasesMatchTheProductionWireAndInfoTables() throws Exception {
@@ -333,7 +333,8 @@ public class Cli8DocumentationTest {
     @Test public void currentEntryPointLinksResolveWithinTheCheckout() throws Exception {
         Pattern links = Pattern.compile("\\[[^\\]\\r\\n]*\\]\\(([^)\\s]+)\\)");
         for (String name : Arrays.asList("README.md", "AGENTS.md", "docs/README.md", "docs/cli.md",
-                "docs/cli-help.md", "docs/cli-playthrough-client.md", "docs/cli7-implementation.md")) {
+                "docs/cli-help.md", "docs/cli-playthrough-client.md", "docs/cli-architecture.md",
+                "docs/cli-combat-visuals.md", "docs/cli-runtime-cancellation.md", "docs/cli-ui-coverage.md")) {
             Matcher link = links.matcher(document(name));
             while (link.find()) {
                 String target = link.group(1);
@@ -344,6 +345,6 @@ public class Cli8DocumentationTest {
             }
         }
         for (String name : Arrays.asList("README.md", "docs/README.md", "docs/cli.md"))
-            assertTrue(name + " must link to the current implementation record", document(name).contains("cli8-implementation.md"));
+            assertTrue(name + " must link to the current architecture", document(name).contains("cli-architecture.md"));
     }
 }
