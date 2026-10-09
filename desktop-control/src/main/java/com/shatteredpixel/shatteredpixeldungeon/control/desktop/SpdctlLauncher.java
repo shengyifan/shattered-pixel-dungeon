@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ReleaseIdentity;
+
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditStore;
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditException;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.GameController;
@@ -29,10 +31,11 @@ public final class SpdctlLauncher {
             return;
         }
         if(args.length==1&&args[0].equals("--version")){
-            protocol.println("CLI.8.0.2 (protocol 8, game 3.3.8)");return;
+            protocol.println(ReleaseIdentity.CLI_VERSION + " (protocol " + ReleaseIdentity.PROTOCOL_VERSION
+                    + ", game " + ReleaseIdentity.GAME_VERSION + ")");return;
         }
         Path profile=System.getenv("SPDCTL_PROFILE")==null
-                ?Paths.get(System.getProperty("user.home"),"Library","Application Support","Shattered Pixel Dungeon CLI v8")
+                ?Paths.get(System.getProperty("user.home"),"Library","Application Support",ReleaseIdentity.PROFILE_DIRECTORY_NAME)
                 :Paths.get(System.getenv("SPDCTL_PROFILE"));
         int exitCode=0;
         boolean profileAccepted=false;
@@ -55,7 +58,9 @@ public final class SpdctlLauncher {
             boolean freshProfile=CliProfileDefaults.isNewProfile(profile);
             AuditStore.preflight(profile.resolve("audit"));
             if(!freshProfile&&!Files.isRegularFile(profile.resolve("audit").resolve("public.sqlite3")))
-                throw new AuditException("CLI_PROFILE_UNSUPPORTED", "CLI 8 requires a new empty profile or an intact schema-11 audit pair; use a new profile", null);
+                throw new AuditException("CLI_PROFILE_UNSUPPORTED", "CLI " + ReleaseIdentity.PROTOCOL_VERSION
+                        + " requires a new empty profile or an intact schema-" + ReleaseIdentity.AUDIT_SCHEMA_VERSION
+                        + " audit pair for game " + ReleaseIdentity.GAME_VERSION + "; use a new profile", null);
             if(control){
                 int result=StableController.launch(args,profile,System.in,protocol,diagnostics);
                 if(result!=0)System.exit(result);
@@ -66,8 +71,8 @@ public final class SpdctlLauncher {
             Files.createDirectories(profile);profile=profile.toRealPath();
             System.setProperty("Specification-Title","Shattered Pixel Dungeon");
             System.setProperty("Implementation-Title","com.shatteredpixel.shatteredpixeldungeon");
-            System.setProperty("Specification-Version","3.3.8");
-            System.setProperty("Implementation-Version","896");
+            System.setProperty("Specification-Version",ReleaseIdentity.GAME_VERSION);
+            System.setProperty("Implementation-Version",Integer.toString(ReleaseIdentity.GAME_VERSION_CODE));
             try(ProfileLock lock=new ProfileLock(profile);AuditStore store=new AuditStore(profile.resolve("audit"))){
                 profileAccepted=true;
                 Files.createDirectories(profile.resolve("audit").resolve("emergency"));
@@ -117,7 +122,7 @@ public final class SpdctlLauncher {
             diagnostics.println(failure instanceof AuditException
                     ? "spdctl: " + ((AuditException)failure).code + " (" + failure.getMessage() + ")"
                     : control ? StableController.launchDiagnostic(failure)
-                    : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI 8 profile)");
+                    : "spdctl: STARTUP_FAILED (details recorded only after accepting the CLI " + ReleaseIdentity.PROTOCOL_VERSION + " profile)");
             System.exit(1);
         }
         if(exitCode!=0)System.exit(exitCode);

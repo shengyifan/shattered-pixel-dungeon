@@ -27,10 +27,12 @@ tasks.register('crashAgentJar', Jar) {
 }
 def helpDocument = rootProject.file('docs/cli-help.md')
 def transportSource = file('src/main/native/spdctl-bootstrap.c')
-def transportInputs = [transportSource, rootProject.file('bin/spdctl'), file('build.gradle')]
+def transportInputs = [transportSource, rootProject.file('bin/spdctl'), file('build.gradle'),
+                       rootProject.cliReleaseFile, rootProject.file('gradle/cli-release.gradle')]
 def nativeTransport = layout.buildDirectory.file('native/spdctl')
 tasks.register('buildNativeTransport', Exec) {
     inputs.file(transportSource)
+    inputs.file(rootProject.cliReleaseFile)
     inputs.property('target', 'arm64-macos12.0-Os-Wall-Wextra-Werror')
     outputs.file(nativeTransport)
     doFirst {
@@ -38,7 +40,9 @@ tasks.register('buildNativeTransport', Exec) {
             throw new GradleException('Native Apple Silicon JDK required')
         nativeTransport.get().asFile.parentFile.mkdirs()
         commandLine 'xcrun', 'clang', '-arch', 'arm64', '-mmacosx-version-min=12.0',
-                '-Os', '-Wall', '-Wextra', '-Werror', transportSource, '-o', nativeTransport.get().asFile
+                '-Os', '-Wall', '-Wextra', '-Werror',
+                '-DSPDCTL_PROFILE_DIRECTORY_NAME="' + rootProject.cliRelease.profileDirectoryName + '"',
+                transportSource, '-o', nativeTransport.get().asFile
     }
 }
 def catalogDirectory = layout.buildDirectory.dir('generated/control-catalog')
@@ -50,6 +54,8 @@ tasks.register('generateBuildCatalog') {
     inputs.files(project(':core').fileTree('src/main/assets'), project(':desktop').fileTree('src/main/assets'))
     inputs.file(helpDocument)
     inputs.files(transportInputs)
+    inputs.property('gameVersion', appVersionName)
+    inputs.property('gameVersionCode', appVersionCode)
     outputs.dir(catalogDirectory)
     doLast {
         def entries = []
@@ -79,8 +85,10 @@ tasks.register('generateBuildCatalog') {
         def buildId = java.security.MessageDigest.getInstance('SHA-256').digest(encoded.getBytes('UTF-8')).encodeHex().toString()
         def output = new File(catalogDirectory.get().asFile, 'control-build.json')
         output.parentFile.mkdirs()
-        output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName,
-            cli_version: 'CLI.8.0.2', protocol_version: 8, audit_schema_version: 11, java_source: '11', build_java: System.getProperty('java.version'),
+        output.text = groovy.json.JsonOutput.toJson([format: 1, build_id: buildId, game_version: appVersionName, game_version_code: appVersionCode,
+            cli_version: rootProject.cliRelease.cliVersion, protocol_version: rootProject.cliRelease.protocolVersion,
+            audit_schema_version: rootProject.cliRelease.auditSchemaVersion, trace_format_version: rootProject.cliRelease.traceFormatVersion,
+            profile_directory_name: rootProject.cliRelease.profileDirectoryName, java_source: '11', build_java: System.getProperty('java.version'),
             sqlite_jdbc: '3.53.4.0', entries: entries])
     }
 }

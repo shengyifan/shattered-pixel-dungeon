@@ -85,6 +85,7 @@ public class Flare extends Visual {
 		if (nRays == 6 && color == 0xFFFF00) variant = "blessed";
 		if (nRays == 6 && color == 0xFF2222) variant = "growing";
 		if (nRays == 5 && color == 0xFFFF00) variant = "invulnerable";
+		if (nRays == 5 && color == 0xFF0000) variant = "eldritch";
 		return variant != null ? java.util.Collections.singletonMap("variant", variant)
 				: com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator("variant", "character_aura");
 	}

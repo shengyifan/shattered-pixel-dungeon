@@ -106,10 +106,17 @@ class ControllerPtyTest(unittest.TestCase):
         harness = cls.build_path / "ControllerPtyHarness.java"
         harness.write_text(HARNESS)
         protocol = ROOT / "control-protocol/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/protocol"
+        identity = ROOT / "control-protocol/build/generated/sources/releaseIdentity/java/main/com/shatteredpixel/shatteredpixeldungeon/control/protocol/ReleaseIdentity.java"
+        if not identity.is_file():
+            raise RuntimeError("Generate ReleaseIdentity with Gradle before running controller PTY tests")
+        properties = dict(line.split("=", 1) for line in
+                          (ROOT / "gradle/cli-release.properties").read_text().splitlines()
+                          if line and not line.startswith("#"))
+        profile_macro = '-DSPDCTL_PROFILE_DIRECTORY_NAME="' + properties["profile_directory_name"] + '"'
         subprocess.run([javac, "-encoding", "UTF-8", "-d", str(cls.classes),
-                        *map(str, sorted(protocol.glob("*.java"))), str(CONTROLLER_SOURCE), str(harness)],
+                        *map(str, sorted(protocol.glob("*.java"))), str(identity), str(CONTROLLER_SOURCE), str(harness)],
                        check=True, capture_output=True)
-        subprocess.run([shutil.which("cc") or "/usr/bin/cc", "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror",
+        subprocess.run([shutil.which("cc") or "/usr/bin/cc", "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror", profile_macro,
                         str(ROOT / "desktop-control/src/main/native/spdctl-bootstrap.c"), "-o", str(cls.binary)],
                        check=True, capture_output=True)
 

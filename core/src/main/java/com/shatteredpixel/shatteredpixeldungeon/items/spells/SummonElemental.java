@@ -170,6 +170,12 @@ public class SummonElemental extends Spell {
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		if (bundle.contains(SUMMON_CLASS)) summonClass = bundle.getClass(SUMMON_CLASS);
+
+		if (summonClass == Elemental.AllyNewBornElemental.class)    image = ItemSpriteSheet.SUMMON_ELE;
+		if (summonClass == Elemental.FireElemental.class)           image = ItemSpriteSheet.SUMMON_ELE_FIRE;
+		if (summonClass == Elemental.FrostElemental.class)          image = ItemSpriteSheet.SUMMON_ELE_FROST;
+		if (summonClass == Elemental.ShockElemental.class)          image = ItemSpriteSheet.SUMMON_ELE_SHOCK;
+		if (summonClass == Elemental.ChaosElemental.class)          image = ItemSpriteSheet.SUMMON_ELE_CHAOS;
 	}
 
 	public WndBag.ItemSelector selector = new WndBag.ItemSelector() {
@@ -198,21 +204,25 @@ public class SummonElemental extends Spell {
 				Sample.INSTANCE.play(Assets.Sounds.BURNING);
 				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), FlameParticle.FACTORY, 12, "flame_burst", curUser.sprite, false);
 				summonClass = Elemental.FireElemental.class;
+				image = ItemSpriteSheet.SUMMON_ELE_FIRE;
 
 			} else if (item instanceof PotionOfFrost){
 				Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), MagicMissile.MagicParticle.FACTORY, 12, "magic_specks", curUser.sprite, false);
 				summonClass = Elemental.FrostElemental.class;
+				image = ItemSpriteSheet.SUMMON_ELE_FROST;
 
 			} else if (item instanceof ScrollOfRecharging){
 				Sample.INSTANCE.play(Assets.Sounds.ZAP);
 				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), ShaftParticle.FACTORY, 12, "light_shafts", curUser.sprite, false);
 				summonClass = Elemental.ShockElemental.class;
+				image = ItemSpriteSheet.SUMMON_ELE_SHOCK;
 
 			} else if (item instanceof ScrollOfTransmutation){
 				Sample.INSTANCE.play(Assets.Sounds.READ);
 				GameplayBurst.burstForCharacter(curUser.sprite.emitter(), RainbowParticle.BURST, 12, "rainbow_burst", curUser.sprite, false);
 				summonClass = Elemental.ChaosElemental.class;
+				image = ItemSpriteSheet.SUMMON_ELE_CHAOS;
 			}
 
 			curUser.sprite.operate(curUser.pos);

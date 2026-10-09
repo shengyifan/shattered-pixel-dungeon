@@ -49,13 +49,13 @@ class ResourceTextProjectionTest {
     }
 
     @Test void equalChineseLabelsKeepDistinctOriginsWithoutAnyWindowSignature() {
-        String blocking=ResourceTextFixture.source("windows.wndupgrade.blocking");
-        String defense=ResourceTextFixture.source("items.stones.stoneofaugmentation$wndaugment.defense");
-        assertEquals(blocking,defense); assertNotSame(blocking,defense);
-        assertEquals("Blocking",ResourceTextFixture.english(blocking));
-        assertEquals("Defense",ResourceTextFixture.english(defense));
+        String close=ResourceTextFixture.source("windows.wndsupportprompt.close");
+        String off=ResourceTextFixture.source("windows.wndsettings$displaytab.off");
+        assertEquals(close,off); assertNotSame(close,off);
+        assertEquals("Close",ResourceTextFixture.english(close));
+        assertEquals("Off",ResourceTextFixture.english(off));
         for(String scene:List.of("GameScene","TitleScene","HeroSelectScene"))
-            assertEquals("Blocking",PublicEnglishProjection.copyInScene(map("text",blocking),scene).get("text"));
+            assertEquals("Close",PublicEnglishProjection.copyInScene(map("text",close),scene).get("text"));
     }
 
     @Test void aCopiedStringCannotBorrowItsNeighborsSceneButtonOrFormerSource() {

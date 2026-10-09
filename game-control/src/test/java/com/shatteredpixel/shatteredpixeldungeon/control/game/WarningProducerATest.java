@@ -18,6 +18,14 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.WallOcclusionTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.GridTileMap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.TerrainFeaturesTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.RaisedTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.FogOfWar;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.WallBlockingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
@@ -162,7 +170,7 @@ class WarningProducerATest {
             PendingWarning first = h.prepared(spire, CrystalSpire.class, "waveWarning", 43);
             assertEquals(Set.of(43), h.redCells(), "The queued second wave is still private");
 
-            assertTrue(actWithoutMapRenderer(spire, CrystalSpire.class));
+            assertTrue(act(spire, CrystalSpire.class));
             PendingWarning second = (PendingWarning) get(spire, CrystalSpire.class, "waveWarning");
             assertFalse(first.isPending());
             assertNotNull(second);
@@ -173,7 +181,7 @@ class WarningProducerATest {
             assertEquals(Set.of(45), h.redCells());
 
             h.fadeMarkers();
-            assertTrue(actWithoutMapRenderer(spire, CrystalSpire.class));
+            assertTrue(act(spire, CrystalSpire.class));
             assertFalse(second.isPending());
             assertNull(get(spire, CrystalSpire.class, "waveWarning"));
             assertEquals(Terrain.MINE_CRYSTAL, h.f.level.map[45]);
@@ -230,6 +238,7 @@ class WarningProducerATest {
     @Test void vaultLaserCompletesCurrentEpisodeBeforeWarningNextDirection() throws Exception {
         try (Harness h = new Harness()) {
             VaultLaser laser = h.place(new VaultLaser(), 44);
+            set(laser, VaultLaser.class, "seen", true); // First-seen catalog persistence is outside this fixture.
             laser.laserDirs = new int[]{45, 54};
             laser.curCooldown = 2;
             laser.afterShotCooldown = 1;
@@ -261,6 +270,7 @@ class WarningProducerATest {
     @Test void vaultSentryCompletesCurrentEpisodeBeforeWarningNextScan() throws Exception {
         try (Harness h = new Harness()) {
             VaultSentry sentry = h.place(new VaultSentry(), 44);
+            set(sentry, VaultSentry.class, "seen", true); // First-seen catalog persistence is outside this fixture.
             sentry.scanDirs = new int[][]{{45}, {54}};
             sentry.scanWidth = 0;
             sentry.scanLength = 3;
@@ -343,13 +353,6 @@ class WarningProducerATest {
         }
     }
 
-    private static boolean actWithoutMapRenderer(Object actor, Class<?> owner) throws Exception {
-        Object scene = get(null, GameScene.class, "scene");
-        set(null, GameScene.class, "scene", null);
-        try { return act(actor, owner); }
-        finally { set(null, GameScene.class, "scene", scene); }
-    }
-
     private static final class CallbackSprite extends CharSprite {
         Callback jumpCallback;
         int zapCell = -1;
@@ -361,7 +364,7 @@ class WarningProducerATest {
     }
 
     /** Adds native map and actor support while preserving the shared fixture's profile-free boundary. */
-    private static final class Harness implements AutoCloseable {
+    static final class Harness implements AutoCloseable {
         final PendingWarningTest.Fixture f = new PendingWarningTest.Fixture();
         final Map<Field, Object> globals = new LinkedHashMap<>();
         final boolean soundEnabled = Sample.INSTANCE.isEnabled();
@@ -394,6 +397,7 @@ class WarningProducerATest {
             f.level.plants = new SparseArray<>();
             f.level.traps = new SparseArray<>();
             f.level.customTiles = new ArrayList<>();
+            f.level.customTerrain = new ArrayList<>();
             f.level.customWalls = new ArrayList<>();
             for (String field : List.of("passable", "losBlocking", "flamable", "secret", "solid", "avoid",
                     "water", "pit", "openSpace", "discoverable")) {
@@ -408,10 +412,19 @@ class WarningProducerATest {
                     f.level.losBlocking[cell] = f.level.solid[cell] = true;
                 }
             }
+            // Keep the real scene available to pooled native warning producers while map paint is headless.
+            set(f.scene, GameScene.class, "tiles", FloatingAppearanceTest.allocate(NoopTerrain.class));
+            set(f.scene, GameScene.class, "occlusion", FloatingAppearanceTest.allocate(NoopOcclusion.class));
+            set(f.scene, GameScene.class, "visualGrid", FloatingAppearanceTest.allocate(NoopGrid.class));
+            set(f.scene, GameScene.class, "terrainFeatures", FloatingAppearanceTest.allocate(NoopFeatures.class));
+            set(f.scene, GameScene.class, "raisedTerrain", FloatingAppearanceTest.allocate(NoopRaised.class));
+            set(f.scene, GameScene.class, "walls", FloatingAppearanceTest.allocate(NoopWalls.class));
+            set(f.scene, GameScene.class, "fog", FloatingAppearanceTest.allocate(NoopFog.class));
+            set(f.scene, GameScene.class, "wallBlocking", FloatingAppearanceTest.allocate(NoopWallBlocking.class));
             f.install(Assets.Effects.EFFECTS, 64, 64);
             f.install("1x1:" + 0xFF55AAFF, 1, 1);
             f.install("1x1:" + 0xFFFFFFFF, 1, 1);
-            for (String field : List.of("emitters", "gases", "effects")) {
+            for (String field : List.of("emitters", "gases", "effects", "checkedCells")) {
                 Group group = new Group();
                 f.scene.add(group);
                 set(f.scene, GameScene.class, field, group);
@@ -441,10 +454,7 @@ class WarningProducerATest {
             return result;
         }
         void fadeMarkers() {
-            Game.elapsed = 2.3f;
-            for (var member : f.scene.childrenSnapshot()) {
-                if (member instanceof TargetedCell) ((TargetedCell) member).update();
-            }
+            f.fadeMarkers();
         }
         @Override public void close() throws Exception {
             Random.popGenerator();
@@ -452,5 +462,43 @@ class WarningProducerATest {
             try { f.close(); }
             finally { for (Map.Entry<Field, Object> entry : globals.entrySet()) entry.getKey().set(null, entry.getValue()); }
         }
+    }
+
+    // Constructor-free fixture allocation avoids loading map textures; native terrain writes still execute.
+    private static final class NoopTerrain extends DungeonTerrainTilemap {
+        @Override public synchronized void updateMap() { }
+        @Override public synchronized void updateMapCell(int cell) { }
+    }
+    private static final class NoopOcclusion extends WallOcclusionTilemap {
+        @Override public synchronized void updateMap() { }
+        @Override public synchronized void updateMapCell(int cell) { }
+    }
+    private static final class NoopGrid extends GridTileMap {
+        @Override public synchronized void updateMap() { }
+        @Override public synchronized void updateMapCell(int cell) { }
+    }
+    private static final class NoopFeatures extends TerrainFeaturesTilemap {
+        private NoopFeatures() { super(null, null); }
+        @Override public synchronized void updateMap() { }
+        @Override public synchronized void updateMapCell(int cell) { }
+    }
+    private static final class NoopRaised extends RaisedTerrainTilemap {
+        @Override public synchronized void updateMap() { }
+        @Override public synchronized void updateMapCell(int cell) { }
+    }
+    private static final class NoopWalls extends DungeonWallsTilemap {
+        @Override public synchronized void updateMap() { }
+        @Override public synchronized void updateMapCell(int cell) { }
+    }
+    private static final class NoopFog extends FogOfWar {
+        private NoopFog() { super(1, 1); }
+        @Override public synchronized void updateFog() { }
+        @Override public synchronized void updateFog(int cell, int radius) { }
+        @Override public synchronized void updateFogArea(int x, int y, int width, int height) { }
+    }
+    private static final class NoopWallBlocking extends WallBlockingTilemap {
+        @Override public synchronized void updateMap() { }
+        @Override public synchronized void updateArea(int cell, int radius) { }
+        @Override public synchronized void updateArea(int x, int y, int width, int height) { }
     }
 }

@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ReleaseIdentity;
+
 import com.badlogic.gdx.Gdx;
 import com.shatteredpixel.shatteredpixeldungeon.*;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -102,6 +104,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("scenario") && TransitionScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
+            } else if (kind.equals("vault") && Cli9VaultScenarioFixtures.supports(name)) {
+                heroClass = Cli9VaultScenarioFixtures.heroClass(name); subclass = HeroSubClass.NONE;
             } else if (kind.equals("notes") && NoteScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("container") && ContainerScenarioFixtures.supports(name)) {
@@ -156,8 +160,8 @@ public final class FixtureLauncher {
         PrintStream protocol = new PrintStream(new FileOutputStream(FileDescriptor.out), true, StandardCharsets.UTF_8);
         System.setProperty("Specification-Title", "Shattered Pixel Dungeon");
         System.setProperty("Implementation-Title", "com.shatteredpixel.shatteredpixeldungeon");
-        System.setProperty("Specification-Version", "3.3.8");
-        System.setProperty("Implementation-Version", "896");
+        System.setProperty("Specification-Version", ReleaseIdentity.GAME_VERSION);
+        System.setProperty("Implementation-Version", Integer.toString(ReleaseIdentity.GAME_VERSION_CODE));
         try (ProfileLock lock = new ProfileLock(profile); AuditStore store = new AuditStore(profile.resolve("audit"))) {
             store.recoverInterrupted();
             store.beginSession(java.util.UUID.randomUUID().toString(),
@@ -287,6 +291,7 @@ public final class FixtureLauncher {
                             "weapon_charge", Dungeon.hero.buff(MeleeWeapon.Charger.class) == null ? null : Dungeon.hero.buff(MeleeWeapon.Charger.class).charges + Dungeon.hero.buff(MeleeWeapon.Charger.class).partialCharge,
                             "low_frequency", fixture.kind.equals("lowfreq") ? LowFrequencyFixtures.assertions() : null,
                             "transition_scenario", fixture.kind.equals("scenario") ? TransitionScenarioFixtures.assertions() : null,
+                            "vault", fixture.kind.equals("vault") ? Cli9VaultScenarioFixtures.assertions() : null,
                             "notes", fixture.kind.equals("notes") ? NoteScenarioFixtures.assertions() : null,
                             "containers", fixture.kind.equals("container") ? ContainerScenarioFixtures.assertions() : null,
                             "item_window", fixture.kind.equals("itemui") ? ItemWindowFixtures.assertions() : null,
@@ -323,6 +328,10 @@ public final class FixtureLauncher {
         Hero hero = Dungeon.hero;
         if (hero.heroClass != fixture.heroClass) throw new IllegalStateException("Start the fixture's required class through the public menu");
         if (fixture.kind.equals("class") || fixture.kind.equals("menu") || fixture.kind.equals("notes")) return null;
+        if (fixture.kind.equals("vault")) {
+            Cli9VaultScenarioFixtures.prepare(fixture.name, hero);
+            return null;
+        }
         if (fixture.kind.equals("container")) {
             ContainerScenarioFixtures.prepare(fixture.name, hero);
             return null;

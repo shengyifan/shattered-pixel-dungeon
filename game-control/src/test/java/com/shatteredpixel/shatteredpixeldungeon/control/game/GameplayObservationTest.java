@@ -26,9 +26,9 @@ class GameplayObservationTest {
     }
 
     @Test void twoDistinctQuantizedHealthSamplesAndBuffIndicesRemainDistinct(){
-        Map<String,Object> sample=map("total",32,"filled",8,"with_shield",10,"basis","displayed");
+        Map<String,Object> sample=map("total",32,"filled",8,"with_shield",10,"incoming_dot",2,"basis","displayed");
         List<Object> controls=List.of(map("id","bar1","role","health_bar","health_estimate",map("samples",List.of(sample))),
-                map("id","bar2","role","health_bar","health_estimate",map("samples",List.of(map("total",21,"filled",6,"with_shield",7,"basis","displayed")))),
+                map("id","bar2","role","health_bar","health_estimate",map("samples",List.of(map("total",21,"filled",6,"with_shield",7,"incoming_dot",0,"basis","displayed")))),
                 map("id","buff","role","button","shown",map("counter","2")));
         Map<String,UiProjectionHints.Node> hints=Map.of("bar1",hint(map("kind","entity","index",0),List.of(),Map.of(),false),
                 "bar2",hint(map("kind","entity","index",0),List.of(),Map.of(),false),
@@ -40,6 +40,26 @@ class GameplayObservationTest {
         List<?> buffs=(List<?>)object(merged.get("hero")).get("buffs");assertFalse(object(buffs.get(0)).containsKey("shown"));assertEquals(Map.of("counter","2"),object(buffs.get(1)).get("shown"));
         Map<String,Object> entity=object(((List<?>)merged.get("visible_entities")).get(0));
         assertEquals(2,((List<?>)object(entity.get("health_estimate")).get("samples")).size());assertEquals(List.of("buff"),ids(merged));
+    }
+
+    @Test void dotDifferencesRemainDistinctAndHeroHealthSamplesInlineForActions(){
+        Map<String,Object> first=map("total",21,"filled",4,"with_shield",22,"incoming_dot",0,"basis","displayed");
+        Map<String,Object> second=map("total",21,"filled",4,"with_shield",22,"incoming_dot",3,"basis","displayed");
+        List<Object> controls=List.of(
+                map("id","first","role","health_bar","health_estimate",map("samples",List.of(first))),
+                map("id","second","role","health_bar","health_estimate",map("samples",List.of(second))),
+                map("id","hero","role","button","ops",List.of(map("op","click"))));
+        Map<String,Object> source=observation(List.of(),controls,Map.of(
+                "first",hint(map("kind","hero"),List.of(),Map.of(),false),
+                "second",hint(map("kind","hero"),List.of(),Map.of(),false),
+                "hero",hint(map("kind","hero"),List.of(),Map.of(),true)));
+        source.put("hero",map("cell",7));
+        Map<String,Object> merged=GameplayObservation.merge(source);
+        assertEquals(List.of(first,second),object(object(merged.get("hero")).get("health_estimate")).get("samples"));
+        assertFalse(object(source.get("hero")).containsKey("health_estimate"));
+        Map<String,Object> actionNode=object(((List<?>)GameplayObservation.uiForActions(merged).get("controls")).get(0));
+        assertEquals(merged.get("hero"),actionNode.get("subject_data"));
+        assertFalse(actionNode.containsKey("subject"));
     }
 
     @Test void unavailableOrAmbiguousSubjectsNeverConsumeDisplayEvidence(){

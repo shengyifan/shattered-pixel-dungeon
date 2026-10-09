@@ -92,7 +92,7 @@ def run_one(root,classpath,runtime_id,name,version):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument("--cases",default="update,patch,future,interrupted")
     names=parser.parse_args().cases.split(",")
-    versions={"update":882,"patch":895,"future":897,"interrupted":896}
+    versions={"update":896,"patch":920,"future":923,"interrupted":922}
     assert all(name in versions for name in names)
     root=Path(__file__).resolve().parents[4]
     classpath,runtime_id=freeze_runtime(root,(root/"desktop-control/build/test-runtime-classpath.txt").read_text().strip())

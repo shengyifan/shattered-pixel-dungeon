@@ -60,7 +60,7 @@ public final class EnglishCorpusProbe {
     @SuppressWarnings("unchecked")
     public void inspect(Map<String, Object> response, Map<String, Object> sample) {
         frames++;
-        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 8;
+        compactFrame = response.get("v") instanceof Number && ((Number)response.get("v")).intValue() == 9;
         if (compactFrame) response=(Map<String,Object>)CompactProtocol.expandStructures(response);
         compactDiagnostics.clear();
         if (compactFrame) { compactFrames++; collectCompactDiagnostics(response, "/response"); }

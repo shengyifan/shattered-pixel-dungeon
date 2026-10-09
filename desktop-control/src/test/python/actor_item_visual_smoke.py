@@ -7,7 +7,7 @@ import time
 import traceback
 import uuid
 from fixture_smoke import FixtureClient, act, close_choices, freeze_runtime, reach_game
-from protocol8 import pages
+from protocol9 import pages
 
 
 def visual(state):

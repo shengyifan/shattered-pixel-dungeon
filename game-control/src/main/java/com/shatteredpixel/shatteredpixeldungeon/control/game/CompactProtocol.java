@@ -2,12 +2,13 @@ package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.WireNames;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.text.PublicTextSources;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 
-/** Pure protocol 8 projection of already rendered public values. Never observes the engine. */
+/** Pure protocol 9 projection of already rendered public values. Never observes the engine. */
 public final class CompactProtocol {
     private static final Set<String> OPAQUE = new HashSet<>(Arrays.asList(
             "raw", "reply", "schema", "raw_request", "raw_bytes", "request_json", "response_json", "original_payload"));
@@ -20,7 +21,7 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> success(String id,String scope,String status,Object canonicalResult,boolean live,boolean sources,boolean full) {
-        Map<String,Object> response=map("v",8,"id",id);
+        Map<String,Object> response=map("v",ControlRequest.PROTOCOL_VERSION,"id",id);
         Map<?,?> original=canonicalResult instanceof Map?(Map<?,?>)canonicalResult:Collections.emptyMap();
         Object effectiveScope=live && original.get("scope_id")!=null?original.get("scope_id"):scope;
         if(effectiveScope!=null)response.put("s",effectiveScope);
@@ -41,7 +42,7 @@ public final class CompactProtocol {
     }
 
     public static Map<String,Object> failure(String id,String scope,String code) {
-        Map<String,Object> response=map("v",8,"id",id);
+        Map<String,Object> response=map("v",ControlRequest.PROTOCOL_VERSION,"id",id);
         if(scope!=null)response.put("s",scope);
         response.put("err",code);
         return response;
@@ -375,7 +376,9 @@ public final class CompactProtocol {
                         "coordinates","cell=y*w+x_start+offset","env","complete cell-indexed visible effects; omitted means empty; array is inline, integer indexes this map's effect_defs",
                         "effect_defs","each definition is a complete ordered effect list; indexes are zero-based and valid only in this observation"),
                 "entities",map("inline","ordinary entity object","reference",map("cell","cell binding","def","zero-based index into this observation's entity_defs"),
-                        "entity_defs","complete trap/container/character descriptor except cell; duplicates must be structurally identical including metadata",
+                        "entity_defs","complete trap/container/character/object descriptor except cell; duplicates must be structurally identical including metadata",
+                        "objects","public native object appearances use kind:object and entity subjects; no hidden creature health, buffs or identity",
+                        "projectile_collision","character means a public object occupies Ballistica's STOP_CHARS category; absent or null is unknown, never a firing-source capability",
                         "dictionary_policy","play only, repeated values only, emitted only when minified UTF-8 bytes decrease; full/src/before/after remain inline; missing or out-of-range references are invalid"),
                 "defaults",map("view","play","item",map("qty",1,"equipped",false,"available",true,"type_known",true,"via","click"),
                         "ui_node",map("enabled",true,"dimmed",false),"ui",map("modal",false,"item_info",null),"item_knowledge","level/cursed: absent=not applicable; null=unknown; value=known",
@@ -412,10 +415,11 @@ public final class CompactProtocol {
                                 "limit","1 to 100; default 50","continue","send next as after and keep the returned until",
                                 "end","true when the fixed range is exhausted")),
                 "visuals",map("version","gameplay_facts_v1",
-                        "cue_fields",map("kind","public gameplay indicator, not hidden AI intent","cell","currently known grid anchor",
+                        "cue_fields",map("kind","public gameplay indicator, not hidden AI intent","cell","publicly observed grid anchor; a native movement shadow does not reveal its underlying terrain",
                                 "source_cell","optional independently known endpoint","dir","optional observed eight-way world movement",
                                 "appearance","reviewed semantic details only: symbol, state, known cells, stage or aggregate visible density"),
-                        "gates","current run/map, attached presentation lifetime and FOV; independent of viewport, camera and UI occlusion",
+                        "gates","current run/map and attached public presentation; ordinary cues use FOV, reviewed persistent terrain uses visited/mapped scope, native movement shadows may reveal a cue on otherwise unknown terrain; independent of viewport, camera and UI occlusion",
+                        "movement_shadow","cell and optional dir describe the observed native shadow; appearance.symbol is its reviewed public sprite appearance, never hidden mob identity; no map cells or live entities are inferred",
                         "status",Arrays.asList("last_observed","not_observed"),
                         "partial_geometry","only known cells and endpoints; unknown coverage remains explicit",
                         "history",map("game.visual","semantic cue snapshots including disappearance",
@@ -424,7 +428,7 @@ public final class CompactProtocol {
                                 "game.log","public gameplay log text and native message tone")),
                 "gameplay_facts",map("item_shown","additional already-public item display values, estimates and warnings",
                         "buff_shown","public counters, states and quantized progress; no hidden duration inference",
-                        "health_estimate","distinct samples of public bar segments: total, filled and with_shield; never exact enemy HP",
+                        "health_estimate","distinct displayed bar samples require integer total, filled, with_shield and incoming_dot with basis:displayed; 0 < total, 0 <= filled <= with_shield <= total + 1 and 0 <= incoming_dot <= with_shield; missing observation is not zero DOT or exact future damage",
                         "turn_progress","public sweep only",
                         "feedback","ordered current semantic messages, floating occurrences and banners",
                         "subjects",map("hero","kind:hero","item","kind:item plus current loc","hero_buff","kind:hero_buff plus index",
@@ -513,7 +517,7 @@ public final class CompactProtocol {
     private static Map<String,Object> entityDescriptor(Object raw) {
         if(!(raw instanceof Map))return null;
         Map<String,Object> entity=cast(raw);
-        if(!Arrays.asList("trap","container","character").contains(entity.get("kind")) || !entity.containsKey("cell")
+        if(!Arrays.asList("trap","container","character","object").contains(entity.get("kind")) || !entity.containsKey("cell")
                 || annotationReferences(entity,"cell"))return null;
         Map<String,Object> descriptor=new LinkedHashMap<>(entity);descriptor.remove("cell");
         return descriptor;

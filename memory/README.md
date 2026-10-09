@@ -7,7 +7,7 @@
 
 1. 先读当前用户要求、[AGENTS](../AGENTS.md)和[英文协议手册](../docs/cli-help.md)。
 2. 按[项目内游玩 skill](../skills/pixel-dungeon-run-assistance/SKILL.md)建立当前楼层、资源和战术计划。
-   它已适配当前协议8的公开观察与控制流程，替换了原skill的存档读取和GUI键鼠流程。
+   它已适配当前协议9的公开观察与控制流程，替换了原skill的存档读取和GUI键鼠流程。
 3. 按需读取下表资料；不用加载所有历史记录。继续游戏必须从授权连接获取当前观察，
    文件、旧坐标或旧会话句柄不能代替当前 `s/rev`。
 
@@ -41,7 +41,11 @@ python3 skills/pixel-dungeon-run-assistance/scripts/ray.py --response /path/to/p
 
 `--response -`从stdin读取；脚本可以从其他工作目录以其实际路径启动，不需要本机用户名或安装全局skill。
 文件只是冻结观察，输出不会产生新绑定或证明动作已执行。弹道工具不覆盖Yog穿墙射线、所有物品覆写、
-射程、范围伤害或隐形占位；几何可达不等于命中、有效或安全。
+射程、范围伤害或隐形占位；几何可达不等于命中、有效或安全。协议9的公开 WATER 外观也可能是
+固体自定义装饰的水面底图，不能直接据此推断可通行或弹道可达；`ray.py`遇到该外观时以
+`public_appearance_collision_ambiguous`停止预测并返回可达性null。因此普通水格的结果也会更保守。
+同帧明确公开的角色或标有`projectile_collision:"character"`的原生物件仍可证明STOP_CHARS在该格停止，
+但物件不能作为假设攻击的发射源；工具不读取隐藏地形或按名字、邻接关系猜测装饰类型。
 
 来源、复制方式、原文件SHA-256及未迁入内容见[迁入清单](IMPORTS.md)。
 历史副本中的外部路径仅为出处，使用这些资料不要求那些文件存在。

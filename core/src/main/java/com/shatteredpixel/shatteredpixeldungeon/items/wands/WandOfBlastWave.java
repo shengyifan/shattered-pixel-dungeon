@@ -34,6 +34,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Effects;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.RadialVisualCue;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
@@ -172,7 +173,7 @@ public class WandOfBlastWave extends DamageWand {
 					if (ch.isActive()) {
 						Paralysis.prolong(ch, Paralysis.class, 1 + finalDist/2f);
 					} else if (ch == Dungeon.hero){
-						if (cause instanceof WandOfBlastWave){
+						if (cause instanceof Wand || cause instanceof Weapon.Enchantment){
 							Badges.validateDeathFromFriendlyMagic();
 						}
 						GLog.n(Messages.get(WandOfBlastWave.class, "knockback_ondeath"));

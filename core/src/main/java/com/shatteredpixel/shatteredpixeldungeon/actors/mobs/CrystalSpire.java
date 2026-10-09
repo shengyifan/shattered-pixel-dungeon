@@ -35,7 +35,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
-import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.Pickaxe;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
@@ -48,6 +47,8 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CrystalSpireSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Callback;
@@ -178,7 +179,7 @@ public class CrystalSpire extends Mob {
 			if (!targetedCells.isEmpty()){
 				for (int i : targetedCells.get(0)){
 					if (waveWarning == null || !waveWarning.isPending()) waveWarning = PendingWarning.begin(this);
-					sprite.parent.add(new TargetedCell(i, 0xFF0000, waveWarning));
+					GameScene.targetedCell(i, TICK, waveWarning);
 				}
 			}
 
@@ -197,14 +198,16 @@ public class CrystalSpire extends Mob {
 					lineAttack();
 				}
 
+				float delay = GameMath.gate(TICK, (int)Math.ceil(Dungeon.hero.cooldown()), 3*TICK);
+
 				for (int i : targetedCells.get(0)){
 					if (waveWarning == null || !waveWarning.isPending()) waveWarning = PendingWarning.begin(this);
-					sprite.parent.add(new TargetedCell(i, 0xFF0000, waveWarning));
+					GameScene.targetedCell(i, delay, waveWarning);
 				}
 
 				abilityCooldown += ABILITY_CD;
 
-				spend(GameMath.gate(TICK, (int)Math.ceil(Dungeon.hero.cooldown()), 3*TICK));
+				spend(delay);
 				Dungeon.hero.interrupt();
 			} else {
 				abilityCooldown -= 1;
@@ -357,6 +360,19 @@ public class CrystalSpire extends Mob {
 						PixelScene.shake( 3, 0.7f );
 						Blacksmith.Quest.beatBoss();
 
+						GameScene.bossSlain();
+						Game.runOnRenderThread(new Callback() {
+							@Override
+							public void call() {
+								Music.INSTANCE.fadeOut(5f, new Callback() {
+									@Override
+									public void call() {
+										Music.INSTANCE.end();
+									}
+								});
+							}
+						});
+
 						Bestiary.setSeen(CrystalSpire.class);
 						Bestiary.countEncounter(CrystalSpire.class);
 
@@ -402,7 +418,7 @@ public class CrystalSpire extends Mob {
 							GLog.n(Messages.get(CrystalSpire.class, "alert"));
 							BossHealthBar.assignBoss(CrystalSpire.this);
 
-							abilityCooldown = 1; //dely first attack by 1 turn
+							abilityCooldown = 1; //delay first attack by 1 turn
 						}
 
 						boolean affectingGuardians = false;
@@ -422,10 +438,13 @@ public class CrystalSpire extends Mob {
 						// cripple close sleeping guardians to give more time
 						// haste far awake guardians to punish waking them
 						if (affectingGuardians){
-							boolean[] passable = Dungeon.level.passable.clone();
+							boolean[] passable = new boolean[Dungeon.level.length()];
 							for (int i = 0; i < Dungeon.level.length(); i++){
 								if (Dungeon.level.map[i] == Terrain.MINE_CRYSTAL){
 									passable[i] = true;
+								} else {
+									//grab from tiles themselves, ignore blobs that affect terrain
+									passable[i] = (Terrain.flags[Dungeon.level.map[i]] & Terrain.PASSABLE) != 0;
 								}
 							}
 							PathFinder.buildDistanceMap(pos, passable);
@@ -450,7 +469,7 @@ public class CrystalSpire extends Mob {
 
 										//speeds up already woken guardians that aren't very close
 										if (PathFinder.distance[ch.pos] > 8){
-											Buff.affect(ch, Haste.class, Math.round((PathFinder.distance[ch.pos]-8)/2f));
+											Buff.affect(ch, Haste.class, Math.max(15, Math.round((PathFinder.distance[ch.pos]-8)/2f)));
 										}
 									}
 								}

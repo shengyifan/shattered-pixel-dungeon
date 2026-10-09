@@ -31,38 +31,42 @@ public class CheckedCell extends Image {
 	
 	private float alpha;
 	private float delay;
-	private final int visualCell;
+	private int visualCell = -1;
+	private long visualLifetime = -1;
 	
-	public CheckedCell( int pos ) {
+	public CheckedCell() {
 		super( TextureCache.createSolid( 0xFF55AAFF ) );
+	}
+
+	public void reset( int pos, int visSource ){
+		revive();
 		visualCell = pos;
-
+		visualLifetime = observationLifetime();
 		origin.set( 0.5f );
-		
+
 		point( DungeonTilemap.tileToWorld( pos ).offset(
-			DungeonTilemap.SIZE / 2,
-			DungeonTilemap.SIZE / 2 ) );
-		
+				DungeonTilemap.SIZE / 2,
+				DungeonTilemap.SIZE / 2 ) );
+
 		alpha = 0.8f;
-	}
+		scale.set( DungeonTilemap.SIZE * alpha );
 
-	@Override public void observeGameplayVisuals() {
-		super.observeGameplayVisuals();
-		if (texture != null && Game.observer.observesVisualCues())
-			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,
-					new com.watabou.noosa.VisualCue("checked_cell", visualCell));
-	}
-
-	public CheckedCell( int pos, int visSource ) {
-		this( pos );
 		delay = (Dungeon.level.trueDistance(pos, visSource)-1f);
-		//steadily accelerates as distance increases
+		//delay steadily accelerates as distance increases
 		if (delay > 0) {
 			delay = (float)Math.pow(delay, 0.67f)/10f;
 			alpha( 0 );
 		}
 	}
 	
+	@Override public void observeGameplayVisuals() {
+		super.observeGameplayVisuals();
+		if (texture != null && visualCell >= 0 && visualLifetime == observationLifetime()
+				&& Game.observer.observesVisualCues())
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.observeCellVisualDraw(this,
+					new com.watabou.noosa.VisualCue("checked_cell", visualCell));
+	}
+
 	@Override
 	public void update() {
 		if ((delay -= Game.elapsed) > 0){
@@ -71,7 +75,7 @@ public class CheckedCell extends Image {
 			alpha( alpha );
 			scale.set( DungeonTilemap.SIZE * alpha );
 		} else {
-			killAndErase();
+			kill();
 		}
 	}
 }

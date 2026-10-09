@@ -20,7 +20,8 @@ public final class GameplayVisualKinds {
             "character_chilled", "character_marked", "character_healing", "character_hearts", "character_shielded",
             "character_illuminated", "character_aura", "ward_state", "statue_armor", "gnoll_earth_armor",
             "geomancer_stone_form", "item_glow", "item_status", "animated_container",
-            "exposed_wiring", "metal_gate", "pylon_platform", "vault_entrance", "vault_barrier", "mine_exit", "spectral_wall"
+            "exposed_wiring", "metal_gate", "pylon_platform", "vault_entrance", "vault_barrier", "mine_exit", "spectral_wall",
+            "vault_elemental_form", "vault_door_energy", "vault_fire_wall", "vault_fire_wall_preview", "vault_frost_cone", "vault_frost_vortex", "vault_lightning_chase"
     )));
     public static boolean affectsIntent(String kind) {
         // electricity_flow reports observed particle motion; map.env separately owns the stable damage cells.

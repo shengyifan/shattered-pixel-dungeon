@@ -9,6 +9,7 @@ com.shatteredpixel.shatteredpixeldungeon.GamesInProgress
 com.shatteredpixel.shatteredpixeldungeon.QuickSlot
 com.shatteredpixel.shatteredpixeldungeon.Rankings
 com.shatteredpixel.shatteredpixeldungeon.SPDAction
+com.shatteredpixel.shatteredpixeldungeon.SPDSettings
 com.shatteredpixel.shatteredpixeldungeon.Statistics
 com.shatteredpixel.shatteredpixeldungeon.actors.Actor
 com.shatteredpixel.shatteredpixeldungeon.actors.Char
@@ -81,6 +82,10 @@ com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper
 com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.VaultLaser
 com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.VaultSentry
 com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Wandmaker$Quest
+com.shatteredpixel.shatteredpixeldungeon.actors.mobs.quest.vault.VaultBossElemental$ElementalForm
+com.shatteredpixel.shatteredpixeldungeon.actors.mobs.quest.vault.VaultBossElemental$FireWall
+com.shatteredpixel.shatteredpixeldungeon.actors.mobs.quest.vault.VaultBossElemental$FrostVortex
+com.shatteredpixel.shatteredpixeldungeon.actors.mobs.quest.vault.VaultBossElemental$LightningChase
 com.shatteredpixel.shatteredpixeldungeon.items.Ankh
 com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal
 com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal$WarriorShield
@@ -133,6 +138,7 @@ com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfMastery
 com.shatteredpixel.shatteredpixeldungeon.items.quest.CeremonialCandle
 com.shatteredpixel.shatteredpixeldungeon.items.quest.CorpseDust$DustGhostSpawner
 com.shatteredpixel.shatteredpixeldungeon.items.quest.EscapeCrystal
+com.shatteredpixel.shatteredpixeldungeon.items.quest.VaultBeacon
 com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring
 com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfElements
 com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce
@@ -178,15 +184,19 @@ com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Displacing
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Explosive
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Friendly
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Polarized
+com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Pressurized
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Sacrificial
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Wayward
+com.shatteredpixel.shatteredpixeldungeon.items.weapon.curses.Wondrous
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blazing
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blocking
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blocking$BlockBuff
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Blooming
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Chilling
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Corrupting
+com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Crystal
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Elastic
+com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Eldritch
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Grim
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Kinetic
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Lucky
@@ -194,6 +204,8 @@ com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Projecting
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Shocking
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Unstable
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Vampiric
+com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Venomous
+com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Vorpal
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Flail
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Flail$SpinAbilityTracker
 com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon
@@ -212,6 +224,7 @@ com.shatteredpixel.shatteredpixeldungeon.journal.Notes$Landmark
 com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel
 com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel$CityEntrance
 com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel$EntranceOverhang
+com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel$EntranceTerrain
 com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel$PylonEnergy
 com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel
 com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel
@@ -236,6 +249,7 @@ com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel
 com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel
 com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel$Sink
 com.shatteredpixel.shatteredpixeldungeon.levels.Terrain
+com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel
 com.shatteredpixel.shatteredpixeldungeon.levels.builders.GridBuilder
 com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm
 com.shatteredpixel.shatteredpixeldungeon.levels.features.HighGrass
@@ -244,6 +258,9 @@ com.shatteredpixel.shatteredpixeldungeon.levels.features.Maze
 com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room$Door$Type
 com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.ConnectionRoom
 com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.PerimeterRoom
+com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MassGraveRoom$MassGraveDeco
+com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.vault.VaultRoom
+com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.vault.treasure.VaultTreasureRoom
 com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretLaboratoryRoom
 com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretLibraryRoom
 com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom
@@ -306,6 +323,7 @@ com.shatteredpixel.shatteredpixeldungeon.ui.TitleBackground
 com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar
 com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar$Mode
 com.shatteredpixel.shatteredpixeldungeon.ui.Tooltip
+com.shatteredpixel.shatteredpixeldungeon.ui.changelist.ChangeIcons
 com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed
 com.shatteredpixel.shatteredpixeldungeon.utils.Holiday
 com.shatteredpixel.shatteredpixeldungeon.windows.WndBag

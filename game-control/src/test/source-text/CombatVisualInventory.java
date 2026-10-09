@@ -54,6 +54,7 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayVisualKinds"));
     /* Include field initializers/constants used by source adapters, not only method bodies. */
     private static final Set<String> SEMANTIC_BOUNDARIES=new HashSet<>(Arrays.asList(
+            "com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell",
             PENDING_WARNING,
             PENDING_WARNING+".Suspension",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",

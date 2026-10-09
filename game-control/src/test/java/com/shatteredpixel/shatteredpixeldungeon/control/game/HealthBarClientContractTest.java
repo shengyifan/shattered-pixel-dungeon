@@ -25,23 +25,25 @@ import static org.junit.jupiter.api.Assertions.*;
 class HealthBarClientContractTest {
     @Test void nativeFractionalBarsSurvivePlayFullAndSourceEncodingAndPythonDecoding() throws Exception {
         List<Object> cases = new ArrayList<>();
-        float[][] dimensions = {{16f, 1f, .25f, .5f}, {64f / 3f, 1f, .15f, 1f},
-                {64f / 3f, 1f, 1f, 1f}, {128f / 9f, 1.5f, .15f, 1f}};
-        int[][] expected = {{16, 4, 8}, {21, 4, 22}, {21, 22, 22}, {21, 4, 22}};
+        float[][] dimensions = {{16f, 1f, .25f, .5f, .125f}, {64f / 3f, 1f, .15f, 1f, .5f},
+                {64f / 3f, 1f, 1f, 1f, 2f}, {128f / 9f, 1.5f, .15f, 1f, 0f}};
+        int[][] expected = {{16, 4, 8, 2}, {21, 4, 22, 11}, {21, 22, 22, 22}, {21, 4, 22, 0}};
         for (int i = 0; i < dimensions.length; i++) {
             float[] spec = dimensions[i];
-            HealthBar bar = bar(spec[0], spec[1], spec[2], spec[3]);
+            HealthBar bar = bar(spec[0], spec[1], spec[2], spec[3], spec[4]);
             assertArrayEquals(expected[i], bar.renderedPixelWidths());
             Map<String,Object> entity = map("kind", "character", "cell", 3, "name", "fixture target");
             entity.putAll(bar.gameplayStatus());
+            Map<String,Object> hero = map("cell", 0);
+            hero.putAll(bar.gameplayStatus());
             Map<String,Object> original = map("scene", "game", "phase", "player_ready",
-                    "scope_id", "s1", "state_version", "r1", "visible_entities", List.of(entity),
+                    "scope_id", "s1", "state_version", "r1", "visible_entities", List.of(entity), "hero", hero,
                     "ui", map("controls", Collections.emptyList()));
             String before = JsonCodec.encode(original);
             for (int view = 0; view < 3; view++) {
                 Map<String,Object> wire = CompactProtocol.success("bar-" + i + "-" + view,
                         "s1", "completed", original, true, view == 2, view != 0);
-                cases.add(map("wire", wire, "expected", Arrays.asList(expected[i][0], expected[i][1], expected[i][2])));
+                cases.add(map("wire", wire, "expected", Arrays.asList(expected[i][0], expected[i][1], expected[i][2], expected[i][3])));
                 assertEquals(before, JsonCodec.encode(original), "Encoding must not normalize the native sample");
             }
         }
@@ -57,8 +59,10 @@ class HealthBarClientContractTest {
                 "for case in cases:",
                 "    wire=case['wire']; before=copy.deepcopy(wire)",
                 "    result=decode_client_response(wire)",
-                "    sample=result.require_current_frame().data['entities'][0]['health_estimate']['samples'][0]",
-                "    assert [sample[k] for k in ('total','filled','with_shield')]==case['expected'], sample",
+                "    frame=result.require_current_frame().data",
+                "    sample=frame['entities'][0]['health_estimate']['samples'][0]",
+                "    assert [sample[k] for k in ('total','filled','with_shield','incoming_dot')]==case['expected'], sample",
+                "    assert frame['hero']['health_estimate']['samples'][0]==sample",
                 "    assert sample['basis']=='displayed'",
                 "    assert wire==before and result.raw==before",
                 "print('PASS: native health samples through play/full/src and Python')");
@@ -78,20 +82,20 @@ class HealthBarClientContractTest {
         }
     }
 
-    private static HealthBar bar(float width, float zoom, float health, float shield) throws Exception {
+    private static HealthBar bar(float width, float zoom, float health, float shield, float incomingDot) throws Exception {
         // Allocate only drawable shells: the real HealthBar.layout and export methods run below.
         Class<?> unsafeType = Class.forName("sun.misc.Unsafe");
         Field singleton = unsafeType.getDeclaredField("theUnsafe"); singleton.setAccessible(true);
         Object unsafe = singleton.get(null);
         HealthBar bar = (HealthBar)unsafeType.getMethod("allocateInstance", Class.class).invoke(unsafe, HealthBar.class);
-        for (String name : Arrays.asList("Bg", "Hp", "Shld")) {
+        for (String name : Arrays.asList("Bg", "Hp", "Shld", "Dot")) {
             ColorBlock block = (ColorBlock)unsafeType.getMethod("allocateInstance", Class.class).invoke(unsafe, ColorBlock.class);
             block.scale = new PointF(1f, 1f);
             Field field = HealthBar.class.getDeclaredField(name); field.setAccessible(true); field.set(bar, block);
         }
         bar.camera = new Camera(0, 0, 100, 100, zoom);
         bar.setRect(0, 0, width, 2);
-        bar.level(health, shield);
+        bar.level(health, shield, incomingDot);
         return bar;
     }
 }

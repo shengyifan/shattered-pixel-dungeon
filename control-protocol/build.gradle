@@ -3,6 +3,36 @@ apply plugin: 'java-library'
 java.sourceCompatibility = java.targetCompatibility = JavaVersion.VERSION_11
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
+def identityDirectory = layout.buildDirectory.dir('generated/sources/releaseIdentity/java/main')
+tasks.register('generateReleaseIdentity') {
+    inputs.file(rootProject.cliReleaseFile)
+    inputs.property('gameVersion', appVersionName)
+    inputs.property('gameVersionCode', appVersionCode)
+    outputs.dir(identityDirectory)
+    doLast {
+        def release = rootProject.cliRelease
+        def output = new File(identityDirectory.get().asFile,
+                'com/shatteredpixel/shatteredpixeldungeon/control/protocol/ReleaseIdentity.java')
+        output.parentFile.mkdirs()
+        output.setText("""package com.shatteredpixel.shatteredpixeldungeon.control.protocol;
+
+/** Generated from the root game identity and gradle/cli-release.properties. */
+public final class ReleaseIdentity {
+    private ReleaseIdentity() { }
+    public static final String CLI_VERSION = "${release.cliVersion}";
+    public static final int PROTOCOL_VERSION = ${release.protocolVersion};
+    public static final int AUDIT_SCHEMA_VERSION = ${release.auditSchemaVersion};
+    public static final String GAME_VERSION = "${appVersionName}";
+    public static final int GAME_VERSION_CODE = ${appVersionCode};
+    public static final String PROFILE_DIRECTORY_NAME = "${release.profileDirectoryName}";
+    public static final int TRACE_FORMAT_VERSION = ${release.traceFormatVersion};
+}
+""", 'UTF-8')
+    }
+}
+sourceSets.main.java.srcDir(identityDirectory)
+tasks.named('compileJava') { dependsOn tasks.named('generateReleaseIdentity') }
+
 dependencies {
     testImplementation 'junit:junit:4.13.2'
 }

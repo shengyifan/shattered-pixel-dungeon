@@ -79,6 +79,23 @@ public final class GameplayIcons {
         if (Assets.Effects.TEXT_ICONS.equals(asset)) return floating(gridIndex(image, 7, 8));
         String portrait = PORTRAITS.get(asset);
         if (portrait != null) {
+            // Distinguish the native vault artwork from ordinary sprites sharing an atlas.
+            if (Assets.Sprites.SKELETON.equals(asset)) {
+                int index=gridIndex(image,12,16);
+                if(index>=21&&index<=37)return symbol("vault_skeleton_portrait");
+            }
+            if (Assets.Sprites.DM100.equals(asset)) {
+                int index=gridIndex(image,16,14);
+                if(index>=16&&index<32)return symbol("vault_dm100_portrait");
+            }
+            if (Assets.Sprites.DM200.equals(asset)) {
+                int index=gridIndex(image,21,18);
+                if(index>=24&&index<36)return symbol("vault_dm200_portrait");
+            }
+            if (Assets.Sprites.SHAMAN.equals(asset)) {
+                int index=gridIndex(image,12,15);
+                if(index>=63&&index<84)return symbol("vault_shaman_portrait");
+            }
             if (Assets.Sprites.AVATARS.equals(asset)) {
                 // SurfaceScene.Avatar selects one 24x32 frame in native HeroClass order.
                 String[] classes = {"warrior", "mage", "rogue", "huntress", "duelist", "cleric"};

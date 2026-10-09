@@ -109,10 +109,10 @@ class WardStatueSemanticTest {
             CrystalSpireSprite[] sprites={new CrystalSpireSprite.Blue(),new CrystalSpireSprite.Green(),new CrystalSpireSprite.Red()};
             for(int color=0;color<sprites.length;color++) {
                 CrystalSpireSprite sprite=sprites[color];assertNull(sprite.ch);
-                TextureFilm frames=new TextureFilm(sprite.texture,24,41);
+                TextureFilm frames=new TextureFilm(sprite.texture,29,40);
                 String[] stages={"intact","cracked","damaged","heavily_damaged","destroyed"};
                 for(int stage=0;stage<stages.length;stage++) {
-                    sprite.frame(frames.get(color*5+stage));
+                    sprite.frame(frames.get(color*8+stage));
                     VisualCue observed=cue(sprite,CrystalSpireSprite.class,"renderedSpireCue");
                     assertEquals(stages[stage],observed.appearance.get("stage"));assertFalse(observed.appearance.containsKey("unmapped_indicator"));
                 }
@@ -169,7 +169,7 @@ class WardStatueSemanticTest {
         @SuppressWarnings("unchecked") Textures() throws Exception {
             cache = (Map<Object,SmartTexture>)SnapshotFields.read(TextureCache.class, "all");
             install(Assets.Sprites.WARDS, 64, 16); install(Assets.Sprites.STATUE, 256, 64);
-            install(Assets.Sprites.CRYSTAL_SPIRE,128,128);
+            install(Assets.Sprites.CRYSTAL_SPIRE,256,128);
         }
         private void install(String asset, int width, int height) throws Exception {
             SmartTexture texture = FloatingAppearanceTest.allocate(SmartTexture.class);

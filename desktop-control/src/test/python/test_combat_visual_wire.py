@@ -1,4 +1,4 @@
-"""Offline Protocol 8 semantic-observation checks; no game or profile access."""
+"""Offline Protocol 9 semantic-observation checks; no game or profile access."""
 
 import copy
 import sys
@@ -28,7 +28,7 @@ def snapshot(prefix="c", *, item_name="visible item"):
         "entity_defs": [{"kind": "character", "name": "rat", "buffs": [
             {"name": "Poison", "shown": {"symbol": "poison", "counter": "0"}}],
             "health_estimate": {"samples": [{"total": 16, "filled": 0,
-                                              "with_shield": 4, "basis": "displayed"}]}},
+                                              "with_shield": 4, "incoming_dot": 0, "basis": "displayed"}]}},
                         {"kind": "container", "item": {"loc": "ground.7", "name": "seed",
                                                          "shown": {"status": None, "future_flag": False}}}],
         "entities": [{"cell": 9, "def": 0}, {"cell": 7, "def": 1}],
@@ -56,7 +56,7 @@ def snapshot(prefix="c", *, item_name="visible item"):
 
 
 def frame(data, identifier="q", revision="r1"):
-    return {"v": 8, "id": identifier, "s": "s1", "rev": revision,
+    return {"v": 9, "id": identifier, "s": "s1", "rev": revision,
             "st": "completed", "data": data}
 
 

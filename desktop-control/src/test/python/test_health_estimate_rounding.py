@@ -8,9 +8,9 @@ from test_combat_visual_wire import frame, snapshot
 from spdctl_client import DecodeError, decode_client_response, decode_wire_response
 
 
-def sample(total=21, filled=4, with_shield=22):
+def sample(total=21, filled=4, with_shield=22, incoming_dot=0):
     return {"total": total, "filled": filled, "with_shield": with_shield,
-            "basis": "displayed"}
+            "incoming_dot": incoming_dot, "basis": "displayed"}
 
 
 def bar_snapshot(samples, prefix="c"):
@@ -50,14 +50,14 @@ class DisplayedHealthRoundingTest(unittest.TestCase):
 
     def test_type_order_basis_and_more_than_one_segment_errors_still_fail(self):
         invalid = []
-        for key in ("total", "filled", "with_shield"):
+        for key in ("total", "filled", "with_shield", "incoming_dot"):
             for value in (True, False, 4.0, -1, None, "4"):
                 invalid.append({**sample(), key: value})
             missing = sample()
             del missing[key]
             invalid.append(missing)
         invalid.extend([sample(0, 0, 0), sample(21, 5, 4), sample(21, 4, 23),
-                        sample(28, 30, 30), sample(21, 23, 22)])
+                        sample(28, 30, 30), sample(21, 23, 22), sample(incoming_dot=23)])
         for basis in (None, True, 0, "hidden", "displayed_gradient"):
             invalid.append({**sample(), "basis": basis})
         missing_basis = sample()

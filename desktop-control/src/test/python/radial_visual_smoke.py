@@ -15,7 +15,7 @@ import uuid
 
 from fixture_smoke import (FixtureClient, act, assert_gui_environment, close_choices,
                            fixture_java_prefix, freeze_fixture_runtime, norm)
-from protocol8 import pages
+from protocol9 import pages
 
 
 CASES = ("supernova-halo", "supernova-halo-edge", "blast-radius-1", "blast-radius-3", "blast-radius-6")

@@ -15,7 +15,7 @@ from spdctl_client import (  # noqa: E402
 
 
 def wire(identifier="t1.2", *, data=None, status="completed", revision="r1"):
-    result = {"v": 8, "id": identifier, "s": "s1", "st": status}
+    result = {"v": 9, "id": identifier, "s": "s1", "st": status}
     if revision is not None:
         result["rev"] = revision
     if data is not None:
@@ -38,7 +38,7 @@ class CurrentFrameSafetyTest(unittest.TestCase):
             {"controller": "response", "response": current,
              "late_responses": [{"request": {"id": "t1.1"}, "response": historical}]},
             {"controller": "settle", "st": "completed", "rid": "t1.1", "outcome": receipt,
-             "observation": current, "discovery": wire("t1.4", data={"cli_version": "CLI.8.0.0"}),
+             "observation": current, "discovery": wire("t1.4", data={"cli_version": "CLI.9.0.0"}),
              "late_responses": [{"request": {"id": "t1.1"}, "response": historical}]},
         ):
             original = copy.deepcopy(source)
@@ -52,7 +52,7 @@ class CurrentFrameSafetyTest(unittest.TestCase):
 
     def test_success_does_not_promise_an_observation(self):
         for source in (
-            wire(data={"cli_version": "CLI.8.0.0"}),
+            wire(data={"cli_version": "CLI.9.0.0"}),
             wire(data={"id": "t1.1", "st": "COMPLETED"}, revision=None),
             wire(data={"items": [], "next": None, "end": True}, revision=None),
             {"controller": "settle", "st": "completed", "rid": "t1.1"},
@@ -71,7 +71,7 @@ class CurrentFrameSafetyTest(unittest.TestCase):
 
     def test_original_errors_and_pending_are_not_replaced_by_missing_frame(self):
         cases = (
-            ({"v": 8, "id": "t1.2", "s": "s1", "err": "STALE_STATE"}, "STALE_STATE"),
+            ({"v": 9, "id": "t1.2", "s": "s1", "err": "STALE_STATE"}, "STALE_STATE"),
             ({"controller": "error", "err": "INVALID_INTENT"}, "INVALID_INTENT"),
             ({"controller": "settle", "st": "pending", "rid": "t1.1"}, "NOT_COMPLETED"),
             ({"controller": "settle", "st": "completed", "rid": "t1.1",
@@ -94,7 +94,7 @@ class CurrentFrameSafetyTest(unittest.TestCase):
             validate_intent(result, {"op": "move", "rev": "r1", "dir": "N"})
 
     def test_map_access_rejects_invalid_frame_instead_of_returning_an_unknown_cell(self):
-        error = decode_wire_response({"v": 8, "id": "t1.2", "err": "STALE_STATE"})
+        error = decode_wire_response({"v": 9, "id": "t1.2", "err": "STALE_STATE"})
         receipt = decode_wire_response(wire(data={"id": "t1.1", "st": "COMPLETED"}))
         for frame in (None, observation(), decode_client_response(observation()), error, receipt):
             with self.subTest(frame=frame), self.assertRaises(IntentError) as raised:
@@ -152,7 +152,7 @@ class IntentDiagnosticTest(unittest.TestCase):
             self.assertEqual(("op", "s", "rev", "alt", "ctl", "opt"), raised.exception.expected)
 
     def test_controller_identity_and_other_extra_fields_are_reported_together(self):
-        intent = {"op": "select", "ctl": "c1", "rev": "r1", "v": 8, "id": "mine", "junk": 0}
+        intent = {"op": "select", "ctl": "c1", "rev": "r1", "v": 9, "id": "mine", "junk": 0}
         before = copy.deepcopy(intent)
         with self.assertRaises(IntentError) as raised:
             validate_intent(None, intent)
@@ -164,7 +164,7 @@ class IntentDiagnosticTest(unittest.TestCase):
         self.assertEqual(before, error.raw_intent)
         self.assertEqual(before, intent)
         with self.assertRaisesRegex(IntentError, "not a known controller operation"):
-            validate_intent(None, {"op": "unknown", "v": 8, "id": "mine", "junk": 0})
+            validate_intent(None, {"op": "unknown", "v": 9, "id": "mine", "junk": 0})
 
     def test_revision_and_scope_mismatch_expose_current_bindings_without_changing_intent(self):
         frame = decode_wire_response(observation())
@@ -257,7 +257,7 @@ class SettlePendingDiagnosticsTest(unittest.TestCase):
                                                                      "save": [{"sid": "p1"}]}),
                           "late_responses": [{"request": {"id": "t1.0"}, "response": observation()}]}
                 if reason == "response_pending":
-                    source["pending_request"] = {"v": 8, "id": "t1.4", "op": op,
+                    source["pending_request"] = {"v": 9, "id": "t1.4", "op": op,
                                                  "future": {"kept": True}}
                     if stage == "receipt":
                         source["pending_request"].update(rid="t1.1", s="s1")
@@ -285,7 +285,7 @@ class SettlePendingDiagnosticsTest(unittest.TestCase):
         source = {"controller": "settle", "st": "pending", "rid": "t1.1",
                   "pending_reason": "budget_exhausted", "stage": "receipt",
                   "transport_error": {"controller": "error", "err": "RESPONSE_TIMEOUT"},
-                  "initial_error": {"v": 8, "id": "t1.1", "err": "EXECUTION_UNKNOWN"}}
+                  "initial_error": {"v": 9, "id": "t1.1", "err": "EXECUTION_UNKNOWN"}}
         result = decode_client_response(source)
         self.assertEqual("budget_exhausted", result.pending_reason)
         self.assertEqual({"RESPONSE_TIMEOUT", "EXECUTION_UNKNOWN"}, {p.code for p in result.problems})
@@ -294,7 +294,7 @@ class SettlePendingDiagnosticsTest(unittest.TestCase):
     def test_invalid_pending_fields_are_evidence_preserving_decode_errors(self):
         base = {"controller": "settle", "st": "pending", "rid": "t1.1", "s": "s1",
                 "pending_reason": "response_pending", "stage": "receipt"}
-        query = {"v": 8, "id": "t1.3", "op": "req", "rid": "t1.1", "s": "s1"}
+        query = {"v": 9, "id": "t1.3", "op": "req", "rid": "t1.1", "s": "s1"}
         invalid = [
             {"pending_reason": value} for value in (None, True, [], {}, "unknown")
         ] + [{"stage": value} for value in (None, [], {}, "unknown")] + [
@@ -322,7 +322,7 @@ class SettlePendingDiagnosticsTest(unittest.TestCase):
         for extra in (
             {"pending_reason": "action_pending"},
             {"stage": "receipt"},
-            {"pending_request": {"v": 8, "id": "t1.2", "op": "req", "rid": "t1.1", "s": "s1"}},
+            {"pending_request": {"v": 9, "id": "t1.2", "op": "req", "rid": "t1.1", "s": "s1"}},
             {"pending_reason": "action_pending", "stage": "discovery"},
             {"pending_reason": "action_pending", "stage": "observation"},
         ):
@@ -335,7 +335,7 @@ class SettlePendingDiagnosticsTest(unittest.TestCase):
             self.assertEqual(before, source)
 
     def test_pending_receipt_query_binds_the_original_action_and_scope(self):
-        query = {"v": 8, "id": "t1.3", "op": "req", "rid": "t1.1", "s": "s1"}
+        query = {"v": 9, "id": "t1.3", "op": "req", "rid": "t1.1", "s": "s1"}
         base = {"controller": "settle", "st": "pending", "rid": "t1.1", "s": "s1",
                 "pending_reason": "response_pending", "stage": "receipt", "pending_request": query}
         self.assertEqual(query, decode_client_response(base).pending_request)

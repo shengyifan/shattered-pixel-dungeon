@@ -6,7 +6,7 @@ import traceback
 import uuid
 
 from fixture_smoke import FixtureClient, act, freeze_runtime, reach_game
-from protocol8 import pages
+from protocol9 import pages
 
 TARGETS = {"314159", "warrior", "dodged"}
 

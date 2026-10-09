@@ -1,10 +1,10 @@
-"""Strict, reusable decoders for ``spdctl`` protocol-8 client output.
+"""Strict, reusable decoders for ``spdctl`` protocol-9 client output.
 
 This module is deliberately transport- and policy-free.  It does not launch the
 game, allocate request IDs, retry operations, replace revisions, or decide which
 game action to take.  It only:
 
-* validates and expands one protocol-8 wire response using that response's own
+* validates and expands one protocol-9 wire response using that response's own
   dictionaries and scoped defaults;
 * separates controller wrappers into their response, outcome, observation,
   discovery, diagnostic, and late-response parts; and
@@ -15,7 +15,7 @@ The original input is retained on every returned object.  Unknown fields,
 explicit ``None``/``False``/``0`` values, text/source metadata, and literal labels
 are copied rather than normalized away.
 
-Displayed health bars allow one segment of foreground overhang: the CLI 8
+Displayed health bars allow one segment of foreground overhang: the CLI 9
 producer rounds the background width but rounds foreground widths up.  This
 bounded rendering tolerance preserves the reported samples without clamping
 them or interpreting them as exact health values.
@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 
-PROTOCOL_VERSION = 8
+PROTOCOL_VERSION = 9
 TILE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
 WIRE_STATUSES = {"completed", "awaiting_input", "in_progress", "interrupted"}
 OBSERVATION_FIELDS = {
@@ -507,7 +507,7 @@ def _expand_observation(value: Mapping[str, Any], path: str,
 
 def expand_structures(value: Mapping[str, Any], scope: Optional[str] = None,
                       revision: Optional[str] = None, *, bindings: bool = False) -> Dict[str, Any]:
-    """Expand v8 templates/references only, without semantic defaults or aliases.
+    """Expand v9 templates/references only, without semantic defaults or aliases.
 
     By default no binding defaults are applied. Test adapters may explicitly bind
     current activity before resolving references; frozen children still reset
@@ -636,7 +636,7 @@ def _map(value: Any, path: str) -> Dict[str, Any]:
         raise DecodeError(f"{path}.env refers to cells omitted from rows: {sorted(unknown_environment)}")
 
     result = dict(_generic(source, path))
-    # ``cells`` is not a protocol-8 compact field today.  Preserve it if a
+    # ``cells`` is not a protocol-9 compact field today.  Preserve it if a
     # future frame supplies that unknown field instead of overwriting it.
     result["decoded_cells" if "cells" in source else "cells"] = cells
     return result
@@ -654,7 +654,7 @@ def _entities(data: Mapping[str, Any], path: str) -> list:
             descriptor = _definition(definitions, item["def"], f"{item_path}.def")
             descriptor = dict(_generic(_dict(descriptor, f"{item_path}.def"), f"{item_path}.def"))
             kind = descriptor.get("kind")
-            if "cell" in descriptor or not isinstance(kind, str) or kind not in {"trap", "container", "character"}:
+            if "cell" in descriptor or not isinstance(kind, str) or kind not in {"trap", "container", "character", "object"}:
                 raise DecodeError(f"{item_path}.def is not a shareable entity descriptor")
             expanded = {"cell": _integer(item.get("cell"), f"{item_path}.cell"), **descriptor}
         else:
@@ -692,7 +692,7 @@ def _health_estimate(value: Any, path: str) -> None:
     for sample_index, sample in enumerate(_list(estimate.get("samples"), f"{path}.samples")):
         sample_path = f"{path}.samples[{sample_index}]"
         sample = _dict(sample, sample_path)
-        for key in ("total", "filled", "with_shield"):
+        for key in ("total", "filled", "with_shield", "incoming_dot"):
             if type(sample.get(key)) is not int:
                 raise DecodeError(f"{sample_path}.{key} must be an integer")
         # HealthBar.layout uses ceil for foreground pixels, while its exported
@@ -701,7 +701,8 @@ def _health_estimate(value: Any, path: str) -> None:
         # only this one-segment overhang; retain every original value and keep
         # the ordering, integer, and positive-total checks strict.
         if not (0 < sample["total"]
-                and 0 <= sample["filled"] <= sample["with_shield"] <= sample["total"] + 1):
+                and 0 <= sample["filled"] <= sample["with_shield"] <= sample["total"] + 1
+                and 0 <= sample["incoming_dot"] <= sample["with_shield"]):
             raise DecodeError(f"{sample_path} has inconsistent displayed segments")
         if sample.get("basis") != "displayed":
             raise DecodeError(f"{sample_path}.basis must be displayed")
@@ -755,11 +756,19 @@ def _subject_data(node: Mapping[str, Any], path: str) -> Any:
     _buffs(facts, f"{path}.subject_data")
     if "turn_progress" in facts:
         _turn_progress(facts["turn_progress"], f"{path}.subject_data.turn_progress")
+    _projectile_collision(facts, f"{path}.subject_data")
     if "health_estimate" in facts:
         _health_estimate(facts["health_estimate"], f"{path}.subject_data.health_estimate")
     if "item" in facts and facts["item"] is not None:
         facts["item"] = _item(facts["item"], f"{path}.subject_data.item")
     return facts
+
+
+def _projectile_collision(value: Mapping[str, Any], path: str) -> None:
+    if "projectile_collision" not in value or value["projectile_collision"] is None:
+        return
+    if value.get("kind") != "object" or value["projectile_collision"] != "character":
+        raise DecodeError(f"{path}.projectile_collision must be null or character on a native object")
 
 
 def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
@@ -771,7 +780,7 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
             if key in cues:
                 raise DecodeError(f"{path}.cues.{key} is retired drawing data")
         if not isinstance(cues.get("status"), str) or cues["status"] not in {"last_observed", "not_observed"}:
-            raise DecodeError(f"{path}.cues.status is not a Protocol 8 observation status")
+            raise DecodeError(f"{path}.cues.status is not a Protocol 9 observation status")
         for index, raw in enumerate(_list(cues.get("cues"), f"{path}.cues.cues")):
             here = f"{path}.cues.cues[{index}]"
             cue = _dict(raw, here)
@@ -780,6 +789,9 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
                 raise DecodeError(f"{here}.kind must be a non-empty semantic name")
             if type(cue.get("cell")) is not int or cue["cell"] < 0:
                 raise DecodeError(f"{here}.cell must be a nonnegative integer")
+            if cue.get("kind") == "movement_shadow" and cue.get("dir") is not None:
+                if not isinstance(cue["dir"], str) or cue["dir"] not in DIRECTIONS:
+                    raise DecodeError(f"{here}.dir must be an advertised compass direction")
             if "source_cell" in cue and (type(cue["source_cell"]) is not int or cue["source_cell"] < 0):
                 raise DecodeError(f"{here}.source_cell must be a nonnegative integer")
             if "unmapped_indicator" in cue and type(cue["unmapped_indicator"]) is not bool:
@@ -838,6 +850,8 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
         if "shown" in hero:
             _shown(hero["shown"], f"{path}.hero.shown")
         _buffs(hero, f"{path}.hero")
+        if "health_estimate" in hero:
+            _health_estimate(hero["health_estimate"], f"{path}.hero.health_estimate")
         if "turn_progress" in hero and hero["turn_progress"] is not None:
             _turn_progress(hero["turn_progress"], f"{path}.hero.turn_progress")
 
@@ -854,6 +868,7 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
             _reject_drawing(_dict(entity["appearance"], f"{here}.appearance"),
                             f"{here}.appearance")
         _buffs(entity, here)
+        _projectile_collision(entity, here)
         if "health_estimate" in entity:
             _health_estimate(entity["health_estimate"], f"{here}.health_estimate")
 
@@ -1033,7 +1048,7 @@ def decode_data(value: Mapping[str, Any], scope: Optional[str] = None,
 
 @dataclass(frozen=True)
 class WireResponse:
-    """One validated protocol-8 response and its independently decoded copy."""
+    """One validated protocol-9 response and its independently decoded copy."""
 
     raw: Mapping[str, Any]
     frame: Mapping[str, Any]
@@ -1072,14 +1087,14 @@ def decode_wire_response(value: Mapping[str, Any]) -> WireResponse:
 def _decode_wire_response(value: Mapping[str, Any]) -> WireResponse:
     source = _dict(value, "$")
     if type(source.get("v")) is not int or source.get("v") != PROTOCOL_VERSION:
-        raise DecodeError("$.v must be integer protocol version 8")
+        raise DecodeError("$.v must be integer protocol version 9")
     if not isinstance(source.get("id"), str) or not source["id"]:
         raise DecodeError("$.id must be a non-empty string")
     has_status, has_error = "st" in source, "err" in source
     if has_status == has_error:
         raise DecodeError("response must contain exactly one of st or err")
     if has_status and (not isinstance(source["st"], str) or source["st"] not in WIRE_STATUSES):
-        raise DecodeError("$.st is not a protocol-8 response status")
+        raise DecodeError("$.st is not a protocol-9 response status")
     if has_error and (not isinstance(source["err"], str) or not source["err"]):
         raise DecodeError("$.err must be a non-empty string")
 
@@ -1200,7 +1215,7 @@ def _validate_settle_pending(source: Mapping[str, Any]) -> None:
             raise DecodeError("settle pending_request requires pending_reason response_pending")
         request = _dict(source["pending_request"], "$.pending_request")
         if type(request.get("v")) is not int or request.get("v") != PROTOCOL_VERSION:
-            raise DecodeError("$.pending_request.v must be integer protocol version 8")
+            raise DecodeError("$.pending_request.v must be integer protocol version 9")
         if not isinstance(request.get("id"), str) or not request["id"]:
             raise DecodeError("$.pending_request.id must be a non-empty string")
         stage_operations = {"receipt": "req", "discovery": "info", "observation": "state"}

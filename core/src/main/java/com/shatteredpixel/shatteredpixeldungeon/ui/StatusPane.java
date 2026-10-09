@@ -59,6 +59,7 @@ public class StatusPane extends Component implements GameplayStatus {
 
 	private Image shieldHP;
 	private Image hp;
+	private Image Dot; //a visual darkening over HP and shield that shows total incoming DOT
 	private BitmapText hpText;
 	private Button heroInfoOnBar;
 
@@ -77,10 +78,12 @@ public class StatusPane extends Component implements GameplayStatus {
 
 	@Override
 	public java.util.Map<String,Object> gameplayStatus() {
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		if(hp!=null&&shieldHP!=null&&Dot!=null)result.putAll(HealthBar.displayedHealth(
+				HealthBar.displayedPixelWidths(this,hp.width,hp.width(),shieldHP.width(),Dot.width())));
 		Float sweep=RenderedAppearance.visibleSweep(counter);
-		if(sweep==null)return java.util.Collections.emptyMap();
-		return java.util.Collections.singletonMap("turn_progress",
-				java.util.Collections.singletonMap("sweep",sweep));
+		if(sweep!=null)result.put("turn_progress",java.util.Collections.singletonMap("sweep",sweep));
+		return result;
 	}
 
 	@Override public Object gameplaySubject() { return Dungeon.hero; }
@@ -151,6 +154,12 @@ public class StatusPane extends Component implements GameplayStatus {
 		else        hp = new Image(asset, 0, 40, 50, 4);
 		add( hp );
 
+		if (large)  Dot = new Image(asset, 0, 103, 128, 9);
+		else        Dot = new Image(asset, 0, 40, 50, 4);
+		Dot.hardlight(0, 0, 0);
+		Dot.alpha(0.25f);
+		add( Dot );
+
 		hpText = new BitmapText(PixelScene.pixelFont);
 		hpText.alpha(0.6f);
 		add(hpText);
@@ -214,8 +223,8 @@ public class StatusPane extends Component implements GameplayStatus {
 			exp.x = x + 30;
 			exp.y = y + 30;
 
-			hp.x = shieldHP.x = x + 30;
-			hp.y = shieldHP.y = y + 19;
+			hp.x = shieldHP.x = Dot.x = x + 30;
+			hp.y = shieldHP.y = Dot.y = y + 19;
 
 			hpText.x = hp.x + (128 - hpText.width())/2f;
 			hpText.y = hp.y + 1;
@@ -258,8 +267,8 @@ public class StatusPane extends Component implements GameplayStatus {
 				shieldHP.frame(50-hpWidth, 44, 50, 4);
 			}
 
-			hp.x = shieldHP.x = hpleft;
-			hp.y = shieldHP.y = y + 2;
+			hp.x = shieldHP.x = Dot.x = hpleft;
+			hp.y = shieldHP.y = Dot.y = y + 2;
 
 			hpText.scale.set(PixelScene.align(0.5f));
 			hpText.x = hp.x + 1;
@@ -302,6 +311,7 @@ public class StatusPane extends Component implements GameplayStatus {
 		
 		int health = Dungeon.hero.HP;
 		int shield = Dungeon.hero.shielding();
+		int incomingDOT = Dungeon.hero.incomingDOT();
 		int max = Dungeon.hero.HT;
 
 		if (!Dungeon.hero.isAlive()) {
@@ -319,15 +329,19 @@ public class StatusPane extends Component implements GameplayStatus {
 
 		float healthPercent = health/(float)max;
 		float shieldPercent = shield/(float)max;
+		float DOTPercent    = incomingDOT/(float)max;
 
 		if (healthPercent + shieldPercent > 1f){
 			float excess = healthPercent + shieldPercent;
 			healthPercent /= excess;
 			shieldPercent /= excess;
+			DOTPercent    /= excess;
 		}
 
 		hp.scale.x = healthPercent;
 		shieldHP.scale.x = healthPercent + shieldPercent;
+		Dot.scale.x = Math.min(DOTPercent, shieldHP.scale.x);
+		Dot.x = shieldHP.x + shieldHP.width() - Dot.width();
 
 		if (oldHP != health || oldShield != shield || oldMax != max){
 			if (shield <= 0) {

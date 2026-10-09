@@ -182,9 +182,8 @@ public abstract class RegularPainter extends Painter {
 			}
 		}
 	}
-	
-	protected void paintDoors( Level l, ArrayList<Room> rooms ) {
 
+	public float hiddenDoorChance( Level l ){
 		float hiddenDoorChance = 0;
 		if (Dungeon.depth > 1){
 			//chance for a hidden door scales from 2/20 on floor 2 to 20/20 on floor 20
@@ -194,6 +193,12 @@ public abstract class RegularPainter extends Painter {
 			//pull the value of extra secret doors toward 50% on secrets level feel
 			hiddenDoorChance = (0.5f + hiddenDoorChance)/2f;
 		}
+		return hiddenDoorChance;
+	}
+
+	protected void paintDoors( Level l, ArrayList<Room> rooms ) {
+
+		float hiddenDoorChance = hiddenDoorChance(l);
 
 		HashMap<Room, Room> roomMerges = new HashMap<>();
 
@@ -444,18 +449,19 @@ public abstract class RegularPainter extends Painter {
 		//no more than one trap every 5 valid tiles.
 		nTraps = Math.min(nTraps, validCells.size()/5);
 
-		//for traps that want to avoid being in hallways
-		ArrayList<Integer> validNonHallways = new ArrayList<>();
+		//for traps that want to avoid being in enclosed spaces
+		ArrayList<Integer> validOpenSpace = new ArrayList<>();
 
 		//temporarily use the passable array for the next step
 		for (int i = 0; i < l.length(); i++){
 			l.passable[i] = (Terrain.flags[l.map[i]] & Terrain.PASSABLE) != 0;
 		}
 
+		//basically an open space calculation
 		for (int i : validCells){
 			if ((l.passable[i+PathFinder.CIRCLE4[0]] || l.passable[i+PathFinder.CIRCLE4[2]])
 					&& (l.passable[i+PathFinder.CIRCLE4[1]] || l.passable[i+PathFinder.CIRCLE4[3]])){
-				validNonHallways.add(i);
+				validOpenSpace.add(i);
 			}
 		}
 
@@ -471,14 +477,19 @@ public abstract class RegularPainter extends Painter {
 			Trap trap = Reflection.newInstance(trapClasses[Random.chances( trapChances )]);
 
 			Integer trapPos;
-			if (trap.avoidsHallways && !validNonHallways.isEmpty()){
-				trapPos = Random.element(validNonHallways);
+			if (trap.avoidsClosedSpaces && !validOpenSpace.isEmpty()){
+				trapPos = Random.element(validOpenSpace);
 			} else {
 				trapPos = Random.element(validCells);
 			}
 			//removes the integer object, not at the index
 			validCells.remove(trapPos);
-			validNonHallways.remove(trapPos);
+			validOpenSpace.remove(trapPos);
+
+			//open space traps cannot be adjacent
+			for (int j = 0; j < PathFinder.CIRCLE4.length; j++) {
+				validOpenSpace.remove((Integer) (trapPos + PathFinder.CIRCLE4[j]));
+			}
 
 			revealInc += revealedChance;
 			if (i >= nTraps || revealInc >= 1) {

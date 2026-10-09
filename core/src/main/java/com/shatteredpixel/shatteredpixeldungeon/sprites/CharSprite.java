@@ -28,8 +28,8 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.DarkBlock;
 import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
-import com.shatteredpixel.shatteredpixeldungeon.effects.IceBlock;
 import com.shatteredpixel.shatteredpixeldungeon.effects.GlowBlock;
+import com.shatteredpixel.shatteredpixeldungeon.effects.IceBlock;
 import com.shatteredpixel.shatteredpixeldungeon.effects.ShieldHalo;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
@@ -64,6 +64,24 @@ import java.util.LinkedHashMap;
 import java.util.Arrays;
 
 public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip.Listener {
+
+	private boolean observedMovementShadow;
+	private long observedMovementShadowLifetime;
+
+	/** Only the native hearing-shadow branch calls this; no actor or destination is retained. */
+	public void observeMovementShadow() { observedMovementShadow = true; observedMovementShadowLifetime=observationLifetime(); }
+	public boolean isObservedMovementShadow() { return observedMovementShadow && ch == null
+			&&observedMovementShadowLifetime==observationLifetime(); }
+
+	/** Current displayed anchor during native motion; no path or destination is inspected. */
+	public int movementShadowCell() {
+		if(!isObservedMovementShadow()||Dungeon.level==null||Dungeon.level.width()<=0||angle!=0
+				||!Float.isFinite(x+y+width()+height())||width()<=0||height()<=0)return -1;
+		int column=(int)Math.floor((x+width()*0.5f)/DungeonTilemap.SIZE);
+		int row=Math.round((y+height()+DungeonTilemap.SIZE*perspectiveRaise)/DungeonTilemap.SIZE)-1;
+		return column<0||column>=Dungeon.level.width()||row<0||row>=Dungeon.level.height()
+				?-1:row*Dungeon.level.width()+column;
+	}
 	
 	// Color constants for floating text
 	public static final int DEFAULT		= 0xFFFFFF;
@@ -85,6 +103,8 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	protected float shadowWidth     = 1.2f;
 	protected float shadowHeight    = 0.25f;
 	protected float shadowOffset    = 0.25f;
+
+	public boolean visibleOutOfFFOV = false;
 
 	public enum State {
 		BURNING, LEVITATING, INVISIBLE, PARALYSED, FROZEN, ILLUMINATED, CHILLED, DARKENED, MARKED, HEALING, SHIELDED, HEARTS, GLOWING, AURA
@@ -143,7 +163,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	
 	@Override
 	public void play(Animation anim) {
-		//Shouldn't interrupt the dieing animation
+		//Shouldn't interrupt the dying animation
 		if (curAnim == null || curAnim != die) {
 			super.play(anim);
 		}
@@ -181,7 +201,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 	//used for just updating a sprite based on a given character, not linking them or placing in the game
 	public void linkVisuals( Char ch ){
-		//do nothin by default
+		//do nothing by default
 	}
 	
 	public PointF worldToCamera( int cell ) {
@@ -246,7 +266,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 		isMoving = true;
 		
-		if (visible && Dungeon.level.water[from] && !ch.flying) {
+		if (visible && Dungeon.level.water[from] && ch != null && !ch.flying) {
 			GameScene.ripple( from );
 		}
 
@@ -833,6 +853,13 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 	@Override public void observeGameplayVisuals() {
 		if (Game.observer.observesVisualCues() && Dungeon.level != null) {
+			if(isObservedMovementShadow()){
+				int cell=movementShadowCell();
+				Map<String,Object> symbol=com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons.worldImage(this);
+				if(cell>=0&&!symbol.isEmpty())GameScene.observeMovingVisualDraw(this,new com.watabou.noosa.VisualCue(
+						"movement_shadow",cell,null,null,null,null,symbol));
+				return;
+			}
 			String cue = renderedStateCue();
 			int cell=renderedCell();
 			if (cue != null && cell>=0)
@@ -904,7 +931,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 
 				motion.killAndErase();
 				motion = null;
-				ch.onMotionComplete();
+				if (ch != null) ch.onMotionComplete();
 
 				GameScene.sortMobSprites();
 				notifyAll();

@@ -24,6 +24,9 @@ extern char **environ;
 #define BUFFER_SIZE 65536
 #define TRACE_VERSION "SPDCTL_TRACE\t1\n"
 #define TRACE_FAILURE 74
+#ifndef SPDCTL_PROFILE_DIRECTORY_NAME
+#error "Compile with the profile directory from gradle/cli-release.properties"
+#endif
 
 typedef struct {
     char session[PATH_MAX];
@@ -909,7 +912,7 @@ int main(int argc, char **argv) {
     bool machine_mode = run || control;
     const char *home = getenv("HOME"), *selected = getenv("SPDCTL_PROFILE"), *trace_root = NULL;
     char default_profile[PATH_MAX], default_trace[PATH_MAX], profile[PATH_MAX];
-    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/Shattered Pixel Dungeon CLI v8", home) >= PATH_MAX
+    if (!home || home[0] != '/' || snprintf(default_profile, sizeof(default_profile), "%s/Library/Application Support/%s", home, SPDCTL_PROFILE_DIRECTORY_NAME) >= PATH_MAX
         || snprintf(default_trace, sizeof(default_trace), "%s/Library/Logs/Shattered Pixel Dungeon CLI/transport", home) >= PATH_MAX)
         return fail("spdctl: HOME_UNAVAILABLE\n", 64);
     if (!selected) selected = default_profile;

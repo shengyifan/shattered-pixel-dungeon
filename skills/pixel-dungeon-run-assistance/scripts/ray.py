@@ -4,6 +4,9 @@
 Default source is the observed hero. --source may select another explicitly
 observed character for a hypothetical geometric aim (not a hidden enemy aim).
 Read one explicitly supplied public response; its binding is never live.
+Public WATER can also be the base appearance of solid custom decoration. Stop
+at that ambiguous appearance unless a public STOP_CHARS occupant proves a stop
+there; do not infer which hidden terrain implementation produced the appearance.
 """
 import argparse
 import ast
@@ -58,12 +61,12 @@ def source_model():
         "references": {
             "line_and_collision_order": str(paths["ballistica"]) + ":74",
             "integer_error_and_ties": str(paths["ballistica"]) + ":114",
-            "inside_map_boundary": str(JAVA / "levels/Level.java") + ":1537",
-            "item_projectile": str(JAVA / "items/Item.java") + ":631",
-            "wand_default": str(JAVA / "items/wands/Wand.java") + ":97",
-            "blast_wave_override": str(JAVA / "items/wands/WandOfBlastWave.java") + ":62",
-            "eye_stop_solid": str(JAVA / "actors/mobs/Eye.java") + ":95",
-            "public_web_solid": str(JAVA / "actors/blobs/Web.java") + ":102",
+            "inside_map_boundary": str(JAVA / "levels/Level.java") + ":1564",
+            "item_projectile": str(JAVA / "items/Item.java") + ":634",
+            "wand_default": str(JAVA / "items/wands/Wand.java") + ":132",
+            "blast_wave_override": str(JAVA / "items/wands/WandOfBlastWave.java") + ":63",
+            "eye_stop_solid": str(JAVA / "actors/mobs/Eye.java") + ":94",
+            "public_web_solid": str(JAVA / "actors/blobs/Web.java") + ":104",
         },
     }
 
@@ -106,10 +109,18 @@ def predict(frame, target, op, model, requested_source=None):
     for e in data.get("entities", []):
         if type(e.get("cell")) is int:
             entities.setdefault(e["cell"], []).append(e)
-    characters = {q for q, group in entities.items() if any(e.get("kind") == "character" for e in group)}
-    characters.add(hero)
+    source_characters = {q for q, group in entities.items()
+                         if any(e.get("kind") == "character" for e in group)}
+    source_characters.add(hero)
+    # Native OBJECTs use Actor.findChar for projectile collision but cannot
+    # supply a hypothetical character attack source. Appearance cues, including
+    # movement shadows and disguised objects, never establish occupancy.
+    collision_occupants = source_characters | {
+        q for q, group in entities.items() if any(
+            e.get("kind") == "object" and e.get("projectile_collision") == "character"
+            for e in group)}
     source = hero if requested_source is None else requested_source
-    if source not in characters:
+    if source not in source_characters:
         raise ValueError("Source must be the hero or an explicitly observed character in this snapshot")
     if any(type(v) is not int for v in (source, target, width, height)) or min(width, height) < 1:
         raise ValueError("Integer source, target and positive dimensions are required")
@@ -128,38 +139,46 @@ def predict(frame, target, op, model, requested_source=None):
         c = known.get(q)
         row = {"index": index, **step, "x": q % width, "y": q // width,
                "known_cell": c, "same_frame_entities": entities.get(q, []),
-               "public_character_present": q in characters}
+               "public_character_present": q in source_characters,
+               "public_collision_occupant_present": q in collision_occupants}
         evaluated.append(row)
         if q == source:
             if st and q == target:
                 collision = {"cell": q, "trigger_cell": q, "reason": "stop_target"}
                 break
             continue
-        if c is None or c.get("terrain") not in tf:
+        # Protocol 9 deliberately reports native custom water decoration with
+        # its WATER base appearance. That public value does not distinguish
+        # passable water from a solid decoration; never recover the distinction
+        # from names, nearby actors, private map state, or guessed geometry.
+        ambiguous_appearance = c is not None and c.get("terrain") == tc["WATER"]
+        if c is None or c.get("terrain") not in tf or ambiguous_appearance:
             row["flags"] = None
-            if q in characters and sc:
-                collision = {"cell": q, "trigger_cell": q, "reason": "known_character_independent_of_unknown_flags"}
+            if q in collision_occupants and sc:
+                collision = {"cell": q, "trigger_cell": q, "reason": "known_collision_occupant_independent_of_unknown_flags"}
             else:
-                unknown = {"cell": q, "index": index, "reason": "unknown_or_unclassified_terrain"}
+                unknown = {"cell": q, "index": index, "reason":
+                           "public_appearance_collision_ambiguous" if ambiguous_appearance
+                           else "unknown_or_unclassified_terrain"}
             break
         bits = tf[c["terrain"]]
         p, av, solid = bool(bits & tc["PASSABLE"]), bool(bits & tc["AVOID"]), bool(bits & tc["SOLID"])
         web = any(e.get("type") == "web" for e in c.get("environment", []))
         solid |= web
         row["flags"] = {"passable": p, "avoid": av, "solid": solid, "public_web_sets_solid": web}
-        if q not in characters:
+        if q not in collision_occupants:
             assumptions.append(q)
         if c.get("visibility") != "visible":
             remembered.append(q)
         # This native test occurs before path.add(cell), so hard terrain can
         # select the PREVIOUS cell. Closed passable doors instead stop on self.
-        if ss and not p and not av and q not in characters:
+        if ss and not p and not av and q not in collision_occupants:
             collision = {"cell": geometry[index - 1]["cell"], "trigger_cell": q,
-                         "reason": "hard_terrain_without_observed_character_stops_at_previous"}
+                         "reason": "hard_terrain_without_observed_collision_occupant_stops_at_previous"}
         elif ss and solid and not (soft and (p or av)):
             collision = {"cell": q, "trigger_cell": q, "reason": "solid_cell"}
-        elif sc and q in characters:
-            collision = {"cell": q, "trigger_cell": q, "reason": "known_character"}
+        elif sc and q in collision_occupants:
+            collision = {"cell": q, "trigger_cell": q, "reason": "known_collision_occupant"}
         elif st and q == target:
             collision = {"cell": q, "trigger_cell": q, "reason": "stop_target"}
         if collision is not None:
@@ -184,7 +203,7 @@ def predict(frame, target, op, model, requested_source=None):
         "evaluated_path_including_blocking_probe": evaluated,
         "conditional_collision_prediction": collision, "conditional_travel_path_to_collision": travel,
         "first_unknown_stops_prediction": unknown,
-        "cells_assuming_no_unreported_character": assumptions,
+        "cells_assuming_no_unreported_collision_occupant": assumptions,
         "remembered_terrain_or_unobservable_occupancy_cells": remembered,
         "predicted_reaches_target_under_assumptions": None if collision is None else
             target_index is not None and collision["dist"] >= target_index,
@@ -208,7 +227,8 @@ def main():
                   "source_model": model[3],
                   "warnings": [
                       "No gameplay, intent, profile, save or audit access. This prediction proves no execution, hit, effect or save.",
-                      "Unknown terrain is not filled in. Absent public characters do not prove absence of invisible or disguised occupants.",
+                      "Unknown terrain is not filled in. Absent public collision occupants do not prove absence of invisible or disguised occupants.",
+                      "Public WATER may be the base appearance of solid decoration. Its collision flags remain unknown; even ordinary water stops prediction unless a public STOP_CHARS occupant proves a stop at that cell.",
                       "Visited/mapped terrain and absent effects may omit off-screen changes. Only public Web adds dynamic solid flags here.",
                       "MAGIC_BOLT=6 is the base wand rule; BlastWave uses PROJECTILE=7. Other overrides, ranges and effect areas are not modeled.",
                       "SOLIDBEAM=4 is a supplied hypothetical geometric aim. It does not read or predict enemy targets, charge state, cooldowns or movement.",

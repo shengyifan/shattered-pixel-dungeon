@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ReleaseIdentity;
+
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditStore;
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.store.AuditException;
 import com.shatteredpixel.shatteredpixeldungeon.control.game.GameController;
@@ -219,14 +221,15 @@ public final class MachineSession implements AutoCloseable {
             Object result;String status="completed";
             switch(op){
                 case "protocol.info":
-                    result=map("cli_version","CLI.8.0.2","game_version","3.3.8",
+                    result=map("cli_version",ReleaseIdentity.CLI_VERSION,"game_version",ReleaseIdentity.GAME_VERSION,
+                            "game_version_code",ReleaseIdentity.GAME_VERSION_CODE,
                             "build_id",com.shatteredpixel.shatteredpixeldungeon.control.game.BuildCatalog.current().get("build_id"),
                             "session_id",store.sessionId(),"audit_schema_version",AuditStore.SCHEMA_VERSION,"text_language","en","text_format","resource-v1",
                             "request_prefix",handles.session(store.sessionId()),
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
                             "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation","persistent_handles",
-                                    "gameplay_facts","semantic_ui","semantic_feedback_events","world_cues_fov","strict_intents","quit_receipt_exit"),
+                                    "gameplay_facts","semantic_ui","semantic_feedback_events","public_world_cues","strict_intents","quit_receipt_exit"),
                             "schema",CompactProtocol.info());break;
                 case "state.get":result=publicStateResult(state);break;
                 case "actions.list":result=pending!=null||cancelling!=null||executionUncertain?publicStateResult(state):actionState(state);break;

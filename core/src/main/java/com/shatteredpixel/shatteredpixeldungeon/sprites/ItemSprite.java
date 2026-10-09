@@ -235,7 +235,7 @@ public class ItemSprite extends MovieClip {
 				view( 0, null );
 		}
 
-		alpha( heap.hidden ? 0.15f : 1f);
+		alpha( heap.hidden ? 0.1f : 1f);
 
 		return this;
 	}
@@ -452,7 +452,8 @@ public class ItemSprite extends MovieClip {
 
 		/** Names an already selected native display branch; never accepts a hidden numeric quantity. */
 		public Glowing gameplayHint(String hint) {
-			if(!java.util.Arrays.asList("explosive_cool","explosive_warm","explosive_hot","resin_fortified").contains(hint))
+			if(!java.util.Arrays.asList("explosive_cool","explosive_warm","explosive_hot","resin_fortified",
+					"crystal_intact","crystal_flawed","crystal_cracked").contains(hint))
 				throw new IllegalArgumentException("Unknown native glow meaning");
 			gameplayHint=hint;return this;
 		}

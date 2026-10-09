@@ -19,7 +19,7 @@ from english_protocol_smoke import (assert_english, checked_state, english_inven
                                     execute, start_or_continue, stop)
 from language_matrix_smoke import validate as validate_sources
 from machine_smoke import Client
-import protocol8
+import protocol9
 from package_english_smoke import display, environment, loaded_jvm, verify_bundle, write_json
 
 
@@ -94,9 +94,9 @@ class CapturedClient(Client):
         self.counter += 1
         if op == "state.get":
             args = {**(args or {}), "src": True}
-        request = protocol8.request(op, args, request_id or f"{self.prefix}-{self.counter:d}",
+        request = protocol9.request(op, args, request_id or f"{self.prefix}-{self.counter:d}",
                                     scope or self.scope, version or self.version)
-        wire = protocol8.wire_bytes(request)
+        wire = protocol9.wire_bytes(request)
         self.last_wire_request, self.last_send_bytes = request, wire
         assert self.process.stdin.write(wire) == len(wire)
         self.process.stdin.flush()
@@ -121,7 +121,7 @@ class CapturedClient(Client):
         self.last_recv_bytes = bytes(line) + b"\n"
         self.last_wire_response = json.loads(line)
         assert self.last_wire_response.get("id") == request["id"], (request, self.last_wire_response)
-        response = protocol8.response(self.last_wire_response, op)
+        response = protocol9.response(self.last_wire_response, op)
         assert_english(response)
         if response.get("ok") and op == "state.get":
             failures = validate_sources(response.get("result"))
@@ -131,10 +131,10 @@ class CapturedClient(Client):
             self.uncertain = True
         state = response.get("result", {})
         if isinstance(state, dict) and response.get("ok"):
-            if protocol8.is_live_operation(op):
+            if protocol9.is_live_operation(op):
                 self.scope = state.get("scope_id", self.scope)
                 self.version = state.get("state_version") or self.version
-            if protocol8.is_live_operation(op) and "observation" in state:
+            if protocol9.is_live_operation(op) and "observation" in state:
                 self.last_state = state
                 display(state)
         self.trace.write(json.dumps({"request": request, "response": self.last_wire_response}, ensure_ascii=False) + "\n")
@@ -269,7 +269,7 @@ def self_test():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path)
-    parser.add_argument("--expected-cli", default="CLI.8.0.2")
+    parser.add_argument("--expected-cli", default="CLI.9.0.0")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -278,7 +278,7 @@ def main():
     if args.bundle is None:
         parser.error("--bundle is required for the actual package test")
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging8.0" / ("transport-defaults-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging9.0" / ("transport-defaults-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     write_json(output / "test_fixture.json", {"test_fixture": True, "counts_as_win": False,
                "setup": "Production CLI only; profile settings and game state are not prewritten"})

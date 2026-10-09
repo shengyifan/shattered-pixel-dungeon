@@ -74,13 +74,13 @@ class TextProvenanceHooksTest {
     }
 
     @Test void bitmapConstructorAndEqualTextReplacementKeepTheLatestSource() {
-        String first = texts.onTextResource("防御", "windows.wndupgrade.blocking", "zh", new Object[0]);
-        String second = texts.onTextResource("防御", "items.stones.stoneofaugmentation$wndaugment.defense", "zh", new Object[0]);
+        String first = texts.onTextResource("关闭", "windows.wndsupportprompt.close", "zh", new Object[0]);
+        String second = texts.onTextResource("关闭", "windows.wndsettings$displaytab.off", "zh", new Object[0]);
         BitmapText widget = new BitmapText(first, null);
-        assertEquals("Blocking", render(widget, widget.text()).get("text"));
+        assertEquals("Close", render(widget, widget.text()).get("text"));
         widget.text(second);
         assertSame(second, widget.text());
-        assertEquals("Defense", render(widget, widget.text()).get("text"));
+        assertEquals("Off", render(widget, widget.text()).get("text"));
         widget.kill(); widget.destroy();
         assertTrue(released.contains(widget));
         assertNull(widget.parent);

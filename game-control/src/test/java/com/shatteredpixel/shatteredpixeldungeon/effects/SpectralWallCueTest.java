@@ -70,12 +70,12 @@ class SpectralWallCueTest {
             Game.observer=new RuntimeObserver(){@Override public boolean observesVisualCues(){return true;}};
             Random.pushGenerator(883);blob=new SkeletonKey.KeyWall();emitter=new BlobEmitter(blob);scene.add(emitter);
             assertSame(SpectralWallParticle.FACTORY,field(emitter,com.watabou.noosa.particles.Emitter.class,"factory"));
-            assertEquals(.02f,field(emitter,com.watabou.noosa.particles.Emitter.class,"interval"));
+            assertEquals(.05f,field(emitter,com.watabou.noosa.particles.Emitter.class,"interval"));
         }
         SpectralWallParticle particle(int cell)throws Exception{
             SpectralWallParticle p=allocate(SpectralWallParticle.class);p.exists=p.alive=p.visible=p.active=true;
             p.scale=new PointF(1,1);p.origin=new PointF(.5f,.5f);p.width=p.height=1;p.resetColor();p.am=.6f;
-            p.texture=allocate(SmartTexture.class);set(p,PixelParticle.class,"lifespan",4f);
+            p.texture=allocate(SmartTexture.class);set(p,PixelParticle.class,"lifespan",3f);
             p.reset((cell%10)*16+3,(cell/10)*16+7);emitter.add(p);return p;
         }
         List<VisualCue> sample()throws Exception{clear();emitter.observeGameplayVisuals();return cues();}

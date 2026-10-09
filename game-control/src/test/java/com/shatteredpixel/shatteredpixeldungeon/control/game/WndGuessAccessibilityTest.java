@@ -50,7 +50,8 @@ class WndGuessAccessibilityTest {
     private static final List<Object> fixtureTextureKeys = List.of(
             Assets.Interfaces.CHROME, Assets.Interfaces.SHADOW,
             Assets.Sprites.ITEMS, Assets.Sprites.ITEM_ICONS,
-            "1x1:" + 0xFFCC0000, "1x1:" + 0xFF00EE00, "1x1:" + 0xFFFFFFFF);
+            "1x1:" + 0xFFCC0000, "1x1:" + 0xFFAA0000, "1x1:" + 0xFF00EE00,
+            "1x1:" + 0xFFFFFFFF, "1x1:" + 0x66000000);
 
     @BeforeAll
     static void resources() throws Exception {

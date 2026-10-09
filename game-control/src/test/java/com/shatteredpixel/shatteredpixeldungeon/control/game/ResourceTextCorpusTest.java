@@ -60,6 +60,7 @@ class ResourceTextCorpusTest {
         Languages selected = Messages.selectedLanguage();
         byte[] random = Random.exportState();
         List<Map<String, Object>> defects = new ArrayList<>(), warnings = new ArrayList<>(), visibilityPartials = new ArrayList<>();
+        List<Map<String, Object>> upstreamDefects = new ArrayList<>();
         Map<String, Object> languageReports = new LinkedHashMap<>();
         long comparisons = 0;
         TextProvenance texts = new TextProvenance(english::get);
@@ -75,6 +76,9 @@ class ResourceTextCorpusTest {
                     increment(counts, "keys_visited"); comparisons++;
                     String localized = Messages.withLanguage(language, () -> Messages.get(key));
                     if (Messages.NO_TEXT_FOUND.equals(localized)) {
+                        if (reviewedMissingUpstreamKey(language, domain, key, template, texts, upstreamDefects)) {
+                            increment(counts, "upstream_resource_defects"); continue;
+                        }
                         defect(defects, language, domain, key, "key_missing_after_fallback", null, null); increment(counts, "failed"); continue;
                     }
                     Spec reference;
@@ -107,6 +111,9 @@ class ResourceTextCorpusTest {
                         }
                         gui = args.length == 0 ? localized : String.format(locale, localized, args);
                     } catch (RuntimeException failure) {
+                        if (reviewedUpstreamFormatFailure(language, domain, key, localized, failure, english, upstreamDefects)) {
+                            increment(counts, "upstream_resource_defects"); continue;
+                        }
                         defect(defects, language, domain, key, "gui_format_for_sampled_arguments", failure, args);
                         increment(counts, "failed"); continue;
                     }
@@ -158,22 +165,25 @@ class ResourceTextCorpusTest {
         report.put("registered_languages", Languages.values().length); report.put("key_language_comparisons", comparisons);
         report.put("domain_sizes", domainSizes); report.put("languages", languageReports);
         report.put("defect_count", defects.size()); report.put("defects", defects); report.put("warnings", warnings);
+        report.put("upstream_resource_defect_count", upstreamDefects.size()); report.put("upstream_resource_defects", upstreamDefects);
         report.put("visibility_partial_count", visibilityPartials.size()); report.put("visibility_partials", visibilityPartials);
         report.put("selected_gui_language_unchanged", true); report.put("random_unchanged", true);
         report.put("limits", Arrays.asList("Printf arguments are materialized representatives of English conversion domains, not live game objects.",
                 "GUI format failures describe these exact sampled argument types; they do not alone prove that a current gameplay call passes those types.",
                 "Argument usage and conversion differences are reported even when both representative renderings succeed.",
+                "Two precisely fingerprinted upstream v4.0.2 resource defects remain native failures, not successful translations or CLI pass counts; their public partial output is checked separately.",
                 "English parameters omitted by the actual GUI produce explicit partial output, with dual-world hidden-argument checks; these are not complete English translations.",
                 "No GUI, real profile, gameplay callback, or resource edit is used."));
         Path output = Path.of("build/text-provenance/resource-corpus.json");
         Files.createDirectories(output.getParent()); Files.writeString(output, JsonCodec.encode(report) + "\n");
         assertEquals((long) english.size() * Languages.values().length, comparisons);
+        assertEquals(2, upstreamDefects.size(), "Changed upstream resource defects require fresh review, not silent removal or expansion");
         assertTrue(defects.isEmpty(), "Resource corpus found " + defects.size() + " precise failures; see " + output.toAbsolutePath());
     }
 
     private static Map<String,Integer> counts() {
         Map<String,Integer> values = new LinkedHashMap<>();
-        for (String key : List.of("keys_visited", "passed", "failed", "english_complete", "visibility_partials", "argument_usage_warnings", "argument_conversion_warnings")) values.put(key, 0);
+        for (String key : List.of("keys_visited", "passed", "failed", "english_complete", "visibility_partials", "argument_usage_warnings", "argument_conversion_warnings", "upstream_resource_defects")) values.put(key, 0);
         return values;
     }
     private static void increment(Map<String,Integer> counts, String key) { counts.put(key, counts.get(key) + 1); }
@@ -186,6 +196,79 @@ class ResourceTextCorpusTest {
         if (error != null) { item.put("error_type", error.getClass().getSimpleName()); item.put("error", error.getMessage()); }
         if (args != null) { List<String> types = new ArrayList<>(); for (Object arg : args) types.add(arg == null ? "null" : arg.getClass().getSimpleName()); item.put("sample_argument_types", types); }
         defects.add(item);
+    }
+
+    private static boolean reviewedMissingUpstreamKey(Languages language, String domain, String key, String english,
+                                                      TextProvenance texts, List<Map<String,Object>> reviewed) throws Exception {
+        if (!language.code().equals("in") || !key.equals("items.quest.escapecrystal.injure_confirm")) return false;
+        // The upstream id/in loading path treats the Indonesian file as its base,
+        // so this exact absent entry has no English fallback. Preserve native behavior.
+        assertEquals("a651780d14da53f3af6de76a0e2e6c2d68c19776a271c56b0dda959e28d9b915", sha256(english));
+        Properties nativeResource = new Properties();
+        try (InputStream input = ResourceTextCorpusTest.class.getClassLoader().getResourceAsStream("messages/items/items_in.properties")) {
+            assertNotNull(input); nativeResource.load(new InputStreamReader(input, StandardCharsets.UTF_8));
+        }
+        assertFalse(nativeResource.containsKey(key));
+        String nativeText = Messages.withLanguage(language, () -> Messages.get(key));
+        assertEquals(Messages.NO_TEXT_FOUND, nativeText);
+        Map<String,Object> projected = texts.render(texts.capture(null, nativeText, false));
+        assertEquals("partial", projected.get("translation_status"));
+        assertNull(projected.get("source"));
+        assertNotEquals(english, projected.get("text"), "Missing native text cannot fabricate an English display");
+        Map<String,Object> item = issue(language, domain, key, "key_missing_after_native_fallback");
+        item.put("english_template_sha256", sha256(english)); item.put("localized_key_absent", true);
+        item.put("native_marker", Messages.NO_TEXT_FOUND); item.put("public_partial", projected);
+        item.put("counts_as_translation_success", false); reviewed.add(item); return true;
+    }
+
+    private static boolean reviewedUpstreamFormatFailure(Languages language, String domain, String key, String localized,
+                                                         RuntimeException sampledFailure, Map<String,String> english,
+                                                         List<Map<String,Object>> reviewed) throws Exception {
+        if (!language.code().equals("el") || !key.equals("actors.hero.abilities.cleric.powerofmany$powerbuff.desc")) return false;
+        // Upstream's -25%%% remains byte-identical. Invoke the actual native failure
+        // hook twice to prove that unseen formatted arguments never enter public text.
+        assertEquals("2319e73f067f110a573ce6be3c25e8df71ef294f1811f2d5a4bc3cf65f6e7d9c", sha256(localized));
+        assertInstanceOf(java.util.UnknownFormatConversionException.class, sampledFailure);
+        TextProvenance texts = new TextProvenance(english::get);
+        List<Throwable> nativeErrors = new ArrayList<>();
+        RuntimeObserver previous = Game.observer;
+        Game.observer = new RuntimeObserver() {
+            @Override public String onTextResource(String value, String resource, String code, Object[] args, String template) {
+                return texts.onTextResource(value, resource, code, args, template);
+            }
+            @Override public String onTextOperation(String operation, String value, Object... args) {
+                return texts.onTextOperation(operation, value, args);
+            }
+            @Override public void onException(Throwable failure) { nativeErrors.add(failure); }
+        };
+        Map<String,Object> first = null;
+        try {
+            for (String hidden : List.of("UNSEEN_FORMAT_ARGUMENT_A", "UNSEEN_FORMAT_ARGUMENT_B")) {
+                String gui = Messages.withLanguage(language, () -> Messages.get(key, new Object[]{hidden}));
+                assertEquals(localized, gui, "Native formatter returns the unchanged failed template");
+                Map<String,Object> token = texts.capture(null, gui, false);
+                Map<String,Object> projected = texts.render(JsonCodec.decode(JsonCodec.encode(token)));
+                assertEquals("partial", projected.get("translation_status"));
+                assertEquals("original_format_failed", projected.get("diagnostic"));
+                assertNull(projected.get("source"));
+                assertFalse(JsonCodec.encode(token).contains(hidden));
+                assertFalse(JsonCodec.encode(projected).contains(hidden));
+                if (first == null) first = projected; else assertEquals(first, projected);
+            }
+        } finally { Game.observer = previous; }
+        assertEquals(2, nativeErrors.size());
+        for (Throwable failure : nativeErrors) assertInstanceOf(java.util.UnknownFormatConversionException.class, failure.getCause());
+        Map<String,Object> item = issue(language, domain, key, "native_format_failure");
+        item.put("gui_template_sha256", sha256(localized)); item.put("error_type", sampledFailure.getClass().getSimpleName());
+        item.put("public_partial", first); item.put("dual_world_hidden_arguments_identical", true);
+        item.put("counts_as_translation_success", false); reviewed.add(item); return true;
+    }
+
+    private static String sha256(String value) throws Exception {
+        byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+        StringBuilder hex = new StringBuilder();
+        for (byte b : digest) hex.append(String.format(Locale.ROOT, "%02x", b & 255));
+        return hex.toString();
     }
 
     private enum Kind { TEXT, INTEGER, FLOAT, CHARACTER, DATE, BOOLEAN }

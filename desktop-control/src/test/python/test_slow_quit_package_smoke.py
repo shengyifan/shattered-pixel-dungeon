@@ -9,7 +9,7 @@ RID = "t3.1"
 
 
 def receipt(status):
-    return {"v": 8, "id": "t3.2", "s": "s1", "st": "completed",
+    return {"v": 9, "id": "t3.2", "s": "s1", "st": "completed",
             "data": {"id": RID, "op": "quit", "st": status, "save": [{"sid": "p9"}]}}
 
 
@@ -22,7 +22,7 @@ def pending(reason="action_pending"):
     result = {"controller": "settle", "rid": RID, "s": "s1", "st": "pending",
               "pending_reason": reason, "stage": "receipt", "outcome": receipt("EXECUTING")}
     if reason == "response_pending":
-        result["pending_request"] = {"v": 8, "id": "t3.3", "op": "req", "s": "s1", "rid": RID}
+        result["pending_request"] = {"v": 9, "id": "t3.3", "op": "req", "s": "s1", "rid": RID}
     return result
 
 
@@ -63,7 +63,7 @@ class SlowQuitPackageAssertionsTest(unittest.TestCase):
     def test_historical_initial_timeout_evidence_remains_allowed(self):
         result = pending("response_pending")
         result["transport_error"] = {"controller": "error", "err": "RESPONSE_TIMEOUT",
-                                     "request": {"v": 8, "id": RID, "op": "quit", "s": "s1"}}
+                                     "request": {"v": 9, "id": RID, "op": "quit", "s": "s1"}}
         before = copy.deepcopy(result)
         assert_pending_quit(result, RID)
         self.assertEqual(before, result)

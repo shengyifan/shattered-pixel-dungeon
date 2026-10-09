@@ -32,7 +32,7 @@ public class WndInfoTrap extends WndTitledMessage {
 
 		super(TerrainFeaturesTilemap.tile( trap.pos, Dungeon.level.map[trap.pos]),
 				Messages.titleCase(trap.name()),
-				Messages.concat((!trap.active ? Messages.concat(Messages.get(WndInfoTrap.class, "inactive"), Messages.literal("\n\n")) : ""), trap.desc()));
+				trap.desc());
 
 	}
 

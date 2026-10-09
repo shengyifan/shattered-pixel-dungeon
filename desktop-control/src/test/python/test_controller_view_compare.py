@@ -7,7 +7,7 @@ from controller_package_smoke import lossless_views_check, normalized_public_fra
 
 
 def frame():
-    return {"v": 8, "id": "t1.7", "s": "s1", "rev": "r1", "st": "completed", "data": {
+    return {"v": 9, "id": "t1.7", "s": "s1", "rev": "r1", "st": "completed", "data": {
         "hero": {"talents": [{"name": "Unspent", "points": 0, "desc": "Full description"}],
                  "turn_progress": {"sweep": 0.25}, "buffs": [
                      {"name": "Haste", "shown": {"counter": "0"}}]},
@@ -15,7 +15,7 @@ def frame():
                  "shown": {"status": "1", "flags": ["equipped"]}}],
         "entities": [{"kind": "character", "cell": 6, "name": "Rat",
                       "health_estimate": {"samples": [{"total": 16, "filled": 3,
-                                                        "with_shield": 4, "basis": "displayed"}]}}],
+                                                        "with_shield": 4, "incoming_dot": 0, "basis": "displayed"}]}}],
         "acts": [{"op": "wait"}], "ui": {"nodes": [{"id": "c1", "text": "1",
             "subject": {"kind": "item", "loc": "bag.0"},
             "icon": {"symbol": "potion"}, "future": [None, False, 0]}],

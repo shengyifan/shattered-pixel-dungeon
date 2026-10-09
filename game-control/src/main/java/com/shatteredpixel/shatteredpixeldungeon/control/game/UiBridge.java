@@ -164,9 +164,6 @@ public final class UiBridge {
             display.putAll(semanticStatus(((RenderedStatus)owner).renderedStatus()));
             intent.putAll(semanticStatus(((RenderedStatus)owner).intentStatus()));
         }
-        if(owner instanceof HealthBar&&!(owner instanceof GameplayStatus)){
-            Map<String,Object> bars=barFields((HealthBar)owner);display.putAll(bars);intent.putAll(bars);
-        }
         Map<String,Object> frozenText=freezeEvidence(PublicEnglishProjection.freeze(textFields));
         Map<String,Object> textIntent=frozenText;
         if(owner instanceof RenderedTextBlock&&((RenderedTextBlock)owner).hasAnimatedColor()){
@@ -255,12 +252,6 @@ public final class UiBridge {
         }
         if(value instanceof List){List<Object> copy=new ArrayList<>();for(Object child:(List<?>)value)copy.add(freezeEvidence(child));return (T)Collections.unmodifiableList(copy);}
         throw new IllegalArgumentException("Drawn UI evidence must contain immutable JSON values only");
-    }
-
-    private static Map<String,Object> barFields(HealthBar bar){
-        int[] pixels=bar.renderedPixelWidths();
-        return pixels.length==3&&pixels[0]>0?map("health_estimate",map("samples",Collections.singletonList(
-                map("total",pixels[0],"filled",pixels[1],"with_shield",pixels[2],"basis","displayed")))):Collections.emptyMap();
     }
 
     private long drawingIdentity(Object owner){
@@ -470,11 +461,16 @@ public final class UiBridge {
             List<?> entities=(List<?>)observation.get("visible_entities");
             for(int index=0;index<entities.size();index++){
                 if(!(entities.get(index) instanceof Map))continue;Map<?,?> entity=(Map<?,?>)entities.get(index);
-                if(!"character".equals(entity.get("kind"))||!(entity.get("cell") instanceof Number))continue;
+                boolean character="character".equals(entity.get("kind"));
+                boolean publicObject="object".equals(entity.get("kind"))&&"character".equals(entity.get("projectile_collision"));
+                if((!character&&!publicObject)||!(entity.get("cell") instanceof Number))continue;
                 int cell=((Number)entity.get("cell")).intValue();Mob found=null;
                 for(Mob mob:Dungeon.level.mobs)if(mob.pos==cell){if(found!=null){found=null;break;}found=mob;}
                 if(found==null)continue;
-                result.put(found,map("kind","entity","index",index));addBuffSubjects(result,found,entity.get("buffs"),index);
+                if(publicObject&&(!Char.hasProp(found,Char.Property.OBJECT)
+                        ||found instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic&&found.alignment==Char.Alignment.NEUTRAL))continue;
+                result.put(found,map("kind","entity","index",index));
+                if(character)addBuffSubjects(result,found,entity.get("buffs"),index);
             }
         }
         return result;

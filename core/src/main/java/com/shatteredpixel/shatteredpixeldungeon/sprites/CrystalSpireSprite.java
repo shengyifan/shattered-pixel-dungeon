@@ -27,24 +27,17 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.RaisedTerrainTilemap;
 import com.watabou.noosa.TextureFilm;
 
 public abstract class CrystalSpireSprite extends MobSprite {
 	private com.watabou.gltextures.SmartTexture spireAppearanceTexture;
 
-	{
-		perspectiveRaise = 7 / 16f; //7 pixels
-
-		shadowWidth     = 1f;
-		shadowHeight    = 1f;
-		shadowOffset    = 1f;
-	}
-
 	public CrystalSpireSprite(){
 		texture( Assets.Sprites.CRYSTAL_SPIRE );
 		spireAppearanceTexture=texture;
 
-		TextureFilm frames = new TextureFilm( texture, 24, 41 );
+		TextureFilm frames = new TextureFilm( texture, 29, 40 );
 
 		int c = texOffset();
 
@@ -67,7 +60,7 @@ public abstract class CrystalSpireSprite extends MobSprite {
 			hpPercent = ch.HP/(float)ch.HT;
 		}
 
-		TextureFilm frames = new TextureFilm( texture, 24, 41 );
+		TextureFilm frames = new TextureFilm( texture, 29, 40 );
 
 		if (hpPercent > 0.9f){
 			idle.frames( frames, 0+texOffset() );
@@ -101,13 +94,13 @@ public abstract class CrystalSpireSprite extends MobSprite {
 	protected com.watabou.noosa.VisualCue renderedSpireCue(int cell) {
 		if(cell<0||!exists||!visible||!Float.isFinite(alpha())||alpha()<=0)return null;
 		int displayed=-1;
-		if(frame!=null&&texture!=null&&texture==spireAppearanceTexture&&texture.width>=24&&texture.height>=41) {
+		if(frame!=null&&texture!=null&&texture==spireAppearanceTexture&&texture.width>=29&&texture.height>=40) {
 			float left=frame.left*texture.width,top=frame.top*texture.height;
 			float right=frame.right*texture.width,bottom=frame.bottom*texture.height;
-			int columns=texture.width/24,rows=texture.height/41;
-			int column=Math.round(left/24f),row=Math.round(top/41f);
-			if(column>=0&&column<columns&&row>=0&&row<rows&&left==column*24&&top==row*41
-					&&right==(column+1)*24&&bottom==(row+1)*41)displayed=row*columns+column-texOffset();
+			int columns=texture.width/29,rows=texture.height/40;
+			int column=Math.round(left/29f),row=Math.round(top/40f);
+			if(column>=0&&column<columns&&row>=0&&row<rows&&left==column*29&&top==row*40
+					&&right==(column+1)*29&&bottom==(row+1)*40)displayed=row*columns+column-texOffset();
 		}
 		java.util.Map<String,Object> state;
 		if (displayed >= 0 && displayed <= 4) state = java.util.Collections.singletonMap("stage",
@@ -125,9 +118,13 @@ public abstract class CrystalSpireSprite extends MobSprite {
 			if (visible){
 				DungeonWallsTilemap.skipCells.add(ch.pos - 2*Dungeon.level.width());
 				DungeonWallsTilemap.skipCells.add(ch.pos - Dungeon.level.width());
+				RaisedTerrainTilemap.skipCells.add(ch.pos - 2*Dungeon.level.width());
+				RaisedTerrainTilemap.skipCells.add(ch.pos - Dungeon.level.width());
 			} else {
 				DungeonWallsTilemap.skipCells.remove(ch.pos - 2*Dungeon.level.width());
 				DungeonWallsTilemap.skipCells.remove(ch.pos - Dungeon.level.width());
+				RaisedTerrainTilemap.skipCells.remove(ch.pos - 2*Dungeon.level.width());
+				RaisedTerrainTilemap.skipCells.remove(ch.pos - Dungeon.level.width());
 			}
 			GameScene.updateMap(ch.pos-2*Dungeon.level.width());
 			GameScene.updateMap(ch.pos-Dungeon.level.width());
@@ -168,7 +165,7 @@ public abstract class CrystalSpireSprite extends MobSprite {
 	public static class Green extends CrystalSpireSprite {
 		@Override
 		protected int texOffset() {
-			return 5;
+			return 8;
 		}
 		@Override
 		public int blood() {
@@ -179,7 +176,7 @@ public abstract class CrystalSpireSprite extends MobSprite {
 	public static class Red extends CrystalSpireSprite {
 		@Override
 		protected int texOffset() {
-			return 10;
+			return 16;
 		}
 		@Override
 		public int blood() {

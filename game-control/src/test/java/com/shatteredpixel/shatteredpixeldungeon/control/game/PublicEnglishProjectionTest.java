@@ -11,12 +11,12 @@ class PublicEnglishProjectionTest {
         return TextProvenance.INSTANCE.onTextResource(text,key,"zh",args);
     }
     @Test void sameChineseTextUsesItsActualResourceIdentity() {
-        String blocking=resource("防御","windows.wndupgrade.blocking");
-        String defense=resource("防御","items.stones.stoneofaugmentation$wndaugment.defense");
-        Map<String,Object> projected=PublicEnglishProjection.copy(map("text",blocking,"label",defense));
-        assertEquals("Blocking",projected.get("text"));
-        assertEquals("Defense",projected.get("label"));
-        assertTrue(projected.get("text_sources").toString().contains("windows.wndupgrade.blocking"));
+        String close=resource("关闭","windows.wndsupportprompt.close");
+        String off=resource("关闭","windows.wndsettings$displaytab.off");
+        Map<String,Object> projected=PublicEnglishProjection.copy(map("text",close,"label",off));
+        assertEquals("Close",projected.get("text"));
+        assertEquals("Off",projected.get("label"));
+        assertTrue(projected.get("text_sources").toString().contains("windows.wndsupportprompt.close"));
         assertFalse(projected.toString().contains("template="));
         assertEquals("complete",PublicEnglishProjection.presentation(projected).get("status"));
     }
@@ -72,8 +72,8 @@ class PublicEnglishProjectionTest {
     }
     @Test void actionLabelsAndListOptionsCarryParallelSources() {
         Map<String,Object> result=PublicEnglishProjection.copy(map("options",Arrays.asList(
-                resource("防御","windows.wndupgrade.blocking"),resource("防御","items.stones.stoneofaugmentation$wndaugment.defense"))));
-        assertEquals(Arrays.asList("Blocking","Defense"),result.get("options"));
+                resource("关闭","windows.wndsupportprompt.close"),resource("关闭","windows.wndsettings$displaytab.off"))));
+        assertEquals(Arrays.asList("Close","Off"),result.get("options"));
         assertEquals(result,PublicEnglishProjection.copy(result));
         assertTrue(result.get("text_sources").toString().contains("options"));
     }

@@ -18,7 +18,7 @@ from public_snapshot import decode_client_response  # noqa: E402
 
 
 def observation():
-    return {"v": 8, "id": "t7.3", "s": "s2", "rev": "r11", "st": "completed",
+    return {"v": 9, "id": "t7.3", "s": "s2", "rev": "r11", "st": "completed",
             "data": {"phase": "player_ready", "hero": {"cell": 15, "depth": 4},
                      "map": {"w": 7, "h": 5,
                              "types": [{"terrain": 1, "name": "Floor", "desc": "Known floor"},
@@ -34,7 +34,7 @@ def observation():
 
 
 def receipt():
-    return {"v": 8, "id": "t7.2", "s": "s2", "st": "completed",
+    return {"v": 9, "id": "t7.2", "s": "s2", "st": "completed",
             "data": {"id": "t7.1", "st": "COMPLETED", "save": [{"sid": "p4"}]}}
 
 
@@ -232,7 +232,7 @@ class BallisticaPortTest(unittest.TestCase):
         self.assertIsNone(result["predicted_reaches_target_under_assumptions"])
 
     def test_hard_wall_collides_before_wall_and_closed_door_on_itself(self):
-        for symbol, expected, reason in (("1", 16, "hard_terrain_without_observed_character_stops_at_previous"),
+        for symbol, expected, reason in (("1", 16, "hard_terrain_without_observed_collision_occupant_stops_at_previous"),
                                          ("2", 17, "solid_cell")):
             with self.subTest(symbol=symbol):
                 source = observation()
@@ -268,6 +268,113 @@ class BallisticaPortTest(unittest.TestCase):
     def test_native_half_error_tie_and_outer_boundary_are_preserved(self):
         line, _ = ray.create_line(15, 24, 7, 5)
         self.assertEqual([15, 23, 24], [step["cell"] for step in line])
+
+    def test_public_native_object_collides_but_cannot_supply_an_attack_source(self):
+        source = observation()
+        source["data"]["entities"].append({"kind": "object", "cell": 17,
+            "name": "token door", "projectile_collision": "character"})
+        result = self.predict(source)
+        self.assertEqual(17, result["conditional_collision_prediction"]["cell"])
+        row = result["evaluated_path_including_blocking_probe"][-1]
+        self.assertTrue(row["public_collision_occupant_present"])
+        self.assertFalse(row["public_character_present"])
+        frame = decode_client_response(source).require_current_frame()
+        with self.assertRaisesRegex(ValueError, "explicitly observed character"):
+            ray.predict(frame.frame, 19, "projectile", self.model, requested_source=17)
+
+    def test_unclassified_objects_and_movement_shadows_do_not_invent_collision(self):
+        for flag in (None, "absent"):
+            source = observation()
+            object_ = {"kind": "object", "cell": 17, "name": "visible object"}
+            if flag is None:
+                object_["projectile_collision"] = None
+            source["data"]["entities"].append(object_)
+            source["data"]["cues"]["cues"].append({"kind": "movement_shadow", "cell": 18,
+                "dir": "E", "appearance": {"symbol": "rat_portrait"}})
+            with self.subTest(flag=flag):
+                result = self.predict(source)
+                self.assertEqual(19, result["conditional_collision_prediction"]["cell"])
+                rows = result["evaluated_path_including_blocking_probe"]
+                self.assertFalse(next(r for r in rows if r["cell"] == 17)["public_collision_occupant_present"])
+                self.assertFalse(next(r for r in rows if r["cell"] == 18)["public_collision_occupant_present"])
+
+    def test_unknown_shadow_cell_keeps_map_unknown_and_stops_ray(self):
+        source = observation()
+        source["data"]["map"]["rows"] = [[2, 1, "0", "v"], [2, 3, "000", "v"]]
+        source["data"]["cues"]["cues"] = [{"kind": "movement_shadow", "cell": 16,
+            "appearance": {"symbol": "rat_portrait"}}]
+        result = self.predict(source)
+        self.assertEqual(16, result["first_unknown_stops_prediction"]["cell"])
+        self.assertIsNone(result["conditional_collision_prediction"])
+        code, output, _ = PublicHelperTest().run_helper("cells.py", source, "16")
+        self.assertEqual(0, code, output)
+        cell = json.loads(output)["cells"][0]
+        self.assertFalse(cell["known"])
+        self.assertIsNone(cell["terrain"])
+        self.assertEqual([], cell["entities"])
+        self.assertEqual("movement_shadow", cell["cues"][0]["kind"])
+
+    def test_public_water_appearance_stops_all_profiles_without_private_lookup(self):
+        source = observation()
+        source["data"]["map"]["types"].append({"terrain": 29, "name": "Water"})
+        source["data"]["map"]["rows"][2] = [2, 0, "0003000", "v"]
+        source["data"]["map"]["env"] = {}
+        # Identical public WATER may mean ordinary water or solid custom water
+        # decoration. Neither interpretation is supplied or guessed here.
+        for mode in ("projectile", "magicbolt", "solidbeam"):
+            with self.subTest(mode=mode), \
+                    patch.object(Path, "read_bytes", side_effect=AssertionError("No private file lookup")), \
+                    patch.object(Path, "read_text", side_effect=AssertionError("No private file lookup")):
+                result = self.predict(source, mode=mode)
+                self.assertEqual({"cell": 17, "index": 2,
+                                  "reason": "public_appearance_collision_ambiguous"},
+                                 result["first_unknown_stops_prediction"])
+                self.assertIsNone(result["conditional_collision_prediction"])
+                self.assertIsNone(result["conditional_travel_path_to_collision"])
+                self.assertIsNone(result["predicted_reaches_target_under_assumptions"])
+                row = result["evaluated_path_including_blocking_probe"][-1]
+                self.assertIsNone(row["flags"])
+                self.assertEqual(29, row["known_cell"]["terrain"])
+                self.assertNotIn("native_terrain", row)
+
+    def test_public_water_actor_or_object_proves_stop_chars_but_not_solidbeam(self):
+        for occupant in ({"kind": "character", "cell": 17, "name": "rat"},
+                         {"kind": "object", "cell": 17, "name": "token door",
+                          "projectile_collision": "character"}):
+            source = observation()
+            source["data"]["map"]["types"].append({"terrain": 29, "name": "Water"})
+            source["data"]["map"]["rows"][2] = [2, 0, "0003000", "v"]
+            source["data"]["entities"].append(occupant)
+            for mode in ("projectile", "magicbolt"):
+                with self.subTest(occupant=occupant["kind"], mode=mode):
+                    result = self.predict(source, mode=mode)
+                    self.assertIsNone(result["first_unknown_stops_prediction"])
+                    self.assertEqual(17, result["conditional_collision_prediction"]["cell"])
+                    self.assertEqual("known_collision_occupant_independent_of_unknown_flags",
+                                     result["conditional_collision_prediction"]["reason"])
+                    self.assertFalse(result["predicted_reaches_target_under_assumptions"])
+            result = self.predict(source, mode="solidbeam")
+            self.assertEqual("public_appearance_collision_ambiguous",
+                             result["first_unknown_stops_prediction"]["reason"])
+            self.assertIsNone(result["conditional_collision_prediction"])
+            if occupant["kind"] == "object":
+                decoded = decode_client_response(source).require_current_frame()
+                with self.assertRaisesRegex(ValueError, "explicitly observed character"):
+                    ray.predict(decoded.frame, 19, "projectile", self.model, requested_source=17)
+
+    def test_water_ambiguity_does_not_promote_disguises_or_shadows_to_occupants(self):
+        source = observation()
+        source["data"]["map"]["types"].append({"terrain": 29, "name": "Water"})
+        source["data"]["map"]["rows"][2] = [2, 0, "0003000", "v"]
+        source["data"]["cues"]["cues"].append({"kind": "movement_shadow", "cell": 17,
+            "appearance": {"symbol": "rat_portrait"}})
+        source["data"]["entities"].append({"kind": "object", "cell": 17,
+            "name": "Ebony chest", "projectile_collision": None})
+        result = self.predict(source)
+        self.assertIsNone(result["conditional_collision_prediction"])
+        self.assertEqual("public_appearance_collision_ambiguous",
+                         result["first_unknown_stops_prediction"]["reason"])
+        self.assertFalse(result["evaluated_path_including_blocking_probe"][-1]["public_collision_occupant_present"])
 
     def test_sha_mismatch_requires_source_review(self):
         with patch.object(ray, "REVIEWED_BALLISTICA", "0" * 64):

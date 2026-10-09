@@ -10,7 +10,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
-import protocol8
+import protocol9
 
 
 def receive(process, timeout=40):
@@ -26,7 +26,7 @@ def receive(process, timeout=40):
             if not chunk:
                 raise AssertionError(("unexpected EOF", process.poll(), bytes(data)))
             data.extend(chunk)
-    return protocol8.response(json.loads(data))
+    return protocol9.response(json.loads(data))
 
 
 def emergency_snapshot(profile):
@@ -44,7 +44,7 @@ def main():
     parser.add_argument("--bundle", type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures/packaging8.0" / ("raw-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures/packaging9.0" / ("raw-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     bundle = output / "中文 应用目录" / args.bundle.name
     shutil.copytree(args.bundle, bundle, symlinks=True)
@@ -76,14 +76,14 @@ def main():
             process.stdin.write(frame)
             process.stdin.flush()
             return receive(process)
-        first = exchange(b'{"v":8,"id":"package-info","op":"info"}\r\n')
+        first = exchange(b'{"v":9,"id":"package-info","op":"info"}\r\n')
         assert first["ok"], first
         scope = first["result"]["scope_id"]
-        old = exchange(b'{"v":7,"id":"package-old-protocol","op":"info"}\n')
-        assert old["protocol_version"] == 8 and old["error"] == {"code": "UNSUPPORTED_PROTOCOL"}, old
-        invalid = exchange(b'{"v":8,"id":"invalid-encoding","op":"state","x":"\xff"}\n')
+        old = exchange(b'{"v":8,"id":"package-old-protocol","op":"info"}\n')
+        assert old["protocol_version"] == 9 and old["error"] == {"code": "UNSUPPORTED_PROTOCOL"}, old
+        invalid = exchange(b'{"v":9,"id":"invalid-encoding","op":"state","x":"\xff"}\n')
         assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = protocol8.wire_bytes(protocol8.request("state.get", request_id="中文-query", scope=scope))
+        query = protocol9.wire_bytes(protocol9.request("state.get", request_id="中文-query", scope=scope))
         observed = exchange(query)
         assert observed["ok"], observed
         duplicate = exchange(query)
@@ -103,11 +103,11 @@ def main():
             process.kill()
             process.wait()
         stderr.close()
-    final_frame=protocol8.wire_bytes(protocol8.request("state.get", request_id="package-eof-frame", scope=scope))[:-1]
+    final_frame=protocol9.wire_bytes(protocol9.request("state.get", request_id="package-eof-frame", scope=scope))[:-1]
     restarted=subprocess.run(command,input=final_frame,capture_output=True,env=env,timeout=40)
     assert restarted.returncode==0,(restarted.returncode,restarted.stderr)
     delivered=restarted.stdout.splitlines()
-    assert len(delivered)==1 and protocol8.response(json.loads(delivered[0]))["ok"],delivered
+    assert len(delivered)==1 and protocol9.response(json.loads(delivered[0]))["ok"],delivered
     frames.append(final_frame)
     with sqlite3.connect(profile / "audit/public.sqlite3") as db:
         wire = db.execute("SELECT raw_bytes,raw_format FROM exchanges ORDER BY sequence").fetchall()
@@ -126,7 +126,7 @@ def main():
         assert recovered == 0, "A rejected lock contender must not create an emergency report to recover"
     result = {"result": "passed", "bundle": str(bundle), "profile": str(profile), "architecture": checks,
               "runtime": runtime, "frames": len(frames), "checks": ["unicode_bundle_and_profile", "bundled_jvm",
-              "native_sqlite", "exact_wire_bytes", "protocol7_rejected_by_protocol8_runtime", "invalid_utf8_recovery", "duplicate_query", "profile_lock",
+              "native_sqlite", "exact_wire_bytes", "protocol8_rejected_by_protocol9_runtime", "invalid_utf8_recovery", "duplicate_query", "profile_lock",
               "EOF_without_push", "final_frame_without_newline", "lock_conflict_preserves_emergency_tree", "codesign", "plist", "database_integrity", "profile_jvm_crash_path"],
               "not_tested": ["forced_JVM_native_crash", "real_Intel_hardware", "Gatekeeper_notarization"]}
     (output / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))

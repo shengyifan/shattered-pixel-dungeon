@@ -4,6 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ControlRequest;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.JsonCodec;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values;
 import com.shatteredpixel.shatteredpixeldungeon.control.protocol.Identifiers;
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ReleaseIdentity;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -33,7 +34,7 @@ import java.util.UUID;
  * The caller must hold the profile's exclusive process lock for this store's entire lifetime.
  */
 public final class AuditStore implements AutoCloseable {
-    public static final int SCHEMA_VERSION = 11;
+    public static final int SCHEMA_VERSION = ReleaseIdentity.AUDIT_SCHEMA_VERSION;
     private final Path publicPath;
     private final Path internalPath;
     private Connection writer;
@@ -104,7 +105,8 @@ public final class AuditStore implements AutoCloseable {
                 throw new AuditException("AUDIT_PAIR_MISMATCH", "The audit database identities differ", null);
         } catch (AuditException error) { throw error; }
         catch (Exception error) {
-            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 8 requires an intact schema-11 audit pair; use a new profile", error);
+            throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI " + ReleaseIdentity.PROTOCOL_VERSION
+                    + " requires an intact schema-" + SCHEMA_VERSION + " audit pair; use a new profile", error);
         }
     }
 
@@ -112,14 +114,21 @@ public final class AuditStore implements AutoCloseable {
         // Immutable read-only SQLite never opens recovery journals or creates WAL sidecars.
         try (Connection reader = DriverManager.getConnection("jdbc:sqlite:" + file.toUri().toASCIIString() + "?mode=ro&immutable=1");
              Statement statement = reader.createStatement();
-             ResultSet rows = statement.executeQuery("SELECT key,value FROM metadata WHERE key IN ('schema_version','profile_id')")) {
-            String version = null, profile = null;
+             ResultSet rows = statement.executeQuery("SELECT key,value FROM metadata WHERE key IN ('schema_version','profile_id','game_version','game_version_code')")) {
+            String version = null, profile = null, gameVersion = null, gameVersionCode = null;
             while (rows.next()) {
                 if ("schema_version".equals(rows.getString(1))) version = rows.getString(2);
                 if ("profile_id".equals(rows.getString(1))) profile = rows.getString(2);
+                if ("game_version".equals(rows.getString(1))) gameVersion = rows.getString(2);
+                if ("game_version_code".equals(rows.getString(1))) gameVersionCode = rows.getString(2);
             }
             if (!Integer.toString(SCHEMA_VERSION).equals(version) || profile == null || profile.isEmpty())
-                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI 8 requires schema 11 and never migrates older audit databases; use a new profile", null);
+                throw new AuditException("AUDIT_SCHEMA_UNSUPPORTED", "CLI " + ReleaseIdentity.PROTOCOL_VERSION
+                        + " requires schema " + SCHEMA_VERSION + " and never migrates older audit databases; use a new profile", null);
+            if (!ReleaseIdentity.GAME_VERSION.equals(gameVersion)
+                    || !Integer.toString(ReleaseIdentity.GAME_VERSION_CODE).equals(gameVersionCode))
+                throw new AuditException("CLI_PROFILE_UNSUPPORTED", "The audit pair must belong to game "
+                        + ReleaseIdentity.GAME_VERSION + " (" + ReleaseIdentity.GAME_VERSION_CODE + "); use a new profile", null);
             // A version marker cannot authorize silently rebuilding missing audit tables.
             try (Statement shape = reader.createStatement()) {
                 for (String sql : new String[]{
@@ -132,6 +141,12 @@ public final class AuditStore implements AutoCloseable {
                         "SELECT kind,canonical,handle FROM public_handles LIMIT 0",
                         "SELECT kind,next_value FROM handle_counters LIMIT 0"}) {
                     try (ResultSet ignored = shape.executeQuery(sql)) { }
+                }
+                for (String trigger : new String[]{"immutable_game_identity_update", "immutable_game_identity_delete", "immutable_game_identity_insert"}) {
+                    try (ResultSet definition = shape.executeQuery("SELECT sql FROM sqlite_master WHERE type='trigger' AND name='" + trigger + "'")) {
+                        if (!definition.next() || definition.getString(1) == null)
+                            throw new SQLException("Missing profile game identity protection");
+                    }
                 }
             }
             return profile;
@@ -193,6 +208,8 @@ public final class AuditStore implements AutoCloseable {
                 for (String schema : schemas()) {
                     putMetadata(schema, "profile_id", publicProfile);
                     putMetadata(schema, "schema_version", Integer.toString(SCHEMA_VERSION));
+                    putMetadata(schema, "game_version", ReleaseIdentity.GAME_VERSION);
+                    putMetadata(schema, "game_version_code", Integer.toString(ReleaseIdentity.GAME_VERSION_CODE));
                 }
             } else if (publicProfile == null || !publicProfile.equals(privateProfile)) {
                 throw new SQLException("The public and internal audit database identities differ");
@@ -200,6 +217,23 @@ public final class AuditStore implements AutoCloseable {
             String version = metadata("main", "schema_version");
             if (!java.util.Objects.equals(version, metadata("internal", "schema_version"))) throw new SQLException("Paired audit schema mismatch");
             if (!Integer.toString(SCHEMA_VERSION).equals(version)) throw new SQLException("Unsupported audit schema");
+            for (String schema : schemas()) {
+                if (!ReleaseIdentity.GAME_VERSION.equals(metadata(schema, "game_version"))
+                        || !Integer.toString(ReleaseIdentity.GAME_VERSION_CODE).equals(metadata(schema, "game_version_code")))
+                    throw new SQLException("Unsupported audit game identity");
+                // Protect the binding independently in both files, including INSERT OR REPLACE.
+                try (Statement s = writer.createStatement()) {
+                    s.execute("CREATE TRIGGER IF NOT EXISTS " + schema + ".immutable_game_identity_update BEFORE UPDATE ON metadata "
+                            + "WHEN OLD.key IN ('game_version','game_version_code') OR NEW.key IN ('game_version','game_version_code') "
+                            + "BEGIN SELECT RAISE(ABORT,'Profile game identity is immutable'); END");
+                    s.execute("CREATE TRIGGER IF NOT EXISTS " + schema + ".immutable_game_identity_delete BEFORE DELETE ON metadata "
+                            + "WHEN OLD.key IN ('game_version','game_version_code') "
+                            + "BEGIN SELECT RAISE(ABORT,'Profile game identity is immutable'); END");
+                    s.execute("CREATE TRIGGER IF NOT EXISTS " + schema + ".immutable_game_identity_insert BEFORE INSERT ON metadata "
+                            + "WHEN NEW.key IN ('game_version','game_version_code') AND EXISTS(SELECT 1 FROM metadata WHERE key=NEW.key) "
+                            + "BEGIN SELECT RAISE(ABORT,'Profile game identity is immutable'); END");
+                }
+            }
             initializeLifecycle();
             menuScope = "menu:" + publicProfile;
             insertScope(menuScope, "menu", null);
@@ -226,7 +260,7 @@ public final class AuditStore implements AutoCloseable {
     public synchronized String beginSession(String bootId,String buildId,String cliVersion,int protocolVersion){
         if(activeSession!=null)throw new IllegalStateException("A session is already active");
         if(!Identifiers.valid(buildId,256)||!Identifiers.valid(cliVersion,64)||protocolVersion!=ControlRequest.PROTOCOL_VERSION)
-            throw new IllegalArgumentException("Session build, CLI version and protocol 8 metadata are required");
+            throw new IllegalArgumentException("Session build, CLI version and protocol " + ControlRequest.PROTOCOL_VERSION + " metadata are required");
         String id=UUID.randomUUID().toString(),started=now();
         transaction(()->{
             for(String schema:schemas()){

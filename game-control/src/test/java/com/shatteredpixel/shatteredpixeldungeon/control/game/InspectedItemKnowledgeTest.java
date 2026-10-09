@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** No native window, GL context, game launch or user save is used by these tests. */
 class InspectedItemKnowledgeTest {
-    static final String CHINESE="决斗家用矛尖_刺退_在射程内但不与决斗家相邻的敌人，造成_11~24点伤害_，将敌人击退且必定命中。";
     static final String ACTUAL="The Duelist can use the tip of a spear to _spike_ an enemy that is in range but not adjacent. This deals _11-24 damage_, knocks the enemy back, and is guaranteed to hit.";
     static final String TYPICAL=ACTUAL.replace("This deals", "This typically deals");
 
@@ -48,10 +47,18 @@ class InspectedItemKnowledgeTest {
     @Test void originalResourceIdentitySelectsKnownVersusTypicalDamageWithoutWindowHeuristics() {
         String actual=ResourceTextFixture.source("items.weapon.melee.spear.ability_desc",11,24);
         String typical=ResourceTextFixture.source("items.weapon.melee.spear.typical_ability_desc",11,24);
-        assertEquals(actual,typical,"The Chinese resource strings intentionally collide");
+        assertNotEquals(actual,typical,"The current Chinese resources distinguish actual and typical damage");
         assertEquals(ACTUAL,ResourceTextFixture.english(actual));
         assertEquals(TYPICAL,ResourceTextFixture.english(typical));
         assertEquals("partial",ResourceTextFixture.status(new String(actual)));
+        // Keep an explicit collision regression even after the native translations diverged.
+        String sameActual=com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance.INSTANCE.onTextResource(
+                "Same displayed fixture text","items.weapon.melee.spear.ability_desc","zh",new Object[]{11,24});
+        String sameTypical=com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance.INSTANCE.onTextResource(
+                "Same displayed fixture text","items.weapon.melee.spear.typical_ability_desc","zh",new Object[]{11,24});
+        assertEquals(sameActual,sameTypical);assertNotSame(sameActual,sameTypical);
+        assertEquals(ACTUAL,ResourceTextFixture.english(sameActual));
+        assertEquals(TYPICAL,ResourceTextFixture.english(sameTypical));
     }
 
     @Test void provenanceCannotBorrowHiddenStatsOrExpandAnUntrackedSuffix() {

@@ -10,7 +10,7 @@ import uuid
 from fixture_smoke import (FixtureClient, assert_gui_environment, close_choices,
                            fixture_java_prefix, freeze_fixture_runtime, reach_game)
 from low_frequency_smoke import act
-from protocol8 import pages
+from protocol9 import pages
 
 
 def visual(state):
@@ -198,7 +198,7 @@ def test_bomb(client):
     pan_wire = bytes(client.last_recv_bytes)
     pan_request = dict(client.last_wire_request)
     pan_frame = json.loads(pan_wire)
-    assert pan_frame["v"] == 8 and pan_frame["id"] == client.last_wire_response["id"]
+    assert pan_frame["v"] == 9 and pan_frame["id"] == client.last_wire_response["id"]
     assert pan_request["id"] == pan_frame["id"] and pan_request["op"] in {"pan", "state"}
     assert pan_request.get("view", "play") == "play" and pan_request.get("src") is not True
     assert pan_frame.get("s") == offscreen["scope_id"] and pan_frame.get("rev") == offscreen["state_version"]

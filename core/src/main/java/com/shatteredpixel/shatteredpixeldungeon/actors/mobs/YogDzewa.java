@@ -35,7 +35,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Sheep;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
-import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
@@ -278,17 +277,20 @@ public class YogDzewa extends Mob {
 				if (allAdjTargeted){
 					targetedCells.remove(targetedCells.size()-1);
 				}
+
+				//don't want to overly punish players with slow move or attack speed
+				float delay = GameMath.gate(TICK, (int)Math.ceil(Dungeon.hero.cooldown()), 3*TICK);
+
 				for (int i : targetedCells){
 					Ballistica b = new Ballistica(pos, i, Ballistica.WONT_STOP);
 					for (int p : b.path){
 						if (beamWarning == null || !beamWarning.isPending()) beamWarning = PendingWarning.begin(this);
-						sprite.parent.add(new TargetedCell(p, 0xFF0000, beamWarning));
+						GameScene.targetedCell(p, delay, beamWarning);
 						affectedCells.add(p);
 					}
 				}
 
-				//don't want to overly punish players with slow move or attack speed
-				spend(GameMath.gate(TICK, (int)Math.ceil(Dungeon.hero.cooldown()), 3*TICK));
+				spend( delay );
 				Dungeon.hero.interrupt();
 
 				abilityCooldown += Random.NormalFloat(MIN_ABILITY_CD, MAX_ABILITY_CD);

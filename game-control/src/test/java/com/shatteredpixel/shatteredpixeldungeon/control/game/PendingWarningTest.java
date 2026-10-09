@@ -18,6 +18,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.watabou.gltextures.SmartTexture;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.noosa.*;
+import com.watabou.utils.SparseArray;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -80,8 +81,8 @@ class PendingWarningTest {
             Owner owner = new Owner();
             PendingWarning first = PendingWarning.begin(owner), second = PendingWarning.begin(owner);
             f.marker(22, first); f.marker(22, first); f.marker(22, second);
-            assertEquals(List.of(new VisualCue("red_target", 22), new VisualCue("red_target", 22)), f.frame(),
-                    "Repeated images share one attack, independent attacks remain separate");
+            assertEquals(List.of(new VisualCue("red_target", 22)), f.frame(),
+                    "A native pooled cell never reveals the number of independent attack owners");
             second.commit();
             Actor.remove(owner);
             assertFalse(first.isPending()); assertTrue(second.isPending());
@@ -179,15 +180,19 @@ class PendingWarningTest {
     }
     static final class Fixture implements AutoCloseable {
         final Game previousGame = Game.instance; final RuntimeObserver previousObserver = Game.observer;
+        final String previousVersion = Game.version;
         final Camera previousCamera = Camera.main; final Level previousLevel = Dungeon.level;
         final Hero previousHero = Dungeon.hero; final String previousRun = Dungeon.runId;
         final int previousDepth = Dungeon.depth, previousBranch = Dungeon.branch, previousSlot = GamesInProgress.curSlot;
         final float previousElapsed = Game.elapsed; final Object previousScene, previousActor, previousActorThread, previousInput;
         final Grid level = new Grid(); final GameController controller;
+        final SparseArray<TargetedCell> previousTargets = TargetedCell.cells;
+        Group targetedCells;
         final Map<Object, SmartTexture> textures; final Map<Object, SmartTexture> previousTextures = new LinkedHashMap<>();
         GameScene scene; VisualCueCollector collector;
         @SuppressWarnings("unchecked") Fixture() throws Exception {
-            PendingWarning.clear();
+            Game.version = "4.0.2";
+            PendingWarning.clear(); TargetedCell.cells = new SparseArray<>();
             previousScene = get(null, GameScene.class, "scene"); previousActor = get(null, Actor.class, "current");
             previousActorThread = get(null, GameScene.class, "actorThread"); previousInput = Game.inputHandler;
             set(null, Actor.class, "current", null); set(null, GameScene.class, "actorThread", null); Game.inputHandler = null;
@@ -207,9 +212,20 @@ class PendingWarningTest {
             scene = new GameScene(); collector = new VisualCueCollector(scene);
             Game.instance = FloatingAppearanceTest.allocate(Game.class); set(Game.instance, Game.class, "scene", scene);
             set(null, GameScene.class, "scene", scene); set(scene, GameScene.class, "visualCueCollector", collector);
+            targetedCells = new Group(); scene.add(targetedCells); set(scene, GameScene.class, "targetedCells", targetedCells);
+            for (TargetedCell cell : TargetedCell.cells.valueList()) { cell.reset(cell.pos, cell.time); targetedCells.add(cell); }
         }
         TargetedCell marker(int cell, PendingWarning warning) {
-            TargetedCell marker = new TargetedCell(cell, 0xFF0000, warning); scene.add(marker); return marker;
+            return GameScene.targetedCell(cell, -1f, warning);
+        }
+        List<TargetedCell> markers() {
+            List<TargetedCell> result = new ArrayList<>();
+            for (Gizmo child : targetedCells.childrenSnapshot()) if (child instanceof TargetedCell) result.add((TargetedCell) child);
+            return result;
+        }
+        void fadeMarkers() {
+            Game.elapsed = 2.3f;
+            for (TargetedCell marker : markers()) { marker.time = Actor.now()-1; marker.update(); }
         }
         List<VisualCue> frame() throws Exception {
             collector.beginDraw(); collector.finishDraw();
@@ -221,7 +237,7 @@ class PendingWarningTest {
             return (GameController.State) capture.invoke(controller, false);
         }
         @Override public void close() throws Exception {
-            PendingWarning.clear(); Game.instance = previousGame; Game.observer = previousObserver; Camera.main = previousCamera;
+            PendingWarning.clear(); TargetedCell.cells = previousTargets; Game.version = previousVersion; Game.instance = previousGame; Game.observer = previousObserver; Camera.main = previousCamera;
             Dungeon.level = previousLevel; Dungeon.hero = previousHero; Dungeon.runId = previousRun;
             Dungeon.depth = previousDepth; Dungeon.branch = previousBranch; GamesInProgress.curSlot = previousSlot; Game.elapsed = previousElapsed;
             set(null, GameScene.class, "scene", previousScene); set(null, Actor.class, "current", previousActor);

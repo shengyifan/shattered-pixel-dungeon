@@ -61,6 +61,12 @@ public final class GameplayBurst {
         SPLASH.set(new Declaration(publicKind,cell,null,measuredCount));
         try{Splash.at(point,color,amount);}finally{restore(previous);}
     }
+    /** Keeps the native cell-centered Splash overload and its emitter/RNG behavior. */
+    public static void splash(int cell,int color,int amount,String publicKind,boolean measuredCount){
+        Declaration previous=SPLASH.get();
+        SPLASH.set(new Declaration(publicKind,cell,null,measuredCount));
+        try{Splash.at(cell,color,amount);}finally{restore(previous);}
+    }
     private static void restore(Declaration previous){if(previous==null)SPLASH.remove();else SPLASH.set(previous);}
     static SplashCapture beforeSplash(Emitter emitter){
         Declaration declaration=SPLASH.get();

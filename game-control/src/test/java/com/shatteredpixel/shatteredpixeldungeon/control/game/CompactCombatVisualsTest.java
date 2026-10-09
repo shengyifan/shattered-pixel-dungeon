@@ -12,7 +12,7 @@ public class CompactCombatVisualsTest {
         Map<String,Object> input=capture("c","m1");String original=JsonCodec.encode(input);
         for(boolean full:Arrays.asList(false,true))for(boolean src:Arrays.asList(false,true)) {
             Map<String,Object> wire=CompactProtocol.success("q","s1","completed",input,true,src,full);
-            assertEquals(8,wire.get("v"));Map<String,Object> packed=object(wire.get("data"));
+            assertEquals(9,wire.get("v"));Map<String,Object> packed=object(wire.get("data"));
             assertTrue(object(packed.get("ui")).containsKey("node_templates"));
             assertTrue(packed.containsKey("act_templates"));assertTrue(packed.containsKey("inv_templates"));
             Map<String,Object> data=object(object(CompactProtocol.expandStructures(wire)).get("data"));

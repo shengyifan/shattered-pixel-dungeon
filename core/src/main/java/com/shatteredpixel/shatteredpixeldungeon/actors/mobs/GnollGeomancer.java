@@ -36,7 +36,6 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
-import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.DarkGold;
@@ -54,6 +53,8 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Callback;
@@ -526,6 +527,19 @@ public class GnollGeomancer extends Mob {
 		Sample.INSTANCE.playDelayed(Assets.Sounds.ROCKS, 0.1f);
 		PixelScene.shake( 3, 0.7f );
 
+		GameScene.bossSlain();
+		Game.runOnRenderThread(new Callback() {
+			@Override
+			public void call() {
+				Music.INSTANCE.fadeOut(5f, new Callback() {
+					@Override
+					public void call() {
+						Music.INSTANCE.end();
+					}
+				});
+			}
+		});
+
 		for (int i = 0; i < Dungeon.level.length(); i++){
 			if (Dungeon.level.map[i] == Terrain.MINE_BOULDER && Dungeon.level.trueDistance(i, pos) <= 6){
 				Level.set(i, Terrain.EMPTY_DECO);
@@ -609,6 +623,8 @@ public class GnollGeomancer extends Mob {
 						throwingRockToPos = aim.collisionPos;
 						throwingWarnings = new PendingWarning[throwingRocksFromPos.length];
 
+						float delay = GameMath.gate(TICK, (int)Math.ceil(enemy.cooldown()), 3*TICK);
+
 						//do up to 3 thrown rock attacks at once, depending on HP
 						for (int i = 0; i < 3 - curbracket; i++){
 							if (aim == null) break;
@@ -618,7 +634,7 @@ public class GnollGeomancer extends Mob {
 
 							Ballistica warnPath = new Ballistica(aim.sourcePos, aim.collisionPos, Ballistica.STOP_SOLID);
 							for (int j : warnPath.subPath(0, warnPath.dist)){
-								sprite.parent.add(new TargetedCell(j, 0xFF0000, throwingWarnings[i]));
+								GameScene.targetedCell(j, delay, throwingWarnings[i]);
 							}
 
 							aim = GnollGeomancer.prepRockThrowAttack(enemy, GnollGeomancer.this);
@@ -626,7 +642,7 @@ public class GnollGeomancer extends Mob {
 
 						Dungeon.hero.interrupt();
 						abilityCooldown = Random.NormalIntRange(3, 5);
-						spend(GameMath.gate(TICK, (int)Math.ceil(enemy.cooldown()), 3*TICK));
+						spend(delay);
 						return true;
 					} else if (GnollGeomancer.prepRockFallAttack(enemy, GnollGeomancer.this, 6-2*curbracket, true)) {
 						lastAbilityWasRockfall = true;
@@ -812,13 +828,17 @@ public class GnollGeomancer extends Mob {
 				pos++;
 			}
 		}
-		GnollRockFall rockFall = new GnollRockFall();
-		for (int i : rockCells){
-			source.sprite.parent.add(new TargetedCell(i, 0xFF0000, rockFall.warning()));
-		}
+
 		//don't want to overly punish players with slow move or attack speed
-		rockFall.attachDelayed(source, GameMath.gate(TICK, (int)Math.ceil(target.cooldown()), 3*TICK));
+		float delay = GameMath.gate(TICK, (int)Math.ceil(target.cooldown()), 3*TICK);
+		PendingWarning rockWarning = PendingWarning.begin(source);
+		for (int i : rockCells){
+			GameScene.targetedCell(i, delay, rockWarning);
+		}
+
+		GnollRockFall rockFall = Buff.append(source, GnollRockFall.class, delay);
 		rockFall.setRockPositions(rockCells);
+		rockFall.adoptWarning(rockWarning);
 
 		source.sprite.attack(target.pos, new Callback() {
 			@Override

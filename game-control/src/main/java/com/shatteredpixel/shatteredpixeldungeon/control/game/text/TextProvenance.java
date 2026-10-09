@@ -472,7 +472,7 @@ public final class TextProvenance {
         return true;
     }
 
-    static boolean validKey(String key) { return key != null && key.matches("[a-z0-9_.$!?-]{1,512}"); }
+    static boolean validKey(String key) { return key != null && key.matches("[a-z0-9_.$!?&-]{1,512}"); }
 
     private static String unsafeReason(Object value, int depth) {
         if (depth > 64) return "source_limit";

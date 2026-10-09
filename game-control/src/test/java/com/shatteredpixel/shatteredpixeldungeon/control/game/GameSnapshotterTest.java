@@ -73,6 +73,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -251,6 +252,58 @@ class GameSnapshotterTest {
         assertFalse(JsonCodec.encode(entities).contains("EbonyMimic"));
         assertFalse(entities.get(0).containsKey("hp"));
         assertFalse(entities.get(0).containsKey("buffs"));
+        assertFalse(entities.get(0).containsKey("projectile_collision"),"A disguised creature cannot disclose its actor occupancy");
+    }
+
+    @Test
+    void publicNativeObjectsRemainObjectsOnKnownFogCellsWithoutCreatureFacts() throws Exception {
+        Hero hero=hero();FixtureLevel level=new FixtureLevel();Dungeon.level=level;
+        Rat object=new Rat();object.pos=6;object.alignment=Char.Alignment.NEUTRAL;
+        @SuppressWarnings("unchecked") Set<Char.Property> properties=(Set<Char.Property>)SnapshotFields.read(object,"properties");
+        properties.add(Char.Property.OBJECT);
+        CharSprite sprite=allocateFixture(CharSprite.class);
+        sprite.exists=sprite.alive=sprite.visible=sprite.visibleOutOfFFOV=true;sprite.am=1;
+        object.sprite=sprite;level.mobs.add(object);
+        assertTrue(((List<?>)PlayerObservation.capture(hero,level,"game").get("visible_entities")).isEmpty(),
+                "A visible-outside-FOV sprite does not reveal objects on unknown terrain");
+        level.mapped[6]=true;
+        @SuppressWarnings("unchecked") List<Map<String,Object>> observed=(List<Map<String,Object>>)
+                PlayerObservation.capture(hero,level,"game").get("visible_entities");
+        assertEquals(1,observed.size());
+        assertEquals("object",observed.get(0).get("kind"));
+        assertEquals("character",observed.get(0).get("projectile_collision"));
+        assertEquals("interact",observed.get(0).get("context_action"));
+        for(String hidden:List.of("hp","health_estimate","buffs","emotion"))assertFalse(observed.get(0).containsKey(hidden),hidden);
+        object.HP=1;object.state=object.HUNTING;
+        assertEquals(observed,PlayerObservation.capture(hero,level,"game").get("visible_entities"));
+        sprite.visible=false;
+        assertTrue(((List<?>)PlayerObservation.capture(hero,level,"game").get("visible_entities")).isEmpty());
+        sprite.visible=true;sprite.visibleOutOfFFOV=false;
+        assertTrue(((List<?>)PlayerObservation.capture(hero,level,"game").get("visible_entities")).isEmpty());
+        level.heroFOV[6]=true;
+        assertEquals(observed,PlayerObservation.capture(hero,level,"game").get("visible_entities"));
+
+        Scene scene=new Scene();ObjectSubjectButton button=new ObjectSubjectButton(object);scene.add(button);
+        UiBridge bridge=new UiBridge(()->scene);UiDrawFixture.capture(bridge);
+        Map<String,Object> capture=PlayerObservation.capture(hero,level,"game");
+        capture.put("ui",bridge.frozenUi(capture));
+        Map<String,Object> merged=GameplayObservation.merge(capture);
+        List<?> controls=(List<?>)((Map<?,?>)merged.get("ui")).get("controls");
+        assertEquals(Map.of("kind","entity","index",0),((Map<?,?>)controls.get(0)).get("subject"));
+        Map<?,?> action=(Map<?,?>)((List<?>)GameplayObservation.uiForActions(merged).get("controls")).get(0);
+        assertEquals(observed.get(0),action.get("subject_data"));
+
+        @SuppressWarnings("unchecked") Map<String,Object> row=(Map<String,Object>)((List<?>)capture.get("visible_entities")).get(0);
+        row.remove("projectile_collision");
+        capture.put("ui",bridge.frozenUi(capture));
+        controls=(List<?>)((Map<?,?>)GameplayObservation.merge(capture).get("ui")).get("controls");
+        assertFalse(((Map<?,?>)controls.get(0)).containsKey("subject"),"An unbound generic object must not identify the native actor");
+    }
+
+    @Test
+    void waterBackedCustomDecorationUsesNativeBaseAppearance(){
+        assertEquals(Terrain.WATER,PlayerObservation.terrainAppearance(Terrain.CUSTOM_DECO_WTR));
+        assertEquals(Terrain.EMPTY,PlayerObservation.terrainAppearance(Terrain.CUSTOM_DECO_EMPTY));
     }
 
     @Test
@@ -280,6 +333,25 @@ class GameSnapshotterTest {
         String fog = JsonCodec.encode(PlayerObservation.capture(hero, level, "game"));
         assertFalse(fog.contains("\"type\":\"fire\""));
         assertFalse(fog.contains("\"type\":\"gas\""));
+    }
+
+    @Test
+    void nativeAlwaysVisibleEnvironmentRetainsKnownFogButNeverCreatesUnknownCells(){
+        Hero hero=hero();FixtureLevel level=new FixtureLevel();Dungeon.level=level;
+        Fire fire=new Fire();fire.alwaysVisible=true;fire.cur=new int[16];
+        fire.cur[6]=fire.cur[15]=1;fire.volume=2;level.blobs.put(Fire.class,fire);
+        level.mapped[6]=true;
+        Map<String,Object> first=PlayerObservation.capture(hero,level,"game");
+        @SuppressWarnings("unchecked") List<Map<String,Object>> cells=(List<Map<String,Object>>)((Map<?,?>)first.get("map")).get("cells");
+        assertEquals(1,cells.size());assertEquals(6,cells.get(0).get("cell"));
+        assertEquals(1,((List<?>)cells.get(0).get("environment")).size());
+        assertEquals("mapped",cells.get(0).get("visibility"));
+        fire.cur[6]=100;fire.cur[15]=900;fire.volume=1000;
+        assertEquals(first,PlayerObservation.capture(hero,level,"game"),"Amounts and unknown cells are not public environment facts");
+        fire.alwaysVisible=false;
+        @SuppressWarnings("unchecked") List<Map<String,Object>> hidden=(List<Map<String,Object>>)((Map<?,?>)
+                PlayerObservation.capture(hero,level,"game").get("map")).get("cells");
+        assertTrue(((List<?>)hidden.get(0).get("environment")).isEmpty());
     }
 
     @Test
@@ -784,6 +856,15 @@ class GameSnapshotterTest {
         private Item selected;
         private int index;
         private Runnable callback;
+    }
+
+    private static final class ObjectSubjectButton extends Button implements com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus {
+        private final Object subject;
+        ObjectSubjectButton(Object subject){this.subject=subject;}
+        @Override protected void createChildren() { }
+        @Override protected void onClick() { }
+        @Override public Object gameplaySubject(){return subject;}
+        @Override public Map<String,Object> gameplayStatus(){return Collections.emptyMap();}
     }
 
     private static final class IntentButtonFixture extends Button {

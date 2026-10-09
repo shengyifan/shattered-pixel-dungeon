@@ -27,12 +27,12 @@ public final class TerrainVisualCue implements Tilemap.DrawObserver {
         return result.frames(new int[]{45,46,47,53,55,61,62,63},"pylon_platform");
     }
     public static TerrainVisualCue vaultEntrance(){
-        return new TerrainVisualCue().frames(new int[]{9,10,11,17,18,19,25,26,27},"vault_entrance");
+        return new TerrainVisualCue().frames(new int[]{1,2,3,16,17,18,19,20,32,33,34,35,36,48,49,50,51,52,65,66,67},"vault_entrance");
     }
     public static TerrainVisualCue vaultBarrier(){
-        return new TerrainVisualCue().frames(new int[]{13,14,15,21,22,23,29,30,31},"vault_barrier");
+        return new TerrainVisualCue().frames(new int[]{21,22,23,37,38,39,53,54,55},"vault_barrier");
     }
-    public static TerrainVisualCue mineExit(){return new TerrainVisualCue().frame(17,"mine_exit",null);}
+    public static TerrainVisualCue mineExit(){return new TerrainVisualCue().frame(9,"mine_exit",null);}
 
     @Override public void observeState(Tilemap source){
         if(!Game.observer.observesVisualCues()||Dungeon.level==null)return;

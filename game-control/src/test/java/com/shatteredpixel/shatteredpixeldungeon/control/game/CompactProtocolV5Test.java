@@ -8,7 +8,7 @@ import java.util.*;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.Assert.*;
 
-/** Protocol 5 self-contained decoding and metadata invariants, using public fixture values only. */
+/** Current self-contained decoding and metadata invariants, using public fixture values only. */
 public class CompactProtocolV5Test {
     @Test public void aliasesApplyToFieldsAndMetadataButNeverEnumsAstOrOpaqueValues() {
         Map<String,Object> input=new LinkedHashMap<>();
@@ -30,7 +30,7 @@ public class CompactProtocolV5Test {
         assertEquals(Arrays.asList("external"),object(output.get("text_origins")).get("item_info.ht"));
         assertEquals(Arrays.asList(map("field","sub_name","code","display_warning")),object(output.get("pres")).get("diag"));
         for(String field:Arrays.asList("schema","raw","reply","original_payload"))assertSame(input.get(field),output.get(field));
-        assertEquals(8,CompactProtocol.failure("q","s","FAILURE").get("v"));
+        assertEquals(9,CompactProtocol.failure("q","s","FAILURE").get("v"));
         assertEquals(WireNames.fields(),CompactProtocol.info().get("aliases"));
     }
 

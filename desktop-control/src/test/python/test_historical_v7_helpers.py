@@ -44,7 +44,7 @@ class HistoricalV7HelpersTest(unittest.TestCase):
                                stdout=PROJECTION if command[2].endswith("protocol7.py") else DECODER)
 
     def test_frozen_v7_decoder_and_projection_leave_active_client_imports_unchanged(self):
-        active = SimpleNamespace(PROTOCOL_VERSION=8)
+        active = SimpleNamespace(PROTOCOL_VERSION=9)
         original_path = sys.path[:]
         with patch.dict(sys.modules, {"spdctl_client": active}), \
                 patch.object(helpers.subprocess, "run", side_effect=self.git):
@@ -56,7 +56,7 @@ class HistoricalV7HelpersTest(unittest.TestCase):
             self.assertIs(decoder.decode_wire_response, projection.decode_wire_response)
             self.assertEqual({"v": 7}, projection.decode_wire_response({"v": 7}))
             with self.assertRaises(ValueError):
-                decoder.decode_wire_response({"v": 8})
+                decoder.decode_wire_response({"v": 9})
             self.assertEqual(DECODER, (self.output / "historical_v7_decoder.py").read_bytes())
 
     def test_existing_frozen_source_must_equal_the_pinned_git_bytes(self):
@@ -85,7 +85,7 @@ class HistoricalV7HelpersTest(unittest.TestCase):
 
     def test_projection_import_failure_restores_bindings_and_search_path(self):
         original_path = sys.path[:]
-        active = SimpleNamespace(PROTOCOL_VERSION=8)
+        active = SimpleNamespace(PROTOCOL_VERSION=9)
         with patch.dict(sys.modules, {"spdctl_client": active}):
             with self.assertRaisesRegex(RuntimeError, "synthetic"):
                 with helpers.decoder_import_binding(SimpleNamespace(PROTOCOL_VERSION=7)):

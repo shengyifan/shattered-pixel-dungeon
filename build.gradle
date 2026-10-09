@@ -4,9 +4,11 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:9.1.0'
+        classpath 'com.android.tools.build:gradle:9.2.0'
     }
 }
+
+apply from: 'gradle/cli-release.gradle'
 
 allprojects {
 
@@ -14,8 +16,9 @@ allprojects {
         appName = 'Shattered Pixel Dungeon'
         appPackageName = 'com.shatteredpixel.shatteredpixeldungeon'
 
-        appVersionCode = 896
-        appVersionName = '3.3.8'
+        //Full releases gets +2 on version code, needed for an F-Droid quirk
+        appVersionCode = 922
+        appVersionName = '4.0.2'
 
         appJavaCompatibility = JavaVersion.VERSION_11
 

@@ -22,13 +22,16 @@
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
-import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
+import com.watabou.utils.Bundlable;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.SparseArray;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -36,29 +39,52 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class TargetedCell extends Image {
+public class TargetedCell extends Image implements Bundlable {
+
+	public int pos;
+	public float time;
 
 	private float alpha;
-	private final int visualCell;
-	private final boolean redTarget;
-	final PendingWarning warning;
 
-	public TargetedCell( int pos, int color ) {
-		this(pos, color, null);
+	public static SparseArray<TargetedCell> cells = new SparseArray<>();
+
+	private final Set<PendingWarning> warningOwners = new LinkedHashSet<>();
+
+	/** Attach observation ownership without changing the native pooled marker. */
+	public void observeWarning(PendingWarning warning) {
+		if (warning != null) {
+			warningOwners.removeIf(previous -> !previous.isPending());
+			warningOwners.add(warning);
+		}
 	}
 
-	public TargetedCell( int pos, int color, PendingWarning warning ) {
-		super(Icons.get(Icons.TARGET));
-		this.warning = warning;
-		visualCell = pos;
-		redTarget = (color & 0xFFFFFF) == 0xFF0000;
-		hardlight(color);
+	/** Called only after the collector validates this actual public marker and its cell. */
+	public boolean rememberObservedWarnings(int cell) {
+		for (PendingWarning warning : warningOwners) warning.remember(cell);
+		return !warningOwners.isEmpty();
+	}
 
+	public void reset( int pos, float time ){
+		// Reusing a marker for another cell/episode never transfers its old attack owners.
+		if (this.pos != pos || cells.get(pos) != this) warningOwners.clear();
+		copy(Icons.get(Icons.TARGET));
 		origin.set( width/2f );
+		camera = null;
 
+		this.pos = pos;
 		point( DungeonTilemap.tileToWorld( pos ) );
 
+		hardlight(0xFF0000);
+
 		alpha = 1f;
+		this.time = time;
+
+		alpha(1f);
+		scale.set(1f);
+
+		synchronized (cells) {
+			cells.put(pos, this);
+		}
 	}
 
 	/**
@@ -91,6 +117,12 @@ public class TargetedCell extends Image {
 		}
 
 		public void complete() { cancel(); }
+
+		/** Observation-only handoff to the actor already created by native logic. */
+		public void transferTo(Actor nextOwner) {
+			Objects.requireNonNull(nextOwner, "Next warning owner");
+			synchronized (PendingWarning.class) { if (active) owner = nextOwner; }
+		}
 
 		/** Used only when a native producer is about to show a fresh warning, never to restore targets. */
 		public boolean isPending() {
@@ -204,18 +236,51 @@ public class TargetedCell extends Image {
 	@Override
 	public void observeGameplayVisuals() {
 		super.observeGameplayVisuals();
-		if (redTarget && texture != null && Game.observer.observesVisualCues()) {
-			GameScene.observeTargetedCellDraw(this, visualCell);
+		if (texture != null && Game.observer.observesVisualCues()) {
+			GameScene.observeTargetedCellDraw(this, pos);
 		}
 	}
 
 	@Override
 	public void update() {
-		if ((alpha -= Game.elapsed/2f) > 0) {
+		alpha -= Game.elapsed;
+		if (time >= Actor.now()){
+			alpha = Math.max(alpha, 0.6f);
+		}
+		if (alpha > 0) {
 			alpha( alpha );
-			scale.set( alpha );
+			scale.set( (float)Math.pow(alpha, 0.33f) );
 		} else {
+			time = 0;
+			synchronized (cells) {
+				cells.remove(pos);
+			}
 			killAndErase();
 		}
 	}
+
+	public static void fixTime(float min){
+		synchronized (cells){
+			for (TargetedCell c : cells.valueList()){
+				c.time -= min;
+			}
+		}
+	}
+
+	private static final String POS = "pos";
+	private static final String COLOR = "color";
+	private static final String TIME = "time";
+
+	@Override
+	public void storeInBundle(Bundle bundle) {
+		bundle.put(POS, pos);
+		bundle.put(TIME, time);
+	}
+
+	@Override
+	public void restoreFromBundle(Bundle bundle) {
+		pos = bundle.getInt(POS);
+		time = bundle.getInt(TIME);
+	}
+
 }

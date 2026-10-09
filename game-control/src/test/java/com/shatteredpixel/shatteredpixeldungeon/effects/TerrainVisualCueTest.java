@@ -2,6 +2,9 @@ package com.shatteredpixel.shatteredpixeldungeon.effects;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.AmbitiousImpRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.MineEntrance;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.watabou.gltextures.SmartTexture;
 import com.watabou.noosa.*;
@@ -9,6 +12,7 @@ import com.watabou.utils.PointF;
 import com.watabou.utils.RectF;
 import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,8 +27,38 @@ class TerrainVisualCueTest {
         assertNotNull(TerrainVisualCue.vaultEntrance().selectedFrame(18,22));
         assertNull(TerrainVisualCue.vaultEntrance().selectedFrame(0,22),"Outer entrance art is not an interactive marker");
         assertEquals("vault_barrier",TerrainVisualCue.vaultBarrier().selectedFrame(22,22).kind);
-        assertEquals("mine_exit",TerrainVisualCue.mineExit().selectedFrame(17,22).kind);
+        assertEquals("mine_exit",TerrainVisualCue.mineExit().selectedFrame(9,22).kind);
         assertNull(TerrainVisualCue.mineExit().selectedFrame(8,22));
+    }
+    @Test void nativeVersionFourTileMappingsKeepEveryInteractiveCellAndOmitDecorativeCorners() throws Exception {
+        AmbitiousImpRoom.QuestEntrance entrance = new AmbitiousImpRoom.QuestEntrance();
+        int[] entranceFrames = nativeFrames(entrance, 0, 0);
+        assertEquals(25, entranceFrames.length);
+        for (int i = 0; i < entranceFrames.length; i++) {
+            boolean corner = (i % entrance.tileW == 0 || i % entrance.tileW == entrance.tileW - 1)
+                    && (i / entrance.tileW == 0 || i / entrance.tileW == entrance.tileH - 1);
+            VisualCue cue = TerrainVisualCue.vaultEntrance().selectedFrame(entranceFrames[i], 22);
+            if (corner) assertNull(cue, "Native entrance corners have no custom inspection image");
+            else assertEquals("vault_entrance", cue.kind);
+        }
+        AmbitiousImpRoom.EntranceBarrier barrier = new AmbitiousImpRoom.EntranceBarrier();
+        int[] barrierFrames = nativeFrames(barrier, 5, 1);
+        assertEquals(9, barrierFrames.length);
+        for (int frame : barrierFrames)
+            assertEquals("vault_barrier", TerrainVisualCue.vaultBarrier().selectedFrame(frame, 22).kind);
+        MineEntrance.QuestExit exit = new MineEntrance.QuestExit();
+        int[] exitFrames = nativeFrames(exit, 0, 1);
+        for (int i = 0; i < exitFrames.length; i++) {
+            VisualCue cue = TerrainVisualCue.mineExit().selectedFrame(exitFrames[i], 22);
+            if (i == 4) assertEquals("mine_exit", cue.kind);
+            else assertNull(cue, "Only the native mine center exposes its exit image");
+        }
+    }
+    private static int[] nativeFrames(CustomTilemap source, int x, int y) throws Exception {
+        int width = (Integer) field(source, source.getClass(), "TEX_WIDTH");
+        Method mapping = CustomTilemap.class.getDeclaredMethod("mapSimpleImage", int.class, int.class, int.class);
+        mapping.setAccessible(true);
+        return (int[]) mapping.invoke(source, x, y, width);
     }
     @Test void selectedPresentationSurvivesCameraAndKnownFogButNeverInventsHiddenCenters() throws Exception {
         try(Fixture f=new Fixture(new int[]{37,40,38,-1,55})){

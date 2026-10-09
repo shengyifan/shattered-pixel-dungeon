@@ -1,0 +1,24 @@
+// The game version remains upstream-owned in the root build. CLI release identity
+// is shared by generated Java, the native launcher, the catalog and shell tooling.
+def identityFile = rootProject.file('gradle/cli-release.properties')
+def identity = new Properties()
+identityFile.withInputStream { identity.load(it) }
+def expected = ['cli_version', 'protocol_version', 'audit_schema_version',
+                'profile_directory_name', 'trace_format_version'] as Set
+if (identity.stringPropertyNames() != expected)
+    throw new GradleException('Unexpected or missing CLI release identity property')
+if (!(identity.cli_version ==~ /CLI\.[1-9][0-9]*\.[0-9]+\.[0-9]+/)
+        || !['protocol_version', 'audit_schema_version', 'trace_format_version'].every {
+            identity.getProperty(it) ==~ /[1-9][0-9]*/
+        }
+        || identity.profile_directory_name != "Shattered Pixel Dungeon CLI v${identity.protocol_version}"
+        || !identity.cli_version.startsWith("CLI.${identity.protocol_version}."))
+    throw new GradleException('Invalid CLI release identity')
+rootProject.ext.cliRelease = Collections.unmodifiableMap([
+    cliVersion: identity.cli_version,
+    protocolVersion: identity.protocol_version.toInteger(),
+    auditSchemaVersion: identity.audit_schema_version.toInteger(),
+    profileDirectoryName: identity.profile_directory_name,
+    traceFormatVersion: identity.trace_format_version.toInteger()
+])
+rootProject.ext.cliReleaseFile = identityFile

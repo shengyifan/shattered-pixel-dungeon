@@ -14,6 +14,8 @@ public class CellParticleCue implements Emitter.DrawObserver {
     public final int cell;
     private final Emitter.Factory factory;
     private final Class<? extends Visual> particleType;
+    /** Optional meaning of a source-selected native particle branch, never an internal effect phase. */
+    public final String stage;
     private boolean observed;
     private Object episode;
     private Emitter observedSource;
@@ -25,7 +27,11 @@ public class CellParticleCue implements Emitter.DrawObserver {
     private Map<Gizmo,Long> precedingContributors;
 
     public CellParticleCue(String kind, int cell, Emitter.Factory factory, Class<? extends Visual> particleType) {
+        this(kind,cell,factory,particleType,null);
+    }
+    public CellParticleCue(String kind, int cell, Emitter.Factory factory, Class<? extends Visual> particleType, String stage) {
         this.kind = kind; this.cell = cell; this.factory = factory; this.particleType = particleType;
+        this.stage = stage;
     }
 
     /** A moving signal follows its already-present sprite, without consulting the sprite's actor. */

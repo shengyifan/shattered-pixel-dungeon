@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.desktop;
 
+import com.shatteredpixel.shatteredpixeldungeon.control.protocol.ReleaseIdentity;
+
 import com.shatteredpixel.shatteredpixeldungeon.*;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.*;
@@ -54,7 +56,7 @@ public final class PerformanceLauncher {
         PrintStream wire=new PrintStream(new FileOutputStream(FileDescriptor.out),true,StandardCharsets.UTF_8);
         System.setProperty("Specification-Title","Shattered Pixel Dungeon");
         System.setProperty("Implementation-Title","com.shatteredpixel.shatteredpixeldungeon");
-        System.setProperty("Specification-Version","3.3.8");System.setProperty("Implementation-Version","896");
+        System.setProperty("Specification-Version",ReleaseIdentity.GAME_VERSION);System.setProperty("Implementation-Version",Integer.toString(ReleaseIdentity.GAME_VERSION_CODE));
         try(ProfileLock ignored=new ProfileLock(profile);AuditStore store=new AuditStore(profile.resolve("audit"))) {
             store.recoverInterrupted();
             store.beginSession(java.util.UUID.randomUUID().toString(),

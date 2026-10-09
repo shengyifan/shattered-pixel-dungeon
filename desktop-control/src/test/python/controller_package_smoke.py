@@ -22,7 +22,7 @@ import time
 import uuid
 import zlib
 
-import protocol8
+import protocol9
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "desktop-control/client"))
 from spdctl_client import decode_wire_response
 
@@ -42,7 +42,10 @@ class ControllerClient:
     def __init__(self, cli, profile, output, environment):
         output.mkdir()
         self.output, self.trace_root = output, output / "transport"
-        self.codec_jar = cli.parent.parent / "app/desktop-control-3.3.8-all.jar"
+        jars = list((cli.parent.parent / "app").glob("desktop-control-*-all.jar"))
+        if len(jars) != 1:
+            raise ValueError("Expected exactly one packaged desktop-control runtime jar")
+        self.codec_jar = jars[0]
         self.send_file = (output / "intent-send.raw").open("wb")
         self.recv_file = (output / "controller-recv.raw").open("wb")
         self.events = (output / "action-events.jsonl").open("w", encoding="utf-8")
@@ -66,8 +69,8 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.8.0.2", self.hello
-            assert self.hello["data"]["audit_schema_version"] == 11, self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.9.0.0", self.hello
+            assert self.hello["data"]["audit_schema_version"] == 12, self.hello
             self.install(self.hello, "info")
         except Exception:
             self.cleanup()
@@ -89,7 +92,7 @@ class ControllerClient:
         return json.loads(line.decode("utf-8", errors="strict"))
 
     def request(self, intent):
-        encoded = protocol8.wire_bytes(intent)
+        encoded = protocol9.wire_bytes(intent)
         self.send_file.write(encoded)
         self.send_file.flush()
         assert self.process.stdin.write(encoded) == len(encoded)
@@ -104,7 +107,7 @@ class ControllerClient:
     def remember_wire(self, value):
         if not isinstance(value, dict):
             return
-        if value.get("v") == 8 and "id" in value and ("st" in value or "err" in value):
+        if value.get("v") == 9 and "id" in value and ("st" in value or "err" in value):
             self.wire_frames.append(value)
             return
         for field in ("response", "outcome", "observation", "discovery", "initial_error", "original_response", "receipt"):
@@ -117,8 +120,8 @@ class ControllerClient:
         return result["response"] if result.get("controller") == "response" else result
 
     def install(self, result, op):
-        assert result.get("v") == 8 and "err" not in result, result
-        view = protocol8.response(result, op)
+        assert result.get("v") == 9 and "err" not in result, result
+        view = protocol9.response(result, op)
         assert view["ok"], view
         self.scope = result.get("s", self.scope)
         self.revision = result.get("rev", self.revision)
@@ -157,7 +160,7 @@ class ControllerClient:
             self.stale_rejections += 1
             self.state()
             raise StaleAction(op)
-        assert response.get("v") == 8 and "err" not in response, response
+        assert response.get("v") == 9 and "err" not in response, response
         assert response["id"].startswith(self.prefix + "."), response
         if response["st"] == "in_progress":
             # This frame was already written and flushed to action-events before any settle command.
@@ -308,9 +311,9 @@ def native_operation(client, operation):
 def save_receipts(action):
     if "settled" in action:
         frame = action["settled"]["outcome"]
-        rows = protocol8.expand_structures(frame)["data"].get("save", [])
+        rows = protocol9.expand_structures(frame)["data"].get("save", [])
     else:
-        frame = protocol8.expand_structures(action["initial"])
+        frame = protocol9.expand_structures(action["initial"])
         rows = frame["data"].get("persistence", {}).get("saves", [])
     assert rows, action
     for receipt in rows:
@@ -333,7 +336,7 @@ def validate_trace(client, decimal_boundary=False):
     previous = 0
     by_id = {}
     for index, (request, response) in enumerate(zip(sent, received)):
-        assert request["v"] == response["v"] == 8 and request["id"] == response["id"], (request, response)
+        assert request["v"] == response["v"] == 9 and request["id"] == response["id"], (request, response)
         assert request["id"] not in by_id, request
         by_id[request["id"]] = response
         if index:
@@ -550,9 +553,9 @@ def lossless_views_check(client):
             "ordered_actions": len(data["acts"]), "inventory_items": len(data["inv"]),
             "items_with_description": described, "talents": len(data["hero"]["talents"]),
             "semantic_facts_and_occurrences_preserved": True, "component_replay": component,
-            "source_bytes": len(protocol8.wire_bytes(source)),
-            "play_bytes": len(protocol8.wire_bytes(replayed["play"])),
-            "full_bytes": len(protocol8.wire_bytes(replayed["full"]))}
+            "source_bytes": len(protocol9.wire_bytes(source)),
+            "play_bytes": len(protocol9.wire_bytes(replayed["play"])),
+            "full_bytes": len(protocol9.wire_bytes(replayed["full"]))}
 
 
 def decimal_request_ids_check(client):
@@ -597,7 +600,7 @@ def source_view_check(client):
     assert all(isinstance(row, dict) for row in data.get("ui", {}).get("nodes", []))
     raw = reply["data"]
     return {"src_true_decoded": True, "source_fields": count, "scope": reply["s"], "rev": reply["rev"],
-            "source_bytes": len(protocol8.wire_bytes(reply)),
+            "source_bytes": len(protocol9.wire_bytes(reply)),
             "templates": {"acts": len(raw.get("act_templates", [])), "inv": len(raw.get("inv_templates", [])),
                           "nodes": len(raw.get("ui", {}).get("node_templates", []))}}
 
@@ -734,7 +737,7 @@ def main():
     parser.add_argument("--bundle", type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
-    output = root / "desktop-control/build/fixtures" / ("cli8-controller-" + uuid.uuid4().hex)
+    output = root / "desktop-control/build/fixtures" / ("cli9-controller-" + uuid.uuid4().hex)
     output.mkdir(parents=True)
     profile = output / "fresh 中文 profile"
     assert not profile.exists()
@@ -745,7 +748,7 @@ def main():
         environment.pop(key, None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.8.0.2 (protocol 8, game 3.3.8)", version
+    assert version == "CLI.9.0.0 (protocol 9, game 4.0.2)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}

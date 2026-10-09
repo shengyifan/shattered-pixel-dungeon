@@ -5,7 +5,9 @@ cd "$project_dir"
 ./gradlew :desktop-control:writeRuntimeClasspath --console=plain >&2
 classpath=$(cat desktop-control/build/runtime-classpath.txt)
 transport=$(cat desktop-control/build/runtime-transport.txt)
-profile_dir="$HOME/Library/Application Support/Shattered Pixel Dungeon CLI v8"
+profile_name=$(sed -n 's/^profile_directory_name=//p' gradle/cli-release.properties)
+case "$profile_name" in 'Shattered Pixel Dungeon CLI v'[1-9]*) ;; *) echo 'spdctl: INVALID_RELEASE_PROFILE' >&2; exit 64 ;; esac
+profile_dir="$HOME/Library/Application Support/$profile_name"
 expect_profile=0
 for argument do
   if [ "$expect_profile" = 1 ]; then profile_dir="$argument"; expect_profile=0

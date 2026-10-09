@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoTrap;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
@@ -66,7 +67,8 @@ public abstract class Trap implements Bundlable {
 	public boolean canBeHidden = true;
 	public boolean canBeSearched = true;
 
-	public boolean avoidsHallways = false; //whether this trap should avoid being placed in hallways
+	//whether this trap should avoid being placed in enclosed areas like hallways
+	public boolean avoidsClosedSpaces = false;
 
 	public Trap set(int pos){
 		this.pos = pos;
@@ -121,7 +123,12 @@ public abstract class Trap implements Bundlable {
 	}
 
 	public String desc() {
-		return Messages.get(this, "desc");
+		String desc = Messages.literal("");
+		if (!active){
+			desc = Messages.concat(Messages.concat(desc, Messages.get(WndInfoTrap.class, "inactive")), Messages.literal("\n\n"));
+		}
+		desc = Messages.concat(desc, Messages.get(this, "desc"));
+		return desc;
 	}
 
 	private static final String POS	= "pos";

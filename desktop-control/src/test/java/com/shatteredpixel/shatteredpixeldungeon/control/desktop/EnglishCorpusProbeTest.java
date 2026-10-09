@@ -128,9 +128,9 @@ public class EnglishCorpusProbeTest {
     @Test public void v7DefaultsDoNotInventMissingSourcesAndAggregateDiagnosticsRetainWirePointers() {
         Map<String,Object> node=map("id","same","role","text","text","Already rendered text");
         EnglishCorpusProbe probe=new EnglishCorpusProbe();
-        probe.inspect(map("v",8,"data",map("ui",map("scene","TitleScene","nodes",List.of(node)))),map());
+        probe.inspect(map("v",9,"data",map("ui",map("scene","TitleScene","nodes",List.of(node)))),map());
         assertEquals(0L,probe.report().get("unavailable_occurrences"));
-        Map<String,Object> partial=map("v",8,"data",map("ui",map("scene","TitleScene","nodes",List.of(node))),
+        Map<String,Object> partial=map("v",9,"data",map("ui",map("scene","TitleScene","nodes",List.of(node))),
                 "pres",map("st","partial","diag",List.of(map("field","$.data.ui.nodes[0].text","code","source_missing"))),
                 "raw",map("description","opaque request text"),"reply",map("description","opaque historical reply text"));
         String before=JsonCodec.encode(partial);
@@ -144,9 +144,9 @@ public class EnglishCorpusProbeTest {
     }
 
     @Test public void v7StructureTablesExposeTheSamePublicTextWithoutMutatingWire() {
-        Map<String,Object> expanded=map("v",8,"data",map("acts",List.of(map("op","click","ctl","c1")),"ui",map("scene","TitleScene","nodes",List.of(
+        Map<String,Object> expanded=map("v",9,"data",map("acts",List.of(map("op","click","ctl","c1")),"ui",map("scene","TitleScene","nodes",List.of(
                 map("id","c1","role","button","label","Visible choice","ops",List.of(map("op","click")))))));
-        Map<String,Object> compressed=map("v",8,"data",map(
+        Map<String,Object> compressed=map("v",9,"data",map(
                 "act_templates",List.of(map("common",map("op","click"),"fields",List.of("ctl"))),
                 "acts",List.of(List.of(0,"c1")),"ui",map("scene","TitleScene",
                 "node_templates",List.of(map("common",map("role","button"),"fields",List.of("id","label","ops"))),

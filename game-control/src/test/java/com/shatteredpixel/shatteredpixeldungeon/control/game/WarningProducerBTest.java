@@ -68,7 +68,7 @@ class WarningProducerBTest {
             List<VisualCue> prepared = f.red();
             assertFalse(prepared.isEmpty());
             Game.elapsed = 2.3f;
-            for (TargetedCell marker : f.markers()) marker.update();
+            f.base.fadeMarkers();
             assertEquals(prepared, f.red(), "The real falling-rock buff owns the faded warning");
             buff.detach();
             assertFalse(warning.isPending());
@@ -108,7 +108,7 @@ class WarningProducerBTest {
             Geomancer source = f.prepareGeomancer();
             PendingWarning[] warnings = (PendingWarning[]) get(source, GnollGeomancer.class, "throwingWarnings");
             assertEquals(3, new HashSet<>(Arrays.asList(warnings)).size());
-            assertEquals(3, f.redAt(66), "All three real warning paths overlap the target cell");
+            assertEquals(1, f.redAt(66), "Three owners share the one publicly displayed pooled marker");
             f.withoutMapRenderer(source::fire);
             assertEquals(3, f.sprites.impacts.size());
             Actor.remove(source);
@@ -118,7 +118,7 @@ class WarningProducerBTest {
                 final int impact = i;
                 f.withoutMapRenderer(() -> f.sprites.impacts.get(impact).call());
                 assertFalse(warnings[i].isPending());
-                assertEquals(2 - i, f.redAt(66), "One impact must not clear another projectile's episode");
+                assertEquals(i < 2 ? 1 : 0, f.redAt(66), "One impact must not clear another publicly observed projectile's cell");
             }
             assertTrue(f.red().isEmpty());
         }
@@ -133,7 +133,7 @@ class WarningProducerBTest {
             f.withoutMapRenderer(source::fire);
             assertFalse(warnings[0].isPending());
             assertEquals(2, f.sprites.impacts.size());
-            assertEquals(2, f.redAt(66));
+            assertEquals(1, f.redAt(66));
             for (Callback impact : f.sprites.impacts) f.withoutMapRenderer(impact::call);
             assertTrue(f.red().isEmpty());
         }
@@ -203,7 +203,7 @@ class WarningProducerBTest {
             int firstSize = f.red().size();
             assertTrue(firstSize > 0);
             Game.elapsed = 2.3f;
-            for (TargetedCell marker : f.markers()) marker.update();
+            f.base.fadeMarkers();
             assertEquals(firstSize, f.red().size());
             assertTrue(nova.act());
             assertSame(warning, get(nova, SuperNovaTracker.class, "pendingWarning"));
@@ -273,7 +273,7 @@ class WarningProducerBTest {
     }
 
     private static PendingWarning binding(TargetedCell marker) {
-        try { return (PendingWarning) get(marker, TargetedCell.class, "warning"); }
+        try { return ((Set<PendingWarning>) get(marker, TargetedCell.class, "warningOwners")).iterator().next(); }
         catch (Exception error) { throw new AssertionError(error); }
     }
 
@@ -361,7 +361,7 @@ class WarningProducerBTest {
             base.level.mobs = new HashSet<>(); base.level.heaps = new SparseArray<>();
             base.level.blobs = new HashMap<>(); base.level.plants = new SparseArray<>();
             base.level.traps = new SparseArray<>(); base.level.transitions = new ArrayList<>();
-            base.level.customTiles = new ArrayList<>(); base.level.customWalls = new ArrayList<>();
+            base.level.customTiles = new ArrayList<>(); base.level.customTerrain = new ArrayList<>(); base.level.customWalls = new ArrayList<>();
             base.level.passable = new boolean[100]; Arrays.fill(base.level.passable, true);
             base.level.solid = new boolean[100]; base.level.avoid = new boolean[100];
             base.level.losBlocking = new boolean[100]; base.level.flamable = new boolean[100];
@@ -404,8 +404,7 @@ class WarningProducerBTest {
             assertTrue(source.HUNTING.act(true, false));
         }
         List<TargetedCell> markers() {
-            return sprites.childrenSnapshot().stream().filter(TargetedCell.class::isInstance)
-                    .map(TargetedCell.class::cast).collect(Collectors.toList());
+            return base.markers();
         }
         List<VisualCue> red() throws Exception {
             return base.frame().stream().filter(cue -> cue.kind.equals("red_target")).collect(Collectors.toList());

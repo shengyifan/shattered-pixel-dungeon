@@ -39,10 +39,10 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
-import com.watabou.utils.BArray;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.BArray;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.PathFinder;
 
@@ -198,6 +198,24 @@ public class DeathMark extends ArmorAbility {
 				Sample.INSTANCE.play(Assets.Sounds.HIT_STAB);
 				Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				target.die(this);
+				int shld = Math.round(initialHP * (0.125f*Dungeon.hero.pointsInTalent(Talent.DEATHLY_DURABILITY)));
+				if (shld > 0 && target.alignment != Char.Alignment.ALLY){
+					Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shld), FloatingText.SHIELDING);
+					Buff.affect(Dungeon.hero, Barrier.class).setShield(shld);
+				}
+			}
+		}
+
+		//if something is already dying when death mark is attached, need to avoid triggering die() again
+		public void detachOnDeath(){
+			super.detach();
+			target.deathMarked = false;
+			//trigger death mark vfx and deathly durability if the target would have died with death mark ending normally
+			if (!target.isAlive()){
+				target.sprite.flash();
+				target.sprite.bloodBurstA(target.sprite.center(), target.HT*2);
+				Sample.INSTANCE.play(Assets.Sounds.HIT_STAB);
+				Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 				int shld = Math.round(initialHP * (0.125f*Dungeon.hero.pointsInTalent(Talent.DEATHLY_DURABILITY)));
 				if (shld > 0 && target.alignment != Char.Alignment.ALLY){
 					Dungeon.hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(shld), FloatingText.SHIELDING);

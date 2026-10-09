@@ -29,10 +29,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Bleeding;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Light;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Pushing;
-import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.RipperSprite;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -273,12 +273,13 @@ public class RipperDemon extends Mob {
 						//get ready to leap
 						leapPos = targetPos;
 						//don't want to overly punish players with slow move or attack speed
-						spend(GameMath.gate(attackDelay(), (int)Math.ceil(enemy.cooldown()), 3*attackDelay()));
+						float delay = GameMath.gate(attackDelay(), (int)Math.ceil(enemy.cooldown()), 3*attackDelay());
+						spend(delay);
 						if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[leapPos]){
 							GLog.w(Messages.get(RipperDemon.this, "leap"));
 							cancelLeapWarning();
 							leapWarning = PendingWarning.begin(RipperDemon.this);
-							sprite.parent.addToBack(new TargetedCell(leapPos, 0xFF0000, leapWarning));
+							GameScene.targetedCell(leapPos, delay, leapWarning);
 							((RipperSprite)sprite).leapPrep( leapPos );
 							Dungeon.hero.interrupt();
 						}

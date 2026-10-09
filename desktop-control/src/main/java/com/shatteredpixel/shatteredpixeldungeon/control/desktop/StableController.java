@@ -507,7 +507,7 @@ public final class StableController {
             }
             if (!valid) {
                 if (inFlight.pendingOwner == null) inFlight = null;
-                return Received.of(localError("INVALID_RESPONSE", "Child frame must contain protocol 8, matching id, and either st or err", original));
+                return Received.of(localError("INVALID_RESPONSE", "Child frame must contain protocol " + ControlRequest.PROTOCOL_VERSION + ", matching id, and either st or err", original));
             }
             inFlight = null;
             return Received.of(response);

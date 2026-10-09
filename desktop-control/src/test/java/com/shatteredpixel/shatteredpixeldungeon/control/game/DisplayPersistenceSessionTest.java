@@ -49,7 +49,7 @@ public class DisplayPersistenceSessionTest {
     @Test public void boundedBackgroundBatchesYieldToQueuedRequestsWithoutLosingARefilledStream()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             store.ensureScope(SCOPE,"run","display");
-            String query=V8Requests.encode(store,map("v",8,"id","query","s",SCOPE,"op","state"));
+            String query=V9Requests.encode(store,map("v",9,"id","query","s",SCOPE,"op","state"));
             Port game=new Port();game.gateFirst=true;game.refillBatches=8;
             ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,StandardCharsets.UTF_8),1000)){
@@ -75,7 +75,7 @@ public class DisplayPersistenceSessionTest {
     @Test public void adjacentSignalsCoalesceAndImmediateQueryBypassesTheBackgroundWindow()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             store.ensureScope(SCOPE,"run","display");
-            String query=V8Requests.encode(store,map("v",8,"id","immediate","s",SCOPE,"op","state"));
+            String query=V9Requests.encode(store,map("v",9,"id","immediate","s",SCOPE,"op","state"));
             Port game=new Port();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,StandardCharsets.UTF_8),1000)){
                 game.addNext();game.addNext();game.addNext();
@@ -98,7 +98,7 @@ public class DisplayPersistenceSessionTest {
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             store.ensureScope(SCOPE,"run","display");Port game=new Port();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,StandardCharsets.UTF_8),1000)){
-                session.accept(V8Requests.encode(store,map("v",8,"id","action","s",SCOPE,"rev","v1","op","wait"))).get(5,TimeUnit.SECONDS);
+                session.accept(V9Requests.encode(store,map("v",9,"id","action","s",SCOPE,"rev","v1","op","wait"))).get(5,TimeUnit.SECONDS);
                 try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+store.internalDatabase());Statement statement=db.createStatement()){
                     statement.execute("CREATE TRIGGER reject_display BEFORE INSERT ON events WHEN NEW.kind='game.visual' BEGIN SELECT RAISE(ABORT,'fixture display failure'); END");
                 }

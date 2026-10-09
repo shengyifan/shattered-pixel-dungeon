@@ -130,13 +130,14 @@ public final class VisualCueCollector {
         return new VisualCue(cue.kind,cue.cell,cue.sourceCell,cue.direction,null,null,cue.appearance);
     }
     public void targetDrawn(Visual source,int cell){
-        if(source instanceof TargetedCell&&((TargetedCell)source).warning!=null){
-            if(collecting&&drawable(source)&&known(cell))((TargetedCell)source).warning.remember(cell);
-        }else cellVisualDrawn(source,new VisualCue("red_target",cell));
+        if(!collecting||!drawable(source)||!known(cell))return;
+        if(source instanceof TargetedCell&&((TargetedCell)source).rememberObservedWarnings(cell))return;
+        // Native markers are pooled by cell. Private attack-owner multiplicity is not a public cue.
+        add(scene,new VisualCue("red_target",cell));
     }
     private void finishPendingWarnings(){
         for(TargetedCell.PendingWarning warning:TargetedCell.PendingWarning.current())
-            for(int cell:warning.cells())if(known(cell))add(warning,new VisualCue("red_target",cell));
+            for(int cell:warning.cells())if(known(cell))add(scene,new VisualCue("red_target",cell));
     }
     public void cellVisualDrawn(Visual source,VisualCue cue){
         if(!collecting||!drawable(source))return;
@@ -188,10 +189,12 @@ public final class VisualCueCollector {
         if(contributes)add(source,new VisualCue(kind,cell));
     }
     public void movingVisualDrawn(Visual source,VisualCue cue){
-        if(!collecting||!drawable(source)||!known(cue.cell)||!hasKnownFootprint(source))return;
+        boolean shadow=publicMovementShadow(source,cue);
+        if(!collecting||!drawable(source)||(!shadow&&(!known(cue.cell)||!hasKnownFootprint(source))))return;
+        if(level==null||cue.cell<0||cue.cell>=level.length())return;
         VisualCueProjection.Rect bounds=VisualCueProjection.worldBounds(source);if(bounds==null)return;
         boolean full=true;
-        for(int cell:VisualCueProjection.worldFootprint(source,level.width(),level.length(),DungeonTilemap.SIZE))full&=known(cell);
+        if(!shadow)for(int cell:VisualCueProjection.worldFootprint(source,level.width(),level.length(),DungeonTilemap.SIZE))full&=known(cell);
         movingObservations.add(new MovingObservation(source,observingSource!=null?observingSource:source,semantic(cue),
                 full?new MotionSample(source,(bounds.left+bounds.right)/2f,(bounds.top+bounds.bottom)/2f):null));
     }
@@ -199,13 +202,19 @@ public final class VisualCueCollector {
         Map<Visual,MotionSample> next=new IdentityHashMap<>();
         if(previousMotionLevel!=level)previousMotion=Collections.emptyMap();
         for(MovingObservation value:movingObservations){
-            if(!attached(value.source)||!known(value.cue.cell))continue;
+            if(!attached(value.source)||(!publicMovementShadow(value.source,value.cue)&&!known(value.cue.cell)))continue;
             MotionSample before=previousMotion.get(value.source),now=value.sample;
             String direction=before!=null&&now!=null&&before.lifetime==now.lifetime?ParticleMotionCue.direction(now.x-before.x,now.y-before.y):null;
             add(value.owner,new VisualCue(value.cue.kind,value.cue.cell,null,direction,null,null,value.cue.appearance));
             if(now!=null)next.put(value.source,now);
         }
         previousMotion=next;previousMotionLevel=level;
+    }
+    /** Native hearing shadows are explicitly shown through fog; this exception never reveals their actor. */
+    private boolean publicMovementShadow(Visual source,VisualCue cue){
+        return "movement_shadow".equals(cue.kind)
+                &&source instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite
+                &&((com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite)source).isObservedMovementShadow();
     }
     public void particleEmitterDrawn(Emitter emitter,CellParticleCue observation){
         if(!collecting||!attached(emitter)||!observation.acceptsSource(emitter))return;
@@ -223,13 +232,15 @@ public final class VisualCueCollector {
             if(anchor)for(Visual child:value.contributors)if(drawable(child)&&hasKnownFootprint(child))visible.add(child);
             boolean contributes=!visible.isEmpty();
             if(contributes){
-                Map<String,Object> measure=null;
+                Map<String,Object> measure=value.observation.stage==null?null:new LinkedHashMap<>(
+                        Collections.singletonMap("stage",value.observation.stage));
                 if(value.observation.measuredCount()){
-                    measure=new LinkedHashMap<>();measure.put("count",visible.size());measure.put("basis","observed_particles");
+                    if(measure==null)measure=new LinkedHashMap<>();measure.put("count",visible.size());measure.put("basis","observed_particles");
                 }
                 add(value.source,new VisualCue(value.observation.kind,value.cell,null,null,null,null,measure));
             }else if(value.observation.retainActiveEpisode()&&anchor&&value.observation.emitting(value.source)&&value.observation.hasObservedPresentation())
-                add(value.source,new VisualCue(value.observation.kind,value.cell));
+                add(value.source,new VisualCue(value.observation.kind,value.cell,null,null,null,null,
+                        value.observation.stage==null?null:Collections.singletonMap("stage",value.observation.stage)));
             boolean eligible=anchor&&value.observation.emitting(value.source)
                     &&(value.contributors.isEmpty()||contributes);
             ready&=value.observation.recordVisibleFrame(eligible,contributes)||!value.source.canProgress();

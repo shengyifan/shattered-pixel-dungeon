@@ -1,4 +1,4 @@
-"""Post-execution identity assertions for explicitly isolated CLI 8 fixtures only.
+"""Post-execution identity assertions for explicitly isolated CLI 9 fixtures only.
 
 This module never provides destinations, targets, or other gameplay choices. It
 reads only the fixture's public handle registry to compare wire identities with
@@ -31,8 +31,11 @@ def fixture_canonical_identity(profile, kind, value):
     with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as connection:
         connection.execute("PRAGMA query_only=ON")
         version = connection.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if version != ("11",):
-            raise ValueError("Fixture identity assertions require schema 11")
+        if version != ("12",):
+            raise ValueError("Fixture identity assertions require schema 12")
+        game = dict(connection.execute("SELECT key,value FROM metadata WHERE key IN ('game_version','game_version_code')"))
+        if game != {"game_version": "4.0.2", "game_version_code": "922"}:
+            raise ValueError("Fixture identity assertions require game 4.0.2 (922)")
         row = connection.execute("SELECT canonical FROM public_handles WHERE kind=? AND handle=?", (kind, value)).fetchone()
     if row is None:
         raise AssertionError({"unknown_fixture_handle": value, "kind": kind})

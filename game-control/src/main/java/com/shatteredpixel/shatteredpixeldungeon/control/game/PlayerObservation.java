@@ -299,6 +299,8 @@ public final class PlayerObservation {
         if (tile == Terrain.SECRET_TRAP) return Terrain.EMPTY;
         if (tile == Terrain.HERO_LKD_DR) return Terrain.LOCKED_DOOR;
         if (tile == Terrain.CUSTOM_DECO_EMPTY) return Terrain.EMPTY;
+        // The custom decoration supplies its own public shape; the native base tile is water.
+        if (tile == Terrain.CUSTOM_DECO_WTR) return Terrain.WATER;
         return tile;
     }
 
@@ -307,19 +309,29 @@ public final class PlayerObservation {
         List<Mob> mobs = level.mobs == null ? new ArrayList<>() : new ArrayList<>(level.mobs);
         mobs.sort(Comparator.comparingInt(mob -> mob.pos));
         for (Mob mob : mobs) {
-            boolean rememberedDisguise = mob instanceof Mimic && mob.alignment == Char.Alignment.NEUTRAL && mob.state == mob.PASSIVE
+            boolean disguised = mob instanceof Mimic && mob.alignment == Char.Alignment.NEUTRAL;
+            boolean publicObject = !disguised && Char.hasProp(mob, Char.Property.OBJECT);
+            boolean rememberedDisguise = disguised && mob.state == mob.PASSIVE
                     && ((Mimic) mob).stealthy() && flag(level.visited, mob.pos);
-            if (mob.pos == hero.pos || (!flag(level.heroFOV, mob.pos) && !rememberedDisguise)) continue;
+            boolean rememberedObject = publicObject && mob.sprite != null && mob.sprite.visibleOutOfFFOV
+                    && (flag(level.visited, mob.pos) || flag(level.mapped, mob.pos));
+            if (mob.pos == hero.pos || (!flag(level.heroFOV, mob.pos) && !rememberedDisguise && !rememberedObject)) continue;
             // FOV alone does not reveal a presentation deliberately hidden by its native producer
             // (for example the City's boss before its reveal fade). Camera clipping is unrelated.
             if (!rememberedDisguise && mob.sprite != null
                     && (!mob.sprite.exists || !mob.sprite.visible || !Float.isFinite(mob.sprite.am+mob.sprite.aa)
                     || mob.sprite.am+mob.sprite.aa <= 0)) continue;
-            if (mob instanceof Mimic && mob.alignment == Char.Alignment.NEUTRAL) {
+            if (disguised) {
                 // A disguised mob must have the same public shape as a displayed container.
                 // Ebony's displayed outline does not disclose that it is a treasure container.
                 entities.add(map("cell", mob.pos, "kind", mob instanceof EbonyMimic ? "object" : "container", "name", mob.name(),
                         "description", mob.description()));
+            } else if (publicObject) {
+                // The native object presentation omits creature health and buffs. Its public
+                // presence still occupies Ballistica's character-collision category.
+                entities.add(map("cell", mob.pos, "kind", "object", "name", mob.name(),
+                        "context_action", mob.alignment == Char.Alignment.ENEMY ? "attack" : "interact",
+                        "projectile_collision", "character"));
             } else {
                 entities.add(map("cell", mob.pos, "kind", "character", "name", mob.name(),
                         "buffs", buffs(mob), "context_action", mob.alignment == Char.Alignment.ENEMY ? "attack" : "interact",
@@ -350,9 +362,11 @@ public final class PlayerObservation {
 
     private static List<Object> visibleEnvironment(Level level, int cell) {
         List<Object> effects = new ArrayList<>();
-        if (!flag(level.heroFOV, cell) || level.blobs == null) return effects;
+        boolean visible = flag(level.heroFOV, cell);
+        if ((!visible && !flag(level.visited, cell) && !flag(level.mapped, cell)) || level.blobs == null) return effects;
         // Exactly WndInfoCell's inspection gate. Amounts and timers are intentionally absent.
         for (Blob blob : level.blobs.values()) {
+            if (!visible && !blob.alwaysVisible) continue;
             if (blob.volume <= 0 || blob.cur == null || cell >= blob.cur.length || blob.cur[cell] <= 0) continue;
             String description = blob.tileDesc();
             if (description != null) effects.add(map("type", environmentAppearance(blob), "description", description));

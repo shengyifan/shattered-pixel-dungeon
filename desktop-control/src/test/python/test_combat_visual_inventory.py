@@ -148,7 +148,7 @@ class CombatVisualReviewTest(unittest.TestCase):
     def test_retired_contract_is_explicit_history_and_cannot_authorize_current_groups(self):
         retired = {"id": "old-screen-adapter", "classification": "nonvisual",
                    "source_producer": "DeletedScreenCollector", "reason": "Unused collector removed.",
-                   "retired_in": "CLI.8.0.2"}
+                   "retired_in": "CLI.9.0.0"}
         self.reviews["retired_contracts"] = [retired]
         self.assertEqual(inventory.check(self.current, self.reviews)["retired_contracts"], 1)
         for field, value in (("id", "current-cell"), ("reason", ""), ("retired_in", "old")):

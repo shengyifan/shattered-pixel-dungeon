@@ -17,7 +17,7 @@ import uuid
 
 from machine_smoke import Client
 from client_result import ActionResult, settle_action
-import protocol8
+import protocol9
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -214,14 +214,14 @@ class PublicClient(Client):
                 raise Checkpoint("maximum_action_requests_reached")
             self.action_count += 1
         request_id = request_id or f"{self.prefix}-{self.counter + 1:d}"
-        self.log("request", request=protocol8.request(op, args, request_id, scope or self.scope, version or self.version),
+        self.log("request", request=protocol9.request(op, args, request_id, scope or self.scope, version or self.version),
                  action_number=self.action_count, cleanup=self.cleanup)
         response = super().request(op, args, request_id, scope, version)
         self.log("response", response=self.last_wire_response)
         if op == "action.execute":
             self.last_operation_response = response
         data = response.get("result")
-        if protocol8.is_live_operation(op) and response.get("ok") and isinstance(data, dict) and "observation" in data:
+        if protocol9.is_live_operation(op) and response.get("ok") and isinstance(data, dict) and "observation" in data:
             self.last_state = data
             current_file = self.profile / "current-state-public.json"
             staged = self.profile / "current-state-public.json.tmp"
@@ -473,7 +473,7 @@ class Policy:
                     if record.get("kind") != "response":
                         continue
                     wire_response = record.get("response", {})
-                    decoded = protocol8.response(wire_response) if "v" in wire_response else wire_response
+                    decoded = protocol9.response(wire_response) if "v" in wire_response else wire_response
                     data = decoded.get("result", {})
                     if not isinstance(data, dict) or data.get("scope_id") != scope:
                         continue
@@ -499,7 +499,7 @@ class Policy:
                         self.reviewed_optional.add(normalized(record["creature"]["name"]))
                         continue
                     wire_response = record.get("response", {})
-                    decoded = protocol8.response(wire_response) if "v" in wire_response else wire_response
+                    decoded = protocol9.response(wire_response) if "v" in wire_response else wire_response
                     data = decoded.get("result", {})
                     if isinstance(data, dict) and "observation" in data:
                         observed_scope = data.get("scope_id")
@@ -1159,13 +1159,7 @@ def interactive_public_session(client, attempt, state, reason="interactive_publi
             elif operation == "checkpoint":
                 checkpoint(client, attempt, state, command.get("reason", reason))
             elif operation == "play":
-                amount = int(command.get("max_actions", 100))
-                if not 1 <= amount <= 500:
-                    raise Checkpoint("interactive_play_requires_1_to_500_action_budget")
-                limit = min(client.maximum - 20, client.action_count + amount)
-                while client.action_count < limit:
-                    state = client.state()
-                    state = client.policy.decide(client, state)
+                require_autonomous_policy()
             elif operation == "stop":
                 if state.get("phase") == "awaiting_input":
                     raise Checkpoint("resolve_current_visible_choice_before_stopping")
@@ -1178,6 +1172,11 @@ def interactive_public_session(client, attempt, state, reason="interactive_publi
                               "game_connection_preserved": True}), flush=True)
             state = client.last_state or state
         display()
+
+
+def require_autonomous_policy():
+    """The pre-4.0 strategy has not been reviewed for the current game rules."""
+    raise Checkpoint("policy_requires_review_for_game_4_0_2")
 
 
 def shutdown(client):
@@ -1572,6 +1571,8 @@ def main():
     args = parser.parse_args()
     if args.self_test:
         return self_test()
+    if not args.interactive:
+        parser.error("Autonomous policy requires review for game 4.0.2; use --interactive for public operator intents")
     if args.max_actions < 12:
         parser.error("--max-actions must reserve at least 12 actions for menu and safe shutdown")
     if args.profile and args.resume_profile:
@@ -1608,39 +1609,21 @@ def main():
         try:
             client = PublicClient(command, attempt, log, args.max_actions)
             client.log("attempt", profile=str(attempt), hero=args.hero, max_actions=args.max_actions,
-                       max_depth=args.max_depth, resumed=resuming, explicit_new_run=args.new_run, policy="public-only-first-region-v5",
-                       capabilities=["adjacent_exploration", "visible_melee_combat", "known_food_and_potions",
-                                     "warrior_tier1_talents", "equipment_ui_stats", "known_upgrade_scrolls",
-                                     "seal_transfer", "observed_stairs", "boss_checkpoint"],
-                       requires_review=["npc_quest_choices", "unknown_scroll_selectors", "boss_combat",
+                       max_depth=args.max_depth, resumed=resuming, explicit_new_run=args.new_run, policy="operator_intents_only_cli9",
+                       capabilities=["public_state", "operator_reviewed_actions", "public_item_selection",
+                                     "public_choice_selection", "explicit_checkpoint"],
+                       requires_review=["autonomous_policy_game_4_0_2", "vault_mechanics", "npc_quest_choices", "unknown_scroll_selectors", "boss_combat",
                                         "class_specific_advanced_abilities"])
             print(json.dumps({"attempt": str(attempt), "public_log": log_name}, ensure_ascii=False), flush=True)
             hello = client.request("protocol.info")
             if not hello.get("ok"):
                 raise Checkpoint("protocol_start_failed")
-            if hello.get("result", {}).get("game_version") != "3.3.8":
+            if hello.get("result", {}).get("game_version") != "4.0.2":
                 raise Checkpoint("policy_requires_review_for_this_game_version")
             if args.expect_cli_version and hello.get("result", {}).get("cli_version") != args.expect_cli_version:
                 raise Checkpoint("unexpected_public_runtime_cli_version")
             state = reach_game(client, args.hero, resuming)
-            state = complete_tutorial(client, state)
-            policy = Policy(args.max_depth, args.allow_rest)
-            if resuming:
-                policy.restore_public_history(attempt, client.scope)
-            client.policy = policy
-            if args.interactive:
-                state, reason = interactive_public_session(client, attempt, state)
-            else:
-                next_checkpoint = args.checkpoint_every
-                while client.action_count < args.max_actions - 20:
-                    state = client.state()
-                    if args.pause_file and args.pause_file.exists():
-                        raise Checkpoint("pause_file_requested")
-                    if client.action_count >= next_checkpoint:
-                        checkpoint(client, attempt, state, "periodic_public_checkpoint")
-                        next_checkpoint += args.checkpoint_every
-                    state = policy.decide(client, state)
-                reason = "maximum_action_budget_checkpoint"
+            state, reason = interactive_public_session(client, attempt, state)
         except Checkpoint as stopped:
             reason = str(stopped)
         except BaseException as failure:

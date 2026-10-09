@@ -13,6 +13,7 @@ public final class GameplayGlow {
         switch(color) {
             case 0x000000: variant="black";break;
             case 0x0000FF: variant="blue";break;
+            case 0x0088FF: variant="crystal_blue";break;
             case 0x008800: variant="dark_green";break;
             case 0x00FF00: variant="green";break;
             case 0x00FFFF: variant="cyan";break;
@@ -21,6 +22,7 @@ public final class GameplayGlow {
             case 0x222222: variant="charcoal";break;
             case 0x2EE62E: variant="leaf_green";break;
             case 0x404040: variant="dark_gray";break;
+            case 0x4400AA: variant="vivid_purple";break;
             case 0x440066: variant="dark_purple";break;
             case 0x448822: variant="olive_green";break;
             case 0x660000: variant="dark_red";break;
@@ -36,6 +38,7 @@ public final class GameplayGlow {
             case 0x8EE3FF: variant="ice_blue";break;
             case 0x919999: variant="blue_gray";break;
             case 0x999999: variant="light_gray";break;
+            case 0xAA6666: variant="muted_red";break;
             case 0xA15CE5: variant="lavender";break;
             case 0xC152AA: variant="mauve";break;
             case 0xCC0022: variant="crimson";break;
@@ -58,6 +61,8 @@ public final class GameplayGlow {
         Map<String,Object> result=new LinkedHashMap<>();result.put("variant",variant);
         if("explosive_cool".equals(hint)||"explosive_warm".equals(hint)||"explosive_hot".equals(hint)) {
             result.put("kind","explosive_heat");result.put("stage",hint.substring("explosive_".length()));
+        } else if("crystal_intact".equals(hint)||"crystal_flawed".equals(hint)||"crystal_cracked".equals(hint)) {
+            result.put("kind","crystal_condition");result.put("stage",hint.substring("crystal_".length()));
         } else if("resin_fortified".equals(hint)) result.put("kind",hint);
         return Collections.unmodifiableMap(result);
     }

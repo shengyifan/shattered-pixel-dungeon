@@ -6,7 +6,7 @@ from pathlib import Path
 import time
 import combat_visual_smoke as runner
 from fixture_smoke import freeze_runtime
-from protocol8 import pages
+from protocol9 import pages
 
 
 def events(client):

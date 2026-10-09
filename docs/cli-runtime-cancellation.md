@@ -1,6 +1,6 @@
-# CLI.8.0.2 continuous actions and cancellation
+# CLI.9.0.0 continuous actions and cancellation
 
-Protocol 8 exposes native extended rest and path travel as interruptible activity.
+Protocol 9 exposes native extended rest and path travel as interruptible activity.
 A directional `move` remains one original directional input; a remote `cell` may
 start the game's continuous path. Neither arrival nor a particular number of
 turns is guaranteed. The CLI starts the original action once and never advances
@@ -39,7 +39,7 @@ nonterminal receipt yields control; it does not begin another hidden poll. Actua
 transport failures remain errors. Preserve the original outcome, error and raw
 bytes rather than treating a successful later query as proof of action success.
 
-A direct client keeps its one connection and sends a fresh protocol-8 request:
+A direct client keeps its one connection and sends a fresh protocol-9 request:
 
 ```json
 {"v":8,"id":"<FRESH_ID>","s":"<CURRENT_SCOPE>","rev":"<ACTIVITY_REV>","op":"cancel","rid":"<ORIGINAL_ID>"}

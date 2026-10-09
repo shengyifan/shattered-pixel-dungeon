@@ -113,7 +113,8 @@ public class TextCompositionInventory {
         && !target.equals("com.shatteredpixel.shatteredpixeldungeon.ui.changelist.ChangeButton")) return;
     String file = root.relativize(Paths.get(unit.getSourceFile().toUri())).toString();
     String prefix = "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/";
-    boolean catalogFile = file.startsWith(prefix + "ui/changelist/v") && file.endsWith("_Changes.java");
+    boolean catalogFile = file.startsWith(prefix + "ui/changelist/v") && file.endsWith("_Changes.java")
+        || file.equals(prefix + "ui/changelist/Pixel_Dungeon_Changes.java");
     if (!catalogFile && !file.equals(prefix + "scenes/ChangesScene.java")) {
       throw new IllegalStateException("Unreviewed caller of the trusted change catalog: " + file);
     }

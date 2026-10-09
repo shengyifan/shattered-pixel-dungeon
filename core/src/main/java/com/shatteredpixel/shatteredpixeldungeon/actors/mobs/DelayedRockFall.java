@@ -50,11 +50,14 @@ public class DelayedRockFall extends FlavourBuff {
 		return pendingWarning;
 	}
 
-	/** Matches Buff.append's attachment and delay, after the native markers are added. */
-	public void attachDelayed( Char target, float duration ) {
-		boolean attached = attachTo(target);
-		spend(duration * target.resist(getClass()));
-		if (!attached && pendingWarning != null) pendingWarning.cancel();
+	/** Binds the observed marker episode after the native Buff.append and rock setup. */
+	public void adoptWarning( PendingWarning warning ) {
+		if (pendingWarning != null && pendingWarning != warning) pendingWarning.cancel();
+		pendingWarning = warning;
+		if (pendingWarning != null) {
+			if (target == null) pendingWarning.cancel();
+			else pendingWarning.transferTo(this);
+		}
 	}
 
 	public void setRockPositions( List<Integer> rockPositions ) {

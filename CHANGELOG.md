@@ -1,8 +1,17 @@
 # CLI 变更记录
 
-本项目基于 **Shattered Pixel Dungeon 3.3.8** 扩展 CLI，上游基线为 `7b8b845a7`，游戏版本码为 `896`。CLI 使用 `CLI.主版本.次版本.修订版本`，与游戏版本、协议版本分别记录。
+本项目基于 **Shattered Pixel Dungeon 4.0.2** 扩展 CLI，上游基线为 `57a4e06a4`，游戏版本码为 `922`。CLI 使用 `CLI.主版本.次版本.修订版本`，与游戏版本、协议版本分别记录。
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
+
+## CLI.9.0.0
+
+- Merges upstream game 4.0.2 while preserving its native combat, AI, generation, timing, UI and save rules. CLI changes attach control, public observation, English provenance and auditing only. The [complete upstream review index](docs/cli-9.0.0-upstream-review.json) covers all 532 upstream paths.
+- Introduces protocol 9, audit schema 12 and the independent CLI v9 profile. Both audit stores validate game 4.0.2/code 922 before writes; earlier or ambiguous profiles are rejected without migration or deletion. One release configuration supplies launcher, handshake, native profile, catalog and fixture identity.
+- Adds displayed DOT coverage to every health sample, native known-cell OBJECT semantics and public projectile occupancy, and source-bound movement shadows without inventing terrain or hidden enemies.
+- Adapts native pooled warnings with independent disclosed-owner lifetimes and one public warning per cell. Adds Vault boss form, door energy and persistent hazards, revised Sentry/terrain sources, Crystal stages and new item effects.
+- Updates current Java/Python clients, source inventories, fixtures and portable helpers to v9. Trace format remains 1. Unreviewed autonomous 4.0.2 policy is explicitly blocked while operator-directed public intents remain available.
+- Records executed source, fixture and actual ARM64 package evidence separately in the [CLI.9.0.0 validation report](docs/cli-9.0.0-v4.0.2-validation.md). Upstream resource defects remain unchanged and are distinguished from CLI projection defects.
 
 ## CLI.8.0.2
 

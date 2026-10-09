@@ -76,7 +76,7 @@ def assert_pending_quit(result, request_id):
     assert reason in {"action_pending", "budget_exhausted", "response_pending"}, result
     if reason == "response_pending":
         query = result["pending_request"]
-        assert query.get("v") == 8 and query.get("op") == "req", result
+        assert query.get("v") == 9 and query.get("op") == "req", result
         assert query.get("rid") == request_id and query.get("s") == result.get("s"), result
         assert isinstance(query.get("id"), str) and query["id"] and query["id"] != request_id, result
     else:

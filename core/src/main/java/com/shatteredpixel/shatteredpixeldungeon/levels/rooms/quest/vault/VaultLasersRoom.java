@@ -26,16 +26,10 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
-import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
 import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
-public class VaultLasersRoom extends StandardRoom {
-
-	@Override
-	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
-	}
+public class VaultLasersRoom extends VaultRoom {
 
 	@Override
 	public void paint(Level level) {
@@ -62,7 +56,7 @@ public class VaultLasersRoom extends StandardRoom {
 					laser.laserDirs = new int[]{cell-level.width()};
 					laser.pos = cell;
 				}
-				laser.afterShotCooldown = Random.IntRange(3, 7);
+				laser.afterShotCooldown = Random.IntRange(7, 9);
 				laser.curCooldown = Random.IntRange(1, laser.afterShotCooldown);
 				level.mobs.add(laser);
 			}
@@ -83,12 +77,17 @@ public class VaultLasersRoom extends StandardRoom {
 					laser.laserDirs = new int[]{cell-1};
 					laser.pos = cell;
 				}
-				laser.afterShotCooldown = Random.IntRange(3, 7);
+				laser.afterShotCooldown = Random.IntRange(7, 9);
 				laser.curCooldown = Random.IntRange(1, laser.afterShotCooldown);
 				level.mobs.add(laser);
 			}
 		}
 
+	}
+
+	@Override
+	public boolean canPlaceCharacter(Point p, Level l) {
+		return false;
 	}
 
 }

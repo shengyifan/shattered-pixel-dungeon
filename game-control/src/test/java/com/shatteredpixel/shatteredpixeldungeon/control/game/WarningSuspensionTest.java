@@ -253,8 +253,7 @@ class WarningSuspensionTest {
         final int previousQueued = queued.get();
 
         @SuppressWarnings("unchecked") Harness() throws Exception {
-            preserve(Game.class.getDeclaredField("version"));
-            Game.version = "3.3.8";
+            // The shared fixture supplies and restores the v4.0.2 runtime identity.
             for (Field field : PathFinder.class.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && !Modifier.isFinal(field.getModifiers())) preserve(field);
             }
@@ -355,8 +354,7 @@ class WarningSuspensionTest {
             return f.frame().stream().filter(cue -> cue.kind.equals("red_target") && cue.cell == cell).count();
         }
         void fadeMarkers() {
-            Game.elapsed = 2.3f;
-            for (var member : sprites.childrenSnapshot()) if (member instanceof TargetedCell) ((TargetedCell) member).update();
+            f.fadeMarkers();
         }
         void withoutMapRenderer(NativeCall call) throws Exception {
             set(null, GameScene.class, "scene", null);

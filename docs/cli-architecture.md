@@ -1,12 +1,12 @@
-# CLI.8.0.2 architecture and verification
+# CLI.9.0.0 architecture and verification
 
-The maintained contract is **CLI.8.0.2 / protocol 8 / audit schema 11**, with game
-**3.3.8** and trace format **1**. The [English help](cli-help.md) defines public
+The maintained contract is **CLI.9.0.0 / protocol 9 / audit schema 12**, with game
+**4.0.2** and trace format **1**. The [English help](cli-help.md) defines public
 commands and schemas. [Semantic observations](cli-combat-visuals.md),
 [client guidance](cli-playthrough-client.md) and [cancellation](cli-runtime-cancellation.md)
 explain the relevant boundaries. This document maps those contracts to source and
 verification entrypoints; test counts and package identity belong in the
-[current validation report](cli-8.0.2-cleanup-validation.md).
+[current validation report](cli-9.0.0-v4.0.2-validation.md).
 
 ## Source responsibilities
 
@@ -19,7 +19,7 @@ verification entrypoints; test counts and package identity belong in the
 | Public observation | [PlayerObservation](../game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/PlayerObservation.java) captures player knowledge. [GameplayObservation](../game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameplayObservation.java) projects semantic facts; [CompactProtocol](../game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/CompactProtocol.java) encodes each complete response. |
 | World cues | [VisualCueCollector](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java) accepts reviewed public sources under map/FOV rules. [TargetedCell](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/TargetedCell.java) retains already revealed pending warnings until native completion or cancellation. |
 | Public English text | [TextProvenance](../game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/text/TextProvenance.java) and [EnglishTextRenderer](../game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/text/EnglishTextRenderer.java) retain source-bound public text independently of the GUI language. Unknown sources remain diagnostic; labels do not identify hidden objects. |
-| Optional external decoder | [spdctl_client.py](../desktop-control/client/spdctl_client.py) validates complete v8 replies, wrappers and proposed intents without transport or gameplay policy. |
+| Optional external decoder | [spdctl_client.py](../desktop-control/client/spdctl_client.py) validates complete v9 replies, wrappers and proposed intents without transport or gameplay policy. |
 | Packaging and trace transport | [desktop-control/build.gradle](../desktop-control/build.gradle) creates the catalog and ARM64 app. [Native bootstrap](../desktop-control/src/main/native/spdctl-bootstrap.c) preserves child wire bytes and keeps diagnostics separate. |
 
 ## Observations, revisions and outcomes
@@ -68,9 +68,10 @@ must retain the original identity and bytes; never automatically replay them.
 
 ## Profile and verification boundaries
 
-The v8 profile is independent of earlier profiles. Nonempty profiles without a
-valid schema-11 audit pair, including older schemas, are rejected before writes;
-there is no automatic migration, deletion or old-wire fallback. Implementation
+The v9 profile is independent of earlier profiles. Nonempty profiles without a
+valid schema-12 audit pair, including older schemas, are rejected before writes;
+both metadata stores must also match game 4.0.2 and game version code 922.
+There is no automatic migration, deletion or old-wire fallback. Implementation
 and regressions use newly created, explicitly labeled isolated profiles. They do
 not inspect or operate a personal game. Editing source or rebuilding an app does
 not hot-update an existing JVM.
@@ -118,14 +119,14 @@ The retained token tools are explicit offline studies, not gameplay clients.
 They read caller-supplied public traces and do not launch or inspect a personal
 profile. Historical CLI7 decoding comes from the fixed Git revision and verified
 source hashes in [historical_v7_helpers.py](../desktop-control/src/test/python/historical_v7_helpers.py),
-loaded without replacing the current protocol-8 decoder. The required Git objects
+loaded without replacing the current protocol-9 decoder. The required Git objects
 must be available; there is no silent fallback to current code.
 
 - [cli7_token_benchmark.py](../desktop-control/src/test/python/cli7_token_benchmark.py)
   requires the historical v7 context, explicit corpus/fixture/classpath/output,
   and `tiktoken==0.12.0`. Zero savings or growth is a valid measured result;
   `--require-smaller` opts into a separate strict performance gate.
-- [cli8_token_study.py](../desktop-control/src/test/python/cli8_token_study.py)
+- [cli9_token_study.py](../desktop-control/src/test/python/cli9_token_study.py)
   requires explicit session, baseline and output paths and `tiktoken==0.14.0`.
   Frame counts come from the supplied baseline, not a fixed historical corpus size.
 

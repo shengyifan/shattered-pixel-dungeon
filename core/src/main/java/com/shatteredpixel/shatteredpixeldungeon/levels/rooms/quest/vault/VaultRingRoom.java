@@ -21,21 +21,20 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.vault;
 
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.VaultRat;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.quest.vault.VaultDM100;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.quest.vault.VaultSkeleton;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
-import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
 import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
-public class VaultRingRoom extends StandardRoom {
+import java.util.ArrayList;
 
-	@Override
-	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
-	}
+public class VaultRingRoom extends VaultRoom {
 
 	@Override
 	public void paint(Level level) {
@@ -48,33 +47,53 @@ public class VaultRingRoom extends StandardRoom {
 			door.set( Door.Type.REGULAR );
 		}
 
-		VaultRat rat = new VaultRat();
-		do {
-			rat.pos = level.pointToCell(random(1));
-		} while (level.solid[rat.pos]);
+		boolean nextToEntry = false;
+		for (Room r : connected.keySet()){
+			if (r.isEntrance()){
+				nextToEntry = true;
+			}
+		}
 
+		Mob enemy;
+		boolean valid;
+		ArrayList<Class<?extends Mob>> toReturn = new ArrayList<>();
+		do {
+			valid = true;
+			enemy = level.createMob();
+			//only T1 enemies next to entrance
+			if (nextToEntry && !(enemy instanceof VaultSkeleton || enemy instanceof VaultDM100)){
+				valid = false;
+			}
+			if (!valid){
+				toReturn.add(enemy.getClass());
+			}
+		} while (!valid);
+
+		int[] wanderPositions;
 		if (Random.Int(2) == 0) {
-			rat.wanderPositions = new int[]{
+			wanderPositions = new int[]{
 					level.pointToCell(new Point(left+2, top+2)),
 					level.pointToCell(new Point(right-2, top+2)),
 					level.pointToCell(new Point(right-2, bottom-2)),
 					level.pointToCell(new Point(left+2, bottom-2))
 			};
 		} else {
-			rat.wanderPositions = new int[]{
+			wanderPositions = new int[]{
 					level.pointToCell(new Point(left+2, bottom-2)),
 					level.pointToCell(new Point(right-2, bottom-2)),
 					level.pointToCell(new Point(right-2, top+2)),
 					level.pointToCell(new Point(left+2, top+2))
 			};
 		}
-		rat.wanderPosIdx = Random.Int(4);
-		rat.state = rat.WANDERING;
-		level.mobs.add(rat);
-	}
 
-	@Override
-	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
-		return false;
+		int idx = Random.Int(4);
+		enemy.pos = wanderPositions[idx];
+		enemy.setupStealthGameplayWanderPositions(wanderPositions, idx);
+		enemy.state = enemy.WANDERING;
+		level.mobs.add(enemy);
+
+		for (Class<?extends Mob> cls : toReturn){
+			((VaultLevel) level).returnMob(cls);
+		}
 	}
 }

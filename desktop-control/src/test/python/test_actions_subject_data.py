@@ -1,4 +1,4 @@
-"""Offline Protocol 8 actions-only subject facts: no earlier frame is consulted."""
+"""Offline Protocol 9 actions-only subject facts: no earlier frame is consulted."""
 
 import copy
 import sys
@@ -10,7 +10,7 @@ from spdctl_client import DecodeError, decode_wire_response
 
 
 def actions_frame(nodes, *, identifier="actions", revision="r9"):
-    return {"v": 8, "id": identifier, "s": "s2", "rev": revision, "st": "completed", "data": {
+    return {"v": 9, "id": identifier, "s": "s2", "rev": revision, "st": "completed", "data": {
         "phase": "player_ready",
         "acts": [{"op": "click", "ctl": "item", "gestures": ["click"], "label": "Use"}],
         "ui": {"nodes": nodes},
@@ -38,7 +38,7 @@ def owners():
         {"id": "entity", "label": "Rat", "ops": [], "subject_data": {
             "kind": "character", "cell": 13, "name": "rat",
             "health_estimate": {"samples": [{"total": 16, "filled": 0,
-                                              "with_shield": 4, "basis": "displayed"}]},
+                                              "with_shield": 4, "incoming_dot": 0, "basis": "displayed"}]},
             "buffs": [{"name": "Poison", "shown": {"symbol": "buff_poison"}}]}},
         {"id": "entity-buff", "label": "Poison", "ops": [], "subject_data": {
             "name": "Poison", "icon": 55, "shown": {"symbol": "buff_poison",
@@ -116,7 +116,7 @@ class ActionsSubjectDataTest(unittest.TestCase):
             {**owners()[0], "subject_data": {"loc": "backpack.4", "shown": {"progress": {
                 "covered": 4, "total": 0, "basis": "displayed"}}}},
             {**owners()[3], "subject_data": {"kind": "character", "health_estimate": {
-                "samples": [{"total": 16, "filled": 8, "with_shield": 4, "basis": "displayed"}]}}},
+                "samples": [{"total": 16, "filled": 8, "with_shield": 4, "incoming_dot": 0, "basis": "displayed"}]}}},
         ]
         for bad in cases:
             with self.subTest(id=bad["id"], keys=list(bad)), self.assertRaises(DecodeError):

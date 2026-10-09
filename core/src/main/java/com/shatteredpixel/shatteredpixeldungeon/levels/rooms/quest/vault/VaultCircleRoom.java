@@ -25,17 +25,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.VaultSentry;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
-import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
-import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
 import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
-public class VaultCircleRoom extends StandardRoom {
-
-	@Override
-	public float[] sizeCatProbs() {
-		return new float[]{0, 1, 0};
-	}
+public class VaultCircleRoom extends VaultRoom {
 
 	@Override
 	public void paint(Level level) {
@@ -49,12 +42,13 @@ public class VaultCircleRoom extends StandardRoom {
 
 		VaultSentry sentry = new VaultSentry();
 		sentry.pos = level.pointToCell(center());
+		sentry.afterScanCooldown = 2;
 
 		sentry.scanLength = 4.49f;
 
 		int w = level.width();
 
-		switch (Random.Int(4)){
+		switch (Random.Int(3)){
 			case 0:
 				sentry.scanWidth = 90f;
 
@@ -82,7 +76,8 @@ public class VaultCircleRoom extends StandardRoom {
 						new int[]{sentry.pos+2-level.width(), sentry.pos-2+level.width()},
 				};
 				break;
-			case 3:
+				//removed, too difficult
+			/*case 3:
 				sentry.scanWidth = 22.5f;
 
 				sentry.scanDirs = new int[][]{
@@ -93,7 +88,7 @@ public class VaultCircleRoom extends StandardRoom {
 						new int[]{sentry.pos-2-3*w, sentry.pos+3-2*w, sentry.pos+2+3*w, sentry.pos-3+2*w},
 						new int[]{sentry.pos-1-3*w, sentry.pos+3-1*w, sentry.pos+1+3*w, sentry.pos-3+1*w},
 				};
-				break;
+				break;*/
 		}
 
 		level.mobs.add(sentry);
@@ -105,9 +100,8 @@ public class VaultCircleRoom extends StandardRoom {
 	}
 
 	@Override
-	public boolean canMerge(Level l, Room other, Point p, int mergeTerrain) {
+	public boolean canPlaceCharacter(Point p, Level l) {
 		return false;
 	}
-
 
 }

@@ -22,7 +22,8 @@ class FixtureIdentityTest(unittest.TestCase):
         self.database=self.profile/"audit/public.sqlite3"
         with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY,value TEXT)")
-            db.execute("INSERT INTO metadata VALUES('schema_version','11')")
+            db.execute("INSERT INTO metadata VALUES('schema_version','12')")
+            db.executemany("INSERT INTO metadata VALUES(?,?)", [("game_version", "4.0.2"), ("game_version_code", "922")])
             db.execute("CREATE TABLE public_handles(kind TEXT,canonical TEXT,handle TEXT)")
             db.executemany("INSERT INTO public_handles VALUES(?,?,?)",[
                 ("scope","run:fixture","s2"),("revision","epoch:17","rh"),
