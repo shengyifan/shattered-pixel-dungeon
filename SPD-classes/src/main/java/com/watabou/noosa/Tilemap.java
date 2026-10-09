@@ -99,6 +99,19 @@ public class Tilemap extends Visual {
 		}
 	}
 
+	/** Pure lookup of an already selected presentation frame, never invoking needsRender or image. */
+	public final int presentationFrameAt(int x, int y) {
+		if (texture == null || data == null || tileset == null || x < 0 || y < 0
+				|| x >= mapWidth || y >= mapHeight || !Float.isFinite(cellW + cellH)
+				|| cellW <= 0 || cellH <= 0) return -1;
+		long index = (long) y * mapWidth + x;
+		if (index >= size || index >= data.length) return -1;
+		int frame = data[(int) index];
+		RectF region = frame < 0 ? null : tileset.get(frame);
+		return region != null && Float.isFinite(region.left + region.top + region.right + region.bottom)
+				&& region.width() > 0 && region.height() > 0 ? frame : -1;
+	}
+
 	@Override public void revive() {
 		drawObserver = null;
 		super.revive();

@@ -69,7 +69,7 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.9.0.0", self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.9.0.1", self.hello
             assert self.hello["data"]["audit_schema_version"] == 12, self.hello
             self.install(self.hello, "info")
         except Exception:
@@ -748,7 +748,7 @@ def main():
         environment.pop(key, None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.9.0.0 (protocol 9, game 4.0.2)", version
+    assert version == "CLI.9.0.1 (protocol 9, game 4.0.2)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}

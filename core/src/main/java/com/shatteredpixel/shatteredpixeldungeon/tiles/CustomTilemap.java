@@ -23,10 +23,14 @@ package com.shatteredpixel.shatteredpixeldungeon.tiles;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.NoosaScript;
 import com.watabou.noosa.TextureFilm;
 import com.watabou.noosa.Tilemap;
+import com.watabou.noosa.Visual;
 import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
 
@@ -146,6 +150,48 @@ public abstract class CustomTilemap implements Bundlable {
 
 	public String desc(int tileX, int tileY){
 		return null;
+	}
+
+	/** Existing native presentation only; independent of viewport clipping and modal windows. */
+	public final int presentationFrameAt(int tileX, int tileY) {
+		if (vis == null || Game.instance == null || !(Game.scene() instanceof GameScene)
+				|| tileX < 0 || tileY < 0 || tileX >= tileW || tileY >= tileH) return -1;
+		// The selected frame can identify this cell only at its native, untransformed anchor.
+		if (!Float.isFinite(vis.x + vis.y + vis.width + vis.height)
+				|| vis.x != this.tileX * (float) SIZE || vis.y != this.tileY * (float) SIZE
+				|| vis.width != tileW * (float) SIZE || vis.height != tileH * (float) SIZE
+				|| vis.scale == null || vis.scale.x != 1 || vis.scale.y != 1 || vis.angle != 0
+				|| vis.origin == null || vis.origin.x != 0 || vis.origin.y != 0) return -1;
+		for (Gizmo node = vis; node != null; node = node.parent) {
+			if (!node.exists || !node.alive || !node.visible) return -1;
+			if (node instanceof Visual) {
+				Visual visual = (Visual) node;
+				if (!Float.isFinite(visual.am + visual.aa) || visual.am + visual.aa <= 0) return -1;
+			}
+			if (node == Game.scene()) return vis.presentationFrameAt(tileX, tileY);
+		}
+		return -1;
+	}
+
+	/**
+	 * Opt-in semantic description for a reviewed, already selected public frame.
+	 * Implementations must be pure and must not inspect hidden terrain or invoke image/name/desc.
+	 * Unreviewed presentation layers deliberately provide no additional terrain knowledge.
+	 */
+	public PublicTerrain publicTerrain(int presentationFrame) {
+		return null;
+	}
+
+	public static final class PublicTerrain {
+		public final int terrain;
+		public final String name;
+		public final String description;
+
+		public PublicTerrain(int terrain, String name, String description) {
+			this.terrain = terrain;
+			this.name = name;
+			this.description = description;
+		}
 	}
 
 	private static final String TILE_X  = "tileX";

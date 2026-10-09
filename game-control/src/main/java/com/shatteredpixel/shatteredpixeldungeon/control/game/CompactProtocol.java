@@ -374,6 +374,7 @@ public final class CompactProtocol {
                         "alphabet",TILE_ALPHABET,"vis",map("v","visible","s","visited","m","mapped"),"unknown","omitted; rows split at unknown gaps",
                         "visibility","one v/s/m repeats to tiles length in play; otherwise exactly one visibility per tile; empty rows are invalid; full always uses per-cell visibility",
                         "coordinates","cell=y*w+x_start+offset","env","complete cell-indexed visible effects; omitted means empty; array is inline, integer indexes this map's effect_defs",
+                        "terrain","public base appearance plus reviewed attached custom presentation: smithy solid frames preserve terrain 23/39 and native name/desc; ordinary water remains 29; unknown or unavailable presentation never exposes private terrain flags",
                         "effect_defs","each definition is a complete ordered effect list; indexes are zero-based and valid only in this observation"),
                 "entities",map("inline","ordinary entity object","reference",map("cell","cell binding","def","zero-based index into this observation's entity_defs"),
                         "entity_defs","complete trap/container/character/object descriptor except cell; duplicates must be structurally identical including metadata",

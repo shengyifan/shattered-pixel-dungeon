@@ -1,6 +1,6 @@
 # Public CLI clients and per-frame decoding
 
-## Reusable CLI.9.0.0 reference helper
+## Reusable CLI.9.0.1 reference helper
 
 `desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
 module for consumers of the packaged controller. It does not launch the game,
@@ -39,7 +39,7 @@ against complete current hero/item/entity/buff facts. Ambiguous or missing subje
 are decoding errors. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
-CLI.9.0.0 validates static parameters for every action, query and local `settle`,
+CLI.9.0.1 validates static parameters for every action, query and local `settle`,
 including required/extra fields and JSON integer versus boolean/float distinctions.
 An omitted settle rid resumes the owner of an outstanding query first, otherwise
 the latest pending action; an explicit invalid rid is never treated as omitted.
@@ -187,8 +187,18 @@ python3 desktop-control/src/test/python/autoplay.py --self-test
 
 Source/test organization and explicit offline token-study entrypoints are in the
 [current architecture](cli-architecture.md). Executed checks belong in the
-[current validation report](cli-9.0.0-v4.0.2-validation.md), separately from
+[current validation report](cli-9.0.1-terrain-validation.md), separately from
 actual playthrough evidence in the [project memory](../memory/README.md).
 Display each complete response using that same parsed object; do not filter by
 fixed English labels, crop the map without marking it, remove descriptions, omit
 public cues or combine an old body with a new revision.
+
+## Public custom terrain
+
+Default map type descriptors preserve reviewed custom terrain identity, name and
+`desc`, rather than only the base tile. Ordinary water is terrain 29; a publicly
+presented Smithy basin is terrain 39 and its other solid pieces use terrain 23.
+The helper never guesses this distinction from a name or neighboring NPC. The
+map/cell helpers retain the complete descriptor; ray geometry uses its reviewed
+terrain identity and keeps unknown gaps unknown. An absent custom presentation
+does not prove that every unreported blocker is absent.

@@ -64,6 +64,7 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection",
+            "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap.PublicTerrain",
             "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
             "com.shatteredpixel.shatteredpixeldungeon.effects.GameplayBurst",
             "com.shatteredpixel.shatteredpixeldungeon.effects.SpectralWallCue",
@@ -216,6 +217,12 @@ public final class CombatVisualInventory {
                             boolean displayAccessor=visual(symbol.getEnclosingElement().asType())
                                     &&(method.startsWith("rendered")||method.startsWith("displayed")||method.equals("intentStatus"));
                             if(displayAccessor||OBSERVATION_TYPES.stream().anyMatch(type->owner.equals(type)||owner.startsWith(type+"."))
+                                    ||method.equals("presentationFrameAt")
+                                            &&(owner.equals("com.watabou.noosa.Tilemap")
+                                            ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap"))
+                                    ||method.equals("publicTerrain")
+                                            &&subtype(symbol.getEnclosingElement().asType(),
+                                            "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap")
                                     ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene")
                                             &&method.equals("observeSpectralWall")
                                     ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite")

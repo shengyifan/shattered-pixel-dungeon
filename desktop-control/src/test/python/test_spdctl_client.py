@@ -176,7 +176,7 @@ class SpdctlClientDecoderTest(unittest.TestCase):
         outcome = wire("lookup", revision=None, data={"id": "action", "op": "cell", "st": "COMPLETED",
                                                              "save": [{"sid": "p1"}]})
         outcome.pop("rev")
-        discovery = wire("info", revision="r8", data={"cli_version": "CLI.9.0.0"})
+        discovery = wire("info", revision="r8", data={"cli_version": "CLI.9.0.1"})
         observation = wire("state", revision="r9", data={"phase": "player_ready", "hero": {"cell": 42}})
         result = decode_client_response({
             "controller": "settle", "rid": "action", "s": "s2", "st": "completed",

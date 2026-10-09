@@ -216,6 +216,19 @@ public class BlacksmithRoom extends StandardRoom {
 		}
 
 		@Override
+		public PublicTerrain publicTerrain(int presentationFrame) {
+			int terrain;
+			switch (presentationFrame) {
+				case 7: case 16: case 17: terrain = Terrain.CUSTOM_DECO; break;
+				case 18: terrain = Terrain.CUSTOM_DECO_WTR; break;
+				default: return null;
+			}
+			// The actual selected smithy image supplies these native inspectable facts.
+			// Do not call name/desc: their fallback branches consult backing level terrain.
+			return new PublicTerrain(terrain, Messages.get(this, "name"), Messages.get(this, "desc"));
+		}
+
+		@Override
 		public Tilemap create() {
 			Tilemap v = super.create();
 			int[] data = new int[tileW*tileH];

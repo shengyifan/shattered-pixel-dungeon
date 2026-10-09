@@ -106,6 +106,8 @@ public final class FixtureLauncher {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("vault") && Cli9VaultScenarioFixtures.supports(name)) {
                 heroClass = Cli9VaultScenarioFixtures.heroClass(name); subclass = HeroSubClass.NONE;
+            } else if (kind.equals("terrain") && PublicTerrainScenarioFixtures.supports(name)) {
+                heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("notes") && NoteScenarioFixtures.supports(name)) {
                 heroClass = HeroClass.WARRIOR; subclass = HeroSubClass.NONE;
             } else if (kind.equals("container") && ContainerScenarioFixtures.supports(name)) {
@@ -292,6 +294,7 @@ public final class FixtureLauncher {
                             "low_frequency", fixture.kind.equals("lowfreq") ? LowFrequencyFixtures.assertions() : null,
                             "transition_scenario", fixture.kind.equals("scenario") ? TransitionScenarioFixtures.assertions() : null,
                             "vault", fixture.kind.equals("vault") ? Cli9VaultScenarioFixtures.assertions() : null,
+                            "public_terrain", fixture.kind.equals("terrain") ? PublicTerrainScenarioFixtures.assertions() : null,
                             "notes", fixture.kind.equals("notes") ? NoteScenarioFixtures.assertions() : null,
                             "containers", fixture.kind.equals("container") ? ContainerScenarioFixtures.assertions() : null,
                             "item_window", fixture.kind.equals("itemui") ? ItemWindowFixtures.assertions() : null,
@@ -330,6 +333,10 @@ public final class FixtureLauncher {
         if (fixture.kind.equals("class") || fixture.kind.equals("menu") || fixture.kind.equals("notes")) return null;
         if (fixture.kind.equals("vault")) {
             Cli9VaultScenarioFixtures.prepare(fixture.name, hero);
+            return null;
+        }
+        if (fixture.kind.equals("terrain")) {
+            PublicTerrainScenarioFixtures.prepare(fixture.name, hero);
             return null;
         }
         if (fixture.kind.equals("container")) {

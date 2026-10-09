@@ -1,4 +1,4 @@
-# CLI.9.0.0 semantic combat observations
+# CLI.9.0.1 semantic combat observations
 
 Protocol 9 and audit schema 12 publish player-facing combat facts from existing
 game state and presentation sources. The observation is a complete public snapshot
@@ -160,4 +160,4 @@ appearance in current observations or new events.
 The source inventory records reviewed routes and source contracts; it does not
 prove producer-specific runtime coverage. Current maintenance and test entrypoints
 are in the [architecture](cli-architecture.md); executed checks and package evidence
-are recorded separately in the [CLI.9.0.0 validation report](cli-9.0.0-v4.0.2-validation.md).
+are recorded separately in the [CLI.9.0.1 validation report](cli-9.0.1-terrain-validation.md).

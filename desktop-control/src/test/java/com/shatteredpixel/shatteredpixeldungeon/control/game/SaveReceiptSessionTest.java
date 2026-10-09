@@ -255,7 +255,7 @@ public class SaveReceiptSessionTest {
     @Test public void currentSessionAttributionDoesNotPullPriorSessionReceiptsIntoANewAction() throws Exception {
         Path profile = temporary.newFolder().toPath();
         try (AuditStore old = new AuditStore(profile)) {
-            old.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.9.0.0",9);
+            old.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.9.0.1",9);
             old.ensureScope(SCOPE, "run", "receipt-fixture");
             old.recordSave("previous-session-save", SCOPE, 1, true, TIME, SCOPE, "future-id", null);
             old.endSession("CLOSED", "fixture complete");
@@ -373,7 +373,7 @@ public class SaveReceiptSessionTest {
         final MachineSession session;
         Harness(Path path) throws Exception {
             store = new AuditStore(path);
-            store.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.9.0.0",9);
+            store.beginSession(UUID.randomUUID().toString(),"fixture-build","CLI.9.0.1",9);
             store.ensureScope(SCOPE, "run", "receipt-fixture");
             session = new MachineSession(store, game, new PrintStream(output, true, "UTF-8"), 30);
         }

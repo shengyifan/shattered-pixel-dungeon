@@ -88,6 +88,26 @@ class PublicHelperTest(unittest.TestCase):
         self.assertEqual("Visible fire", first["environment"][0]["desc"])
         self.assertEqual("red_target", second["cues"][0]["kind"])
 
+    def test_map_and_cells_preserve_water_and_custom_decoration_descriptors(self):
+        source = observation()
+        water = {"terrain": 29, "name": "Water", "desc": "Ordinary visible water."}
+        decoration = {"terrain": 39, "name": "Water basin", "desc": "Visible solid basin."}
+        source["data"]["map"]["types"].extend([water, decoration])
+        source["data"]["map"]["rows"][2] = [2, 0, "0034000", "v"]
+        code, output, _ = self.run_helper("map.py", source)
+        self.assertEqual(0, code, output)
+        legend = json.loads(next(line.removeprefix("Legend ") for line in output.splitlines()
+                                 if line.startswith("Legend ")))
+        water_entry = next(entry for entry in legend if entry["terrain"] == 29)
+        deco_entry = next(entry for entry in legend if entry["terrain"] == 39)
+        self.assertNotEqual(water_entry["symbol"], deco_entry["symbol"])
+        self.assertEqual(water, {key: value for key, value in water_entry.items() if key != "symbol"})
+        self.assertEqual(decoration, {key: value for key, value in deco_entry.items() if key != "symbol"})
+        code, output, _ = self.run_helper("cells.py", source, "16", "17")
+        self.assertEqual(0, code, output)
+        for cell, descriptor in zip(json.loads(output)["cells"], (water, decoration)):
+            self.assertEqual(descriptor, {key: cell["public_cell"][key] for key in descriptor})
+
     def test_cells_reject_outside_coordinates_without_wrapping_to_another_row(self):
         code, output, _ = self.run_helper("cells.py", observation(), "7,1", "35", "north")
         self.assertEqual(2, code)
@@ -314,30 +334,48 @@ class BallisticaPortTest(unittest.TestCase):
         self.assertEqual([], cell["entities"])
         self.assertEqual("movement_shadow", cell["cues"][0]["kind"])
 
-    def test_public_water_appearance_stops_all_profiles_without_private_lookup(self):
+    def test_ordinary_public_water_allows_all_profiles_without_private_lookup(self):
         source = observation()
         source["data"]["map"]["types"].append({"terrain": 29, "name": "Water"})
         source["data"]["map"]["rows"][2] = [2, 0, "0003000", "v"]
         source["data"]["map"]["env"] = {}
-        # Identical public WATER may mean ordinary water or solid custom water
-        # decoration. Neither interpretation is supplied or guessed here.
         for mode in ("projectile", "magicbolt", "solidbeam"):
             with self.subTest(mode=mode), \
                     patch.object(Path, "read_bytes", side_effect=AssertionError("No private file lookup")), \
                     patch.object(Path, "read_text", side_effect=AssertionError("No private file lookup")):
                 result = self.predict(source, mode=mode)
-                self.assertEqual({"cell": 17, "index": 2,
-                                  "reason": "public_appearance_collision_ambiguous"},
-                                 result["first_unknown_stops_prediction"])
-                self.assertIsNone(result["conditional_collision_prediction"])
-                self.assertIsNone(result["conditional_travel_path_to_collision"])
-                self.assertIsNone(result["predicted_reaches_target_under_assumptions"])
-                row = result["evaluated_path_including_blocking_probe"][-1]
-                self.assertIsNone(row["flags"])
-                self.assertEqual(29, row["known_cell"]["terrain"])
+                self.assertIsNone(result["first_unknown_stops_prediction"])
+                self.assertTrue(result["predicted_reaches_target_under_assumptions"])
+                self.assertEqual([15, 16, 17, 18, 19], result["conditional_travel_path_to_collision"])
+                self.assertTrue(result["conditional_collision_prediction"]["conditional"])
+                self.assertIn(17, result["cells_assuming_no_unreported_collision_occupant"])
+                row = next(row for row in result["evaluated_path_including_blocking_probe"] if row["cell"] == 17)
+                self.assertEqual({"passable": True, "avoid": False, "solid": False,
+                                  "public_web_sets_solid": False}, row["flags"])
                 self.assertNotIn("native_terrain", row)
 
-    def test_public_water_actor_or_object_proves_stop_chars_but_not_solidbeam(self):
+    def test_public_solid_custom_decorations_stop_before_cell_without_occupant(self):
+        for terrain in (23, 39):
+            source = observation()
+            source["data"]["map"]["types"].append({"terrain": terrain,
+                "name": "Public decoration", "desc": "The visibly presented decoration."})
+            source["data"]["map"]["rows"][2] = [2, 0, "0003000", "v"]
+            for mode in ("projectile", "magicbolt", "solidbeam"):
+                with self.subTest(terrain=terrain, mode=mode), \
+                        patch.object(Path, "read_bytes", side_effect=AssertionError("No private file lookup")), \
+                        patch.object(Path, "read_text", side_effect=AssertionError("No private file lookup")):
+                    result = self.predict(source, mode=mode)
+                    self.assertIsNone(result["first_unknown_stops_prediction"])
+                    self.assertEqual([15, 16], result["conditional_travel_path_to_collision"])
+                    collision = result["conditional_collision_prediction"]
+                    self.assertEqual((16, 17, "hard_terrain_without_observed_collision_occupant_stops_at_previous"),
+                                     (collision["cell"], collision["trigger_cell"], collision["reason"]))
+                    self.assertFalse(result["predicted_reaches_target_under_assumptions"])
+                    row = result["evaluated_path_including_blocking_probe"][-1]
+                    self.assertEqual({"passable": False, "avoid": False, "solid": True,
+                                      "public_web_sets_solid": False}, row["flags"])
+
+    def test_public_water_actor_or_object_stops_only_stop_chars_profiles(self):
         for occupant in ({"kind": "character", "cell": 17, "name": "rat"},
                          {"kind": "object", "cell": 17, "name": "token door",
                           "projectile_collision": "character"}):
@@ -350,19 +388,46 @@ class BallisticaPortTest(unittest.TestCase):
                     result = self.predict(source, mode=mode)
                     self.assertIsNone(result["first_unknown_stops_prediction"])
                     self.assertEqual(17, result["conditional_collision_prediction"]["cell"])
-                    self.assertEqual("known_collision_occupant_independent_of_unknown_flags",
-                                     result["conditional_collision_prediction"]["reason"])
+                    self.assertEqual("known_collision_occupant", result["conditional_collision_prediction"]["reason"])
                     self.assertFalse(result["predicted_reaches_target_under_assumptions"])
             result = self.predict(source, mode="solidbeam")
-            self.assertEqual("public_appearance_collision_ambiguous",
-                             result["first_unknown_stops_prediction"]["reason"])
-            self.assertIsNone(result["conditional_collision_prediction"])
+            self.assertIsNone(result["first_unknown_stops_prediction"])
+            self.assertTrue(result["predicted_reaches_target_under_assumptions"])
             if occupant["kind"] == "object":
                 decoded = decode_client_response(source).require_current_frame()
                 with self.assertRaisesRegex(ValueError, "explicitly observed character"):
                     ray.predict(decoded.frame, 19, "projectile", self.model, requested_source=17)
 
-    def test_water_ambiguity_does_not_promote_disguises_or_shadows_to_occupants(self):
+    def test_public_solid_custom_decorations_with_object_stop_on_cell(self):
+        source = observation()
+        source["data"]["map"]["types"].append({"terrain": 39, "name": "Public decoration"})
+        source["data"]["map"]["rows"][2] = [2, 0, "0003000", "v"]
+        source["data"]["entities"].append({"kind": "object", "cell": 17,
+            "name": "token door", "projectile_collision": "character"})
+        for mode in ("projectile", "magicbolt", "solidbeam"):
+            with self.subTest(mode=mode):
+                result = self.predict(source, mode=mode)
+                self.assertIsNone(result["first_unknown_stops_prediction"])
+                self.assertEqual(17, result["conditional_collision_prediction"]["cell"])
+                self.assertEqual("solid_cell", result["conditional_collision_prediction"]["reason"])
+
+    def test_unknown_terrain_occupant_only_establishes_stop_chars_collision(self):
+        source = observation()
+        source["data"]["map"]["rows"] = [[2, 1, "00", "v"], [2, 4, "00", "v"]]
+        source["data"]["map"]["env"] = {}
+        source["data"]["entities"].append({"kind": "object", "cell": 17,
+            "name": "token door", "projectile_collision": "character"})
+        for mode in ("projectile", "magicbolt"):
+            with self.subTest(mode=mode):
+                result = self.predict(source, mode=mode)
+                self.assertEqual(17, result["conditional_collision_prediction"]["cell"])
+                self.assertEqual("known_collision_occupant_independent_of_unknown_flags",
+                                 result["conditional_collision_prediction"]["reason"])
+        result = self.predict(source, mode="solidbeam")
+        self.assertEqual("unknown_or_unclassified_terrain", result["first_unknown_stops_prediction"]["reason"])
+        self.assertIsNone(result["conditional_collision_prediction"])
+
+    def test_water_does_not_promote_disguises_or_shadows_to_occupants(self):
         source = observation()
         source["data"]["map"]["types"].append({"terrain": 29, "name": "Water"})
         source["data"]["map"]["rows"][2] = [2, 0, "0003000", "v"]
@@ -371,10 +436,11 @@ class BallisticaPortTest(unittest.TestCase):
         source["data"]["entities"].append({"kind": "object", "cell": 17,
             "name": "Ebony chest", "projectile_collision": None})
         result = self.predict(source)
-        self.assertIsNone(result["conditional_collision_prediction"])
-        self.assertEqual("public_appearance_collision_ambiguous",
-                         result["first_unknown_stops_prediction"]["reason"])
-        self.assertFalse(result["evaluated_path_including_blocking_probe"][-1]["public_collision_occupant_present"])
+        self.assertIsNone(result["first_unknown_stops_prediction"])
+        self.assertTrue(result["predicted_reaches_target_under_assumptions"])
+        row = next(row for row in result["evaluated_path_including_blocking_probe"] if row["cell"] == 17)
+        self.assertFalse(row["public_collision_occupant_present"])
+        self.assertIn(17, result["cells_assuming_no_unreported_collision_occupant"])
 
     def test_sha_mismatch_requires_source_review(self):
         with patch.object(ray, "REVIEWED_BALLISTICA", "0" * 64):

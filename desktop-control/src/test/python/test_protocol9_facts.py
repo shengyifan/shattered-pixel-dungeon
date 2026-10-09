@@ -1,6 +1,7 @@
 """Offline CLI 9 knowledge and observation contracts; synthetic public frames only."""
 
 import copy
+import json
 import unittest
 
 import protocol9
@@ -12,6 +13,44 @@ from test_health_estimate_rounding import sample
 
 
 class Protocol9FactsTest(unittest.TestCase):
+    def test_custom_terrain_descriptors_survive_views_and_independent_frozen_maps(self):
+        water = {"terrain": 29, "name": "Water", "desc": "Ordinary visible water."}
+        basin = {"terrain": 39, "name": "Water basin", "desc": "Visible solid basin."}
+        anvil = {"terrain": 23, "name": "Anvil", "desc": "Visible solid anvil."}
+        for view in ("play", "full", "src"):
+            descriptors = copy.deepcopy([water, basin, anvil])
+            if view == "src":
+                for descriptor in descriptors:
+                    descriptor["text_sources"] = {key: {"kind": "literal", "origin": "external", "value": descriptor[key]}
+                                                   for key in ("name", "desc")}
+            current = {"w": 5, "h": 1, "types": descriptors,
+                       "rows": [[0, 0, "012", "v"]]}
+            # The exact same row indexes deliberately mean different terrain
+            # in the before snapshot; neither map can inherit the other's types.
+            before = {"s": "s0", "rev": "r0", "map": {"w": 5, "h": 1,
+                      "types": list(reversed(descriptors)), "rows": [[0, 0, "012", "s"]]}}
+            after = {"s": "s2", "rev": "r2", "map": {"w": 5, "h": 1,
+                     "types": [descriptors[1]], "rows": [[0, 4, "0", "m"]]}}
+            source = frame({"phase": "player_ready", "map": current,
+                            "before": before, "after": after})
+            original = copy.deepcopy(source)
+            with self.subTest(view=view):
+                decoded = decode_wire_response(json.loads(json.dumps(source)))
+                for cell, descriptor in enumerate(descriptors):
+                    self.assertEqual(descriptor, {key: map_cell(decoded, cell)[key] for key in descriptor})
+                self.assertIsNone(map_cell(decoded, 3), "Unknown map gaps remain unknown")
+                before_cells = decoded.data["before"]["map"]["cells"]
+                after_cell, = decoded.data["after"]["map"]["cells"]
+                self.assertEqual([23, 39, 29], [cell["terrain"] for cell in before_cells])
+                self.assertTrue(all(cell["visibility"] == "visited" for cell in before_cells))
+                self.assertEqual((4, "mapped"), (after_cell["cell"], after_cell["visibility"]))
+                self.assertEqual(descriptors[1], {key: after_cell[key] for key in descriptors[1]})
+                adapter_cells = protocol9.response(source)["result"]["observation"]["map"]["cells"]
+                self.assertEqual([29, 39, 23], [cell["terrain"] for cell in adapter_cells])
+                self.assertEqual(basin["desc"], adapter_cells[1]["description"])
+                self.assertEqual(original, source)
+                self.assertEqual(original, decoded.raw)
+
     def test_protocol8_and_noninteger_version_fail_without_rewriting_original(self):
         for version in (8, 7, 9.0, True, None, "9"):
             source = frame({"hero": {"cell": 1}})

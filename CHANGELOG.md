@@ -4,6 +4,13 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
 
+## CLI.9.0.1
+
+- Preserves reviewed native custom-terrain identity, name and description in the default map. Ordinary water remains terrain 29; the publicly presented Smithy basin is solid terrain 39, and its other solid pieces use terrain 23.
+- Reads only existing attached native presentation through pure accessors. It never creates an inspection window/image, calls arbitrary custom name/description getters or derives the public distinction from hidden terrain flags. Unknown cells and unavailable presentation remain knowledge-limited.
+- Removes the public ray helper's blanket uncertainty for all water. Geometry follows the complete public descriptor; unobserved blockers remain a conditional assumption rather than a claimed absence.
+- Keeps protocol 9, audit schema 12, game 4.0.2/code 922 and the existing v9 profile. See the [terrain correction and validation](docs/cli-9.0.1-terrain-validation.md).
+
 ## CLI.9.0.0
 
 - Merges upstream game 4.0.2 while preserving its native combat, AI, generation, timing, UI and save rules. CLI changes attach control, public observation, English provenance and auditing only. The [complete upstream review index](docs/cli-9.0.0-upstream-review.json) covers all 532 upstream paths.

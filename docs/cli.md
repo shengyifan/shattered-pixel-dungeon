@@ -1,12 +1,12 @@
 # spdctl control interface
 
-Current contract: **CLI.9.0.0 / protocol 9 / audit schema 12**, base game **4.0.2**.
+Current contract: **CLI.9.0.1 / protocol 9 / audit schema 12**, base game **4.0.2**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md),
 which is bundled verbatim as `spdctl --help`. Read the [current architecture](cli-architecture.md)
 for implementation and test boundaries, and the [agent working agreements](../AGENTS.md)
 before changing or operating the controller. Protocol 9 keeps complete same-frame
 action sharing and record templates and reports [semantic public facts](cli-combat-visuals.md).
-The [current validation report](cli-9.0.0-v4.0.2-validation.md) records the actual
+The [current validation report](cli-9.0.1-terrain-validation.md) records the actual
 checks for this batch; the [8.0.1 recovery record](cli-8.0.1-recovery-validation.md)
 is background for settle budgets, warning lifetimes and safe Python access.
 
@@ -63,7 +63,7 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 Use current v9 tests and the rebuilt executable. Test profiles and generated JSON
 belong in ignored build directories. The [architecture](cli-architecture.md)
-identifies the maintained gates; the [CLI.9.0.0 report](cli-9.0.0-v4.0.2-validation.md)
+identifies the maintained gates; the [CLI.9.0.1 report](cli-9.0.1-terrain-validation.md)
 records their executed scope and actual package readback. Historical version results
 are not evidence for a later build. Protocol 9 has no cross-frame dictionaries or
 map/inventory/log deltas; each response remains independently complete. A static

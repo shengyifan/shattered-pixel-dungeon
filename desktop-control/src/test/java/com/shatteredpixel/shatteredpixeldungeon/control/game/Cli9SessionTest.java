@@ -61,7 +61,7 @@ public class Cli9SessionTest {
                 assertFalse(last(wire).containsKey("err"));
                 Map<?,?> hello = (Map<?,?>) last(wire).get("data");
                 assertEquals(9L, last(wire).get("v")); assertEquals(12L, hello.get("audit_schema_version"));
-                assertEquals("CLI.9.0.0", hello.get("cli_version"));
+                assertEquals("CLI.9.0.1", hello.get("cli_version"));
                 assertEquals("4.0.2", hello.get("game_version"));
                 assertEquals(922L, hello.get("game_version_code"));
             }
@@ -99,7 +99,7 @@ public class Cli9SessionTest {
 
     @Test public void certifiedActionWithMissingTextKeepsItsSaveLogsAndAllowsTheNextAction() throws Exception {
         try (AuditStore store = new AuditStore(temporary.newFolder().toPath())) {
-            store.ensureScope("run:a", "run", "a"); store.beginSession("cli4-presentation","fixture-build","CLI.9.0.0",9);
+            store.ensureScope("run:a", "run", "a"); store.beginSession("cli4-presentation","fixture-build","CLI.9.0.1",9);
             FakeGame game = new FakeGame(); ByteArrayOutputStream wire = new ByteArrayOutputStream();
             try (MachineSession session = new MachineSession(store, game, new PrintStream(wire, true, "UTF-8"), 1000)) {
                 send(store, session, request("act", "action.execute", "v1", map("action", "wait")));
@@ -150,7 +150,7 @@ public class Cli9SessionTest {
         java.nio.file.Path profile=temporary.newFolder().toPath();
         Map<String,Object> recorded;
         try(AuditStore store=new AuditStore(profile)) {
-            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.9.0.0",9);
+            store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.9.0.1",9);
             com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance provenance=
                     new com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance(key->"Recorded %d");
             String source=provenance.onTextResource("当时显示17","fixture.recorded","zh",new Object[]{17});
@@ -162,7 +162,7 @@ public class Cli9SessionTest {
             store.endSession("CLOSED","finished");
         }
         try(AuditStore store=new AuditStore(profile)) {
-            store.beginSession("new-boot","new-build","CLI.9.0.0",9);
+            store.beginSession("new-boot","new-build","CLI.9.0.1",9);
             FakeGame game=new FakeGame();game.failObservation=true;
             ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {

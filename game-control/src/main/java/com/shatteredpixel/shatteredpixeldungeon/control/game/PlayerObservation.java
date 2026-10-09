@@ -51,6 +51,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.Holiday;
 import com.watabou.noosa.Gizmo;
@@ -285,13 +286,38 @@ public final class PlayerObservation {
             boolean mapped = flag(level.mapped, cell);
             if (!visible && !visited && !mapped) continue;
             int appearance = terrainAppearance(level.map[cell]);
-            cells.add(map("cell", cell, "x", cell % level.width(), "y", cell / level.width(),
+            Map<String, Object> observed = map("cell", cell, "x", cell % level.width(), "y", cell / level.width(),
                     "visibility", visible ? "visible" : visited ? "visited" : "mapped",
                     "terrain", appearance, "name", level.tileName(appearance),
-                    "environment", visibleEnvironment(level, cell)));
+                    "environment", visibleEnvironment(level, cell));
+            CustomTilemap.PublicTerrain custom = publicCustomTerrain(level, cell);
+            if (custom != null) {
+                observed.put("terrain", custom.terrain);
+                observed.put("name", custom.name);
+                observed.put("description", custom.description);
+            }
+            cells.add(observed);
         }
         return map("width", level.width(), "height", level.height(), "unknown", "omitted",
                 "cells", cells);
+    }
+
+    private static CustomTilemap.PublicTerrain publicCustomTerrain(Level level, int cell) {
+        if (level != Dungeon.level) return null;
+        int x = cell % level.width(), y = cell / level.width();
+        CustomTilemap selected = null;
+        int selectedFrame = -1;
+        // Follow native layer priority conservatively: a selected but unreviewed overlay
+        // masks reviewed layers below. Never invoke image overrides or arbitrary name/desc.
+        if (level.customTiles != null) for (CustomTilemap source : level.customTiles) {
+            int frame = source.presentationFrameAt(x - source.tileX, y - source.tileY);
+            if (frame >= 0) { selected = source; selectedFrame = frame; }
+        }
+        if (selected == null && level.customTerrain != null) for (CustomTilemap source : level.customTerrain) {
+            int frame = source.presentationFrameAt(x - source.tileX, y - source.tileY);
+            if (frame >= 0) { selected = source; selectedFrame = frame; }
+        }
+        return selected == null ? null : selected.publicTerrain(selectedFrame);
     }
 
     static int terrainAppearance(int tile) {

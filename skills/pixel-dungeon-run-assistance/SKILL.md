@@ -6,7 +6,7 @@ description: Plan and operate a Shattered Pixel Dungeon Warrior run through the 
 # Pixel Dungeon run assistance
 
 Use for an authorized playthrough, current-floor tactics, shop/alchemy planning,
-or a review of recorded play. This project adaptation targets CLI.9.0.0,
+or a review of recorded play. This project adaptation targets CLI.9.0.1,
 protocol 9, audit schema 12, and game 4.0.2. Verify the actual connection's
 versions and advertised capabilities; historical notes never establish live state.
 

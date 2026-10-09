@@ -1,0 +1,235 @@
+{
+  "format": "cli_9_0_1_terrain_source_review_v1",
+  "baseline_commit": "5c4494b4a",
+  "cli_version": "CLI.9.0.1",
+  "protocol_version": 9,
+  "game_version": "4.0.2",
+  "game_version_code": 922,
+  "audit_schema_version": 12,
+  "runtime_verified_by_inventory": false,
+  "review_scope": "Exact current native custom-terrain presentation hooks and public map projection; native gameplay unchanged.",
+  "source_delta": {
+    "new_boundary_sites": 6,
+    "changed_boundary_sites": 2,
+    "removed_sites": 0
+  },
+  "scanner_change": "Track only the exact Tilemap/CustomTilemap presentationFrameAt methods, CustomTilemap publicTerrain overrides and immutable PublicTerrain structure; all prior scanner obligations remain intact.",
+  "decisions": [
+    {
+      "id": "c8991eb8cf06dc4fe6e4e74b593c2e71705ccc7c4c9415bbcc2d08119798f832:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/quest/BlacksmithRoom.java",
+      "line": 218,
+      "owner": "com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.BlacksmithRoom.SmithyVisuals",
+      "method": "publicTerrain",
+      "kind": "observation_boundary",
+      "sink": "com.shatteredpixel.shatteredpixeldungeon.levels.rooms.quest.BlacksmithRoom.SmithyVisuals.publicTerrain",
+      "expression": "PublicTerrain publicTerrainint presentationFrame",
+      "body_digest": "d44ec00d1d7c688175aea2b2de621624da603735f5b9d80037b6b0e10d0a3cab",
+      "change": "new",
+      "reason": "Use only reviewed selected native smithy frames: 18 -> CUSTOM_DECO_WTR, 7/16/17 -> CUSTOM_DECO. Text comes from the same SmithyVisuals Messages name/desc sources as native inspection; no backing level map or native dynamic getter is consulted.",
+      "contract": "public-custom-terrain-descriptor",
+      "tests": [
+        "CustomTerrainObservationTest#selectedSmithyFramesSeparateSolidDecorationFromOrdinaryWaterAndNativeCollision",
+        "CustomTerrainObservationTest#nativeKnownScopeIncludesVisitedMappedAndOffscreenCellsButNeverUnknownTerrain",
+        "CustomTerrainObservationTest#absentDetachedHiddenTransparentKilledAndUnselectedSourcesCannotRevealPrivateTerrain",
+        "CustomTerrainObservationTest#semanticDescriptorDependsOnlyOnSelectedFrameRatherThanPrivateTerrainOrNativeGetter",
+        "CustomTerrainObservationTest#nativeCustomTilePrecedenceUsesLastValidSourceBeforeCustomTerrainFallback",
+        "CustomTerrainObservationTest#repeatedQueriesPreserveNativeStateRngAndSelectedRenderBuffers",
+        "CustomTerrainObservationTest#englishSourceBoundDescriptionsSurvivePlayFullSrcAndFrozenHistory",
+        "CustomTerrainObservationTest#relocatedScaledRotatedOrMalformedPresentationDoesNotDescribeTheOldCell"
+      ]
+    },
+    {
+      "id": "45531411c41a1181ed0dd54b943204d6008f49d86d7fd9aec58edea8705504fb:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/tiles/CustomTilemap.java",
+      "line": 156,
+      "owner": "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap",
+      "method": "presentationFrameAt",
+      "kind": "observation_boundary",
+      "sink": "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap.presentationFrameAt",
+      "expression": "int presentationFrameAtint tileX,int tileY",
+      "body_digest": "2ee86976fd3e60a515c488128a95a45c13da3680d8f76356b7aba5187076de7f",
+      "change": "new",
+      "reason": "Read only the existing tilemap dimensions, selected data frame and immutable texture-film lookup; bounds/texture absence return no presentation. Never calls needsRender, image, draw, update or RNG. Require finite native anchor/dimensions and default scale/angle/origin; relocated or transformed art cannot describe its old map cell.",
+      "contract": "public-custom-terrain-descriptor",
+      "tests": [
+        "CustomTerrainObservationTest#selectedSmithyFramesSeparateSolidDecorationFromOrdinaryWaterAndNativeCollision",
+        "CustomTerrainObservationTest#nativeKnownScopeIncludesVisitedMappedAndOffscreenCellsButNeverUnknownTerrain",
+        "CustomTerrainObservationTest#absentDetachedHiddenTransparentKilledAndUnselectedSourcesCannotRevealPrivateTerrain",
+        "CustomTerrainObservationTest#semanticDescriptorDependsOnlyOnSelectedFrameRatherThanPrivateTerrainOrNativeGetter",
+        "CustomTerrainObservationTest#nativeCustomTilePrecedenceUsesLastValidSourceBeforeCustomTerrainFallback",
+        "CustomTerrainObservationTest#repeatedQueriesPreserveNativeStateRngAndSelectedRenderBuffers",
+        "CustomTerrainObservationTest#englishSourceBoundDescriptionsSurvivePlayFullSrcAndFrozenHistory",
+        "CustomTerrainObservationTest#relocatedScaledRotatedOrMalformedPresentationDoesNotDescribeTheOldCell"
+      ]
+    },
+    {
+      "id": "ec96c172ba9bbbf1cdea60dbfd15eb6dce3f6c955351dbbd698960151d994cab:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/tiles/CustomTilemap.java",
+      "line": 181,
+      "owner": "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap",
+      "method": "publicTerrain",
+      "kind": "observation_boundary",
+      "sink": "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap.publicTerrain",
+      "expression": "PublicTerrain publicTerrainint presentationFrame",
+      "body_digest": "cb59547b9fbca9f5236d5fd8c47c71786528d56e241f9a6eb40d9181cc6d06fe",
+      "change": "new",
+      "reason": "Default null is an explicit opt-in boundary: unreviewed custom presentations provide no public semantic discriminator and mask reviewed lower layers when selected.",
+      "contract": "public-custom-terrain-descriptor",
+      "tests": [
+        "CustomTerrainObservationTest#selectedSmithyFramesSeparateSolidDecorationFromOrdinaryWaterAndNativeCollision",
+        "CustomTerrainObservationTest#nativeKnownScopeIncludesVisitedMappedAndOffscreenCellsButNeverUnknownTerrain",
+        "CustomTerrainObservationTest#absentDetachedHiddenTransparentKilledAndUnselectedSourcesCannotRevealPrivateTerrain",
+        "CustomTerrainObservationTest#semanticDescriptorDependsOnlyOnSelectedFrameRatherThanPrivateTerrainOrNativeGetter",
+        "CustomTerrainObservationTest#nativeCustomTilePrecedenceUsesLastValidSourceBeforeCustomTerrainFallback",
+        "CustomTerrainObservationTest#repeatedQueriesPreserveNativeStateRngAndSelectedRenderBuffers",
+        "CustomTerrainObservationTest#englishSourceBoundDescriptionsSurvivePlayFullSrcAndFrozenHistory",
+        "CustomTerrainObservationTest#relocatedScaledRotatedOrMalformedPresentationDoesNotDescribeTheOldCell"
+      ]
+    },
+    {
+      "id": "c71f432e726738777fddda75467fc5753e0cd93d7c0ffe5bed752d19ef8da651:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/tiles/CustomTilemap.java",
+      "line": 185,
+      "owner": "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap.PublicTerrain",
+      "method": "<initializer>",
+      "kind": "source_boundary",
+      "sink": "com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap.PublicTerrain",
+      "expression": "CLASS com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap.PublicTerrain",
+      "body_digest": "ea814285caf4ddc825d2992a98521c4313d0b630857d38c342f1bba7fe3d6d0a",
+      "change": "new",
+      "reason": "Immutable terrain/name/description value container with no model references or side effects; its exact structure is now tracked by the source boundary scanner.",
+      "contract": "public-custom-terrain-descriptor",
+      "tests": [
+        "CustomTerrainObservationTest#selectedSmithyFramesSeparateSolidDecorationFromOrdinaryWaterAndNativeCollision",
+        "CustomTerrainObservationTest#nativeKnownScopeIncludesVisitedMappedAndOffscreenCellsButNeverUnknownTerrain",
+        "CustomTerrainObservationTest#absentDetachedHiddenTransparentKilledAndUnselectedSourcesCannotRevealPrivateTerrain",
+        "CustomTerrainObservationTest#semanticDescriptorDependsOnlyOnSelectedFrameRatherThanPrivateTerrainOrNativeGetter",
+        "CustomTerrainObservationTest#nativeCustomTilePrecedenceUsesLastValidSourceBeforeCustomTerrainFallback",
+        "CustomTerrainObservationTest#repeatedQueriesPreserveNativeStateRngAndSelectedRenderBuffers",
+        "CustomTerrainObservationTest#englishSourceBoundDescriptionsSurvivePlayFullSrcAndFrozenHistory",
+        "CustomTerrainObservationTest#relocatedScaledRotatedOrMalformedPresentationDoesNotDescribeTheOldCell"
+      ]
+    },
+    {
+      "id": "b2345c193daa8f38760d7c123104194113d989641c5b25d5fa9bf6b5a71452df:1",
+      "file": "SPD-classes/src/main/java/com/watabou/noosa/Tilemap.java",
+      "line": 103,
+      "owner": "com.watabou.noosa.Tilemap",
+      "method": "presentationFrameAt",
+      "kind": "observation_boundary",
+      "sink": "com.watabou.noosa.Tilemap.presentationFrameAt",
+      "expression": "int presentationFrameAtint x,int y",
+      "body_digest": "7f71d27a268820a89ef0b4048803c312ff4a80b1867c79beaa2885f10ff38bb1",
+      "change": "new",
+      "reason": "Read only the existing tilemap dimensions, selected data frame and immutable texture-film lookup; bounds/texture absence return no presentation. Never calls needsRender, image, draw, update or RNG. Require positive finite cell sizes and selected texture region geometry.",
+      "contract": "public-custom-terrain-descriptor",
+      "tests": [
+        "CustomTerrainObservationTest#selectedSmithyFramesSeparateSolidDecorationFromOrdinaryWaterAndNativeCollision",
+        "CustomTerrainObservationTest#nativeKnownScopeIncludesVisitedMappedAndOffscreenCellsButNeverUnknownTerrain",
+        "CustomTerrainObservationTest#absentDetachedHiddenTransparentKilledAndUnselectedSourcesCannotRevealPrivateTerrain",
+        "CustomTerrainObservationTest#semanticDescriptorDependsOnlyOnSelectedFrameRatherThanPrivateTerrainOrNativeGetter",
+        "CustomTerrainObservationTest#nativeCustomTilePrecedenceUsesLastValidSourceBeforeCustomTerrainFallback",
+        "CustomTerrainObservationTest#repeatedQueriesPreserveNativeStateRngAndSelectedRenderBuffers",
+        "CustomTerrainObservationTest#englishSourceBoundDescriptionsSurvivePlayFullSrcAndFrozenHistory",
+        "CustomTerrainObservationTest#relocatedScaledRotatedOrMalformedPresentationDoesNotDescribeTheOldCell"
+      ]
+    },
+    {
+      "id": "5e41b44fbd0f102f89fc472696bd838eeccd27cba1a5d0af03a3b262ca15ce2d:1",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/PlayerObservation.java",
+      "line": 305,
+      "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
+      "method": "publicCustomTerrain",
+      "kind": "observation_boundary",
+      "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation.publicCustomTerrain",
+      "expression": "CustomTilemap.PublicTerrain publicCustomTerrainLevel level,int cell",
+      "body_digest": "7bd8e554e04d443fb8badd377007bd7bec162befd0aa14522b86017b36e83e0a",
+      "change": "new",
+      "reason": "Apply only to current Dungeon.level after the caller known-cell gate. Respect last selected customTiles layer and customTerrain fallback; an unreviewed top layer masks a reviewed lower layer. Never creates images or calls arbitrary native name/desc. Null source collections contribute no descriptor, preserving partial isolated fixtures and unavailable sources.",
+      "contract": "public-custom-terrain-descriptor",
+      "tests": [
+        "CustomTerrainObservationTest#selectedSmithyFramesSeparateSolidDecorationFromOrdinaryWaterAndNativeCollision",
+        "CustomTerrainObservationTest#nativeKnownScopeIncludesVisitedMappedAndOffscreenCellsButNeverUnknownTerrain",
+        "CustomTerrainObservationTest#absentDetachedHiddenTransparentKilledAndUnselectedSourcesCannotRevealPrivateTerrain",
+        "CustomTerrainObservationTest#semanticDescriptorDependsOnlyOnSelectedFrameRatherThanPrivateTerrainOrNativeGetter",
+        "CustomTerrainObservationTest#nativeCustomTilePrecedenceUsesLastValidSourceBeforeCustomTerrainFallback",
+        "CustomTerrainObservationTest#repeatedQueriesPreserveNativeStateRngAndSelectedRenderBuffers",
+        "CustomTerrainObservationTest#englishSourceBoundDescriptionsSurvivePlayFullSrcAndFrozenHistory",
+        "CustomTerrainObservationTest#relocatedScaledRotatedOrMalformedPresentationDoesNotDescribeTheOldCell"
+      ]
+    },
+    {
+      "id": "3114bb6cab7f639ccbcf2b3165174e3a4adab5d0b21521d0e51707bfc08bc145:1",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/PlayerObservation.java",
+      "line": 75,
+      "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
+      "method": "<initializer>",
+      "kind": "source_boundary",
+      "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
+      "expression": "CLASS com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
+      "body_digest": "2436fa391d67cd0bc446c337fe0917f0af68acb9599ccb2e5e83e827995adb6f",
+      "change": "changed",
+      "reason": "Add only the publicCustomTerrain observer helper and immutable descriptor dependency. No static or model state, game callbacks, combat rules or persistence behavior changed.",
+      "contract": "source-class-fingerprint",
+      "tests": []
+    },
+    {
+      "id": "16291a0f36a9fc70753501cb6ba16d6f7d44edfe94adbda27275b81ccd107c19:1",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/PlayerObservation.java",
+      "line": 281,
+      "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation",
+      "method": "terrain",
+      "kind": "observation_boundary",
+      "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.PlayerObservation.terrain",
+      "expression": "Map<String, Object> terrainLevel level",
+      "body_digest": "e3a741784a039269a79843d52ea20e9156ee15c213fa46fb2e31cf0bf34a79db",
+      "change": "changed",
+      "reason": "Keep native known-cell gate and base public appearance. Override only with a reviewed selected public descriptor, preserving terrain, name and description for compact play/full/src and frozen history without consulting private solid/passable arrays.",
+      "contract": "public-custom-terrain-descriptor",
+      "tests": [
+        "CustomTerrainObservationTest#selectedSmithyFramesSeparateSolidDecorationFromOrdinaryWaterAndNativeCollision",
+        "CustomTerrainObservationTest#nativeKnownScopeIncludesVisitedMappedAndOffscreenCellsButNeverUnknownTerrain",
+        "CustomTerrainObservationTest#absentDetachedHiddenTransparentKilledAndUnselectedSourcesCannotRevealPrivateTerrain",
+        "CustomTerrainObservationTest#semanticDescriptorDependsOnlyOnSelectedFrameRatherThanPrivateTerrainOrNativeGetter",
+        "CustomTerrainObservationTest#nativeCustomTilePrecedenceUsesLastValidSourceBeforeCustomTerrainFallback",
+        "CustomTerrainObservationTest#repeatedQueriesPreserveNativeStateRngAndSelectedRenderBuffers",
+        "CustomTerrainObservationTest#englishSourceBoundDescriptionsSurvivePlayFullSrcAndFrozenHistory",
+        "CustomTerrainObservationTest#relocatedScaledRotatedOrMalformedPresentationDoesNotDescribeTheOldCell"
+      ]
+    }
+  ],
+  "gates": {
+    "combat_visual": {
+      "checked": true,
+      "source_files": 1340,
+      "sites": 13504,
+      "review_groups": 4828,
+      "unreviewed": [],
+      "removed": [],
+      "changed": [],
+      "outstanding": [],
+      "runtime_verified_by_inventory": false
+    },
+    "text_composition": {
+      "checked": true,
+      "source_files": 1238,
+      "operations": 206,
+      "verified_catalog_constructors": 789,
+      "ledger_change": "none"
+    },
+    "ui_inventory": {
+      "checked": true,
+      "parsed_types_before": 2875,
+      "parsed_types_after": 2876,
+      "records": 1917,
+      "unmapped_inputs": 0,
+      "changed_records": 0,
+      "reason": "The immutable PublicTerrain class adds one parsed type and no input route or UI method."
+    },
+    "snapshot_statics": {
+      "ledger_change": "none",
+      "reason": "No mutable static fields or model roots added; full snapshot manifest tests remain a separate runtime gate."
+    }
+  }
+}

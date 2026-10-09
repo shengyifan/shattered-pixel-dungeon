@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 9)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.9.0.0, protocol 9, and base game 4.0.2.
+`spdctl --version` reports CLI.9.0.1, protocol 9, and base game 4.0.2.
 
 ## 1. Start and keep the connection open
 
@@ -332,8 +332,16 @@ Missing/null collision information is unknown. Disguised mimics, generic objects
 and movement shadows do not inherit this field.
 Known map cells include public `alwaysVisible` environment descriptions under the
 native inspection gate; ordinary hidden gases and unknown terrain remain hidden.
-Map terrain keeps public base appearance; dynamic custom-tile descriptions remain
-available through the native cell-examine action. Boss form and each reviewed
+Map terrain starts with public base appearance. A reviewed, currently attached
+custom presentation can replace that cell's terrain/name and supply its native
+`desc` directly in the default map. The Smithy water-basin decoration is public
+terrain 39 (solid), with the native Smithy name/description; ordinary water stays
+terrain 29. The other reviewed Smithy pieces use terrain 23. These distinctions
+come from the existing selected public tile, not private collision flags or a
+label guess. They survive play/full/src and independently frozen map dictionaries.
+Unseen cells stay absent; an unavailable or unreviewed custom source does not
+invent extra knowledge. Other custom details remain available through native
+cell examination. Boss form and each reviewed
 Vault hazard come from their current public sprite/effect sources, not hidden
 cooldowns, targets or future paths.
 
@@ -518,7 +526,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.9.0.0 reports public gameplay facts rather than renderer internals. An
+CLI.9.0.1 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength

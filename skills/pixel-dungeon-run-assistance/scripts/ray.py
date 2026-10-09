@@ -4,9 +4,9 @@
 Default source is the observed hero. --source may select another explicitly
 observed character for a hypothetical geometric aim (not a hidden enemy aim).
 Read one explicitly supplied public response; its binding is never live.
-Public WATER can also be the base appearance of solid custom decoration. Stop
-at that ambiguous appearance unless a public STOP_CHARS occupant proves a stop
-there; do not infer which hidden terrain implementation produced the appearance.
+Use this frame's public terrain descriptor, including publicly presented solid
+custom decorations. Missing public sources never authorize recovering private
+terrain or occupants; every prediction remains conditional on those omissions.
 """
 import argparse
 import ast
@@ -147,19 +147,15 @@ def predict(frame, target, op, model, requested_source=None):
                 collision = {"cell": q, "trigger_cell": q, "reason": "stop_target"}
                 break
             continue
-        # Protocol 9 deliberately reports native custom water decoration with
-        # its WATER base appearance. That public value does not distinguish
-        # passable water from a solid decoration; never recover the distinction
-        # from names, nearby actors, private map state, or guessed geometry.
-        ambiguous_appearance = c is not None and c.get("terrain") == tc["WATER"]
-        if c is None or c.get("terrain") not in tf or ambiguous_appearance:
+        # CLI.9.0.1 retains publicly presented solid decorations in terrain.
+        # Use only this descriptor, never names, nearby actors or private flags.
+        if c is None or c.get("terrain") not in tf:
             row["flags"] = None
             if q in collision_occupants and sc:
                 collision = {"cell": q, "trigger_cell": q, "reason": "known_collision_occupant_independent_of_unknown_flags"}
             else:
-                unknown = {"cell": q, "index": index, "reason":
-                           "public_appearance_collision_ambiguous" if ambiguous_appearance
-                           else "unknown_or_unclassified_terrain"}
+                unknown = {"cell": q, "index": index,
+                           "reason": "unknown_or_unclassified_terrain"}
             break
         bits = tf[c["terrain"]]
         p, av, solid = bool(bits & tc["PASSABLE"]), bool(bits & tc["AVOID"]), bool(bits & tc["SOLID"])
@@ -228,7 +224,7 @@ def main():
                   "warnings": [
                       "No gameplay, intent, profile, save or audit access. This prediction proves no execution, hit, effect or save.",
                       "Unknown terrain is not filled in. Absent public collision occupants do not prove absence of invisible or disguised occupants.",
-                      "Public WATER may be the base appearance of solid decoration. Its collision flags remain unknown; even ordinary water stops prediction unless a public STOP_CHARS occupant proves a stop at that cell.",
+                      "Terrain collision uses only this snapshot's public descriptors, including presented custom decorations. An absent public source never proves absence of an unreported blocker; no private terrain is recovered.",
                       "Visited/mapped terrain and absent effects may omit off-screen changes. Only public Web adds dynamic solid flags here.",
                       "MAGIC_BOLT=6 is the base wand rule; BlastWave uses PROJECTILE=7. Other overrides, ranges and effect areas are not modeled.",
                       "SOLIDBEAM=4 is a supplied hypothetical geometric aim. It does not read or predict enemy targets, charge state, cooldowns or movement.",

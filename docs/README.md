@@ -1,6 +1,6 @@
 # Maintained documentation
 
-The current CLI contract is **CLI.9.0.0 / protocol 9 / audit schema 12**, with game
+The current CLI contract is **CLI.9.0.1 / protocol 9 / audit schema 12**, with game
 **4.0.2**. Begin with the maintained guides below. Old version numbers, test counts
 and machine-specific output paths in historical material are not current evidence.
 
@@ -18,7 +18,9 @@ and machine-specific output paths in historical material are not current evidenc
 
 ## Dated validation records
 
-- [CLI.9.0.0 / v4.0.2 validation](cli-9.0.0-v4.0.2-validation.md): this batch's implementation, executed gates and package evidence.
+- [CLI.9.0.1 public custom terrain](cli-9.0.1-terrain-validation.md): source-bound default-map correction and its actual package verification.
+
+- [CLI.9.0.0 / v4.0.2 validation](cli-9.0.0-v4.0.2-validation.md): the preceding v4.0.2 integration, executed gates and package evidence.
 - [CLI.8.0.2 cleanup validation](cli-8.0.2-cleanup-validation.md): historical game 3.3.8 package and cleanup evidence.
 - [CLI.8.0.1 recovery and warning fixes](cli-8.0.1-recovery-validation.md): preceding controller, warning-lifecycle and Python repair evidence.
 
