@@ -6,6 +6,7 @@
 
 ## CLI.9.0.3
 
+- Records the [2026-10-10 clean rebuild](docs/cli-9.0.3-unlock-validation.md#clean-rebuild-2026-10-10): removes prior generated outputs, rebuilds and verifies the byte-identical ARM64 CLI package, and prepares the user's requested branch push. Runtime source and release identities are unchanged.
 - Initializes only genuinely absent/empty desktop profiles with persistent `unlock_start_options=true`, skips introduction/tutorial, and shares that default across the ordinary GUI and spdctl entrypoints. Existing profiles remain unchanged; CLI keeps its windowed Simplified-Chinese defaults, while GUI display/language defaults remain native.
 - Opens all six classes, nine challenge choices, custom seeds, daily runs, full randomization, class/talent/armor-ability previews and the ranking seed-copy entrance. Challenges start unselected and no custom seed is supplied by default.
 - Keeps feature availability separate from earned badges, victories and guidebook progress. Actual talent/class/armor progression and native daily/seed restrictions remain intact; no debug mode or artificial achievements are used.

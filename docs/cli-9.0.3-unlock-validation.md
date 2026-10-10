@@ -5,6 +5,64 @@ profiles. Identity: **CLI.9.0.3 / protocol 9 / audit schema 12 / game 4.0.2,
 code 922 / trace format 1**. The default CLI directory remains
 `Shattered Pixel Dungeon CLI v9`.
 
+## Clean rebuild 2026-10-10
+
+After the implementation record below, the user requested removal of all prior
+project build products, a fresh macOS CLI build and Git push. Runtime source
+remains `46b634bdeaad643ea11e3de8d6d42d966284966a`; CLI, protocol, schema and game
+identities are unchanged.
+
+Fourteen ignored generated directories and generated `ios/robovm.properties`
+were removed after verifying containment, no tracked inputs and no symlinked
+cleanup roots: **25,923 regular files / 3,647,304,963 logical bytes**. This removed
+old app images, stale 3.3.8 JARs, fixtures, frozen runtimes, validation artifacts,
+the project-local Gradle cache and Python bytecode caches. Nested symlinks were
+not followed. Personal profiles, external logs, tracked build inputs and global
+dependency/JDK caches were excluded. Gradle regenerated the iOS properties file
+during configuration; no mobile build was executed.
+
+The offline full gate used `--no-build-cache --rerun-tasks --no-daemon`: all
+**39 tasks executed**, and **897 Java tests** passed (20 protocol, 636 game-control,
+241 desktop-control), with no failures/errors/skips. After runtime/test classpath
+generation, sequential Python suites passed **368 desktop / 8 source / 35 helper**
+tests. Existing SQLite ResourceWarning diagnostics did not fail tests.
+
+The standard ARM64 app again reports `CLI.9.0.3 (protocol 9, game 4.0.2)`.
+Production JAR, build ID and help hashes exactly match the implementation package
+recorded below. The catalog SHA-256 is
+`a95426cb7a09e59c603b12373b128132fe42b595acad792f4cc3652f8301bd02`.
+All 3,469 catalog entries, manifest identity, source/bundled/printed help,
+snapshot resources, ARM64-only binaries and strict deep ad-hoc signature pass.
+All 472 compiled test classes, the instrumentation agent and retired types are
+absent from the production JAR. Only the new standard app output is retained.
+
+New actual-package checks passed: all nine unlock/menu/class/daily/duplicate-seed
+cases across 11 ordinary bundled-controller/JVM launches; 22 unchanged-content
+profile refusals plus fresh schema-12 reopen; ordinary controller lifecycle and
+save/reopen; and the separately instrumented slow-quit check. The successful
+ordinary controller run had two sessions, 29+7 requests and four save receipts,
+with old-revision rejection, matching saved state and complete raw/viewer checks.
+
+The first ordinary controller run's restart returned a TitleScene observation
+already marked `phase:"closing"` and exited normally before the next click was
+registered. The native exit trigger was not captured. Its failed fixture and raw
+records remain preserved; a separate fresh fixture run serially passed all checks
+without source/package changes. No causal claim about concurrent launches or OS
+input is made.
+
+Current generated evidence is under
+`desktop-control/build/clean-rebuild-20261010/`: `cleanup.json`, `full-gate.log`,
+`java-test-totals.json`, `python-schema-summary.json`, `package-identity.json`,
+`unlock-all-summary.json`, `unlock-suite-evidence.json`, `controller-package.log`,
+`controller-package-serial-retry.log` and `slow-quit-package.log`. Earlier generated
+paths cited below were deleted and remain historical references. GUI automation
+was not repeated; the preceding GUI acceptance belongs to the byte-identical
+production JAR. This round used only explicitly isolated CLI fixtures, without
+GUI tools or personal profile access, and does not count as a real playthrough.
+
+The user authorized pushing `feature/mac-cli` to `origin` after this verification.
+Master remains the upstream v4.0.2 commit; tags and publication are not included.
+
 ## Availability contract
 
 Both ordinary desktop GUI and spdctl initialize an absent or completely empty
@@ -161,4 +219,5 @@ a real playthrough. Local generated evidence is under
 The final delivery path is
 `desktop-control/build/app-macos-arm64/Shattered Pixel Dungeon.app`.
 Android/iOS builds are not part of this batch. Master remains the upstream
-v4.0.2 commit; no push, tag or publication is authorized.
+v4.0.2 commit. The initial implementation was committed locally without a push,
+tag or publication; the later clean-rebuild push request is recorded above.
