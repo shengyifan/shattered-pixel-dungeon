@@ -1,6 +1,6 @@
 {
   "format": "combat_visual_reviews_v3",
-  "source_baseline": "CLI.9.0.2 / game 4.0.2 expression source review, 2026-10-09. Baseline commit 3d9ef4b19. All previous source identities remain exact; changed/new sites are individually reviewed in docs/cli-9.0.2-expression-source-review.json. Static attribution never certifies runtime execution.",
+  "source_baseline": "CLI.9.0.3 / game 4.0.2 configured start-option review, 2026-10-10. Baseline commit 46a8b5266. Changed and replaced source sites are individually reviewed in docs/cli-9.0.3-unlock-source-review.json. Static attribution never certifies runtime execution.",
   "runtime_verified_by_inventory": false,
   "scope_policy": "Decision-relevant semantic world cues use current map/FOV independent of camera, viewport or UI occlusion. Native UI symbols, text, bars and feedback use their own current visibility/ownership gates. Dynamic source types, same-frame replacements and decorative exclusions are explicit per group; this static inventory never certifies producer runtime execution. Native red_target episodes retain only previously source/FOV-disclosed cells until native termination, intersected with current FOV; marker fade is cosmetic. Explicit temporary-owner handoffs preserve already disclosed episodes; actual holder loss/permanent replacement ends them. Fresh public unowned/restored warning sources carry appearance.lifecycle:unknown and conservatively persist until true scope end; their owner or geometry is never reconstructed from saved/private state.",
   "groups": [
@@ -77963,10 +77963,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-create-0fa2cd59fdff",
@@ -77976,17 +77984,26 @@
       "sites": [
         {
           "id": "9c593c214561285f4badadf6ac0b4085a1d7decd59261eeb43797d404692cf3b:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-create-222802707740",
@@ -77996,17 +78013,26 @@
       "sites": [
         {
           "id": "f5978febdfafb40dfba037b534407096224447a1a722f8dd76275ba3bcd35160:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-create-3011f6c931cc",
@@ -78016,17 +78042,26 @@
       "sites": [
         {
           "id": "ae0d15256f5bb6e8c29a5d4852a457b78e5da17968d1544e6ed896a83644d460:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-create-35ec5814ce27",
@@ -78036,17 +78071,26 @@
       "sites": [
         {
           "id": "c167bc38c854cfbf325d05558561d065e317d7830f08d49dbbf487fc8e31b53b:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-create-aed5635d2c57",
@@ -78056,17 +78100,26 @@
       "sites": [
         {
           "id": "345bceb99aceab63f6f8ca95d5207774c12152c4b738d7cc099abbf73ea38535:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-create-efdd03bc01b7",
@@ -78076,289 +78129,298 @@
       "sites": [
         {
           "id": "f1952dee65027d6684819ba04df161434a38937929723f5bc836ce0717e9ebd9:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "857305885db1eaf3ff1e1ba9ff8c464185875fee2249169f36fd682c2dc94b76:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "5e5cdcab2e23167b3428c93c6e16a27bbc16b4a236d9944d4c1824c83a4be79d:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "2b7f42161c84e3e614ed2fefd1110da9c31c0155b6e01bc17daefc1c932e676d:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "962f8373498527a71e125f4f96943be641edc9c4d501eaeb2d98a75201f54ac1:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "3cd17e16e6fd4464f5c3d5c7491637cdfa06723524afb7b57da1a337c884c847:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "a378e4d135bb5564eab0842435cb8773d2b94f1a7f6dfcccfb9a0b360c179a5d:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "b18b8fd11b8e4b7d59f4fd81bef9544843a4a8acd75f40ebec6cf9c1734d1492:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "95628f832a03f7c135152077765d42d8e949d25b22e63ce8d4ed7a1a690f7d1d:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "27fd5b2fcf189d12ccf0f30b1025530b232fa3141f27bd80543d60d88b1994bc:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "b3cf1965b9be297c160b81e1fd4c15af02c8e7f0904ace43a978d11385fb37bc:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "c7aedad0e8e64269780b7f0981e1cb7c03854132ff532a26603ac0f89d27b1be:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "8cc2fe5506f9cf0390140c7d80e3969177a8d9d68652b9123c5ad844f31a8837:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "24a1e9b7b2e1f1e5dcc4fe6654ea7d40bed8793e7c26d98f417a45e270e05cc3:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "fce8585f997a4f323df1b0478b9c6708ef1da856670bb077c441fee0a531e49d:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "9529747dc075e599ec8df21cfa497a7ce7463e736a16bfd463dd5334d62b6420:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "d8ade500afc7929383294fdce6a68406dbb0dcf06abe24aa4558bde4b032b8de:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "651bf54888d5382e55cb9b99e224355d2275a67ee2132d62e5523437bc22bd59:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "9fcc74ca1cb99e3758d15d425b37a3b183274b2919d8fca756a9f45eeddf1bf5:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "246567993a0d87b2df278cb9ad98f79bcfa6730dff570d2876a7cd57cdc61523:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "cd8f8278c38c0f59628a9036886d323c5ed22eb5a89967fb7da6982626bdf981:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "94e3ec37de66c7971ef55ddb80f1aa7d8fcac1dcfd0b0530fdc2c8c2ff01ca5f:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "252259c4ff7dde8b4870ba33508ae32b80f89e47ca1268f3e4430c5f90217dde:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "bb754d6b0fe8e04cff67213a5244c3c4f64164c279f1f1616c599d26300d0edc:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "b047cfc054e783c805d398d4450e33baa48bc513de084113b1e151942aca4318:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "ad0a00fdbe257e3efafdb07fa0397d7c53d82a5dfeab1f3fb922b5aa9ecbf6a5:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "000757a493861c3f6030dcdbb7a018a59bfa0428142acb9bf3943300d61f9239:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "3ce31734144bac184b37f03853601ba425c090e23260a9dfe63ac40b389cbad4:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "f6d32addb4e206c2564d8f7f16de5490ced845a73754671f52a1d3d10b97c1f6:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "55b50411ef26e2821092d9b0feddaf919a13c3545412ee54e09f48d16514a3df:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "dc919e60bc1bea17414e55a2eb154c7217c2733d817261cd06b4b7d0bc51d527:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "74363eb03c470a1b3262d9556eee64ebe9b90879a851e05d0877543300d84e6f:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "86398df58feefcba6fe81199646ef9c4c9c5d173eaf6204d9a44831d9fae0651:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "4ae2422e03d49d6c236eecdb6831b269cfd43ab8df8fedc228499f1dc610fc05:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "6a93314d4655a56436c500099f348574c2ca36928cc417573ae7256cf5395df4:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "4cb015000b1703599e56b8efa3e8de37a7f84905958bb8bcc58ec96f9dc411d4:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "af0c4ba06740c90cb5866c436714411e28814abb79f4563d99d34c0cea34f1af:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "f91b2a87db427e86e687f150843fdb65f131aef35544b4231ae8752385a18c69:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "08b26f8763e71996afb0e82956b3a532512a9ad69bc2139ac1ff4099ca76d552:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "dc1c5ab70a5d1020882008744119b7f60a7a5897a302d11465120ab87af1367d:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "f2a3621d23ea411fa0ea5f03403e4974c24acefe00df5ca5c7a68226d2b6cd79:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "00b5da948e95bbfe678a3fd231701e8bce0660b40bc46380e09ded01aef7e3a6:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "ebb436078834e044aa27bacfeb8a41b318efeeecf6ba050d03750ab73181d258:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "0254585fa32e7d3fb63bd29979e2ebb889ad86a40d348a2acadb558d4cb90acd:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "67465b49efd52a4dfc6c9f05ff3f620e30bfc7add8e3b533f5ed8945b4be7113:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "3f82cb9430fd3e53356d8208d7ef17bbe1b5f1167eefcf82926b0ad94ea57ec6:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "97bf64f5d6e33bc02597d6bd93213caa1219668f249edfa9880e7591d092178e:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "6eb57f9407fa400a0e6cb8e0056581fb83f6955f412842baa03f14322ee00b7b:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "2ff36cc14e723d8b198113b9773e9e57a7a78e32dc867b7004c26cb83f78d7ca:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "a55ec72089fa84bd4d6a0a615abe2d1aa8d5cf6aac8f32b011b89a241c58e4db:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "732ed021cd51f03676140b0fbb6e482f742c6be095d69c1f2eeefc5082b62e78:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "a9b51a9eca8ab4769c2562c7d9335021cc9059ac2f7001d1be64116ba50d39a9:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "f0d60f810a4e79c8f69827228dedd36b117c5971db9486e76273fec580ef537a:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "f73a8c6d4e7a2a652342b67aab83539c396d3c93fa73766058d25b5563505b6a:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "e96844bd771f9d2078ec8c9e8b2d7c219bcadbf2f7b9ebdfaca4de300a9bd4ce:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "add6ca1cf6ed46aaac42fc06eda8f42f6fd31ed72f452ca4c142a6f7b4d8c8ee:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "90cfa9ad89cd773a80cfae1b7c3c1f9263d81f036e2b5084a75927a09c2aef2e:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "53f28ade71028802651fb1c7e8989c58cd8b42616f9ee4104ed898cd1f7875bb:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "0d98afa69723a7be24e6874fb1ed8dd4a55e5724ca32439dc7008be14065deb3:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "83c1c31463bf8f0135255db9798ff38df5f2c5334254699e20b3723617e6289a:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "916a7a27490733901f6c2c2cb997eda4a9aa2f7c0c306f9779dfc53fabda53ae:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "9f56f4bf4208c5b60d405dcf7a49b25a12d3ec4d251d123a59f5c8a431e93ea9:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "b13dc647daa6d74ba21af3a1fb11af682ae4a1314d79c71426fe246f9d64b4c8:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "03f4d5074787ba66585549dc172d93e32c44b5a524e36aa0ebd00e0e3bff5e71:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "d6cca88a3b2094312635344ecd67cdf15d2e730413d234579fc98f4f17bae4a9:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "bc1e7aed837864fb0b2add2bae23d9357493387bead2b56335d6f96d1cfe569e:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "5ffcf0d5f0514bd47cf462d7ae93443350a03c6a505f2bb93892bcc47da7f329:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "e843f91d774ba043179149ac58c8661022674fd792a863486fe4e3117a617875:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         },
         {
           "id": "c797503a95eae8623b245ca24324a71fd10c80c840656345dbd690c1631459b9:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-create-f052c1b426e0",
@@ -78368,9 +78430,10 @@
       "sites": [
         {
           "id": "3739529d6828fdb0e22477486f970b0fffec5ba24d11284fd07303fb015613cc:1",
-          "body_digest": "818a645526e566df3fc1099f7a683fd625feb48be33ecaf49aaef1a117ef0fd0"
+          "body_digest": "e34c96a618765d141f17023bf6fc80e8a2f760f7f7c9e3318a139a4b77e08c24"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -78447,10 +78510,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-onClick-06f35377c23f",
@@ -78460,13 +78531,14 @@
       "sites": [
         {
           "id": "1f26dfd4f43fc05c629edf3c4b8e1a9172d8f7c603f035de62f39732474ad48b:1",
-          "body_digest": "4d0f1ebd4042894f7e7670a0d737ca7ea99b27688511f8193ea45987d82f694b"
+          "body_digest": "7df8ec8d46f2b693e121dfae28bb5658a0c73933e0dc3f15ab6d601334aa25c8"
         },
         {
           "id": "61440aa6091c6a3cad9c703ba6baaa3d434f25d83ec5ecb25b45f8f3e892dbd6:1",
-          "body_digest": "4d0f1ebd4042894f7e7670a0d737ca7ea99b27688511f8193ea45987d82f694b"
+          "body_digest": "7df8ec8d46f2b693e121dfae28bb5658a0c73933e0dc3f15ab6d601334aa25c8"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -78495,10 +78567,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-onClick-2f1462ea4065",
@@ -78508,21 +78588,30 @@
       "sites": [
         {
           "id": "3d3030302e7fff637d876e1865498c1305195467731092be19e0b28256622ff8:1",
-          "body_digest": "a68bd2d3cd63f0d21f95b5a38d400a6f027b66aa8a5bf5ae6a3769c4cf5141a0"
+          "body_digest": "5ec120f8748169b809a8af588c1ab3780d7041c63a56d27585329aee76a2367f"
         },
         {
           "id": "84354ff48b2495bfca3acf305980d7d32d2958d39ee110ad74f5c74373b2ac62:1",
-          "body_digest": "a68bd2d3cd63f0d21f95b5a38d400a6f027b66aa8a5bf5ae6a3769c4cf5141a0"
+          "body_digest": "5ec120f8748169b809a8af588c1ab3780d7041c63a56d27585329aee76a2367f"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-onClick-3814bb48db24",
@@ -78532,9 +78621,10 @@
       "sites": [
         {
           "id": "dcf646b910e8920949e118cb2a2f89d6b1157df326d96eec15346e20a8943d99:1",
-          "body_digest": "4d0f1ebd4042894f7e7670a0d737ca7ea99b27688511f8193ea45987d82f694b"
+          "body_digest": "7df8ec8d46f2b693e121dfae28bb5658a0c73933e0dc3f15ab6d601334aa25c8"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -78603,10 +78693,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-onClick-9025e42ae0bf",
@@ -78616,9 +78714,10 @@
       "sites": [
         {
           "id": "57ee6ca3ec45b630e18a3a7623eaa9022801df25f660557cfab0a4289c25e9ea:1",
-          "body_digest": "eeb94c8f792143eb97842bcc508ddbb6f4b4c4c023c18b860c0cd8c71a7511e6"
+          "body_digest": "6fd54b9d3836ed9809ad14be8992a4850a462295aaae8d0f67a2a67c59c210fb"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -78663,10 +78762,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "New-run class selection and previews before a fight.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "This scene displays a noncombat screen; text/actions remain native GUI content.",
       "id": "ui-review-HeroSelectScene-onClick-fb194d36d9ff",
@@ -78676,9 +78783,10 @@
       "sites": [
         {
           "id": "81c2fe1c64018fa553ade44c1411e2e1039c2515c4f403f611ce36c67f7454d7:1",
-          "body_digest": "a68bd2d3cd63f0d21f95b5a38d400a6f027b66aa8a5bf5ae6a3769c4cf5141a0"
+          "body_digest": "5ec120f8748169b809a8af588c1ab3780d7041c63a56d27585329aee76a2367f"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -92913,10 +93021,21 @@
     {
       "classification": "covered_inspection",
       "reason": "Talent icon/bar state corresponds to the complete captured talent directory and the original talent inspection/choice window; zero-point entries and tier/armor/subclass gates remain public.",
-      "route": {"semantic_contract": "talent-directory-replacement"},
+      "route": {
+        "semantic_contract": "talent-directory-replacement"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "talent-directory-replacement"}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        {
+          "kind": "semantic_contract",
+          "id": "talent-directory-replacement"
+        }
       ],
       "visible_evidence": "Current talent name, invested/available points, original choices and displayed explanation after the native click.",
       "id": "ui-review-TalentsPane-_init_-84e21d86d010",
@@ -92926,57 +93045,58 @@
       "sites": [
         {
           "id": "631097cd8ea0ac94e8646e695ae4d4bb81f020d16a32b79efd2802051ad44a7b:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "e307117f07edf84c1cf1dcee62d25ab186c3b03bbfd71bb92df15c63f665ff18:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "ee563e10e4c4cbe77545db585eaa59f47bfbe4a3e985e5a94720e6e93ede9672:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "c107aa4c5da87ca1c8920c512dca3f96d8f5b9ca2a2b486fe00f3100aeb0e337:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "7ed7a7d4f0d5f7de7f8bac56538e4cc8cc1c9f4a2d0dabd578bc839edf9abec6:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "c107aa4c5da87ca1c8920c512dca3f96d8f5b9ca2a2b486fe00f3100aeb0e337:2",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "7ed7a7d4f0d5f7de7f8bac56538e4cc8cc1c9f4a2d0dabd578bc839edf9abec6:2",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "0bf4a2e77e88706d5c2917d7fa951ae5e7e99be17bf3cde0a29d25ebd7cd6da8:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "485e893408af9e8f3f7546a8c0da6f085c7dcdac679c7e5226e6523f30530924:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "73aae4ada9eb0ae054699c1176c8693484b9027b79ea9a19629d219dae89d3aa:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "73aae4ada9eb0ae054699c1176c8693484b9027b79ea9a19629d219dae89d3aa:2",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "73aae4ada9eb0ae054699c1176c8693484b9027b79ea9a19629d219dae89d3aa:3",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         },
         {
           "id": "589c1875bb4774b78cb876baa07404b08781bfdef567c17c4f4ceab9c61a53c6:1",
-          "body_digest": "9927fa8a70cc66cf1c9187d4074e9fa8be20b0e31c76d7caf8488aa2d67823cb"
+          "body_digest": "614079931da68e401949ff6a5c0dcd3ab2fd07ecb2755e10196c87c804ad4ba5"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "not_player_visible",
@@ -102648,9 +102768,17 @@
     {
       "classification": "not_player_visible",
       "reason": "A class/type declaration is a source-inventory attribution point, not an independently instantiated or drawn combat fact.",
-      "route": {"semantic_contract": "reviewed-nonvisual-site"},
+      "route": {
+        "semantic_contract": "reviewed-nonvisual-site"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "No pixels arise from a type declaration alone.",
       "id": "ui-review-WndHeroInfo-_init_-156ce1795202",
@@ -102660,9 +102788,10 @@
       "sites": [
         {
           "id": "b4e76388a8c2a9895a2a033f297aff3acc85bbc7037ea14a2651ab523c8e6f1e:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "covered_inspection",
@@ -102815,10 +102944,21 @@
     {
       "classification": "covered_inspection",
       "reason": "The native widget or window displays a current label, value, icon meaning, option, or action constraint; its group names the exact source branch.",
-      "route": {"semantic_contract": "native-ui-meaning"},
+      "route": {
+        "semantic_contract": "native-ui-meaning"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "native-ui-meaning"}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        {
+          "kind": "semantic_contract",
+          "id": "native-ui-meaning"
+        }
       ],
       "visible_evidence": "Captured header/body text and styles, item/health/buff display, enabled options, control identity/order and their complete current operations.",
       "id": "ui-review-WndHeroInfo-_init_-49cd85cbfece",
@@ -102828,124 +102968,133 @@
       "sites": [
         {
           "id": "9339ac3bbe5c84bde4c725a190fa21ca7ee07dd3b7de9cedc57589bf88154f7e:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "4dcfea2f9ffc5a962a57733f5adbeea930b1a9a0f4b49bef095c7c8eb74f3198:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "a30073b95eb529644af0884e1d5491ca57fd006d2a911d1cf611a1d6be46f56a:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "38cb56a2ce91cb32a7caa45b0aa1871718fe7c27d613edb6e334bce0ce7c0e04:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "bb5f26b9abadece13744c206323cba40f8cf1f99428c2c855b9c852f1b52eabd:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "b32820dd8f5c0eaaafae73ef2632f7bed9637350df6305a0ac4a691c67098896:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "90e400617bfa391d850314e37190633874f2a419c4e998c4f75285fded3a6b27:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "274967d915d39cb9a081fc147f453c3d6e35c27a476dc3cfe40e7d5473272ea0:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "b9a22995d44454037cd48b73b9fb3d34723fb0f7e3da6a5b5f2fd1d0b23408e7:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "3939a924aee93c14c442c7efe20d4778d03ab30e335235d1f46dfaf61541d649:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "94cba69e8b97ad874afed9fb3bceb77377c787a0ad5b2e3ab720b3920c7297b2:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "de88c5336dba51d0e310bd856191fa2d8b3dd362b91b5c70081567077ff0a00e:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "6ab56e397475739fe1824cbab8af9410f38644c4152a04c29731d345b7a8e6d8:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "6c2b2719954be8a7384b496fea4bd988518573eeea575168b61961770211e9b1:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "80db567df0229fbb71558b641ed58d6382a71af40ae081b1acc84437f7230f43:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "adba59056ad25ced0d49126f9ca263ea3c7db69e53c575f3827c749730c545bb:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "42dada7d962a0832a901fec9ab74321113b044f2270baacd3c56b121cd927adc:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "4a183b1fd204f8aeb40da74e9b01e787f283f43713b950588d49f5796ff7cdd2:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "e8f046aeb8e246d7900c7266f7f814883105b2d442e3455732f3a75bbd961955:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "1ab00fa8b7eff94e97939690ff89d72936727519dc592806d6940fdc263e8b7f:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "3e021977105f653afe07b529c99b4298fc7dcf3a185305da6f8c81df692ab0ad:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "8e70f2c2578b5768a900ac366be6d0f9db023517b7502976c1a1a21e543fb79e:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "df181d1eb3146d1f5172698184d75b6d77c0365d2434a0f0806cb7d1ef45cf47:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "fa108d1733f969677f6bb9796cf5189d460b5dd7f3502667203801b35f8c0d77:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "1b1cadc8ffdc43a526943b2d91f9ddd10df55e4fa5018f90cf727d0dbbc6c4d3:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "abaa8684045526a6a64ef6d1b012be837a42e6f5155c391e8ac14752b4040091:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "d7e11ecebf376acc3524dc7749ccf5adc064e32fe21f9514189ba403e2d2c977:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         },
         {
           "id": "fe0be7fdc3a6b758d546b695c5aa27a7e0be1cceec909359dae3848b8a2f4ffe:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "not_player_visible",
       "reason": "A class/type declaration is a source-inventory attribution point, not an independently instantiated or drawn combat fact.",
-      "route": {"semantic_contract": "reviewed-nonvisual-site"},
+      "route": {
+        "semantic_contract": "reviewed-nonvisual-site"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "No pixels arise from a type declaration alone.",
       "id": "ui-review-WndHeroInfo-_init_-509d545713ad",
@@ -102955,9 +103104,10 @@
       "sites": [
         {
           "id": "ab939bfd6e29468bfe14ea3f2047437e69c2bdb7ea278920853c322173861756:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "covered_inspection",
@@ -102998,9 +103148,17 @@
     {
       "classification": "not_player_visible",
       "reason": "A class/type declaration is a source-inventory attribution point, not an independently instantiated or drawn combat fact.",
-      "route": {"semantic_contract": "reviewed-nonvisual-site"},
+      "route": {
+        "semantic_contract": "reviewed-nonvisual-site"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "No pixels arise from a type declaration alone.",
       "id": "ui-review-WndHeroInfo-_init_-73109929f232",
@@ -103010,9 +103168,10 @@
       "sites": [
         {
           "id": "35c3939fb6889fa7c1fe6ce58b2f475395edf04427b40481b4eced848b76af3b:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "not_player_visible",
@@ -103036,9 +103195,17 @@
     {
       "classification": "not_player_visible",
       "reason": "A class/type declaration is a source-inventory attribution point, not an independently instantiated or drawn combat fact.",
-      "route": {"semantic_contract": "reviewed-nonvisual-site"},
+      "route": {
+        "semantic_contract": "reviewed-nonvisual-site"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "No pixels arise from a type declaration alone.",
       "id": "ui-review-WndHeroInfo-_init_-8ce5f27fd61a",
@@ -103048,9 +103215,10 @@
       "sites": [
         {
           "id": "c9c60754ce93c6cbb9a6006299fdaed778e8a7d1c37a13c92ac0cc9c0559b5b8:1",
-          "body_digest": "41d6597941ad506b5f2cdef65e22b6a640db66ca6401964316c3f6d6ab9aa414"
+          "body_digest": "58ed97dd1f48524371815aabbd35b01c0db1f8c39f44b12ef32a9456120d37f0"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "not_player_visible",
@@ -107035,10 +107203,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "Post-run statistics and rankings.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "Window text, images, values and ordinary choice controls on the named noncombat surface.",
       "id": "ui-review-WndRanking-_init_-4d8e5b04269c",
@@ -107048,9 +107224,10 @@
       "sites": [
         {
           "id": "8a12b296d87d117be660314c67d6633b3d09ef3086fdcabbfbbfc845d5e48b87:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -107131,10 +107308,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "Post-run statistics and rankings.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "Window text, images, values and ordinary choice controls on the named noncombat surface.",
       "id": "ui-review-WndRanking-_init_-74c3db174a32",
@@ -107144,9 +107329,10 @@
       "sites": [
         {
           "id": "fbcbcb6e14e48c48ce4758e46ed358d431c4e36259156b1789de52e6e08b7d5e:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -107183,10 +107369,18 @@
     {
       "classification": "scope_exclusion",
       "reason": "Post-run statistics and rankings.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "scope": "noncombat",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "visible_evidence": "Window text, images, values and ordinary choice controls on the named noncombat surface.",
       "id": "ui-review-WndRanking-_init_-b7b07294a744",
@@ -107196,93 +107390,94 @@
       "sites": [
         {
           "id": "57dfd08cc1b8f1f67b3cd626fa957befef8738bcdf6ee9287a2ddd02f2b2495e:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "ad0ff4b4d3007768fdb8765c7222875bec0692a6f5931d43c9b36d0a68ac7990:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "25dde01d802de47bb261e1942dbe1ac49803c0b31ae2f50242ab26beb4c441e4:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "54a73a801f83767191eeb19aa8103783807a8af8f278caacd57c2581de0cfbf4:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "9f2c8f46d358b87b1117fd0fbe8ade111cef92d0b11b8b20eed8ae32004fbec4:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "e26fbc37ff9ef955a048b698cb130386a10f1cacaafc12845e384dd62875b0a3:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "fe04551b7ae61a943e7d28dc9884fcb54390a838b281c571a423a18d72f0f4e7:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "f067949d2fcda8120fdec8aff45203894c5300eba775c7e282fd1e41427d3d65:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "1800996f0c302d54d8879d792de8bc0ec535014452d219183b560d486ac4c03b:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "afa6327a56167608b2c0fdb456698269eb485af15bcac180c092e7ffc926905b:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "2360c5bc3ee84c0e54511ce5ac3bb5e93bf3847f08a0f117f018173096916dbf:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "f6e19a50b63e20e2efeb7329f48e5e81d99c803d09e93f14b8b87b5b2a96fba8:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "ae421b2840f7ee7cc3e1ca03cecb9604368b818b617be0529ced519e0456fc77:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "7da6debf0ee805ebd4a0534256223bcc3453f5eb52754261241f61f96f8d9b72:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "4f700ddd91f46425e122c2aa4cc6a9f0baf474a4b094b8a2db19bf4ce99450b3:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "af988daf16ad85e2856057783772b68c7f71058b92a50e234ed51aa6c2fb106d:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "2e61e0f59e848a7dd99502403e049f804f1fd6a64b29e5492298a2b06e89482b:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "2094ebe02998ba58704f7f953c82a1d9bd669dde56e0c4a59c17f57d4de911d6:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "8ff32ffafa0f06db831b7cea63e72f6bdfe8b3a051ecd4ffae45995992791ca0:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "dc9f7bef376a0eb1cee140d711c912e7b599b0fa37040053a42d9969c02b2dc4:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "03f82a6a646eb6cae759989f25ab36d27b1b0577ac1946ccf405a39912ce3a9b:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         },
         {
           "id": "79e5bdf588a409e9f65215665b95a4f6f4e13b917121ce39b040ae0fc9c05401:1",
-          "body_digest": "51eebacc898538aed2523d644c39a59050e7c3863faf737730b0e3436beea633"
+          "body_digest": "0a347c394b9ff2da87f67f62dfb2f622021fa473886214adff07c7a4d86bd33c"
         }
-      ]
+      ],
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate."
     },
     {
       "classification": "scope_exclusion",
@@ -138558,78 +138753,86 @@
       "visible_evidence": "void createChildren | add(bg) | new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, \"custom_seed\"), 6){ @Override protected void onClick() { if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()){ ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage( Icons.get(Icons.SEED), Messages.get(HeroSelectScene.class, \"custom_seed\"), Messages.get(HeroSelectScene.class, \"custom_seed_nowin\")) ); return; } String existingSeedtext = SPDSettings.customSeed(); ShatteredPixelDungeon.scene().addToFront( new WndTextInput(Messages.get(HeroSelectScene.class, \"custom_seed_title\"), Messages.get(HeroSelectScene.class, \"custom_seed_desc\"), existingSeedtext, 20, false, Messages.get(HeroSelectScene.class, \"custom_seed_set\"), Messages.get(HeroSelectScene.class, \"custom_seed_clear\")){ @Override public void onSelect(boolean positive, String text) { text = DungeonSeed.formatText(text); long seed = DungeonSeed.convertFromText(text); if (positive && seed != -1){ for (GamesInProgress.Info info : GamesInProgress.checkAll()){ if (info.customSeed.isEmpty() && info.seed == seed){ SPDSettings.customSeed(\"\"); icon.resetColor(); ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, \"custom_seed_duplicate\"))); return; } } SPDSettings.customSeed(text); icon.hardlight(1f, 1.5f, 0.67f); } else { SPDSettings.customSeed(\"\"); icon.resetColor(); } updateOptionsColor(); } }); } } | CLASS <anonymous com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene$GameOptions$1> | seedButton.icon().hardlight(1f, 1.5f, 0.67f) | add(seedButton) | new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, \"daily\"), 6){ private static final long SECOND = 1000; private static final long MINUTE = 60 * SECOND; private static final long HOUR = 60 * MINUTE; private static final long DAY = 24 * HOUR; @Override protected void onClick() { super.onClick(); if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()){ ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage( Icons.get(Icons.CALENDAR), Messages.get(HeroSelectScene.class, \"daily\"), Messages.get(HeroSelectScene.class, \"daily_nowin\")) ); return; } long diff = (SPDSettings.lastDaily() + DAY) - Game.realTime; if (diff > 24*HOUR){ ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, \"daily_unavailable_long\", (diff / DAY)+1))); return; } for (GamesInProgress.Info game : GamesInProgress.checkAll()){ if (game.daily){ ShatteredPixelDungeon.scene().addToFront(new WndMessage(Messages.get(HeroSelectScene.class, \"daily_existing\"))); return; } } Image icon = Icons.get(Icons.CALENDAR); if (diff <= 0) icon.hardlight(0.5f, 1f, 2f); else icon.hardlight(1f, 0.5f, 2f); ShatteredPixelDungeon.scene().addToFront(new WndOptions( icon, Messages.get(HeroSelectScene.class, \"daily\"), diff > 0 ? Messages.get(HeroSelectScene.class, \"daily_repeat\") : Messages.get(HeroSelectScene.class, \"daily_desc\"), Messages.get(HeroSelectScene.class, \"daily_yes\"), Messages.get(HeroSelectScene.class, \"daily_no\")){ @Override protected void onSelect(int index) { if (index == 0){ if (diff <= 0) { long time = Game.realTime - (Game.realTime % DAY); //earliest possible daily for v4.0 is Apr 01 2026 //which is 20,544 days after Jan 1 1970 time = Math.max(time, 20_544 * DAY); SPDSettings.lastDaily(time); Dungeon.dailyReplay = false; } else { Dungeon.dailyReplay = true; } Dungeon.hero = null; Dungeon.daily = true; Dungeon.initSeed(); ActionIndicator.clearAction(); InterlevelScene.mode = InterlevelScene.Mode.DESCEND; Game.switchScene( InterlevelScene.class ); } } }); } private long timeToUpdate = 0; private final SimpleDateFormat dateFormat = new SimpleDateFormat(\"HH:mm:ss\", Locale.ROOT); { dateFormat.setTimeZone(TimeZone.getTimeZone(\"UTC\")); } @Override public void update() { super.update(); if (Game.realTime > timeToUpdate && visible){ long diff = (SPDSettings.lastDaily() + DAY) - Game.realTime; if (diff > 0){ if (diff > 30*HOUR){ text(Messages.literal(\"30:00:00+\")); } else { text(dateFormat.format(new Date(diff))); } timeToUpdate = Game.realTime + SECOND; } else { text(Messages.get(HeroSelectScene.class, \"daily\")); timeToUpdate = Long.MAX_VALUE; } } } } | CLASS <anonymous com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene$GameOptions$2> | add(dailyButton) | new StyledButton(Chrome.Type.BLANK, Messages.get(WndChallenges.class, \"title\"), 6){ @Override protected void onClick() { if (!Badges.isUnlocked(Badges.Badge.VICTORY) && !DeviceCompat.isDebug()){ ShatteredPixelDungeon.scene().addToFront( new WndTitledMessage( Icons.get(Icons.CHALLENGE_GREY), Messages.get(WndChallenges.class, \"title\"), Messages.get(HeroSelectScene.class, \"challenges_nowin\") )); return; } ShatteredPixelDungeon.scene().addToFront(new WndChallenges(SPDSettings.challenges(), true) { public void onBackPressed() { super.onBackPressed(); icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY)); updateOptionsColor(); } } ); } } | CLASS <anonymous com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene$GameOptions$3> | add(challengeButton) | new StyledButton(Chrome.Type.BLANK, Messages.get(HeroSelectScene.class, \"randomize\"), 6) { @Override protected void onClick() { if (Badges.isUnlocked(Badges.Badge.VICTORY) || DeviceCompat.isDebug()){ ShatteredPixelDungeon.scene().addToFront(new WndRandomize()); } else { HeroClass randomCls; do { randomCls = Random.oneOf(HeroClass.values()); } while (!randomCls.isUnlocked()); setSelectedHero(randomCls); GamesInProgress.randomizedClass = true; } } } | CLASS <anonymous com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene$GameOptions$4> | add(randomButton) | new ColorBlock(1, 1, 0xFF000000) | add(spc)",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "Only the current native source and its documented same-frame knowledge, attachment and lifetime gates supply evidence. This static review never invokes gameplay callbacks or certifies a runtime scenario.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "sites": [
         {
           "id": "2c62fc1a8a664635a36335b0c814b4bb108af36d165c98e832f0571f521081df:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "6bbeddeca15c7a517fd040811e0ae2ff0326b430876424656ff3bf2a8aa0213c:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
-          "id": "1bf9b82d9e10d7b0b40541a5ed71851a6a493e0facf0f43241010a8615a12a17:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "id": "55580d3f2ec04f24133db07347bcfa74a539da7476ddd56c7400cfc25332041c:1",
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "8ebc297186c10ab80a6786702e15ab6646a0f3fd33b547f2ac48f4080b4a0db1:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "e2e67b7d54effc7d09b0be771c66f7093ad5484cd63891257c7a1d9f9242a78d:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "3dfbe6c6df5b32498b35de8c5b0572bc5932d16b2f4b49d1960fd7d60f6a5aaf:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
-          "id": "11877cbf02cd1710fb0cce5f078fbb6f2c8d644074420d3862488595b4af2551:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "id": "ff6d4f202100ae8a3c5bf2c37b32cdc52d31b2fa7e23a9f94093f12f261b0466:1",
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "740165eb6f36ba318235b301c76a6800d1f410f39d207da41a719c510ba2e473:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "ebc906097b0a0b5c4793c471d21344f240acc6aff585fbcab017dba846a41146:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
-          "id": "9edde8c6f28c20aa6adc678e1acbc5a9c389e7b12fefd48012819f0c3f6276d1:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "id": "b347753eff8d1cc615f9782beaa620678e1146ac42f789106c65bb5d79ff87db:1",
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "6a073fbadebea9204a7df7870384730d2f61cfc23b7482ab55daeda9f3defc89:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "09f3c075bef369e0cc3d06137db6af57d615dc479d708413175ab783b1aae599:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
-          "id": "f2fa6ab27f871b1b3d9a8ab8e5d5c66e3ea32d5d60b9bd4109750ed828156a62:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "id": "e10abf9752d2a0b2d33a0b80fb10c7d7df29f3fbb1276e35d42f0ab2b40f1470:1",
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "ce16eef8996fdf1a289c9bf0a557b3caa76ba039b297b0c7f48aa076fb5c95ad:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "1cd796a3b48f6b8a8bd95fa267cc1c5cb0f328e7b509ad901dab8bae93cc5e42:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "4b8504148aad0e09f7d6788e36b4a57066ae3409afdd8feb2bd7b5aa1af204f6:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         },
         {
           "id": "3f12b11f25404cf9402a54603d725c69f9adf450aa2f434d08b8bafe2b32210f:1",
-          "body_digest": "a320df41ab44678505d5eb79499fd832b46acb2a410a31968b30bc16d015a82d"
+          "body_digest": "52e9a247e4de39c91ed940a3da2217fbfd39e0966f7c1fc6fffab736ccd76aaa"
         }
       ],
       "source_evidence": [
@@ -138771,7 +138974,7 @@
         }
       ],
       "runtime_verified_by_inventory": false,
-      "verification": "Explicit CLI.9.0.0 source review, ui-ledger-decisions.json; referenced tests identify validation obligations, with executed results reported separately.",
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate.",
       "scope": "noncombat"
     },
     {
@@ -138782,38 +138985,46 @@
       "visible_evidence": "new WndTitledMessage( Icons.get(Icons.CALENDAR), Messages.get(HeroSelectScene.class, \"daily\"), Messages.get(HeroSelectScene.class, \"daily_nowin\")) | new WndMessage(Messages.get(HeroSelectScene.class, \"daily_unavailable_long\", (diff / DAY)+1)) | new WndMessage(Messages.get(HeroSelectScene.class, \"daily_existing\")) | icon.hardlight(0.5f, 1f, 2f) | icon.hardlight(1f, 0.5f, 2f) | new WndOptions( icon, Messages.get(HeroSelectScene.class, \"daily\"), diff > 0 ? Messages.get(HeroSelectScene.class, \"daily_repeat\") : Messages.get(HeroSelectScene.class, \"daily_desc\"), Messages.get(HeroSelectScene.class, \"daily_yes\"), Messages.get(HeroSelectScene.class, \"daily_no\")){ @Override protected void onSelect(int index) { if (index == 0){ if (diff <= 0) { long time = Game.realTime - (Game.realTime % DAY); //earliest possible daily for v4.0 is Apr 01 2026 //which is 20,544 days after Jan 1 1970 time = Math.max(time, 20_544 * DAY); SPDSettings.lastDaily(time); Dungeon.dailyReplay = false; } else { Dungeon.dailyReplay = true; } Dungeon.hero = null; Dungeon.daily = true; Dungeon.initSeed(); ActionIndicator.clearAction(); InterlevelScene.mode = InterlevelScene.Mode.DESCEND; Game.switchScene( InterlevelScene.class ); } } } | CLASS <anonymous com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene$GameOptions$2$1>",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "Only the current native source and its documented same-frame knowledge, attachment and lifetime gates supply evidence. This static review never invokes gameplay callbacks or certifies a runtime scenario.",
-      "route": {"semantic_contract": "noncombat-surface"},
+      "route": {
+        "semantic_contract": "noncombat-surface"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        }
       ],
       "sites": [
         {
           "id": "47bd0e4c4cd4dfdd67f4a4dba4a67029db7ea6e4468da352d9637bcda5816f0c:1",
-          "body_digest": "38eb0b43553a38835c4ef35161fd480d58c8cc2f323043c9bb2f0c942fec0007"
+          "body_digest": "2c68117d1839f227592a4ab19764ec4281acdf35e6d32cfbcc9336b30df4d9d2"
         },
         {
           "id": "081b4c793b118c549f454e2a5e5b53673dbe46bbf3f3b801bdd6c33fd5af4f4c:1",
-          "body_digest": "38eb0b43553a38835c4ef35161fd480d58c8cc2f323043c9bb2f0c942fec0007"
+          "body_digest": "2c68117d1839f227592a4ab19764ec4281acdf35e6d32cfbcc9336b30df4d9d2"
         },
         {
           "id": "c8a51d8e88fbf5e99b607e7c8b4ce6132553529624f3359e436cd3f97830bbe9:1",
-          "body_digest": "38eb0b43553a38835c4ef35161fd480d58c8cc2f323043c9bb2f0c942fec0007"
+          "body_digest": "2c68117d1839f227592a4ab19764ec4281acdf35e6d32cfbcc9336b30df4d9d2"
         },
         {
           "id": "dbc94e17458c00344d1e578d1f046bb6e653bc265a2acf3bc15dbddf21f3c660:1",
-          "body_digest": "38eb0b43553a38835c4ef35161fd480d58c8cc2f323043c9bb2f0c942fec0007"
+          "body_digest": "2c68117d1839f227592a4ab19764ec4281acdf35e6d32cfbcc9336b30df4d9d2"
         },
         {
           "id": "6578bc5a3796a04a26d374f947c61eb6b2265ccf420b15aa6e75543e2c63d0c4:1",
-          "body_digest": "38eb0b43553a38835c4ef35161fd480d58c8cc2f323043c9bb2f0c942fec0007"
+          "body_digest": "2c68117d1839f227592a4ab19764ec4281acdf35e6d32cfbcc9336b30df4d9d2"
         },
         {
           "id": "5668b500c168d0e1a5f7459419451a856bc2dfdd7e1c9a4691a9986b4a879400:1",
-          "body_digest": "38eb0b43553a38835c4ef35161fd480d58c8cc2f323043c9bb2f0c942fec0007"
+          "body_digest": "2c68117d1839f227592a4ab19764ec4281acdf35e6d32cfbcc9336b30df4d9d2"
         },
         {
           "id": "099359beaf2b52abcef3979a942c493d733eeec21f576e21b6b394d5ab6e8475:1",
-          "body_digest": "38eb0b43553a38835c4ef35161fd480d58c8cc2f323043c9bb2f0c942fec0007"
+          "body_digest": "2c68117d1839f227592a4ab19764ec4281acdf35e6d32cfbcc9336b30df4d9d2"
         }
       ],
       "source_evidence": [
@@ -138875,7 +139086,7 @@
         }
       ],
       "runtime_verified_by_inventory": false,
-      "verification": "Explicit CLI.9.0.0 source review, ui-ledger-decisions.json; referenced tests identify validation obligations, with executed results reported separately.",
+      "verification": "Explicit CLI.9.0.3 configured start-option source review in docs/cli-9.0.3-unlock-source-review.json; existing semantic classification retained. Runtime validation is separate.",
       "scope": "noncombat"
     },
     {
@@ -187645,6 +187856,38 @@
       "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/GameScene.java",
       "method": "targetedCell",
       "reason": "Original native reset call moved unchanged with its original enclosing allocation body to private nativeTargetedCell, so explicit tracked creation no longer first marks itself unowned. Pool, time, geometry and call order remain native."
+    },
+    {
+      "id": "11877cbf02cd1710fb0cce5f078fbb6f2c8d644074420d3862488595b4af2551:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/HeroSelectScene.java",
+      "method": "createChildren",
+      "reason": "Native button source identity changes only because its embedded onClick eligibility delegates to the accepted profile policy; the original button content and operation are retained.",
+      "old_group": "cli9:HeroSelectScene:createChildren:d7d03910c2269e9a",
+      "replacement": "ff6d4f202100ae8a3c5bf2c37b32cdc52d31b2fa7e23a9f94093f12f261b0466:1"
+    },
+    {
+      "id": "1bf9b82d9e10d7b0b40541a5ed71851a6a493e0facf0f43241010a8615a12a17:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/HeroSelectScene.java",
+      "method": "createChildren",
+      "reason": "Native button source identity changes only because its embedded onClick eligibility delegates to the accepted profile policy; the original button content and operation are retained.",
+      "old_group": "cli9:HeroSelectScene:createChildren:d7d03910c2269e9a",
+      "replacement": "55580d3f2ec04f24133db07347bcfa74a539da7476ddd56c7400cfc25332041c:1"
+    },
+    {
+      "id": "9edde8c6f28c20aa6adc678e1acbc5a9c389e7b12fefd48012819f0c3f6276d1:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/HeroSelectScene.java",
+      "method": "createChildren",
+      "reason": "Native button source identity changes only because its embedded onClick eligibility delegates to the accepted profile policy; the original button content and operation are retained.",
+      "old_group": "cli9:HeroSelectScene:createChildren:d7d03910c2269e9a",
+      "replacement": "b347753eff8d1cc615f9782beaa620678e1146ac42f789106c65bb5d79ff87db:1"
+    },
+    {
+      "id": "f2fa6ab27f871b1b3d9a8ab8e5d5c66e3ea32d5d60b9bd4109750ed828156a62:1",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/HeroSelectScene.java",
+      "method": "createChildren",
+      "reason": "Native button source identity changes only because its embedded onClick eligibility delegates to the accepted profile policy; the original button content and operation are retained.",
+      "old_group": "cli9:HeroSelectScene:createChildren:d7d03910c2269e9a",
+      "replacement": "e10abf9752d2a0b2d33a0b80fb10c7d7df29f3fbb1276e35d42f0ab2b40f1470:1"
     }
   ],
   "evidence_policy": {

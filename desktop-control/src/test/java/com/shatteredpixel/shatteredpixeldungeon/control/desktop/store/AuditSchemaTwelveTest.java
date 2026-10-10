@@ -24,7 +24,7 @@ public class AuditSchemaTwelveTest {
     @Test public void gameIdentityIsPairedImmutableAndDoesNotPinTheCliPatchOrBuild() throws Exception {
         Path root = temporary.newFolder("current-game-identity").toPath();
         try (AuditStore store = new AuditStore(root)) {
-            store.beginSession("first", "first-build", "CLI.9.0.2", 9);
+            store.beginSession("first", "first-build", "CLI.9.0.3", 9);
             store.endSession("CLOSED", "fixture_finished");
         }
         for (String side : new String[]{"public", "internal"}) {
@@ -47,7 +47,7 @@ public class AuditSchemaTwelveTest {
             }
         }
         try (AuditStore store = new AuditStore(root)) {
-            store.beginSession("next", "different-build", "CLI.9.0.2", 9);
+            store.beginSession("next", "different-build", "CLI.9.0.3", 9);
             store.endSession("CLOSED", "fixture_finished");
         }
     }

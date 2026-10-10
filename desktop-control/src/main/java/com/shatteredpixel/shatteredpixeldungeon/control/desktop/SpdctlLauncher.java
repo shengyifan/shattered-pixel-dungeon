@@ -67,7 +67,7 @@ public final class SpdctlLauncher {
                 return;
             }
             // Remember freshness before this launch creates its lock, audit, or other profile files.
-            Runnable initializeDefaults=CliProfileDefaults.prepare(profile);
+            java.util.function.Consumer<com.badlogic.gdx.Preferences> initializeDefaults=CliProfileDefaults.prepare(profile);
             Files.createDirectories(profile);profile=profile.toRealPath();
             System.setProperty("Specification-Title","Shattered Pixel Dungeon");
             System.setProperty("Implementation-Title","com.shatteredpixel.shatteredpixeldungeon");

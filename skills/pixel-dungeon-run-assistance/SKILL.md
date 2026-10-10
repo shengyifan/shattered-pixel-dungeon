@@ -6,7 +6,7 @@ description: Plan and operate a Shattered Pixel Dungeon Warrior run through the 
 # Pixel Dungeon run assistance
 
 Use for an authorized playthrough, current-floor tactics, shop/alchemy planning,
-or a review of recorded play. This project adaptation targets CLI.9.0.2,
+or a review of recorded play. This project adaptation targets CLI.9.0.3,
 protocol 9, audit schema 12, and game 4.0.2. Verify the actual connection's
 versions and advertised capabilities; historical notes never establish live state.
 
@@ -165,3 +165,8 @@ pre-execution corrections, random outcomes, and tool failures. Cite observed
 before/after evidence and real costs; do not invent hidden causes or an untested
 optimal alternative. Reuse static source findings, keep adviser tasks focused,
 and reduce redundant queries/calls rather than deleting public facts to save tokens.
+
+New desktop profiles default to open character/start-option and information-preview
+entrances, without earned badges or victories. Existing profiles retain their
+progression. Re-observe the actual native menu; availability is not evidence of a
+win, talent points, a subclass or an armor ability. Challenges are off until chosen.

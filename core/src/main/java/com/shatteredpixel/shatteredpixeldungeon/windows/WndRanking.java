@@ -30,6 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Rankings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.StartOptions;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
@@ -62,7 +63,6 @@ import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.ui.Component;
 import com.watabou.utils.Bundle;
-import com.watabou.utils.DeviceCompat;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -268,7 +268,7 @@ public class WndRanking extends WndTabbed {
 			int buttontop = HEIGHT - 16;
 
 			if (Dungeon.hero != null && Dungeon.seed != -1 && !Dungeon.daily &&
-					(DeviceCompat.isDebug() || Badges.isUnlocked(Badges.Badge.VICTORY))){
+					StartOptions.advancedOptionsUnlocked()){
 				final Image icon = Icons.get(Icons.SEED);
 				RedButton btnSeed = new RedButton(Messages.get(this, "copy_seed")){
 					@Override

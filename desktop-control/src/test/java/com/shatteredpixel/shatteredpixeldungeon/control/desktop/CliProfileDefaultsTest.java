@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
 
@@ -58,10 +59,10 @@ public class CliProfileDefaultsTest {
         Path profile = temporary.newFolder().toPath();
         Files.createFile(profile.resolve(".unrelated-file"));
         assertFalse(CliProfileDefaults.isNewProfile(profile));
-        Runnable defaults = CliProfileDefaults.prepare(profile);
+        Consumer<Preferences> defaults = CliProfileDefaults.prepare(profile);
         Preferences preferences = preferences(profile);
         SPDSettings.set(preferences);
-        defaults.run();
+        defaults.accept(preferences);
         assertTrue(preferences.get().isEmpty());
         assertFalse(Files.exists(profile.resolve(SPDSettings.DEFAULT_PREFS_FILE)));
     }
@@ -74,7 +75,7 @@ public class CliProfileDefaultsTest {
 
     @Test public void freshDefaultsAreDeferredUntilSettingsHaveLoaded() throws Exception {
         Path profile = temporary.getRoot().toPath().resolve("new-profile");
-        Runnable defaults = CliProfileDefaults.prepare(profile);
+        Consumer<Preferences> defaults = CliProfileDefaults.prepare(profile);
         assertFalse(Files.exists(profile));
         Files.createDirectories(profile);
         Files.createFile(profile.resolve(".profile-lock-created-after-check"));
@@ -82,10 +83,11 @@ public class CliProfileDefaultsTest {
         SPDSettings.set(preferences);
         Game.versionCode = 912;
         assertTrue(preferences.get().isEmpty());
-        defaults.run();
+        defaults.accept(preferences);
         Map<String, Object> expected = new LinkedHashMap<>();
         expected.put(SPDSettings.KEY_FULLSCREEN, false);
         expected.put(SPDSettings.KEY_LANG, "zh");
+        expected.put(SPDSettings.KEY_UNLOCK_START_OPTIONS, true);
         expected.put(SPDSettings.KEY_INTRO, false);
         expected.put(SPDSettings.KEY_VERSION, 912);
         assertEquals(expected.keySet(), preferences.get().keySet());
@@ -95,10 +97,12 @@ public class CliProfileDefaultsTest {
         assertEquals(expected.keySet(), reloaded.get().keySet());
         assertFalse(reloaded.getBoolean(SPDSettings.KEY_FULLSCREEN));
         assertEquals("zh", reloaded.getString(SPDSettings.KEY_LANG));
+        assertTrue(reloaded.getBoolean(SPDSettings.KEY_UNLOCK_START_OPTIONS));
         assertFalse(reloaded.getBoolean(SPDSettings.KEY_INTRO));
         assertEquals(912, reloaded.getInteger(SPDSettings.KEY_VERSION));
         assertFalse(SPDSettings.fullscreen());
         assertEquals(Languages.CHI_SMPL, SPDSettings.language());
+        assertTrue(SPDSettings.unlockStartOptions());
         assertFalse(SPDSettings.intro());
         assertEquals(912, SPDSettings.version());
     }
@@ -113,16 +117,57 @@ public class CliProfileDefaultsTest {
                 .putString("unrelated", "preserve").flush();
         Path settings = profile.resolve(SPDSettings.DEFAULT_PREFS_FILE);
         byte[] before = Files.readAllBytes(settings);
-        Runnable defaults = CliProfileDefaults.prepare(profile);
+        Consumer<Preferences> defaults = CliProfileDefaults.prepare(profile);
         SPDSettings.set(preferences);
         Game.versionCode = 912;
-        defaults.run();
+        defaults.accept(preferences);
         assertArrayEquals(before, Files.readAllBytes(settings));
         assertTrue(SPDSettings.fullscreen());
         assertEquals(Languages.ENGLISH, SPDSettings.language());
         assertTrue(SPDSettings.intro());
         assertEquals(800, SPDSettings.version());
         assertEquals("preserve", preferences.getString("unrelated"));
+        assertFalse(SPDSettings.unlockStartOptions());
+        assertFalse(preferences.contains(SPDSettings.KEY_UNLOCK_START_OPTIONS));
+    }
+
+    @Test public void reopenedProfileRetainsUnlockAndExplicitDisplayChoices() throws Exception {
+        Path profile = temporary.newFolder().toPath();
+        Consumer<Preferences> defaults = CliProfileDefaults.prepare(profile);
+        Preferences preferences = preferences(profile);
+        SPDSettings.set(preferences);
+        Game.versionCode = 922;
+        defaults.accept(preferences);
+        SPDSettings.put(SPDSettings.KEY_FULLSCREEN, true);
+        SPDSettings.language(Languages.ENGLISH);
+        byte[] before = Files.readAllBytes(profile.resolve(SPDSettings.DEFAULT_PREFS_FILE));
+
+        Consumer<Preferences> reopen = CliProfileDefaults.prepare(profile);
+        Preferences reloaded = preferences(profile);
+        SPDSettings.set(reloaded);
+        reopen.accept(reloaded);
+        assertTrue(SPDSettings.unlockStartOptions());
+        assertFalse(SPDSettings.intro());
+        assertEquals(922, SPDSettings.version());
+        assertTrue(SPDSettings.fullscreen());
+        assertEquals(Languages.ENGLISH, SPDSettings.language());
+        assertArrayEquals(before, Files.readAllBytes(profile.resolve(SPDSettings.DEFAULT_PREFS_FILE)));
+    }
+
+    @Test public void settingsLoadedAfterFreshCheckBlockAllDefaultsWithoutFlushing() throws Exception {
+        Path profile = temporary.newFolder().toPath();
+        Consumer<Preferences> defaults = CliProfileDefaults.prepare(profile);
+        Preferences preferences = preferences(profile);
+        SPDSettings.set(preferences);
+        // Include an unflushed unrelated key: the guard must inspect the loaded
+        // preferences themselves rather than reread only the settings file.
+        preferences.putString("unrelated", "arrived-after-check");
+        defaults.accept(preferences);
+        assertEquals(1, preferences.get().size());
+        assertEquals("arrived-after-check", preferences.getString("unrelated"));
+        assertFalse(Files.exists(profile.resolve(SPDSettings.DEFAULT_PREFS_FILE)));
+        assertFalse(SPDSettings.unlockStartOptions());
+        assertTrue(SPDSettings.intro());
     }
 
     @Test public void invalidProfileIsNotTreatedAsFresh() throws Exception {

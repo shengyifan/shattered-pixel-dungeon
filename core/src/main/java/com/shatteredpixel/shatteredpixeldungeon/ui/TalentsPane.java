@@ -21,7 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
-import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.StartOptions;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
@@ -62,15 +62,7 @@ public class TalentsPane extends ScrollPane {
 		int tiersAvailable = 1;
 
 		if (mode == TalentButton.Mode.INFO){
-			if (!Badges.isUnlocked(Badges.Badge.LEVEL_REACHED_1)){
-				tiersAvailable = 1;
-			} else if (!Badges.isUnlocked(Badges.Badge.LEVEL_REACHED_2) || !Badges.isUnlocked(Badges.Badge.BOSS_SLAIN_2)){
-				tiersAvailable = 2;
-			} else if (!Badges.isUnlocked(Badges.Badge.BOSS_SLAIN_4)){
-				tiersAvailable = 3;
-			} else {
-				tiersAvailable = Talent.MAX_TALENT_TIERS;
-			}
+			tiersAvailable = StartOptions.talentPreviewTiers();
 		} else {
 			while (tiersAvailable < Talent.MAX_TALENT_TIERS
 					&& Dungeon.hero.lvl+1 >= Talent.tierLevelThresholds[tiersAvailable+1]){

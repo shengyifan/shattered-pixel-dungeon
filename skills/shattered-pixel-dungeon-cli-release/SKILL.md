@@ -15,7 +15,7 @@ The [import record](../../memory/IMPORTS.md) identifies the original material.
 ## Establish the boundary
 
 - Inspect the checkout, branch, worktree and actual launcher version. The present
-  baseline is CLI.9.0.2 / protocol 9 / schema 12 / game 4.0.2; verify it rather than
+  baseline is CLI.9.0.3 / protocol 9 / schema 12 / game 4.0.2; verify it rather than
   treating this line or historical test totals as current package evidence.
 - Preserve the existing game/controller and personal profiles. Never inspect
   personal saves or private audit databases to diagnose gameplay decisions. Use
@@ -28,6 +28,18 @@ The [import record](../../memory/IMPORTS.md) identifies the original material.
 - Honor a Python-only repair or pause boundary. An external decoder can be repaired
   without restarting a JVM; Java/package changes affect a subsequent launch. A
   successful state query is not evidence that unsaved combat has been persisted.
+
+New-profile availability is a user-authorized exception to the original pre-run
+progression gates: both desktop entrypoints initialize only absent/empty profiles,
+with no fake badges, debug mode or old-profile migration. Validate fresh production
+launchers directly; the legacy fixture launcher grants unlock badges and cannot
+prove this default. Actual in-run progression and daily/seed checks remain native.
+
+For ordinary GUI acceptance, launch the exact packaged executable with an explicit
+isolated `--data-dir` and identify its process before binding a GUI tool. After
+quitting, verify exit by that PID; do not ask the GUI tool to observe the exited
+app, because it can automatically relaunch the default entrypoint. Exclude any
+such unintended default-profile window from fixture evidence and report it.
 
 ## Diagnose with the correct evidence
 
@@ -46,7 +58,7 @@ resumed through `settle`, not resent or implicitly drained by `state/cancel`.
 
 Useful local evidence routes:
 
-- [CLI.9.0.2 integration and validation](../../docs/cli-9.0.2-expression-validation.md)
+- [CLI.9.0.3 integration and validation](../../docs/cli-9.0.3-unlock-validation.md)
   and [semantic observations](../../docs/cli-combat-visuals.md) for the current batch;
   [CLI.8.0.1 recovery/warning validation](../../docs/cli-8.0.1-recovery-validation.md)
   records the preceding lifecycle fixes.

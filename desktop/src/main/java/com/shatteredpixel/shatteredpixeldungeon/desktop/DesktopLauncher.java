@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.desktop;
 
 import com.badlogic.gdx.Files;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3FileHandle;
@@ -44,6 +45,7 @@ import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class DesktopLauncher {
 
@@ -63,13 +65,13 @@ public class DesktopLauncher {
 
 	public static void launch(String[] args, java.nio.file.Path dataDirectory,
 			Thread.UncaughtExceptionHandler exceptionHandler, boolean profileAlreadyLocked) {
-		launch(args, dataDirectory, exceptionHandler, profileAlreadyLocked, () -> {});
+		launch(args, dataDirectory, exceptionHandler, profileAlreadyLocked, preferences -> {});
 	}
 
 	/** Runs the optional settings hook before any display preferences are consumed. */
 	public static void launch(String[] args, java.nio.file.Path dataDirectory,
 			Thread.UncaughtExceptionHandler exceptionHandler, boolean profileAlreadyLocked,
-			Runnable preferencesReady) {
+			Consumer<Preferences> preferencesReady) {
 
 		if (exceptionHandler != null && SharedLibraryLoader.os == Os.MacOsX
 				&& !"1".equals(System.getenv("JAVA_STARTED_ON_FIRST_THREAD_"
@@ -201,34 +203,41 @@ public class DesktopLauncher {
 		}
 		java.nio.file.Path profilePath = baseFileType == Files.FileType.Absolute
 				? java.nio.file.Paths.get(basePath) : java.nio.file.Paths.get(System.getProperty("user.home"), basePath);
-		try (ProfileLock profileLock = profileAlreadyLocked ? null : new ProfileLock(profilePath)) {
-		config.setPreferencesConfig( basePath, baseFileType );
-		loadPreferences(basePath, baseFileType, preferencesReady);
-		
-		config.setWindowSizeLimits( 720, 400, -1, -1 );
-		Point p = SPDSettings.windowResolution();
-		config.setWindowedMode( p.x, p.y );
+		try {
+			// Capture freshness before the GUI creates its lock. Prelocked launchers
+			// supply a callback captured before their own lock/audit setup instead.
+			Consumer<Preferences> initializeDefaults = profileAlreadyLocked ? preferencesReady
+					: DesktopProfileDefaults.prepare(profilePath).andThen(preferencesReady);
+			try (ProfileLock profileLock = profileAlreadyLocked ? null : new ProfileLock(profilePath)) {
+				config.setPreferencesConfig( basePath, baseFileType );
+				loadPreferences(basePath, baseFileType, initializeDefaults);
 
-		config.setMaximized(SPDSettings.windowMaximized());
+				config.setWindowSizeLimits( 720, 400, -1, -1 );
+				Point p = SPDSettings.windowResolution();
+				config.setWindowedMode( p.x, p.y );
 
-		//going fullscreen on launch is a bit buggy
-		// so game always starts windowed and then switches in DesktopPlatformSupport.updateSystemUI
-		//config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
+				config.setMaximized(SPDSettings.windowMaximized());
 
-		//records whether window is maximized or not for settings
-		DesktopWindowListener listener = new DesktopWindowListener();
-		config.setWindowListener( listener );
-		
-		config.setWindowIcon("icons/icon_16.png", "icons/icon_32.png", "icons/icon_48.png",
-				"icons/icon_64.png", "icons/icon_128.png", "icons/icon_256.png");
+				//going fullscreen on launch is a bit buggy
+				// so game always starts windowed and then switches in DesktopPlatformSupport.updateSystemUI
+				//config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
 
-		new Lwjgl3Application(new ShatteredPixelDungeon(new DesktopPlatformSupport()), config);
+				//records whether window is maximized or not for settings
+				DesktopWindowListener listener = new DesktopWindowListener();
+				config.setWindowListener( listener );
+
+				config.setWindowIcon("icons/icon_16.png", "icons/icon_32.png", "icons/icon_48.png",
+						"icons/icon_64.png", "icons/icon_128.png", "icons/icon_256.png");
+
+				new Lwjgl3Application(new ShatteredPixelDungeon(new DesktopPlatformSupport()), config);
+			}
 		} catch (java.io.IOException e) { throw new IllegalStateException("PROFILE_UNAVAILABLE", e); }
 	}
 
-	static void loadPreferences(String basePath, Files.FileType baseFileType, Runnable preferencesReady) {
-		SPDSettings.set( new Lwjgl3Preferences( new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType) ));
+	static void loadPreferences(String basePath, Files.FileType baseFileType, Consumer<Preferences> preferencesReady) {
+		Preferences preferences = new Lwjgl3Preferences(new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType));
+		SPDSettings.set(preferences);
 		FileUtils.setDefaultFileProperties( baseFileType, basePath );
-		preferencesReady.run();
+		preferencesReady.accept(preferences);
 	}
 }

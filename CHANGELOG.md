@@ -4,6 +4,13 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
 
+## CLI.9.0.3
+
+- Initializes only genuinely absent/empty desktop profiles with persistent `unlock_start_options=true`, skips introduction/tutorial, and shares that default across the ordinary GUI and spdctl entrypoints. Existing profiles remain unchanged; CLI keeps its windowed Simplified-Chinese defaults, while GUI display/language defaults remain native.
+- Opens all six classes, nine challenge choices, custom seeds, daily runs, full randomization, class/talent/armor-ability previews and the ranking seed-copy entrance. Challenges start unselected and no custom seed is supplied by default.
+- Keeps feature availability separate from earned badges, victories and guidebook progress. Actual talent/class/armor progression and native daily/seed restrictions remain intact; no debug mode or artificial achievements are used.
+- Keeps protocol 9, audit schema 12, game 4.0.2/code 922 and trace format 1. See [new-profile defaults and validation](docs/cli-9.0.3-unlock-validation.md).
+
 ## CLI.9.0.2
 
 - Adds source-bound native tab icon identities and explicit selected state, plus native laid-out talent point counts in all UI contexts, including ranking windows without a current hero projection.

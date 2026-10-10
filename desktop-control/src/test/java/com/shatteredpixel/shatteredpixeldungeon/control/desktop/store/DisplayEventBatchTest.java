@@ -30,7 +30,7 @@ public class DisplayEventBatchTest {
         Path root = temporary.newFolder("display-batch-fixture").toPath();
         String privateText = "PRIVATE_DISPLAY_SENTINEL: \"original\"\\line\n";
         try (AuditStore store = new AuditStore(root)) {
-            String session = store.beginSession("batch-boot", "batch-fixture", "CLI.9.0.2", 9);
+            String session = store.beginSession("batch-boot", "batch-fixture", "CLI.9.0.3", 9);
             long after = Long.parseLong(scalar(store.publicDatabase(), "SELECT max(sequence) FROM events"));
             BigInteger before = generation(store.publicDatabase());
             assertDurability(store);

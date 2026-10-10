@@ -1,12 +1,18 @@
-# CLI.9.0.2 architecture and verification
+# CLI.9.0.3 architecture and verification
 
-The maintained contract is **CLI.9.0.2 / protocol 9 / audit schema 12**, with game
+The maintained contract is **CLI.9.0.3 / protocol 9 / audit schema 12**, with game
 **4.0.2** and trace format **1**. The [English help](cli-help.md) defines public
 commands and schemas. [Semantic observations](cli-combat-visuals.md),
 [client guidance](cli-playthrough-client.md) and [cancellation](cli-runtime-cancellation.md)
 explain the relevant boundaries. This document maps those contracts to source and
 verification entrypoints; test counts and package identity belong in the
-[current validation report](cli-9.0.2-expression-validation.md).
+[current validation report](cli-9.0.3-unlock-validation.md).
+
+New desktop profiles persist `unlock_start_options=true` and skip introduction/tutorial.
+The GUI and CLI share startup initialization before consuming display settings;
+CLI adds its own language/window defaults after validating profile compatibility.
+Availability gates use that setting without awarding earned achievements or
+changing in-run progression. Existing profiles are never migrated to the new default.
 
 ## Source responsibilities
 

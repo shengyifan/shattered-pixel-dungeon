@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 9)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.9.0.2, protocol 9, and base game 4.0.2.
+`spdctl --version` reports CLI.9.0.3, protocol 9, and base game 4.0.2.
 
 ## 1. Start and keep the connection open
 
@@ -118,9 +118,15 @@ schema-12 pair, including any older schema, is rejected before profile writes.
 Both stores must also identify game 4.0.2 and version code 922. Missing, mismatched
 or different game metadata is rejected before writes. No migration or deletion
 is performed; use a new profile.
-Only genuinely absent or empty profiles receive the windowed Simplified-Chinese,
-skip-introduction/tutorial defaults. Existing settings and ordinary GUI defaults
-remain unchanged; class unlocks, achievements and guidebook progress are not granted.
+Only genuinely absent or empty desktop profiles receive `unlock_start_options=true`
+and skip-introduction/tutorial defaults. Both the ordinary GUI and spdctl open all
+six classes, challenge selection, custom seeds, daily runs, full randomization and
+class/talent/armor-ability previews. Challenges remain unselected and the custom
+seed remains empty until chosen. Earned badges, victories and guidebook progress
+are not granted; native in-run progression and daily/seed validation still apply.
+CLI profiles also default to windowed Simplified Chinese; ordinary GUI language
+and display defaults remain native. Existing profiles are not updated: a missing
+unlock setting remains false, including when starting a new slot in that profile.
 `--help` and `--version` exit without starting a game or creating a profile.
 
 ## 2. Discover the state
@@ -540,7 +546,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.9.0.2 reports public gameplay facts rather than renderer internals. An
+CLI.9.0.3 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength

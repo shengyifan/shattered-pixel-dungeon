@@ -1,6 +1,6 @@
 # Maintained documentation
 
-The current CLI contract is **CLI.9.0.2 / protocol 9 / audit schema 12**, with game
+The current CLI contract is **CLI.9.0.3 / protocol 9 / audit schema 12**, with game
 **4.0.2**. Begin with the maintained guides below. Old version numbers, test counts
 and machine-specific output paths in historical material are not current evidence.
 
@@ -18,6 +18,7 @@ and machine-specific output paths in historical material are not current evidenc
 
 ## Dated validation records
 
+- [CLI.9.0.3 new-profile defaults](cli-9.0.3-unlock-validation.md): open character/start options and previews without granting earned achievements.
 - [CLI.9.0.2 expression fixes](cli-9.0.2-expression-validation.md): warning uncertainty, semantic tabs/talent points and dynamic public collision.
 
 - [CLI.9.0.1 public custom terrain](cli-9.0.1-terrain-validation.md): source-bound default-map correction and its actual package verification.

@@ -223,6 +223,7 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_CUSTOM_SEED	= "custom_seed";
 	public static final String KEY_LAST_DAILY	= "last_daily";
 	public static final String KEY_INTRO		= "intro";
+	public static final String KEY_UNLOCK_START_OPTIONS = "unlock_start_options";
 
 	public static final String KEY_SUPPORT_NAGGED= "support_nagged";
 	public static final String KEY_VICTORY_NAGGED= "victory_nagged";
@@ -234,6 +235,14 @@ public class SPDSettings extends GameSettings {
 	
 	public static boolean intro() {
 		return getBoolean( KEY_INTRO, true );
+	}
+
+	public static void unlockStartOptions( boolean value ) {
+		put( KEY_UNLOCK_START_OPTIONS, value );
+	}
+
+	public static boolean unlockStartOptions() {
+		return getBoolean( KEY_UNLOCK_START_OPTIONS, false );
 	}
 	
 	public static void lastClass( int value ) {

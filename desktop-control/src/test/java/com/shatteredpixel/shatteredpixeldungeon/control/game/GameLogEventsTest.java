@@ -20,7 +20,7 @@ public class GameLogEventsTest {
     @Rule public TemporaryFolder temporary=new TemporaryFolder();
     @Test public void eventsReadDrainsDisplayedSnapshotsBeforeItsResponseAndConsoleRemainsPrivate()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
-            store.ensureScope("run:a","run","a");store.ensureScope("run:old","run","old");store.beginSession("log-test","fixture-build","CLI.9.0.2",9);
+            store.ensureScope("run:a","run","a");store.ensureScope("run:old","run","old");store.beginSession("log-test","fixture-build","CLI.9.0.3",9);
             FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             game.logs.add(snapshot("run:old",literal("old visible")));game.logs.add(snapshot("run:a",literal("current visible")));
             OutputStream checked=new OutputStream(){
@@ -54,7 +54,7 @@ public class GameLogEventsTest {
 
     @Test public void handshakePublishesBuildSessionAndAuditSchemaMetadata()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
-            String sessionId=store.beginSession("handshake-test","fixture-build","CLI.9.0.2",9);ByteArrayOutputStream wire=new ByteArrayOutputStream();
+            String sessionId=store.beginSession("handshake-test","fixture-build","CLI.9.0.3",9);ByteArrayOutputStream wire=new ByteArrayOutputStream();
             try(MachineSession session=new MachineSession(store,new FakeGame(),new PrintStream(wire,true,"UTF-8"),1000)){
                 session.accept(V9Requests.encode(store, map("protocol_version", 9, "id","hello","op","protocol.info"))).get(5,TimeUnit.SECONDS);
                 Map<?,?> result=(Map<?,?>)last(wire).get("data");
@@ -74,7 +74,7 @@ public class GameLogEventsTest {
     }
     @Test public void consecutiveSourcelessDisplaysRemainPartialEventsWithoutClosingTheSession()throws Exception{
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())) {
-            store.ensureScope("run:a","run","a");store.beginSession("translation-failure","fixture-build","CLI.9.0.2",9);
+            store.ensureScope("run:a","run","a");store.beginSession("translation-failure","fixture-build","CLI.9.0.3",9);
             FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             game.logs.add(snapshot("run:a","未收录的第一条实际显示甲"));
             game.logs.add(snapshot("run:a","未收录的第二条实际显示乙"));

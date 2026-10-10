@@ -1,12 +1,12 @@
 # spdctl control interface
 
-Current contract: **CLI.9.0.2 / protocol 9 / audit schema 12**, base game **4.0.2**.
+Current contract: **CLI.9.0.3 / protocol 9 / audit schema 12**, base game **4.0.2**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md),
 which is bundled verbatim as `spdctl --help`. Read the [current architecture](cli-architecture.md)
 for implementation and test boundaries, and the [agent working agreements](../AGENTS.md)
 before changing or operating the controller. Protocol 9 keeps complete same-frame
 action sharing and record templates and reports [semantic public facts](cli-combat-visuals.md).
-The [current validation report](cli-9.0.2-expression-validation.md) records the actual
+The [current validation report](cli-9.0.3-unlock-validation.md) records the actual
 checks for this batch; the [8.0.1 recovery record](cli-8.0.1-recovery-validation.md)
 is background for settle budgets, warning lifetimes and safe Python access.
 
@@ -24,9 +24,9 @@ paths, internal build directories and symlink destinations are rejected.
 Use the delivery path authorized for the task. Existing running games are not
 restarted or upgraded in place by editing Java source or producing a new package.
 
-The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v9/`. Earlier profiles remain untouched. A nonempty profile without a valid schema-12 audit pair, including an older schema, is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty profiles receive the existing windowed Chinese/new-profile defaults.
+The default profile is `~/Library/Application Support/Shattered Pixel Dungeon CLI v9/`. Earlier profiles remain untouched. A nonempty profile without a valid schema-12 audit pair, including an older schema, is rejected before writes. There is no automatic migration or old-wire fallback. Only absent/empty desktop profiles receive the persisted open-start-options and skip-tutorial defaults, through both ordinary GUI and spdctl. CLI also keeps its windowed Simplified-Chinese defaults. Existing profiles, earned badges and victories remain unchanged; see the help for the complete availability boundary.
 
-The packaged controller owns one native-recorded game child using the bundled JVM. It emits initial info and accepts short intents; actions bind an explicit already displayed revision. It supplies `v:8`, a fresh request ID and that observation's scope. Direct `run --machine` remains available and requires these fields explicitly. Use only advertised `ops/acts`. Short durable identities are profile-local; separate directories can reuse numbers. Do not inspect saves or private audit to choose actions.
+The packaged controller owns one native-recorded game child using the bundled JVM. It emits initial info and accepts short intents; actions bind an explicit already displayed revision. It supplies `v:9`, a fresh request ID and that observation's scope. Direct `run --machine` remains available and requires these fields explicitly. Use only advertised `ops/acts`. Short durable identities are profile-local; separate directories can reuse numbers. Do not inspect saves or private audit to choose actions.
 
 Generated request counters are decimal: `t1.9` is followed by `t1.10`, not `t1.a`.
 The server-provided prefix remains opaque; failed allocations consume numbers,
@@ -63,7 +63,7 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 Use current v9 tests and the rebuilt executable. Test profiles and generated JSON
 belong in ignored build directories. The [architecture](cli-architecture.md)
-identifies the maintained gates; the [CLI.9.0.2 report](cli-9.0.2-expression-validation.md)
+identifies the maintained gates; the [CLI.9.0.3 report](cli-9.0.3-unlock-validation.md)
 records their executed scope and actual package readback. Historical version results
 are not evidence for a later build. Protocol 9 has no cross-frame dictionaries or
 map/inventory/log deltas; each response remains independently complete. A static

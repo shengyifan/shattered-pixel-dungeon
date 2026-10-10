@@ -38,7 +38,7 @@ class CurrentFrameSafetyTest(unittest.TestCase):
             {"controller": "response", "response": current,
              "late_responses": [{"request": {"id": "t1.1"}, "response": historical}]},
             {"controller": "settle", "st": "completed", "rid": "t1.1", "outcome": receipt,
-             "observation": current, "discovery": wire("t1.4", data={"cli_version": "CLI.9.0.2"}),
+             "observation": current, "discovery": wire("t1.4", data={"cli_version": "CLI.9.0.3"}),
              "late_responses": [{"request": {"id": "t1.1"}, "response": historical}]},
         ):
             original = copy.deepcopy(source)
@@ -52,7 +52,7 @@ class CurrentFrameSafetyTest(unittest.TestCase):
 
     def test_success_does_not_promise_an_observation(self):
         for source in (
-            wire(data={"cli_version": "CLI.9.0.2"}),
+            wire(data={"cli_version": "CLI.9.0.3"}),
             wire(data={"id": "t1.1", "st": "COMPLETED"}, revision=None),
             wire(data={"items": [], "next": None, "end": True}, revision=None),
             {"controller": "settle", "st": "completed", "rid": "t1.1"},
