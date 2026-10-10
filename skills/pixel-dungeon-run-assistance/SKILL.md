@@ -24,6 +24,10 @@ versions and advertised capabilities; historical notes never establish live stat
   for demonstrated route, targeting, boss, and recovery mistakes. For talent
   choices, consult the [versioned Warrior notes](../../memory/references/warrior-talents-v3.3.8.md)
   only as a source-reading aid; verify current talent descriptions and equipment.
+- Before a nine-challenge Warrior attempt, read the [decision card](../../memory/nine-challenges-warrior-4.0.2/00-run-plan.md)
+  and [4.0.2 failed-run review](../../memory/2026-10-10-warrior-nine-challenges-retrospective.md).
+  The review supplies resource costs and stop-loss lessons, not a winning route;
+  historical coordinates, handles and potion colors are not new-run bindings.
 - For analysis of one complete public JSON response, use [map.py](scripts/map.py)
   for the known map, [cells.py](scripts/cells.py) for exact cells, or
   [ray.py](scripts/ray.py) for conditional collision geometry. Each requires an
@@ -113,9 +117,11 @@ route or termination condition has been checked.
 
 ## Resources, shops, and alchemy
 
-Prefer a high-coverage clear when the user has not chosen a different objective.
-Collect safe, valuable resources on the route; justify an optional cleanup loop
-against hunger, spawning, remaining charges, and escape cost. Do not turn exploration
+Choose exploration coverage from the user's objective and remaining resource budgets.
+For an all-nine-challenge win attempt, prioritize key resources and a connected exit
+route; optional coverage and quests need food, light, incoming-damage and escape
+allowances. Collect safe, valuable resources on the route; justify a cleanup loop
+against hunger, spawning, remaining charges and escape cost. Do not turn exploration
 into respawn farming or repeated grass traversal without a concrete benefit.
 Starvation prevents normal regeneration and can damage HP through shields; verify
 current hunger and regeneration rules before promising a recovery budget.
@@ -142,6 +148,60 @@ what movement advances the phase. For Yog, use the retrospective's source-backed
 checks for fist protection, delayed damage, grass, blindness, and wall-piercing
 death rays; do not treat a fading marker as a cancelled attack. Current
 `red_target` semantics are defined by the protocol manual.
+
+## Nine-challenge stop-loss decisions
+
+Use the decision card's resource table for version-specific values and its linked
+review for observed costs. Suggested waiting limits are adjustable tactical budgets,
+not native action parameters or proven optimal policies.
+
+- **Food:** budget nutrition, Hearty Meal's threshold-dependent healing, regeneration
+  and the baseline three-time-unit eating cost without Iron Stomach separately.
+  Avoid eating in melee without Iron Stomach; do not take damage deliberately to
+  reach a talent threshold. After
+  the last meal, prioritize known supply/key-resource/exit routes and stop low-value
+  cleanup or pursuit. High-HP starvation can justify eating for regeneration when
+  the resulting progression benefit is explicit.
+- **Rest:** finite status removal, NPC/shield waiting and short ambushes use one
+  `wait`, its complete response, then a new decision. Continuous `rest` requires
+  a checked native termination condition, budget and retreat margin; it has no
+  fixed-turn argument. Do not spend the last food/light window resting until hunger
+  interrupts. Re-plan when the goal, waiting budget or safety margin is exhausted.
+- **Light:** compare the displayed reserve with the actual connected route,
+  interactions, expected combat and retreat. If the reserve cannot cover the plan
+  and no usable spare torch is available, stop optional quests/pursuit/waiting and
+  redirect to supply or an exit. Use short
+  moves in dark ranged-enemy areas; damage, poison or forced movement invalidates
+  the prior route. A visible torch still needs a safe approach past its guards.
+- **Gnoll Trickster:** adjacency prevents its shot only for the checked action.
+  Equal-speed two-cell pursuit needs an attainable attack endpoint. Budget a first
+  door-side lure, for example 3–5 single waits. End it when the budget expires
+  without a real attack opportunity, or earlier on damage, new threats or insufficient
+  food/light. A new attack window or material change permits re-estimating the
+  remaining cap; retain cumulative time and resources spent rather than resetting
+  the budget. These limits govern further lure/pursuit; an already adjacent attack
+  opportunity needs its own current damage and retreat assessment.
+  Fleeing can sidestep or approach; wandering
+  does not guarantee a return. Projectile blockage, either FOV and surprise are
+  distinct; a heap can prevent a door closing.
+- **Unknown potions:** retain identification exclusions without treating them as
+  safety. Stop routine trial drinking without a survivable adverse-effect/escape
+  budget; identify earlier while resources remain. At low HP, starving or cornered,
+  compare known control/movement/combat before gambling on a bottle. A necessary
+  gamble must account for self-centered gas, paralysis automatically advancing
+  time without an actionable frame, and freezing/bottle chains; do not promise
+  another chance to cancel. Death-revealed identities/maps are postmortem evidence.
+- **Transitions:** distinguish actual shield from `counter_kind:cooldown`; hunger
+  neither consumes shielding nor triggers the seal. Stop optional work before HP,
+  food, light and escape options all run out. Unknown cells are not escape promises,
+  and a giant blocked by a narrow door may still attack across two connected
+  non-solid cells.
+
+Stop-loss means changing the gameplay plan within the user's authorization. Settle
+or cancel the original activity under the protocol's pending-request rules before
+another decision; settle timeouts do not cap game turns. Never hide a batch of waits
+or rebind an old intent. At the user's stop condition, stop inputs and queries;
+stop-loss does not authorize quitting, restarting or starting another run.
 
 ## Pause, completion, and review
 
