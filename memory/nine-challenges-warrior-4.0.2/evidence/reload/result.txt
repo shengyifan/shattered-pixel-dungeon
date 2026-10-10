@@ -1,0 +1,62 @@
+SOURCE_HEAD=8405ae82f206e965d14b4a3b9d4fb282f2230e47
+EVIDENCE_SCOPE=synthetic in-memory Bundle serialization and Corruption.act arithmetic, not a live playthrough
+SOURCE_SHA256 f00ec6ce63191c4e2a2a0eac7138a16bb680dec0a0d464666f55e3238e270605 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Actor.java
+SOURCE_SHA256 b50ab23f2f6df590ce8c547af038cf427eac517074c2c4dc7e6bdb52c9f56949 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java
+SOURCE_SHA256 6b005f0e39b98b305e49b5c388fe73a27c2418f90fb01d9cd15a4b96d99429cf core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Mob.java
+SOURCE_SHA256 04a23bcbdf46a7a9f4163d4f2fee2f6826ab3d34913d9e1061167ea6a599d032 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/abilities/Ratmogrify.java
+SOURCE_SHA256 1e176bb17b50b5bd788323577269e7bea2eedfced72894a8cafbeef593ab8d8e core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/HeavyBoomerang.java
+SOURCE_SHA256 3ba1fc07e3cbca72a481ffe2db9c314a2820ce0e2a667d7c1fb3a8a12e9cb274 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/DM201.java
+SOURCE_SHA256 3c043f2d664bea255f76557466c7c8104da2729f479f1186a6f403d33bbdd984 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/GreatCrab.java
+SOURCE_SHA256 5b0247c65dd299566692d88355ffdf8c82e1514f8cd47d987e793c20c3e1be26 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/MobSpawner.java
+SOURCE_SHA256 a0aa49e6b09d31f5a0333157789614f46115aee57baea5dad2132dc5842b5a46 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java
+SOURCE_SHA256 eb5de6c706be0a816f24ab10dd4a576916f2409d1351d5e523650826d3871291 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/GnollTrickster.java
+SOURCE_SHA256 1f65ca6db2ed7eb159ae06d6835a0eb8efd983fe627cc5a0d8396a7f509cbc8f core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Eye.java
+SOURCE_SHA256 2a3b7facca7f55df26c73a3b95556ce892ba3fc79778b7c018567f57d36d9b0a core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/DM300.java
+SOURCE_SHA256 ff8f88692e2e057aae85f8ef597b763c6d3ab9968ab6b1fcbb746ffe0d8c920f core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Tengu.java
+SOURCE_SHA256 660c094ca8b14f0415f8e73f4c32c37a6fc617d55bbe3a81e28931a55b296eee core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/ChampionEnemy.java
+SOURCE_SHA256 0a0cc03b8f3fcef2d19a300aba18c39a354fcf2e0d8876d35109d27fc5a548f9 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/BrokenSeal.java
+SOURCE_SHA256 5a099673520cd7d5006302708bcba8d1da1dc035f8f97471ebf3a911893d6616 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Berserk.java
+SOURCE_SHA256 161fe6b598675f1c2661c48fcc410541dbba07824c080e9de6cc5b52ea6d239a core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Corruption.java
+SOURCE_SHA256 d25ad063cc8849086500eab1972cd6704ef67c1a6ffcce7e6231a96f901ee205 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Dungeon.java
+SOURCE_SHA256 5fcd2a4db06a66c54cf159f27149d501a45efc0ebea4103827bc6b962b34bc98 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/Level.java
+SOURCE_SHA256 1cba829ac5bf4ca6bc34006d990f072c7c4cf2e5770cc9c1ece2ac9e0a97b9b6 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndGame.java
+SOURCE_SHA256 6c47e0a9d9bece9642cda113e2b85a3aaeec2212696af665cd912882ed10e804 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/InterlevelScene.java
+RUNTIME_SHA256 7297d9b0a0006fdea8ba7539262c8cf1616c7ed5046f8d9b055c1624f41633c1 core/build/libs/core-4.0.2.jar
+RUNTIME_SHA256 67a027b2072f103f0fd831cbc5591624ec41f6ef67700b64508570708bf21c45 SPD-classes/build/libs/SPD-classes-4.0.2.jar
+PASS TransmogRat non-allied timer resets from 1.25 => 6.0
+PASS TransmogRat original class retained => class com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Gnoll
+PASS CircleBack left resets from 4 => 0
+PASS CircleBack return position preserved => 55
+PASS DM201 threatened resets from true => false
+PASS GreatCrab moving resets from 2 => 0
+PASS Mob hunting state preserved => true
+PASS Mob HP preserved => 3
+PASS Mob position preserved => 42
+PASS Mob target preserved => 55
+PASS Mob enemySeen preserved => true
+PASS Mob enemyID preserved => 1
+PASS Mob alerted transient reset => false
+PASS Actor time preserved => 2.25
+PASS MobSpawner.time preserved => 17.5
+PASS Growing.multiplier preserved => 1.75
+PASS Goo.pumpedUp preserved => 2
+PASS Goo.healInc preserved => 3
+PASS GnollTrickster.combo preserved => 4
+PASS Eye.beamCharged preserved => true
+PASS Eye.beamTarget preserved => 55
+PASS Eye.beamCooldown preserved => 4
+PASS DM300.turnsSinceLastAbility preserved => 4
+PASS DM300.abilityCooldown preserved => 7
+PASS Tengu.abilityCooldown preserved => 3
+PASS BombAbility.timer preserved => 1
+PASS WarriorShield shielding preserved => 7
+PASS WarriorShield cooldown preserved => 32
+PASS WarriorShield initialShield preserved => 10
+PASS WarriorShield turnsSinceEnemies preserved => 2.5
+PASS Berserk.power preserved => 0.75
+PASS Berserk.turnRecovery preserved => 55
+PASS Berserk.levelRecovery preserved => 1.5
+PASS Corruption fractional damage truncated from 0.75 => 0.0
+PASS Corruption HT20 after 20 ticks without reload damage => 4
+PASS Corruption HT20 after 20 ticks reloading each tick damage => 0
+PASS TOTAL=36 challenges=511 (synthetic in-memory fixtures; no live gameplay)

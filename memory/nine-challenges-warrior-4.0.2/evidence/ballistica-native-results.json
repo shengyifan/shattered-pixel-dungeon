@@ -1,0 +1,1549 @@
+{
+  "evidence_kind": "isolated_native_Ballistica_synthetic_geometry",
+  "scope": "Native Ballistica only; synthetic collision/occupancy stubs, no full game or live play proof.",
+  "source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/mechanics/Ballistica.java",
+  "source_sha256": "3cce12645f1bf662481887df0fca19f0d68130741ff58a66557995ba3a359427",
+  "repository_head": "8405ae82f206e965d14b4a3b9d4fb282f2230e47",
+  "runner_sha256": "9f70378b539d23b69d7850e150afdabd253aa21d0d6fb0cd7ba6364c8f9b4945",
+  "inside_map_source": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/Level.java:1564",
+  "java_version": "openjdk version \"25.0.4\" 2026-07-21 LTS",
+  "map": {
+    "width": 12,
+    "height": 10,
+    "default_passable": true,
+    "default_avoid": false,
+    "default_solid": false
+  },
+  "case_count": 21,
+  "passed": 21,
+  "cases": [
+    {
+      "name": "direct_aim_blocked",
+      "source": 26,
+      "target": 41,
+      "flags": 6,
+      "terrain": [
+        [
+          40,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        41
+      ],
+      "expected_collision": 27,
+      "expected_prefix": [
+        26,
+        27,
+        40,
+        41
+      ],
+      "actual": {
+        "collision": 27,
+        "dist": 1,
+        "path": [
+          26,
+          27,
+          40,
+          41,
+          42,
+          55,
+          56,
+          57,
+          70
+        ],
+        "travel_to_collision": [
+          26,
+          27
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            6,
+            3
+          ],
+          [
+            7,
+            4
+          ],
+          [
+            8,
+            4
+          ],
+          [
+            9,
+            4
+          ],
+          [
+            10,
+            5
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "farther_aim_bypasses_wall",
+      "source": 26,
+      "target": 43,
+      "flags": 6,
+      "terrain": [
+        [
+          40,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        41
+      ],
+      "expected_collision": 41,
+      "expected_prefix": [
+        26,
+        27,
+        28,
+        41
+      ],
+      "actual": {
+        "collision": 41,
+        "dist": 3,
+        "path": [
+          26,
+          27,
+          28,
+          41,
+          42,
+          43,
+          44,
+          45,
+          58
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          41
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            6,
+            3
+          ],
+          [
+            7,
+            3
+          ],
+          [
+            8,
+            3
+          ],
+          [
+            9,
+            3
+          ],
+          [
+            10,
+            4
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "forward_tie_clear",
+      "source": 26,
+      "target": 54,
+      "flags": 6,
+      "terrain": [
+        [
+          41,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        54
+      ],
+      "expected_collision": 54,
+      "expected_prefix": [
+        26,
+        39,
+        40,
+        53,
+        54
+      ],
+      "actual": {
+        "collision": 54,
+        "dist": 4,
+        "path": [
+          26,
+          39,
+          40,
+          53,
+          54,
+          67,
+          68,
+          81,
+          82
+        ],
+        "travel_to_collision": [
+          26,
+          39,
+          40,
+          53,
+          54
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            7,
+            5
+          ],
+          [
+            8,
+            5
+          ],
+          [
+            9,
+            6
+          ],
+          [
+            10,
+            6
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "reverse_tie_blocked",
+      "source": 54,
+      "target": 26,
+      "flags": 6,
+      "terrain": [
+        [
+          41,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        26
+      ],
+      "expected_collision": 54,
+      "expected_prefix": [
+        54,
+        41,
+        40,
+        27,
+        26
+      ],
+      "actual": {
+        "collision": 54,
+        "dist": 0,
+        "path": [
+          54,
+          41,
+          40,
+          27,
+          26,
+          13
+        ],
+        "travel_to_collision": [
+          54
+        ],
+        "path_xy": [
+          [
+            6,
+            4
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "magic_bolt_continues_beyond_click",
+      "source": 26,
+      "target": 27,
+      "flags": 6,
+      "terrain": [],
+      "characters": [
+        29
+      ],
+      "expected_collision": 29,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 29,
+        "dist": 3,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "projectile_stops_at_clicked_cell",
+      "source": 26,
+      "target": 27,
+      "flags": 7,
+      "terrain": [],
+      "characters": [
+        29
+      ],
+      "expected_collision": 27,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 27,
+        "dist": 1,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "first_character_blocks",
+      "source": 26,
+      "target": 32,
+      "flags": 6,
+      "terrain": [],
+      "characters": [
+        28,
+        30
+      ],
+      "expected_collision": 28,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 28,
+        "dist": 2,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "solid_beam_ignores_characters",
+      "source": 26,
+      "target": 32,
+      "flags": 4,
+      "terrain": [
+        [
+          32,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        28,
+        30
+      ],
+      "expected_collision": 31,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 31,
+        "dist": 5,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "hard_wall_stops_at_previous_cell",
+      "source": 26,
+      "target": 32,
+      "flags": 6,
+      "terrain": [
+        [
+          29,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [],
+      "expected_collision": 28,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 28,
+        "dist": 2,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "closed_door_stops_on_door",
+      "source": 26,
+      "target": 32,
+      "flags": 6,
+      "terrain": [
+        [
+          29,
+          true,
+          false,
+          true
+        ]
+      ],
+      "characters": [],
+      "expected_collision": 29,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 29,
+        "dist": 3,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "ignore_soft_solid_passes_door",
+      "source": 26,
+      "target": 32,
+      "flags": 14,
+      "terrain": [
+        [
+          29,
+          true,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        31
+      ],
+      "expected_collision": 31,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 31,
+        "dist": 5,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "ignore_soft_solid_keeps_hard_wall",
+      "source": 26,
+      "target": 32,
+      "flags": 14,
+      "terrain": [
+        [
+          29,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        31
+      ],
+      "expected_collision": 28,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 28,
+        "dist": 2,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "solid_cell_with_character_stops_on_cell",
+      "source": 26,
+      "target": 32,
+      "flags": 6,
+      "terrain": [
+        [
+          29,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        29
+      ],
+      "expected_collision": 29,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 29,
+        "dist": 3,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "pit_avoid_is_not_blocking",
+      "source": 26,
+      "target": 32,
+      "flags": 6,
+      "terrain": [
+        [
+          29,
+          false,
+          true,
+          false
+        ]
+      ],
+      "characters": [
+        31
+      ],
+      "expected_collision": 31,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 31,
+        "dist": 5,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "wont_stop_ignores_wall_and_characters",
+      "source": 26,
+      "target": 32,
+      "flags": 0,
+      "terrain": [
+        [
+          29,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        31
+      ],
+      "expected_collision": 34,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 34,
+        "dist": 8,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "inside_map_boundary_fallback",
+      "source": 26,
+      "target": 32,
+      "flags": 6,
+      "terrain": [],
+      "characters": [],
+      "expected_collision": 34,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 34,
+        "dist": 8,
+        "path": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "travel_to_collision": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "same_source_magic_geometry_not_legal_wand_aim",
+      "source": 26,
+      "target": 26,
+      "flags": 6,
+      "terrain": [],
+      "characters": [],
+      "expected_collision": 13,
+      "expected_prefix": [
+        26,
+        13
+      ],
+      "actual": {
+        "collision": 13,
+        "dist": 1,
+        "path": [
+          26,
+          13
+        ],
+        "travel_to_collision": [
+          26,
+          13
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "same_source_projectile_geometry",
+      "source": 26,
+      "target": 26,
+      "flags": 7,
+      "terrain": [],
+      "characters": [],
+      "expected_collision": 26,
+      "expected_prefix": [
+        26,
+        13
+      ],
+      "actual": {
+        "collision": 26,
+        "dist": 0,
+        "path": [
+          26,
+          13
+        ],
+        "travel_to_collision": [
+          26
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "diagonal_corner_does_not_probe_side_cells",
+      "source": 26,
+      "target": 39,
+      "flags": 6,
+      "terrain": [
+        [
+          27,
+          false,
+          false,
+          true
+        ],
+        [
+          38,
+          false,
+          false,
+          true
+        ]
+      ],
+      "characters": [
+        39
+      ],
+      "expected_collision": 39,
+      "expected_prefix": null,
+      "actual": {
+        "collision": 39,
+        "dist": 1,
+        "path": [
+          26,
+          39,
+          52,
+          65,
+          78,
+          91,
+          104
+        ],
+        "travel_to_collision": [
+          26,
+          39
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            7,
+            7
+          ],
+          [
+            8,
+            8
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "blast_direct_aim_next_cell_southeast",
+      "source": 26,
+      "target": 39,
+      "flags": 7,
+      "terrain": [],
+      "characters": [
+        39
+      ],
+      "expected_collision": 39,
+      "expected_prefix": [
+        26,
+        39,
+        52
+      ],
+      "actual": {
+        "collision": 39,
+        "dist": 1,
+        "path": [
+          26,
+          39,
+          52,
+          65,
+          78,
+          91,
+          104
+        ],
+        "travel_to_collision": [
+          26,
+          39
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            7,
+            7
+          ],
+          [
+            8,
+            8
+          ]
+        ]
+      },
+      "passed": true
+    },
+    {
+      "name": "blast_offset_aim_next_cell_east",
+      "source": 26,
+      "target": 40,
+      "flags": 7,
+      "terrain": [],
+      "characters": [
+        39
+      ],
+      "expected_collision": 39,
+      "expected_prefix": [
+        26,
+        39,
+        40
+      ],
+      "actual": {
+        "collision": 39,
+        "dist": 1,
+        "path": [
+          26,
+          39,
+          40,
+          53,
+          54,
+          67,
+          68,
+          81,
+          82
+        ],
+        "travel_to_collision": [
+          26,
+          39
+        ],
+        "path_xy": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            7,
+            5
+          ],
+          [
+            8,
+            5
+          ],
+          [
+            9,
+            6
+          ],
+          [
+            10,
+            6
+          ]
+        ]
+      },
+      "passed": true
+    }
+  ]
+}
