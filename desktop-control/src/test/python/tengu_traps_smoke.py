@@ -13,17 +13,17 @@ KIND = "fading_trap_pattern"
 
 def zap_boss(client):
     state = client.state()
-    target = next(e for e in state["observation"]["visible_entities"] if e.get("context_action") == "attack")
-    wand = next(i for i in state["observation"]["inventory"] if i["name"] == "wand of magic missile")
-    opened = act(client, "inventory.open", locator=wand["locator"])
-    zap = next(a for a in opened["actions"] if a.get("label") == "ZAP")
-    targeting = act(client, "ui.activate", control=zap["control"])
-    assert any(a["action"] == "cell.select" for a in targeting["actions"])
+    target = next(e for e in state["entities"] if e.get("context_action") == "attack")
+    wand = next(i for i in state["inv"] if i["name"] == "wand of magic missile")
+    opened = act(client, "item", loc=wand["loc"])
+    zap = next(a for a in opened["acts"] if a.get("label") == "ZAP")
+    targeting = act(client, "click", ctl=zap["ctl"])
+    assert any(a["op"] == "cell" for a in targeting["acts"])
     # This original item target callback causes damage -> Tengu.jump -> original
     # placeTrapsInTenguCell. No test-side pattern replacement occurs after setup.
-    result = act(client, "cell.select", cell=target["cell"])
+    result = act(client, "cell", cell=target["cell"])
     assert kind_cells(result, KIND), {"native_pattern_missing_in_final_zap_response": visual(result)}
-    visible = {t["cell"] for t in result["observation"]["map"]["cells"] if t["visibility"] == "visible"}
+    visible = {t["cell"] for t in result["map"]["cells"] if t["visibility"] == "visible"}
     assert kind_cells(result, KIND) <= visible
     return result
 
@@ -38,20 +38,20 @@ def test_patterns(client):
     context = visual(first)["map_context"]
     # Existing cell examination remains a normal semantic route while the
     # custom visual is registered; no hidden trap name is copied into a cue.
-    info = act(client, "cell.select", cell=min(first_cells), mode="examine")
-    assert info["observation"]["ui"]["modal"] and kind_cells(info, KIND) & first_cells
-    assert any(n.get("text") == "Poison Dart Trap" for n in info["observation"]["ui"]["controls"])
-    restored = act(client, "ui.back")
+    info = act(client, "cell", cell=min(first_cells), mode="examine")
+    assert info["ui"]["modal"] and kind_cells(info, KIND) & first_cells
+    assert any(n.get("text") == "Poison Dart Trap" for n in info["ui"]["nodes"])
+    restored = act(client, "back")
     assert kind_cells(restored, KIND) & first_cells
     restored_cells = kind_cells(restored, KIND)
-    menu = next(n for n in restored["observation"]["ui"]["controls"] if str(n.get("shortcut_action", "")).lower() == "back")
-    blocked = act(client, "ui.activate", control=menu["id"])
-    assert blocked["observation"]["ui"]["modal"] and kind_cells(blocked, KIND) & first_cells
-    restored = act(client, "ui.back")
+    menu = next(n for n in restored["ui"]["nodes"] if str(n.get("shortcut", "")).lower() == "back")
+    blocked = act(client, "click", ctl=menu["id"])
+    assert blocked["ui"]["modal"] and kind_cells(blocked, KIND) & first_cells
+    restored = act(client, "back")
     assert kind_cells(restored, KIND) & first_cells
-    outside = act(client, "view.pan", x=5000, y=5000)
+    outside = act(client, "pan", x=5000, y=5000)
     assert kind_cells(outside, KIND) & first_cells
-    restored = act(client, "view.pan", x=-5000, y=-5000)
+    restored = act(client, "pan", x=-5000, y=-5000)
     assert kind_cells(restored, KIND) & first_cells
     # The original pattern fades after two actor turns plus its real-time
     # AlphaTweener. The hidden trap model still exists; it must not fill cues.

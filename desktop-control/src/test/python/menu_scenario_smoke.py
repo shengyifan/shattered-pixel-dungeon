@@ -13,15 +13,15 @@ from test_ui import configure_test_ui
 
 
 def ui(state):
-    return state["observation"]["ui"]
+    return state["ui"]
 
 
 def choose(client, label):
     state = client.state()
-    candidates = [a for a in state["actions"] if a["action"] == "ui.activate" and a.get("label") == label]
+    candidates = [a for a in state["acts"] if a["op"] == "click" and a.get("label") == label]
     assert candidates, {"missing_label": label, "scene": ui(state)["scene"],
-                        "choices": [(a.get("action"), a.get("label")) for a in state["actions"]]}
-    return act(client, "ui.activate", control=candidates[0]["control"])
+                        "choices": [(a.get("op"), a.get("label")) for a in state["acts"]]}
+    return act(client, "click", ctl=candidates[0]["ctl"])
 
 
 def return_to_title(client):
@@ -30,10 +30,10 @@ def return_to_title(client):
         if ui(state)["scene"] == "TitleScene" and not ui(state)["modal"]:
             return state
         if ui(state)["scene"] == "WelcomeScene":
-            label = "Continue" if any(a.get("label") == "Continue" for a in state["actions"]) else "Enter the Dungeon"
+            label = "Continue" if any(a.get("label") == "Continue" for a in state["acts"]) else "Enter the Dungeon"
             choose(client, label)
         else:
-            act(client, "ui.back")
+            act(client, "back")
     raise AssertionError("Original back did not return to title")
 
 
@@ -41,21 +41,21 @@ def scene_case(client, label, expected):
     start = return_to_title(client)
     opened = choose(client, label)
     assert ui(opened)["scene"] == expected, ui(opened)
-    assert opened["scope_id"] and opened["scope_id"] == start["scope_id"] and ui(start)["scene"] == "TitleScene"
-    assert any(n.get("text") for n in ui(opened)["controls"]), "Scene must publish displayed text"
+    assert opened["s"] and opened["s"] == start["s"] and ui(start)["scene"] == "TitleScene"
+    assert any(n.get("text") for n in ui(opened)["nodes"]), "Scene must publish displayed text"
     result = {"label": label, "scene": expected, "same_menu_scope": True,
-              "actions": [(a["action"], a.get("label")) for a in opened["actions"]],
-              "displayed_text_samples": [n["text"][:180] for n in ui(opened)["controls"] if n.get("text")][:12]}
+              "acts": [(a["op"], a.get("label")) for a in opened["acts"]],
+              "displayed_text_samples": [n["text"][:180] for n in ui(opened)["nodes"] if n.get("text")][:12]}
     if expected == "JournalScene":
         tabs = ["Badges", "Catalogs", "Dungeon Guide", "Alchemy Guide"]
-        result["tab_candidates"] = [a.get("label") for a in opened["actions"] if a["action"] == "ui.activate"]
+        result["tab_candidates"] = [a.get("label") for a in opened["acts"] if a["op"] == "click"]
         result["verified_tabs"] = []
         for tab in tabs:
             panel = choose(client, tab)
             assert ui(panel)["scene"] == expected
             result["verified_tabs"].append(tab)
     returned = return_to_title(client)
-    assert returned["scope_id"] == start["scope_id"]
+    assert returned["s"] == start["s"]
     result["original_back_to_title"] = True
     return result
 
@@ -83,14 +83,14 @@ def main():
     report = {"test_fixture": True, "counts_as_win": False, "runtime_id": runtime_id,
               "profile": str(profile.relative_to(root)), "language": "zh", "window_mode": "windowed", "cases": []}
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"], hello
-        report["build_id"] = hello["result"]["build_id"]
+        hello = client.request("info")
+        assert ("err" not in hello), hello
+        report["build_id"] = hello["data"]["build_id"]
         initial = client.state(); report["initial_scene"] = ui(initial)["scene"]
         title = return_to_title(client)
         report["gui_environment"] = assert_gui_environment(profile, title)
         report["cli_language"] = "en"
-        assert any(a.get("label") == "Enter the Dungeon" for a in title["actions"])
+        assert any(a.get("label") == "Enter the Dungeon" for a in title["acts"])
         for label, expected in [("About", "AboutScene"), ("Changes", "ChangesScene"), ("Journal", "JournalScene"),
                                 ("Rankings", "RankingsScene"), ("Support the Game", "SupporterScene"), ("News", "NewsScene")]:
             report["cases"].append(scene_case(client, label, expected))

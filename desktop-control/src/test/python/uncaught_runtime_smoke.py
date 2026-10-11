@@ -3,7 +3,6 @@
 import json
 from fixture_identity import fixture_canonical_identity
 from pathlib import Path
-import shutil
 import sqlite3
 import threading
 import time
@@ -11,7 +10,7 @@ import uuid
 import zipfile
 
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game as fixture_start
-from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
+from fixture_support import copy_audited_profile, launch_command, metadata, safe_profile, stop, write_json
 from machine_smoke import reach_game
 
 
@@ -42,33 +41,28 @@ def main():
     metadata(template, "class:WARRIOR", runtime_id)
     seed = FixtureClient(launch_command(classpath, fixture=True), template)
     try:
-        assert seed.request("protocol.info")["ok"]
+        assert ("err" not in seed.request('info'))
         fixture_start(seed, "WARRIOR")
-        seed.act("game.save")
+        seed.act('save')
     finally:
         stop(seed)
     profile = safe_profile(root, "uncaught-runtime")
     metadata(profile, "uncaught-runtime", runtime_id)
-    for entry in template.iterdir():
-        if entry.name == "settings.xml" or entry.name.startswith("game"):
-            if entry.is_dir():
-                shutil.copytree(entry, profile / entry.name)
-            else:
-                shutil.copy2(entry, profile / entry.name)
+    copy_audited_profile(template, profile)
     command = launch_command(classpath)
     command.insert(1, "-javaagent:" + str(agent) + "=" + str(profile))
     client = FixtureClient(command, profile)
     try:
-        assert client.request("protocol.info")["ok"]
+        assert ("err" not in client.request('info'))
         reach_game(client, resume=True)
         before = client.state()
-        assert any(a["action"] == "wait" for a in before["actions"]), before["actions"]
-        scope, request_id = before["scope_id"], "uncaught-" + uuid.uuid4().hex
+        assert any(a['op'] == "wait" for a in before['acts']), before['acts']
+        scope, request_id = before['s'], "uncaught-" + uuid.uuid4().hex
         (profile / "uncaught.armed").write_text(request_id)
         received = {}
         def send():
             try:
-                received["response"] = client.request("action.execute", {"action": "wait"}, request_id=request_id)
+                received["response"] = client.request_action({'op': "wait"}, request_id=request_id)
             except Exception as error:
                 received["pipe_error"] = type(error).__name__
         worker = threading.Thread(target=send, daemon=True)

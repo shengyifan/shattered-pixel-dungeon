@@ -9,9 +9,6 @@ final class TextObservationFixture implements AutoCloseable {
     private final RuntimeObserver previous=Game.observer;
     TextObservationFixture() {
         Game.observer=new RuntimeObserver() {
-            @Override public String onTextResource(String value,String key,String language,Object[] args) {
-                return TextProvenance.INSTANCE.onTextResource(value,key,language,args);
-            }
             @Override public String onTextResource(String value,String key,String language,Object[] args,String guiTemplate) {
                 return TextProvenance.INSTANCE.onTextResource(value,key,language,args,guiTemplate);
             }

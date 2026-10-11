@@ -221,7 +221,7 @@ public final class FixtureLauncher {
         try(OutputStream output=Files.newOutputStream(file)){settings.storeToXML(output,"Isolated fixture UI preferences","UTF-8");}
     }
 
-    private static final class FixtureObserver implements RuntimeObserver {
+    private static final class FixtureObserver {
         final GameController game; final Fixture fixture; final Path profile;
         boolean menuPrepared, injected; String lastVersion, lastUiVersion;
         Boolean lastWindowFocus;
@@ -237,7 +237,7 @@ public final class FixtureLauncher {
                         catch (java.lang.reflect.InvocationTargetException failure) { throw failure.getCause(); }
                     });
         }
-        @Override public void afterFrame() {
+        public void afterFrame() {
             try {
                 if (!menuPrepared && Game.scene() != null && !Game.switchingScene()) {
                     Badges.loadGlobal();
@@ -314,11 +314,6 @@ public final class FixtureLauncher {
                 game.exitNow();
             }
         }
-        @Override public void onException(Throwable error) { game.onException(error); }
-        @Override public boolean beforeActorResume() { return game.beforeActorResume(); }
-        @Override public void onDispose() { game.onDispose(); }
-        @Override public void onSave(String id,int slot,Throwable error) { game.onSave(id,slot,error); }
-        @Override public boolean exitRequested() { return game.exitRequested(); }
     }
 
     private static Boolean windowFocused(){

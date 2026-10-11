@@ -246,7 +246,7 @@ class Cli9WarningPoolingTest {
         try (PendingWarningTest.Fixture f = new PendingWarningTest.Fixture()) {
             GameScene.targetedCell(22, -1f);
             f.frame();
-            GameController.VisualSnapshot event = f.controller.pollVisual();
+            GameController.DisplayEvent event = DisplayEventTestFixture.next(f.controller, "game.visual");
             assertNotNull(event);
             Map<?, ?> savedCue = (Map<?, ?>) ((List<?>) event.data().get("cues")).get(0);
             assertEquals(Map.of("lifecycle", "unknown"), savedCue.get("appearance"));

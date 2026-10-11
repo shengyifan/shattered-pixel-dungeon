@@ -4,8 +4,6 @@ import copy
 import json
 import unittest
 
-import protocol9
-from autoplay import Checkpoint, require_autonomous_policy
 from spdctl_client import DecodeError, decode_wire_response, map_cell
 from test_actions_subject_data import actions_frame
 from test_combat_visual_wire import frame
@@ -24,7 +22,6 @@ class Protocol9FactsTest(unittest.TestCase):
             with self.subTest(view=view):
                 self.assertEqual(cues, decoded.data["cues"])
                 self.assertEqual(cues, decoded.data["before"]["cues"])
-                self.assertEqual(cues, protocol9.response(source)["result"]["observation"]["visual_cues"])
                 self.assertEqual(original, source)
         event = {"seq": 1, "kind": "visual.cues", "data": cues}
         source = frame({"items": [event], "next": None, "end": True})
@@ -38,18 +35,15 @@ class Protocol9FactsTest(unittest.TestCase):
                 with self.subTest(value=value), self.assertRaisesRegex(DecodeError, "lifecycle"):
                     decode_wire_response(bad)
 
-    def test_test_adapter_retains_complete_protected_diagnostics_in_addition_to_aliases(self):
+    def test_decoder_retains_complete_protected_diagnostics(self):
         diagnostics = {"st": "partial", "diag": [
             {"field": "appearance.lifecycle", "code": "first", "source": "public_marker", "detail": False},
             {"field": "appearance.lifecycle", "code": "second", "details": {"extra": 0}}]}
         node = {"id": "partial", "ops": [], "pres": diagnostics}
         source = frame({"ui": {"nodes": [node]}})
         decoded = decode_wire_response(source)
-        adapted = protocol9.response(source)["result"]["observation"]["ui"]["controls"][0]
         self.assertEqual(diagnostics, decoded.data["ui"]["nodes"][0]["pres"])
-        self.assertEqual(diagnostics, adapted["pres"])
-        self.assertEqual("partial", adapted["translation_status"])
-        self.assertEqual({"appearance.lifecycle": "second"}, adapted["text_diagnostics"])
+        self.assertEqual(diagnostics, source["data"]["ui"]["nodes"][0]["pres"])
 
     def test_collision_overrides_survive_effect_tables_and_independent_frozen_frames(self):
         effects = [{"type": "light_wall", "desc": "Public light", "collision": {
@@ -74,8 +68,6 @@ class Protocol9FactsTest(unittest.TestCase):
                     self.assertEqual(effects[2 - cell], decoded.data["before"]["map"]["cells"][cell]["environment"][0])
                 self.assertEqual(original, source)
                 self.assertEqual(original, decoded.raw)
-                adapted = protocol9.response(source)["result"]["observation"]["map"]["cells"]
-                self.assertEqual({"solid": True}, adapted[2]["environment"][0]["collision"])
 
     def test_environment_collision_override_types_are_strict_without_filling_omitted_flags(self):
         base = {"w": 1, "h": 1, "types": [{"terrain": 1}], "rows": [[0, 0, "0", "v"]]}
@@ -157,9 +149,6 @@ class Protocol9FactsTest(unittest.TestCase):
                 self.assertTrue(all(cell["visibility"] == "visited" for cell in before_cells))
                 self.assertEqual((4, "mapped"), (after_cell["cell"], after_cell["visibility"]))
                 self.assertEqual(descriptors[1], {key: after_cell[key] for key in descriptors[1]})
-                adapter_cells = protocol9.response(source)["result"]["observation"]["map"]["cells"]
-                self.assertEqual([29, 39, 23], [cell["terrain"] for cell in adapter_cells])
-                self.assertEqual(basin["desc"], adapter_cells[1]["description"])
                 self.assertEqual(original, source)
                 self.assertEqual(original, decoded.raw)
 
@@ -172,8 +161,6 @@ class Protocol9FactsTest(unittest.TestCase):
                 decode_wire_response(source)
             self.assertEqual(source, original)
             self.assertEqual(raised.exception.raw, original)
-            with self.assertRaises(AssertionError):
-                protocol9.response(source)
 
     def test_dot_preserved_across_hero_entities_actions_and_independent_snapshots(self):
         bars = [sample(16, 16, 16, 0), sample(16, 16, 16, 16),
@@ -213,7 +200,6 @@ class Protocol9FactsTest(unittest.TestCase):
         self.assertEqual({"cell": 4, **descriptor}, decoded["entities"][0])
         self.assertNotIn("health_estimate", decoded["entities"][0])
         self.assertNotIn("buffs", decoded["entities"][0])
-        self.assertEqual("object", protocol9.response(source)["result"]["observation"]["visible_entities"][0]["kind"])
         for value in (None, "character"):
             entity = {"kind": "object", "cell": 4, "projectile_collision": value}
             self.assertEqual(entity, decode_wire_response(frame({"entities": [entity]})).data["entities"][0])
@@ -252,10 +238,6 @@ class Protocol9FactsTest(unittest.TestCase):
         response = decode_wire_response(frame({"items": [event], "next": None, "end": True, "until": 1}))
         self.assertEqual([event], response.data["items"])
         self.assertFalse(response.is_observation)
-
-    def test_autoplay_does_not_authorize_unreviewed_game4_policy(self):
-        with self.assertRaisesRegex(Checkpoint, "policy_requires_review_for_game_4_0_2"):
-            require_autonomous_policy()
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-# CLI.9.0.5 UI 覆盖清单
+# CLI.9.0.6 UI 覆盖清单
 
 清单通过 `./gradlew :game-control:generateUiCoverage` 用 javac AST 解析当前 `core/src/main/java` 与 `SPD-classes/src/main/java`。它扫描命名类、匿名类、嵌套窗口、继承关系、输入回调、物品 actions/execute、职业动作、护甲能力与法术；不加载、初始化或构造任何游戏类。
 
@@ -17,9 +17,10 @@
 
 ## v4.0.2 合入后的静态审查
 
-CLI.9.0.5 / protocol 9 的当前清单解析 **2,881 个类型、1,917 条记录**，其中
+CLI.9.0.6 / protocol 9 的当前清单解析 **2,880 个类型、1,917 条记录**，其中
 **858 条输入方法、160 个窗口、258 个按钮、33 个物品选择器、372 个物品类型**；
 `unmapped_inputs=0`。职业、子职业、护甲能力、法术和武僧招式的类型范围保持下文所列口径。
+CLI.9.0.6 删除了旧 `RenderedStatus` 接口，因此解析类型减少 1；全部 1,917 条既有记录逐条不变。
 
 CLI.9.0.1 新增的一个解析类型是只读 `PublicTerrain`，没有新增或修改输入路由。
 CLI.9.0.3 新增无状态的 `StartOptions` 资格策略；该批 4 条既有输入方法更新开局资格条件，19 条仅更新行号，没有新增或删除输入路由。
@@ -35,7 +36,7 @@ CLI.9.0.5 的类型数新增 1，来自只保存作用域与展示就绪元数�
 `VisualCueCollector.DropObservation`。全部 **1,917 条既有记录未变**：新增、删除、
 方法体、行号与输入路线变化均为 0，`unmapped_inputs=0`。静态审查产物为
 `game-control/build/ui-coverage-cli905-review.json`；它不证明实际运行覆盖。
-本批实际测试和安装包验证见 [CLI.9.0.5 验证记录](cli-9.0.5-revision-validation.md)。
+上述 CLI.9.0.5 批次的实际测试和安装包验证见其[验证记录](cli-9.0.5-revision-validation.md)；当前维护验证见 [CLI.9.0.6 记录](cli-9.0.6-cleanup-validation.md)。
 
 下列变更统计属于前一批 CLI.9.0.0 的 v4.0.2 合入：与 `ff05ece42` 的 CLI.8.0.2 基线比较，记录新增 25 条、删除 18 条、方法体或其他
 语义字段改变 28 条；另有 233 条仅清单中的源码行号变化。变动涉及 65 个文件，
@@ -118,4 +119,4 @@ CLI.9.0.5 的类型数新增 1，来自只保存作用域与展示就绪元数�
 - 测试夹具只能存在于 test source-set，允许内部布置可复现场景；之后操作必须走同一个 UiBridge 和实际原生窗口。夹具初始化与诊断信息不能出现在公开游戏操作协议。
 - 每个专项证据记录 fixture ID、构建版本、角色/能力、命令、公开前后观察、预期/实际结果；不得将只检查 enum 个数的测试命名成能力可用或通关测试。
 
-当前测试入口见[架构与验证](cli-architecture.md)，本批实际执行范围见[CLI.9.0.5 验证记录](cli-9.0.5-revision-validation.md)。以上是审查维度，不宣称全部组合已执行。
+当前测试入口见[架构与验证](cli-architecture.md)，本批实际执行范围见[CLI.9.0.6 验证记录](cli-9.0.6-cleanup-validation.md)。以上是审查维度，不宣称全部组合已执行。

@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 9)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.9.0.5, protocol 9, and base game 4.0.2.
+`spdctl --version` reports CLI.9.0.6, protocol 9, and base game 4.0.2.
 
 ## 1. Start and keep the connection open
 
@@ -55,8 +55,9 @@ Its `controller:"settle"` wrapper keeps `outcome` (the original action's receipt
 optional `discovery`, and `observation` (fresh current state) separate. `st:"pending"`
 means more settling or cancellation may follow, not permission to repeat the action.
 Use the nested observation's own `s/rev`, not the wrapper's original request scope.
-An exhausted call budget returns `st:"pending"` without a transport error. New
-pending wrappers include `stage:"receipt"|"discovery"|"observation"` and:
+An exhausted call budget returns `st:"pending"` without a transport error. Every
+pending settle wrapper requires `stage:"receipt"|"discovery"|"observation"` and
+`pending_reason`; a wrapper missing either field is invalid:
 
 | `pending_reason` | Meaning |
 | --- | --- |
@@ -179,7 +180,7 @@ old revisions. Historical queries never return a top-level live `rev`.
 
 Protocol 9 allocates durable typed handles in the selected profile: `s` for
 scope, `r` for normal revision, `a` for activity revision, `t` for session, `p` for
-save receipt and `m` for map context (for example `s2`, `r7`, `a3`). CLI.9.0.5
+save receipt and `m` for map context (for example `s2`, `r7`, `a3`). CLI.9.0.6
 allocates new `r` and `a` handles with ASCII decimal digits only: `r9`, `r10`,
 `r11` and `a9`, `a10`, `a11`. Other kinds retain base36 suffixes. Historical
 mappings and raw/reply records retain their original spelling. All handles represent
@@ -570,7 +571,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.9.0.5 reports public gameplay facts rather than renderer internals. An
+CLI.9.0.6 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength

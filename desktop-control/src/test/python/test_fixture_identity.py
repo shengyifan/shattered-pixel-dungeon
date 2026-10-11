@@ -35,7 +35,7 @@ class FixtureIdentityTest(unittest.TestCase):
     def test_matching_requires_same_scope_and_complete_revision_and_is_read_only(self):
         before={p.name:p.read_bytes() for p in (self.profile/"audit").iterdir()}
         row={"scope_id":"run:fixture","state_version":"epoch:17"}
-        state={"scope_id":"s2","state_version":"rh"}
+        state={"s":"s2","rev":"rh"}
         self.assertTrue(identity.fixture_context_matches(self.profile,row,state))
         self.assertFalse(identity.fixture_context_matches(self.profile,{**row,"scope_id":"run:other"},state))
         self.assertFalse(identity.fixture_context_matches(self.profile,{**row,"state_version":"other-epoch:17"},state))
@@ -56,8 +56,8 @@ class FixtureIdentityTest(unittest.TestCase):
     def test_canonical_mock_contexts_do_not_read_a_registry(self):
         row={"scope_id":"run:mock","state_version":"v1"}
         with patch.object(identity.sqlite3,"connect") as connect:
-            self.assertTrue(identity.fixture_context_matches(Path("unused"),row,row))
-            self.assertFalse(identity.fixture_context_matches(Path("unused"),{**row,"scope_id":"run:other"},row))
+            self.assertTrue(identity.fixture_context_matches(Path("unused"),row,{"s":row["scope_id"],"rev":row["state_version"]}))
+            self.assertFalse(identity.fixture_context_matches(Path("unused"),{**row,"scope_id":"run:other"},{"s":row["scope_id"],"rev":row["state_version"]}))
             self.assertFalse(identity.fixture_identity_matches(Path("unused"),"scope",None,None))
             self.assertFalse(identity.fixture_identity_matches(Path("unused"),"scope","",""))
             connect.assert_not_called()
@@ -67,7 +67,7 @@ class FixtureIdentityTest(unittest.TestCase):
              "language_code":"zh","fullscreen":False,"assertion_only":"sentinel"}
         for name in ("ui-assertions.jsonl","fixture-assertions.jsonl"):
             (self.profile/name).write_text(json.dumps(row)+"\n")
-        state={"scope_id":"s2","state_version":"rh","observation":{"ui":{"display":{"language":"zh","fullscreen":False}}}}
+        state={"s":"s2","rev":"rh","ui":{"display":{"language":"zh","fullscreen":False}}}
         with patch.dict(fixture_smoke.os.environ,{"SPDCTL_TEST_LANGUAGE":"zh"}):
             proof=fixture_smoke.assert_gui_environment(self.profile,state)
         self.assertEqual("epoch:17",proof["asserted_state_version"])
@@ -78,9 +78,9 @@ class FixtureIdentityTest(unittest.TestCase):
     def test_outcome_uses_opaque_scope_equality_and_only_explicit_terminal_result(self):
         for scope in ("s2","run:canonical-mock"):
             for result in ("won","lost"):
-                self.assertEqual(result,outcome_of({"scope_id":scope,"run_outcome":{"scope_id":scope,"result":result}}))
+                self.assertEqual(result,outcome_of({"s":scope,"run_outcome":{"s":scope,"result":result}}))
         for scope,result,outer in (("","won",""),(None,"won",None),(42,"won",42),("s2","ended","s2"),("s2","won","s3")):
-            self.assertIsNone(outcome_of({"scope_id":outer,"run_outcome":{"scope_id":scope,"result":result}}))
+            self.assertIsNone(outcome_of({"s":outer,"run_outcome":{"s":scope,"result":result}}))
 
 
 if __name__=="__main__":

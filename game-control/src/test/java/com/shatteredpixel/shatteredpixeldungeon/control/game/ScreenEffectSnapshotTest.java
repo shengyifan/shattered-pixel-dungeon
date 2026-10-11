@@ -5,7 +5,7 @@ import java.util.*;
 import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.map;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Screen shake and transition pixels do not enter CLI 8 state or persistence. */
+/** Screen shake and transition pixels do not enter current state or persistence. */
 class ScreenEffectSnapshotTest {
     @Test void retiredEventKindsAreRejectedBeforeQueueing(){
         for(String kind:List.of("game.screen_visual","game.visual_metrics"))

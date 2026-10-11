@@ -35,20 +35,20 @@ class RawFixtureClient(FixtureClient):
 
 
 def cues(state, kind):
-    return [cue for cue in state["observation"]["visual_cues"]["cues"] if cue["kind"] == kind]
+    return [cue for cue in state["cues"]["cues"] if cue["kind"] == kind]
 
 
 def entities(state, kind):
-    return [entity for entity in state["observation"]["visible_entities"] if entity["kind"] == kind]
+    return [entity for entity in state["entities"] if entity["kind"] == kind]
 
 
 def prepare_boundary(client, name, initial):
     if name == "chest-glow":
         boxes = entities(initial, "container")
         assert len(boxes) == 1 and boxes[0]["name"].lower() == "chest", boxes
-        assert not cues(initial, "item_glow"), initial["observation"]["visual_cues"]
+        assert not cues(initial, "item_glow"), initial["cues"]
         target = boxes[0]["cell"]
-        boundary = act(client, "cell.select", cell=target, mode="act")
+        boundary = act(client, "cell", cell=target, mode="act")
         assert any(item["cell"] == target for item in entities(boundary, "item")), "Native chest did not open"
         complete = any(cue["cell"] == target for cue in cues(boundary, "item_glow"))
     else:
@@ -90,53 +90,53 @@ def run_one(root, classpath, runtime_id, execution, name, interface_size, fps, e
                   foreground_fps=fps, runtime_id=runtime_id, execution=execution,
                   expect_regression=expect_regression, profile=str(profile.relative_to(root)), action_retries=0)
     try:
-        hello = client.request("protocol.info")
-        assert hello.get("ok"), hello
-        result.update(build_id=hello["result"]["build_id"], cli_version=hello["result"]["cli_version"])
+        hello = client.request("info")
+        assert "err" not in hello, hello
+        result.update(build_id=hello["data"]["build_id"], cli_version=hello["data"]["cli_version"])
         initial = start_warrior(client)
         started = time.monotonic()
         boundary, semantic_complete = prepare_boundary(client, name, initial)
-        revision = boundary["state_version"]
-        assert boundary["observation"]["ui"]["display"] == {"language": "zh", "fullscreen": False}
+        revision = boundary["rev"]
+        assert boundary["ui"]["display"] == {"language": "zh", "fullscreen": False}
         destination = next(cell["cell"] for cell in adjacent_cells(boundary)
-                           if cell["x"] < boundary["observation"]["hero"]["cell"] % boundary["observation"]["map"]["width"])
+                           if cell["x"] < boundary["hero"]["cell"] % boundary["map"]["w"])
         direction = direction_to(boundary, destination)
         evidence = dict(completion_seconds=time.monotonic() - started, completion_revision=revision,
                         semantic_complete_at_return=semantic_complete,
-                        completion_cues=boundary["observation"]["visual_cues"], sampled_revisions=[])
+                        completion_cues=boundary["cues"], sampled_revisions=[])
         result["evidence"] = evidence
         # Four real-time samples cross the complete native tween/drop/particle tail
         # and also exercise gaps between chilled particles. No game turn is spent.
         for _ in range(4):
             time.sleep(.6)
             later = client.state()
-            assert later["observation"]["hero"] == boundary["observation"]["hero"], "Wall-clock wait changed hero facts"
-            evidence["sampled_revisions"].append(later["state_version"])
-        evidence["later_cues"] = later["observation"]["visual_cues"]
+            assert later["hero"] == boundary["hero"], "Wall-clock wait changed hero facts"
+            evidence["sampled_revisions"].append(later["rev"])
+        evidence["later_cues"] = later["cues"]
         unchanged = all(value == revision for value in evidence["sampled_revisions"])
-        response = client.request("action.execute", {"action": "move.step", "direction": direction}, version=revision)
-        evidence["original_revision_accepted"] = bool(response.get("ok"))
+        response = client.request("move", {"dir": direction}, version=revision)
+        evidence["original_revision_accepted"] = "err" not in response
         if expect_regression:
-            assert not semantic_complete or not unchanged or not response.get("ok"), "The old runtime did not reproduce a presentation boundary regression"
+            assert not semantic_complete or not unchanged or "err" in response, "The old runtime did not reproduce a presentation boundary regression"
         else:
             assert re.fullmatch(r"r[0-9]+", revision), revision
             assert semantic_complete, {"early_completion": evidence}
             assert unchanged, {"late_revision_drift": evidence}
-            assert response.get("ok"), response
-        if response.get("ok"):
-            moved = settle_action(client, response, "move.step").require_success().observation
-            assert moved["observation"]["hero"]["cell"] == destination, moved["observation"]["hero"]
-            assert moved["state_version"] != revision
-            rejected = client.request("action.execute", {"action": "move.step", "direction": direction}, version=revision)
+            assert "err" not in response, response
+        if "err" not in response:
+            moved = settle_action(client, response, "move").require_success().observation
+            assert moved["hero"]["cell"] == destination, moved["hero"]
+            assert moved["rev"] != revision
+            rejected = client.request("move", {"dir": direction}, version=revision)
             expected_cell = destination
         else:
             rejected = response
-            expected_cell = boundary["observation"]["hero"]["cell"]
-        assert rejected.get("error", {}).get("code") == "STALE_STATE", rejected
-        record = client.request("request.get", {"target_id": rejected["id"], "get": ["before", "after"]})
-        assert record.get("ok") and record["result"]["status"] == "REJECTED", record
-        assert record["result"]["before_snapshot"] == record["result"]["after_snapshot"], record
-        assert client.state()["observation"]["hero"]["cell"] == expected_cell
+            expected_cell = boundary["hero"]["cell"]
+        assert rejected.get("err") == "STALE_STATE", rejected
+        record = client.request("req", {"rid": rejected["id"], "get": ["before", "after"]})
+        assert "err" not in record and record["data"]["st"] == "REJECTED", record
+        assert record["data"]["before"] == record["data"]["after"], record
+        assert client.state()["hero"]["cell"] == expected_cell
         evidence.update(revision_unchanged_through_tail=unchanged, rejected_action_did_not_move=True)
         result["ok"] = True
     except Exception as error:

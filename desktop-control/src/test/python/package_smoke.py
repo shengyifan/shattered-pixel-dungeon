@@ -13,7 +13,7 @@ import uuid
 import protocol9
 
 
-def receive(process, timeout=40):
+def receive(process, timeout=40, *, malformed_request=False):
     # This test deliberately sends only one frame at a time.
     data = bytearray()
     deadline = time.monotonic() + timeout
@@ -26,7 +26,14 @@ def receive(process, timeout=40):
             if not chunk:
                 raise AssertionError(("unexpected EOF", process.poll(), bytes(data)))
             data.extend(chunk)
-    return protocol9.response(json.loads(data))
+    wire = json.loads(data)
+    if malformed_request:
+        # Invalid UTF-8 cannot disclose a parsed request ID. Inspect that exact
+        # negative-test diagnostic without treating it as a valid bound frame.
+        assert wire.get("v") == 9 and wire.get("id") is None, wire
+        assert wire.get("err") == "INVALID_ENCODING" and "data" not in wire, wire
+        return wire
+    return protocol9.response(wire)
 
 
 def emergency_snapshot(profile):
@@ -71,23 +78,23 @@ def main():
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr, env=env)
     frames = []
     try:
-        def exchange(frame):
+        def exchange(frame, *, malformed_request=False):
             frames.append(frame)
             process.stdin.write(frame)
             process.stdin.flush()
-            return receive(process)
+            return receive(process, malformed_request=malformed_request)
         first = exchange(b'{"v":9,"id":"package-info","op":"info"}\r\n')
-        assert first["ok"], first
-        scope = first["result"]["scope_id"]
+        assert ("err" not in first), first
+        scope = first["s"]
         old = exchange(b'{"v":8,"id":"package-old-protocol","op":"info"}\n')
-        assert old["protocol_version"] == 9 and old["error"] == {"code": "UNSUPPORTED_PROTOCOL"}, old
-        invalid = exchange(b'{"v":9,"id":"invalid-encoding","op":"state","x":"\xff"}\n')
-        assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = protocol9.wire_bytes(protocol9.request("state.get", request_id="中文-query", scope=scope))
+        assert old["v"] == 9 and old["err"] == "UNSUPPORTED_PROTOCOL", old
+        invalid = exchange(b'{"v":9,"id":"invalid-encoding","op":"state","x":"\xff"}\n', malformed_request=True)
+        assert invalid["err"] == "INVALID_ENCODING", invalid
+        query = protocol9.wire_bytes(protocol9.request("state", request_id="中文-query", scope=scope))
         observed = exchange(query)
-        assert observed["ok"], observed
+        assert ("err" not in observed), observed
         duplicate = exchange(query)
-        assert duplicate["error"]["code"] == "DUPLICATE_REQUEST_ID", duplicate
+        assert duplicate["err"] == "DUPLICATE_REQUEST_ID", duplicate
         before_conflict = emergency_snapshot(profile)
         conflict = subprocess.run(command, input=b"", capture_output=True, env=env, timeout=20)
         assert conflict.returncode != 0 and conflict.stdout == b"", conflict
@@ -103,11 +110,11 @@ def main():
             process.kill()
             process.wait()
         stderr.close()
-    final_frame=protocol9.wire_bytes(protocol9.request("state.get", request_id="package-eof-frame", scope=scope))[:-1]
+    final_frame=protocol9.wire_bytes(protocol9.request("state", request_id="package-eof-frame", scope=scope))[:-1]
     restarted=subprocess.run(command,input=final_frame,capture_output=True,env=env,timeout=40)
     assert restarted.returncode==0,(restarted.returncode,restarted.stderr)
     delivered=restarted.stdout.splitlines()
-    assert len(delivered)==1 and protocol9.response(json.loads(delivered[0]))["ok"],delivered
+    assert len(delivered)==1 and "err" not in protocol9.response(json.loads(delivered[0])),delivered
     frames.append(final_frame)
     with sqlite3.connect(profile / "audit/public.sqlite3") as db:
         wire = db.execute("SELECT raw_bytes,raw_format FROM exchanges ORDER BY sequence").fetchall()

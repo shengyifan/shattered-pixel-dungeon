@@ -22,7 +22,7 @@ public class GameLogEventsTest {
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             store.ensureScope("run:a","run","a");store.ensureScope("run:old","run","old");store.beginSession("log-test","fixture-build","CLI.9.0.3",9);
             FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
-            game.logs.add(snapshot("run:old",literal("old visible")));game.logs.add(snapshot("run:a",literal("current visible")));
+            game.displayed.enqueueDisplayEvent(GameController.DisplayEvent.from(snapshot("run:old",literal("old visible"))));game.displayed.enqueueDisplayEvent(GameController.DisplayEvent.from(snapshot("run:a",literal("current visible"))));
             OutputStream checked=new OutputStream(){
                 boolean first=true;
                 @Override public void write(int value)throws IOException{
@@ -76,8 +76,8 @@ public class GameLogEventsTest {
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())) {
             store.ensureScope("run:a","run","a");store.beginSession("translation-failure","fixture-build","CLI.9.0.3",9);
             FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
-            game.logs.add(snapshot("run:a","未收录的第一条实际显示甲"));
-            game.logs.add(snapshot("run:a","未收录的第二条实际显示乙"));
+            game.displayed.enqueueDisplayEvent(GameController.DisplayEvent.from(snapshot("run:a","未收录的第一条实际显示甲")));
+            game.displayed.enqueueDisplayEvent(GameController.DisplayEvent.from(snapshot("run:a","未收录的第二条实际显示乙")));
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)) {
                 session.accept(V9Requests.encode(store, map("protocol_version", 9, "scope_id","run:a","id","display-query","op","events.read"))).get(5,TimeUnit.SECONDS);
                 assertFalse(last(wire).containsKey("err"));
@@ -104,10 +104,10 @@ public class GameLogEventsTest {
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             store.ensureScope("run:a","run","a");FakeGame game=new FakeGame();ByteArrayOutputStream wire=new ByteArrayOutputStream();
             Object identity=new Object(){@Override public String toString(){throw new AssertionError("Private identity must never be serialized");}};
-            game.visuals.add(new GameController.VisualSnapshot("a",identity,1,"opaque-map",1,"2026-09-09T01:00:00Z",List.of(new VisualCue("red_target",10))));
+            game.displayed.enqueueDisplayEvent(GameController.DisplayEvent.from(new GameController.VisualSnapshot("a",identity,1,"opaque-map",1,"2026-09-09T01:00:00Z",List.of(new VisualCue("red_target",10)))));
             try(MachineSession session=new MachineSession(store,game,new PrintStream(wire,true,"UTF-8"),1000)){
                 session.accept(V9Requests.encode(store, map("protocol_version", 9, "scope_id","run:a","id","first","op","events.read"))).get(5,TimeUnit.SECONDS);
-                game.visuals.add(new GameController.VisualSnapshot("a",identity,1,"opaque-map",2,"2026-09-09T01:00:01Z",List.of()));
+                game.displayed.enqueueDisplayEvent(GameController.DisplayEvent.from(new GameController.VisualSnapshot("a",identity,1,"opaque-map",2,"2026-09-09T01:00:01Z",List.of())));
                 session.accept(V9Requests.encode(store, map("protocol_version", 9, "scope_id","run:a","id","second","op","events.read"))).get(5,TimeUnit.SECONDS);
                 List<?> events=(List<?>)((Map<?,?>)last(wire).get("data")).get("items");assertEquals(2,events.size());
                 Map<?,?> first=(Map<?,?>)((Map<?,?>)events.get(0)).get("data"),second=(Map<?,?>)((Map<?,?>)events.get(1)).get("data");
@@ -134,16 +134,18 @@ public class GameLogEventsTest {
     private static Map<String,Object> last(ByteArrayOutputStream wire)throws Exception{String[] rows=wire.toString("UTF-8").strip().split("\\R");return JsonCodec.decode(rows[rows.length-1]);}
     private static final class FakeGame implements PreparedTestGamePort{
         int exits;
-        final Queue<GameController.GameLogSnapshot> logs=new ArrayDeque<>();
-        final Queue<GameController.VisualSnapshot> visuals=new ArrayDeque<>();
+        final GameController displayed=new GameController(null,"menu:fixture",error->{throw new AssertionError(error);});
         final GameController.State state=new GameController.State("run:a","v1","player_ready",map("visible",true),map("private",true),Collections.emptyList());
         public GameController.State latest(){return state;}
         public CompletableFuture<GameController.State> observe(){return CompletableFuture.completedFuture(state);}
         public CompletableFuture<GameController.State> execute(String version,Map<String,Object> args){throw new AssertionError("No action may be dispatched by a query");}
         public void prepareRun(String id){throw new AssertionError("No run may be prepared by a query");}
         public GameController.SaveResult pollSave(){return null;}
-        public GameController.GameLogSnapshot pollGameLog(){return logs.poll();}
-        public GameController.VisualSnapshot pollVisual(){return visuals.poll();}
+        public List<GameController.DisplayEvent> peekDisplayEvents(int limit) { return displayed.peekDisplayEvents(limit); }
+        public void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events) { displayed.acknowledgeDisplayEvents(events); }
+        public boolean hasDisplayEvents() { return displayed.hasDisplayEvents(); }
+        public void setDisplaySignal(Runnable signal) { displayed.setDisplaySignal(signal); }
+        public void freezeDisplayEvents() { displayed.freezeDisplayEvents(); }
         public boolean exiting(){return false;}
         public boolean disposed(){return false;}
         public void exitNow(){exits++;}

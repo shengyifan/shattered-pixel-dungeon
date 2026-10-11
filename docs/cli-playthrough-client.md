@@ -1,6 +1,6 @@
 # Public CLI clients and per-frame decoding
 
-## Reusable CLI.9.0.5 reference helper
+## Reusable CLI.9.0.6 reference helper
 
 `desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
 module for consumers of the packaged controller. It does not launch the game,
@@ -57,14 +57,15 @@ invalid direction values, all unsupported fields, missing cancellation IDs and
 binding mismatches. Directions are exactly `N NE E SE S SW W NW`; the helper never
 corrects spelling, removes fields, fills IDs or rebinds revisions automatically.
 
-New settle pending wrappers expose `pending_reason`, `stage` and, only when a
-query response remains outstanding, `pending_request`. The decoder validates
-these explicit fields and preserves their evidence without maintaining a
-connection or cross-response state machine. Their absence in older wrappers
-means unknown, not idle. An ordinary budget yield adds no `problems`, but a
-pending result still does not satisfy `require_success()`. Queries and settle
-remain syntactically valid without a current observation. A successful state
-query never clears controller pending-action bookkeeping.
+Every settle wrapper with `st:"pending"` requires explicit `pending_reason` and
+`stage`. Only `pending_reason:"response_pending"` carries `pending_request`, which
+must identify the exact outstanding query. The decoder rejects a pending wrapper
+missing either required field and preserves the failed wrapper as evidence.
+Completed and error wrappers retain their own schemas. The decoder does not
+maintain a connection or a cross-response state machine. An ordinary budget yield
+adds no `problems`, but a pending result still does not satisfy `require_success()`.
+Queries and settle remain syntactically valid without a current observation. A
+successful state query never clears controller pending-action bookkeeping.
 
 `inv[].shown`, `buffs[].shown`, `health_estimate`, `hero.turn_progress`, explicit
 `ui.nodes[].subject` references and `ui.feedback` are public semantic facts, not
@@ -178,11 +179,12 @@ It owns one child, requires the already displayed revision and exposes explicit
 settling; it does not contain a combat or exploration policy.
 
 The optional [development driver](../desktop-control/src/test/python/autoplay.py)
-uses protocol 9 and has bounded exploration and persistent JSON-intent modes.
-It needs a new decision for unsupported enemies, choices or boss situations;
-its limited policy is not an autonomous-clear guarantee. It uses public responses,
-not game saves or private audit, to choose actions. The driver's current-version
-adapters live in `protocol9.py`; legacy readers are isolated research utilities.
+keeps one protocol-9 connection for explicit public JSON intents with
+`--interactive`. Each game action comes from the operator's current decision and
+advertised public binding. The unreviewed pre-4.0 exploration policy has been
+removed. Current clients and acceptance fixtures use the protocol-9 wire fields
+and production Python decoder; the former canonical-name adapter and historical
+research readers are no longer maintained entrypoints.
 
 The shared `ActionResult` separates original outcome/receipt from the current
 observation. Synchronous success uses its own reply; pending actions use small
@@ -193,15 +195,16 @@ terminal receipt before waiting for exit, with no subsequent state query.
 The driver can write `current-state-public.json` as a frozen public debugging
 observation. A saved file or older checkpoint does not certify the current game
 revision or a native save; save confirmation still comes from public receipts.
-The following runs offline policy checks without starting a game:
+The following runs the current interactive-client unit tests without starting a game:
 
 ```sh
-python3 desktop-control/src/test/python/autoplay.py --self-test
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+  -s desktop-control/src/test/python -p 'test_autoplay.py'
 ```
 
-Source/test organization and explicit offline token-study entrypoints are in the
+Source/test organization and validation entrypoints are in the
 [current architecture](cli-architecture.md). Executed checks belong in the
-[current validation report](cli-9.0.5-revision-validation.md), separately from
+[current validation report](cli-9.0.6-cleanup-validation.md), separately from
 actual playthrough evidence in the [project memory](../memory/README.md).
 Display each complete response using that same parsed object; do not filter by
 fixed English labels, crop the map without marking it, remove descriptions, omit

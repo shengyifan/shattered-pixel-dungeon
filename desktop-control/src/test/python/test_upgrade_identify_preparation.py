@@ -8,13 +8,13 @@ import upgrade_preview_smoke as upgrade
 
 class UpgradeIdentifyPreparationTest(unittest.TestCase):
     def state(self, known=False, auxiliary=True):
-        inventory = [{"locator": "equipment.armor", "name": "cloth armor", "level_known": True, "level": 0},
-                     {"locator": "backpack.1", "name": "scroll of upgrade" if known else "scroll of NAUDIZ",
-                      "type_known": known, "quantity": 1}]
+        inventory = [{"loc": "equipment.armor", "name": "cloth armor", "level": 0},
+                     {"loc": "backpack.1", "name": "scroll of upgrade" if known else "scroll of NAUDIZ",
+                      "type_known": known, "qty": 1}]
         if auxiliary:
-            inventory.append({"locator": "backpack.0", "name": "scroll of identify", "type_known": True, "quantity": 1})
-        return {"state_version": "v1", "observation": {"hero": {"level": 1}, "inventory": inventory},
-                "actions": [{"action": "ui.back"}]}
+            inventory.append({"loc": "backpack.0", "name": "scroll of identify", "type_known": True, "qty": 1})
+        return {"rev": "r1", "hero": {"level": 1}, "inv": inventory,
+                "acts": [{"op": "back"}]}
 
     def test_original_read_selects_the_unique_public_unknown_scroll_then_verifies_consumption(self):
         client = Mock()
@@ -22,8 +22,8 @@ class UpgradeIdentifyPreparationTest(unittest.TestCase):
         with patch.object(upgrade, "open_item") as opened, patch.object(upgrade, "choose", side_effect=[selected, identified]) as choice, patch.object(upgrade, "verify") as verify:
             result = upgrade.identify_with_identify_scroll(client, 2)
         predicate = opened.call_args.args[1]
-        self.assertTrue(predicate(selected["observation"]["inventory"][-1]))
-        self.assertFalse(predicate(selected["observation"]["inventory"][1]))
+        self.assertTrue(predicate(selected["inv"][-1]))
+        self.assertFalse(predicate(selected["inv"][1]))
         self.assertEqual(["READ", "scroll of NAUDIZ"], [call.args[1] for call in choice.call_args_list])
         self.assertEqual(1, verify.call_args_list[0].kwargs["identify_count"])
         self.assertEqual((client, identified, 0, 1, True, 2), verify.call_args_list[1].args)

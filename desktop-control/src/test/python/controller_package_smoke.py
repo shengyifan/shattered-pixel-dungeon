@@ -69,7 +69,7 @@ class ControllerClient:
             assert self.hello.get("st") == "completed" and "err" not in self.hello, self.hello
             self.prefix = self.hello["data"]["request_prefix"]
             assert re.fullmatch(r"t[0-9a-z]+", self.prefix), self.hello
-            assert self.hello["data"]["cli_version"] == "CLI.9.0.5", self.hello
+            assert self.hello["data"]["cli_version"] == "CLI.9.0.6", self.hello
             assert self.hello["data"]["audit_schema_version"] == 12, self.hello
             self.install(self.hello, "info")
         except Exception:
@@ -122,13 +122,13 @@ class ControllerClient:
     def install(self, result, op):
         assert result.get("v") == 9 and "err" not in result, result
         view = protocol9.response(result, op)
-        assert view["ok"], view
+        assert ("err" not in view), view
         self.scope = result.get("s", self.scope)
         self.revision = result.get("rev", self.revision)
         if result.get("rev") is not None:
             assert re.fullmatch(r"[ra][1-9][0-9]*", result["rev"]), result
-        if "observation" in view.get("result", {}):
-            self.current, self.state_view = result, view["result"]
+        if "scene" in view.get("data", {}):
+            self.current, self.state_view = result, protocol9.frame_data(view)
         return self.state_view
 
     def state(self):
@@ -240,21 +240,21 @@ class ControllerClient:
         assert not self.group_alive(), "Disposable fixture process group remains after cleanup"
 
 
-def available(state, canonical):
-    return [action for action in state.get("actions", []) if action.get("action") == canonical]
+def available(state, operation):
+    return [action for action in state.get("acts", []) if action.get("op") == operation]
 
 
 def reach_warrior(client, resume=False):
     seen, selected = [], False
     state = client.state_view or client.state()
     for _ in range(35):
-        observation = state.get("observation", {})
+        observation = state
         ui = observation.get("ui", {})
         scene = ui.get("scene")
         seen.append(scene)
         if observation.get("scene") == "game":
             assert observation["hero"]["class"] == "warrior", observation["hero"]
-            if ui.get("modal") and available(state, "ui.back"):
+            if ui.get("modal") and available(state, "back"):
                 try:
                     client.action("back")
                 except StaleAction:
@@ -262,7 +262,7 @@ def reach_warrior(client, resume=False):
                 state = client.state_view
                 continue
             return state, seen
-        actions = available(state, "ui.activate")
+        actions = available(state, "click")
         choice = None
         if resume and scene == "StartScene":
             choice = next((action for action in actions if action.get("label", "").split("\n")[0].casefold() == "warrior"), None)
@@ -276,15 +276,15 @@ def reach_warrior(client, resume=False):
         try:
             if choice:
                 chosen_warrior = choice.get("label", "").casefold() == "warrior"
-                client.action("click", ctl=choice["control"])
+                client.action("click", ctl=choice["ctl"])
                 if chosen_warrior:
                     selected = True
-            elif available(state, "ui.reveal"):
+            elif available(state, "reveal"):
                 client.action("reveal")
-            elif ui.get("modal") and available(state, "ui.back"):
+            elif ui.get("modal") and available(state, "back"):
                 client.action("back")
             else:
-                raise AssertionError({"no_advertised_menu_control": scene, "actions": actions})
+                raise AssertionError({"no_advertised_menu_control": scene, "acts": actions})
         except StaleAction:
             pass  # A new loop reacquires the actual node from the newly displayed state.
         state = client.state_view
@@ -292,17 +292,16 @@ def reach_warrior(client, resume=False):
 
 
 def snapshot(state):
-    observation = state["observation"]
+    observation = state
     return {"hero": {field: observation["hero"].get(field) for field in
                      ("class", "cell", "depth", "hp", "level", "gold", "strength")},
-            "inventory": [(item["locator"], item["name"], item["quantity"], item["equipped"])
-                          for item in observation.get("inventory", [])]}
+            "inv": [(item["loc"], item["name"], item["qty"], item["equipped"])
+                          for item in observation.get("inv", [])]}
 
 
 def native_operation(client, operation):
-    canonical = {"save": "game.save", "quit": "app.quit"}[operation]
     for _ in range(6):
-        assert available(client.state_view, canonical), {"unavailable": operation, "state": client.state_view}
+        assert available(client.state_view, operation), {"unavailable": operation, "state": client.state_view}
         try:
             return client.action(operation)
         except StaleAction:
@@ -645,7 +644,7 @@ def standalone_actions_check(client):
         evidence.append({"view": view, "request_id": reply["id"], "scope": reply["s"],
                          "rev": reply["rev"], "inline_subjects": len(inline),
                          "known_facts_compared": compared,
-                         "actions": len(data.get("acts", [])),
+                         "acts": len(data.get("acts", [])),
                          "independent_decode_and_semantic_validation": True})
     return evidence
 
@@ -653,13 +652,13 @@ def standalone_actions_check(client):
 def targeting_cancel_check(client):
     """Open the real throw selector and cancel it without changing game resources."""
     before = snapshot(client.state_view)
-    stone = next(item for item in client.state_view["observation"]["inventory"]
+    stone = next(item for item in client.state_view["inv"]
                  if item["name"].casefold() == "throwing stone")
-    opened = client.action("item", loc=stone["locator"])
-    throw = next(action for action in available(client.state_view, "ui.activate")
+    opened = client.action("item", loc=stone["loc"])
+    throw = next(action for action in available(client.state_view, "click")
                  if action.get("label", "").casefold() == "throw")
-    aiming = client.action("click", ctl=throw["control"])
-    assert available(client.state_view, "cell.cancel"), client.state_view
+    aiming = client.action("click", ctl=throw["ctl"])
+    assert available(client.state_view, "untarget"), client.state_view
     actions = standalone_actions_check(client)
     action_frame, action_data = client.last_actions_frame
     advertised = next(action for action in action_data["acts"] if action.get("op") == "untarget")
@@ -750,7 +749,7 @@ def main():
         environment.pop(key, None)
     environment["PATH"] = "/usr/bin:/bin"
     version = subprocess.check_output([str(cli), "--version"], env=environment, text=True).strip()
-    assert version == "CLI.9.0.5 (protocol 9, game 4.0.2)", version
+    assert version == "CLI.9.0.6 (protocol 9, game 4.0.2)", version
     clients, report = [], {"result": "running", "counts_as_win": False, "bundle": str(args.bundle.resolve()),
                            "artifacts": str(output), "isolated_profile": str(profile), "version": version,
                            "fresh_defaults": True, "personal_profile_or_audit_reads": False}

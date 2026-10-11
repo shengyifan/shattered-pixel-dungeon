@@ -17,22 +17,22 @@ def actual_window(client,state,name):
 
 
 def details_case(client,panel,tabs,index):
-    choices=[a["control"] for a in panel["actions"] if a["action"]=="ui.activate" and a["control"] not in tabs]
+    choices=[a["ctl"] for a in panel["acts"] if a["op"]=="click" and a["ctl"] not in tabs]
     assert len(choices)==(2 if index==2 else 3),choices
     reports=[]
     for control in choices:
-        detail=act(client,"ui.activate",control=control)
+        detail=act(client,"click",ctl=control)
         window="WndInfoSubclass" if index==2 else "WndInfoArmorAbility"
         actual_window(client,detail,window)
-        title=next(n["text"] for n in ui(detail)["controls"] if n.get("text"))
-        talents=[a for a in detail["actions"] if a["action"]=="ui.activate"]
+        title=next(n["text"] for n in ui(detail)["nodes"] if n.get("text"))
+        talents=[a for a in detail["acts"] if a["op"]=="click"]
         opened=[]
         for talent in talents:
-            explanation=act(client,"ui.activate",control=talent["control"])
+            explanation=act(client,"click",ctl=talent["ctl"])
             actual_window(client,explanation,"WndInfoTalent")
-            opened.append({"label":talent.get("label"),"state_version":explanation["state_version"]})
-            back=act(client,"ui.back");actual_window(client,back,window)
-        restored=act(client,"ui.back");actual_window(client,restored,"WndHeroInfo")
+            opened.append({"label":talent.get("label"),"rev":explanation["rev"]})
+            back=act(client,"back");actual_window(client,back,window)
+        restored=act(client,"back");actual_window(client,restored,"WndHeroInfo")
         reports.append({"title":title,"window":window,"talents":opened,"original_back":True})
     return reports
 
@@ -46,24 +46,24 @@ def run_case(root,classpath,runtime_id,hero,details=False):
     result={"test_fixture":True,"counts_as_win":False,"fixture":"hero_info."+hero,"runtime_id":runtime_id,
             "profile":str(profile.relative_to(root)),"cli_language":"en","gui_language":"zh","tabs":[],"details_requested":details}
     try:
-        hello=client.request("protocol.info");assert hello["ok"],hello
-        result["build_id"]=hello["result"]["build_id"]
+        hello=client.request("info");assert ("err" not in hello),hello
+        result["build_id"]=hello["data"]["build_id"]
         return_to_title(client);choose(client,"Enter the Dungeon")
         state=choose(client,hero)
         if not ui(state)["modal"]:state=choose(client,hero)
         assert ui(state)["scene"]=="HeroSelectScene" and ui(state)["modal"]
-        tabs=[a["control"] for a in state["actions"] if a["action"]=="ui.activate"]
+        tabs=[a["ctl"] for a in state["acts"] if a["op"]=="click"]
         assert len(tabs)==4,tabs
         for index,tab in enumerate(tabs):
-            panel=act(client,"ui.activate",control=tab)
-            texts=[n["text"] for n in ui(panel)["controls"] if n.get("text")]
+            panel=act(client,"click",ctl=tab)
+            texts=[n["text"] for n in ui(panel)["nodes"] if n.get("text")]
             expected=[hero,"Talents","Subclasses","Armor Abilities"][index]
             assert expected.casefold() in {text.casefold() for text in texts},{"expected":expected,"texts":texts}
-            result["tabs"].append({"index":index,"title":expected,"state_version":panel["state_version"],"displayed_texts":texts})
+            result["tabs"].append({"index":index,"title":expected,"rev":panel["rev"],"displayed_texts":texts})
             if details and index>=2:result["tabs"][-1]["details"]=details_case(client,panel,tabs,index)
-        returned=act(client,"ui.back")
+        returned=act(client,"back")
         assert ui(returned)["scene"]=="HeroSelectScene" and not ui(returned)["modal"]
-        assert returned["scope_id"] and returned["scope_id"] == panel["scope_id"] and "hero" not in returned["observation"]
+        assert returned["s"] and returned["s"] == panel["s"] and "hero" not in returned
         result.update(ok=True,original_back=True,game_created=False)
     except Exception as error:result.update(ok=False,error=repr(error),traceback=traceback.format_exc())
     finally:

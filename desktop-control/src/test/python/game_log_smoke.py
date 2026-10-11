@@ -7,7 +7,7 @@ import uuid
 from protocol9 import pages
 import zipfile
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game, act
-from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
+from fixture_support import launch_command, metadata, safe_profile, stop, write_json
 
 
 def make_agent(root, runtime):
@@ -41,7 +41,7 @@ def stage(client, profile, mode):
 
 def events(client, scope):
     found=[]
-    for rows in pages(client,"events.read",scope=scope):
+    for rows in pages(client,"events",scope=scope):
         found.extend(e for e in rows if e["kind"]=="game.log")
     return found
 
@@ -51,20 +51,20 @@ def rendered(events):
 
 
 def new_game_in_same_process(client):
-    act(client,"ui.back")
+    act(client,"back")
     state=client.state()
-    back=next(a for a in state["actions"] if a.get("action")=="ui.activate" and any(label in a.get("label","").lower() for label in ["main menu","主菜单"]))
-    act(client,"ui.activate",control=back["control"])
+    back=next(a for a in state["acts"] if a.get("op")=="click" and any(label in a.get("label","").lower() for label in ["main menu","主菜单"]))
+    act(client,"click",ctl=back["ctl"])
     for _ in range(12):
-        state=client.state();scene=state["observation"]["scene"]
+        state=client.state();scene=state["scene"]
         if scene=="hero_select":return reach_game(client,"WARRIOR")
-        actions=[a for a in state["actions"] if a.get("action")=="ui.activate"]
+        actions=[a for a in state["acts"] if a.get("op")=="click"]
         choice=next((a for a in actions if any(label in a.get("label","").lower() for label in ["new game","新游戏"])),None)
         if choice is None:choice=next((a for a in actions if a.get("label","").lower() in {"play","enter the dungeon","进入地牢","开始游戏"}),None)
-        if choice is None and any(a["action"]=="ui.reveal" for a in state["actions"]):
-            act(client,"ui.reveal");continue
+        if choice is None and any(a["op"]=="reveal" for a in state["acts"]):
+            act(client,"reveal");continue
         assert choice,state
-        act(client,"ui.activate",control=choice["control"])
+        act(client,"click",ctl=choice["ctl"])
     raise AssertionError("Could not enter the next new game")
 
 
@@ -76,8 +76,8 @@ def main():
     command=launch_command(classpath,fixture=True);command.insert(1,"-javaagent:"+str(agent)+"="+str(profile))
     client=FixtureClient(command,profile)
     try:
-        hello=client.request("protocol.info");assert hello["ok"] and hello["result"]["build_id"]
-        first=reach_game(client,"WARRIOR");scope=first["scope_id"]
+        hello=client.request("info");assert ("err" not in hello) and hello["data"]["build_id"]
+        first=reach_game(client,"WARRIOR");scope=first["s"]
         fixture=json.loads((profile/"test_fixture.json").read_text());assert fixture["language"]=="CHI_SMPL" and fixture["fullscreen"] is False,fixture
         before=events(client,scope);last=before[-1]["sequence"] if before else 0
         stage(client,profile,"burst")
@@ -90,8 +90,8 @@ def main():
         log=rendered(events(client,scope))
         assert any("BOTTOM_VISIBLE" in line["text"] and line["clipped"] for line in log)
         assert not any("TOP_NEVER_VISIBLE" in line["text"] for line in log)
-        state=client.state();assert "TOP_NEVER_VISIBLE" not in json.dumps(state["observation"]["ui"])
-        assert "BOTTOM_VISIBLE" in json.dumps(state["observation"]["ui"])
+        state=client.state();assert "TOP_NEVER_VISIBLE" not in json.dumps(state["ui"])
+        assert "BOTTOM_VISIBLE" in json.dumps(state["ui"])
         assert "BURST_17" in json.dumps(log),"The older displayed snapshot must remain in public history"
 
         stage(client,profile,"same");a=events(client,scope)
@@ -101,14 +101,14 @@ def main():
         stage(client,profile,"console")
         assert "PRIVATE_CONSOLE_LOG_FIXTURE" not in json.dumps(events(client,scope))
         assert len(events(client,scope))==len(a)
-        second=new_game_in_same_process(client);new_scope=second["scope_id"];assert new_scope!=scope
+        second=new_game_in_same_process(client);new_scope=second["s"];assert new_scope!=scope
         stage(client,profile,"same")
         b=events(client,new_scope)
         assert sum("REPEATED_VISIBLE_TEXT" in line["text"] for line in rendered(b))==1
-        assert all(e["scope_id"]==new_scope for e in b)
+        assert all(e["s"]==new_scope for e in b)
         assert all("TOP_NEVER_VISIBLE" not in line["text"] and "BURST_17" not in line["text"] for line in rendered(b))
         result={"verified":True,"test_fixture":True,"counts_as_win":False,"runtime_id":runtime_id,
-                "profile":str(profile.relative_to(root)),"build_id":hello["result"]["build_id"],"language":"CHI_SMPL","fullscreen":False,
+                "profile":str(profile.relative_to(root)),"build_id":hello["data"]["build_id"],"language":"CHI_SMPL","fullscreen":False,
                 "first_scope":scope,"second_scope":new_scope,"burst_trim_verified":True,
                 "long_raw_text_exists_but_top_not_exported":True,"clipped_tail_visible":True,
                 "older_display_retained_in_history":True,"same_run_ui_rebuild_deduplicated":True,

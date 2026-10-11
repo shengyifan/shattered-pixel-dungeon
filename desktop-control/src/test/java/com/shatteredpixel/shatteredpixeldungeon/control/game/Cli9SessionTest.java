@@ -61,7 +61,7 @@ public class Cli9SessionTest {
                 assertFalse(last(wire).containsKey("err"));
                 Map<?,?> hello = (Map<?,?>) last(wire).get("data");
                 assertEquals(9L, last(wire).get("v")); assertEquals(12L, hello.get("audit_schema_version"));
-                assertEquals("CLI.9.0.5", hello.get("cli_version"));
+                assertEquals("CLI.9.0.6", hello.get("cli_version"));
                 assertEquals("4.0.2", hello.get("game_version"));
                 assertEquals(922L, hello.get("game_version_code"));
             }
@@ -153,7 +153,7 @@ public class Cli9SessionTest {
             store.ensureScope("run:a","run","a");store.beginSession("event-boot","event-build","CLI.9.0.3",9);
             com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance provenance=
                     new com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance(key->"Recorded %d");
-            String source=provenance.onTextResource("当时显示17","fixture.recorded","zh",new Object[]{17});
+            String source=provenance.onTextResource("当时显示17","fixture.recorded","zh",new Object[]{17},"当时显示%d");
             Map<String,Object> data=PublicEnglishProjection.copy(map("gui_language","zh","text_language","en",
                     "entries",List.of(map("text",provenance.capture(null,source,false)),map("text","未标记的另一行"))));
             data.put("presentation",PublicEnglishProjection.presentation(data));
@@ -231,7 +231,7 @@ public class Cli9SessionTest {
         int observations, executions, exits; boolean failObservation,failExecution;
         GameController.State state = state("v1", false);
         Queue<GameController.SaveResult> saves = new ArrayDeque<>();
-        Queue<GameController.GameLogSnapshot> logs = new ArrayDeque<>();
+        final GameController displayed = new GameController(null,"menu:fixture",error->{throw new AssertionError(error);});
         public GameController.State latest() { return state; }
         public CompletableFuture<GameController.State> observe() {
             observations++;
@@ -244,14 +244,18 @@ public class Cli9SessionTest {
             state = state("v" + (executions + 1), true);
             if (executions == 1) {
                 saves.add(new GameController.SaveResult("saved", "a", 1, null, "2026-09-13T00:00:00Z", "run:a", "act"));
-                logs.add(new GameController.GameLogSnapshot("run:a", "2026-09-13T00:00:00Z",
-                        List.of(new RuntimeObserver.LogEntry("未标记的实际日志", 1, false))));
+                displayed.enqueueDisplayEvent(GameController.DisplayEvent.from(new GameController.GameLogSnapshot("run:a", "2026-09-13T00:00:00Z",
+                        List.of(new RuntimeObserver.LogEntry("未标记的实际日志", 1, false)))));
             }
             return CompletableFuture.completedFuture(state);
         }
         public void prepareRun(String id) { throw new AssertionError("No menu action in this fixture"); }
         public GameController.SaveResult pollSave() { return saves.poll(); }
-        public GameController.GameLogSnapshot pollGameLog() { return logs.poll(); }
+        public List<GameController.DisplayEvent> peekDisplayEvents(int limit) { return displayed.peekDisplayEvents(limit); }
+        public void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events) { displayed.acknowledgeDisplayEvents(events); }
+        public boolean hasDisplayEvents() { return displayed.hasDisplayEvents(); }
+        public void setDisplaySignal(Runnable signal) { displayed.setDisplaySignal(signal); }
+        public void freezeDisplayEvents() { displayed.freezeDisplayEvents(); }
         public boolean exiting() { return false; }
         public boolean disposed() { return false; }
         public void exitNow() { exits++; }

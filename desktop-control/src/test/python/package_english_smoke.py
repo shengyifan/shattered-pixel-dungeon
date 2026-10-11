@@ -45,10 +45,18 @@ def new_profile(output, name):
 
 
 def display(state):
-    value = state["observation"]["ui"]["display"]
+    value = state["ui"]["display"]
     assert value["language"] == "zh", value
     assert value["fullscreen"] is False, value
     return value
+
+
+def action_save_receipts(result):
+    """Read save evidence from the original action, separate from its observation."""
+    result.require_success()
+    if result.receipt_response is not None:
+        return result.receipt_response["data"].get("save", [])
+    return result.initial_response.get("data", {}).get("persistence", {}).get("saves", [])
 
 
 def verify_bundle(bundle, expected_cli):
@@ -139,28 +147,28 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
     stderr = (profile.parent / (profile.name + "-native-stderr.log")).open("ab")
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr, env=env)
     try:
-        def exchange(frame):
+        def exchange(frame, *, malformed_request=False):
             frames.append(frame)
             process.stdin.write(frame)
             process.stdin.flush()
-            result = receive(process)
+            result = receive(process, malformed_request=malformed_request)
             assert_english(result)
             return result
         hello = exchange(b'{"v":9,"id":"package-info","op":"info"}\r\n')
-        assert hello["ok"] and hello["result"]["build_id"] == expected_build
-        assert hello["result"]["cli_version"] == expected_cli
-        scope = hello["result"]["scope_id"]
+        assert ("err" not in hello) and hello["data"]["build_id"] == expected_build
+        assert hello["data"]["cli_version"] == expected_cli
+        scope = hello["s"]
         old = exchange(b'{"v":8,"id":"package-old-protocol","op":"info"}\n')
-        assert old["protocol_version"] == 9 and old["error"] == {"code": "UNSUPPORTED_PROTOCOL"}, old
-        invalid = exchange(b'{"v":9,"id":"package-invalid-encoding","op":"state","x":"\xff"}\n')
-        assert invalid["error"]["code"] == "INVALID_ENCODING", invalid
-        query = protocol9.wire_bytes(protocol9.request("state.get", request_id="package-state", scope=scope))
+        assert old["v"] == 9 and old["err"] == "UNSUPPORTED_PROTOCOL", old
+        invalid = exchange(b'{"v":9,"id":"package-invalid-encoding","op":"state","x":"\xff"}\n', malformed_request=True)
+        assert invalid["err"] == "INVALID_ENCODING", invalid
+        query = protocol9.wire_bytes(protocol9.request("state", request_id="package-state", scope=scope))
         observed = exchange(query)
-        assert observed["ok"], observed
-        mode = display(observed["result"])
+        assert ("err" not in observed), observed
+        mode = display(observed["data"])
         jvm = loaded_jvm(process, bundle)
         repeated = exchange(query)
-        assert repeated["error"]["code"] == "DUPLICATE_REQUEST_ID", repeated
+        assert repeated["err"] == "DUPLICATE_REQUEST_ID", repeated
         emergency_before = emergency_snapshot(profile)
         conflict = subprocess.run(command, input=b"", capture_output=True, env=env, timeout=20)
         assert conflict.returncode != 0 and conflict.stdout == b"" and b"STARTUP_FAILED" in conflict.stderr
@@ -173,14 +181,14 @@ def raw_pipe_case(cli, bundle, output, env, expected_build, expected_cli):
             process.terminate()
             process.wait(timeout=10)
         stderr.close()
-    final = protocol9.wire_bytes(protocol9.request("state.get", request_id="package-final-frame", scope=scope))[:-1]
+    final = protocol9.wire_bytes(protocol9.request("state", request_id="package-final-frame", scope=scope))[:-1]
     restarted = subprocess.run(command, input=final, capture_output=True, env=env, timeout=45)
     lines = restarted.stdout.splitlines()
     assert restarted.returncode == 0 and len(lines) == 1, (restarted.returncode, restarted.stderr, lines)
     response = protocol9.response(json.loads(lines[0]))
-    assert response["ok"]
+    assert ("err" not in response)
     assert_english(response)
-    display(response["result"])
+    display(response["data"])
     frames.append(final)
     for side in ("public", "internal"):
         with sqlite3.connect((profile / "audit" / (side + ".sqlite3")).as_uri() + "?mode=ro", uri=True) as db:
@@ -222,21 +230,21 @@ class PackageClient(Client):
         self.prefix = "package-" + uuid.uuid4().hex[:12]
 
     def request(self, op, args=None, **kwargs):
-        if op == "state.get":
+        if op == "state":
             args = {**(args or {}), "src": True}
         response = super().request(op, args, **kwargs)
-        if response.get("error", {}).get("code") in {"EXECUTION_UNKNOWN", "EXECUTION_UNCERTAIN"}:
+        if response.get("err") in {"EXECUTION_UNKNOWN", "EXECUTION_UNCERTAIN"}:
             self.uncertain = True
         self.trace.write(json.dumps({"test_fixture": True, "request": self.last_wire_request,
                                      "response": self.last_wire_response}, ensure_ascii=False) + "\n")
         self.trace.flush()
         assert_english(response)
-        if response.get("ok") and op == "state.get":
-            failures=validate_sources(response.get("result"))
+        if ("err" not in response) and op == "state":
+            failures=validate_sources(response.get("data"))
             assert not failures, {"source_failures":failures[:20],"op":op}
         self.responses.append((op, response))
-        state = response.get("result", {})
-        if response.get("ok") and isinstance(state, dict) and "observation" in state:
+        state = protocol9.frame_data(response)
+        if "err" not in response and "scene" in state:
             self.last_state = state
             display(state)
         return response
@@ -247,10 +255,10 @@ def settings_confirmation(client):
     opened = activate(client, "Settings").observation
     # Icon tabs are unlabeled original controls. Discover the actual displayed panel,
     # without assuming a hidden tab index or using an OS pointer coordinate.
-    candidates = [a["control"] for a in opened["actions"] if a["action"] == "ui.activate" and not a.get("label")]
+    candidates = [a["ctl"] for a in opened["acts"] if a["op"] == "click" and not a.get("label")]
     for control in [None] + candidates:
         state = checked_state(client)
-        controls = state["observation"]["ui"]["controls"]
+        controls = state["ui"]["nodes"]
         checks = [node for node in controls if "checked" in node and any(
             isinstance(label, str) and label.casefold() == "fullscreen"
             for label in [node.get("label"), node.get("text")]
@@ -258,10 +266,10 @@ def settings_confirmation(client):
         if checks:
             assert len(checks) == 1 and checks[0]["checked"] is False
             confirmation = {"original_fullscreen_checkbox_checked": False, "display": display(state)}
-            execute(client, "ui.back")
+            execute(client, "back")
             return confirmation
-        if control is not None and any(a.get("control") == control for a in state["actions"]):
-            execute(client, "ui.activate", control=control)
+        if control is not None and any(a.get("ctl") == control for a in state["acts"]):
+            execute(client, "click", ctl=control)
     raise AssertionError("The original Display Settings fullscreen checkbox was not observed")
 
 
@@ -275,13 +283,13 @@ def original_food_pair(profile, english_event, scope):
             value = json.loads(text)
             if value["scope_id"] == binding[0] and value["kind"] == "game.log" \
                     and value.get("event_sequence") == english_event["sequence"] \
-                    and value["original_display"]["occurred_at"] == english_event["data"]["occurred_at"]:
+                    and value["original_display"]["occurred_at"] == english_event["data"]["at"]:
                 original.append(value["original_display"])
     assert len(original) == 1, "Match the exact event sequence and display time, not unrelated Chinese logs"
     assert any("吃起来不错！" in entry["text"] for entry in original[0]["entries"])
     assert len(original[0]["entries"]) == len(english_event["data"]["entries"])
-    return {"scope_id": scope, "public_event_sequence": english_event["sequence"],
-            "occurred_at": english_event["data"]["occurred_at"],
+    return {"s": scope, "public_event_sequence": english_event["sequence"],
+            "at": english_event["data"]["at"],
             "english_food_message": "That food tasted delicious!", "original_displayed_food_message": "吃起来不错！"}
 
 
@@ -290,28 +298,28 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
     client = PackageClient(cli, profile, env)
     checks = []
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"] and hello["result"]["build_id"] == expected_build
-        assert hello["result"]["cli_version"] == expected_cli
+        hello = client.request("info")
+        assert ("err" not in hello) and hello["data"]["build_id"] == expected_build
+        assert hello["data"]["cli_version"] == expected_cli
         reach_game(client)
         # Complete any normal first-run tutorial through its original public controls.
         finish_tutorial(client)
         state = checked_state(client)
         items = english_inventory(state)
-        scope = state["scope_id"]
+        scope = state["s"]
         jvm = loaded_jvm(client.process, bundle)
         checks.append("packaged_start_and_original_tutorial_to_ready")
         settings = settings_confirmation(client)
         checks.append("actual_selected_chinese_and_windowed_settings_confirmed")
         stone = next(item for item in items if item["name"].casefold() == "throwing stone")
-        execute(client, "inventory.open", locator=stone["locator"])
+        execute(client, "item", loc=stone["loc"])
         aiming = activate(client, "THROW").observation
-        assert any(a["action"] == "cell.cancel" for a in aiming["actions"])
-        cancelled = execute(client, "cell.cancel").observation
-        assert next(item["quantity"] for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "throwing stone") == stone["quantity"]
+        assert any(a["op"] == "untarget" for a in aiming["acts"])
+        cancelled = execute(client, "untarget").observation
+        assert next(item["qty"] for item in cancelled["inv"] if item["name"].casefold() == "throwing stone") == stone["qty"]
         checks.append("original_inventory_throw_cancel_preserves_quantity")
-        food = next(item for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "ration of food")
-        execute(client, "inventory.open", locator=food["locator"])
+        food = next(item for item in cancelled["inv"] if item["name"].casefold() == "ration of food")
+        execute(client, "item", loc=food["loc"])
         eaten = activate(client, "EAT").initial_response
         deadline = time.monotonic() + 10
         food_event = None
@@ -325,29 +333,30 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
                 break
             time.sleep(.05)
         assert food_event, "The package must expose its actual drawn food message in English"
-        record = client.request("request.get", {"target_id": eaten["id"], "get": ["reply"]}, scope=scope)
-        assert record["ok"] and record["result"]["response"] == eaten
-        assert client.request("actions.list")["ok"]
-        saved = execute(client, "game.save").initial_response["result"]
-        assert any(receipt["success"] for receipt in saved["persistence"]["saves_during_request"])
-        before_hero = {key: saved["observation"]["hero"][key] for key in ("class", "cell", "depth", "hp", "level", "gold")}
-        before_inventory = [(item["locator"], item["name"], item["quantity"], item["equipped"])
-                            for item in saved["observation"]["inventory"]]
+        record = client.request("req", {"rid": eaten["id"], "get": ["reply"]}, scope=scope)
+        assert "err" not in record and protocol9.response(record["data"]["reply"]) == eaten
+        assert "err" not in client.request("actions")
+        saved_action = execute(client, "save")
+        assert any(receipt["success"] for receipt in action_save_receipts(saved_action))
+        saved = saved_action.observation
+        before_hero = {key: saved["hero"][key] for key in ("class", "cell", "depth", "hp", "level", "gold")}
+        before_inventory = [(item["loc"], item["name"], item["qty"], item["equipped"])
+                            for item in saved["inv"]]
         checks.append("original_drawn_english_log_and_explicit_save_receipt")
         stop(client)
         pair = original_food_pair(profile, food_event, scope)
         resumed = PackageClient(cli, profile, env)
         try:
-            assert resumed.request("protocol.info")["result"]["build_id"] == expected_build
+            assert resumed.request("info")["data"]["build_id"] == expected_build
             after = reach_game(resumed, resume=True)
-            assert after["scope_id"] == scope
-            assert {key: after["observation"]["hero"][key] for key in before_hero} == before_hero
+            assert after["s"] == scope
+            assert {key: after["hero"][key] for key in before_hero} == before_hero
             english_inventory(after)
-            assert [(item["locator"], item["name"], item["quantity"], item["equipped"])
-                    for item in after["observation"]["inventory"]] == before_inventory
+            assert [(item["loc"], item["name"], item["qty"], item["equipped"])
+                    for item in after["inv"]] == before_inventory
             restarted_jvm = loaded_jvm(resumed.process, bundle)
-            record = resumed.request("request.get", {"target_id": eaten["id"], "get": ["reply"]}, scope=scope)
-            assert record["ok"] and record["result"]["response"] == eaten
+            record = resumed.request("req", {"rid": eaten["id"], "get": ["reply"]}, scope=scope)
+            assert "err" not in record and protocol9.response(record["data"]["reply"]) == eaten
             assert any(event["sequence"] == food_event["sequence"] for event in public_events(resumed, scope))
             stop(resumed)
         finally:
@@ -355,7 +364,7 @@ def game_case(cli, bundle, output, env, expected_build, expected_cli):
                 stop(resumed, failure_cleanup=True)
         checks.append("second_packaged_jvm_restores_same_run_and_original_history")
         result = {"case_id": "package.english_game_and_restart", "verified": True, "profile": str(profile),
-                "scope_id": scope, "jvm": jvm, "restarted_jvm": restarted_jvm, "settings": settings,
+                "s": scope, "jvm": jvm, "restarted_jvm": restarted_jvm, "settings": settings,
                 "original_draw_pair": pair, "checks": checks, "database_checks": audit_health(profile)}
         write_json(profile / "game-result.json", result)
         return result

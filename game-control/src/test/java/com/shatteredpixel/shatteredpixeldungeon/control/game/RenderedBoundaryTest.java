@@ -43,23 +43,23 @@ class RenderedBoundaryTest {
         assertFalse(ready());assertFalse(ready(),"Repeated processing is not another draw");
         draw(List.of(new VisualCue("red_target",10)));
         assertTrue(ready());
-        assertNotNull(controller.pollVisual());assertNull(controller.pollVisual(),"Identical frames acknowledge rendering without duplicate events");
+        assertNotNull(DisplayEventTestFixture.next(controller, "game.visual"));assertNull(DisplayEventTestFixture.next(controller, "game.visual"),"Identical frames acknowledge rendering without duplicate events");
         invoke("resetRenderedBoundary");assertFalse(ready());draw(List.of());assertTrue(ready());
-        assertTrue(controller.pollVisual().cues.isEmpty(),"Clearing a marker is a retained display event");
+        assertTrue(((List<?>)DisplayEventTestFixture.next(controller, "game.visual").data().get("cues")).isEmpty(),"Clearing a marker is a retained display event");
     }
 
     @Test void oldRunOrMapFramesCannotAcknowledgeANewMapAndUiRebuildKeepsContext()throws Exception{
-        draw(List.of(new VisualCue("red_target",10)));String first=controller.pollVisual().mapContext;
+        draw(List.of(new VisualCue("red_target",10)));Object first=DisplayEventTestFixture.next(controller, "game.visual").data().get("map_context");
         assertFalse(ready());draw(List.of(new VisualCue("red_target",10)));assertTrue(ready());
         GameScene replacement=new GameScene();field(GameScene.class,"scene").set(null,replacement);new TestGame(replacement);
-        draw(List.of(new VisualCue("red_target",10)));assertNull(controller.pollVisual());
+        draw(List.of(new VisualCue("red_target",10)));assertNull(DisplayEventTestFixture.next(controller, "game.visual"));
         assertEquals(first,visualState().get("map_context"));
         Level second=new IdentityLevel();Dungeon.level=second;
         assertFalse(ready());assertEquals("not_observed",visualState().get("status"));
         draw(List.of(new VisualCue("red_target",10)));assertFalse(ready()); // still the old level token
-        controller.onVisualCues("a",second,1,List.of());assertFalse(ready());
-        String next=controller.pollVisual().mapContext;assertNotEquals(first,next);
-        controller.onVisualCues("a",second,1,List.of());assertTrue(ready());
+        controller.onVisualCues("a",second,1,List.of(), true, null);assertFalse(ready());
+        Object next=DisplayEventTestFixture.next(controller, "game.visual").data().get("map_context");assertNotEquals(first,next);
+        controller.onVisualCues("a",second,1,List.of(), true, null);assertTrue(ready());
         Dungeon.runId="b";assertFalse(ready());assertEquals("not_observed",visualState().get("status"));
     }
 
@@ -155,21 +155,21 @@ class RenderedBoundaryTest {
 
     @Test void semanticCueSnapshotsAreCanonicalAndDetachedFromMutableInput(){
         List<VisualCue> cues=new ArrayList<>(List.of(new VisualCue("red_target",20),new VisualCue("red_target",10),new VisualCue("red_target",20)));
-        draw(cues);cues.clear();GameController.VisualSnapshot snapshot=controller.pollVisual();
-        assertEquals(3,snapshot.cues.size());assertEquals(10,snapshot.cues.get(0).cell);
-        assertThrows(UnsupportedOperationException.class,()->snapshot.cues.clear());
-        draw(List.of(new VisualCue("red_target",10),new VisualCue("red_target",20)));assertNotNull(controller.pollVisual(),"Independent equal indicators retain multiplicity");
+        draw(cues);cues.clear();GameController.DisplayEvent snapshot=DisplayEventTestFixture.next(controller, "game.visual");
+        assertEquals(3,((List<?>)snapshot.data().get("cues")).size());assertEquals(10,((Map<?,?>)((List<?>)snapshot.data().get("cues")).get(0)).get("cell"));
+        assertThrows(UnsupportedOperationException.class,()->((List<?>)snapshot.data().get("cues")).clear());
+        draw(List.of(new VisualCue("red_target",10),new VisualCue("red_target",20)));assertNotNull(DisplayEventTestFixture.next(controller, "game.visual"),"Independent equal indicators retain multiplicity");
         assertFalse(snapshot.data().containsKey("generation"));assertFalse(snapshot.data().containsKey("levelIdentity"));
     }
 
     @Test void delayedFirstDrawableMustBeAcknowledgedButItsInternalReadinessNeverEscapes()throws Exception{
-        controller.onVisualCues("a",level,1,List.of(),false);assertFalse(ready());
-        controller.onVisualCues("a",level,1,List.of(),false);assertFalse(ready());
+        controller.onVisualCues("a",level,1,List.of(),false, null);assertFalse(ready());
+        controller.onVisualCues("a",level,1,List.of(),false, null);assertFalse(ready());
         assertFalse(visualState().containsKey("presentationReady"));
-        assertFalse(controller.pollVisual().data().containsKey("presentationReady"));
-        controller.onVisualCues("a",level,1,List.of(new VisualCue("black_goo_droplets",10)),true);
+        assertFalse(DisplayEventTestFixture.next(controller, "game.visual").data().containsKey("presentationReady"));
+        controller.onVisualCues("a",level,1,List.of(new VisualCue("black_goo_droplets",10)),true, null);
         assertTrue(ready(),"The first genuinely drawn cue can now complete the already-stable action");
-        controller.onVisualCues("a",level,1,List.of(),true);
+        controller.onVisualCues("a",level,1,List.of(),true, null);
         assertTrue(ready(),"A later natural flicker is not a new initial-presentation wait");
     }
 
@@ -187,7 +187,7 @@ class RenderedBoundaryTest {
         field(GameController.class,"frame").setLong(controller,13);assertTrue(ready());
     }
 
-    private void draw(List<VisualCue> cues){controller.onVisualCues("a",level,1,cues);}
+    private void draw(List<VisualCue> cues){controller.onVisualCues("a",level,1,cues, true, null);}
     private boolean ready()throws Exception{return (Boolean)invoke("renderedBoundaryReady");}
     @SuppressWarnings("unchecked") private Map<String,Object> visualState()throws Exception{return (Map<String,Object>)invoke("visualState");}
     private Object invoke(String name)throws Exception{Method m=GameController.class.getDeclaredMethod(name);m.setAccessible(true);return m.invoke(controller);}

@@ -6,8 +6,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "client"))
 from spdctl_client import DecodeError, decode_client_response, decode_wire_response, expand_structures
-import protocol9
-from historical_v6_client import decode_wire_response as decode_historical_v6
 
 
 def frame(data, identifier="q", **extra):
@@ -38,10 +36,10 @@ class Protocol9StructuresTest(unittest.TestCase):
         original = frame(data, rev="a1")
         pure = expand_structures(original)
         self.assertEqual({"op": "cancel"}, pure["data"]["ui"]["nodes"][0]["ops"][0])
-        for decoded in (decode_wire_response(original).data, protocol9.expand_structures(original)["data"]):
-            self.assertEqual({"op": "cancel", "rev": "a1", "rid": "original"},
-                             decoded["ui"]["nodes"][0]["ops"][0])
-            self.assertEqual("a1", decoded["acts"][0]["rev"])
+        decoded = decode_wire_response(original).data
+        self.assertEqual({"op": "cancel", "rev": "a1", "rid": "original"},
+                         decoded["ui"]["nodes"][0]["ops"][0])
+        self.assertEqual("a1", decoded["acts"][0]["rev"])
         historic = decode_wire_response(frame({"before": data}, rev="a9")).data["before"]
         self.assertNotIn("rev", historic["ui"]["nodes"][0]["ops"][0])
         self.assertEqual("original", historic["ui"]["nodes"][0]["ops"][0]["rid"])
@@ -204,17 +202,12 @@ class Protocol9StructuresTest(unittest.TestCase):
         for key in ("node_shapes", "op_defs"):
             with self.subTest(key=key), self.assertRaises(DecodeError):
                 decode_wire_response(frame({"ui": {key: [], "nodes": []}}))
-        # Historical research is deliberately isolated from the production client.
-        self.assertEqual(6, decode_historical_v6({"v": 6, "id": "old", "st": "completed"}).frame["v"])
 
-    def test_canonical_scenario_helper_keeps_complete_actions_and_does_not_invent(self):
-        expected = ["Click", "Long", None]
-        result = protocol9.response(frame(sample()))["result"]
-        self.assertEqual(expected, [a.get("label") for a in result["actions"]])
+    def test_complete_actions_are_preserved_without_inventing_capabilities(self):
+        decoded = decode_wire_response(frame(sample())).data
+        self.assertEqual(["Click", "Long", None], [a.get("label") for a in decoded["acts"]])
         no_actions = {"ui": {"nodes": [{"id": "c1", "ops": [{"op": "click"}]}]}}
-        self.assertEqual([], protocol9.response(frame(no_actions))["result"]["actions"])
-        self.assertEqual({"v": 9, "id": "t1.10", "op": "move", "s": "s1", "rev": "r1", "dir": "N"},
-                         protocol9.request("action.execute", {"action": "move.step", "direction": "north"}, "t1.10", "s1", "r1"))
+        self.assertNotIn("acts", decode_wire_response(frame(no_actions)).data)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""P6 low-frequency UI fixtures; public NDJSON choices, test-only post-action assertions."""
+"""Protocol-9 low-frequency UI fixtures; public NDJSON choices, test-only post-action assertions."""
 import argparse
 import json
 from pathlib import Path
@@ -9,6 +9,7 @@ import traceback
 import uuid
 
 from fixture_smoke import FixtureClient, act, checkpoint, close_choices, freeze_runtime, reach_game, select_inventory_item
+from protocol9 import frame_data
 
 CASES = ["shop-trade", "shop-steal", "shop-steal-warning", "ghost-reward", "wandmaker-reward",
          "blacksmith-cashout", "blacksmith-pickaxe", "blacksmith-reforge", "companion",
@@ -21,15 +22,15 @@ def click(client, predicate):
     state = client.state()
     matches = [action for action in controls(state) if predicate(action.get("label", ""))]
     assert matches, {"no_matching_control": controls(state)}
-    return act(client, "ui.activate", control=matches[0]["control"])
+    return act(client, "click", ctl=matches[0]["ctl"])
 
 
 def quantity(state, fragment):
-    return sum(item["quantity"] for item in state["observation"].get("inventory", []) if fragment in item["name"].lower())
+    return sum(item["qty"] for item in state.get("inv", []) if fragment in item["name"].lower())
 
 
 def controls(state):
-    return [action for action in state["actions"] if action["action"] == "ui.activate"]
+    return [action for action in state["acts"] if action["op"] == "click"]
 
 
 def choose(client, fragment):
@@ -38,8 +39,8 @@ def choose(client, fragment):
 
 def npc(client, fragment):
     state = client.state()
-    entity = next(e for e in state["observation"]["visible_entities"] if fragment in e.get("name", "").lower())
-    return act(client, "cell.select", cell=entity["cell"])
+    entity = next(e for e in state["entities"] if fragment in e.get("name", "").lower())
+    return act(client, "cell", cell=entity["cell"])
 
 
 def shown_price(action):
@@ -49,29 +50,29 @@ def shown_price(action):
 
 
 def public_stock(state):
-    return next(e for e in state["observation"]["visible_entities"] if "healing" in e.get("item", {}).get("name", "").lower())
+    return next(e for e in state["entities"] if "healing" in e.get("item", {}).get("name", "").lower())
 
 
 def shop(client, profile, steal):
     initial = client.state()
-    gold = initial["observation"]["hero"]["gold"]
+    gold = initial["hero"]["gold"]
     count = quantity(initial, "healing")
     stock = public_stock(initial)
-    opened = act(client, "cell.select", cell=stock["cell"])
+    opened = act(client, "cell", cell=stock["cell"])
     action = next(a for a in controls(opened) if ("steal" if steal else "buy") in a.get("label", "").lower())
     if steal:
         assert "100%" in action["label"], action
     price = shown_price(action)
-    cancelled = act(client, "ui.back")
-    assert cancelled["observation"]["hero"]["gold"] == gold and quantity(cancelled, "healing") == count
+    cancelled = act(client, "back")
+    assert cancelled["hero"]["gold"] == gold and quantity(cancelled, "healing") == count
     assert public_stock(cancelled)["cell"] == stock["cell"]
-    act(client, "cell.select", cell=stock["cell"])
-    before = checkpoint(profile, client.state()["state_version"])["low_frequency"]
+    act(client, "cell", cell=stock["cell"])
+    before = checkpoint(profile, client.state()["rev"])["low_frequency"]
     bought = choose(client, "steal" if steal else "buy")
     assert quantity(bought, "healing") == count + 1, bought
-    assert bought["observation"]["hero"]["gold"] == gold if steal else bought["observation"]["hero"]["gold"] == gold - price
+    assert bought["hero"]["gold"] == gold if steal else bought["hero"]["gold"] == gold - price
     if steal:
-        after = checkpoint(profile, bought["state_version"])["low_frequency"]
+        after = checkpoint(profile, bought["rev"])["low_frequency"]
         assert after["armband_charge"] < before["armband_charge"], (before, after)
         return {"buy_window_cancel_checked": True, "actual_100_percent_steal": True,
                 "gold_unchanged": True, "charge_before": before["armband_charge"], "charge_after": after["armband_charge"]}
@@ -82,20 +83,20 @@ def shop(client, profile, steal):
     sell_window = client.state()
     sell_action = next(a for a in controls(sell_window) if "sell" in a.get("label", "").lower())
     sell_price = shown_price(sell_action)
-    sell_cancelled = act(client, "ui.back")
+    sell_cancelled = act(client, "back")
     assert quantity(sell_cancelled, "healing") == count + 1
-    assert sell_cancelled["observation"]["hero"]["gold"] == gold - price
+    assert sell_cancelled["hero"]["gold"] == gold - price
     select_inventory_item(client, lambda label: "healing" in label.lower())
     sold = choose(client, "sell")
     assert quantity(sold, "healing") == count
-    assert sold["observation"]["hero"]["gold"] == gold - price + sell_price
+    assert sold["hero"]["gold"] == gold - price + sell_price
     return {"buy_cancel_checked": True, "sell_cancel_checked": True,
             "purchase_cost": price, "sale_value": sell_price, "inventory_quantity_round_trip": True}
 
 
 def shop_stack(client):
     initial = client.state()
-    count, gold = quantity(initial, "healing"), initial["observation"]["hero"]["gold"]
+    count, gold = quantity(initial, "healing"), initial["hero"]["gold"]
     assert count == 3
     prices = []
     for entire_stack in (False, True):
@@ -105,15 +106,15 @@ def shop_stack(client):
         trade = client.state()
         action = next(a for a in controls(trade) if ("sell all" if entire_stack else "sell 1") in a.get("label", "").lower())
         price = shown_price(action)
-        sold = act(client, "ui.activate", control=action["control"])
+        sold = act(client, "click", ctl=action["ctl"])
         assert quantity(sold, "healing") == (0 if entire_stack else count - 1)
-        assert sold["observation"]["hero"]["gold"] == gold + price
+        assert sold["hero"]["gold"] == gold + price
         close_choices(client)
         opened = npc(client, "shopkeeper")
         buyback = next(a for a in controls(opened) if "healing" in a.get("label", "").lower())
-        returned = act(client, "ui.activate", control=buyback["control"])
+        returned = act(client, "click", ctl=buyback["ctl"])
         assert quantity(returned, "healing") == count
-        assert returned["observation"]["hero"]["gold"] == gold
+        assert returned["hero"]["gold"] == gold
         prices.append(price)
     return {"sell_one_and_buyback": True, "sell_all_and_buyback": True, "stack_restored_each_time": True,
             "sale_prices": prices, "gold_round_trip": True}
@@ -122,17 +123,17 @@ def shop_stack(client):
 def shop_failed_theft(client, profile):
     initial = client.state()
     before = values(client, profile)
-    stock = next(e for e in initial["observation"]["visible_entities"] if "plate armor" in e.get("item", {}).get("name", "").lower())
-    opened = act(client, "cell.select", cell=stock["cell"])
+    stock = next(e for e in initial["entities"] if "plate armor" in e.get("item", {}).get("name", "").lower())
+    opened = act(client, "cell", cell=stock["cell"])
     attempt = next(a for a in controls(opened) if "steal" in a.get("label", "").lower())
     shown_chance = int(re.search(r"(\d+)%", attempt["label"])[1])
     assert 0 < shown_chance < 10, attempt
-    act(client, "ui.activate", control=attempt["control"])
+    act(client, "click", ctl=attempt["ctl"])
     failed = choose(client, "yes, i'm sure")  # Exactly one real attempt, no RNG override or retry.
     assert quantity(failed, "plate armor") == 0, "The single random trial succeeded; failure path is not covered by this run"
-    assert not any("shopkeeper" in e.get("name", "").lower() for e in failed["observation"]["visible_entities"])
-    assert failed["observation"]["hero"]["gold"] == initial["observation"]["hero"]["gold"]
-    assert checkpoint(profile, failed["state_version"])["low_frequency"]["armband_charge"] == before["armband_charge"]
+    assert not any("shopkeeper" in e.get("name", "").lower() for e in failed["entities"])
+    assert failed["hero"]["gold"] == initial["hero"]["gold"]
+    assert checkpoint(profile, failed["rev"])["low_frequency"]["armband_charge"] == before["armband_charge"]
     return {"actual_failed_theft": True, "attempts": 1, "rng_overridden": False,
             "displayed_success_percent": shown_chance, "shopkeeper_fled": True,
             "no_item_acquired": True, "no_gold_or_charge_spent_on_native_failure": True}
@@ -153,7 +154,7 @@ def reward(client, profile, wandmaker):
     choose(client, fragment)
     received = choose(client, "confirm")
     assert quantity(received, fragment) == count + 1
-    values = checkpoint(profile, received["state_version"])["low_frequency"]
+    values = checkpoint(profile, received["rev"])["low_frequency"]
     assert values["wandmaker_rewards_claimed" if wandmaker else "ghost_quest_complete"], values
     if wandmaker:
         assert quantity(received, "embers") == quest_count - 1
@@ -165,14 +166,14 @@ def values(client, profile, state=None):
     """Read only a postcondition; pass the action result to test its completion boundary."""
     if state is None:
         state = client.state()
-    return checkpoint(profile, state["state_version"])["low_frequency"]
+    return checkpoint(profile, state["rev"])["low_frequency"]
 
 
 def empty_slot(client, index=0):
     state = client.state()
     slots = [a for a in controls(state) if not a.get("label")]
     assert len(slots) > index, {"empty_slot_missing": controls(state)}
-    return act(client, "ui.activate", control=slots[index]["control"])
+    return act(client, "click", ctl=slots[index]["ctl"])
 
 
 def blacksmith(client, profile, case):
@@ -182,7 +183,7 @@ def blacksmith(client, profile, case):
     if case == "blacksmith-reforge":
         choose(client, "reforge")
         empty_slot(client)
-        cancelled = act(client, "ui.back")  # original selector cancellation
+        cancelled = act(client, "back")  # original selector cancellation
         assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
         empty_slot(client)
         select_inventory_item(client, lambda label: label.lower().startswith("sword"))
@@ -190,26 +191,26 @@ def blacksmith(client, profile, case):
         selection = client.state()
         swords = [a for a in controls(selection) if a.get("label", "").lower().startswith("sword")]
         assert len(swords) == 2, swords
-        act(client, "ui.activate", control=swords[1]["control"])
+        act(client, "click", ctl=swords[1]["ctl"])
         forged = choose(client, "reforge")
-        after = checkpoint(profile, forged["state_version"])["low_frequency"]
+        after = checkpoint(profile, forged["rev"])["low_frequency"]
         assert after["blacksmith_favor"] == before["blacksmith_favor"] - 500
-        old = [i for i in initial["observation"]["inventory"] if i["name"].lower() == "sword"]
-        new = [i for i in forged["observation"]["inventory"] if i["name"].lower() == "sword"]
+        old = [i for i in initial["inv"] if i["name"].lower() == "sword"]
+        new = [i for i in forged["inv"] if i["name"].lower() == "sword"]
         assert len(old) == 2 and len(new) == 1 and new[0]["level"] == max(i["level"] for i in old) + 1
         return {"selector_cancel_checked": True, "two_items_reforged_into_one": True, "favor_cost": 500}
-    option = "pickaxe" if case == "blacksmith-pickaxe" else "cash out"
-    choose(client, option)
+    opt = "pickaxe" if case == "blacksmith-pickaxe" else "cash out"
+    choose(client, opt)
     cancelled = choose(client, "nevermind")
     assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
-    choose(client, option)
+    choose(client, opt)
     done = choose(client, "yes, i want" if case == "blacksmith-pickaxe" else "give me the gold")
-    after = checkpoint(profile, done["state_version"])["low_frequency"]
+    after = checkpoint(profile, done["rev"])["low_frequency"]
     if case == "blacksmith-pickaxe":
         assert quantity(done, "pickaxe") == quantity(initial, "pickaxe") + 1
         assert after["blacksmith_favor"] == before["blacksmith_favor"] - 250
     else:
-        assert done["observation"]["hero"]["gold"] == initial["observation"]["hero"]["gold"] + before["blacksmith_favor"]
+        assert done["hero"]["gold"] == initial["hero"]["gold"] + before["blacksmith_favor"]
         assert after["blacksmith_favor"] == 0
     return {"confirmation_cancel_checked": True, "reward_and_favor_verified": True,
             "favor_before": before["blacksmith_favor"], "favor_after": after["blacksmith_favor"]}
@@ -226,30 +227,30 @@ def smith_service(client, profile, case):
         assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
         choose(client, service)
         paid = choose(client, "warm the forge")
-        paid_values = checkpoint(profile, paid["state_version"])["low_frequency"]
+        paid_values = checkpoint(profile, paid["rev"])["low_frequency"]
         assert paid_values["blacksmith_favor"] == before["blacksmith_favor"] - 2000
         assert paid_values["blacksmith_rewards_pending"]
-        blocked_back = act(client, "ui.back")
-        assert blocked_back["observation"]["ui"] == paid["observation"]["ui"]
+        blocked_back = act(client, "back")
+        assert blocked_back["ui"] == paid["ui"]
         choices = [a for a in controls(blocked_back) if a.get("label")]
         assert len(choices) >= 2, choices
         label = choices[0]["label"]
-        act(client, "ui.activate", control=choices[0]["control"])
+        act(client, "click", ctl=choices[0]["ctl"])
         cancelled = choose(client, "cancel")
         assert values(client, profile, cancelled)["blacksmith_rewards_pending"]
         choose(client, label)
         reward_state = choose(client, "confirm")
-        after = checkpoint(profile, reward_state["state_version"])["low_frequency"]
+        after = checkpoint(profile, reward_state["rev"])["low_frequency"]
         assert not after["blacksmith_rewards_pending"] and after["blacksmith_smiths"] == before["blacksmith_smiths"] + 1
-        assert sum(i["quantity"] for i in reward_state["observation"]["inventory"]) == sum(i["quantity"] for i in initial["observation"]["inventory"]) + 1
+        assert sum(i["qty"] for i in reward_state["inv"]) == sum(i["qty"] for i in initial["inv"]) + 1
         return {"smith_cost": 2000, "purchase_confirmation_cancelled": True,
                 "mandatory_reward_window_back_blocked": True, "reward_preview_cancelled": True,
                 "generated_reward_received": True, "reward_list_cleared": True}
-    cancelled = act(client, "ui.back")
+    cancelled = act(client, "back")
     assert values(client, profile, cancelled)["blacksmith_favor"] == before["blacksmith_favor"]
     choose(client, service)
     result = click(client, lambda label: label.lower().startswith("sword"))
-    after = checkpoint(profile, result["state_version"])["low_frequency"]
+    after = checkpoint(profile, result["rev"])["low_frequency"]
     cost = 500 if service == "harden" else 1000
     assert after["blacksmith_favor"] == before["blacksmith_favor"] - cost
     if service == "harden":
@@ -262,8 +263,8 @@ def smith_service(client, profile, case):
 
 def rose_menu(client, action):
     state = client.state()
-    rose = next(i for i in state["observation"]["inventory"] if "dried rose" in i["name"].lower())
-    act(client, "inventory.open", locator=rose["locator"])
+    rose = next(i for i in state["inv"] if "dried rose" in i["name"].lower())
+    act(client, "item", loc=rose["loc"])
     return choose(client, action)
 
 
@@ -271,7 +272,7 @@ def companion(client, profile):
     initial = client.state()
     rose_menu(client, "outfit")
     empty_slot(client)
-    cancelled = act(client, "ui.back")
+    cancelled = act(client, "back")
     assert values(client, profile, cancelled)["rose_weapon"] is None
     empty_slot(client)
     equipped = select_inventory_item(client, lambda label: label.lower().startswith("sword"))
@@ -279,26 +280,26 @@ def companion(client, profile):
     empty_slot(client)
     armored = select_inventory_item(client, lambda label: "leather armor" in label.lower())
     assert values(client, profile, armored)["rose_armor"] == "LeatherArmor"
-    act(client, "ui.back")
+    act(client, "back")
     summoned = rose_menu(client, "summon")
-    summoned_values = checkpoint(profile, summoned["state_version"])["low_frequency"]
+    summoned_values = checkpoint(profile, summoned["rev"])["low_frequency"]
     assert summoned_values["rose_charge"] == 0
-    assert any("ghost" in e.get("name", "").lower() for e in summoned["observation"]["visible_entities"])
+    assert any("ghost" in e.get("name", "").lower() for e in summoned["entities"])
     targeting = rose_menu(client, "direct")
-    cancelled = act(client, "cell.cancel")
-    assert checkpoint(profile, cancelled["state_version"])["low_frequency"]["ghost_defending_cell"] == -1
+    cancelled = act(client, "untarget")
+    assert checkpoint(profile, cancelled["rev"])["low_frequency"]["ghost_defending_cell"] == -1
     targeting = rose_menu(client, "direct")
-    hero = targeting["observation"]["hero"]["cell"]
-    width = targeting["observation"]["map"]["width"]
-    occupied = {e["cell"] for e in targeting["observation"]["visible_entities"]}
-    target = next(tile["cell"] for tile in targeting["observation"]["map"]["cells"] if tile["visibility"] == "visible"
+    hero = targeting["hero"]["cell"]
+    width = targeting["map"]["w"]
+    occupied = {e["cell"] for e in targeting["entities"]}
+    target = next(tile["cell"] for tile in targeting["map"]["cells"] if tile["visibility"] == "visible"
                   and tile["name"].lower() == "floor" and tile["cell"] not in occupied
                   and max(abs(tile["x"] - hero % width), abs(tile["y"] - hero // width)) == 2)
-    directed = act(client, "cell.select", cell=target)
-    assert checkpoint(profile, directed["state_version"])["low_frequency"]["ghost_defending_cell"] == target
+    directed = act(client, "cell", cell=target)
+    assert checkpoint(profile, directed["rev"])["low_frequency"]["ghost_defending_cell"] == target
     following = rose_menu(client, "direct")
-    following = act(client, "cell.select", cell=following["observation"]["hero"]["cell"])
-    assert checkpoint(profile, following["state_version"])["low_frequency"]["ghost_defending_cell"] == -1
+    following = act(client, "cell", cell=following["hero"]["cell"])
+    assert checkpoint(profile, following["rev"])["low_frequency"]["ghost_defending_cell"] == -1
     rose_menu(client, "outfit")
     weapon_returned = choose(client, "sword")
     assert values(client, profile, weapon_returned)["rose_weapon"] is None
@@ -306,8 +307,8 @@ def companion(client, profile):
     armor_returned = choose(client, "leather armor")
     assert values(client, profile, armor_returned)["rose_armor"] is None
     assert quantity(armor_returned, "leather armor") == 1
-    returned = act(client, "ui.back")
-    restored = checkpoint(profile, returned["state_version"])["low_frequency"]
+    returned = act(client, "back")
+    restored = checkpoint(profile, returned["rev"])["low_frequency"]
     assert restored["rose_weapon"] is None and restored["rose_armor"] is None
     assert quantity(returned, "sword") == quantity(initial, "sword") and quantity(returned, "leather armor") == 1
     return {"outfit_selector_cancel_checked": True, "weapon_and_armor_equipped": True,
@@ -322,26 +323,26 @@ def companion_variant(client, profile, resummon):
     if resummon:
         assert before["rose_first_summon"] and before["rose_charge"] == 99
         charged = act(client, "wait")
-        assert checkpoint(profile, charged["state_version"])["low_frequency"]["rose_charge"] == 100
+        assert checkpoint(profile, charged["rev"])["low_frequency"]["rose_charge"] == 100
         summoned = rose_menu(client, "summon")
-        assert checkpoint(profile, summoned["state_version"])["low_frequency"]["rose_charge"] == 0
-        assert any("ghost" in e.get("name", "").lower() for e in summoned["observation"]["visible_entities"])
+        assert checkpoint(profile, summoned["rev"])["low_frequency"]["rose_charge"] == 0
+        assert any("ghost" in e.get("name", "").lower() for e in summoned["entities"])
         return {"setup_previous_summon_with_nearly_full_recharge": True, "native_wait_completed_recharge": True,
                 "second_summon_branch_executed": True, "full_charge_consumed": True}
     rose_menu(client, "outfit")
     empty_slot(client)
     select_inventory_item(client, lambda label: label.lower().startswith("sword"))
-    act(client, "ui.back")
+    act(client, "back")
     rose_menu(client, "summon")
     targeting = rose_menu(client, "direct")
-    target = next(e for e in targeting["observation"]["visible_entities"] if e.get("context_action") == "attack")
-    directed = act(client, "cell.select", cell=target["cell"])
-    assert checkpoint(profile, directed["state_version"])["low_frequency"]["ghost_enemy_cell"] == target["cell"]
+    target = next(e for e in targeting["entities"] if e.get("context_action") == "attack")
+    directed = act(client, "cell", cell=target["cell"])
+    assert checkpoint(profile, directed["rev"])["low_frequency"]["ghost_enemy_cell"] == target["cell"]
     # A fixed, public sequence lets the original ally scheduler approach and attack.
     # The hidden HP assertion below never chooses whether or where to act.
     for _ in range(8):
         advanced = act(client, "wait")
-    after = checkpoint(profile, advanced["state_version"])["low_frequency"]
+    after = checkpoint(profile, advanced["rev"])["low_frequency"]
     assert after["fixture_rat_hp"] < before["fixture_rat_hp"]
     return {"visible_enemy_directed": True, "target_assignment_in_final_response": True,
             "fixed_public_waits": 8, "actual_companion_damage_verified": True}
@@ -350,37 +351,37 @@ def companion_variant(client, profile, resummon):
 def steal_warning(client, profile):
     initial = client.state()
     before = values(client, profile)
-    act(client, "cell.select", cell=public_stock(initial)["cell"])
+    act(client, "cell", cell=public_stock(initial)["cell"])
     warning = choose(client, "steal")
     assert any("changed my mind" in a.get("label", "").lower() for a in controls(warning))
     cancelled = choose(client, "changed my mind")
-    assert cancelled["observation"]["hero"]["gold"] == initial["observation"]["hero"]["gold"]
+    assert cancelled["hero"]["gold"] == initial["hero"]["gold"]
     assert quantity(cancelled, "healing") == quantity(initial, "healing")
-    assert checkpoint(profile, cancelled["state_version"])["low_frequency"]["armband_charge"] == before["armband_charge"]
+    assert checkpoint(profile, cancelled["rev"])["low_frequency"]["armband_charge"] == before["armband_charge"]
     return {"risky_steal_warning_shown": True, "native_confirmation_cancelled_without_cost": True}
 
 
 def alchemy_energy(client, profile):
     initial = client.state()
-    station = next(tile for tile in initial["observation"]["map"]["cells"] if "alchemy" in tile["name"].lower())
-    act(client, "cell.select", cell=station["cell"])
+    station = next(tile for tile in initial["map"]["cells"] if "alchemy" in tile["name"].lower())
+    act(client, "cell", cell=station["cell"])
     before = values(client, profile)["dungeon_energy"]
     choose(client, "energize items")
     select_inventory_item(client, lambda label: "healing" in label.lower())
-    cancelled = act(client, "ui.back")
+    cancelled = act(client, "back")
     assert values(client, profile, cancelled)["dungeon_energy"] == before
     select_inventory_item(client, lambda label: "healing" in label.lower())
     energized = choose(client, "turn 1 into")
-    after_energy = checkpoint(profile, energized["state_version"])["low_frequency"]["dungeon_energy"]
+    after_energy = checkpoint(profile, energized["rev"])["low_frequency"]["dungeon_energy"]
     assert after_energy > before
-    act(client, "ui.back")
+    act(client, "back")
     choose(client, "add")
     select_inventory_item(client, lambda label: "healing" in label.lower())
     brewed = choose(client, "craft")
-    after_brew = checkpoint(profile, brewed["state_version"])["low_frequency"]["dungeon_energy"]
+    after_brew = checkpoint(profile, brewed["rev"])["low_frequency"]["dungeon_energy"]
     assert after_brew == after_energy - 4
-    after = act(client, "ui.back")
-    assert after["scope_id"] == initial["scope_id"]
+    after = act(client, "back")
+    assert after["s"] == initial["s"]
     assert quantity(after, "shielding") == 1 and quantity(after, "healing") == 0
     return {"energize_cancel_checked": True, "one_item_converted_to_energy": after_energy - before,
             "exotic_potion_crafted": True, "energy_spent": 4, "same_scope": True}
@@ -389,13 +390,13 @@ def alchemy_energy(client, profile):
 def resurrection(client, profile):
     initial = client.state()
     before = values(client, profile)
-    assert initial["observation"]["hero"]["hp"] == 1 and quantity(initial, "ankh") == 1
+    assert initial["hero"]["hp"] == 1 and quantity(initial, "ankh") == 1
     dead = act(client, "wait")
     assert any("preserve these items" in a.get("label", "").lower() for a in controls(dead)), dead
-    blocked_back = act(client, "ui.back")
-    assert blocked_back["observation"]["ui"] == dead["observation"]["ui"]
+    blocked_back = act(client, "back")
+    assert blocked_back["ui"] == dead["ui"]
     choose(client, "worn shortsword")
-    cancelled = act(client, "ui.back")
+    cancelled = act(client, "back")
     assert values(client, profile, cancelled)["ankhs_used"] == before["ankhs_used"]
     choose(client, "worn shortsword")
     select_inventory_item(client, lambda label: "cloth armor" in label.lower())
@@ -405,27 +406,27 @@ def resurrection(client, profile):
     empty_slot(client)
     select_inventory_item(client, lambda label: "identify" in label.lower())
     revived = choose(client, "preserve these items")
-    assert revived["scope_id"] == initial["scope_id"]
-    assert revived["observation"]["hero"]["hp"] > 0
+    assert revived["s"] == initial["s"]
+    assert revived["hero"]["hp"] > 0
     assert quantity(revived, "ankh") == 0 and quantity(revived, "identify") == 1
-    assert checkpoint(profile, revived["state_version"])["low_frequency"]["ankhs_used"] == before["ankhs_used"] + 1
-    kept = next(item for item in revived["observation"]["inventory"] if item.get("available") is True and "identify" in item["name"].lower())
-    inspected = act(client, "inventory.open", locator=kept["locator"])
-    assert inspected["observation"]["ui"]["modal"]
-    act(client, "ui.back")
+    assert checkpoint(profile, revived["rev"])["low_frequency"]["ankhs_used"] == before["ankhs_used"] + 1
+    kept = next(item for item in revived["inv"] if item.get("available") is True and "identify" in item["name"].lower())
+    inspected = act(client, "item", loc=kept["loc"])
+    assert inspected["ui"]["modal"]
+    act(client, "back")
     for _ in range(5):
         current = client.state()
-        unavailable = next(item for item in current["observation"]["inventory"] if item.get("available") is False)
+        unavailable = next(item for item in current["inv"] if item.get("available") is False)
         failed_id = "lost-inventory-gray-" + uuid.uuid4().hex
-        refused = client.request("action.execute", {"action": "inventory.open", "locator": unavailable["locator"]}, request_id=failed_id)
-        if refused.get("error", {}).get("code") != "STALE_STATE":
+        refused = client.request_action({"op": "item", "loc": unavailable["loc"]}, request_id=failed_id)
+        if refused.get("err") != "STALE_STATE":
             break
-    assert refused.get("error", {}).get("code") == "ACTION_UNAVAILABLE", refused
-    duplicate = client.request("action.execute", {"action": "inventory.open", "locator": unavailable["locator"]}, request_id=failed_id)
-    assert duplicate.get("error", {}).get("code") == "DUPLICATE_REQUEST_ID", duplicate
+    assert refused.get("err") == "ACTION_UNAVAILABLE", refused
+    duplicate = client.request_action({"op": "item", "loc": unavailable["loc"]}, request_id=failed_id)
+    assert duplicate.get("err") == "DUPLICATE_REQUEST_ID", duplicate
     after_rejection = client.state()
-    for key in ("hero", "inventory", "map", "visible_entities"):
-        assert current["observation"][key] == after_rejection["observation"][key], {"gray_item_rejection_changed_world": key}
+    for key in ("hero", "inv", "map", "entities"):
+        assert current[key] == after_rejection[key], {"gray_item_rejection_changed_world": key}
     return {"death_from_original_poison_tick": True, "mandatory_window_back_does_not_skip": True,
             "item_selector_cancel_checked": True, "missing_item_warning_cancelled": True,
             "selected_items_preserved": True, "ankh_consumed": True, "same_scope_after_resurrection": True,
@@ -437,13 +438,13 @@ def resurrection(client, profile):
 def blessed_ankh(client, profile):
     initial = client.state()
     before = values(client, profile)
-    assert initial["observation"]["hero"]["hp"] == 1 and quantity(initial, "ankh") == 1
+    assert initial["hero"]["hp"] == 1 and quantity(initial, "ankh") == 1
     revived = act(client, "wait")
-    assert revived["scope_id"] == initial["scope_id"]
-    assert revived["observation"]["hero"]["hp"] > 0 and quantity(revived, "ankh") == 0
-    assert not revived["observation"]["ui"]["modal"]
+    assert revived["s"] == initial["s"]
+    assert revived["hero"]["hp"] > 0 and quantity(revived, "ankh") == 0
+    assert not revived["ui"]["modal"]
     assert not any("preserve these items" in a.get("label", "").lower() for a in controls(revived))
-    assert checkpoint(profile, revived["state_version"])["low_frequency"]["ankhs_used"] == before["ankhs_used"] + 1
+    assert checkpoint(profile, revived["rev"])["low_frequency"]["ankhs_used"] == before["ankhs_used"] + 1
     assert quantity(revived, "identify") == quantity(initial, "identify")
     return {"original_poison_death": True, "automatic_blessed_resurrection": True,
             "no_item_selection_window": True, "ankh_consumed_inventory_preserved": True, "same_scope": True}
@@ -452,65 +453,65 @@ def blessed_ankh(client, profile):
 def amulet_pickup(client, profile):
     initial = client.state()
     assert quantity(initial, "amulet") == 0
-    heap = next(e for e in initial["observation"]["visible_entities"] if "amulet" in e.get("item", {}).get("name", "").lower())
-    first_choice = act(client, "cell.select", cell=heap["cell"])
-    assert first_choice["observation"]["ui"]["scene"] == "AmuletScene"
-    texts = " ".join(str(n.get("text", "")) for n in first_choice["observation"]["ui"]["controls"])
+    heap = next(e for e in initial["entities"] if "amulet" in e.get("item", {}).get("name", "").lower())
+    first_choice = act(client, "cell", cell=heap["cell"])
+    assert first_choice["ui"]["scene"] == "AmuletScene"
+    texts = " ".join(str(n.get("text", "")) for n in first_choice["ui"]["nodes"])
     assert len(texts) > 100, "The first-pickup story must be displayed, not just the noText re-opened menu"
     stayed = choose(client, "not done yet")
-    assert stayed["scope_id"] == initial["scope_id"] and quantity(stayed, "amulet") == 1
+    assert stayed["s"] == initial["s"] and quantity(stayed, "amulet") == 1
     return {"ground_item_pickup_used": True, "native_delayed_pickup_callback_completed": True,
             "first_acquisition_story_shown": True, "stay_retains_amulet_and_scope": True}
 
 
 def current_scene(client):
-    response = client.request("state.get")
-    if response.get("error", {}).get("code") == "SCOPE_MISMATCH":
-        assert client.request("protocol.info")["ok"]
-        response = client.request("state.get")
-    assert response["ok"], response
-    return response["result"]
+    response = client.request("state")
+    if response.get("err") == "SCOPE_MISMATCH":
+        assert "err" not in client.request("info")
+        response = client.request("state")
+    assert ("err" not in response), response
+    return frame_data(response)
 
 
 def amulet(client, profile, end):
     initial = client.state()
-    item = next(i for i in initial["observation"]["inventory"] if "amulet of yendor" in i["name"].lower())
-    act(client, "inventory.open", locator=item["locator"])
+    item = next(i for i in initial["inv"] if "amulet of yendor" in i["name"].lower())
+    act(client, "item", loc=item["loc"])
     opened = choose(client, "end the game")
-    assert opened["observation"]["ui"]["scene"] == "AmuletScene", opened
+    assert opened["ui"]["scene"] == "AmuletScene", opened
     assert any("not done yet" in a.get("label", "").lower() for a in controls(opened))
     if not end:
         stayed = choose(client, "not done yet")
-        assert stayed["observation"]["scene"] == "game" and stayed["scope_id"] == initial["scope_id"]
+        assert stayed["scene"] == "game" and stayed["s"] == initial["s"]
         assert quantity(stayed, "amulet of yendor") == 1
         return {"amulet_scene_choice_read": True, "stay_returns_to_same_run": True}
     choose(client, "call it a day")
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
         ranked = current_scene(client)
-        if ranked["observation"]["ui"]["scene"] == "RankingsScene":
+        if ranked["ui"]["scene"] == "RankingsScene":
             break
         time.sleep(0.1)  # Wait only for the explicit post-victory presentation transition.
     else:
         raise AssertionError("Victory did not reach its normal ranking scene")
-    events = client.request("events.read", {"limit": 100}, scope=initial["scope_id"])
-    assert events["ok"], events
-    assert any(event["kind"] == "run.ended" and event["data"].get("result") == "won" for event in events["result"]), events
+    events = client.request("events", {"limit": 100}, scope=initial["s"])
+    assert ("err" not in events), events
+    assert any(event["kind"] == "run.ended" and event["data"].get("result") == "won" for event in events["data"]["items"]), events
     # This is an artificially prepared Amulet fixture, never a legitimate playthrough win.
-    texts = " ".join(str(node.get("text", "")) for node in ranked["observation"]["ui"]["controls"])
-    assert ranked["observation"]["ui"]["modal"], {"expected_victory_window": texts}
+    texts = " ".join(str(node.get("text", "")) for node in ranked["ui"]["nodes"])
+    assert ranked["ui"]["modal"], {"expected_victory_window": texts}
     assert "victory" in texts.lower() or "congratulations" in texts.lower(), texts
-    blocked_back = act(client, "ui.back")
-    assert blocked_back["observation"]["ui"] == ranked["observation"]["ui"]
+    blocked_back = act(client, "back")
+    assert blocked_back["ui"] == ranked["ui"]
     dismissed = choose(client, "close")
-    assert not dismissed["observation"]["ui"]["modal"]
+    assert not dismissed["ui"]["modal"]
     return {"amulet_scene_choice_read": True, "test_only_win_event_recorded": True,
             "rankings_and_victory_window_shown": True, "victory_close_button_used": True,
             "counts_as_legitimate_win": False}
 
 
 def run_one(root, classpath, runtime_id, case):
-    profile = root / "desktop-control/build/fixtures" / ("p6-" + case + "-" + uuid.uuid4().hex)
+    profile = root / "desktop-control/build/fixtures" / ("low-frequency-" + case + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
@@ -518,9 +519,9 @@ def run_one(root, classpath, runtime_id, case):
     client = FixtureClient(command, profile, verify_gui=True)
     report = dict(test_fixture=True, counts_as_win=False, case=case, profile=str(profile.relative_to(root)), runtime_id=runtime_id)
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"], hello
-        report.update(build_id=hello["result"]["build_id"], cli_version=hello["result"]["cli_version"])
+        hello = client.request("info")
+        assert ("err" not in hello), hello
+        report.update(build_id=hello["data"]["build_id"], cli_version=hello["data"]["cli_version"])
         reach_game(client, "WARRIOR")
         if case == "shop-stack":
             evidence = shop_stack(client)

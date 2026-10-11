@@ -109,7 +109,7 @@ class RadialVisualObservationTest {
             set(null, GameScene.class, "scene", scene); set(scene, GameScene.class, "visualCueCollector", collector);
             Game.observer = new RuntimeObserver() {
                 @Override public boolean observesVisualCues() { return true; }
-                @Override public void onVisualCues(String run, Object grid, int depth, List<VisualCue> value, boolean ready) {
+                @Override public void onVisualCues(String run, Object grid, int depth, List<VisualCue> value, boolean ready, Object occurrences) {
                     cues = new ArrayList<>(value);
                 }
             };

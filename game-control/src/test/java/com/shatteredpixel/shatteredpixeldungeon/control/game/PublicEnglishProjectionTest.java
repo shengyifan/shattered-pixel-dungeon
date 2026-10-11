@@ -7,8 +7,8 @@ import static com.shatteredpixel.shatteredpixeldungeon.control.protocol.Values.m
 import static org.junit.jupiter.api.Assertions.*;
 
 class PublicEnglishProjectionTest {
-    private static String resource(String text,String key,Object... args) {
-        return TextProvenance.INSTANCE.onTextResource(text,key,"zh",args);
+    private static String resource(String template,String key) {
+        return TextProvenance.INSTANCE.onTextResource(template,key,"zh",new Object[0],template);
     }
     @Test void sameChineseTextUsesItsActualResourceIdentity() {
         String close=resource("关闭","windows.wndsupportprompt.close");
@@ -28,11 +28,11 @@ class PublicEnglishProjectionTest {
         assertFalse(projected.toString().contains("防御"));
     }
     @Test void clippingRemovesKeysAndFrozenArgumentsBeforeSerialization() {
-        String full=resource("完整文案","windows.wndupgrade.blocking",123456789);
+        String full=ResourceTextFixture.source("items.weapon.melee.spear.ability_desc",123456789,123456789);
         Map<String,Object> frozen=PublicEnglishProjection.freeze(map("text",full,"clipped",true));
         Map<String,Object> projected=PublicEnglishProjection.copy(frozen);
         for(Object result:Arrays.asList(frozen,projected)) {
-            assertFalse(result.toString().contains("windows.wndupgrade.blocking"));
+            assertFalse(result.toString().contains("items.weapon.melee.spear.ability_desc"));
             assertFalse(result.toString().contains("123456789"));
         }
         assertEquals("partial",PublicEnglishProjection.presentation(projected).get("status"));

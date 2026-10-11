@@ -51,8 +51,8 @@ def fixture_identity_matches(profile, kind, canonical, wire):
 
 
 def fixture_context_matches(profile, checkpoint, state):
-    kind = "activity" if str(state["state_version"]).startswith("a") and not str(state["state_version"]).startswith("activity:") else "revision"
+    kind = "activity" if str(state["rev"]).startswith("a") and not str(state["rev"]).startswith("activity:") else "revision"
     if str(checkpoint["state_version"]).startswith("activity:"):
         kind = "activity"
-    return fixture_identity_matches(profile, kind, checkpoint["state_version"], state["state_version"]) and \
-        fixture_identity_matches(profile, "scope", checkpoint["scope_id"], state["scope_id"])
+    return fixture_identity_matches(profile, kind, checkpoint["state_version"], state["rev"]) and \
+        fixture_identity_matches(profile, "scope", checkpoint["scope_id"], state["s"])

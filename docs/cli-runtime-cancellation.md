@@ -1,4 +1,4 @@
-# CLI.9.0.5 continuous actions and cancellation
+# CLI.9.0.6 continuous actions and cancellation
 
 Protocol 9 exposes native extended rest and path travel as interruptible activity.
 A directional `move` remains one original directional input; a remote `cell` may
@@ -28,7 +28,9 @@ With `spdctl control --machine`, these are illustrative **controller intents**:
 The displayed handles are examples, not reusable values. The controller supplies
 a fresh request ID, protocol version and the scope of the displayed revision.
 `settle` is local receipt recovery; gameplay `wait` advances the game and cannot
-replace it. Inspect `pending_reason` before sending another operation:
+replace it. Every pending settle wrapper requires explicit `pending_reason` and
+`stage`; missing fields are decoding errors. Inspect the reason before sending
+another operation:
 
 - `action_pending`: a complete nonterminal receipt is known, with no outstanding
   internal response; the current advertised cancellation may be used.
@@ -66,7 +68,7 @@ normal ready boundary, the original request becomes `INTERRUPTED`, while the
 cancellation request completes separately. Request IDs, original response bytes,
 before/after snapshots and save receipts keep their own identities.
 
-CLI.9.0.5 also uses prepare/audit/commit for ordinary actions, without changing the
+CLI.9.0.6 also uses prepare/audit/commit for ordinary actions, without changing the
 separate cancellation lease or continuous-activity acknowledgement contract.
 Finite completion waits for reviewed public semantic presentation to become
 ready. A final `player_ready` observation therefore waits for visible aura follow,
@@ -106,4 +108,4 @@ python3 desktop-control/src/test/python/cancellation_smoke.py --mode travel-audi
 The failure mode injects a persistence failure only into its labeled test profile;
 never use a personal profile. Fixtures are marked `counts_as_win=false`. Current
 source organization and gate boundaries are in the [architecture](cli-architecture.md);
-executed results belong in the [current validation report](cli-9.0.5-revision-validation.md).
+executed results belong in the [current validation report](cli-9.0.6-cleanup-validation.md).

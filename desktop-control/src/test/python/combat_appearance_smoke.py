@@ -11,8 +11,8 @@ from protocol9 import pages
 
 def test_case(client, name):
     initial = client.last_state
-    observation = initial["observation"]
-    nodes = observation["ui"]["controls"]
+    observation = initial
+    nodes = observation["ui"]["nodes"]
     feedback = observation["ui"].get("feedback", [])
     if name in {"appearance-freecast", "appearance-paidcast"}:
         spells = [node for node in nodes if "spell_icon" in node]
@@ -25,7 +25,7 @@ def test_case(client, name):
     if name == "appearance-quicktarget":
         markers = [node for node in nodes if node.get("quickslot") == 1 and node.get("targeting_marker") is True]
         assert markers, nodes
-        cue = next(cue for cue in observation["visual_cues"]["cues"] if cue["kind"] == "quickslot_target")
+        cue = next(cue for cue in observation["cues"]["cues"] if cue["kind"] == "quickslot_target")
         assert cue["cell"] == observation["hero"]["cell"] + 2, cue
         return {"native_slot_marker": markers, "known_target_cell": cue["cell"]}
     if name == "appearance-attackportrait":
@@ -45,16 +45,16 @@ def test_case(client, name):
         banners = [entry for entry in feedback if entry.get("kind") == "banner"
                    and entry.get("banner_kind") == "boss_slain"]
         assert banners, feedback
-        events = [event for page in pages(client, "events.read") for event in page if event["kind"] == "game.banner"]
+        events = [event for page in pages(client, "events") for event in page if event["kind"] == "game.banner"]
         assert len(events) == 1 and events[0]["data"]["kind"] == "boss_slain", events
         time.sleep(0.15)
         later = client.state()
-        assert later["state_version"] == initial["state_version"], "Banner lifetime must not expire an action binding"
-        repeated = [event for page in pages(client, "events.read") for event in page if event["kind"] == "game.banner"]
+        assert later["rev"] == initial["rev"], "Banner lifetime must not expire an action binding"
+        repeated = [event for page in pages(client, "events") for event in page if event["kind"] == "game.banner"]
         assert repeated == events, repeated
         return {"native_banner_feedback": banners, "one_actual_display_event": events}
     if name == "appearance-bosswarning":
-        bosses = [entity for entity in observation["visible_entities"]
+        bosses = [entity for entity in observation["entities"]
                   if entity.get("shown", {}).get("boss_warning") is True]
         inline = [node for node in nodes if node.get("shown", {}).get("boss_warning") is True]
         assert len(bosses) + len(inline) == 1, {"entities": bosses, "nodes": inline}
@@ -66,7 +66,7 @@ def test_case(client, name):
         assert icons["primary_icon"]["symbol"] != icons["secondary_icon"]["symbol"], icons
         return {"native_champion_action_symbols": icons}
     if name == "appearance-projectile":
-        events = [event for page in pages(client, "events.read") for event in page if event["kind"] == "game.visual"]
+        events = [event for page in pages(client, "events") for event in page if event["kind"] == "game.visual"]
         projectiles = [cue for event in events for cue in event["data"]["cues"] if cue["kind"] == "missile_projectile"]
         assert projectiles, events
         assert all(cue.get("appearance", {}).get("symbol") and "source_cell" not in cue for cue in projectiles), projectiles
@@ -77,13 +77,13 @@ def test_case(client, name):
         assert {entry["tone"] for entry in shown} == {"negative", "positive"}, shown
         assert {entry["icon"]["symbol"] for entry in shown} == {"physical_damage", "healing"}, shown
         assert all(entry["cell"] == observation["hero"]["cell"] for entry in shown), shown
-        events = [event for page in pages(client, "events.read") for event in page if event["kind"] == "game.floating_text"]
+        events = [event for page in pages(client, "events") for event in page if event["kind"] == "game.floating_text"]
         entries = [entry for event in events for entry in event["data"]["entries"] if entry.get("text") == "4"]
         assert len(entries) == 2 and {entry["icon"]["symbol"] for entry in entries} == {"physical_damage", "healing"}, entries
         time.sleep(2.2)
         faded = client.state()
-        assert not any(entry.get("kind") == "floating" for entry in faded["observation"]["ui"].get("feedback", []))
-        retained = [event for page in pages(client, "events.read") for event in page if event["kind"] == "game.floating_text"]
+        assert not any(entry.get("kind") == "floating" for entry in faded["ui"].get("feedback", []))
+        retained = [event for page in pages(client, "events") for event in page if event["kind"] == "game.floating_text"]
         assert retained == events, "Fading must not erase evidence or create duplicate occurrences"
         return {"distinct_semantic_occurrences": entries, "history_survives_fade": True}
     if name == "appearance-item":

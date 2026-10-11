@@ -1,12 +1,12 @@
-# CLI.9.0.5 architecture and verification
+# CLI.9.0.6 architecture and verification
 
-The maintained contract is **CLI.9.0.5 / protocol 9 / audit schema 12**, with game
+The maintained contract is **CLI.9.0.6 / protocol 9 / audit schema 12**, with game
 **4.0.2** and trace format **1**. The [English help](cli-help.md) defines public
 commands and schemas. [Semantic observations](cli-combat-visuals.md),
 [client guidance](cli-playthrough-client.md) and [cancellation](cli-runtime-cancellation.md)
 explain the relevant boundaries. This document maps those contracts to source and
 verification entrypoints; test counts and package identity belong in the
-[current validation report](cli-9.0.5-revision-validation.md).
+[current validation report](cli-9.0.6-cleanup-validation.md).
 
 New desktop profiles persist `unlock_start_options=true` and skip introduction/tutorial.
 The GUI and CLI share startup initialization before consuming display settings;
@@ -141,6 +141,7 @@ Run focused checks for the change, then the applicable full Java and Python gate
 
 ```sh
 ./gradlew :control-protocol:test :game-control:test :desktop-control:test \
+  :desktop-control:writeRuntimeClasspath :desktop-control:writeTestRuntimeClasspath \
   --no-build-cache --rerun-tasks --offline --no-daemon --console=plain
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s desktop-control/src/test/python -p 'test_*.py'
@@ -165,28 +166,21 @@ playthrough are different kinds of evidence. Report exactly which ran on which
 build, along with failures and exclusions. Generated traces, JSON, profiles and
 runtime artifacts belong in ignored build directories, not `docs/`.
 
-## Offline token research
+## Current client and fixture inputs
 
-The retained token tools are explicit offline studies, not gameplay clients.
-They read caller-supplied public traces and do not launch or inspect a personal
-profile. Historical CLI7 decoding comes from the fixed Git revision and verified
-source hashes in [historical_v7_helpers.py](../desktop-control/src/test/python/historical_v7_helpers.py),
-loaded without replacing the current protocol-9 decoder. The required Git objects
-must be available; there is no silent fallback to current code.
+Current clients and acceptance fixtures consume protocol-9 wire fields and the
+production Python decoder directly. Pending controller-settle wrappers require
+their explicit reason and stage; malformed or incomplete wrappers retain their
+failure evidence instead of entering an older-wrapper fallback. Public gameplay
+helpers require one complete current wire response or controller wrapper. A
+historical relay envelope must be unpacked explicitly before its contained public
+reply can be inspected, with the original archive preserved separately.
 
-- [cli7_token_benchmark.py](../desktop-control/src/test/python/cli7_token_benchmark.py)
-  requires the historical v7 context, explicit corpus/fixture/classpath/output,
-  and `tiktoken==0.12.0`. Zero savings or growth is a valid measured result;
-  `--require-smaller` opts into a separate strict performance gate.
-- [cli9_token_study.py](../desktop-control/src/test/python/cli9_token_study.py)
-  requires explicit session, baseline and output paths and `tiktoken==0.14.0`.
-  Frame counts come from the supplied baseline, not a fixed historical corpus size.
-
-Both require a fresh, empty output directory and preserve source inputs. Consult
-`python3 <script> --help` for arguments. Do not mix their token totals without
-accounting for tokenizer/version, corpus, encoding and newline conventions.
-Reference-token measurements and synthetic projection equivalence are not model
-billing, native field equivalence, package gameplay or an autonomous clear.
+Retired CLI5/6/7 and depth-9 token studies, historical decoder loaders and the
+canonical-name test adapter have been removed from the maintained test tree.
+Their dated findings remain historical records. The interactive development
+driver has no autonomous exploration policy; its acceptance tests exercise
+explicit public intents and outcome handling.
 
 ## Historical records
 

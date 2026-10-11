@@ -1,6 +1,6 @@
 {
   "format": "combat_visual_reviews_v3",
-  "source_baseline": "CLI.9.0.5 / game 4.0.2 semantic presentation readiness and prepared-action public decision review, 2026-10-12. Baseline commit c393b58fa6510f40f6bef3b5708ab60feabb7787. Exact changed producer bodies preserve public facts and native gameplay; new pure readiness gates are source-fingerprinted. Static attribution never certifies runtime execution.",
+  "source_baseline": "CLI.9.0.6 / game 4.0.2 compatibility cleanup, 2026-10-12. Compared with HEAD 555875650 using independently attributed source snapshots: 20 obsolete observer/status/typed-queue sites are explicitly retired, 10 retained boundary bodies are reviewed, and no source sites or semantic permissions are added. Current callback tests exercise full occurrence identity handoff. Static attribution never certifies runtime execution.",
   "runtime_verified_by_inventory": false,
   "scope_policy": "Decision-relevant semantic world cues use current map/FOV independent of camera, viewport or UI occlusion. Native UI symbols, text, bars and feedback use their own current visibility/ownership gates. Dynamic source types, same-frame replacements and decorative exclusions are explicit per group; this static inventory never certifies producer runtime execution. Native red_target episodes retain only previously source/FOV-disclosed cells until native termination, intersected with current FOV; marker fade is cosmetic. Explicit temporary-owner handoffs preserve already disclosed episodes; actual holder loss/permanent replacement ends them. Fresh public unowned/restored warning sources carry appearance.lifecycle:unknown and conservatively persist until true scope end; their owner or geometry is never reconstructed from saved/private state.",
   "groups": [
@@ -48335,8 +48335,8 @@
     },
     {
       "classification": "covered_current",
-      "reason": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
-      "visible_evidence": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "reason": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "visible_evidence": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
       "visibility_gate": "Same currently attached StatusPane or RadialMenu in this observation; no later click or stale arc value.",
       "lifecycle": "Only the replacement in the same current observation is evidence. It never borrows an older capture or creates an additional occurrence from this source.",
       "route": {"semantic_contract": "ui-circle-arc-replacement"},
@@ -50192,8 +50192,8 @@
     },
     {
       "classification": "covered_current",
-      "reason": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
-      "visible_evidence": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "reason": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "visible_evidence": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
       "visibility_gate": "Same currently attached StatusPane or RadialMenu in this observation; no later click or stale arc value.",
       "lifecycle": "Only the replacement in the same current observation is evidence. It never borrows an older capture or creates an additional occurrence from this source.",
       "route": {"semantic_contract": "ui-circle-arc-replacement"},
@@ -53011,8 +53011,8 @@
     },
     {
       "classification": "covered_current",
-      "reason": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
-      "visible_evidence": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "reason": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "visible_evidence": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
       "visibility_gate": "Same currently attached StatusPane or RadialMenu in this observation; no later click or stale arc value.",
       "lifecycle": "Only the replacement in the same current observation is evidence. It never borrows an older capture or creates an additional occurrence from this source.",
       "route": {"semantic_contract": "ui-circle-arc-replacement"},
@@ -55830,8 +55830,8 @@
     },
     {
       "classification": "covered_current",
-      "reason": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
-      "visible_evidence": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "reason": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "visible_evidence": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
       "visibility_gate": "Same currently attached StatusPane or RadialMenu in this observation; no later click or stale arc value.",
       "lifecycle": "Only the replacement in the same current observation is evidence. It never borrows an older capture or creates an additional occurrence from this source.",
       "route": {"semantic_contract": "ui-circle-arc-replacement"},
@@ -67761,8 +67761,8 @@
     },
     {
       "classification": "covered_current",
-      "reason": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
-      "visible_evidence": "ui RenderedStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "reason": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
+      "visible_evidence": "ui GameplayStatus arcs and radial-menu choices. No visual branch is promoted to hidden actor or item state.",
       "visibility_gate": "Same currently attached StatusPane or RadialMenu in this observation; no later click or stale arc value.",
       "lifecycle": "Only the replacement in the same current observation is evidence. It never borrows an older capture or creates an additional occurrence from this source.",
       "route": {"semantic_contract": "ui-circle-arc-replacement"},
@@ -87961,44 +87961,6 @@
     },
     {
       "classification": "not_player_visible",
-      "reason": "This explicit native-widget adapter separates exact current display from input-relevant semantics. It does not create a widget, infer hidden data or prune public appearance.",
-      "route": {"semantic_contract": "reviewed-nonvisual-site"},
-      "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
-      ],
-      "visible_evidence": "The owning native widget supplies already visible fields; decorative animation can be excluded only from the intent signature, never the public observation.",
-      "id": "ui-review-RenderedStatus-intentStatus-b64f3fafd640",
-      "trigger": "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus.intentStatus at the original native construction/update/draw or control callback; no observation-created UI.",
-      "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
-      "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
-      "sites": [
-        {
-          "id": "8cec30a75f15be2113ef6c4c30e772c1aa02ccabc13979b0c5831d215e62a456:1",
-          "body_digest": "95c002caa879e4eb9df237acc73cd68dd90bc8c1bbecc49cfa1a6f6568e13876"
-        }
-      ]
-    },
-    {
-      "classification": "not_player_visible",
-      "reason": "This explicit native-widget adapter separates exact current display from input-relevant semantics. It does not create a widget, infer hidden data or prune public appearance.",
-      "route": {"semantic_contract": "reviewed-nonvisual-site"},
-      "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
-      ],
-      "visible_evidence": "The owning native widget supplies already visible fields; decorative animation can be excluded only from the intent signature, never the public observation.",
-      "id": "ui-review-RenderedStatus-renderedStatus-689235a34d0a",
-      "trigger": "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus.renderedStatus at the original native construction/update/draw or control callback; no observation-created UI.",
-      "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
-      "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
-      "sites": [
-        {
-          "id": "1a4f5adc6f97d87210d6e090db06b0329903f7e5cb95caffc29f7a754990c56a:1",
-          "body_digest": "e743d4087063748b3a760b86d18f99dbf2db1cef5e1565ed534f62bae6b1e2db"
-        }
-      ]
-    },
-    {
-      "classification": "not_player_visible",
       "reason": "A class/type declaration is a source-inventory attribution point, not an independently instantiated or drawn combat fact.",
       "route": {"semantic_contract": "reviewed-nonvisual-site"},
       "tests": [
@@ -89028,47 +88990,20 @@
     },
     {
       "classification": "not_player_visible",
-      "reason": "The observer interface defaults are passive/no-op boundaries, not independent rendered evidence or game actions. A producer must supply an actual displayed snapshot; save/action completion remains a separate contract.",
+      "reason": "The observer interface defaults are passive/no-op boundaries, not independent rendered evidence or game actions. A producer must supply an actual displayed snapshot; save/action completion remains a separate contract. CLI.9.0.6 removes obsolete text and visual observer overloads. Native Messages supplies the GUI template, and VisualCueCollector supplies readiness and private occurrence identity through the complete current callbacks.",
       "route": {"semantic_contract": "reviewed-nonvisual-site"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
       ],
-      "visible_evidence": "No pixels are inferred from registering or calling a lifecycle callback without its reviewed producer.",
+      "visible_evidence": "24 observation_boundary com.watabou.noosa.RuntimeObserver.onTextResource: String onTextResourceString rendered,String resolvedKey,String language,Object[] arguments,String guiTemplate",
       "id": "ui-review-RuntimeObserver-onTextResource-2bb002692672",
-      "trigger": "com.watabou.noosa.RuntimeObserver.onTextResource at the original native construction/update/draw or control callback; no observation-created UI.",
+      "trigger": "Current source methods in SPD-classes/src/main/java/com/watabou/noosa/RuntimeObserver.java: RuntimeObserver.onTextResource.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
       "sites": [
-        {
-          "id": "e3277b4ddd7dca3bc36eaf2d27d02606ecf95fffebfe11881b0ab150d7510c23:1",
-          "body_digest": "c1010336893802880d629376b4fe0519a1cc8dc2f8fdb977c941c9e698527fc6"
-        },
         {
           "id": "d459b5cddb5c8776797c61cad5d9aa25a7881a071fba60540eec71aa583d8e7f:1",
-          "body_digest": "b9938b5d2d6d99b8a2215a8e08a151669b7f7c0f242ca0688baeaf0aa3e503fb"
-        }
-      ]
-    },
-    {
-      "classification": "not_player_visible",
-      "reason": "The observer interface defaults are passive/no-op boundaries, not independent rendered evidence or game actions. A producer must supply an actual displayed snapshot; save/action completion remains a separate contract.",
-      "route": {"semantic_contract": "reviewed-nonvisual-site"},
-      "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
-      ],
-      "visible_evidence": "No pixels are inferred from registering or calling a lifecycle callback without its reviewed producer.",
-      "id": "ui-review-RuntimeObserver-onVisualCues-798457c57367",
-      "trigger": "com.watabou.noosa.RuntimeObserver.onVisualCues at the original native construction/update/draw or control callback; no observation-created UI.",
-      "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
-      "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
-      "sites": [
-        {
-          "id": "f6c9933128b8ed0e05f70ab41432271103ea1895bf5b7333be67eee8ba2359c2:1",
-          "body_digest": "448897f8590a3c12341f088b232fa4c928b1320e135e7800c101f0158dbfeac9"
-        },
-        {
-          "id": "1a94c1419c5f7c5be79cec937ff079e99d24d8668dcc8760944db28cd2b101b3:1",
-          "body_digest": "365e09f68147ba24ac49415c13949b322348b910d13a91426f79adfaedd7f88d"
+          "body_digest": "7736dc402eb04e4e2595a761e5f6c178eef6f97cd678b07db410b2da63de8817"
         }
       ]
     },
@@ -115821,9 +115756,9 @@
     {
       "id": "cli8-source:GameplayStatus:native-ui-meaning:01",
       "classification": "covered_current",
-      "reason": " Canonical unmappedIndicator produces typed boolean/partial diagnostics; displayedChannel exposes only selected 8-bit brightness.",
-      "trigger": "Current source methods in core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayStatus.java: GameplayStatus.gameplayStatus, GameplayStatus.gameplayIntentStatus, GameplayStatus.gameplaySubject, GameplayStatus.gameplayTextComponents, GameplayStatus.renderedStatus, GameplayStatus.intentStatus.",
-      "visible_evidence": "7 callback com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayStatus: Map<String, Object> gameplayStatus | 7 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayStatus: Map<String, Object> gameplayStatus | 10 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayIntentStatus: Map<String, Object> gameplayIntentStatus | 10 callback com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayIntentStatus: Map<String, Object> gameplayIntentStatus | 13 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplaySubject: Object gameplaySubject | 13 callback com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplaySubject: Object gameplaySubject | 16 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayTextComponents: Map<String, com.watabou.noosa.BitmapText> gameplayTextComponents | 20 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.renderedStatus: Map<String, Object> renderedStatus | 21 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.intentStatus: Map<String, Object> intentStatus",
+      "reason": " Canonical unmappedIndicator produces typed boolean/partial diagnostics; displayedChannel exposes only selected 8-bit brightness. CLI.9.0.6 removes forwarding aliases for the retired RenderedStatus interface. GameplayStatus retains its direct semantic display and input methods with their existing ownership and visibility gates.",
+      "trigger": "Current source methods in core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayStatus.java: GameplayStatus.gameplayStatus, GameplayStatus.gameplayIntentStatus, GameplayStatus.gameplaySubject, GameplayStatus.gameplayTextComponents, GameplayStatus.displayedChannel, GameplayStatus.unmappedIndicator.",
+      "visible_evidence": "7 callback com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayStatus: Map<String, Object> gameplayStatus | 7 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayStatus: Map<String, Object> gameplayStatus | 10 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayIntentStatus: Map<String, Object> gameplayIntentStatus | 10 callback com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayIntentStatus: Map<String, Object> gameplayIntentStatus | 13 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplaySubject: Object gameplaySubject | 13 callback com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplaySubject: Object gameplaySubject | 16 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.gameplayTextComponents: Map<String, com.watabou.noosa.BitmapText> gameplayTextComponents | 33 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.displayedChannel: float displayedChannelfloat value | 21 observation_boundary com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus.unmappedIndicator: Map<String, Object> unmappedIndicatorString field,String sourceCode",
       "visibility_gate": "Current native scene/control, attached existing children and eligible same-frame text/icon/bar capture. Every health sample has integer total, filled, with_shield and incoming_dot with basis:displayed; 0 < total, 0 <= filled <= with_shield <= total + 1, and 0 <= incoming_dot <= with_shield. Zero DOT means an observed zero-width darkened segment; a missing bar never supplies a zero sample. Reads inspect laid-out native widths and never call Char.incomingDOT, shielding, update or layout. DOT samples, turn progress and boss warning use independent display eligibility. A subject is resolved only against the same captured hero/inventory/entity/buff rows; a public object uses kind:entity/index, while standalone actions inline subject_data. No hidden object actor association is inferred from a generic object label.",
       "lifecycle": "The current semantic contract observes the native source under its own visibility gate. Each new observation is independent; an older capture or a decorative redraw cannot create a new public fact or action binding.",
       "route": {"semantic_contract": "native-ui-meaning"},
@@ -115863,14 +115798,6 @@
         {
           "id": "fd0dd8a5c4b8b673346f411806cdd23485db0eda887dc34ace1e9efad5de6f8e:1",
           "body_digest": "7f2d09f1ed4cf66d84d348c5bd8cd5899867e342684051de90aa2f66101e48a6"
-        },
-        {
-          "id": "f49bcc74d3437e52433408132c1ef782a6c9d5fe9b5a68f487258fd78c8cdccd:1",
-          "body_digest": "57ebf996fa3918759163a97199855795904ec44eb4db11ecd254753a83fb43fe"
-        },
-        {
-          "id": "370e29162930354d47d9ffb9ee2182cfe4ee602eeb692c50ece6779e7cb3108b:1",
-          "body_digest": "1610df27a70202f2dea88412acbc0fa27290928f440798af967e3b52b66ca54a"
         },
         {
           "id": "666227fa13093532af49c92cd7885a7f3224aa5c741ac6a652f815f6c37bdb9b:1",
@@ -116539,7 +116466,7 @@
     {
       "id": "cli8-source:GameController:controller-display-handoff:02",
       "classification": "covered_current",
-      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: VisualSnapshot.<init>, VisualSnapshot.cueData, VisualSnapshot.data, VisualSnapshot.stateData, DisplayEvent.<init>, DisplayEvent.from, DisplayEvent.snapshotData, DisplayEvent.snapshotOriginal, DisplayEvent.data, DisplayEvent.originalData.",
+      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: VisualSnapshot.<init>, VisualSnapshot.cueData, VisualSnapshot.data, VisualSnapshot.stateData, DisplayEvent.<init>, DisplayEvent.from, DisplayEvent.snapshotData, DisplayEvent.snapshotOriginal, DisplayEvent.data, DisplayEvent.originalData. CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: VisualSnapshot.<init>, VisualSnapshot.cueData, VisualSnapshot.data, VisualSnapshot.stateData, DisplayEvent.<init>, DisplayEvent.from, DisplayEvent.snapshotData, DisplayEvent.snapshotOriginal, DisplayEvent.data, DisplayEvent.originalData.",
       "visible_evidence": "126 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.VisualSnapshot.<init>: null <init>String runId,Object levelIdentity,int depth,String mapContext,long generation,String occurredAt,List<VisualCue> cues | 129 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.VisualSnapshot.<init>: null <init>String runId,Object levelIdentity,int depth,String mapContext,long generation,String occurredAt,List<VisualCue> cues,boolean presentationRe | 135 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.VisualSnapshot.cueData: List<Map<String, Object>> cueData | 143 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.VisualSnapshot.data: Map<String, Object> data | 150 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.VisualSnapshot.stateData: Map<String, Object> stateData | 157 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.<init>: null <init>String scopeId,String kind,Object snapshot | 162 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.<init>: null <init>String scopeId,String kind,Map<String, Object> data,Map<String, Object> original | 169 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.from: DisplayEvent fromObject snapshot | 176 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.snapshotData: Map<String, Object> snapshotDataObject snapshot | 183 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.snapshotOriginal: Map<String, Object> snapshotOriginalObject snapshot | 188 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.data: Map<String, Object> data | 189 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.originalData: Map<String, Object> originalData",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
@@ -116584,11 +116511,11 @@
         },
         {
           "id": "efb4303403b2c7248d058600f117241983938f7f7718b040ef9e8c5a778cd1e5:1",
-          "body_digest": "56fe05528becdf71b0448b07efedd43bda13abcbabe97fd8f69f2cac5afaaad5"
+          "body_digest": "ebd13f995f45e78e5ac9ee1090e257b5a0cdc3e39035e9f7ee6c48b9074df120"
         },
         {
           "id": "08ffb9602ddf45493c8e61d18e1c1326fab50fcd5b0d4b3c9a92033228efcdaf:1",
-          "body_digest": "23ba35db28ebf86d4462654fc055bb4ecf498be70cafbdfeb1964f50a04661aa"
+          "body_digest": "cf0458b1cba55ac520d37f6557e35830e7d4e6ae71016982b423a696a09fce51"
         },
         {
           "id": "9cd10c8c7371169658a42f75a4afe579f0569e11816e67556ef7baaa49d10cad:1",
@@ -116616,9 +116543,9 @@
     {
       "id": "cli8-source:GameController:controller-display-handoff:03",
       "classification": "covered_current",
-      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: DisplayEvent.freezeLiteral, GameController.observe, GameController.latest, GameController.pollGameLog, GameController.pollFloatingText, GameController.pollBanner, GameController.pollVisual, GameController.takeVisuals, GameController.takeFloatingTexts, GameController.takeBanners, GameController.takeGameLogs, GameController.pollDisplayType.",
-      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: DisplayEvent.freezeLiteral, GameController.observe, GameController.latest, GameController.pollGameLog, GameController.pollFloatingText, GameController.pollBanner, GameController.pollVisual, GameController.takeVisuals, GameController.takeFloatingTexts, GameController.takeBanners, GameController.takeGameLogs, GameController.pollDisplayType.",
-      "visible_evidence": "190 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.freezeLiteral: T freezeLiteralT value | 269 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.observe: CompletableFuture<State> observe | 293 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.latest: State latest | 298 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollGameLog: GameLogSnapshot pollGameLog | 299 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollFloatingText: FloatingSnapshot pollFloatingText | 300 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollBanner: BannerSnapshot pollBanner | 301 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollVisual: VisualSnapshot pollVisual | 302 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.takeVisuals: List<VisualSnapshot> takeVisuals | 303 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.takeFloatingTexts: List<FloatingSnapshot> takeFloatingTexts | 304 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.takeBanners: List<BannerSnapshot> takeBanners | 305 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.takeGameLogs: List<GameLogSnapshot> takeGameLogs | 306 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollDisplayType: T pollDisplayTypeClass<T> type",
+      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO.",
+      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: DisplayEvent.freezeLiteral, GameController.observe, GameController.latest.",
+      "visible_evidence": "191 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.DisplayEvent.freezeLiteral: T freezeLiteralT value | 298 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.observe: CompletableFuture<State> observe | 361 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.latest: State latest",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
       "route": {"semantic_contract": "controller-display-handoff"},
@@ -116641,42 +116568,6 @@
         {
           "id": "7bc54ec3c5c1863ad1c36f214ed8126f15f87634bf2cddb293c862c86f00a035:1",
           "body_digest": "5ba3fd169597518a9c729d662469962048a680aa21d781857b24e5de4747843d"
-        },
-        {
-          "id": "026279f18f05becdf801b8e5885ad5160610ad32e24be270208ee8d1a2b8ea24:1",
-          "body_digest": "94b0fbffb23104b983201d88f5dea1ad52ec961bd70ed97eb5b727ac0f688374"
-        },
-        {
-          "id": "25cd457880a722a1ec6a577db54072b0f1c67b877bbfa21e6a1f9ca909dbfefb:1",
-          "body_digest": "9cbbf416f7986ae41ae77c08c981ad8dce6ad6ef889762f0543cf18ffc7e9dbf"
-        },
-        {
-          "id": "26dd0f2e70c7ff7897fe37684159a351278ed3834f0d691a4751f3c0ee71ad65:1",
-          "body_digest": "ef67353bbc8e0060111d50a9ecb2b0baf73ccf120872a684b0e920efac686854"
-        },
-        {
-          "id": "ec1db977e88bfbc19d53acbcacde50048c546942f629fad0caba3bb7ac2345cd:1",
-          "body_digest": "8d3132210a8fc35c740aa47e8a5d359a6deb9f0670cb88455580fc530880e041"
-        },
-        {
-          "id": "c3ed39a5e53b27e14538783bd0fa1ab2efa884f086e6a5a4d85ab4367f082535:1",
-          "body_digest": "2d4bd24b82fd76bcfacb9011e972fe65250546a1ba75e5e359249f4da4e1c8a2"
-        },
-        {
-          "id": "a40dcabcaa39cd5518b396d18a61e9e70c51814adfb319b46b810ef41f794b19:1",
-          "body_digest": "4454d68ccafa6b6da3bc8d5b88d553626fa226beaf9091e1146dcf6abdc81014"
-        },
-        {
-          "id": "ae03d9ddef563639726024a6fc11364f67e6a74c928c737c0ca01688859036cd:1",
-          "body_digest": "f15e89eaaf713656e45d35d4cc61a1c0402a5583a2db60fac4295bbf8a6ce69e"
-        },
-        {
-          "id": "1396319d8e46ffd44af775fbf1ff375da03d5ab8537f044b5354254ed4d4e36a:1",
-          "body_digest": "6d6b57913d68a3bccb5d733c6e0db40378a5308ad8c2e5aa256b5e3019aa12c6"
-        },
-        {
-          "id": "feefd4f12989fb9f2cac08fabe48a8f37260b708b301cb15c5cfc4b59227f5c6:1",
-          "body_digest": "3b35f876e00f0c5db9cd1d37b9fbd8a8714ff717546ab0d2a1b6dfb0c12bac45"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -116684,9 +116575,9 @@
     {
       "id": "cli8-source:GameController:controller-display-handoff:04",
       "classification": "covered_current",
-      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: GameController.takeDisplayType, GameController.enqueueDisplayEvent, GameController.setDisplaySignal, GameController.hasDisplayEvents, GameController.peekDisplayEvents, GameController.acknowledgeDisplayEvents, GameController.freezeDisplayEvents, GameController.onGameLog, GameController.observesVisualCues, GameController.onBanner, GameController.onFloatingText, GameController.onVisualCues.",
-      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.takeDisplayType, GameController.enqueueDisplayEvent, GameController.setDisplaySignal, GameController.hasDisplayEvents, GameController.peekDisplayEvents, GameController.acknowledgeDisplayEvents, GameController.freezeDisplayEvents, GameController.onGameLog, GameController.observesVisualCues, GameController.onBanner, GameController.onFloatingText, GameController.onVisualCues.",
-      "visible_evidence": "312 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.takeDisplayType: List<T> takeDisplayTypeClass<T> type | 316 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.enqueueDisplayEvent: void enqueueDisplayEventDisplayEvent event | 320 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.setDisplaySignal: void setDisplaySignalRunnable signal | 324 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.hasDisplayEvents: boolean hasDisplayEvents | 326 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.peekDisplayEvents: List<DisplayEvent> peekDisplayEventsint limit | 332 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.acknowledgeDisplayEvents: void acknowledgeDisplayEventsList<DisplayEvent> batch | 338 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.freezeDisplayEvents: void freezeDisplayEvents | 354 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onGameLog: void onGameLogString runId,List<RuntimeObserver.LogEntry> entries | 366 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.observesVisualCues: boolean observesVisualCues | 367 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onBanner: void onBannerString runId,String kind,Map<String, Object> appearance | 371 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onFloatingText: void onFloatingTextString runId,Object levelIdentity,int depth,String text,boolean clipped,Map<String, Object> appearance | 377 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onVisualCues: void onVisualCuesString runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady",
+      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO.",
+      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.enqueueDisplayEvent, GameController.setDisplaySignal, GameController.hasDisplayEvents, GameController.peekDisplayEvents, GameController.acknowledgeDisplayEvents, GameController.freezeDisplayEvents, GameController.onGameLog, GameController.observesVisualCues, GameController.onBanner, GameController.onFloatingText.",
+      "visible_evidence": "367 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.enqueueDisplayEvent: void enqueueDisplayEventDisplayEvent event | 371 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.setDisplaySignal: void setDisplaySignalRunnable signal | 375 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.hasDisplayEvents: boolean hasDisplayEvents | 377 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.peekDisplayEvents: List<DisplayEvent> peekDisplayEventsint limit | 383 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.acknowledgeDisplayEvents: void acknowledgeDisplayEventsList<DisplayEvent> batch | 389 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.freezeDisplayEvents: void freezeDisplayEvents | 412 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onGameLog: void onGameLogString runId,List<RuntimeObserver.LogEntry> entries | 433 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.observesVisualCues: boolean observesVisualCues | 434 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onBanner: void onBannerString runId,String kind,Map<String, Object> appearance | 438 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onFloatingText: void onFloatingTextString runId,Object levelIdentity,int depth,String text,boolean clipped,Map<String, Object> appearance",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
       "route": {"semantic_contract": "controller-display-handoff"},
@@ -116698,10 +116589,6 @@
         "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw"
       ],
       "sites": [
-        {
-          "id": "65a8843dd02d842a4c1b057bfb5634cd9362b1e1c595b47c79847e6acb24e28d:1",
-          "body_digest": "ed78449ba623dbe0d2313a6b9034e579e6a96b761209e467a37bcb31c77e450a"
-        },
         {
           "id": "0c4059ae92dee8743b89340bd1f2d336c7b988c4734dc312aba593c7986855e3:1",
           "body_digest": "db972bdb02425349b5d883d5ccb44ffff206831d5d345d9848f9542c68aed3e2"
@@ -116741,10 +116628,6 @@
         {
           "id": "94c54b86d19bb7c6de732c5acb063677535dc7b9ff949a61aecc6da76ba90403:1",
           "body_digest": "2ad353548d8b5d145b8f1e740d93861df7884ac0d5866d775c4c1ad16ae77a66"
-        },
-        {
-          "id": "9777887b0782355515c060d9721efed15cab46dd563343528c6be39ebe9f4d04:1",
-          "body_digest": "35d1c3c5b244f4bcc6ae69c80df8c9ed392ffcc67d8d1ed9e52b451e84b98b17"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -116752,9 +116635,9 @@
     {
       "id": "cli8-source:GameController:controller-display-handoff:05",
       "classification": "covered_current",
-      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: GameController.recordVisualCues, GameController.visualEventMeaning, GameController.onTextResource, GameController.onTextOperation, GameController.onTextBound, GameController.onTextReleased, GameController.stable, GameController.beforeActorResume, GameController.beforeSceneUpdate, GameController.afterDraw. CLI8 bounded source review: private occurrence identity changes event onset without a wire field. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
-      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.recordVisualCues, GameController.visualEventMeaning, GameController.onTextResource, GameController.onTextOperation, GameController.onTextBound, GameController.onTextReleased, GameController.stable, GameController.beforeActorResume, GameController.beforeSceneUpdate, GameController.afterDraw.",
-      "visible_evidence": "380 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.recordVisualCues: void recordVisualCuesString runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady,long now | 404 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.visualEventMeaning: List<Map<String, Object>> visualEventMeaningList<VisualCue> cues | 409 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.visualEventMeaning: List<Map<String, Object>> visualEventMeaningList<VisualCue> cues,boolean includeQuantities | 422 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextResource: String onTextResourceString text,String key,String language,Object[] arguments | 425 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextResource: String onTextResourceString text,String key,String language,Object[] arguments,String guiTemplate | 428 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextOperation: String onTextOperationString operation,String text,Object... operands | 431 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextBound: void onTextBoundObject owner,String text | 432 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextReleased: void onTextReleasedObject owner | 455 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.stable: boolean stable | 483 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.beforeActorResume: boolean beforeActorResume | 493 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.beforeSceneUpdate: void beforeSceneUpdate | 507 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.afterDraw: void afterDraw",
+      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete.. CLI8 bounded source review: private occurrence identity changes event onset without a wire field. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity. CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO.",
+      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.visualEventMeaning, GameController.onTextResource, GameController.onTextOperation, GameController.onTextBound, GameController.onTextReleased, GameController.stable, GameController.beforeActorResume, GameController.beforeSceneUpdate, GameController.afterDraw, GameController.recordVisualCues, GameController.onVisualCues.",
+      "visible_evidence": "477 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.visualEventMeaning: List<Map<String, Object>> visualEventMeaningList<VisualCue> cues | 486 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.visualEventMeaning: List<Map<String, Object>> visualEventMeaningList<VisualCue> cues,boolean includeQuantities | 499 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextResource: String onTextResourceString text,String key,String language,Object[] arguments,String guiTemplate | 502 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextOperation: String onTextOperationString operation,String text,Object... operands | 505 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextBound: void onTextBoundObject owner,String text | 506 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextReleased: void onTextReleasedObject owner | 536 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.stable: boolean stable | 564 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.beforeActorResume: boolean beforeActorResume | 575 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.beforeSceneUpdate: void beforeSceneUpdate | 590 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.afterDraw: void afterDraw | 448 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.recordVisualCues: void recordVisualCuesString runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady,long now,Object occurrences | 444 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onVisualCues: void onVisualCuesString runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady,Object occurrences",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
       "route": {"semantic_contract": "controller-display-handoff"},
@@ -116772,20 +116655,12 @@
       ],
       "sites": [
         {
-          "id": "0e8dee1f427392203600eccb11ddcbf4de3113d52f388bcfb284ff92859a83fb:1",
-          "body_digest": "9f1eae0fbc64174383e5718df7873a6f3dd76aa9168d6a27a2d95d7a5aca144a"
-        },
-        {
           "id": "566107a895b0ae5fa09f68ba648e7c48ee6e8ec6a868cd401e4999010076a8be:1",
           "body_digest": "926f949ae31cd2dab79f40e9621db298a712596f10f3af05ba3ae673a800f15f"
         },
         {
           "id": "0a90990d411dc3f9d1bf9986f06f1e271469f538e1031e66bf01bfe2bb45383a:1",
           "body_digest": "a0794183b8aa3e93c70a35a772e49d433989300a5f5b463779b99ac712869ac1"
-        },
-        {
-          "id": "828c7429d302b027c44ae0199acadbeba5d53bf1b4d2a8fc74451c60bf8ed452:1",
-          "body_digest": "8a1c0206ae830ccd4098d969788770d54d5fe6e06aa2d5536757017bee160554"
         },
         {
           "id": "a85851fb166754be6b1ce57da53ec3c98942ac389ec8bd6518f198135108c8db:1",
@@ -117474,7 +117349,7 @@
     {
       "id": "cli8-source:UiBridge:native-ui-meaning:01",
       "classification": "covered_current",
-      "reason": "The native widget or window displays a current label, value, icon meaning, option, or action constraint; its group names the exact source branch.",
+      "reason": "The native widget or window displays a current label, value, icon meaning, option, or action constraint; its group names the exact source branch. CLI.9.0.6 reads GameplayStatus directly after removing the RenderedStatus forwarding layer. Every existing widget already implements GameplayStatus; capture eligibility, visible semantic facts and input-relevant status retain the same gates.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java: DrawnEvidence.<init>, UiBridge.<init>, UiBridge.captureDrawnEvidence, UiBridge.captureWorldHealth, UiBridge.worldHealth, UiBridge.captureDrawn, UiBridge.captureCandidate, UiBridge.readDisplay, UiBridge.semanticTextStyle, UiBridge.textTone, UiBridge.semanticTextComponent.",
       "visible_evidence": "Retained exact baseline source identities and enclosing bodies; changed or retired sites are separately classified. null <init>List<Long> bindings,Map<String, Object> display,Map<String, Object> text,Map<String, Object> textIntent,Map<String, Object> statusIntent,String rawText,boolean textVisible,boolean clipped,Object subject | null <init> | null <init>Supplier<Scene> sceneSource | void captureDrawnEvidence | void captureWorldHealthGizmo owner | boolean worldHealthGizmo owner | void captureDrawnGizmo owner | boolean captureCandidateGizmo owner | Map<String, Object> semanticTextStyleGizmo owner,RenderedTextBlock.VisibleText fragment | Map<String, Object> textToneGizmo owner,int color | boolean semanticTextComponentGizmo owner",
       "visibility_gate": "Current native scene/control, attached existing children and eligible same-frame text/icon/bar capture. Every health sample has integer total, filled, with_shield and incoming_dot with basis:displayed; 0 < total, 0 <= filled <= with_shield <= total + 1, and 0 <= incoming_dot <= with_shield. Zero DOT means an observed zero-width darkened segment; a missing bar never supplies a zero sample. Reads inspect laid-out native widths and never call Char.incomingDOT, shielding, update or layout. DOT samples, turn progress and boss warning use independent display eligibility. A subject is resolved only against the same captured hero/inventory/entity/buff rows; a public object uses kind:entity/index, while standalone actions inline subject_data. No hidden object actor association is inferred from a generic object label.",
@@ -117519,7 +117394,7 @@
         },
         {
           "id": "eec0141a0a8d8e3d60682e83c07cb7191e089dc15a15ccbddd9bda7ccc910054:1",
-          "body_digest": "a4ca1cba1cac264de5e7eba0a36aa80b89ad3c3e1883a949f15d8207565c9d98"
+          "body_digest": "e6b5a2c96fcc52c0661babb3ae49f43ef1e2104120e61ebc1166cdcda3855395"
         },
         {
           "id": "d286bb57342fb7cdd07eb73f18f1508e6c4bce6c70a8e635be4304d17d392714:1",
@@ -117538,7 +117413,7 @@
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 104,
+          "line": 103,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.DrawnEvidence",
           "method": "<init>",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.DrawnEvidence.<init>",
@@ -117546,7 +117421,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 112,
+          "line": 111,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "<init>",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.<init>",
@@ -117554,7 +117429,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 114,
+          "line": 113,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "<init>",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.<init>",
@@ -117562,7 +117437,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 117,
+          "line": 116,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "captureDrawnEvidence",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.captureDrawnEvidence",
@@ -117570,7 +117445,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 126,
+          "line": 125,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "captureWorldHealth",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.captureWorldHealth",
@@ -117578,7 +117453,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 132,
+          "line": 131,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "worldHealth",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.worldHealth",
@@ -117586,7 +117461,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 137,
+          "line": 136,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "captureDrawn",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.captureDrawn",
@@ -117594,7 +117469,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 146,
+          "line": 145,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "captureCandidate",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.captureCandidate",
@@ -117602,7 +117477,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 184,
+          "line": 183,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "semanticTextStyle",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.semanticTextStyle",
@@ -117610,7 +117485,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 198,
+          "line": 197,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "textTone",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.textTone",
@@ -117618,7 +117493,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 203,
+          "line": 202,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "semanticTextComponent",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.semanticTextComponent",
@@ -117693,7 +117568,7 @@
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 208,
+          "line": 207,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "semanticStatus",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.semanticStatus",
@@ -117701,7 +117576,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 229,
+          "line": 228,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "nativeSubject",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.nativeSubject",
@@ -117709,7 +117584,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 238,
+          "line": 237,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "freezeEvidence",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.freezeEvidence",
@@ -117717,7 +117592,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 257,
+          "line": 256,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "drawingIdentity",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.drawingIdentity",
@@ -117725,7 +117600,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 264,
+          "line": 263,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "bindingFingerprint",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.bindingFingerprint",
@@ -117733,7 +117608,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 267,
+          "line": 266,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "appendBindings",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.appendBindings",
@@ -117741,7 +117616,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 280,
+          "line": 279,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "semanticBinding",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.semanticBinding",
@@ -117749,7 +117624,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 287,
+          "line": 286,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "displayScope",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.displayScope",
@@ -117757,7 +117632,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 293,
+          "line": 292,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "matchingDraw",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.matchingDraw",
@@ -117765,7 +117640,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 299,
+          "line": 298,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "evidence",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.evidence",
@@ -117773,7 +117648,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 308,
+          "line": 307,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "forgetHidden",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.forgetHidden",
@@ -117848,7 +117723,7 @@
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 314,
+          "line": 313,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "drawnIntentReady",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.drawnIntentReady",
@@ -117856,7 +117731,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 318,
+          "line": 317,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "drawnIntentReady",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.drawnIntentReady",
@@ -117864,7 +117739,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 334,
+          "line": 333,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "describeActions",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.describeActions",
@@ -117872,7 +117747,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 339,
+          "line": 338,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "frozenActions",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.frozenActions",
@@ -117880,7 +117755,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 344,
+          "line": 343,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "describeUi",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.describeUi",
@@ -117888,7 +117763,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 346,
+          "line": 345,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "frozenUi",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.frozenUi",
@@ -117896,7 +117771,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 349,
+          "line": 348,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "frozenUi",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.frozenUi",
@@ -117904,7 +117779,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 369,
+          "line": 368,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "projectionHints",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.projectionHints",
@@ -117912,7 +117787,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 422,
+          "line": 421,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "emptyItemPlaceholder",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.emptyItemPlaceholder",
@@ -117920,7 +117795,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 430,
+          "line": 429,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "publicItemLocators",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.publicItemLocators",
@@ -117928,7 +117803,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 479,
+          "line": 478,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "addBuffSubjects",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.addBuffSubjects",
@@ -118008,7 +117883,7 @@
     {
       "id": "cli8-source:UiBridge:native-ui-meaning:05",
       "classification": "covered_current",
-      "reason": "The native widget or window displays a current label, value, icon meaning, option, or action constraint; its group names the exact source branch.",
+      "reason": "The native widget or window displays a current label, value, icon meaning, option, or action constraint; its group names the exact source branch. CLI.9.0.6 reads GameplayStatus directly after removing the RenderedStatus forwarding layer. Every existing widget already implements GameplayStatus; capture eligibility, visible semantic facts and input-relevant status retain the same gates.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java: UiBridge.selectingInventory, UiBridge.walk, UiBridge.addAction, UiBridge.role, UiBridge.visibleText, UiBridge.clippedDirectText, UiBridge.floatingFragment, UiBridge.gameLogFragment, UiBridge.isGameLogText.",
       "visible_evidence": "868 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.selectingInventory: InventoryPane selectingInventoryGizmo gizmo | 881 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.walk: void walkGizmo gizmo,String parentId,ScrollPane pane,boolean inUi | 988 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.addAction: void addActionString action,String control,Map<String, Object> node,String key,Object value | 995 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.role: String roleGizmo gizmo,ScrollPane pane | 1015 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.visibleText: String visibleTextGizmo gizmo | 1026 call com.watabou.noosa.BitmapText.text: ((BitmapText) gizmo).text() | 1044 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.clippedDirectText: boolean clippedDirectTextGizmo gizmo | 1048 call com.watabou.noosa.BitmapText.text: text.text() | 1048 call com.watabou.noosa.BitmapText.text: text.text() | 1061 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.floatingFragment: RenderedTextBlock.VisibleText floatingFragmentGizmo gizmo | 1067 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.gameLogFragment: RenderedTextBlock.VisibleText gameLogFragmentGizmo gizmo | 1070 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.isGameLogText: boolean isGameLogTextGizmo gizmo",
       "visibility_gate": "Current native scene/control, attached existing children and eligible same-frame text/icon/bar capture. Every health sample has integer total, filled, with_shield and incoming_dot with basis:displayed; 0 < total, 0 <= filled <= with_shield <= total + 1, and 0 <= incoming_dot <= with_shield. Zero DOT means an observed zero-width darkened segment; a missing bar never supplies a zero sample. Reads inspect laid-out native widths and never call Char.incomingDOT, shielding, update or layout. DOT samples, turn progress and boss warning use independent display eligibility. A subject is resolved only against the same captured hero/inventory/entity/buff rows; a public object uses kind:entity/index, while standalone actions inline subject_data. No hidden object actor association is inferred from a generic object label.",
@@ -118042,7 +117917,7 @@
         },
         {
           "id": "79e134725605836d186efaaf932bddaf3148f90ce14b471ee766f87da83ff5ac:1",
-          "body_digest": "0a947513cd546c6bf29dac3dfe241afa5ee660a97168bbf898ec60fb50acac38"
+          "body_digest": "9e6970577ef999b787134c27566c71ccefa524b080751833885507d40d9400bd"
         },
         {
           "id": "ab888c8d82725dadfb2d6a44a56aa9262f040fb3227896d0c6ef0397002e7c6b:1",
@@ -119125,7 +119000,7 @@
     {
       "id": "cli8-boundary:GameController",
       "classification": "not_player_visible",
-      "reason": "Whole-class source fingerprint for com.shatteredpixel.shatteredpixeldungeon.control.game.GameController includes static/instance field initializers and semantic method bodies; concrete methods remain independently reviewed. CLI8 bounded source review: private occurrence identity changes event onset without a wire field. CLI.8.0.1 bounded source review: capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
+      "reason": "Whole-class source fingerprint for com.shatteredpixel.shatteredpixeldungeon.control.game.GameController includes static/instance field initializers and semantic method bodies; concrete methods remain independently reviewed. CLI8 bounded source review: private occurrence identity changes event onset without a wire field. CLI.8.0.1 bounded source review: capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity. CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO.",
       "trigger": "Attributed class declaration com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.control.game.GameController with exact current class-body digest; no separate visual occurrence.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -119152,7 +119027,7 @@
       "sites": [
         {
           "id": "540b9a131a94d25667ba768c1b14796880c17829ef251cb206b780389d1e81b5:1",
-          "body_digest": "4d2f4f3fc64dbe0bb09c60a502de0177429f8126232e6089007e4748230bcb11"
+          "body_digest": "e9b7fd98489ad81112450a443ccdc2e5f30db2536279851221c351382cc0d27a"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -120386,7 +120261,7 @@
     {
       "id": "cli8-boundary4:RuntimeObserver",
       "classification": "not_player_visible",
-      "reason": "Whole-class exact source fingerprint for RuntimeObserver.java protects branch guards and field initializers; concrete semantic display methods are reviewed separately. CLI.8.0.2 source review: only three uncalled default rendering callbacks are removed. Current semantic VisualCue and feedback overloads and action/save boundaries are unchanged. CLI.9.0.5 review: optional newRunIdentity defaults to null and carries only the executing control request audit identity. Native gameplay and GUI new-run behavior remain unchanged.",
+      "reason": "Whole-class exact source fingerprint for RuntimeObserver.java protects branch guards and field initializers; concrete semantic display methods are reviewed separately. CLI.8.0.2 source review: only three uncalled default rendering callbacks are removed. Current semantic VisualCue and feedback overloads and action/save boundaries are unchanged. CLI.9.0.5 review: optional newRunIdentity defaults to null and carries only the executing control request audit identity. Native gameplay and GUI new-run behavior remain unchanged. CLI.9.0.6 removes obsolete text and visual observer overloads. Native Messages supplies the GUI template, and VisualCueCollector supplies readiness and private occurrence identity through the complete current callbacks.",
       "trigger": "Class declaration RuntimeObserver.java.",
       "visible_evidence": "No pixels or public fact are emitted by a fingerprint.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -120408,7 +120283,7 @@
       "sites": [
         {
           "id": "6ed3886fd5de61feca2ecf9580a0ad6e270e213f6c0e965ac5b9135b7b9dfa99:1",
-          "body_digest": "da21151f178c57af6c7b70d4bae55aac34e2bb55603dd309fb8ae655866736d7"
+          "body_digest": "9d29219fbbffcda500133093fab345bc16531c7552e7145992537cbc606ca4a9"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -120551,7 +120426,7 @@
     {
       "id": "cli8-source4:RuntimeObserver:occurrence-handoff:01",
       "classification": "covered_current",
-      "reason": "Private RuntimeObserver source occurrence callback disambiguates equal new bursts without serializing identity.",
+      "reason": "Private RuntimeObserver source occurrence callback disambiguates equal new bursts without serializing identity. CLI.9.0.6 removes obsolete text and visual observer overloads. Native Messages supplies the GUI template, and VisualCueCollector supplies readiness and private occurrence identity through the complete current callbacks.",
       "trigger": "RuntimeObserver.java.onVisualCues current native source method.",
       "visible_evidence": "Private RuntimeObserver source occurrence callback disambiguates equal new bursts without serializing identity.",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
@@ -120561,12 +120436,12 @@
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
         {"kind": "semantic_contract", "id": "controller-display-handoff"},
         "GameplayBurstTest#privateOccurrenceIdentityIsStableAcrossCountsButChangesForAnEqualNewBurst",
-        "GameplayBurstTest#newObserverOverloadStillNotifiesExistingFiveArgumentObservers"
+        "VisualMetricSnapshotTest#currentObserverHookRetainsEqualOccurrencesWithoutPrivateIdentityLeak"
       ],
       "sites": [
         {
           "id": "9071d4359b8f18c2ef64613e33e14a3c5d4489b7e76161df4c11be0232d614d1:1",
-          "body_digest": "140d9388a73d16440efa08fc8edda8ba816df578d6601e34436c12189537accc"
+          "body_digest": "24d5319525e6ba3d411e36b7f221ca373503c1b262787077d605c5f8f53502dc"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -162953,7 +162828,7 @@
     {
       "id": "cli9:UiBridge:initializer:713e43535c03ef82",
       "classification": "not_player_visible",
-      "reason": "Reviewed current UI changes remove the obsolete three-width health fallback and bind publicly projected native OBJECT subjects separately from characters. Existing source/draw ownership, frozen text, full subject uniqueness and operation gates remain intact.",
+      "reason": "Reviewed current UI changes remove the obsolete three-width health fallback and bind publicly projected native OBJECT subjects separately from characters. Existing source/draw ownership, frozen text, full subject uniqueness and operation gates remain intact. CLI.9.0.6 reads GameplayStatus directly after removing the RenderedStatus forwarding layer. Every existing widget already implements GameplayStatus; capture eligibility, visible semantic facts and input-relevant status retain the same gates.",
       "trigger": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java:<initializer>; exact attributed sites below.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -162970,13 +162845,13 @@
       "sites": [
         {
           "id": "4ea2ad1c0a46492b99da515a73de52e6f89321c195beaeb04b6e03d12cb95ce0:1",
-          "body_digest": "ec466b9f1677a326efde8b6cce2f9654cca78e976f9cb09b38ce4ed024f023c9"
+          "body_digest": "88553a871ac8ab8d4943fdf389604cd4ecafbe6325410627d0972d32f3e48784"
         }
       ],
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 73,
+          "line": 72,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "<initializer>",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
@@ -163010,7 +162885,7 @@
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 453,
+          "line": 452,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "publicSubjects",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.publicSubjects",
@@ -163023,7 +162898,7 @@
     {
       "id": "cli9:UiBridge:readDisplay:1d8298f3f03797f2",
       "classification": "covered_current",
-      "reason": "The old HealthBar fallback is removed because current native HealthBar implements GameplayStatus with four displayed widths including required incoming_dot. Existing semanticStatus reads current source-selected HUD samples; it never invokes Char.incomingDOT or fabricates zero DOT.",
+      "reason": "The old HealthBar fallback is removed because current native HealthBar implements GameplayStatus with four displayed widths including required incoming_dot. Existing semanticStatus reads current source-selected HUD samples; it never invokes Char.incomingDOT or fabricates zero DOT. CLI.9.0.6 reads GameplayStatus directly after removing the RenderedStatus forwarding layer. Every existing widget already implements GameplayStatus; capture eligibility, visible semantic facts and input-relevant status retain the same gates.",
       "trigger": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java:readDisplay; exact attributed sites below.",
       "visible_evidence": "DrawnEvidence readDisplayGizmo owner",
       "visibility_gate": "Current native scene/control, attached existing children and eligible same-frame text/icon/bar capture. Every health sample has integer total, filled, with_shield and incoming_dot with basis:displayed; 0 < total, 0 <= filled <= with_shield <= total + 1, and 0 <= incoming_dot <= with_shield. Zero DOT means an observed zero-width darkened segment; a missing bar never supplies a zero sample. Reads inspect laid-out native widths and never call Char.incomingDOT, shielding, update or layout. DOT samples, turn progress and boss warning use independent display eligibility. A subject is resolved only against the same captured hero/inventory/entity/buff rows; a public object uses kind:entity/index, while standalone actions inline subject_data. No hidden object actor association is inferred from a generic object label.",
@@ -163038,13 +162913,13 @@
       "sites": [
         {
           "id": "9110455685f0d1101829947311d221a77f7195b0da144df94c9b88075dc8acbb:1",
-          "body_digest": "b2b553d4a4fe0bf8a76cf5a2e7ff5b7991cc26a6d00317295023dc77b62208cb"
+          "body_digest": "1245cdafdeb2b1108c05e6df5fc7c46fa97c74d2588c23a9b586ccd2167c2117"
         }
       ],
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
-          "line": 151,
+          "line": 150,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge",
           "method": "readDisplay",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiBridge.readDisplay",
@@ -166428,7 +166303,7 @@
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 757,
+          "line": 730,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "rejectBeforeExecution",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.rejectBeforeExecution",
@@ -166436,7 +166311,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 325,
+          "line": 324,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "abortPreparedAction",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.abortPreparedAction",
@@ -166444,7 +166319,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 763,
+          "line": 736,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "failPreparation",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.failPreparation",
@@ -166452,7 +166327,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 753,
+          "line": 726,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "notExecuted",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.notExecuted",
@@ -166460,7 +166335,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 730,
+          "line": 703,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "dispatch",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.dispatch",
@@ -166468,7 +166343,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 315,
+          "line": 314,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "commitPreparedAction",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.commitPreparedAction",
@@ -166476,7 +166351,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 233,
+          "line": 232,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PreparationStage",
           "method": "<init>",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PreparationStage.<init>",
@@ -166484,7 +166359,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 709,
+          "line": 682,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "invalidatePreparation",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.invalidatePreparation",
@@ -166492,7 +166367,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 705,
+          "line": 678,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "holdsPreparedBoundary",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.holdsPreparedBoundary",
@@ -166500,7 +166375,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 704,
+          "line": 677,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "inputGeneration",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.inputGeneration",
@@ -166508,7 +166383,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 410,
+          "line": 392,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "newRunIdentity",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.newRunIdentity",
@@ -166524,7 +166399,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 226,
+          "line": 225,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.ActionPreparation",
           "method": "<init>",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.ActionPreparation.<init>",
@@ -166532,7 +166407,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 308,
+          "line": 307,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "prepareAction",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.prepareAction",
@@ -166540,7 +166415,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 720,
+          "line": 693,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "commitAtBoundary",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.commitAtBoundary",
@@ -166548,7 +166423,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 335,
+          "line": 334,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "requireOwner",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.requireOwner",
@@ -166556,7 +166431,7 @@
         },
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 894,
+          "line": 867,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PublicDecision",
           "method": "<init>",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PublicDecision.<init>",
@@ -166603,7 +166478,7 @@
       "source_evidence": [
         {
           "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
-          "line": 901,
+          "line": 874,
           "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
           "method": "publicDecision",
           "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.publicDecision",
@@ -167301,8 +167176,8 @@
         "WardStatueSemanticTest#wardMeterPublishesOnlyEightBitBrightnessAndKeepsUnknownChargeExplicit",
         "CharacterAppearanceCueTest#flareUnknownMeaningUsesTypedDiagnosticWithoutInventingAuraOrLootTier",
         "GameplayBurstTest#privateOccurrenceIdentityIsStableAcrossCountsButChangesForAnEqualNewBurst",
-        "GameplayBurstTest#newObserverOverloadStillNotifiesExistingFiveArgumentObservers",
-        "VisualMetricSnapshotTest#repeatedEqualOccurrencesAreRecordedWithoutSamplingOrPublicIdentityLeak",
+        "VisualMetricSnapshotTest#currentObserverHookRetainsEqualOccurrencesWithoutPrivateIdentityLeak",
+        "VisualMetricSnapshotTest#currentObserverHookRetainsEqualOccurrencesWithoutPrivateIdentityLeak",
         "VisualMetricSnapshotTest#genericParticleFieldsCannotEnterCurrentFactsOrFrozenHistory",
         "Cli9WarningPoolingTest#unknownLifecycleSurvivesFrozenEventsAndEveryObservationView"
       ]
@@ -167757,8 +167632,8 @@
         "DisplayEventQueueTest#publicAndOriginalPayloadsAreDeeplyFrozenAtConstruction",
         "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw",
         "GameplayBurstTest#privateOccurrenceIdentityIsStableAcrossCountsButChangesForAnEqualNewBurst",
-        "GameplayBurstTest#newObserverOverloadStillNotifiesExistingFiveArgumentObservers",
-        "VisualMetricSnapshotTest#repeatedEqualOccurrencesAreRecordedWithoutSamplingOrPublicIdentityLeak",
+        "VisualMetricSnapshotTest#currentObserverHookRetainsEqualOccurrencesWithoutPrivateIdentityLeak",
+        "VisualMetricSnapshotTest#currentObserverHookRetainsEqualOccurrencesWithoutPrivateIdentityLeak",
         "VisualMetricSnapshotTest#reviewedRangeShapeSurvivesButGenericShapesRetainPartialDiagnostics",
         "GameplayObservationTest#iconOnlyFloatingFeedbackRetainsItsPublicSymbolWhenNoGlyphIsShown",
         "VisualMetricSnapshotTest#genericParticleFieldsCannotEnterCurrentFactsOrFrozenHistory",
@@ -171041,8 +170916,6 @@
         "ui-review-RenderedAppearance-uncoveredInScene-78cf1110b2d4",
         "ui-review-RenderedAppearance-visibleBounds-b3a4fbd9bbf7",
         "ui-review-RenderedAppearance-visualBounds-4747c93d480c",
-        "ui-review-RenderedStatus-intentStatus-b64f3fafd640",
-        "ui-review-RenderedStatus-renderedStatus-689235a34d0a",
         "ui-review-RenderedText-_initializer_-bb8eb5872c60",
         "ui-review-RenderedTextBlock-_initializer_-b28af10f0fdd",
         "ui-review-ResumeIndicator-_initializer_-b7a86f2b0890",
@@ -171066,7 +170939,6 @@
         "ui-review-RuntimeObserver-onTextOperation-9d0a66e8ea29",
         "ui-review-RuntimeObserver-onTextReleased-dba6dc4205eb",
         "ui-review-RuntimeObserver-onTextResource-2bb002692672",
-        "ui-review-RuntimeObserver-onVisualCues-798457c57367",
         "ui-review-Sample-play-57f6fbae93a2",
         "ui-review-Sample-playDelayed-382761bf37ad",
         "ui-review-ScaleTweener-_initializer_-fd2e37fb0514",
@@ -190639,6 +190511,146 @@
       "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
       "method": "prepareRun",
       "reason": "CLI.9.0.5 removes the unowned next-run identity handoff. The executing ActionPreparation now supplies its own planned run ID through RuntimeObserver.newRunIdentity, consumed once by Dungeon.init."
+    },
+    {
+      "id": "8cec30a75f15be2113ef6c4c30e772c1aa02ccabc13979b0c5831d215e62a456:1",
+      "old_group": "ui-review-RenderedStatus-intentStatus-b64f3fafd640",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedStatus.java",
+      "method": "intentStatus",
+      "reason": "CLI.9.0.6 removes the obsolete RenderedStatus interface. All native implementations and consumers use GameplayStatus.gameplayStatus and gameplayIntentStatus directly; semantic display and input facts are unchanged."
+    },
+    {
+      "id": "1a4f5adc6f97d87210d6e090db06b0329903f7e5cb95caffc29f7a754990c56a:1",
+      "old_group": "ui-review-RenderedStatus-renderedStatus-689235a34d0a",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/RenderedStatus.java",
+      "method": "renderedStatus",
+      "reason": "CLI.9.0.6 removes the obsolete RenderedStatus interface. All native implementations and consumers use GameplayStatus.gameplayStatus and gameplayIntentStatus directly; semantic display and input facts are unchanged."
+    },
+    {
+      "id": "e3277b4ddd7dca3bc36eaf2d27d02606ecf95fffebfe11881b0ab150d7510c23:1",
+      "old_group": "ui-review-RuntimeObserver-onTextResource-2bb002692672",
+      "file": "SPD-classes/src/main/java/com/watabou/noosa/RuntimeObserver.java",
+      "method": "onTextResource",
+      "reason": "CLI.9.0.6 removes obsolete text and visual observer overloads. Native Messages supplies the GUI template, and VisualCueCollector supplies readiness and private occurrence identity through the complete current callbacks."
+    },
+    {
+      "id": "f6c9933128b8ed0e05f70ab41432271103ea1895bf5b7333be67eee8ba2359c2:1",
+      "old_group": "ui-review-RuntimeObserver-onVisualCues-798457c57367",
+      "file": "SPD-classes/src/main/java/com/watabou/noosa/RuntimeObserver.java",
+      "method": "onVisualCues",
+      "reason": "CLI.9.0.6 removes obsolete text and visual observer overloads. Native Messages supplies the GUI template, and VisualCueCollector supplies readiness and private occurrence identity through the complete current callbacks."
+    },
+    {
+      "id": "1a94c1419c5f7c5be79cec937ff079e99d24d8668dcc8760944db28cd2b101b3:1",
+      "old_group": "ui-review-RuntimeObserver-onVisualCues-798457c57367",
+      "file": "SPD-classes/src/main/java/com/watabou/noosa/RuntimeObserver.java",
+      "method": "onVisualCues",
+      "reason": "CLI.9.0.6 removes obsolete text and visual observer overloads. Native Messages supplies the GUI template, and VisualCueCollector supplies readiness and private occurrence identity through the complete current callbacks."
+    },
+    {
+      "id": "f49bcc74d3437e52433408132c1ef782a6c9d5fe9b5a68f487258fd78c8cdccd:1",
+      "old_group": "cli8-source:GameplayStatus:native-ui-meaning:01",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayStatus.java",
+      "method": "renderedStatus",
+      "reason": "CLI.9.0.6 removes forwarding aliases for the retired RenderedStatus interface. GameplayStatus retains its direct semantic display and input methods with their existing ownership and visibility gates."
+    },
+    {
+      "id": "370e29162930354d47d9ffb9ee2182cfe4ee602eeb692c50ece6779e7cb3108b:1",
+      "old_group": "cli8-source:GameplayStatus:native-ui-meaning:01",
+      "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayStatus.java",
+      "method": "intentStatus",
+      "reason": "CLI.9.0.6 removes forwarding aliases for the retired RenderedStatus interface. GameplayStatus retains its direct semantic display and input methods with their existing ownership and visibility gates."
+    },
+    {
+      "id": "026279f18f05becdf801b8e5885ad5160610ad32e24be270208ee8d1a2b8ea24:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "pollGameLog",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "25cd457880a722a1ec6a577db54072b0f1c67b877bbfa21e6a1f9ca909dbfefb:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "pollFloatingText",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "26dd0f2e70c7ff7897fe37684159a351278ed3834f0d691a4751f3c0ee71ad65:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "pollBanner",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "ec1db977e88bfbc19d53acbcacde50048c546942f629fad0caba3bb7ac2345cd:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "pollVisual",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "c3ed39a5e53b27e14538783bd0fa1ab2efa884f086e6a5a4d85ab4367f082535:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "takeVisuals",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "a40dcabcaa39cd5518b396d18a61e9e70c51814adfb319b46b810ef41f794b19:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "takeFloatingTexts",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "ae03d9ddef563639726024a6fc11364f67e6a74c928c737c0ca01688859036cd:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "takeBanners",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "1396319d8e46ffd44af775fbf1ff375da03d5ab8537f044b5354254ed4d4e36a:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "takeGameLogs",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "feefd4f12989fb9f2cac08fabe48a8f37260b708b301cb15c5cfc4b59227f5c6:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:03",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "pollDisplayType",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "65a8843dd02d842a4c1b057bfb5634cd9362b1e1c595b47c79847e6acb24e28d:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:04",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "takeDisplayType",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "9777887b0782355515c060d9721efed15cab46dd563343528c6be39ebe9f4d04:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:04",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "onVisualCues",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "0e8dee1f427392203600eccb11ddcbf4de3113d52f388bcfb284ff92859a83fb:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:05",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "recordVisualCues",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
+    },
+    {
+      "id": "828c7429d302b027c44ae0199acadbeba5d53bf1b4d2a8fc74451c60bf8ed452:1",
+      "old_group": "cli8-source:GameController:controller-display-handoff:05",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "onTextResource",
+      "reason": "CLI.9.0.6 removes test-only observer overloads and type-filtered display queue adapters. The complete observer callbacks retain template/readiness/occurrence inputs, and production and tests use the single ordered peek/ack display-event FIFO."
     }
   ],
   "evidence_policy": {

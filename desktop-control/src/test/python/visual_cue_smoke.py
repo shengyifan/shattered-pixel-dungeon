@@ -14,7 +14,7 @@ from protocol9 import pages
 
 
 def visual(state):
-    return state["observation"]["visual_cues"]
+    return state["cues"]
 
 
 def kind_cells(state, kind):
@@ -30,18 +30,18 @@ def wait_result(client, kind, fixture):
         time.sleep(0.2)
         late = client.state()
         raise AssertionError({"new_warning_missing_from_final_action_response": fixture,
-                              "final_response_version": result["state_version"], "immediate": immediate,
+                              "final_response_version": result["rev"], "immediate": immediate,
                               "later_diagnostic_only": visual(late)})
-    visible = {tile["cell"] for tile in result["observation"]["map"]["cells"] if tile["visibility"] == "visible"}
+    visible = {tile["cell"] for tile in result["map"]["cells"] if tile["visibility"] == "visible"}
     assert all(cue["cell"] in visible for cue in visual(result)["cues"])
-    assert all({"kind", "cell"} <= set(cue) <= {"kind", "cell", "source_cell", "direction", "appearance"}
+    assert all({"kind", "cell"} <= set(cue) <= {"kind", "cell", "source_cell", "dir", "appearance"}
                for cue in visual(result)["cues"]), visual(result)
     assert all("color" not in cue and "opacity" not in cue for cue in visual(result)["cues"])
     return result
 
 
 def read_visual_events(client, after=0):
-    return [event for batch in pages(client, "events.read", after=after, limit=100)
+    return [event for batch in pages(client, "events", after=after, limit=100)
             for event in batch if event["kind"] == "game.visual"]
 
 
@@ -50,7 +50,7 @@ def test_red(client):
     assert not kind_cells(before, "red_target")
     warning = wait_result(client, "red_target", "Yog beam")
     cells = kind_cells(warning, "red_target")
-    assert warning["observation"]["hero"]["cell"] in cells, "The actual beam must visually warn the hero's cell"
+    assert warning["hero"]["cell"] in cells, "The actual beam must visually warn the hero's cell"
     events = read_visual_events(client)
     seen = [event for event in events if any(cue["kind"] == "red_target" for cue in event["data"]["cues"])]
     assert seen, events
@@ -59,8 +59,8 @@ def test_red(client):
     time.sleep(2.3)
     faded = client.state()
     assert kind_cells(faded, "red_target") == cells, visual(faded)
-    assert faded["observation"]["hero"] == warning["observation"]["hero"]
-    assert faded["state_version"] == warning["state_version"], "Marker fade must not invalidate an unresolved warning"
+    assert faded["hero"] == warning["hero"]
+    assert faded["rev"] == warning["rev"], "Marker fade must not invalidate an unresolved warning"
     later_events = read_visual_events(client)
     assert historical in later_events, "A displayed warning must remain in public event history"
     assert not any(event["sequence"] > historical["sequence"]
@@ -68,7 +68,7 @@ def test_red(client):
     assert visual(faded)["map_context"] == visual(warning)["map_context"]
     resolved = act(client, "wait")
     assert not kind_cells(resolved, "red_target"), visual(resolved)
-    assert resolved["state_version"] != faded["state_version"], "Native attack resolution must still invalidate intent"
+    assert resolved["rev"] != faded["rev"], "Native attack resolution must still invalidate intent"
     final_events = read_visual_events(client)
     assert historical in final_events, "Attack resolution cannot rewrite earlier public evidence"
     assert any(event["sequence"] > historical["sequence"]
@@ -81,8 +81,8 @@ def test_red(client):
 
 def test_goo(client):
     before = client.state()
-    goo = next(entity for entity in before["observation"]["visible_entities"] if entity.get("context_action") == "attack")
-    width = before["observation"]["map"]["width"]
+    goo = next(entity for entity in before["entities"] if entity.get("context_action") == "attack")
+    width = before["map"]["w"]
     warning = wait_result(client, "black_goo_droplets", "Goo expanded charging particles")
     cells = kind_cells(warning, "black_goo_droplets")
     def distance(cell):
@@ -95,12 +95,12 @@ def test_goo(client):
     events = read_visual_events(client)
     assert any(any(cue["kind"] == "black_goo_droplets" for cue in event["data"]["cues"]) for event in events)
     # A modal changes available operations but not the known world warning.
-    menu = next(node for node in warning["observation"]["ui"]["controls"]
-                if str(node.get("shortcut_action", "")).lower() == "back")
-    blocked = act(client, "ui.activate", control=menu["id"])
-    assert blocked["observation"]["ui"]["modal"] and kind_cells(blocked, "black_goo_droplets")
-    reopened = act(client, "ui.back")
-    assert not reopened["observation"]["ui"]["modal"] and kind_cells(reopened, "black_goo_droplets")
+    menu = next(node for node in warning["ui"]["nodes"]
+                if str(node.get("shortcut", "")).lower() == "back")
+    blocked = act(client, "click", ctl=menu["id"])
+    assert blocked["ui"]["modal"] and kind_cells(blocked, "black_goo_droplets")
+    reopened = act(client, "back")
+    assert not reopened["ui"]["modal"] and kind_cells(reopened, "black_goo_droplets")
     assert visual(reopened)["map_context"] == visual(warning)["map_context"]
     resolved = act(client, "wait")
     tail = kind_cells(resolved, "black_goo_droplets")
@@ -122,7 +122,7 @@ def test_hidden(client):
     elapsed = time.monotonic() - start
     assert elapsed < 10, {"hidden_source_incorrectly_delayed_response": elapsed}
     assert visual(after)["status"] == "last_observed" and not kind_cells(after, "black_goo_droplets")
-    assert after["observation"]["hero"]["cell"] == before["observation"]["hero"]["cell"]
+    assert after["hero"]["cell"] == before["hero"]["cell"]
     return {"synthetic_render_source_only": True, "hidden_source_initial_emission_delay_seconds": 60,
             "public_wait_response_seconds": elapsed, "hidden_no_drawable_source_did_not_wait": True,
             "no_hidden_cue_published": True}
@@ -130,37 +130,37 @@ def test_hidden(client):
 
 def test_frozen(client):
     def frozen(state):
-        return any(buff.get("name") == "time bubble" for buff in state["observation"]["hero"]["buffs"])
+        return any(buff.get("name") == "time bubble" for buff in state["hero"]["buffs"])
     initial = client.state()
     assert frozen(initial)
     # Let the normal startup grace expire; never assign Game.timeTotal in this live test.
     time.sleep(1.2)
     state = client.state()
     assert frozen(state)
-    menu = next(node for node in state["observation"]["ui"]["controls"]
-                if str(node.get("shortcut_action", "")).lower() == "back")
-    act(client, "ui.activate", control=menu["id"])
+    menu = next(node for node in state["ui"]["nodes"]
+                if str(node.get("shortcut", "")).lower() == "back")
+    act(client, "click", ctl=menu["id"])
     state = client.state()
-    settings = next(a for a in state["actions"] if a.get("label") == "Settings")
-    state = act(client, "ui.activate", control=settings["control"])
-    candidates = [a["control"] for a in state["actions"] if a["action"] == "ui.activate" and not a.get("label")]
-    for control in candidates:
-        if any(a["action"] == "ui.value" and "Interface Mode" in a.get("label", "") for a in state["actions"]):
+    settings = next(a for a in state["acts"] if a.get("label") == "Settings")
+    state = act(client, "click", ctl=settings["ctl"])
+    candidates = [a["ctl"] for a in state["acts"] if a["op"] == "click" and not a.get("label")]
+    for ctl in candidates:
+        if any(a["op"] == "value" and "Interface Mode" in a.get("label", "") for a in state["acts"]):
             break
-        state = act(client, "ui.activate", control=control)
-    mode = next(a for a in state["actions"] if a["action"] == "ui.value" and "Interface Mode" in a.get("label", ""))
-    old = next(n["value"] for n in state["observation"]["ui"]["controls"] if n.get("id") == mode["control"])
+        state = act(client, "click", ctl=ctl)
+    mode = next(a for a in state["acts"] if a["op"] == "value" and "Interface Mode" in a.get("label", ""))
+    old = next(n["value"] for n in state["ui"]["nodes"] if n.get("id") == mode["ctl"])
     start = time.monotonic()
-    rebuilt = act(client, "ui.value", control=mode["control"], value=0 if old != 0 else 2)
+    rebuilt = act(client, "value", ctl=mode["ctl"], value=0 if old != 0 else 2)
     elapsed = time.monotonic() - start
     assert elapsed < 10 and frozen(rebuilt)
-    assert not any(a.get("control") == mode["control"] for a in rebuilt["actions"]), "Actual UI rebuild must retire the old control"
+    assert not any(a.get("ctl") == mode["ctl"] for a in rebuilt["acts"]), "Actual UI rebuild must retire the old control"
     close_choices(client)
     time.sleep(1.2)
     ready = client.state()
     assert frozen(ready) and visual(ready)["status"] == "last_observed"
-    target = next(e for e in ready["observation"]["visible_entities"] if e.get("context_action") == "attack")
-    resumed = act(client, "cell.select", cell=target["cell"])
+    target = next(e for e in ready["entities"] if e.get("context_action") == "attack")
+    resumed = act(client, "cell", cell=target["cell"])
     assert not frozen(resumed), "The native attack must end TimeBubble, without test-side thawing"
     return {"native_freeze": "Swiftthistle.TimeBubble", "normal_scene_startup_grace_preserved": True,
             "ui_rebuild_while_frozen_completed_seconds": elapsed, "controls_rebuilt": True,
@@ -173,7 +173,7 @@ def test_bomb(client):
     anchor = kind_cells(first, "bomb_countdown_3")
     assert len(anchor) == 1, {"native_first_countdown_missing_in_final_response": visual(first)}
     assert any(n.get("kind") == "floating" and n.get("text") == "3..."
-               for n in first["observation"]["ui"]["feedback"]), "Cue must match current feedback"
+               for n in first["ui"]["feedback"]), "Cue must match current feedback"
     smoke = kind_cells(first, "bomb_smoke")
     assert anchor <= smoke
     history = read_visual_events(client)
@@ -185,12 +185,12 @@ def test_bomb(client):
     assert not any(c["kind"].startswith("bomb_countdown_") for c in visual(faded)["cues"])
     assert kind_cells(faded, "bomb_smoke")
     assert shown_three in read_visual_events(client)
-    menu = next(n for n in faded["observation"]["ui"]["controls"] if str(n.get("shortcut_action", "")).lower() == "back")
-    modal = act(client, "ui.activate", control=menu["id"])
-    assert modal["observation"]["ui"]["modal"] and kind_cells(modal, "bomb_smoke")
-    restored = act(client, "ui.back")
+    menu = next(n for n in faded["ui"]["nodes"] if str(n.get("shortcut", "")).lower() == "back")
+    modal = act(client, "click", ctl=menu["id"])
+    assert modal["ui"]["modal"] and kind_cells(modal, "bomb_smoke")
+    restored = act(client, "back")
     assert kind_cells(restored, "bomb_smoke")
-    offscreen = act(client, "view.pan", x=5000, y=5000)
+    offscreen = act(client, "pan", x=5000, y=5000)
     assert kind_cells(offscreen, "bomb_smoke"), visual(offscreen)
     # Keep the exact child wire frame from this pan's own settled observation.
     # This isolated fixture artifact supports a within-frame token contribution
@@ -201,18 +201,18 @@ def test_bomb(client):
     assert pan_frame["v"] == 9 and pan_frame["id"] == client.last_wire_response["id"]
     assert pan_request["id"] == pan_frame["id"] and pan_request["op"] in {"pan", "state"}
     assert pan_request.get("view", "play") == "play" and pan_request.get("src") is not True
-    assert pan_frame.get("s") == offscreen["scope_id"] and pan_frame.get("rev") == offscreen["state_version"]
+    assert pan_frame.get("s") == offscreen["s"] and pan_frame.get("rev") == offscreen["rev"]
     assert any(cue["kind"] == "bomb_smoke" for cue in pan_frame["data"]["cues"]["cues"]), pan_frame["id"]
     pan_wire_path = client.profile / "offscreen-pan-response.raw"
     pan_wire_path.write_bytes(pan_wire)
-    restored = act(client, "view.pan", x=-5000, y=-5000)
+    restored = act(client, "pan", x=-5000, y=-5000)
     assert kind_cells(restored, "bomb_smoke"), visual(restored)
     numbered = []
     for number in (2, 1):
         state = act(client, "wait")
         assert kind_cells(state, "bomb_countdown_" + str(number)) == anchor, visual(state)
         assert any(n.get("kind") == "floating" and n.get("text") == str(number) + "..."
-                   for n in state["observation"]["ui"]["feedback"])
+                   for n in state["ui"]["feedback"])
         numbered.append(number)
     exploded = act(client, "wait")
     # Native tail particles are permitted while they still draw, even after the
@@ -255,11 +255,11 @@ def run_one(root, classpath, runtime_id, name, test=None, execution=None):
     if execution is not None:
         report["execution"] = execution
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"], hello
-        report["build_id"] = hello["result"].get("build_id")
+        hello = client.request("info")
+        assert ("err" not in hello), hello
+        report["build_id"] = hello["data"].get("build_id")
         started = reach_game(client, "WARRIOR")
-        assert started["observation"]["hero"]["class_name"] == "warrior", "Public descriptions must be English"
+        assert started["hero"]["class_name"] == "warrior", "Public descriptions must be English"
         report["gui_environment"] = assert_gui_environment(profile, started)
         report["cli_language"] = "en"
         report["language"] = "zh"

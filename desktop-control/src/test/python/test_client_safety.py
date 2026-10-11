@@ -73,7 +73,8 @@ class CurrentFrameSafetyTest(unittest.TestCase):
         cases = (
             ({"v": 9, "id": "t1.2", "s": "s1", "err": "STALE_STATE"}, "STALE_STATE"),
             ({"controller": "error", "err": "INVALID_INTENT"}, "INVALID_INTENT"),
-            ({"controller": "settle", "st": "pending", "rid": "t1.1"}, "NOT_COMPLETED"),
+            ({"controller": "settle", "st": "pending", "rid": "t1.1",
+              "pending_reason": "budget_exhausted", "stage": "receipt"}, "NOT_COMPLETED"),
             ({"controller": "settle", "st": "completed", "rid": "t1.1",
               "observation": observation(),
               "transport_error": {"controller": "error", "err": "RESPONSE_TIMEOUT"}}, "RESPONSE_TIMEOUT"),
@@ -235,15 +236,29 @@ class IntentDiagnosticTest(unittest.TestCase):
 
 
 class SettlePendingDiagnosticsTest(unittest.TestCase):
-    def test_old_pending_is_unknown_and_not_a_failure_problem(self):
-        result = decode_client_response({"controller": "settle", "st": "pending", "rid": "t1.1"})
-        self.assertIsNone(result.pending_reason)
-        self.assertIsNone(result.stage)
-        self.assertIsNone(result.pending_request)
-        self.assertEqual((), result.problems)
-        self.assertFalse(result.ok)
-        with self.assertRaises(ClientResponseError):
-            result.require_success()
+    def test_pending_requires_current_metadata_and_preserves_original_evidence(self):
+        source = {"controller": "settle", "st": "pending", "rid": "t1.1", "s": "s1",
+                  "outcome": wire("t1.3", revision=None,
+                                  data={"id": "t1.1", "st": "EXECUTING"})}
+        before = copy.deepcopy(source)
+        with self.assertRaisesRegex(DecodeError, "require both pending_reason and stage") as raised:
+            decode_client_response(source)
+        self.assertEqual(before, raised.exception.raw)
+        self.assertEqual(before, raised.exception.context["raw"])
+        self.assertEqual(before, source)
+
+    def test_terminal_settle_results_do_not_require_pending_metadata(self):
+        for status, extra in (("completed", {}), ("error", {"err": "RECOVERY_FAILED"})):
+            source = {"controller": "settle", "st": status, "rid": "t1.1", **extra}
+            with self.subTest(status=status):
+                result = decode_client_response(source)
+                self.assertEqual(status == "completed", result.ok)
+                self.assertIsNone(result.pending_reason)
+                self.assertIsNone(result.stage)
+                self.assertIsNone(result.pending_request)
+                self.assertEqual(source, result.raw)
+                self.assertEqual([] if status == "completed" else ["RECOVERY_FAILED"],
+                                 [problem.code for problem in result.problems])
 
     def test_all_explicit_pending_reasons_preserve_evidence_and_remain_pending(self):
         for reason in ("action_pending", "budget_exhausted", "response_pending"):

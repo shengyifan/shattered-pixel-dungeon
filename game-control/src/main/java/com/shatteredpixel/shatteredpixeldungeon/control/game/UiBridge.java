@@ -28,7 +28,6 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.CharHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.OptionSlider;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
-import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
@@ -144,7 +143,7 @@ public final class UiBridge {
     }
 
     private static boolean captureCandidate(Gizmo owner){
-        return owner instanceof RenderedStatus||owner instanceof HealthBar||owner instanceof RenderedTextBlock
+        return owner instanceof GameplayStatus||owner instanceof HealthBar||owner instanceof RenderedTextBlock
                 ||owner instanceof BitmapText||owner instanceof Component||owner instanceof ActionArea;
     }
 
@@ -160,9 +159,9 @@ public final class UiBridge {
                 &&!semanticTextComponent(owner))textFields.putAll(textTone(owner,((BitmapText)owner).displayedTextColor()));
         if(clipped)textFields.put("clipped",true);
         display.putAll(textFields);
-        if(owner instanceof RenderedStatus){
-            display.putAll(semanticStatus(((RenderedStatus)owner).renderedStatus()));
-            intent.putAll(semanticStatus(((RenderedStatus)owner).intentStatus()));
+        if(owner instanceof GameplayStatus){
+            display.putAll(semanticStatus(((GameplayStatus)owner).gameplayStatus()));
+            intent.putAll(semanticStatus(((GameplayStatus)owner).gameplayIntentStatus()));
         }
         Map<String,Object> frozenText=freezeEvidence(PublicEnglishProjection.freeze(textFields));
         Map<String,Object> textIntent=frozenText;
@@ -998,7 +997,7 @@ public final class UiBridge {
         if (gizmo instanceof HealthBar) return "health_bar";
         // GridItem has native display semantics as well as its existing list selection callback.
         if (pane != null && gizmo instanceof com.shatteredpixel.shatteredpixeldungeon.ui.ScrollingGridPane.GridItem) return "entry";
-        if (gizmo instanceof RenderedStatus) return "status";
+        if (gizmo instanceof GameplayStatus) return "status";
         if (gizmo instanceof RenderedTextBlock || gizmo instanceof BitmapText) return "text";
         if (pane != null && gizmo instanceof Component && hasMethod(gizmo.getClass(), "onClick", float.class, float.class)) {
             // Compound rows such as changelog groups dispatch to their individual buttons.

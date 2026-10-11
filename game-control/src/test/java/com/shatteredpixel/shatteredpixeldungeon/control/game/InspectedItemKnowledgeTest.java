@@ -53,9 +53,9 @@ class InspectedItemKnowledgeTest {
         assertEquals("partial",ResourceTextFixture.status(new String(actual)));
         // Keep an explicit collision regression even after the native translations diverged.
         String sameActual=com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance.INSTANCE.onTextResource(
-                "Same displayed fixture text","items.weapon.melee.spear.ability_desc","zh",new Object[]{11,24});
+                "相同伤害 11-24","items.weapon.melee.spear.ability_desc","zh",new Object[]{11,24},"相同伤害 %1$d-%2$d");
         String sameTypical=com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance.INSTANCE.onTextResource(
-                "Same displayed fixture text","items.weapon.melee.spear.typical_ability_desc","zh",new Object[]{11,24});
+                "相同伤害 11-24","items.weapon.melee.spear.typical_ability_desc","zh",new Object[]{11,24},"相同伤害 %1$d-%2$d");
         assertEquals(sameActual,sameTypical);assertNotSame(sameActual,sameTypical);
         assertEquals(ACTUAL,ResourceTextFixture.english(sameActual));
         assertEquals(TYPICAL,ResourceTextFixture.english(sameTypical));

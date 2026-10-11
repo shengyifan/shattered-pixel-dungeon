@@ -36,7 +36,6 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.effects.ParticleMotionCue",
             "com.shatteredpixel.shatteredpixeldungeon.effects.RadialVisualCue",
             "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedAppearance",
-            "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedStatus",
             "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayStatus",
             "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons",
             "com.shatteredpixel.shatteredpixeldungeon.ui.GameplayGlow",

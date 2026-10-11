@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import time
 from fixture_smoke import FixtureClient, checkpoint, freeze_runtime, reach_game, visible_target
-from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
+from fixture_support import launch_command, metadata, safe_profile, stop, write_json
 from low_frequency_smoke import act, click, quantity
 
 
@@ -29,7 +29,7 @@ def main():
     gui=None
     with (gui_profile/"ordinary-gui.log").open("wb") as gui_log:
         try:
-            assert client.request("protocol.info")["ok"]
+            assert ("err" not in client.request('info'))
             reach_game(client,"WARRIOR")
             # Starting another normal app window changes focus naturally; no focusWindow/input simulation is used.
             gui=subprocess.Popen([str(args.gui_launcher.resolve()),"--data-dir",str(gui_profile)],stdout=gui_log,stderr=gui_log)
@@ -42,15 +42,15 @@ def main():
             else:raise AssertionError("The ordinary GUI did not leave the controlled window unfocused")
             first_focus_count=len(history)
             state=client.state()
-            item=next(i for i in state["observation"]["inventory"] if any(name in i["name"].lower() for name in ["throwing stone","投石"]))
+            item=next(i for i in state['inv'] if any(name in i["name"].lower() for name in ["throwing stone","投石"]))
             item_name=item["name"];before=quantity(state,item_name)
-            state=act(client,"inventory.open",locator=item["locator"])
-            assert checkpoint(profile,state["state_version"])["window_focused"] is False
+            state=act(client,'item',loc=item['loc'])
+            assert checkpoint(profile,state['rev'])["window_focused"] is False
             state=click(client,lambda label:label.lower() in {"throw","投掷","扔出"})
             target=visible_target(state,floor=True)
-            state=act(client,"cell.select",cell=target,mode="act")
+            state=act(client,'cell',cell=target,mode="act")
             assert quantity(state,item_name)==before-1
-            assert checkpoint(profile,state["state_version"])["window_focused"] is False
+            assert checkpoint(profile,state['rev'])["window_focused"] is False
             history=focus_history(profile)
             assert all(row["focused"] is False for row in history[first_focus_count-1:]),history
             assert gui.poll() is None

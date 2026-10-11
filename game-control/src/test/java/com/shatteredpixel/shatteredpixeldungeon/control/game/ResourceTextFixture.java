@@ -22,7 +22,7 @@ final class ResourceTextFixture {
     static String source(Languages language,String key,Object... args) {
         String template=resource(language,key);
         String shown=args.length==0?template:String.format(new Locale(language.code()),template,args);
-        return TextProvenance.INSTANCE.onTextResource(shown,key,language.code(),args);
+        return TextProvenance.INSTANCE.onTextResource(shown,key,language.code(),args,template);
     }
     static String resource(Languages language,String key) {
         String group=key.substring(0,key.indexOf('.'));

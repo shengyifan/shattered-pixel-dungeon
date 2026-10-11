@@ -31,16 +31,7 @@ public final class TextProvenance {
     /** Allows isolated resource and frozen-history tests without a running GUI. */
     public TextProvenance(Function<String, String> englishTemplates) { this.englishTemplates = englishTemplates; }
 
-    public String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments) {
-        return resource(rendered, resolvedKey, arguments, null, true);
-    }
-
     public String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments, String guiTemplate) {
-        return resource(rendered, resolvedKey, arguments, guiTemplate, false);
-    }
-
-    /** Compatibility for tests supplying already-certified visible values; native Messages uses the template overload. */
-    private String resource(String rendered, String resolvedKey, Object[] arguments, String guiTemplate, boolean certified) {
         if (rendered == null || suppression.get() != 0) return rendered;
         TextSource source;
         try {
@@ -52,23 +43,18 @@ public final class TextProvenance {
             } else {
                 String template = withoutTracking(() -> englishTemplates.apply(resolvedKey));
                 boolean formatted = arguments != null && arguments.length > 0;
-                if (certified && template == null) source = TextSource.of("resource", "key", resolvedKey, "template", null,
-                        "arguments", arguments(arguments), "formatted", formatted);
+                Set<Integer> visible = FormatArgumentUsage.indices(guiTemplate, formatted);
+                Set<Integer> wanted = template == null ? Collections.emptySet() : FormatArgumentUsage.indices(template, formatted);
+                String fixedPrefix = structuralPrefix(guiTemplate);
+                if (formatted && fixedPrefix.indexOf('%') >= 0) fixedPrefix = fixedPrefix.substring(0, fixedPrefix.indexOf('%'));
+                if (!visible.containsAll(wanted)) source = reference(resolvedKey, "argument_not_displayed");
                 else {
-                    String sourceTemplate = certified ? template : guiTemplate;
-                    Set<Integer> visible = FormatArgumentUsage.indices(sourceTemplate, formatted);
-                    Set<Integer> wanted = template == null ? java.util.Collections.emptySet() : FormatArgumentUsage.indices(template, formatted);
-                    String fixedPrefix = structuralPrefix(sourceTemplate);
-                    if (formatted && fixedPrefix.indexOf('%') >= 0) fixedPrefix = fixedPrefix.substring(0, fixedPrefix.indexOf('%'));
-                    if (!visible.containsAll(wanted)) source = reference(resolvedKey, "argument_not_displayed");
-                    else {
-                        PrecisionCapture precision = precision(arguments, sourceTemplate, template, formatted, visibleArguments(arguments, visible));
-                        if (precision.reason != null) source = precision.safeReference ? reference(resolvedKey, precision.reason) : TextSource.unknown(precision.reason);
-                        else if (precision.changed && template != null) source = TextSource.of("resource", "key", resolvedKey, "template", template,
-                                "arguments", precision.arguments, "formatted", formatted, "formatted_text", precision.english, "fixed_prefix", fixedPrefix);
-                        else source = TextSource.of("resource", "key", resolvedKey, "template", template,
-                                "arguments", precision.arguments, "formatted", formatted, "fixed_prefix", fixedPrefix);
-                    }
+                    PrecisionCapture precision = precision(arguments, guiTemplate, template, formatted, visibleArguments(arguments, visible));
+                    if (precision.reason != null) source = precision.safeReference ? reference(resolvedKey, precision.reason) : TextSource.unknown(precision.reason);
+                    else if (precision.changed && template != null) source = TextSource.of("resource", "key", resolvedKey, "template", template,
+                            "arguments", precision.arguments, "formatted", formatted, "formatted_text", precision.english, "fixed_prefix", fixedPrefix);
+                    else source = TextSource.of("resource", "key", resolvedKey, "template", template,
+                            "arguments", precision.arguments, "formatted", formatted, "fixed_prefix", fixedPrefix);
                 }
             }
         } catch (RuntimeException failure) {

@@ -14,11 +14,11 @@ TITLES = ["Display Settings", "Interface Settings", "Input Settings", "Connectiv
 
 
 def nodes(state):
-    return ui(state)["controls"]
+    return ui(state)["nodes"]
 
 
 def controls(state, kind):
-    return [a for a in state["actions"] if a["action"] == kind]
+    return [a for a in state["acts"] if a["op"] == kind]
 
 
 def panel_title(state):
@@ -26,14 +26,14 @@ def panel_title(state):
 
 
 def slider_roundtrip(client, state, needle):
-    action = next(a for a in controls(state, "ui.value") if needle in a.get("label", ""))
-    node = next(n for n in nodes(state) if n.get("id") == action["control"])
+    action = next(a for a in controls(state, "value") if needle in a.get("label", ""))
+    node = next(n for n in nodes(state) if n.get("id") == action["ctl"])
     original = node["value"]
-    target = node["minimum"] if original != node["minimum"] else node["maximum"]
-    changed = act(client, "ui.value", control=node["id"], value=target)
+    target = node["min"] if original != node["min"] else node["max"]
+    changed = act(client, "value", ctl=node["id"], value=target)
     current = next(n for n in nodes(changed) if n.get("id") == node["id"])
     assert current["value"] == target
-    restored = act(client, "ui.value", control=node["id"], value=original)
+    restored = act(client, "value", ctl=node["id"], value=original)
     assert next(n for n in nodes(restored) if n.get("id") == node["id"])["value"] == original
     return restored, {"label": needle, "old": original, "tested": target, "restored": True}
 
@@ -42,10 +42,10 @@ def test_settings(client, result):
     return_to_title(client)
     state = choose(client, "Settings")
     assert ui(state)["modal"]
-    tabs = [a["control"] for a in controls(state, "ui.activate") if not a.get("label")]
+    tabs = [a["ctl"] for a in controls(state, "click") if not a.get("label")]
     assert len(tabs) == 6, tabs
     for index, control in enumerate(tabs):
-        state = act(client, "ui.activate", control=control)
+        state = act(client, "click", ctl=control)
         assert panel_title(state) == TITLES[index], {"index": index, "ui": ui(state)}
         assert ui(state)["display"] == {"language": "zh", "fullscreen": False}
         evidence = {"title": TITLES[index], "gui": assert_gui_environment(client.profile, state)}
@@ -56,51 +56,51 @@ def test_settings(client, result):
             state, evidence["grid"] = slider_roundtrip(client, state, "Visual Grid")
         elif index == 2:
             state = choose(client, "Key Bindings")
-            assert ui(state)["modal"] and controls(state, "ui.binding_slot"), ui(state)
-            evidence["binding_rows"] = len(controls(state, "ui.binding_slot"))
-            row=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
-            editing=act(client,"ui.binding_slot",control=row["control"],slot=1)
-            key=controls(editing,"ui.binding_key")[0]
-            edited=act(client,"ui.binding_key",control=key["control"],keycode=142)
+            assert ui(state)["modal"] and controls(state, "bind_slot"), ui(state)
+            evidence["binding_rows"] = len(controls(state, "bind_slot"))
+            row=next(a for a in controls(state,"bind_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            editing=act(client,"bind_slot",ctl=row["ctl"],slot=1)
+            key=controls(editing,"bind_key")[0]
+            edited=act(client,"bind_key",ctl=key["ctl"],keycode=142)
             assert any("F12" in n.get("text","") for n in nodes(edited))
             state=choose(client,"Cancel")
-            unchanged=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            unchanged=next(a for a in controls(state,"bind_slot") if a.get("label","").split("\n",1)[0]=="Wait")
             assert "F12" not in unchanged.get("label","")
             evidence["binding_key_input_and_original_cancel"] = True
-            editing=act(client,"ui.binding_slot",control=unchanged["control"],slot=1)
-            key=controls(editing,"ui.binding_key")[0]
-            act(client,"ui.binding_key",control=key["control"],keycode=142)
+            editing=act(client,"bind_slot",ctl=unchanged["ctl"],slot=1)
+            key=controls(editing,"bind_key")[0]
+            act(client,"bind_key",ctl=key["ctl"],keycode=142)
             draft=choose(client,"Confirm")
-            row=next(a for a in controls(draft,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            row=next(a for a in controls(draft,"bind_slot") if a.get("label","").split("\n",1)[0]=="Wait")
             assert "F12" in row["label"]
-            duplicate=act(client,"ui.binding_slot",control=row["control"],slot=2)
-            key=controls(duplicate,"ui.binding_key")[0]
-            duplicate=act(client,"ui.binding_key",control=key["control"],keycode=142)
+            duplicate=act(client,"bind_slot",ctl=row["ctl"],slot=2)
+            key=controls(duplicate,"bind_key")[0]
+            duplicate=act(client,"bind_key",ctl=key["ctl"],keycode=142)
             assert any("This key is already bound to this action." in n.get("text","") for n in nodes(duplicate))
-            assert not any(a.get("label")=="Confirm" for a in controls(duplicate,"ui.activate"))
+            assert not any(a.get("label")=="Confirm" for a in controls(duplicate,"click"))
             choose(client,"Cancel")
             choose(client,"Confirm")
             state=choose(client,"Key Bindings")
-            row=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            row=next(a for a in controls(state,"bind_slot") if a.get("label","").split("\n",1)[0]=="Wait")
             assert "F12" in row["label"], "The original parent Confirm must apply the actual binding"
             choose(client,"Default Bindings")
             choose(client,"Confirm")
             state=choose(client,"Key Bindings")
-            row=next(a for a in controls(state,"ui.binding_slot") if a.get("label","").split("\n",1)[0]=="Wait")
+            row=next(a for a in controls(state,"bind_slot") if a.get("label","").split("\n",1)[0]=="Wait")
             assert "F12" not in row["label"]
             evidence["binding_confirm_duplicate_guard_default_restore"] = True
-            state = act(client, "ui.back")
-            assert controls(state,"ui.binding_slot"), "The original binding editor ignores Back to protect edits"
+            state = act(client, "back")
+            assert controls(state,"bind_slot"), "The original binding editor ignores Back to protect edits"
             evidence["binding_back_preserved_editor"] = True
             state = choose(client,"Cancel")
             assert panel_title(state) == TITLES[index]
         elif index == 4:
             state, evidence["music_volume"] = slider_roundtrip(client, state, "Music Volume")
         elif index == 5:
-            assert any(a.get("label") == "Simplified Chinese" for a in controls(state, "ui.activate"))
+            assert any(a.get("label") == "Simplified Chinese" for a in controls(state, "click"))
             evidence["current_language_available_in_english"] = True
         result.append(evidence)
-    act(client, "ui.back")
+    act(client, "back")
     assert ui(client.state())["scene"] == "TitleScene"
     return result
 
@@ -116,8 +116,8 @@ def main():
     report = {"test_fixture": True, "counts_as_win": False, "runtime_id": runtime_id,
               "profile": str(profile.relative_to(root)), "cli_language": "en", "gui_language": "zh", "cases": []}
     try:
-        hello = client.request("protocol.info"); assert hello["ok"], hello
-        report["build_id"] = hello["result"]["build_id"]
+        hello = client.request("info"); assert ("err" not in hello), hello
+        report["build_id"] = hello["data"]["build_id"]
         test_settings(client, report["cases"])
         report["ok"] = True
     except Exception as error:

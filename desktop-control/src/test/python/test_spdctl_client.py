@@ -191,6 +191,7 @@ class SpdctlClientDecoderTest(unittest.TestCase):
 
         pending = decode_client_response({
             "controller": "settle", "rid": "action", "s": "s2", "st": "pending",
+            "pending_reason": "action_pending", "stage": "receipt",
             "outcome": wire("lookup2", revision=None, data={"id": "action", "op": "cell", "st": "EXECUTING"}),
         })
         self.assertIsNone(pending.current_frame)

@@ -13,16 +13,29 @@ def main():
     root=Path(__file__).resolve().parents[4]
     output=root/"desktop-control/build/fixtures/packaging9.0"/("startup-failure-"+uuid.uuid4().hex)
     profile=output/"profile"
-    emergency=profile/"audit/emergency";emergency.mkdir(parents=True)
-    from test_ui import configure_test_ui
-    configure_test_ui(profile)
-    (profile/"test_fixture.json").write_text(json.dumps({"test_fixture":True,"counts_as_win":False},indent=2))
+    output.mkdir(parents=True)
+    command=[str(args.launcher.resolve()),"run","--machine","--data-dir",str(profile),
+             "--no-terminal","--trace-dir",str(output/"transport")]
+    # Initialize the intact current audit pair through the packaged launcher, then
+    # close by normal EOF before introducing a fault into this isolated fixture.
+    initialized=subprocess.run(command, input=b'{"v":9,"id":"startup-bootstrap","op":"info"}\n',
+                               capture_output=True,timeout=45)
+    assert initialized.returncode==0,(initialized.returncode,initialized.stderr)
+    frames=[json.loads(line) for line in initialized.stdout.splitlines()]
+    assert len(frames)==1 and frames[0].get("id")=="startup-bootstrap" and "err" not in frames[0],frames
+    bootstrap_ids=[]
+    for name in ["public","internal"]:
+        with sqlite3.connect((profile/"audit"/(name+".sqlite3")).as_uri()+"?mode=ro",uri=True) as db:
+            prior=db.execute("SELECT session_id,status FROM sessions").fetchall()
+            assert len(prior)==1 and prior[0][1]=="CLOSED",prior
+            bootstrap_ids.append(prior[0][0])
+    assert bootstrap_ids[0]==bootstrap_ids[1],bootstrap_ids
+    emergency=profile/"audit/emergency"
+    (output/"test_fixture.json").write_text(json.dumps({"test_fixture":True,"counts_as_win":False},indent=2))
     # The importer must preserve an existing archived file, making Files.move fail before GameController exists.
     (emergency/"fixture.log").write_bytes(b"fixture diagnostic bytes\xff")
     (emergency/"fixture.log.imported").write_text("pre-existing archive must remain")
-    process=subprocess.run([str(args.launcher.resolve()),"run","--machine","--data-dir",str(profile),
-                            "--no-terminal","--trace-dir",str(output/"transport")],
-                           input=b"",capture_output=True,timeout=30)
+    process=subprocess.run(command,input=b"",capture_output=True,timeout=30)
     assert process.returncode==1,(process.returncode,process.stderr)
     assert process.stdout==b"",process.stdout
     assert b"STARTUP_FAILED" in process.stderr
@@ -31,9 +44,9 @@ def main():
     for name in ["public","internal"]:
         with sqlite3.connect(profile/"audit"/(name+".sqlite3")) as db:
             assert db.execute("PRAGMA integrity_check").fetchone()==("ok",)
-            session=db.execute("SELECT session_id,status,end_reason,ended_at FROM sessions").fetchall()
+            session=db.execute("SELECT session_id,status,end_reason,ended_at FROM sessions WHERE session_id != ?",(bootstrap_ids[0],)).fetchall()
             assert len(session)==1 and session[0][1:3]==("FAILED","launcher_failure") and session[0][3],session
-            assert db.execute("SELECT count(*) FROM requests").fetchone()==(0,)
+            assert db.execute("SELECT count(*) FROM requests WHERE session_id=?",(session[0][0],)).fetchone()==(0,)
             sessions.append(session)
             if name=="public":
                 events=json.dumps(db.execute("SELECT kind,data_json FROM events").fetchall())

@@ -4,6 +4,13 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
 
+## CLI.9.0.6
+
+- Removes retired CLI5/6/7 and depth-9 token-study entrypoints, historical decoder loaders and their dedicated tests. Current acceptance clients use protocol-9 wire fields and the production decoder instead of the old canonical-name adapter.
+- Requires every pending controller-settle wrapper to carry its current `pending_reason` and `stage`; `response_pending` also requires its exact outstanding `pending_request`. Public map/cell/ray helpers accept current wire/controller objects and reject the retired `{seq,response}` relay envelope.
+- Removes the unreviewed pre-4.0 autonomous exploration policy while retaining explicit interactive public intents, outcome settlement and current runtime acceptance coverage. Corrects active documentation and makes the Java-to-Python gate generate both runtime classpaths before dependent tests.
+- Keeps protocol 9, audit schema 12, game 4.0.2/code 922, the v9 profile and trace format 1. Native game/save compatibility, immutable historical handle mappings and recorded playthrough/validation evidence retain their existing boundaries. Cleanup and fresh-build verification are recorded in [maintenance validation](docs/cli-9.0.6-cleanup-validation.md).
+
 ## CLI.9.0.5
 
 - Aligns finite action completion with reviewed public semantic presentation: visible character/aura follow, chilled onset, finite sentry tails and semantic item landing. Genuine warning and operation-state changes remain part of revision validation; decorative feedback remains outside it.

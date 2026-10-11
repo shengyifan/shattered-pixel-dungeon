@@ -34,13 +34,6 @@ class GameplayBurstTest {
             assertTrue(((Set<?>)GameplayVisualTraversalTest.method("occurrenceKey").invoke(f.collector)).isEmpty());
         }
     }
-    @Test void newObserverOverloadStillNotifiesExistingFiveArgumentObservers() {
-        int[] calls={0};RuntimeObserver observer=new RuntimeObserver(){
-            @Override public void onVisualCues(String run,Object level,int depth,List<VisualCue> cues,boolean ready){calls[0]++;}
-        };
-        observer.onVisualCues("fixture",new Object(),1,Collections.emptyList(),true,Collections.emptySet());
-        assertEquals(1,calls[0]);
-    }
     @Test void measuredSignalCountsActualKnownContributorsNotRequestedQuantityOrOldTails() throws Exception {
         try(Fixture f=new Fixture()){
             Emitter emitter=f.emitter();Visual preceding=f.particle(emitter,22);

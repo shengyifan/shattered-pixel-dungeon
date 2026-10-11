@@ -107,9 +107,9 @@ class TutorialBoundaryTest {
         assertTrue(stable());
 
         assertFalse(rendered());
-        controller.onVisualCues(Dungeon.runId, Dungeon.level, Dungeon.depth, List.of());
+        controller.onVisualCues(Dungeon.runId, Dungeon.level, Dungeon.depth, List.of(), true, null);
         assertFalse(rendered(), "Finishing the tween must still pass the normal draw acknowledgement");
-        controller.onVisualCues(Dungeon.runId, Dungeon.level, Dungeon.depth, List.of());
+        controller.onVisualCues(Dungeon.runId, Dungeon.level, Dungeon.depth, List.of(), true, null);
         assertTrue(rendered());
     }
 

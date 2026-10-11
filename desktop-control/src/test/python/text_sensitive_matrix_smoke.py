@@ -17,6 +17,7 @@ import time
 import traceback
 
 from fixture_smoke import freeze_runtime
+from protocol9 import ACTION_OPS
 from language_matrix_smoke import MatrixClient, validate
 
 
@@ -66,34 +67,34 @@ def client_type(evidence):
             if evidence.failure is not None:
                 raise AssertionError("This case stopped at its first error; no further CLI requests may be sent")
             evidence.responses += 1
-            evidence.actions += int(op == "action.execute")
+            evidence.actions += int(op in ACTION_OPS)
             try:
                 response = super().request(op, args, **kwargs)
-                assert response.get("protocol_version") == 9, response
-                assert response.get("ok"), response
-                result = response.get("result")
-                # Root MatrixClient checks dict results; events.read also returns a list.
-                if op == "state.get":
+                assert response.get("v") == 9, response
+                assert ("err" not in response), response
+                result = response.get("data")
+                # Explicit source observations require complete provenance checks.
+                if op == 'state':
                     failures = validate(result)
                     evidence.source_checks += 1
                     assert not failures, {"op": op, "source_failures": failures[:30]}
-                if op == "protocol.info":
-                    assert response["protocol_version"] == 9 and result["audit_schema_version"] == 12, result
-                    assert result["cli_version"] == "CLI.9.0.5" and result["text_language"] == "en", result
+                if op == 'info':
+                    assert response["v"] == 9 and result["audit_schema_version"] == 12, result
+                    assert result["cli_version"] == "CLI.9.0.6" and result["text_language"] == "en", result
                     assert result.get("build_id") and result.get("session_id"), result
                     metadata = {key: result[key] for key in ("build_id", "cli_version", "audit_schema_version", "text_language", "session_id")}
-                    metadata["protocol_version"] = response["protocol_version"]
+                    metadata["v"] = response["v"]
                     if evidence.handshakes:
                         assert metadata["build_id"] == evidence.handshakes[0]["build_id"], "A case changed frozen runtime builds"
                     evidence.handshakes.append(metadata)
-                if isinstance(result, dict) and isinstance(result.get("observation"), dict):
-                    display = result["observation"].get("ui", {}).get("display")
+                if isinstance(result, dict):
+                    display = result.get("ui", {}).get("display")
                     if display is not None:
                         assert display == {"language": evidence.language, "fullscreen": False}, display
                         evidence.gui_languages.add(display["language"])
                 return response
             except Exception as error:
-                evidence.failure = {"op": op, "action": args.get("action") if isinstance(args, dict) else None,
+                evidence.failure = {"op": op, "action": op if op in ACTION_OPS else None,
                                     "error_type": type(error).__name__, "error": str(error)[:5000]}
                 raise
     return SensitiveMatrixClient

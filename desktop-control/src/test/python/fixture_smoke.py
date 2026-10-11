@@ -18,7 +18,7 @@ import uuid
 import zipfile
 from machine_smoke import Client
 from client_result import settle_action
-from protocol9 import is_live_operation
+from protocol9 import OBSERVATION_FIELDS, frame_data, is_live_operation
 from fixture_identity import fixture_identity_matches, fixture_context_matches
 
 CLASSES = ["WARRIOR", "MAGE", "ROGUE", "HUNTRESS", "DUELIST", "CLERIC"]
@@ -41,8 +41,8 @@ FLOOR_TARGETS = {"HeroicLeap", "SmokeBomb", "Feint", "WarpBeacon", "PowerOfMany"
 SPELL_SELF = {"BlessSpell", "LayOnHands", "MnemonicPrayer"}
 SPELL_FLOOR = {"Flash", "HallowedGround", "WallOfLight", "BeamingRay"}
 SNEAK_WEAPONS = {"Dagger", "Dirk", "AssassinsBlade"}
-GAME_PROSE_FIELDS = {"name", "class_name", "subclass_name", "label", "text", "description",
-                     "prompt", "cell_prompt", "item_prompt", "options", "message", "title",
+GAME_PROSE_FIELDS = {"name", "class_name", 'sub_name', "label", "text", 'desc',
+                     "prompt", 'prompt', "item_prompt", "options", "message", "title",
                      "hint", "tooltip", "disabled_reason"}
 RAW_FIELDS = {"raw_request", "raw_response", "raw_bytes", "raw_format", "raw_json", "text_sources", "text_diagnostics", "node"}
 
@@ -76,11 +76,29 @@ def norm(text):
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
+class DeferredTrace:
+    """Open only after a complete response, after the launcher has accepted its profile."""
+    def __init__(self, path):
+        self.path = path
+        self.stream = None
+
+    def write(self, text):
+        if self.stream is None:
+            self.stream = self.path.open("a")
+        return self.stream.write(text)
+
+    def flush(self):
+        if self.stream is not None:
+            self.stream.flush()
+
+    def close(self):
+        if self.stream is not None:
+            self.stream.close()
+
+
 class FixtureClient(Client):
     def __init__(self, command, profile, verify_gui=False):
-        from test_ui import configure_test_ui
-        configure_test_ui(profile)
-        self.trace = (profile / "public-trace.jsonl").open("a")
+        self.trace = DeferredTrace(profile / "public-trace.jsonl")
         self.last_state = None
         self.verify_gui = verify_gui
         self.gui_postconditions_checked = 0
@@ -88,8 +106,8 @@ class FixtureClient(Client):
 
     def request(self, op, args=None, **kwargs):
         result = super().request(op, args, **kwargs)
-        if is_live_operation(op) and result.get("ok") and isinstance(result.get("result"), dict) and "observation" in result["result"]:
-            self.last_state = result["result"]
+        if is_live_operation(op) and ("err" not in result) and isinstance(result.get('data'), dict) and OBSERVATION_FIELDS & result['data'].keys():
+            self.last_state = frame_data(result)
         self.trace.write(json.dumps({"test_fixture": True, "op": op, "args": args,
                                      "request": getattr(self, "last_wire_request", None),
                                      "response": getattr(self, "last_wire_response", result)}, ensure_ascii=False) + "\n")
@@ -97,50 +115,50 @@ class FixtureClient(Client):
         # Preserve evidence before rejecting a malformed translation. This includes
         # nested request.get/history/events responses; raw audit fields remain opaque.
         assert_game_prose_english(result)
-        data = result.get("result")
-        quitting = op == "action.execute" and isinstance(args, dict) and args.get("action") == "app.quit"
-        if self.verify_gui and not quitting and result.get("ok") and isinstance(data, dict) and "observation" in data:
-            assert_gui_environment(self.profile, data)
+        data = result.get('data')
+        quitting = op == "quit"
+        if self.verify_gui and not quitting and ("err" not in result) and isinstance(data, dict) and OBSERVATION_FIELDS & data.keys():
+            assert_gui_environment(self.profile, frame_data(result))
             self.gui_postconditions_checked += 1
         return result
 
 
 def act(client, action, **args):
     old_choice = None
-    if action == "ui.activate" and client.last_state:
-        old_choice = next((a for a in client.last_state["actions"] if a.get("control") == args.get("control") and a["action"] == action), None)
+    if action == 'click' and client.last_state:
+        old_choice = next((a for a in client.last_state['acts'] if a.get('ctl') == args.get('ctl') and a['op'] == action), None)
     for _ in range(4):
-        result = client.request("action.execute", {"action": action, **args})
-        if result.get("ok"):
+        result = client.request(action, args)
+        if ("err" not in result):
             settled = settle_action(client, result, action).require_success()
             data = settled.observation
             if data is not None:
                 client.last_state = data
             return data
-        if result.get("error", {}).get("code") != "STALE_STATE":
+        if result.get("err") != "STALE_STATE":
             raise AssertionError(result)
         refreshed = client.state()
-        if action == "ui.activate" and old_choice and old_choice.get("label"):
-            if any(a["action"] == action and a.get("control") == args["control"] for a in refreshed["actions"]):
+        if action == 'click' and old_choice and old_choice.get("label"):
+            if any(a['op'] == action and a.get('ctl') == args['ctl'] for a in refreshed['acts']):
                 continue
-            replacement = [a for a in refreshed["actions"] if a["action"] == action and a.get("label") == old_choice["label"]]
+            replacement = [a for a in refreshed['acts'] if a['op'] == action and a.get("label") == old_choice["label"]]
             assert len(replacement) == 1, {"stale_action_is_ambiguous": old_choice, "candidates": replacement}
-            args["control"] = replacement[0]["control"]
+            args['ctl'] = replacement[0]['ctl']
     raise AssertionError("UI did not settle after repeated read-only refreshes")
 
 
 def click(client, predicate):
     state = client.state()
-    candidates = [a for a in state["actions"] if a["action"] == "ui.activate" and predicate(a.get("label", ""))]
-    assert candidates, {"no_matching_control": [a for a in state["actions"] if a["action"] == "ui.activate"]}
-    return act(client, "ui.activate", control=candidates[0]["control"])
+    candidates = [a for a in state['acts'] if a['op'] == 'click' and predicate(a.get("label", ""))]
+    assert candidates, {"no_matching_control": [a for a in state['acts'] if a['op'] == 'click']}
+    return act(client, 'click', ctl=candidates[0]['ctl'])
 
 
 def reach_game(client, hero_class):
     selected = False
     for _ in range(35):
         state = client.state()
-        observation = state["observation"]
+        observation = state
         if observation.get("scene") == "game":
             assert observation["hero"]["class"] == hero_class.lower(), observation["hero"]
             assert observation["hero"]["class_name"] == hero_class.lower(), observation["hero"]
@@ -151,9 +169,9 @@ def reach_game(client, hero_class):
             selected = True
             continue
         if ui.get("scene") == "HeroSelectScene" and ui.get("modal") and selected:
-            act(client, "ui.back")
+            act(client, 'back')
             continue
-        options = [a for a in state["actions"] if a["action"] == "ui.activate" and a.get("label")]
+        options = [a for a in state['acts'] if a['op'] == 'click' and a.get("label")]
         choice = None
         # Exact English resource labels; GUI language is checked separately after actions.
         for label in ["Continue", "Enter the Dungeon", "Play", "New Game", "Start"]:
@@ -161,37 +179,37 @@ def reach_game(client, hero_class):
             if choice:
                 break
         if choice:
-            act(client, "ui.activate", control=choice["control"])
-        elif any(a["action"] == "ui.reveal" for a in state["actions"]):
-            act(client, "ui.reveal")
+            act(client, 'click', ctl=choice['ctl'])
+        elif any(a['op'] == 'reveal' for a in state['acts']):
+            act(client, 'reveal')
         else:
-            raise AssertionError({"cannot_start": ui, "actions": state["actions"]})
+            raise AssertionError({"cannot_start": ui, 'acts': state['acts']})
     raise AssertionError("Did not reach a playable fixture")
 
 
 def has_action(state, action):
-    return any(a["action"] == action for a in state["actions"])
+    return any(a['op'] == action for a in state['acts'])
 
 
 def close_choices(client, discard=False):
     for _ in range(8):
         state = client.state()
-        if state["phase"] != "awaiting_input" and not state["observation"].get("ui", {}).get("modal"):
+        if state["phase"] != "awaiting_input" and not state.get("ui", {}).get("modal"):
             return state
         if discard:
-            confirmation = next((a for a in state["actions"] if a["action"] == "ui.activate" and a.get("label", "").lower().startswith("yes,")), None)
+            confirmation = next((a for a in state['acts'] if a['op'] == 'click' and a.get("label", "").lower().startswith("yes,")), None)
             if confirmation:
-                act(client, "ui.activate", control=confirmation["control"])
+                act(client, 'click', ctl=confirmation['ctl'])
                 continue
-        act(client, "cell.cancel" if has_action(state, "cell.cancel") else "ui.back")
+        act(client, 'untarget' if has_action(state, 'untarget') else 'back')
     raise AssertionError("Prompt did not close through its normal cancellation path")
 
 
 def visible_target(state, floor=False):
-    observation = state["observation"]
+    observation = state
     hero = observation["hero"]["cell"]
-    width = observation["map"]["width"]
-    characters = [e for e in observation["visible_entities"] if e["kind"] == "character"]
+    width = observation["map"]['w']
+    characters = [e for e in observation['entities'] if e["kind"] == "character"]
     if not floor and characters:
         return min(characters, key=lambda e: abs(e["cell"] % width - hero % width) + abs(e["cell"] // width - hero // width))["cell"]
     occupied = {e["cell"] for e in characters}
@@ -227,9 +245,9 @@ def assert_gui_environment(profile, state):
             for line in path.read_text().splitlines():
                 row = json.loads(line)
                 kind = "activity" if str(row["state_version"]).startswith("activity:") else "revision"
-                if fixture_identity_matches(profile, kind, row["state_version"], state["state_version"]):
+                if fixture_identity_matches(profile, kind, row["state_version"], state['rev']):
                     assert fixture_context_matches(profile, row, state), row
-                    display = state["observation"]["ui"]["display"]
+                    display = state["ui"]["display"]
                     assert row["language_code"] == display["language"] == os.environ.get("SPDCTL_TEST_LANGUAGE", "zh"), row
                     assert row["fullscreen"] is False and display["fullscreen"] is False, row
                     return {"gui_language": row["language"], "language_code": row["language_code"], "fullscreen": row["fullscreen"],
@@ -240,64 +258,64 @@ def assert_gui_environment(profile, state):
 
 def initial_item_test(client, hero_class):
     state = client.state()
-    item = next(i for i in state["observation"]["inventory"] if INITIAL_ITEM[hero_class] in i["name"].lower())
-    opened = act(client, "inventory.open", locator=item["locator"])
+    item = next(i for i in state['inv'] if INITIAL_ITEM[hero_class] in i["name"].lower())
+    opened = act(client, 'item', loc=item['loc'])
     assert opened["phase"] == "awaiting_input"
-    assert any(a["action"] == "ui.activate" for a in opened["actions"])
+    assert any(a['op'] == 'click' for a in opened['acts'])
     close_choices(client)
     return {"initial_item": item["name"], "opened_real_item_window": True}
 
 
 def select_inventory_item(client, predicate):
     state = client.state()
-    if any(a["action"] == "ui.activate" and predicate(a.get("label", "")) for a in state["actions"]):
+    if any(a['op'] == 'click' and predicate(a.get("label", "")) for a in state['acts']):
         return click(client, predicate)
-    bags = [n.get("label") for n in state["observation"]["ui"]["controls"]
-            if n.get("enabled") and n.get("shortcut_action", "").startswith("bag_") and n.get("label")]
+    bags = [n.get("label") for n in state["ui"]['nodes']
+            if n.get("enabled") and n.get('shortcut', "").startswith("bag_") and n.get("label")]
     for label in bags:
         click(client, lambda text: text == label)
         state = client.state()
-        if any(a["action"] == "ui.activate" and predicate(a.get("label", "")) for a in state["actions"]):
+        if any(a['op'] == 'click' and predicate(a.get("label", "")) for a in state['acts']):
             return click(client, predicate)
     raise AssertionError({"item_not_in_any_visible_bag": bags})
 
 
 def armor_test(client, profile, name, empty):
     state = client.state()
-    before = checkpoint(profile, state["state_version"])
-    act(client, "inventory.open", locator="equipment.armor")
+    before = checkpoint(profile, state['rev'])
+    act(client, 'item', loc="equipment.armor")
     result = click(client, lambda text: norm(text) == norm(name))
     cancelled = False
     selected_target = None
-    if not empty and has_action(result, "cell.cancel"):
-        after_cancel = act(client, "cell.cancel")
-        assert checkpoint(profile, after_cancel["state_version"])["armor_charge"] == before["armor_charge"]
+    if not empty and has_action(result, 'untarget'):
+        after_cancel = act(client, 'untarget')
+        assert checkpoint(profile, after_cancel['rev'])["armor_charge"] == before["armor_charge"]
         cancelled = True
-        act(client, "inventory.open", locator="equipment.armor")
+        act(client, 'item', loc="equipment.armor")
         result = click(client, lambda text: norm(text) == norm(name))
     if not empty and name == "Trinity":
         result = click(client, lambda text: "blazing" in text.lower())
-    if not empty and has_action(result, "cell.cancel"):
+    if not empty and has_action(result, 'untarget'):
         selected_target = visible_target(result, name in FLOOR_TARGETS)
-        result = act(client, "cell.select", cell=selected_target)
-    response_values = checkpoint(profile, result["state_version"])
+        result = act(client, 'cell', cell=selected_target)
+    response_values = checkpoint(profile, result['rev'])
     if not empty and name != "WarpBeacon":
         assert response_values["armor_charge"] < before["armor_charge"], {"action_response_preceded_armor_effect": name, "before": before, "response": response_values}
     close_choices(client)
     result = client.state()
-    after = checkpoint(profile, result["state_version"])
+    after = checkpoint(profile, result['rev'])
     if empty:
         assert before["armor_charge"] == after["armor_charge"] == 0, (before, after)
-        assert not has_action(result, "cell.cancel")
+        assert not has_action(result, 'untarget')
     elif name == "WarpBeacon":
         # Placement is free; exercise the actual paid teleport through the following menu too.
-        act(client, "inventory.open", locator="equipment.armor")
+        act(client, 'item', loc="equipment.armor")
         reopened = click(client, lambda text: norm(text) == norm(name))
         assert reopened["phase"] == "awaiting_input", reopened
         teleported = click(client, lambda text: "teleport" in text.lower())
-        after = checkpoint(profile, teleported["state_version"])
+        after = checkpoint(profile, teleported['rev'])
         assert after["armor_charge"] < before["armor_charge"], after
-        assert teleported["observation"]["hero"]["cell"] == selected_target
+        assert teleported["hero"]["cell"] == selected_target
         close_choices(client)
     else:
         assert after["armor_charge"] < before["armor_charge"], {"ability_did_not_spend": name, "before": before, "after": after}
@@ -308,44 +326,44 @@ def armor_test(client, profile, name, empty):
 
 def subclass_test(client, profile, name):
     state = client.state()
-    assert state["observation"]["hero"]["subclass"] == name.lower()
-    before = checkpoint(profile, state["state_version"])
+    assert state["hero"]["subclass"] == name.lower()
+    before = checkpoint(profile, state['rev'])
     passive = name in {"BATTLEMAGE", "WARLOCK", "WARDEN"}
     if passive:
-        item = next(i for i in state["observation"]["inventory"] if ("staff" if name != "WARDEN" else "spirit bow") in i["name"].lower())
-        act(client, "inventory.open", locator=item["locator"])
+        item = next(i for i in state['inv'] if ("staff" if name != "WARDEN" else "spirit bow") in i["name"].lower())
+        act(client, 'item', loc=item['loc'])
         result = click(client, lambda label: norm(label) == ("zap" if name != "WARDEN" else "shoot"))
     else:
-        nodes = state["observation"]["ui"]["controls"]
-        indicator = next((n for n in nodes if n.get("shortcut_action") == "tag_action" and n.get("enabled")), None)
-        assert indicator, {"missing_indicator": name, "controls": nodes}
-        result = act(client, "ui.activate", control=indicator["id"])
+        nodes = state["ui"]['nodes']
+        indicator = next((n for n in nodes if n.get('shortcut') == "tag_action" and n.get("enabled")), None)
+        assert indicator, {"missing_indicator": name, 'nodes': nodes}
+        result = act(client, 'click', ctl=indicator["id"])
         if name == "GLADIATOR":
             result = click(client, lambda label: "slam" in label.lower())
         elif name == "MONK":
             result = click(client, lambda label: "dragon kick" in label.lower())
-    if has_action(result, "cell.cancel"):
-        result = act(client, "cell.select", cell=visible_target(result))
-    response_values = checkpoint(profile, result["state_version"])
+    if has_action(result, 'untarget'):
+        result = act(client, 'cell', cell=visible_target(result))
+    response_values = checkpoint(profile, result['rev'])
     if name == "MONK":
         assert response_values["monk_energy"] < before["monk_energy"], {"action_response_preceded_monk_effect": response_values}
     elif name in {"PRIEST", "PALADIN"}:
         assert response_values["tome_charge"] < before["tome_charge"], {"action_response_preceded_spell_effect": response_values}
     elif name == "CHAMPION":
-        old = next(i["name"] for i in state["observation"]["inventory"] if i["locator"] == "equipment.weapon")
-        new = next(i["name"] for i in result["observation"]["inventory"] if i["locator"] == "equipment.weapon")
+        old = next(i["name"] for i in state['inv'] if i['loc'] == "equipment.weapon")
+        new = next(i["name"] for i in result['inv'] if i['loc'] == "equipment.weapon")
         assert old != new, {"action_response_preceded_weapon_swap": (old, new)}
     elif name in {"BERSERKER", "FREERUNNER"}:
-        assert state["observation"]["hero"]["buffs"] != result["observation"]["hero"]["buffs"], {
+        assert state["hero"]["buffs"] != result["hero"]["buffs"], {
             "action_response_preceded_subclass_effect": name}
     else:
         assert response_values["target_hp"] < before["target_hp"], {"action_response_preceded_attack_effect": name, "response": response_values}
     close_choices(client)
     after_state = client.state()
-    after = checkpoint(profile, after_state["state_version"])
+    after = checkpoint(profile, after_state['rev'])
     if name == "CHAMPION":
-        old = next(i["name"] for i in state["observation"]["inventory"] if i["locator"] == "equipment.weapon")
-        new = next(i["name"] for i in after_state["observation"]["inventory"] if i["locator"] == "equipment.weapon")
+        old = next(i["name"] for i in state['inv'] if i['loc'] == "equipment.weapon")
+        new = next(i["name"] for i in after_state['inv'] if i['loc'] == "equipment.weapon")
         assert old != new, (old, new)
     elif name == "MONK":
         assert after["monk_energy"] < before["monk_energy"], (before, after)
@@ -354,96 +372,96 @@ def subclass_test(client, profile, name):
     elif name not in {"BERSERKER", "FREERUNNER"}:
         assert after["target_hp"] < before["target_hp"], (before, after)
     else:
-        assert state["observation"]["hero"]["buffs"] != after_state["observation"]["hero"]["buffs"]
+        assert state["hero"]["buffs"] != after_state["hero"]["buffs"]
     return {"subclass": name, "active_indicator": not passive, "public_action_and_effect_checked": True}
 
 
 def ui_test(client, name):
     state = client.state()
-    inventory = state["observation"]["inventory"]
+    inventory = state['inv']
     if name == "alchemy":
-        original_scope = state["scope_id"]
-        station = next(c for c in state["observation"]["map"]["cells"] if c["visibility"] == "visible" and "alchemy" in c["name"].lower())
-        entered = act(client, "cell.select", cell=station["cell"])
-        assert entered["scope_id"] == original_scope, "Alchemy must remain in the same run scope"
-        assert entered["observation"]["ui"]["scene"] == "AlchemyScene"
+        original_scope = state['s']
+        station = next(c for c in state["map"]["cells"] if c["visibility"] == "visible" and "alchemy" in c["name"].lower())
+        entered = act(client, 'cell', cell=station["cell"])
+        assert entered['s'] == original_scope, "Alchemy must remain in the same run scope"
+        assert entered["ui"]["scene"] == "AlchemyScene"
         for _ in range(3):
             click(client, lambda label: "add" in label.lower())
             select_inventory_item(client, lambda label: "sungrass" in label.lower() and "seed" in label.lower())
         click(client, lambda label: "craft" in label.lower())
-        act(client, "ui.back")
+        act(client, 'back')
         after = client.state()
-        assert after["scope_id"] == original_scope
-        assert any("healing" in i["name"].lower() for i in after["observation"]["inventory"]), after
-        assert not any("sungrass" in i["name"].lower() for i in after["observation"]["inventory"])
+        assert after['s'] == original_scope
+        assert any("healing" in i["name"].lower() for i in after['inv']), after
+        assert not any("sungrass" in i["name"].lower() for i in after['inv'])
         return {"alchemy_crafted_from_three_seeds": True, "same_run_scope": True}
     if name == "identify":
         item = next(i for i in inventory if norm(i["name"]) == "sword")
-        assert not item["level_known"] and item["level"] is None, item
+        assert "level" in item and item["level"] is None, item
         scroll = next(i for i in inventory if "identify" in i["name"].lower())
     elif name == "upgrade":
-        item = next(i for i in inventory if i["locator"] == "equipment.weapon")
+        item = next(i for i in inventory if i['loc'] == "equipment.weapon")
         scroll = next(i for i in inventory if "upgrade" in i["name"].lower())
     else:
-        item = next(i for i in inventory if i["locator"] == "equipment.weapon")
+        item = next(i for i in inventory if i['loc'] == "equipment.weapon")
         scroll = next(i for i in inventory if "scroll" in i["name"].lower() and not i["type_known"])
-    act(client, "inventory.open", locator=scroll["locator"])
+    act(client, 'item', loc=scroll['loc'])
     click(client, lambda label: norm(label) == "read")
     if name == "cancel-confirm":
-        warning = act(client, "ui.back")
-        assert warning["observation"]["ui"]["modal"]
-        assert any(a.get("label", "").lower().startswith("no,") for a in warning["actions"])
-        blocked_back = act(client, "ui.back")
-        assert blocked_back["observation"]["ui"] == warning["observation"]["ui"], "Mandatory cancellation confirmation must not be bypassed by back"
+        warning = act(client, 'back')
+        assert warning["ui"]["modal"]
+        assert any(a.get("label", "").lower().startswith("no,") for a in warning['acts'])
+        blocked_back = act(client, 'back')
+        assert blocked_back["ui"] == warning["ui"], "Mandatory cancellation confirmation must not be bypassed by back"
         click(client, lambda label: label.lower().startswith("no,"))
     click(client, lambda label: norm(label) == "sword")
     if name == "upgrade":
         preview = client.state()
-        assert preview["observation"]["ui"]["modal"]
+        assert preview["ui"]["modal"]
         click(client, lambda label: norm(label) == "upgrade")
     close_choices(client)
-    after = client.state()["observation"]["inventory"]
+    after = client.state()['inv']
     if name == "identify":
-        identified = next(i for i in after if i["locator"] == item["locator"])
-        assert identified["level_known"] and identified["level"] == 2, identified
+        identified = next(i for i in after if i['loc'] == item['loc'])
+        assert type(identified.get("level")) is int and identified["level"] == 2, identified
     elif name == "upgrade":
-        upgraded = next(i for i in after if i["locator"] == "equipment.weapon")
+        upgraded = next(i for i in after if i['loc'] == "equipment.weapon")
         assert upgraded["level"] == item["level"] + 1, upgraded
     else:
-        changed = next(i for i in after if i["locator"] == "equipment.weapon")
+        changed = next(i for i in after if i['loc'] == "equipment.weapon")
         assert changed["name"] != item["name"], changed
     return {"interaction": name, "original_selector_and_confirmation": True, "public_result_verified": True}
 
 
 def spell_test(client, profile, name, empty=False):
     state = client.state()
-    before = checkpoint(profile, state["state_version"])
-    tome = next(i for i in state["observation"]["inventory"] if "tome" in i["name"].lower())
-    act(client, "inventory.open", locator=tome["locator"])
+    before = checkpoint(profile, state['rev'])
+    tome = next(i for i in state['inv'] if "tome" in i["name"].lower())
+    act(client, 'item', loc=tome['loc'])
     click(client, lambda label: norm(label) == "cast")
     expected = norm(name[:-5] if name.endswith("Spell") else name)
     menu = client.state()
-    available = [a for a in menu["actions"] if a["action"] == "ui.activate"
+    available = [a for a in menu['acts'] if a['op'] == 'click'
                  and norm(a.get("label", "").split("\n")[0]) == expected]
     if empty:
         assert available, {"missing_original_dimmed_spell_control": name}
-        node = next(n for n in menu["observation"]["ui"]["controls"] if n.get("id") == available[0]["control"])
+        node = next(n for n in menu["ui"]['nodes'] if n.get("id") == available[0]['ctl'])
         assert node.get("dimmed"), {"empty_spell_not_visually_dimmed": node}
-        refused = act(client, "ui.activate", control=available[0]["control"])
-        assert not has_action(refused, "cell.cancel")
-        refused_values = checkpoint(profile, refused["state_version"])
+        refused = act(client, 'click', ctl=available[0]['ctl'])
+        assert not has_action(refused, 'untarget')
+        refused_values = checkpoint(profile, refused['rev'])
         assert refused_values["tome_charge"] == before["tome_charge"] == 0, (before, refused_values)
         close_choices(client)
         return {"spell": name, "empty_resource_native_refusal_checked": True, "dimmed_control_checked": True}
-    assert available, {"spell_not_available": name, "actions": menu["actions"]}
-    result = act(client, "ui.activate", control=available[0]["control"])
+    assert available, {"spell_not_available": name, 'acts': menu['acts']}
+    result = act(client, 'click', ctl=available[0]['ctl'])
     cancelled = False
-    if has_action(result, "cell.cancel"):
-        cancelled_state = act(client, "cell.cancel")
-        cancelled_values = checkpoint(profile, cancelled_state["state_version"])
+    if has_action(result, 'untarget'):
+        cancelled_state = act(client, 'untarget')
+        cancelled_values = checkpoint(profile, cancelled_state['rev'])
         assert cancelled_values["tome_charge"] == before["tome_charge"], (before, cancelled_values)
         cancelled = True
-        act(client, "inventory.open", locator=tome["locator"])
+        act(client, 'item', loc=tome['loc'])
         click(client, lambda label: norm(label) == "cast")
         result = click(client, lambda label: norm(label.split("\n")[0]) == expected)
     if name == "HolyIntuition":
@@ -452,25 +470,26 @@ def spell_test(client, profile, name, empty=False):
         item_hint = {"BodyForm": "blazing", "MindForm": "magic missile", "SpiritForm": "accuracy"}[name]
         if name == "BodyForm":
             options = client.state()
-            option = next(a for a in options["actions"] if a["action"] == "ui.activate" and item_hint in a.get("label", "").lower())
-            unchanged = act(client, "ui.activate", control=option["control"], gesture="long")
-            assert unchanged["observation"]["ui"] == options["observation"]["ui"], "Unimplemented native long press must not synthesize a click"
-            assert checkpoint(profile, unchanged["state_version"])["tome_charge"] == before["tome_charge"]
+            option = next(a for a in options['acts'] if a['op'] == 'click' and item_hint in a.get("label", "").lower())
+            unchanged = act(client, 'click', ctl=option['ctl'], g="long")
+            assert unchanged["ui"] == options["ui"], "Unimplemented native long press must not synthesize a click"
+            assert checkpoint(profile, unchanged['rev'])["tome_charge"] == before["tome_charge"]
         result = click(client, lambda label: item_hint in label.lower())
         result = click(client, lambda label: label.lower().startswith("assign to"))
-    elif has_action(result, "cell.cancel"):
-        target = result["observation"]["hero"]["cell"] if name in SPELL_SELF else visible_target(result, name in SPELL_FLOOR)
-        result = act(client, "cell.select", cell=target)
-    response_values = checkpoint(profile, result["state_version"])
+    elif has_action(result, 'untarget'):
+        target = result["hero"]["cell"] if name in SPELL_SELF else visible_target(result, name in SPELL_FLOOR)
+        result = act(client, 'cell', cell=target)
+    response_values = checkpoint(profile, result['rev'])
     assert response_values["tome_charge"] + response_values["tome_partial"] < before["tome_charge"] + before["tome_partial"], {"action_response_preceded_spell_effect": name, "response": response_values}
     close_choices(client)
     state = client.state()
-    after = checkpoint(profile, state["state_version"])
+    after = checkpoint(profile, state['rev'])
     assert after["tome_charge"] + after["tome_partial"] < before["tome_charge"] + before["tome_partial"], {"spell_not_cast": name, "before": before, "after": after}
     if name in {"BodyForm", "MindForm", "SpiritForm"}:
         assert after["trinity_form"], after
     if name == "HolyIntuition":
-        assert next(i for i in state["observation"]["inventory"] if norm(i["name"]) == "sword")["curse_known"]
+        identified = next(i for i in state['inv'] if norm(i["name"]) == "sword")
+        assert type(identified.get("cursed")) is bool, identified
     if name == "Cleanse":
         assert not any("Poison" in b for b in after["effect_buffs"]), after
     return {"spell": name, "cast_and_resource_spend_verified": True, "target_cancel_checked": cancelled,
@@ -481,41 +500,41 @@ def spell_test(client, profile, name, empty=False):
 def weapon_ability_control(client):
     state = client.state()
     excluded = {"equip", "unequip", "drop", "throw", "journal", "notes"}
-    choices = [a for a in state["actions"] if a["action"] == "ui.activate" and a.get("label") and norm(a["label"]) not in excluded]
+    choices = [a for a in state['acts'] if a['op'] == 'click' and a.get("label") and norm(a["label"]) not in excluded]
     assert len(choices) == 1, {"ambiguous_weapon_ability": choices}
     return choices[0]
 
 
 def weapon_test(client, profile, name, empty=False):
     state = client.state()
-    before = checkpoint(profile, state["state_version"])
-    start_cell = state["observation"]["hero"]["cell"]
-    act(client, "inventory.open", locator="equipment.weapon")
+    before = checkpoint(profile, state['rev'])
+    start_cell = state["hero"]["cell"]
+    act(client, 'item', loc="equipment.weapon")
     choice = weapon_ability_control(client)
-    result = act(client, "ui.activate", control=choice["control"])
+    result = act(client, 'click', ctl=choice['ctl'])
     cancelled = False
-    if not empty and has_action(result, "cell.cancel"):
-        cancelled_state = act(client, "cell.cancel")
-        assert checkpoint(profile, cancelled_state["state_version"])["weapon_charge"] == before["weapon_charge"]
+    if not empty and has_action(result, 'untarget'):
+        cancelled_state = act(client, 'untarget')
+        assert checkpoint(profile, cancelled_state['rev'])["weapon_charge"] == before["weapon_charge"]
         cancelled = True
-        act(client, "inventory.open", locator="equipment.weapon")
+        act(client, 'item', loc="equipment.weapon")
         choice = weapon_ability_control(client)
-        result = act(client, "ui.activate", control=choice["control"])
-    if not empty and has_action(result, "cell.cancel"):
-        result = act(client, "cell.select", cell=visible_target(result, name in SNEAK_WEAPONS))
-    response_values = checkpoint(profile, result["state_version"])
+        result = act(client, 'click', ctl=choice['ctl'])
+    if not empty and has_action(result, 'untarget'):
+        result = act(client, 'cell', cell=visible_target(result, name in SNEAK_WEAPONS))
+    response_values = checkpoint(profile, result['rev'])
     if not empty:
         assert response_values["weapon_charge"] < before["weapon_charge"], {"action_response_preceded_weapon_effect": name, "response": response_values}
     close_choices(client)
     state = client.state()
-    after = checkpoint(profile, state["state_version"])
+    after = checkpoint(profile, state['rev'])
     if empty:
         assert before["weapon_charge"] == after["weapon_charge"] == 0, (before, after)
-        assert not has_action(state, "cell.cancel")
+        assert not has_action(state, 'untarget')
     else:
         assert after["weapon_charge"] < before["weapon_charge"], {"weapon_ability_not_used": name, "before": before, "after": after}
         if name in SNEAK_WEAPONS:
-            assert state["observation"]["hero"]["cell"] != start_cell
+            assert state["hero"]["cell"] != start_cell
     return {"weapon": name, "ability_label": choice["label"], "actual_resource_spend_verified": not empty,
             "resource_empty_checked": empty, "target_cancel_checked": cancelled,
             "charge_before": before["weapon_charge"], "charge_after": after["weapon_charge"]}
@@ -523,24 +542,24 @@ def weapon_test(client, profile, name, empty=False):
 
 def monk_test(client, profile, name, empty=False):
     state = client.state()
-    before = checkpoint(profile, state["state_version"])
-    indicator = next((n for n in state["observation"]["ui"]["controls"] if n.get("shortcut_action") == "tag_action" and n.get("enabled")), None)
+    before = checkpoint(profile, state['rev'])
+    indicator = next((n for n in state["ui"]['nodes'] if n.get('shortcut') == "tag_action" and n.get("enabled")), None)
     if empty and name == "Flurry":
         assert indicator is None and before["monk_energy"] == 0
         return {"monk_ability": name, "zero_energy_no_indicator": True}
     assert indicator, name
-    act(client, "ui.activate", control=indicator["id"])
+    act(client, 'click', ctl=indicator["id"])
     menu = client.state()
-    matching = [a for a in menu["actions"] if a["action"] == "ui.activate" and norm(a.get("label", "")).startswith(norm(name))]
+    matching = [a for a in menu['acts'] if a['op'] == 'click' and norm(a.get("label", "")).startswith(norm(name))]
     if empty:
         assert not matching, {"insufficient_monk_energy": name, "choices": matching}
         close_choices(client)
         return {"monk_ability": name, "insufficient_energy_disables_choice": True}
     assert matching, name
-    result = act(client, "ui.activate", control=matching[0]["control"])
-    if has_action(result, "cell.cancel"):
-        result = act(client, "cell.select", cell=visible_target(result, name == "Dash"))
-    after = checkpoint(profile, result["state_version"])
+    result = act(client, 'click', ctl=matching[0]['ctl'])
+    if has_action(result, 'untarget'):
+        result = act(client, 'cell', cell=visible_target(result, name == "Dash"))
+    after = checkpoint(profile, result['rev'])
     assert after["monk_energy"] < before["monk_energy"], {"action_response_preceded_monk_effect": name, "response": after}
     if name == "Meditate":
         assert not any("Poison" in buff for buff in after["effect_buffs"]), after
@@ -559,7 +578,7 @@ def run_one(root, classpath, fixture, runtime_id):
     client = FixtureClient(command, profile, verify_gui=True)
     report = {"test_fixture": True, "counts_as_win": False, "fixture": fixture, "profile": str(profile), "runtime_id": runtime_id}
     try:
-        assert client.request("protocol.info")["ok"]
+        assert "err" not in client.request("info")
         started = reach_game(client, hero_class)
         report.update(cli_language="en", gui_environment=assert_gui_environment(profile, started))
         if kind == "class":
@@ -809,7 +828,7 @@ def main():
                "runtime_id": runtime_id, "total": len(reports), "passed": sum(r["ok"] for r in reports), "results": reports}
     (root / "desktop-control/build/fixtures" / runtime_id / "results.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     (root / "desktop-control/build/fixtures/latest-results.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
-    if not all(r["ok"] for r in reports):
+    if not all(("err" not in r) for r in reports):
         raise SystemExit(1)
 
 

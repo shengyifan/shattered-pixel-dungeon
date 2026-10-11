@@ -151,20 +151,19 @@ public final class GameController implements RuntimeObserver {
         }
         public Map<String,Object> stateData(){return map("status","last_observed","depth",depth,"map_context",mapContext,"cues",cueData());}
     }
-    /** An immutable occurrence in the single render-callback FIFO. Type adapters retain existing test APIs. */
+    /** An immutable occurrence in the single render-callback FIFO. */
     public static final class DisplayEvent {
         public final String scopeId,kind;
-        private final Object snapshot;
         private final Map<String,Object> publicData,originalData;
         private DisplayEvent(String scopeId,String kind,Object snapshot){
-            this.scopeId=scopeId;this.kind=kind;this.snapshot=snapshot;
+            this.scopeId=scopeId;this.kind=kind;
             publicData=freezeLiteral(snapshotData(snapshot));originalData=freezeLiteral(snapshotOriginal(snapshot));
         }
         /** New display surfaces use the same persistence path without adding another parallel queue. */
         public DisplayEvent(String scopeId,String kind,Map<String,Object> data,Map<String,Object> original){
             if(scopeId==null||!scopeId.startsWith("run:")||!Arrays.asList("game.log","game.visual","game.floating_text","game.banner","game.audio").contains(kind))
                 throw new IllegalArgumentException("Display events require a run scope and semantic game event kind");
-            this.scopeId=scopeId;this.kind=kind;snapshot=null;
+            this.scopeId=scopeId;this.kind=kind;
             publicData=freezeLiteral(PublicEnglishProjection.freeze(GameplayEvidence.semantic(data)));
             originalData=original==null?null:freezeLiteral(GameplayEvidence.semantic(original));
         }
@@ -364,23 +363,6 @@ public final class GameController implements RuntimeObserver {
     public boolean disposed(){return disposed;}
     public SaveResult pollSave(){return saves.poll();}
     public RunOutcome pollRunOutcome(){return outcomes.poll();}
-    public synchronized GameLogSnapshot pollGameLog(){return pollDisplayType(GameLogSnapshot.class);}
-    public synchronized FloatingSnapshot pollFloatingText(){return pollDisplayType(FloatingSnapshot.class);}
-    public synchronized BannerSnapshot pollBanner(){return pollDisplayType(BannerSnapshot.class);}
-    public synchronized VisualSnapshot pollVisual(){return pollDisplayType(VisualSnapshot.class);}
-    public synchronized List<VisualSnapshot> takeVisuals(){return takeDisplayType(VisualSnapshot.class);}
-    public synchronized List<FloatingSnapshot> takeFloatingTexts(){return takeDisplayType(FloatingSnapshot.class);}
-    public synchronized List<BannerSnapshot> takeBanners(){return takeDisplayType(BannerSnapshot.class);}
-    public synchronized List<GameLogSnapshot> takeGameLogs(){return takeDisplayType(GameLogSnapshot.class);}
-    private <T> T pollDisplayType(Class<T> type){
-        for(Iterator<DisplayEvent> iterator=displayEvents.iterator();iterator.hasNext();){
-            Object value=iterator.next().snapshot;if(type.isInstance(value)){iterator.remove();return type.cast(value);}
-        }
-        return null;
-    }
-    private <T> List<T> takeDisplayType(Class<T> type){
-        List<T> batch=new ArrayList<>();T value;while((value=pollDisplayType(type))!=null)batch.add(value);return batch;
-    }
     /** Called under the render callback lock; the listener may only schedule nonblocking work. */
     public synchronized void enqueueDisplayEvent(DisplayEvent event){
         if(displayCaptureClosed)return;
@@ -459,15 +441,9 @@ public final class GameController implements RuntimeObserver {
         if(rendered==null||!rendered.runId.equals(runId)||rendered.levelIdentity!=levelIdentity||rendered.depth!=depth)return;
         enqueueDisplayEvent(DisplayEvent.from(new FloatingSnapshot(runId,depth,rendered.mapContext,text,clipped,appearance)));
     }
-    @Override public synchronized void onVisualCues(String runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady){
-        recordVisualCues(runId,levelIdentity,depth,cues,presentationReady,System.nanoTime());
-    }
     @Override public synchronized void onVisualCues(String runId,Object levelIdentity,int depth,List<VisualCue> cues,
             boolean presentationReady,Object occurrences){
         recordVisualCues(runId,levelIdentity,depth,cues,presentationReady,System.nanoTime(),occurrences);
-    }
-    synchronized void recordVisualCues(String runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady,long now){
-        recordVisualCues(runId,levelIdentity,depth,cues,presentationReady,now,null);
     }
     synchronized void recordVisualCues(String runId,Object levelIdentity,int depth,List<VisualCue> cues,
             boolean presentationReady,long now,Object occurrences){
@@ -519,9 +495,6 @@ public final class GameController implements RuntimeObserver {
             meaning.add(entry);
         }
         return meaning;
-    }
-    @Override public String onTextResource(String text,String key,String language,Object[] arguments) {
-        return TextProvenance.INSTANCE.onTextResource(text,key,language,arguments);
     }
     @Override public String onTextResource(String text,String key,String language,Object[] arguments,String guiTemplate) {
         return TextProvenance.INSTANCE.onTextResource(text,key,language,arguments,guiTemplate);

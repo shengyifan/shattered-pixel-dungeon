@@ -70,8 +70,8 @@ class ResourceTextProjectionTest {
 
     @Test void equalVisibleFragmentsCannotExposeDifferentHiddenKeysOrArguments() {
         TextProvenance p=new TextProvenance(key->key.equals("hidden.a")?"First hidden %d":"Second hidden %d");
-        String a=p.onTextResource("同一前缀 隐藏甲17","hidden.a","zh",new Object[]{17});
-        String b=p.onTextResource("同一前缀 隐藏乙29","hidden.b","zh",new Object[]{29});
+        String a=p.onTextResource("同一前缀 隐藏甲17","hidden.a","zh",new Object[]{17},"同一前缀 隐藏甲%d");
+        String b=p.onTextResource("同一前缀 隐藏乙29","hidden.b","zh",new Object[]{29},"同一前缀 隐藏乙%d");
         Map<String,Object> first=p.render(p.capture(null,a,true)),second=p.render(p.capture(null,b,true));
         assertEquals(first,second); assertEquals("partial",first.get("translation_status"));
         assertNull(first.get("source"));
@@ -82,7 +82,7 @@ class ResourceTextProjectionTest {
     @Test void frozenHistoryNeverConsultsTheCurrentResourceCatalogOrLiveObjects() {
         Map<String,String> catalog=new HashMap<>();catalog.put("fixture.message","Recorded %d");
         TextProvenance p=new TextProvenance(catalog::get);
-        String shown=p.onTextResource("当时17","fixture.message","zh",new Object[]{17});
+        String shown=p.onTextResource("当时17","fixture.message","zh",new Object[]{17},"当时%d");
         Map<String,Object> frozen=JsonCodec.decode(JsonCodec.encode(p.capture(null,shown,false)));
         catalog.put("fixture.message","Replaced %d");
         TextProvenance later=new TextProvenance(key->{throw new AssertionError("History may not reload templates");});

@@ -51,8 +51,8 @@ public class EnglishCorpusProbeTest {
     }
 
     @Test public void frozenOriginsTranslateLabelsWhileClippedContentAlwaysStaysPartial() {
-        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
-        String off=TextProvenance.INSTANCE.onTextResource("关闭","windows.wndsettings$displaytab.off","zh",new Object[0]);
+        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0],"返回");
+        String off=TextProvenance.INSTANCE.onTextResource("关闭","windows.wndsettings$displaytab.off","zh",new Object[0],"关闭");
         Map<String,Object> response=PublicEnglishProjection.copy(map("result",List.of(
                 map("role","button","label",back),map("role","text","text",off,"clipped",true))));
         String before=JsonCodec.encode(response);
@@ -63,7 +63,7 @@ public class EnglishCorpusProbeTest {
     }
 
     @Test public void cacheCannotReuseAFormerOriginForTheSameSurfaceText() {
-        String erase=TextProvenance.INSTANCE.onTextResource("删除","windows.wndgameinprogress.erase","zh",new Object[0]);
+        String erase=TextProvenance.INSTANCE.onTextResource("删除","windows.wndgameinprogress.erase","zh",new Object[0],"删除");
         Map<String,Object> complete=PublicEnglishProjection.copy(map("role","button","text",erase));
         String displayed=(String)complete.get("text");
         EnglishCorpusProbe probe=new EnglishCorpusProbe();
@@ -74,7 +74,7 @@ public class EnglishCorpusProbeTest {
     }
 
     @Test public void actionTextWithoutItsOwnSourceCannotBorrowAnotherResponsesControls() {
-        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
+        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0],"返回");
         Map<String,Object> action=PublicEnglishProjection.copy(map("action","ui.activate","control","back","label",back));
         EnglishCorpusProbe probe=new EnglishCorpusProbe();
         probe.inspect(map("result",action),map());
@@ -86,7 +86,7 @@ public class EnglishCorpusProbeTest {
     }
 
     @Test public void neighboringPartialFieldsDoNotContaminateACompleteFieldDiagnostic() {
-        String label=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
+        String label=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0],"返回");
         Map<String,Object> rendered=PublicEnglishProjection.copy(map("label",label,"description","无来源的新说明"));
         EnglishCorpusProbe probe=new EnglishCorpusProbe();probe.inspect(map("result",rendered),map());
         assertEquals(1L,probe.report().get("unavailable_occurrences"));
@@ -95,7 +95,7 @@ public class EnglishCorpusProbeTest {
     }
 
     @Test public void realV7OutputPreservesCompactPathsAndRecordedPartialDiagnosticsWithSourcesOptional() {
-        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0]);
+        String back=TextProvenance.INSTANCE.onTextResource("返回","windows.wndupgrade.back","zh",new Object[0],"返回");
         String note=TextProvenance.INSTANCE.onTextOperation("user","用户自定义文字","用户自定义文字");
         Map<String,Object> rendered=PublicEnglishProjection.copy(map("scope_id","run:fixture","state_version","rev:1",
                 "phase","player_ready","observation",map("ui",map("scene","HeroSelectScene","controls",List.of(

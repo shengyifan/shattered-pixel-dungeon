@@ -12,13 +12,13 @@ from tutorial_boundary_smoke import act, adjacent_cells, direction_to, preferenc
 
 
 def attack_control(state):
-    return next(node for node in state["observation"]["ui"]["controls"]
-                if node.get("shortcut_action") == "tag_attack")
+    return next(node for node in state["ui"]["nodes"]
+                if node.get("shortcut") == "tag_attack")
 
 
 def advertised(state, control):
-    return any(action.get("action") == "ui.activate" and action.get("control") == control
-               for action in state["actions"])
+    return any(action.get("op") == "click" and action.get("ctl") == control
+               for action in state["acts"])
 
 
 def run_one(root, classpath, runtime_id, interface_size, remaining, expect_regression):
@@ -35,58 +35,58 @@ def run_one(root, classpath, runtime_id, interface_size, remaining, expect_regre
               "runtime_id": runtime_id, "interface_size": interface_size,
               "expect_regression": expect_regression, "profile": str(profile.relative_to(root))}
     try:
-        hello = client.request("protocol.info")
-        assert hello.get("ok"), hello
-        result.update(build_id=hello["result"]["build_id"], cli_version=hello["result"]["cli_version"])
+        hello = client.request("info")
+        assert "err" not in hello, hello
+        result.update(build_id=hello["data"]["build_id"], cli_version=hello["data"]["cli_version"])
         initial = start_warrior(client)
-        enemies = [e for e in initial["observation"]["visible_entities"]
+        enemies = [e for e in initial["entities"]
                    if e.get("kind") == "character" and e.get("context_action") == "attack"]
         assert len(enemies) == (2 if remaining else 1), enemies
         target = min(enemies, key=lambda e: e["cell"])["cell"]
         assert attack_control(initial)["enabled"], attack_control(initial)
         started = time.monotonic()
-        boundary = act(client, "cell.select", cell=target, mode="act")
+        boundary = act(client, "cell", cell=target, mode="act")
         elapsed = time.monotonic() - started
         assert boundary["phase"] == "player_ready", boundary["phase"]
-        assert boundary["observation"]["ui"]["display"] == {"language": "zh", "fullscreen": False}
+        assert boundary["ui"]["display"] == {"language": "zh", "fullscreen": False}
         assert not any(e.get("kind") == "character" and e["cell"] == target
-                       for e in boundary["observation"]["visible_entities"]), "The native melee kill did not complete"
+                       for e in boundary["entities"]), "The native melee kill did not complete"
         control = attack_control(boundary)
         assert advertised(boundary, control["id"]) == control["enabled"]
-        result["evidence"] = {"kill_elapsed_seconds": elapsed, "completion_version": boundary["state_version"],
+        result["evidence"] = {"kill_elapsed_seconds": elapsed, "completion_version": boundary["rev"],
                               "attack_enabled_at_completion": control["enabled"]}
         if not expect_regression:
             assert control["enabled"] == remaining, "Completion preceded the finite attack-indicator update"
         destination = next(cell["cell"] for cell in adjacent_cells(boundary)
-                           if cell["y"] < boundary["observation"]["hero"]["cell"] // boundary["observation"]["map"]["width"])
+                           if cell["y"] < boundary["hero"]["cell"] // boundary["map"]["w"])
         direction = direction_to(boundary, destination)
         # Immediate assertions above must pass before crossing the original 0.75-second delay.
         time.sleep(1.1)
         later = client.state()
-        assert later["observation"]["hero"] == boundary["observation"]["hero"]
+        assert later["hero"] == boundary["hero"]
         assert attack_control(later)["enabled"] == remaining
-        response = client.request("action.execute", {"action": "move.step", "direction": direction},
-                                  version=boundary["state_version"])
+        response = client.request("move", {"dir": direction},
+                                  version=boundary["rev"])
         if expect_regression:
             assert control["enabled"] and not remaining
-            assert later["state_version"] != boundary["state_version"]
-            assert response.get("error", {}).get("code") == "STALE_STATE", response
+            assert later["rev"] != boundary["rev"]
+            assert response.get("err") == "STALE_STATE", response
             rejected = response
-            expected_cell = boundary["observation"]["hero"]["cell"]
+            expected_cell = boundary["hero"]["cell"]
         else:
-            assert later["state_version"] == boundary["state_version"], (boundary["state_version"], later["state_version"])
-            assert response.get("ok") and response.get("status") == "completed", response
-            assert response["result"]["observation"]["hero"]["cell"] == destination
-            rejected = client.request("action.execute", {"action": "move.step", "direction": direction},
-                                      version=boundary["state_version"])
-            assert rejected.get("error", {}).get("code") == "STALE_STATE", rejected
+            assert later["rev"] == boundary["rev"], (boundary["rev"], later["rev"])
+            assert "err" not in response and response.get("st") == "completed", response
+            assert response["data"]["hero"]["cell"] == destination
+            rejected = client.request("move", {"dir": direction},
+                                      version=boundary["rev"])
+            assert rejected.get("err") == "STALE_STATE", rejected
             expected_cell = destination
-        record = client.request("request.get", {"target_id": rejected["id"], "get": ["before", "after"]})
-        assert record.get("ok") and record["result"]["status"] == "REJECTED", record
-        assert record["result"]["before_snapshot"] == record["result"]["after_snapshot"]
-        assert client.state()["observation"]["hero"]["cell"] == expected_cell
-        result["evidence"].update(later_version=later["state_version"],
-                                  original_version_accepted=bool(response.get("ok")),
+        record = client.request("req", {"rid": rejected["id"], "get": ["before", "after"]})
+        assert "err" not in record and record["data"]["st"] == "REJECTED", record
+        assert record["data"]["before"] == record["data"]["after"]
+        assert client.state()["hero"]["cell"] == expected_cell
+        result["evidence"].update(later_version=later["rev"],
+                                  original_version_accepted="err" not in response,
                                   rejected_action_did_not_move=True, action_retries=0)
         result["ok"] = True
     except Exception as error:

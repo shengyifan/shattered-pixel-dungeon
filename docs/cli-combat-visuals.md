@@ -1,4 +1,4 @@
-# CLI.9.0.5 semantic combat observations
+# CLI.9.0.6 semantic combat observations
 
 Protocol 9 and audit schema 12 publish player-facing combat facts from existing
 game state and presentation sources. The observation is a complete public snapshot
@@ -143,8 +143,9 @@ Pending presentation stays in the original `in_progress`/settle lifecycle rather
 than publishing a premature final `player_ready` revision. Meaningful warnings
 and operation-state changes still participate in revision validation; decorative
 feedback, movement-shadow fade and electrical-flow animation do not independently
-invalidate it. Actual checks and package evidence are recorded separately in the
-[CLI.9.0.5 validation report](cli-9.0.5-revision-validation.md).
+invalidate it. The introduction checks and package evidence are recorded in the
+[CLI.9.0.5 validation report](cli-9.0.5-revision-validation.md); current maintenance
+verification is recorded in the [CLI.9.0.6 report](cli-9.0.6-cleanup-validation.md).
 
 ### Pending red warnings
 

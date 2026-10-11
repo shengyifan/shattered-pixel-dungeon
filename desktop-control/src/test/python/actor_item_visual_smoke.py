@@ -11,27 +11,27 @@ from protocol9 import pages
 
 
 def visual(state):
-    return state["observation"]["visual_cues"]
+    return state["cues"]
 
 
 def events(client, kind):
-    return [row for page in pages(client, "events.read") for row in page if row["kind"] == kind]
+    return [row for page in pages(client, "events") for row in page if row["kind"] == kind]
 
 
 def check(client, name):
     if name == "spectator":
         state = client.last_state
-        target = state["observation"]["hero"]["cell"] + 2
+        target = state["hero"]["cell"] + 2
         paused = [cue for cue in visual(state)["cues"] if cue["cell"] == target
                   and cue["kind"] == "sprite_state" and cue.get("appearance", {}).get("paused") is True]
         assert paused, visual(state)
         assert all("tint" not in cue["appearance"] and "opacity" not in cue for cue in paused)
-        entity = next(row for row in state["observation"]["visible_entities"] if row["cell"] == target)
+        entity = next(row for row in state["entities"] if row["cell"] == target)
         assert not entity.get("buffs"), "Fixture must prove the icon-NONE route"
         return {"icon_none_pause_semantic_state": paused}
     if name == "particle-counts":
         state = client.last_state
-        assert state["observation"]["hero"]["cell"] >= 0 and state["observation"]["map"]["cells"]
+        assert state["hero"]["cell"] >= 0 and state["map"]["cells"]
         assert not events(client, "game.visual_metrics"), "Generic particle density is retired"
         assert "metrics" not in visual(state) and "screen_effects" not in visual(state), visual(state)
         return {"valid_gameplay_observation": True, "generic_particle_metrics_retired": True}
@@ -69,16 +69,16 @@ def check(client, name):
     assert all(type(cue["appearance"]["count"]) is int and cue["appearance"]["count"] > 0
                and "rendered_particles" not in cue for cue in flames), flames
     assert not events(client, "game.visual_metrics"), "Retired metric stream must remain absent"
-    revision = state["state_version"]
+    revision = state["rev"]
     time.sleep(.3)
     later = client.state()
-    assert later["state_version"] == revision, "Passive flame density must not invalidate a decision"
-    menu = next(node for node in later["observation"]["ui"]["controls"]
-                if str(node.get("shortcut_action", "")).lower() == "back")
-    modal = act(client, "ui.activate", control=menu["id"])
-    assert modal["observation"]["ui"]["modal"] and any(
+    assert later["rev"] == revision, "Passive flame density must not invalidate a decision"
+    menu = next(node for node in later["ui"]["nodes"]
+                if str(node.get("shortcut", "")).lower() == "back")
+    modal = act(client, "click", ctl=menu["id"])
+    assert modal["ui"]["modal"] and any(
         cue["kind"] == "sacrificial_flames" for cue in visual(modal)["cues"]), visual(modal)
-    act(client, "ui.back")
+    act(client, "back")
     return {"native_mark_warning": True, "flame_density": flames,
             "modal_keeps_known_world_fact": True, "passive_density_keeps_revision": True}
 
@@ -100,8 +100,8 @@ def main():
         client = FixtureClient(command, profile, verify_gui=True)
         report = {"fixture": name, "test_fixture": True, "counts_as_win": False, "runtime_id": runtime, "profile": str(profile)}
         try:
-            hello = client.request("protocol.info"); assert hello["ok"], hello
-            report["build_id"] = hello["result"]["build_id"]
+            hello = client.request("info"); assert "err" not in hello, hello
+            report["build_id"] = hello["data"]["build_id"]
             reach_game(client, "WARRIOR")
             report.update(ok=True, evidence=check(client, name))
         except Exception as error:

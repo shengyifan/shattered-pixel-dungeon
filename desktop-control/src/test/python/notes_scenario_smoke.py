@@ -19,15 +19,15 @@ from english_protocol_smoke import start_or_continue
 CASES = ("text", "floor", "inventory", "item-type", "item-shortcut")
 
 
-def controls(state, action="ui.activate"):
-    return [candidate for candidate in state["actions"] if candidate["action"] == action]
+def controls(state, action="click"):
+    return [candidate for candidate in state["acts"] if candidate["op"] == action]
 
 
 def choose(client, label):
     state = client.state()
     matches = [candidate for candidate in controls(state) if candidate.get("label") == label]
-    assert len(matches) == 1, {"missing_or_ambiguous_label": label, "choices": [(c.get("label"), c["control"]) for c in controls(state)]}
-    return act(client, "ui.activate", control=matches[0]["control"])
+    assert len(matches) == 1, {"missing_or_ambiguous_label": label, "choices": [(c.get("label"), c["ctl"]) for c in controls(state)]}
+    return act(client, "click", ctl=matches[0]["ctl"])
 
 
 def source_nodes(value):
@@ -47,10 +47,10 @@ def note_edit_title_action(state, title):
     if named:
         assert len(named) == 1, named
         return named[0], None
-    ui = state["observation"]["ui"]
+    ui = state["ui"]
     assert state["phase"] == "awaiting_input" and ui["scene"] == "GameScene" and ui["modal"], ui
-    nodes = {node["id"]: node for node in ui["controls"] if "id" in node}
-    assert len(nodes) == len(ui["controls"]), "Duplicate public controls cannot establish a note context"
+    nodes = {node["id"]: node for node in ui["nodes"] if "id" in node}
+    assert len(nodes) == len(ui["nodes"]), "Duplicate public controls cannot establish a note context"
     roots = [node for node in nodes.values() if node.get("role") == "window" and not node.get("parent")]
     assert len(roots) == 1 and sum(node.get("role") == "window" for node in nodes.values()) == 1, roots
     root = roots[0]["id"]
@@ -60,30 +60,32 @@ def note_edit_title_action(state, title):
                       for source in source_nodes(node.get("text_sources", {}).get("text")))]
     assert len(titles) == 1, {"known_note_title_not_shown": title}
     buttons = [node for node in nodes.values() if node.get("role") == "button"]
-    assert len(actions) == len(buttons) == 3, {"note_buttons": buttons, "actions": actions}
-    assert all(action["action"] in {"ui.activate", "ui.back"} for action in state["actions"]), state["actions"]
+    assert len(actions) == len(buttons) == 3, {"note_buttons": buttons, "acts": actions}
+    assert all(action["op"] in {"click", "back"} for action in state["acts"]), state["acts"]
     assert all(node.get("parent") == root and node.get("enabled") is True for node in buttons), buttons
-    assert {action["control"] for action in actions} == {node["id"] for node in buttons}, actions
+    assert {action["ctl"] for action in actions} == {node["id"] for node in buttons}, actions
     names = {action.get("label"): action for action in actions}
     body = "Add Text" if "Add Text" in names else "Edit Text"
     assert body in names and "Delete" in names, actions
     for label, key in ((body, "ui.customnotebutton$customnotewindow." + ("add_text" if body == "Add Text" else "edit_text")),
                        ("Delete", "ui.customnotebutton$customnotewindow.delete")):
         action = names[label]
-        assert action.get("text_diagnostics", {}).get("label") is None, action
+        assert not any(diagnostic.get("field") == "label" for diagnostic in action.get("pres", {}).get("diag", [])), action
         keys = {source["key"] for source in source_nodes(action.get("text_sources", {}).get("label"))
                 if source.get("kind") == "resource"}
         assert keys == {key}, {"named_note_button_source": action}
-    remaining = [action for action in actions if action["control"] not in {names[body]["control"], names["Delete"]["control"]}]
+    remaining = [action for action in actions if action["ctl"] not in {names[body]["ctl"], names["Delete"]["ctl"]}]
     assert len(remaining) == 1, remaining
     action = remaining[0]
-    button = nodes[action["control"]]
-    assert action.get("text_diagnostics", {}).get("label") == "clipped_text" and action.get("text_sources", {}).get("label") is None, action
-    assert button.get("clipped") is True and button.get("text_diagnostics", {}).get("text") == "clipped_text", button
+    button = nodes[action["ctl"]]
+    assert any(diagnostic.get("field") == "label" and diagnostic.get("code") == "clipped_text"
+               for diagnostic in action.get("pres", {}).get("diag", [])) and action.get("text_sources", {}).get("label") is None, action
+    assert button.get("clipped") is True and any(diagnostic.get("field") == "text" and diagnostic.get("code") == "clipped_text"
+                                                 for diagnostic in button.get("pres", {}).get("diag", [])), button
     assert button.get("text_sources", {}).get("text") is None and "click" in action.get("gestures", []), button
     assert not any(source.get("key") == "ui.customnotebutton$customnotewindow.edit_title"
-                   for source in source_nodes({"ui": ui, "actions": actions})), "The clipped full key must remain redacted"
-    return action, {"control": action["control"], "state_version": state["state_version"],
+                   for source in source_nodes({"ui": ui, "acts": actions})), "The clipped full key must remain redacted"
+    return action, {"ctl": action["ctl"], "rev": state["rev"],
                     "evidence": "known user note title, two sourced body/delete choices, one remaining clipped button",
                     "clipped_source_remains_absent": True}
 
@@ -91,11 +93,11 @@ def note_edit_title_action(state, title):
 def choose_edit_title(client, title):
     state = client.state(source=True)
     action, structural = note_edit_title_action(state, title)
-    assert client.scope == state["scope_id"] and client.version == state["state_version"], "Use the current advertised note action"
-    response = client.act("ui.activate", control=action["control"])
+    assert client.scope == state["s"] and client.version == state["rev"], "Use the current advertised note action"
+    response = client.act("click", ctl=action["ctl"])
     assert response.ok and response.status == "awaiting_input", response
     edited = response.observation
-    fields = [node for node in edited["observation"]["ui"]["controls"] if node.get("role") == "text_input"]
+    fields = [node for node in edited["ui"]["nodes"] if node.get("role") == "text_input"]
     assert len(fields) == 1 and fields[0].get("max_length") == 50 and fields[0].get("multiline") is False, fields
     assert fields[0]["value"] == title, fields[0]
     if structural:
@@ -106,25 +108,25 @@ def choose_edit_title(client, title):
 
 
 def shown(state, text):
-    return any(node.get("text") == text or node.get("label") == text for node in state["observation"]["ui"]["controls"])
+    return any(node.get("text") == text or node.get("label") == text for node in state["ui"]["nodes"])
 
 
 def close_windows(client):
     for _ in range(8):
         state = client.state()
-        if not state["observation"]["ui"]["modal"]:
+        if not state["ui"]["modal"]:
             return state
-        assert not controls(state, "ui.text"), "Complete the original text selection before leaving"
-        act(client, "ui.back")
+        assert not controls(state, "text"), "Complete the original text selection before leaving"
+        act(client, "back")
     raise AssertionError("Original windows did not close")
 
 
 def open_notes(client):
     state = close_windows(client)
-    journal = [node for node in state["observation"]["ui"]["controls"]
-               if str(node.get("shortcut_action", "")).lower() == "journal" and node.get("enabled")]
+    journal = [node for node in state["ui"]["nodes"]
+               if str(node.get("shortcut", "")).lower() == "journal" and node.get("enabled")]
     assert len(journal) == 1, journal
-    opened = act(client, "ui.activate", control=journal[0]["id"])
+    opened = act(client, "click", ctl=journal[0]["id"])
     if not any(c.get("label") == "Add a Custom Note" for c in controls(opened)):
         opened = choose(client, "Adventuring Notes")
     assert any(c.get("label") == "Add a Custom Note" for c in controls(opened))
@@ -132,13 +134,13 @@ def open_notes(client):
 
 
 def item_note_button(client):
-    opened = act(client, "inventory.open", locator="equipment.weapon")
-    nodes = {node["id"]: node for node in opened["observation"]["ui"]["controls"] if "id" in node}
+    opened = act(client, "item", loc="equipment.weapon")
+    nodes = {node["id"]: node for node in opened["ui"]["nodes"] if "id" in node}
     candidates = [candidate for candidate in controls(opened) if not candidate.get("label")
-                  and nodes[candidate["control"]].get("role") == "button"]
+                  and nodes[candidate["ctl"]].get("role") == "button"]
     assert len(candidates) == 1, {"unlabelled_item_note_controls": candidates}
     # The original journal icon is the sole unlabelled button in this actual item menu.
-    return act(client, "ui.activate", control=candidates[0]["control"])
+    return act(client, "click", ctl=candidates[0]["ctl"])
 
 
 def begin_creation(client, case, floor, item_appearance=None):
@@ -161,24 +163,24 @@ def begin_creation(client, case, floor, item_appearance=None):
             candidates = [candidate for candidate in candidates if candidate["label"] == item_appearance]
         assert candidates, {"no_public_potion_appearance": controls(selected)}
         item_appearance = candidates[0]["label"]
-        selected = act(client, "ui.activate", control=candidates[0]["control"])
-    assert len(controls(selected, "ui.text")) == 1, selected["actions"]
+        selected = act(client, "click", ctl=candidates[0]["ctl"])
+    assert len(controls(selected, "text")) == 1, selected["acts"]
     return selected, item_appearance
 
 
 def edit_input(client, text, positive):
     state = client.state()
-    fields = controls(state, "ui.text")
-    assert len(fields) == 1, state["actions"]
-    changed = act(client, "ui.text", control=fields[0]["control"], text=text)
-    field = next(node for node in changed["observation"]["ui"]["controls"] if node.get("role") == "text_input")
+    fields = controls(state, "text")
+    assert len(fields) == 1, state["acts"]
+    changed = act(client, "text", ctl=fields[0]["ctl"], text=text)
+    field = next(node for node in changed["ui"]["nodes"] if node.get("role") == "text_input")
     assert field["value"] == text
     return choose(client, "Confirm" if positive else "Cancel")
 
 
 def notes_after(profile, state):
     """Assertion only: none of these returned values may choose a later command."""
-    return checkpoint(profile, state["state_version"])["notes"]
+    return checkpoint(profile, state["rev"])["notes"]
 
 
 def assert_note(profile, state, case, title, body, floor):
@@ -200,30 +202,30 @@ def open_saved_note(client, title, item_shortcut):
         opened = item_note_button(client)
     else:
         state = open_notes(client)
-        nodes = {node["id"]: node for node in state["observation"]["ui"]["controls"] if "id" in node}
-        entries = [candidate for candidate in controls(state, "ui.select") if nodes[candidate["control"]].get("role") == "entry"]
+        nodes = {node["id"]: node for node in state["ui"]["nodes"] if "id" in node}
+        entries = [candidate for candidate in controls(state, "select") if nodes[candidate["ctl"]].get("role") == "entry"]
         assert entries, "The custom-note section must expose its original note entry"
         # This fixture creates exactly one note. Its original icon is the first entry
         # under the visible Custom section, before the floor-landmark sections.
-        opened = act(client, entries[0]["action"], control=entries[0]["control"])
-    assert shown(opened, title), {"expected_note_title": title, "controls": opened["observation"]["ui"]["controls"]}
+        opened = act(client, entries[0]["op"], ctl=entries[0]["ctl"])
+    assert shown(opened, title), {"expected_note_title": title, "nodes": opened["ui"]["nodes"]}
     note_edit_title_action(opened, title)
     return opened
 
 
 def save(client):
     stable = close_windows(client)
-    saved = act(client, "game.save")
-    receipt = saved.get("persistence", {}).get("last_save") or saved.get("last_save")
-    assert receipt and receipt["success"] is True and receipt["scope_id"] == stable["scope_id"], saved.get("persistence")
-    assert any(row["success"] is True and row["scope_id"] == stable["scope_id"]
-               for row in saved.get("persistence", {}).get("saves_during_request", [])), "An earlier last_save is not proof this game.save ran"
+    saved = act(client, "save")
+    receipt = saved.get("persistence", {}).get("saved") or saved.get("saved")
+    assert receipt and receipt["success"] is True and receipt["s"] == stable["s"], saved.get("persistence")
+    assert any(row["success"] is True and row["s"] == stable["s"]
+               for row in saved.get("persistence", {}).get("saves", [])), "An earlier last_save is not proof this game.save ran"
     return saved
 
 
 def quit(client):
     close_windows(client)
-    act(client, "app.quit")
+    act(client, "quit")
     client.process.wait(timeout=25)
     assert client.process.returncode == 0
     client.stderr.close()
@@ -231,7 +233,7 @@ def quit(client):
 
 
 def workflow(client, profile, case, initial):
-    floor = initial["observation"]["hero"]["depth"]
+    floor = initial["hero"]["depth"]
     assert notes_after(profile, initial)["records"] == []
     _, appearance = begin_creation(client, case, floor)
     cancelled = edit_input(client, "Discarded test note", False)
@@ -295,17 +297,17 @@ def run_one(root, classpath, runtime_id, case):
               "preparation": "ordinary Warrior; no game-stat, map, item or note injection"}
     client = FixtureClient(command, profile, verify_gui=True)
     try:
-        hello = client.request("protocol.info"); assert hello["ok"]
-        report["build_id"] = hello["result"]["build_id"]
+        hello = client.request("info"); assert ("err" not in hello)
+        report["build_id"] = hello["data"]["build_id"]
         initial, _ = start_or_continue(client)
-        report["scope_id"] = initial["scope_id"]
+        report["s"] = initial["s"]
         report["gui_environment"] = assert_gui_environment(profile, initial)
         data = workflow(client, profile, case, initial)
         quit(client)
         client = FixtureClient(command, profile, verify_gui=True)
-        assert client.request("protocol.info")["ok"]
+        assert ("err" not in client.request("info"))
         restored, _ = start_or_continue(client, resume=True)
-        assert restored["scope_id"] == report["scope_id"]
+        assert restored["s"] == report["s"]
         assert_note(profile, restored, case, data["title"], data["body"], data["floor"])
         opened = open_saved_note(client, data["title"], case == "item-shortcut")
         assert shown(opened, data["body"])

@@ -24,10 +24,6 @@ public final class MachineSession implements AutoCloseable {
         GameController.State latest();
         CompletableFuture<GameController.State> observe();
         CompletableFuture<GameController.State> execute(String version, Map<String,Object> args);
-        default GameController.Execution start(String version,Map<String,Object> args,String requestId){
-            CompletableFuture<GameController.State> completion=execute(version,args);
-            return new GameController.Execution(completion,completion);
-        }
         GameController.ActionPreparation prepareAction(String scope,String version,Map<String,Object> args,
                                                        String requestId,String plannedRun);
         GameController.Execution commitPreparedAction(GameController.ActionPreparation preparation);
@@ -41,39 +37,11 @@ public final class MachineSession implements AutoCloseable {
         default void abortCancellation(String version){}
         GameController.SaveResult pollSave();
         default GameController.RunOutcome pollRunOutcome(){return null;}
-        default GameController.GameLogSnapshot pollGameLog(){return null;}
-        default GameController.FloatingSnapshot pollFloatingText(){return null;}
-        default GameController.BannerSnapshot pollBanner(){return null;}
-        default List<GameController.BannerSnapshot> takeBanners(){
-            List<GameController.BannerSnapshot> batch=new ArrayList<>();GameController.BannerSnapshot value;
-            for(int i=0;i<128&&(value=pollBanner())!=null;i++)batch.add(value);return batch;
-        }
-        default GameController.VisualSnapshot pollVisual(){return null;}
-        default List<GameController.VisualSnapshot> takeVisuals(){
-            List<GameController.VisualSnapshot> batch=new ArrayList<>();GameController.VisualSnapshot value;
-            for(int i=0;i<128&&(value=pollVisual())!=null;i++)batch.add(value);return batch;
-        }
-        default List<GameController.FloatingSnapshot> takeFloatingTexts(){
-            List<GameController.FloatingSnapshot> batch=new ArrayList<>();GameController.FloatingSnapshot value;
-            for(int i=0;i<128&&(value=pollFloatingText())!=null;i++)batch.add(value);return batch;
-        }
-        default List<GameController.GameLogSnapshot> takeGameLogs(){
-            List<GameController.GameLogSnapshot> batch=new ArrayList<>();GameController.GameLogSnapshot value;
-            for(int i=0;i<128&&(value=pollGameLog())!=null;i++)batch.add(value);return batch;
-        }
-        /** Legacy isolated fakes may expose individual queues; production overrides the ordered FIFO API. */
-        default List<GameController.DisplayEvent> peekDisplayEvents(int limit){
-            List<GameController.DisplayEvent> batch=new ArrayList<>();Object value;
-            while(batch.size()<limit&&(value=pollGameLog())!=null)batch.add(GameController.DisplayEvent.from(value));
-            while(batch.size()<limit&&(value=pollFloatingText())!=null)batch.add(GameController.DisplayEvent.from(value));
-            while(batch.size()<limit&&(value=pollBanner())!=null)batch.add(GameController.DisplayEvent.from(value));
-            while(batch.size()<limit&&(value=pollVisual())!=null)batch.add(GameController.DisplayEvent.from(value));
-            return batch;
-        }
-        default void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events){}
-        default boolean hasDisplayEvents(){return false;}
-        default void setDisplaySignal(Runnable signal){}
-        default void freezeDisplayEvents(){}
+        List<GameController.DisplayEvent> peekDisplayEvents(int limit);
+        void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events);
+        boolean hasDisplayEvents();
+        void setDisplaySignal(Runnable signal);
+        void freezeDisplayEvents();
         boolean exiting();
         boolean disposed();
         void exitNow();
@@ -121,7 +89,6 @@ public final class MachineSession implements AutoCloseable {
             public GameController.State latest(){return game.latest();}
             public CompletableFuture<GameController.State> observe(){return game.observe();}
             public CompletableFuture<GameController.State> execute(String v,Map<String,Object> a){return game.execute(v,a);}
-            public GameController.Execution start(String v,Map<String,Object> a,String id){return game.start(v,a,id);}
             public GameController.ActionPreparation prepareAction(String s,String v,Map<String,Object> a,String id,String run){return game.prepareAction(s,v,a,id,run);}
             public GameController.Execution commitPreparedAction(GameController.ActionPreparation p){return game.commitPreparedAction(p);}
             public void abortPreparedAction(GameController.ActionPreparation p){game.abortPreparedAction(p);}
@@ -130,14 +97,6 @@ public final class MachineSession implements AutoCloseable {
             public void abortCancellation(String v){game.abortCancellation(v);}
             public GameController.SaveResult pollSave(){return game.pollSave();}
             public GameController.RunOutcome pollRunOutcome(){return game.pollRunOutcome();}
-            public GameController.GameLogSnapshot pollGameLog(){return game.pollGameLog();}
-            public GameController.FloatingSnapshot pollFloatingText(){return game.pollFloatingText();}
-            public GameController.BannerSnapshot pollBanner(){return game.pollBanner();}
-            public List<GameController.BannerSnapshot> takeBanners(){return game.takeBanners();}
-            public GameController.VisualSnapshot pollVisual(){return game.pollVisual();}
-            public List<GameController.VisualSnapshot> takeVisuals(){return game.takeVisuals();}
-            public List<GameController.FloatingSnapshot> takeFloatingTexts(){return game.takeFloatingTexts();}
-            public List<GameController.GameLogSnapshot> takeGameLogs(){return game.takeGameLogs();}
             public List<GameController.DisplayEvent> peekDisplayEvents(int limit){return game.peekDisplayEvents(limit);}
             public void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events){game.acknowledgeDisplayEvents(events);}
             public boolean hasDisplayEvents(){return game.hasDisplayEvents();}

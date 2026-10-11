@@ -71,7 +71,7 @@ class UiDrawStatusEvidenceTest {
         StatusButton button=new StatusButton(false);scene.add(button);bridge.captureDrawnEvidence();
         Object before=node(bridge.frozenUi(),"button").get("sample_status");
         Image old=button.image;button.remove(old);button.image=image();button.add(button.image);
-        assertEquals(before,button.renderedStatus().get("sample_status"),"The replacement intentionally has equal pixels");
+        assertEquals(before,button.gameplayStatus().get("sample_status"),"The replacement intentionally has equal pixels");
         assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));assertTrue(bridge.drawnIntentReady());
         bridge.captureDrawnEvidence();assertEquals(before,node(bridge.frozenUi(),"button").get("sample_status"));
         button.remove(button.image);assertNoField(bridge.describeUi(),"sample_status");

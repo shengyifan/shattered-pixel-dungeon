@@ -8,12 +8,13 @@ scheduler proof are read only for assertions, never for gameplay choices.
 import argparse
 from fixture_identity import fixture_canonical_identity
 import json
+from protocol9 import frame_data
 from pathlib import Path
 import sqlite3
 import time
 import zipfile
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game, act
-from legacy_save_smoke import launch_command, metadata, safe_profile, save_file, save_json, stop, write_json
+from fixture_support import launch_command, metadata, safe_profile, save_file, save_json, stop, write_json
 
 
 def make_agent(root, runtime):
@@ -37,14 +38,14 @@ def original_pause_fixture(classpath, agent, profile):
     command.insert(1,"-javaagent:"+str(agent)+"="+str(profile))
     client=FixtureClient(command,profile)
     try:
-        hello=client.request("protocol.info");assert hello["ok"]
+        hello=client.request('info');assert ("err" not in hello)
         alive=reach_game(client,"WARRIOR")
-        assert alive["observation"]["hero"]["hp"]==1
+        assert alive["hero"]["hp"]==1
         dead=act(client,"wait")
-        assert dead["observation"]["hero"]["hp"]==0,dead
-        assert any(a.get("label")=="保留这些物品" for a in dead["actions"]),dead["actions"]
-        assert all(a["action"] not in {"app.quit","game.save"} for a in dead["actions"])
-        scope=dead["scope_id"]
+        assert dead["hero"]["hp"]==0,dead
+        assert any(a.get("label")=="Preserve these items" for a in dead['acts']),dead['acts']
+        assert all(a['op'] not in {'quit','save'} for a in dead['acts'])
+        scope=dead['s']
         (profile/"native-pause.armed").write_text("original ApplicationListener.pause at render-frame end")
         client.process.wait(timeout=30)
         assert client.process.returncode==0
@@ -70,7 +71,7 @@ def original_pause_fixture(classpath, agent, profile):
             receipts=db.execute("SELECT receipt_id,success FROM save_checkpoints WHERE scope_id=?",(canonical_scope,)).fetchall()
             assert any(success for _,success in receipts),receipts
         (profile/"native-pause.armed").unlink()
-        return {"scope_id":scope,"build_id":hello["result"]["build_id"],"original_pause":proof,
+        return {'s':scope,"build_id":hello["data"]["build_id"],"original_pause":proof,
                 "saved_hp":hero["HP"],"saved_unblessed_ankhs":len(objects),"save_receipts":len(receipts)}
     finally:
         if client.process.poll() is None:client.process.terminate();client.process.wait(timeout=10)
@@ -80,26 +81,26 @@ def original_pause_fixture(classpath, agent, profile):
 def continue_public(client, profile):
     for _ in range(20):
         state=client.state()
-        if state["observation"].get("scene")=="game":return state,None
-        choices=[a for a in state["actions"] if a["action"]=="ui.activate" and a.get("label")]
+        if state.get("scene")=="game":return state,None
+        choices=[a for a in state['acts'] if a['op']=='click' and a.get("label")]
         choice=None
-        for label in ["继续","continue","进入地牢","enter","开始游戏","play","战士","warrior"]:
+        for label in ["continue","enter","play","warrior"]:
             choice=next((a for a in choices if label in a["label"].lower()),None)
             if choice:break
-        if choice is None and any(a["action"]=="ui.reveal" for a in state["actions"]):
-            act(client,"ui.reveal");continue
-        assert choice,{"scene":state["observation"].get("scene"),"choices":choices}
+        if choice is None and any(a['op']=='reveal' for a in state['acts']):
+            act(client,'reveal');continue
+        assert choice,{"scene":state.get("scene"),"choices":choices}
         start=time.monotonic()
-        result=client.request("action.execute",{"action":"ui.activate","control":choice["control"]})
-        if result.get("error",{}).get("code")=="STALE_STATE":continue
-        assert result.get("ok"),result
-        if result.get("status")=="in_progress":
+        result=client.request_action({'op':'click','ctl':choice['ctl']})
+        if result.get("err")=="STALE_STATE":continue
+        assert "err" not in result,result
+        if result.get("st")=="in_progress":
             proof=json.loads((profile/"resume-observed.json").read_text())
-            record=client.request("request.get",{"target_id":result["id"]},scope=result["scope_id"])
-            assert record["ok"],record
-            return None,{"response_seconds":round(time.monotonic()-start,3),"initial_status":result["status"],
-                         "logical_status":record["result"]["status"],"request_id":result["id"],"scheduler":proof}
-        if result["result"]["observation"].get("scene")=="game":return result["result"],None
+            record=client.request('req',{'rid':result["id"]},scope=result['s'])
+            assert ("err" not in record),record
+            return None,{"response_seconds":round(time.monotonic()-start,3),"initial_status":result["st"],
+                         "logical_status":record["data"]["st"],"request_id":result["id"],"scheduler":proof}
+        if result["data"].get("scene")=="game":return frame_data(result),None
     raise AssertionError("Could not select the original Continue control")
 
 
@@ -117,8 +118,8 @@ def main():
     result={"test_fixture":True,"counts_as_win":False,"runtime_id":runtime_id,"profile":str(profile.relative_to(root)),
             "language":"CHI_SMPL","fullscreen":False,"expected":args.expect,"prepared":prepared}
     try:
-        hello=client.request("protocol.info");assert hello["ok"]
-        assert hello["result"]["build_id"]==prepared["build_id"]
+        hello=client.request('info');assert ("err" not in hello)
+        assert hello["data"]["build_id"]==prepared["build_id"]
         state,blocked=continue_public(client,profile)
         if args.expect=="blocked":
             assert state is None and blocked["logical_status"]=="EXECUTING",blocked
@@ -127,28 +128,28 @@ def main():
             result.update(verified=True,reproduced_blocked=True,blocked=blocked)
         else:
             assert state is not None and blocked is None,blocked
-            assert state["scope_id"]==prepared["scope_id"] and state["phase"]=="awaiting_input",state
-            assert state["observation"]["hero"]["hp"]==0
-            assert any(a.get("label")=="保留这些物品" for a in state["actions"]),state["actions"]
+            assert state['s']==prepared['s'] and state["phase"]=="awaiting_input",state
+            assert state["hero"]["hp"]==0
+            assert any(a.get("label")=="Preserve these items" for a in state['acts']),state['acts']
             proof=json.loads((profile/"resume-observed.json").read_text())
             assert not proof["actor_alive"] and proof["actor_thread"] is None,proof
-            again=client.state();assert again["state_version"]==state["state_version"]
-            for action in ["app.quit","game.save","wait"]:
-                assert all(a["action"]!=action for a in again["actions"])
-                rejected=client.request("action.execute",{"action":action})
-                assert rejected.get("error",{}).get("code")=="ACTION_UNAVAILABLE",rejected
-            unchanged=act(client,"ui.back")
-            assert any(a.get("label")=="保留这些物品" for a in unchanged["actions"])
-            item=next(a for a in unchanged["actions"] if a["action"]=="ui.activate" and "短剑" in a.get("label",""))
-            selected=act(client,"ui.activate",control=item["control"])
+            again=client.state();assert again['rev']==state['rev']
+            for action in ['quit','save',"wait"]:
+                assert all(a['op']!=action for a in again['acts'])
+                rejected=client.request_action({'op':action})
+                assert rejected.get("err")=="ACTION_UNAVAILABLE",rejected
+            unchanged=act(client,'back')
+            assert any(a.get("label")=="Preserve these items" for a in unchanged['acts'])
+            item=next(a for a in unchanged['acts'] if a['op']=='click' and "shortsword" in a.get("label","").lower())
+            selected=act(client,'click',ctl=item['ctl'])
             assert selected["phase"]=="awaiting_input"
-            back=act(client,"ui.back")
-            confirm=next(a for a in back["actions"] if a.get("label")=="保留这些物品")
-            revived=act(client,"ui.activate",control=confirm["control"])
-            assert revived["scope_id"]==prepared["scope_id"] and revived["observation"]["hero"]["hp"]>0,revived
-            assert all("重生十字架" not in item["name"] for item in revived["observation"]["inventory"])
-            saved=act(client,"game.save")
-            assert saved["persistence"]["saves_during_request"]
+            back=act(client,'back')
+            confirm=next(a for a in back['acts'] if a.get("label")=="Preserve these items")
+            revived=act(client,'click',ctl=confirm['ctl'])
+            assert revived['s']==prepared['s'] and revived["hero"]["hp"]>0,revived
+            assert all("ankh" not in item["name"].lower() for item in revived['inv'])
+            saved=act(client,'save')
+            assert saved["persistence"]['saves']
             result.update(verified=True,reproduced_blocked=False,restored_window=proof,
                           blocked_actions_still_rejected=True,mandatory_back_still_blocked=True,
                           item_selector_cancelled=True,same_scope_after_original_resurrection=True,

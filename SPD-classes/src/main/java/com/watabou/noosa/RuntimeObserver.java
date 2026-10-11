@@ -20,12 +20,8 @@ public interface RuntimeObserver {
     default void onRunEnded(String runId, boolean won) {}
     /** Optional audit identity owned by the currently executing new-run request. */
     default String newRunIdentity() { return null; }
-    /** Optional immutable text provenance. NONE preserves the original String identity. */
-    default String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments) { return rendered; }
     /** The successful source-language template permits masking parameters the GUI did not display. */
-    default String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments, String guiTemplate) {
-        return onTextResource(rendered, resolvedKey, language, arguments);
-    }
+    default String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments, String guiTemplate) { return rendered; }
     default String onTextOperation(String operation, String rendered, Object... operands) { return rendered; }
     default void onTextBound(Object owner, String rendered) {}
     default void onTextReleased(Object owner) {}
@@ -45,16 +41,10 @@ public interface RuntimeObserver {
                                 String text, boolean clipped, Map<String,Object> appearance) {}
     /** A known graphical combat announcement, emitted once after its unobscured native draw. */
     default void onBanner(String runId,String kind,Map<String,Object> appearance) {}
-    /** One completed GameScene draw. The identity token is opaque and must never be serialized. */
-    default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues) {
-        onVisualCues(runId,levelIdentity,depth,cues,true);
-    }
-    default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues, boolean presentationReady) {}
-    /** Private source occurrence identity for event onsets; it must never be serialized into public observations. */
+    /** One completed GameScene draw, including readiness and private source occurrence identity.
+     * The identity must never be serialized into public observations. */
     default void onVisualCues(String runId, Object levelIdentity, int depth, List<VisualCue> cues,
-                              boolean presentationReady, Object occurrences) {
-        onVisualCues(runId, levelIdentity, depth, cues, presentationReady);
-    }
+                              boolean presentationReady, Object occurrences) {}
     final class LogEntry {
         public final String text;
         public final int color;

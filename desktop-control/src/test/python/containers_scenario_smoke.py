@@ -22,15 +22,15 @@ KEYS = {"locked-chest": ("golden key", "GoldenKey"), "crystal-chest": ("crystal 
 
 def assertions(profile, state):
     """Postconditions only. Values returned here never choose an action, control or cell."""
-    return checkpoint(profile, state["state_version"])["containers"]
+    return checkpoint(profile, state["rev"])["containers"]
 
 
 def amount(state, name):
-    return sum(item["quantity"] for item in state["observation"]["inventory"] if item["name"].casefold() == name.casefold())
+    return sum(item["qty"] for item in state["inv"] if item["name"].casefold() == name.casefold())
 
 
 def at_cell(state, cell):
-    return [entity for entity in state["observation"]["visible_entities"] if entity.get("cell") == cell]
+    return [entity for entity in state["entities"] if entity.get("cell") == cell]
 
 
 def ground(state, cell):
@@ -52,12 +52,12 @@ def inspect_closed(client, profile, state, cells):
     descriptions = []
     for cell in cells:
         before = clock(profile, state)
-        opened = act(client, "cell.select", cell=cell, mode="examine")
-        assert opened["observation"]["ui"]["modal"]
-        assert opened["observation"]["ui"].get("inspected_item") is None, "A closed container must not expose an item subject"
+        opened = act(client, "cell", cell=cell, mode="examine")
+        assert opened["ui"]["modal"]
+        assert opened["ui"].get("item_info") is None, "A closed container must not expose an item subject"
         check_hidden(profile, opened)
-        descriptions.append([node["text"] for node in opened["observation"]["ui"]["controls"] if node.get("text")])
-        state = act(client, "ui.back")
+        descriptions.append([node["text"] for node in opened["ui"]["nodes"] if node.get("text")])
+        state = act(client, "back")
         assert clock(profile, state) == before, "Original container inspection/back should not spend a turn"
     if len(cells) > 1:
         assert all(text == descriptions[0] for text in descriptions), "Same-looking closed containers revealed different contents"
@@ -76,42 +76,42 @@ def collect_pile(client, profile, state, cell, maximum=4):
             return state, gains
         assert not any(entity.get("kind") == "character" for entity in at_cell(state, cell)), "Reassess a real occupied target; do not attack instead of pickup"
         before = amount(state, item["name"])
-        gold_before = state["observation"]["hero"]["gold"]
-        was_here = state["observation"]["hero"]["cell"] == cell
-        next_state = act(client, "cell.select", cell=cell)
+        gold_before = state["hero"]["gold"]
+        was_here = state["hero"]["cell"] == cell
+        next_state = act(client, "cell", cell=cell)
         # With a visible enemy, original Hero.handle first moves onto a standard pile.
         # Only a subsequent same-cell selection picks up; never pretend that movement is pickup.
         gained = amount(next_state, item["name"]) - before
         if item["name"].casefold() == "gold":
-            gained = next_state["observation"]["hero"]["gold"] - gold_before
+            gained = next_state["hero"]["gold"] - gold_before
         if gained:
-            assert gained == item["quantity"], {"wrong_original_pickup_quantity": item, "gained": gained}
-            gains.append({"name": item["name"], "quantity": gained})
+            assert gained == item["qty"], {"wrong_original_pickup_quantity": item, "gained": gained}
+            gains.append({"name": item["name"], "qty": gained})
         else:
-            assert not was_here and next_state["observation"]["hero"]["cell"] == cell
-            assert next_state["observation"]["hero"]["hp"] > 0
+            assert not was_here and next_state["hero"]["cell"] == cell
+            assert next_state["hero"]["hp"] > 0
         state = next_state
     raise AssertionError("Pile did not empty through the bounded original pickup sequence")
 
 
 def heap_multi(client, profile, initial):
-    entities = [entity for entity in initial["observation"]["visible_entities"] if entity.get("kind") == "item"]
+    entities = [entity for entity in initial["entities"] if entity.get("kind") == "item"]
     assert len(entities) == 1, entities
     cell = entities[0]["cell"]
-    assert entities[0]["item"]["name"].casefold() == "throwing stone" and entities[0]["item"]["quantity"] == 3
+    assert entities[0]["item"]["name"].casefold() == "throwing stone" and entities[0]["item"]["qty"] == 3
     assert len(assertions(profile, initial)["heaps"][str(cell)]["items"]) == 3
     before = clock(profile, initial)
     final, gains = collect_pile(client, profile, initial, cell)
-    assert [(item["name"].casefold(), item["quantity"]) for item in gains] == [("throwing stone", 3), ("gold", 17), ("ration of food", 2)], gains
+    assert [(item["name"].casefold(), item["qty"]) for item in gains] == [("throwing stone", 3), ("gold", 17), ("ration of food", 2)], gains
     assert clock(profile, final) - before == 4, "One diagonal move plus three normal pickup turns"
     return {"case_id": "containers.heap_multi", "one_visible_top_item_for_three_private_stacks": True,
             "original_top_to_bottom_pickups": gains, "heap_removed_when_empty": True, "native_turns": 4}
 
 
 def container(client, profile, initial, name):
-    boxes = sorted([entity for entity in initial["observation"]["visible_entities"]
+    boxes = sorted([entity for entity in initial["entities"]
                     if entity.get("kind") == "container" and entity.get("name", "").casefold() == TITLES[name]], key=lambda entity: entity["cell"])
-    assert boxes, initial["observation"]["visible_entities"]
+    assert boxes, initial["entities"]
     cells = [box["cell"] for box in boxes]
     if len(boxes) > 1:
         assert [{key: value for key, value in box.items() if key != "cell"} for box in boxes].count(
@@ -121,32 +121,32 @@ def container(client, profile, initial, name):
     key_checks = []
     if name in KEYS:
         before = assertions(profile, state)
-        refused = act(client, "cell.select", cell=cells[0])
+        refused = act(client, "cell", cell=cells[0])
         after = assertions(profile, refused)
         assert before["hero_clock"] == after["hero_clock"] and before["heaps"] == after["heaps"] and before["keys"] == after["keys"]
-        assert not refused["observation"]["ui"]["modal"], "Native locked-container refusal has no cancel confirmation"
+        assert not refused["ui"]["modal"], "Native locked-container refusal has no cancel confirmation"
         check_hidden(profile, refused)
         key_name, key_class = KEYS[name]
-        key = next(entity for entity in refused["observation"]["visible_entities"] if entity.get("item", {}).get("name", "").casefold() == key_name)
-        state = act(client, "cell.select", cell=key["cell"])
+        key = next(entity for entity in refused["entities"] if entity.get("item", {}).get("name", "").casefold() == key_name)
+        state = act(client, "cell", cell=key["cell"])
         expected = len(cells)
-        key_id = key_class + ":" + str(state["observation"]["hero"]["depth"])
+        key_id = key_class + ":" + str(state["hero"]["depth"])
         assert assertions(profile, state)["keys"].get(key_id, 0) == expected
-        key_checks.append({"no_key_refusal_spends_no_turn_or_payload": True, "original_key_pickup": key_name, "quantity": expected})
+        key_checks.append({"no_key_refusal_spends_no_turn_or_payload": True, "original_key_pickup": key_name, "qty": expected})
     opened_loot = []
     for cell in cells:
         state = client.state()
         before = assertions(profile, state)
-        position = state["observation"]["hero"]["cell"]
-        width = state["observation"]["map"]["width"]
+        position = state["hero"]["cell"]
+        width = state["map"]["w"]
         distance = max(abs(position % width - cell % width), abs(position // width - cell // width))
-        opened = act(client, "cell.select", cell=cell)
+        opened = act(client, "cell", cell=cell)
         after = assertions(profile, opened)
-        assert not opened["observation"]["ui"]["modal"], "The original container opens directly, not through an invented confirmation"
+        assert not opened["ui"]["modal"], "The original container opens directly, not through an invented confirmation"
         assert after["heaps"][str(cell)]["type"] == "HEAP"
         assert after["hero_clock"] - before["hero_clock"] == 1 + max(0, distance - 1), "Adjacent opening costs one native turn, plus ordinary approach steps"
         item = ground(opened, cell)
-        assert item and item["level_known"] is False and item["level"] is None
+        assert item and "level" in item and item["level"] is None
         opened_loot.append(item["name"])
         if name in KEYS:
             assert after["keys"].get(key_id, 0) == before["keys"].get(key_id, 0) - 1
@@ -164,24 +164,24 @@ def container(client, profile, initial, name):
 
 def choose(client, predicate):
     state = client.state()
-    choices = [a for a in state["actions"] if a["action"] == "ui.activate" and predicate(a.get("label", ""))]
-    assert len(choices) == 1, state["actions"]
-    return act(client, "ui.activate", control=choices[0]["control"])
+    choices = [a for a in state["acts"] if a["op"] == "click" and predicate(a.get("label", ""))]
+    assert len(choices) == 1, state["acts"]
+    return act(client, "click", ctl=choices[0]["ctl"])
 
 
 def for_sale(client, profile, initial):
-    stock = next(entity for entity in initial["observation"]["visible_entities"] if entity.get("kind") == "item")
+    stock = next(entity for entity in initial["entities"] if entity.get("kind") == "item")
     name = stock["item"]["name"]
-    qty = amount(initial, name); gold = initial["observation"]["hero"]["gold"]
-    opened = act(client, "cell.select", cell=stock["cell"])
-    price_action = next(a for a in opened["actions"] if re.fullmatch(r"Buy for (\d+)g", a.get("label", "")))
+    qty = amount(initial, name); gold = initial["hero"]["gold"]
+    opened = act(client, "cell", cell=stock["cell"])
+    price_action = next(a for a in opened["acts"] if re.fullmatch(r"Buy for (\d+)g", a.get("label", "")))
     price = int(re.fullmatch(r"Buy for (\d+)g", price_action["label"])[1])
     before = clock(profile, opened)
-    cancelled = act(client, "ui.back")
-    assert amount(cancelled, name) == qty and cancelled["observation"]["hero"]["gold"] == gold and clock(profile, cancelled) == before
-    act(client, "cell.select", cell=stock["cell"])
+    cancelled = act(client, "back")
+    assert amount(cancelled, name) == qty and cancelled["hero"]["gold"] == gold and clock(profile, cancelled) == before
+    act(client, "cell", cell=stock["cell"])
     bought = choose(client, lambda label: label == "Buy for " + str(price) + "g")
-    assert amount(bought, name) == qty + stock["item"]["quantity"] and bought["observation"]["hero"]["gold"] == gold - price
+    assert amount(bought, name) == qty + stock["item"]["qty"] and bought["hero"]["gold"] == gold - price
     assert assertions(profile, bought)["heaps"][str(stock["cell"])] is None
     return {"case_id": "containers.for_sale", "original_purchase_window": True, "back_cancels_without_charge": True,
             "price_from_public_button": price, "original_buy_and_inventory_gain": True}
@@ -189,65 +189,65 @@ def for_sale(client, profile, initial):
 
 def door(client, profile, initial, name):
     label = "locked door" if name == "iron-door" else "crystal door"
-    tile = next(tile for tile in initial["observation"]["map"]["cells"] if tile["visibility"] == "visible" and tile["name"].casefold() == label)
+    tile = next(tile for tile in initial["map"]["cells"] if tile["visibility"] == "visible" and tile["name"].casefold() == label)
     before = assertions(profile, initial)
-    refused = act(client, "cell.select", cell=tile["cell"])
+    refused = act(client, "cell", cell=tile["cell"])
     after = assertions(profile, refused)
     assert before["hero_clock"] == after["hero_clock"] and before["terrain"] == after["terrain"] and before["keys"] == after["keys"]
-    assert not refused["observation"]["ui"]["modal"]
+    assert not refused["ui"]["modal"]
     key_name, key_class = KEYS[name]
-    key = next(entity for entity in refused["observation"]["visible_entities"] if entity.get("item", {}).get("name", "").casefold() == key_name)
-    state = act(client, "cell.select", cell=key["cell"])
-    key_id = key_class + ":" + str(state["observation"]["hero"]["depth"])
+    key = next(entity for entity in refused["entities"] if entity.get("item", {}).get("name", "").casefold() == key_name)
+    state = act(client, "cell", cell=key["cell"])
+    key_id = key_class + ":" + str(state["hero"]["depth"])
     assert assertions(profile, state)["keys"].get(key_id, 0) == 1
-    opened = act(client, "cell.select", cell=tile["cell"])
+    opened = act(client, "cell", cell=tile["cell"])
     assert assertions(profile, opened)["keys"].get(key_id, 0) == 0
-    current = next(cell for cell in opened["observation"]["map"]["cells"] if cell["cell"] == tile["cell"])
+    current = next(cell for cell in opened["map"]["cells"] if cell["cell"] == tile["cell"])
     assert current["name"].casefold() != label
-    crossed = act(client, "cell.select", cell=tile["cell"])
-    assert crossed["observation"]["hero"]["cell"] == tile["cell"]
+    crossed = act(client, "cell", cell=tile["cell"])
+    assert crossed["hero"]["cell"] == tile["cell"]
     return {"case_id": "containers." + name.replace("-", "_"), "no_key_refusal_without_turn": True,
             "original_key_pickup": key_name, "one_key_consumed": True, "unlocked_then_crossed": True,
             "cancel_dialog": "not_applicable_original_flow_is_direct"}
 
 
 def worn_exit(client, profile, initial):
-    assert initial["observation"]["hero"]["depth"] == 5
+    assert initial["hero"]["depth"] == 5
     assert assertions(profile, initial)["level_class"] == "SewerBossLevel"
-    exits = [tile for tile in initial["observation"]["map"]["cells"]
+    exits = [tile for tile in initial["map"]["cells"]
              if tile["visibility"] == "visible" and tile["name"].casefold() == "locked depth exit"]
     assert len(exits) == 1, exits
     cell = exits[0]["cell"]
     before = assertions(profile, initial)
-    refused = act(client, "cell.select", cell=cell)
+    refused = act(client, "cell", cell=cell)
     after = assertions(profile, refused)
     assert before["hero_clock"] == after["hero_clock"] and before["terrain"] == after["terrain"] and before["keys"] == after["keys"]
-    assert not refused["observation"]["ui"]["modal"]
-    key = next(entity for entity in refused["observation"]["visible_entities"]
+    assert not refused["ui"]["modal"]
+    key = next(entity for entity in refused["entities"]
                if entity.get("item", {}).get("name", "").casefold() == "worn key")
-    picked = act(client, "cell.select", cell=key["cell"])
+    picked = act(client, "cell", cell=key["cell"])
     # The first original WornKey pickup includes the developer support prompt.
     # Keep this real interaction in the test instead of preparing supportNagged=true.
-    assert picked["observation"]["ui"]["modal"]
+    assert picked["ui"]["modal"]
     shown = "\n".join(text for _, text in game_prose_values(picked))
     assert "A Message From The Developer" in shown and "Hello, I hope you're enjoying Shattered Pixel Dungeon!" in shown
-    assert any(a.get("label") == "Go to Patreon Page" for a in picked["actions"])
-    assert any(a.get("label") == "Close" for a in picked["actions"])
+    assert any(a.get("label") == "Go to Patreon Page" for a in picked["acts"])
+    assert any(a.get("label") == "Close" for a in picked["acts"])
     assert not assertions(profile, picked)["support_nagged"]
     before_close = clock(profile, picked)
-    backed = act(client, "ui.back")
-    assert backed["observation"]["ui"]["modal"] and clock(profile, backed) == before_close
+    backed = act(client, "back")
+    assert backed["ui"]["modal"] and clock(profile, backed) == before_close
     picked = choose(client, lambda label: label == "Close")
-    assert not picked["observation"]["ui"]["modal"] and assertions(profile, picked)["support_nagged"]
+    assert not picked["ui"]["modal"] and assertions(profile, picked)["support_nagged"]
     assert clock(profile, picked) == before_close
     before = assertions(profile, picked)
     assert before["keys"].get("WornKey:5", 0) == 1 and before["terrain_names"][str(cell)] == "LOCKED_EXIT"
-    opened = act(client, "cell.select", cell=cell)
+    opened = act(client, "cell", cell=cell)
     after = assertions(profile, opened)
     assert after["keys"].get("WornKey:5", 0) == 0 and after["terrain_names"][str(cell)] == "UNLOCKED_EXIT"
     assert after["hero_clock"] - before["hero_clock"] == 1
-    assert opened["observation"]["hero"]["depth"] == 5 and opened["scope_id"] == initial["scope_id"]
-    assert next(tile for tile in opened["observation"]["map"]["cells"] if tile["cell"] == cell)["name"].casefold() == "unlocked depth exit"
+    assert opened["hero"]["depth"] == 5 and opened["s"] == initial["s"]
+    assert next(tile for tile in opened["map"]["cells"] if tile["cell"] == cell)["name"].casefold() == "unlocked depth exit"
     return {"case_id": "containers.worn_exit", "actual_generated_sewer_boss_exit": True,
             "no_key_refusal_no_turn": True, "original_worn_key_pickup_and_one_key_consumed": True,
             "native_unlock_turns": 1, "original_terrain_change": "LOCKED_EXIT -> UNLOCKED_EXIT",
@@ -256,7 +256,7 @@ def worn_exit(client, profile, initial):
 
 
 def skeleton_key_door(client, profile, initial):
-    doors = [tile for tile in initial["observation"]["map"]["cells"]
+    doors = [tile for tile in initial["map"]["cells"]
              if tile["visibility"] == "visible" and tile["name"].casefold() == "closed door"]
     assert len(doors) == 1, doors
     cell = doors[0]["cell"]
@@ -264,10 +264,10 @@ def skeleton_key_door(client, profile, initial):
     assert original["terrain_names"][str(cell)] == "DOOR" and original["skeleton_key"]["charge"] == 4
 
     def insert(state):
-        key = next(item for item in state["observation"]["inventory"] if item["name"].casefold() == "skeleton key")
-        act(client, "inventory.open", locator=key["locator"])
+        key = next(item for item in state["inv"] if item["name"].casefold() == "skeleton key")
+        act(client, "item", loc=key["loc"])
         aiming = choose(client, lambda label: label == "INSERT")
-        assert any(action["action"] == "cell.cancel" for action in aiming["actions"])
+        assert any(action["op"] == "untarget" for action in aiming["acts"])
         return aiming
 
     def unchanged(before, after):
@@ -278,34 +278,34 @@ def skeleton_key_door(client, profile, initial):
         before = assertions(profile, state)
         aiming = insert(state)
         unchanged(before, assertions(profile, aiming))
-        result = act(client, "cell.select", cell=cell)
+        result = act(client, "cell", cell=cell)
         after = assertions(profile, result)
         assert after["terrain_names"][str(cell)] == terrain
         assert after["hero_clock"] - before["hero_clock"] == 1
         assert before["skeleton_key"]["charge"] - after["skeleton_key"]["charge"] == cost
-        assert not result["observation"]["ui"]["modal"] and not any(a["action"] == "cell.cancel" for a in result["actions"])
+        assert not result["ui"]["modal"] and not any(a["op"] == "untarget" for a in result["acts"])
         return result
 
     locked = target(initial, "HERO_LKD_DR", 2)
     before = assertions(profile, locked)
-    refused = act(client, "cell.select", cell=cell)
+    refused = act(client, "cell", cell=cell)
     unchanged(before, assertions(profile, refused))
     aiming = insert(refused)
-    cancelled = act(client, "cell.cancel")
+    cancelled = act(client, "untarget")
     unchanged(before, assertions(profile, cancelled))
     opened = target(cancelled, "DOOR", 0)
     relocked = target(opened, "HERO_LKD_DR", 2)
-    key = next(item for item in relocked["observation"]["inventory"] if item["name"].casefold() == "skeleton key")
+    key = next(item for item in relocked["inv"] if item["name"].casefold() == "skeleton key")
     before = assertions(profile, relocked)
-    act(client, "inventory.open", locator=key["locator"])
+    act(client, "item", loc=key["loc"])
     dropped = choose(client, lambda label: label == "DROP")
     after = assertions(profile, dropped)
     assert after["hero_clock"] - before["hero_clock"] == 2, "Original equipped DROP includes unequip and drop turns"
     assert not after["skeleton_key"]["equipped"] and not after["skeleton_key"]["in_belongings"]
     assert any(entity.get("item", {}).get("name", "").casefold() == "skeleton key"
-               for entity in dropped["observation"]["visible_entities"])
+               for entity in dropped["entities"])
     assert after["terrain_names"][str(cell)] == "HERO_LKD_DR"
-    forced = act(client, "cell.select", cell=cell)
+    forced = act(client, "cell", cell=cell)
     final = assertions(profile, forced)
     assert final["terrain_names"][str(cell)] == "DOOR" and final["hero_clock"] - after["hero_clock"] == 1
     assert final["keys"] == original["keys"] and final["skeleton_key"]["charge"] == 0
@@ -326,10 +326,10 @@ def run_one(root, classpath, runtime_id, name):
     report = {"case_id": "containers." + name.replace("-", "_"), "test_fixture": True, "counts_as_win": False,
               "profile": str(profile.relative_to(root)), "runtime_id": runtime_id}
     try:
-        hello = client.request("protocol.info"); assert hello["ok"]
-        report["build_id"] = hello["result"]["build_id"]
+        hello = client.request("info"); assert ("err" not in hello)
+        report["build_id"] = hello["data"]["build_id"]
         initial, _ = start_or_continue(client)
-        report["scope_id"] = initial["scope_id"]
+        report["s"] = initial["s"]
         report["gui_environment"] = assert_gui_environment(profile, initial)
         evidence = heap_multi(client, profile, initial) if name == "heap-multi" else for_sale(client, profile, initial) if name == "for-sale" else worn_exit(client, profile, initial) if name == "worn-exit" else skeleton_key_door(client, profile, initial) if name == "skeleton-key-door" else door(client, profile, initial, name) if name.endswith("-door") else container(client, profile, initial, name)
         report.update(evidence=evidence, cli_language="en")

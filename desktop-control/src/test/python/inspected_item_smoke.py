@@ -14,7 +14,7 @@ CASES = ["known", "unknown", "old-body", "floor-sale", "containers-a", "containe
 
 
 def body(state):
-    return "\n".join(node.get("text", "") for node in state["observation"]["ui"]["controls"])
+    return "\n".join(node.get("text", "") for node in state["ui"]["nodes"])
 
 
 def resources(source):
@@ -29,11 +29,11 @@ def resources(source):
 
 
 def inspected(state, known, *, with_sources=True):
-    ui = state["observation"]["ui"]
-    item = ui.get("inspected_item")
-    assert item and set(item) == {"control", "level_known"}, item
+    ui = state["ui"]
+    item = ui.get("item_info")
+    assert item and set(item) == {"ctl", "level_known"}, item
     assert item["level_known"] is known, item
-    owners = [node for node in ui["controls"] if node.get("id") == item["control"]]
+    owners = [node for node in ui["nodes"] if node.get("id") == item["ctl"]]
     assert len(owners) == 1 and owners[0]["role"] == "window" and not owners[0].get("parent"), owners
     text = body(state)
     expected = "This deals " if known else "This typically deals "
@@ -69,61 +69,61 @@ def run(root, cp, runtime_id, name):
               "profile": str(profile), "runtime_id": runtime_id, "cli_language": "en",
               "gui_language": os.environ.get("SPDCTL_TEST_LANGUAGE", "zh"), "windowed": True}
     try:
-        assert client.request("protocol.info")["ok"]
+        assert ("err" not in client.request("info"))
         state = reach_game(client, "DUELIST")
         if name in {"known", "unknown", "old-body"}:
-            opened = act(client, "inventory.open", locator="equipment.weapon")
+            opened = act(client, "item", loc="equipment.weapon")
             detailed = client.state(source=True)
-            assert detailed["state_version"] == opened["state_version"], "Source detail changed the item inspection"
+            assert detailed["rev"] == opened["rev"], "Source detail changed the item inspection"
             projection, text = inspected(detailed, name == "known")
             if name == "known":
-                inventory = next(item for item in opened["observation"]["inventory"] if item["locator"] == "equipment.weapon")
-                assert inventory["level_known"] is True and inventory["curse_known"] is False, inventory
+                inventory = next(item for item in opened["inv"] if item["loc"] == "equipment.weapon")
+                assert type(inventory["level"]) is int and inventory["cursed"] is None, inventory
             for _ in range(5):
                 queried = client.state(source=True)
                 assert inspected(queried, name == "known") == (projection, text)
-                assert client.request("actions.list")["ok"]
+                assert ("err" not in client.request("actions"))
             if name == "old-body":
-                inventory = next(item for item in queried["observation"]["inventory"] if item["locator"] == "equipment.weapon")
-                assert inventory["level_known"] is True, inventory
-                assert checkpoint(profile, queried["state_version"])["inspection"]["identified_after_body"]
-                act(client, "ui.back")
-                reopened = act(client, "inventory.open", locator="equipment.weapon")
+                inventory = next(item for item in queried["inv"] if item["loc"] == "equipment.weapon")
+                assert type(inventory["level"]) is int, inventory
+                assert checkpoint(profile, queried["rev"])["inspection"]["identified_after_body"]
+                act(client, "back")
+                reopened = act(client, "item", loc="equipment.weapon")
                 current = inspected(reopened, True, with_sources=False)
                 # Ordinary source trees are intentionally absent from play. This
                 # explicit diagnostic query validates the same rendered revision.
                 detailed = client.state(source=True)
-                assert detailed["state_version"] == reopened["state_version"]
+                assert detailed["rev"] == reopened["rev"]
                 assert inspected(detailed, True)[0] == current[0]
                 assert set(re.findall(r"\d+-\d+ damage", body(detailed))) == set(re.findall(r"\d+-\d+ damage", body(reopened)))
                 assert body(reopened) != text
-            act(client, "ui.back")
-            assert client.state()["observation"]["ui"].get("inspected_item") is None
+            act(client, "back")
+            assert client.state()["ui"].get("item_info") is None
             report["evidence"] = {"final_response_has_bound_knowledge": True, "repeated_queries": 5,
                                   "old_body_preserved_after_native_identify": name == "old-body",
                                   "curse_knowledge_independent": name == "known"}
         else:
-            entities = [e for e in state["observation"]["visible_entities"] if e["kind"] in {"item", "container"}]
+            entities = [e for e in state["entities"] if e["kind"] in {"item", "container"}]
             signatures = []
             expected = 2 if name == "floor-sale" else 6
             assert len(entities) == expected, entities
             for entity in sorted(entities, key=lambda e: e.get("name", e.get("item", {}).get("name", ""))):
-                opened = act(client, "cell.select", cell=entity["cell"], mode="examine")
+                opened = act(client, "cell", cell=entity["cell"], mode="examine")
                 if name == "floor-sale":
                     # The public entity's knowledge chooses the assertion, not a hidden heap peek.
-                    known = entity.get("item", {}).get("level_known")
-                    assert isinstance(known, bool), entity
+                    assert "level" in entity["item"], entity
+                    known = entity["item"]["level"] is not None
                     current = inspected(opened, known, with_sources=False)
                     detailed = client.state(source=True)
-                    assert detailed["state_version"] == opened["state_version"]
+                    assert detailed["rev"] == opened["rev"]
                     assert inspected(detailed, known)[0] == current[0]
                     assert set(re.findall(r"\d+-\d+ damage", body(detailed))) == set(re.findall(r"\d+-\d+ damage", body(opened)))
                 else:
-                    assert opened["observation"]["ui"].get("inspected_item") is None
+                    assert opened["ui"].get("item_info") is None
                     assert "This typically deals" not in body(opened)
                 signatures.append({"name": entity.get("name", entity.get("item", {}).get("name")), "text": body(opened),
-                                   "inspected_item": opened["observation"]["ui"].get("inspected_item")})
-                act(client, "ui.back")
+                                   "item_info": opened["ui"].get("item_info")})
+                act(client, "back")
             report["evidence"] = {"native_windows": expected, "public_signatures": signatures}
         report.update(ok=True, every_response_game_prose_checked=True)
     except Exception as error:

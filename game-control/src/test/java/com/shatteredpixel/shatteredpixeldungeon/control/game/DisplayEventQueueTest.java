@@ -102,7 +102,7 @@ public class DisplayEventQueueTest {
         assertEquals(Collections.singletonList(third), controller.peekDisplayEvents(100));
     }
 
-    @Test public void typedSnapshotAdaptersAlsoFreezeOpaqueMetadataForPersistence() {
+    @Test public void snapshotEventsFreezeOpaqueMetadataForPersistence() {
         Map<String, Object> diagnostic = map("code", 123);
         Map<String, Object> presentation = map("diagnostics", new ArrayList<>(Collections.singletonList(diagnostic)));
         GameController.BannerSnapshot snapshot = new GameController.BannerSnapshot("queue", "fixture",
@@ -117,7 +117,8 @@ public class DisplayEventQueueTest {
 
         assertEquals(before, JsonCodec.encode(controller.peekDisplayEvents(1).get(0).data()));
         assertNull(event.originalData());
-        assertSame(snapshot, controller.pollBanner());
+        assertSame(event, controller.peekDisplayEvents(1).get(0));
+        controller.acknowledgeDisplayEvents(Collections.singletonList(event));
         assertFalse(controller.hasDisplayEvents());
     }
 
@@ -175,47 +176,6 @@ public class DisplayEventQueueTest {
         assertFalse(controller.hasDisplayEvents());
     }
 
-    @Test public void typedPollAndTakeAdaptersConsumeTheSameOccurrencesWithoutDuplicates() {
-        GameController controller = controller();
-        GameController.VisualSnapshot firstVisual = visual(1);
-        GameController.VisualSnapshot secondVisual = visual(2);
-        GameController.VisualSnapshot thirdVisual = visual(3);
-        GameController.GameLogSnapshot firstLog = log(1);
-        GameController.GameLogSnapshot secondLog = log(2);
-        GameController.GameLogSnapshot thirdLog = log(3);
-        GameController.DisplayEvent screen = event("game.banner", 4);
-        GameController.DisplayEvent lastVisual = GameController.DisplayEvent.from(thirdVisual);
-        GameController.DisplayEvent lastLog = GameController.DisplayEvent.from(thirdLog);
-        controller.enqueueDisplayEvent(GameController.DisplayEvent.from(firstVisual));
-        controller.enqueueDisplayEvent(screen);
-        controller.enqueueDisplayEvent(GameController.DisplayEvent.from(firstLog));
-        controller.enqueueDisplayEvent(GameController.DisplayEvent.from(secondVisual));
-        controller.enqueueDisplayEvent(GameController.DisplayEvent.from(secondLog));
-        controller.enqueueDisplayEvent(lastVisual);
-        controller.enqueueDisplayEvent(lastLog);
-
-        assertSame(firstVisual, controller.pollVisual());
-        assertSame(firstLog, controller.pollGameLog());
-        assertEquals(Arrays.asList(secondVisual, thirdVisual), controller.takeVisuals());
-        assertNull(controller.pollVisual());
-        assertTrue(controller.takeVisuals().isEmpty());
-        assertEquals(Arrays.asList(secondLog, thirdLog), controller.takeGameLogs());
-        assertNull(controller.pollGameLog());
-        assertTrue(controller.takeGameLogs().isEmpty());
-        assertEquals(Collections.singletonList(screen), controller.peekDisplayEvents(100));
-        controller.acknowledgeDisplayEvents(Collections.singletonList(screen));
-        assertFalse(controller.hasDisplayEvents());
-
-        // Conversely, unified acknowledgement removes an occurrence from all typed adapters.
-        controller.enqueueDisplayEvent(lastVisual);
-        controller.enqueueDisplayEvent(lastLog);
-        controller.acknowledgeDisplayEvents(controller.peekDisplayEvents(2));
-        assertNull(controller.pollVisual());
-        assertNull(controller.pollGameLog());
-        assertTrue(controller.takeVisuals().isEmpty());
-        assertTrue(controller.takeGameLogs().isEmpty());
-    }
-
     private static GameController controller() {
         return new GameController(null, "menu:display-queue-fixture", failure -> { throw new AssertionError(failure); });
     }
@@ -224,12 +184,4 @@ public class DisplayEventQueueTest {
         return new GameController.DisplayEvent("run:queue", kind, map("sequence", sequence), null);
     }
 
-    private static GameController.VisualSnapshot visual(int generation) {
-        return new GameController.VisualSnapshot("queue", new Object(), 1, "map:queue", generation,
-                "2026-09-23T00:00:00Z", Collections.emptyList());
-    }
-
-    private static GameController.GameLogSnapshot log(int sequence) {
-        return new GameController.GameLogSnapshot("run:queue", "2026-09-23T00:00:0" + sequence + "Z", Collections.emptyList());
-    }
 }

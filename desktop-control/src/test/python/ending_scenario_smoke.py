@@ -8,7 +8,7 @@ import time
 
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game, checkpoint
 from english_protocol_smoke import activate, checked_state, execute, public_events
-from legacy_save_smoke import launch_command, metadata, safe_profile, write_json, stop
+from fixture_support import launch_command, metadata, safe_profile, write_json, stop
 from fixture_identity import fixture_context_matches, fixture_identity_matches
 
 
@@ -16,9 +16,9 @@ def ui_assertion(profile,state,window=None):
     deadline=time.monotonic()+5
     while time.monotonic()<deadline:
         rows=[json.loads(line) for line in (profile/"ui-assertions.jsonl").read_text().splitlines()]
-        row=next((row for row in reversed(rows) if fixture_identity_matches(profile,"revision",row["state_version"],state["state_version"])),None)
+        row=next((row for row in reversed(rows) if fixture_identity_matches(profile,"revision",row['state_version'],state['rev'])),None)
         if row is not None:
-            display=state["observation"]["ui"]["display"]
+            display=state["ui"]["display"]
             assert fixture_context_matches(profile,row,state),row
             assert row["language_code"]==display["language"]==os.environ.get("SPDCTL_TEST_LANGUAGE","zh"),row
             assert row["fullscreen"] is False and display["fullscreen"] is False,row
@@ -30,57 +30,57 @@ def ui_assertion(profile,state,window=None):
 
 def original_death(client,profile):
     initial=reach_game(client,"WARRIOR")
-    assert initial["observation"]["hero"]["hp"]==1
-    assert all("ankh" not in item["name"].lower() for item in initial["observation"]["inventory"])
+    assert initial["hero"]["hp"]==1
+    assert all("ankh" not in item["name"].lower() for item in initial['inv'])
     outcome=execute(client,"wait",request_id="death-trigger")
     dead=outcome.observation
-    assert dead["phase"]=="ended" and dead["observation"]["hero"]["hp"]==0,dead
-    assert dead["scope_id"]==initial["scope_id"]
-    assert dead["run_outcome"]=={"scope_id":initial["scope_id"],"result":"lost"},dead["run_outcome"]
-    events=public_events(client,initial["scope_id"])
+    assert dead["phase"]=="ended" and dead["hero"]["hp"]==0,dead
+    assert dead['s']==initial['s']
+    assert dead["run_outcome"]=={'s':initial['s'],"result":"lost"},dead["run_outcome"]
+    events=public_events(client,initial['s'])
     ended=[event for event in events if event["kind"]=="run.ended"]
     assert len(ended)==1 and ended[0]["data"]["result"]=="lost",ended
-    private=checkpoint(profile,dead["state_version"])["ending"]
+    private=checkpoint(profile,dead['rev'])["ending"]
     assert private["ankh_count"]==0 and private["ranking_records"]==1 and private["games_won"]==0,private
     # This scenario specifically verifies historical ending persistence.
-    recorded = client.request("request.get", {"target_id": outcome.request_id, "get": ["reply"]}, scope=outcome.scope_id)
-    assert recorded["ok"], recorded
-    return initial,dead,recorded["result"]["response"],ended[0]
+    recorded = client.request('req', {'rid': outcome.request_id, "get": ["reply"]}, scope=outcome.scope_id)
+    assert ("err" not in recorded), recorded
+    return initial,dead,recorded["data"]["reply"],ended[0]
 
 
 def death_menu(client,profile):
     state=checked_state(client)
-    labels={action.get("label") for action in state["actions"] if action["action"]=="ui.activate"}
+    labels={action.get("label") for action in state['acts'] if action['op']=='click'}
     label="Game Menu" if "Game Menu" in labels else "Menu"
-    assert label in labels,state["actions"]
+    assert label in labels,state['acts']
     # Death leaves both the ordinary HUD menu and the new death-banner menu usable.
     # Either is an original visible entry to WndGame; select one advertised control,
     # then verify the dead-only contents instead of assuming labels are globally unique.
-    control=next(action["control"] for action in state["actions"] if action["action"]=="ui.activate" and action.get("label")==label)
-    menu=execute(client,"ui.activate",control=control).observation
+    ctl=next(action['ctl'] for action in state['acts'] if action['op']=='click' and action.get("label")==label)
+    menu=execute(client,'click',ctl=ctl).observation
     ui_assertion(profile,menu,"com.shatteredpixel.shatteredpixeldungeon.windows.WndGame")
-    assert {"Settings","Start New Game","Rankings","Main Menu"}<={action.get("label") for action in menu["actions"]}
+    assert {"Settings","Start New Game","Rankings","Main Menu"}<={action.get("label") for action in menu['acts']}
     return menu
 
 
 def ranking_case(client,profile,dead):
     death_menu(client,profile)
     ranked=activate(client,"Rankings").observation
-    assert ranked["observation"]["ui"]["scene"]=="RankingsScene"
-    assert ranked["scope_id"] and ranked["scope_id"]!=dead["scope_id"] and "hero" not in ranked["observation"]
-    rows=[action for action in ranked["actions"] if action["action"]=="ui.activate"
+    assert ranked["ui"]["scene"]=="RankingsScene"
+    assert ranked['s'] and ranked['s']!=dead['s'] and "hero" not in ranked
+    rows=[action for action in ranked['acts'] if action['op']=='click'
           and "succumbed to poison" in action.get("label","").lower()]
-    assert len(rows)==1,ranked["actions"]
-    detail=execute(client,"ui.activate",control=rows[0]["control"]).observation
+    assert len(rows)==1,ranked['acts']
+    detail=execute(client,'click',ctl=rows[0]['ctl']).observation
     proof=ui_assertion(profile,detail,"com.shatteredpixel.shatteredpixeldungeon.windows.WndRanking")
-    texts=" ".join(str(node.get("text","")) for node in detail["observation"]["ui"]["controls"])
+    texts=" ".join(str(node.get("text","")) for node in detail["ui"]['nodes'])
     assert "Maximum Depth" in texts and "Strength" in texts and "Game Duration" in texts,texts
     assert "Unable to load additional information" not in texts,texts
-    back=execute(client,"ui.back").observation
-    assert back["observation"]["ui"]["scene"]=="RankingsScene" and not back["observation"]["ui"]["modal"]
-    title=execute(client,"ui.back").observation
-    assert title["observation"]["ui"]["scene"]=="TitleScene"
-    assert title["scope_id"]==ranked["scope_id"]
+    back=execute(client,'back').observation
+    assert back["ui"]["scene"]=="RankingsScene" and not back["ui"]["modal"]
+    title=execute(client,'back').observation
+    assert title["ui"]["scene"]=="TitleScene"
+    assert title['s']==ranked['s']
     return {"case_id":"ending.permanent_death","original_death_menu":True,
             "original_ranking_row_description":"Succumbed to Poison","ranking_detail_actual_window":proof["window_classes"],
             "ranking_stats_loaded":True,"original_detail_back_and_title_return":True}
@@ -89,87 +89,87 @@ def ranking_case(client,profile,dead):
 def restart_case(client,profile,initial,outcome):
     death_menu(client,profile)
     selected=activate(client,"Start New Game").observation
-    assert selected["observation"]["ui"]["scene"]=="HeroSelectScene"
+    assert selected["ui"]["scene"]=="HeroSelectScene"
     # The original dead-run menu already selects this hero class. Selecting the
     # class again opens the separate Hero Info window; Start is the actual next step.
-    assert not selected["observation"]["ui"]["modal"]
-    assert any(action.get("label")=="Start" for action in selected["actions"])
+    assert not selected["ui"]["modal"]
+    assert any(action.get("label")=="Start" for action in selected['acts'])
     new=activate(client,"Start").observation
     for _ in range(5):
-        if new["observation"]["scene"]=="game":break
-        assert new["observation"]["ui"]["scene"]=="InterlevelScene",new
-        assert any(action.get("label")=="Continue" for action in new["actions"]),new["actions"]
+        if new["scene"]=="game":break
+        assert new["ui"]["scene"]=="InterlevelScene",new
+        assert any(action.get("label")=="Continue" for action in new['acts']),new['acts']
         new=activate(client,"Continue").observation
-    assert new["observation"]["scene"]=="game",new
-    assert new["scope_id"] and new["scope_id"]!=initial["scope_id"] and new["observation"]["ui"]["scene"]=="GameScene"
-    assert new["observation"]["hero"]["hp"]==new["observation"]["hero"]["max_hp"]>0
-    assert new["observation"]["hero"]["level"]==1
+    assert new["scene"]=="game",new
+    assert new['s'] and new['s']!=initial['s'] and new["ui"]["scene"]=="GameScene"
+    assert new["hero"]["hp"]==new["hero"]['ht']>0
+    assert new["hero"]["level"]==1
     assert not new.get("run_outcome"),new.get("run_outcome")
-    assert not any("poison" in buff.get("name","").lower() for buff in new["observation"]["hero"]["buffs"])
+    assert not any("poison" in buff.get("name","").lower() for buff in new["hero"]["buffs"])
     # A query may use the old action ID in the new run; the old run's original action stays terminal.
-    fresh_id=client.request("state.get",request_id="death-trigger")
-    assert fresh_id["ok"] and fresh_id["result"]["scope_id"]==new["scope_id"],fresh_id
-    old=client.request("request.get",{"target_id":"death-trigger", "get": ["reply"]},scope=initial["scope_id"])
-    assert old["ok"] and old["result"]["response"]==outcome,old
-    old_events=[event for event in public_events(client,initial["scope_id"]) if event["kind"]=="run.ended"]
+    fresh_id=client.request('state',request_id="death-trigger")
+    assert ("err" not in fresh_id) and fresh_id['s']==new['s'],fresh_id
+    old=client.request('req',{'rid':"death-trigger", "get": ["reply"]},scope=initial['s'])
+    assert ("err" not in old) and old["data"]["reply"]==outcome,old
+    old_events=[event for event in public_events(client,initial['s']) if event["kind"]=="run.ended"]
     assert len(old_events)==1 and old_events[0]["data"]["result"]=="lost"
-    assert not [event for event in public_events(client,new["scope_id"]) if event["kind"]=="run.ended"]
+    assert not [event for event in public_events(client,new['s']) if event["kind"]=="run.ended"]
     return {"case_id":"ending.restart_after_death","original_dead_menu_start_new_game":True,
-            "new_scope_id":new["scope_id"],"original_new_hero_healthy_without_fixture_reinjection":True,
+            "new_scope_id":new['s'],"original_new_hero_healthy_without_fixture_reinjection":True,
             "old_request_id_allowed_in_new_scope":True,"old_death_response_and_event_unchanged":True,
             "old_outcome_does_not_leak_into_new_run":True}
 
 
 def entrance(client,expected_depth):
     state=checked_state(client)
-    hero=state["observation"]["hero"]
+    hero=state["hero"]
     assert hero["depth"]==expected_depth,hero
-    width=state["observation"]["map"]["width"]
-    choices=[cell for cell in state["observation"]["map"]["cells"] if cell["name"]=="Depth entrance"]
-    assert choices,state["observation"]["map"]
+    width=state["map"]['w']
+    choices=[cell for cell in state["map"]["cells"] if cell["name"]=="Depth entrance"]
+    assert choices,state["map"]
     target=min(choices,key=lambda cell:max(abs(cell["cell"]%width-hero["cell"]%width),abs(cell["cell"]//width-hero["cell"]//width)))["cell"]
-    result=execute(client,"cell.select",cell=target,mode="act").observation
+    result=execute(client,'cell',cell=target,mode="act").observation
     # If the native input only walked onto the stairs, the next original click activates them.
-    if result["observation"].get("scene")=="game" and result["observation"]["hero"]["depth"]==expected_depth and result["phase"]=="player_ready":
-        assert result["observation"]["hero"]["cell"]==target,result
-        result=execute(client,"cell.select",cell=target,mode="act").observation
+    if result.get("scene")=="game" and result["hero"]["depth"]==expected_depth and result["phase"]=="player_ready":
+        assert result["hero"]["cell"]==target,result
+        result=execute(client,'cell',cell=target,mode="act").observation
     return result
 
 
 def amulet_surface(client,profile,initial):
-    scope=initial["scope_id"]
-    assert initial["observation"]["hero"]["depth"]==2
-    assert not any(item["name"].lower()=="amulet of yendor" for item in initial["observation"]["inventory"])
-    heap=next(entity for entity in initial["observation"]["visible_entities"]
+    scope=initial['s']
+    assert initial["hero"]["depth"]==2
+    assert not any(item["name"].lower()=="amulet of yendor" for item in initial['inv'])
+    heap=next(entity for entity in initial['entities']
               if entity.get("item",{}).get("name","").lower()=="amulet of yendor")
-    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act").observation
-    assert acquired["observation"]["ui"]["scene"]=="AmuletScene",acquired
+    acquired=execute(client,'cell',cell=heap["cell"],mode="act").observation
+    assert acquired["ui"]["scene"]=="AmuletScene",acquired
     ui_assertion(profile,acquired)
-    text=" ".join(str(node.get("text","")) for node in acquired["observation"]["ui"]["controls"])
+    text=" ".join(str(node.get("text","")) for node in acquired["ui"]['nodes'])
     assert "You finally hold it in your hands, the Amulet of Yendor!" in text,text
-    assert {"Let's call it a day","I'm not done yet"}<={action.get("label") for action in acquired["actions"]}
+    assert {"Let's call it a day","I'm not done yet"}<={action.get("label") for action in acquired['acts']}
     assert not [event for event in public_events(client,scope) if event["kind"]=="run.ended"]
     stayed=activate(client,"I'm not done yet").observation
-    assert stayed["scope_id"]==scope and stayed["observation"]["scene"]=="game" and stayed["observation"]["hero"]["depth"]==2
-    assert any(item["name"].lower()=="amulet of yendor" for item in stayed["observation"]["inventory"])
+    assert stayed['s']==scope and stayed["scene"]=="game" and stayed["hero"]["depth"]==2
+    assert any(item["name"].lower()=="amulet of yendor" for item in stayed['inv'])
     first=entrance(client,2)
-    assert first["scope_id"]==scope and first["observation"]["scene"]=="game" and first["observation"]["hero"]["depth"]==1,first
-    assert not checkpoint(profile,first["state_version"])["ending"]["ascended"]
+    assert first['s']==scope and first["scene"]=="game" and first["hero"]["depth"]==1,first
+    assert not checkpoint(profile,first['rev'])["ending"]["ascended"]
     surface=entrance(client,1)
-    assert surface["observation"]["ui"]["scene"]=="SurfaceScene",surface
+    assert surface["ui"]["scene"]=="SurfaceScene",surface
     surface_proof=ui_assertion(profile,surface)
-    assert surface["run_outcome"]=={"scope_id":scope,"result":"won"}
-    private=checkpoint(profile,surface["state_version"])["ending"]
+    assert surface["run_outcome"]=={'s':scope,"result":"won"}
+    private=checkpoint(profile,surface['rev'])["ending"]
     assert private["ascended"] and private["amulet_obtained"] and private["games_won"]==1,private
     ended=[event for event in public_events(client,scope) if event["kind"]=="run.ended"]
     assert len(ended)==1 and ended[0]["data"]["result"]=="won",ended
     ranked=activate(client,"Game Over").observation
-    assert ranked["observation"]["ui"]["scene"]=="RankingsScene"
+    assert ranked["ui"]["scene"]=="RankingsScene"
     victory=ui_assertion(profile,ranked,"com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats")
-    blocked=execute(client,"ui.back").observation
+    blocked=execute(client,'back').observation
     ui_assertion(profile,blocked,"com.shatteredpixel.shatteredpixeldungeon.windows.WndVictoryCongrats")
     closed=activate(client,"Close").observation
-    assert closed["observation"]["ui"]["scene"]=="RankingsScene" and not closed["observation"]["ui"]["modal"]
+    assert closed["ui"]["scene"]=="RankingsScene" and not closed["ui"]["modal"]
     return {"case_id":"ending.amulet_pickup_surface","source_scope_id":scope,
             "original_ground_pickup_and_acquisition_story":True,"original_stay_keeps_amulet_and_scope":True,
             "original_two_to_one_transition":True,"actual_surface_scene":surface_proof["scene"],
@@ -179,30 +179,30 @@ def amulet_surface(client,profile,initial):
 
 
 def ascension_start(client,profile,initial):
-    scope=initial["scope_id"]
-    before=checkpoint(profile,initial["state_version"])["ending"]
-    assert initial["observation"]["hero"]["depth"]==25 and before["level_class"]=="HallsBossLevel"
+    scope=initial['s']
+    before=checkpoint(profile,initial['rev'])["ending"]
+    assert initial["hero"]["depth"]==25 and before["level_class"]=="HallsBossLevel"
     assert not before["ascension_active"] and not before["amulet_obtained"]
-    heap=next(entity for entity in initial["observation"]["visible_entities"]
+    heap=next(entity for entity in initial['entities']
               if entity.get("item",{}).get("name","").lower()=="amulet of yendor")
-    acquired=execute(client,"cell.select",cell=heap["cell"],mode="act").observation
-    assert acquired["observation"]["ui"]["scene"]=="AmuletScene"
+    acquired=execute(client,'cell',cell=heap["cell"],mode="act").observation
+    assert acquired["ui"]["scene"]=="AmuletScene"
     stayed=activate(client,"I'm not done yet").observation
-    assert stayed["scope_id"]==scope and stayed["observation"]["hero"]["depth"]==25
+    assert stayed['s']==scope and stayed["hero"]["depth"]==25
     prompt=entrance(client,25)
-    assert prompt["phase"]=="awaiting_input" and {"Continue!","Stop for Now"}<={action.get("label") for action in prompt["actions"]}
-    shown=" ".join(str(node.get("text","")) for node in prompt["observation"]["ui"]["controls"])
+    assert prompt["phase"]=="awaiting_input" and {"Continue!","Stop for Now"}<={action.get("label") for action in prompt['acts']}
+    shown=" ".join(str(node.get("text","")) for node in prompt["ui"]['nodes'])
     assert "You begin to feel Yog-Dzewa's great and terrible power radiating from the amulet." in shown
     prompt_proof=ui_assertion(profile,prompt)
     assert any(name.startswith("com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel$") for name in prompt_proof["window_classes"])
     cancelled=activate(client,"Stop for Now").observation
-    assert cancelled["observation"]["hero"]["depth"]==25 and not checkpoint(profile,cancelled["state_version"])["ending"]["ascension_active"]
+    assert cancelled["hero"]["depth"]==25 and not checkpoint(profile,cancelled['rev'])["ending"]["ascension_active"]
     entrance(client,25)
     ascended=activate(client,"Continue!").observation
-    assert ascended["scope_id"]==scope and ascended["phase"]=="player_ready" and ascended["observation"]["hero"]["depth"]==24,ascended
-    after=checkpoint(profile,ascended["state_version"])["ending"]
+    assert ascended['s']==scope and ascended["phase"]=="player_ready" and ascended["hero"]["depth"]==24,ascended
+    after=checkpoint(profile,ascended['rev'])["ending"]
     assert after["level_class"]=="HallsLevel" and after["highest_ascent"]==24 and after["ascension_active"]
-    assert any(buff["name"].lower()=="amulet's curse" for buff in ascended["observation"]["hero"]["buffs"])
+    assert any(buff["name"].lower()=="amulet's curse" for buff in ascended["hero"]["buffs"])
     events=public_events(client,scope)
     assert any("The amulet begins calling out to distant enemies." in entry["text"]
                for event in events if event["kind"]=="game.log" for entry in event["data"]["entries"]),events
@@ -219,7 +219,7 @@ def run_one(root,classpath,runtime_id,name):
     command=launch_command(classpath,fixture=True);command[-1]="ending:"+name
     client=FixtureClient(command,profile,verify_gui=True)
     try:
-        hello=client.request("protocol.info");assert hello["ok"]
+        hello=client.request('info');assert ("err" not in hello)
         if name in {"amulet-surface","ascension-start"}:
             initial=reach_game(client,"WARRIOR")
             details=amulet_surface(client,profile,initial) if name=="amulet-surface" else ascension_start(client,profile,initial)
@@ -228,9 +228,9 @@ def run_one(root,classpath,runtime_id,name):
             details=ranking_case(client,profile,dead) if name=="death-ranking" else restart_case(client,profile,initial,outcome)
             details.update(original_poison_death=True,run_ended_event=event)
         result={"verified":True,"test_fixture":True,"counts_as_win":False,"runtime_id":runtime_id,
-                "profile":str(profile.relative_to(root)),"build_id":hello["result"]["build_id"],
+                "profile":str(profile.relative_to(root)),"build_id":hello["data"]["build_id"],
                 "gui_language":os.environ.get("SPDCTL_TEST_LANGUAGE","zh"),"cli_language":"en","fullscreen":False,
-                "old_scope_id":initial["scope_id"],
+                "old_scope_id":initial['s'],
                 "gui_postconditions_checked":client.gui_postconditions_checked,**details}
         stop(client)
         write_json(profile/"ending-scenario-result.json",result)

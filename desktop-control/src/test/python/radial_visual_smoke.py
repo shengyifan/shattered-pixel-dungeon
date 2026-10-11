@@ -15,7 +15,7 @@ import uuid
 
 from fixture_smoke import (FixtureClient, act, assert_gui_environment, close_choices,
                            fixture_java_prefix, freeze_fixture_runtime, norm)
-from protocol9 import pages
+from protocol9 import OBSERVATION_FIELDS, frame_data, pages
 
 
 CASES = ("supernova-halo", "supernova-halo-edge", "blast-radius-1", "blast-radius-3", "blast-radius-6")
@@ -33,10 +33,10 @@ class RadialFixtureClient(FixtureClient):
 
     def request(self, op, args=None, **kwargs):
         result = super().request(op, args, **kwargs)
-        data = result.get("result")
-        quitting = op == "action.execute" and isinstance(args, dict) and args.get("action") == "app.quit"
-        if not quitting and result.get("ok") and isinstance(data, dict) and "observation" in data:
-            self.gui_frames.append(copy.deepcopy(data))
+        data = result.get("data")
+        quitting = op == "quit"
+        if not quitting and "err" not in result and isinstance(data, dict) and OBSERVATION_FIELDS & data.keys():
+            self.gui_frames.append(copy.deepcopy(frame_data(result)))
         return result
 
     def verify_original_gui_frames(self):
@@ -47,42 +47,42 @@ class RadialFixtureClient(FixtureClient):
 
 
 def reach_game_response(client):
-    """Retain the entry action's own final frame, without the legacy post-entry refresh."""
+    """Retain the entry action's own final frame, without an additional post-entry state query."""
     state = client.state()
     selected = False
     for _ in range(35):
-        observation = state["observation"]
+        observation = state
         if observation.get("scene") == "game":
             assert observation["hero"]["class"] == "warrior", observation["hero"]
             return state
         ui = observation.get("ui", {})
-        options = [action for action in state["actions"] if action["action"] == "ui.activate"]
+        options = [action for action in state["acts"] if action["op"] == "click"]
         if ui.get("scene") == "HeroSelectScene" and not selected and not ui.get("modal"):
             choices = [action for action in options if norm(action.get("label", "")) == "warrior"]
             assert len(choices) == 1, options
-            state = act(client, "ui.activate", control=choices[0]["control"])
+            state = act(client, "click", ctl=choices[0]["ctl"])
             selected = True
         elif ui.get("scene") == "HeroSelectScene" and ui.get("modal") and selected:
-            state = act(client, "ui.back")
+            state = act(client, "back")
         else:
             choice = next((action for label in ("Continue", "Enter the Dungeon", "Play", "New Game", "Start")
                            for action in options if action.get("label") == label), None)
             if choice is not None:
-                state = act(client, "ui.activate", control=choice["control"])
-            elif any(action["action"] == "ui.reveal" for action in state["actions"]):
-                state = act(client, "ui.reveal")
+                state = act(client, "click", ctl=choice["ctl"])
+            elif any(action["op"] == "reveal" for action in state["acts"]):
+                state = act(client, "reveal")
             else:
-                raise AssertionError({"cannot_start_radial_fixture": ui, "actions": state["actions"]})
+                raise AssertionError({"cannot_start_radial_fixture": ui, "acts": state["acts"]})
     raise AssertionError("Did not reach a playable radial fixture")
 
 
 def cues(state, kind=None):
-    observed = state["observation"]["visual_cues"]["cues"]
+    observed = state["cues"]["cues"]
     return observed if kind is None else [cue for cue in observed if cue["kind"] == kind]
 
 
 def events(client):
-    return [event for page in pages(client, "events.read") for event in page]
+    return [event for page in pages(client, "events") for event in page]
 
 
 def drawn_samples(history, kind):
@@ -99,7 +99,7 @@ def check_appearance(state, cue, shape):
     cells = appearance["cells"]
     assert isinstance(cells, list) and cells and all(type(cell) is int for cell in cells), appearance
     assert cue["cell"] in cells and len(cells) == len(set(cells)), cue
-    visible = {cell["cell"] for cell in state["observation"]["map"]["cells"]
+    visible = {cell["cell"] for cell in state["map"]["cells"]
                if cell["visibility"] == "visible"}
     assert set(cells) <= visible, {"unknown_visual_cells": sorted(set(cells) - visible)}
     assert not {"center_world", "size", "radius_world", "scale", "angle", "alpha_transform"} & set(appearance)
@@ -135,39 +135,39 @@ def check_halo(client, name, initial):
     surviving = cues(persistent, "supernova_halo")
     assert surviving, {"persistent_native_halo_missing": cues(persistent)}
     assert cues(persistent, "red_target") == cues(initial, "red_target"), cues(persistent)
-    assert persistent["state_version"] == initial["state_version"], "Native marker fade cannot end the pending nova warning"
+    assert persistent["rev"] == initial["rev"], "Native marker fade cannot end the pending nova warning"
     assert not any(entry.get("kind") == "floating" and entry.get("text") == "10..."
-                   for entry in persistent["observation"]["ui"].get("feedback", []))
+                   for entry in persistent["ui"].get("feedback", []))
     for cue in surviving:
         check_appearance(persistent, cue, "halo")
     # After the initial target image/text fade, observe the retained warning and halo pulsation without
     # advancing actors. Keep the original frames in public-trace.jsonl for diagnosis.
     passive = [persistent]
-    passive_rows = [{"revision": persistent["state_version"], "halos": surviving}]
+    passive_rows = [{"revision": persistent["rev"], "halos": surviving}]
     for _ in range(8):
         time.sleep(.07)
         sample = client.state()
         passive.append(sample)
-        passive_rows.append({"revision": sample["state_version"], "halos": cues(sample, "supernova_halo")})
-    unchanged_world = all(sample["observation"][key] == persistent["observation"][key]
-                          for sample in passive for key in ("hero", "map", "inventory", "visible_entities"))
+        passive_rows.append({"revision": sample["rev"], "halos": cues(sample, "supernova_halo")})
+    unchanged_world = all(sample[key] == persistent[key]
+                          for sample in passive for key in ("hero", "map", "inv", "entities"))
     passive_report = {"test_fixture": True, "no_actions": True, "same_world": unchanged_world,
-                      "revisions": [sample["state_version"] for sample in passive], "samples": passive_rows}
+                      "revisions": [sample["rev"] for sample in passive], "samples": passive_rows}
     (client.profile / "halo-passive-observations.json").write_text(json.dumps(passive_report, indent=2) + "\n")
     assert unchanged_world, {"read_only_halo_probe_changed_world": passive_report}
     assert len(set(passive_report["revisions"])) == 1, {"halo_pulse_changed_intent": passive_report}
     persistent = passive[-1]
     after = events(client); assert_retained(before, after)
-    menu = next(node for node in persistent["observation"]["ui"]["controls"]
-                if str(node.get("shortcut_action", "")).lower() == "back")
-    modal = act(client, "ui.activate", control=menu["id"])
-    assert modal["observation"]["ui"]["modal"] and cues(modal, "supernova_halo"), cues(modal)
-    restored = act(client, "ui.back")
+    menu = next(node for node in persistent["ui"]["nodes"]
+                if str(node.get("shortcut", "")).lower() == "back")
+    modal = act(client, "click", ctl=menu["id"])
+    assert modal["ui"]["modal"] and cues(modal, "supernova_halo"), cues(modal)
+    restored = act(client, "back")
     assert cues(restored, "supernova_halo"), cues(restored)
     for cue in cues(restored, "supernova_halo"):
         check_appearance(restored, cue, "halo")
     return {"kind": "supernova_halo", "initial_known_cell_sets": known_sets,
-            "persistent_response_revision": persistent["state_version"],
+            "persistent_response_revision": persistent["rev"],
             "native_countdown_history": countdown, "initial_halo_history_count": len(history),
             "transient_history_retained": True, "modal_keeps_known_extent": True,
             "passive_halo_revisions": passive_report["revisions"],
@@ -183,7 +183,7 @@ def check_wave(client, name, initial):
     # Event snapshots contain only currently known cells. The fixture's radius is
     # not copied into the wire and these cells are not a hidden blast area.
     event_cells = []
-    visible = {cell["cell"] for cell in initial["observation"]["map"]["cells"]
+    visible = {cell["cell"] for cell in initial["map"]["cells"]
                if cell["visibility"] == "visible"}
     for sample in samples:
         appearance = sample["cue"]["appearance"]
@@ -215,8 +215,8 @@ def run_one(root, classpath, runtime_id, name, execution=None):
     if execution is not None:
         report["execution"] = execution
     try:
-        hello = client.request("protocol.info"); assert hello["ok"], hello
-        report.update(build_id=hello["result"]["build_id"], cli_version=hello["result"]["cli_version"])
+        hello = client.request("info"); assert "err" not in hello, hello
+        report.update(build_id=hello["data"]["build_id"], cli_version=hello["data"]["cli_version"])
         initial = reach_game_response(client)
         report["initial_frame_identity"] = {key: client.last_wire_response.get(key) for key in ("v", "id", "s", "rev", "st")}
         report["initial_frame_request"] = dict(client.last_wire_request)

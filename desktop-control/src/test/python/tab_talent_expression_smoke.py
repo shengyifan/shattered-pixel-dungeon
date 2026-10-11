@@ -12,7 +12,7 @@ from spdctl_client import decode_wire_response
 from fixture_smoke import FixtureClient, freeze_fixture_runtime, fixture_java_prefix
 from english_protocol_smoke import activate, execute
 from ending_scenario_smoke import original_death, death_menu, ui_assertion
-from legacy_save_smoke import metadata, safe_profile, stop
+from fixture_support import metadata, safe_profile, stop
 
 
 def tabs(nodes):
@@ -114,33 +114,33 @@ def ranking(root, bundle=None):
     report = {"test_fixture": True, "counts_as_win": False, "runtime_id": runtime_id,
               "execution": execution, "profile": str(profile)}
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"], hello
+        hello = client.request("info")
+        assert ("err" not in hello), hello
         _, dead, _, _ = original_death(client, profile)
         death_menu(client, profile)
         ranked = activate(client, "Rankings").observation
-        rows = [a for a in ranked["actions"] if a.get("action") == "ui.activate"
+        rows = [a for a in ranked["acts"] if a.get("op") == "click"
                 and "succumbed to poison" in a.get("label", "").lower()]
         assert len(rows) == 1, rows
-        detail = execute(client, "ui.activate", control=rows[0]["control"]).observation
+        detail = execute(client, "click", ctl=rows[0]["ctl"]).observation
         ui_assertion(profile, detail, "com.shatteredpixel.shatteredpixeldungeon.windows.WndRanking")
-        initial = tabs(detail["observation"]["ui"]["controls"])
+        initial = tabs(detail["ui"]["nodes"])
         assert {n["icon"]["symbol"] for n in initial} == {"rankings", "talent", "backpack_lrg", "badges"}, initial
         choice = next(n for n in initial if n["icon"]["symbol"] == "talent")
-        detail = execute(client, "ui.activate", control=choice["id"]).observation
-        assert detail["observation"]["ui"]["scene"] == "RankingsScene"
-        assert "hero" not in detail["observation"], "Ranking points cannot depend on current hero projection"
+        detail = execute(client, "click", ctl=choice["id"]).observation
+        assert detail["ui"]["scene"] == "RankingsScene"
+        assert "hero" not in detail, "Ranking points cannot depend on current hero projection"
         ui_assertion(profile, detail, "com.shatteredpixel.shatteredpixeldungeon.windows.WndRanking")
-        selected = [n for n in tabs(detail["observation"]["ui"]["controls"]) if n["selected"]]
+        selected = [n for n in tabs(detail["ui"]["nodes"]) if n["selected"]]
         assert selected[0]["icon"]["symbol"] == "talent"
-        points = {n.get("label"): n["talent_points"] for n in detail["observation"]["ui"]["controls"] if "talent_points" in n}
-        assert points["Hearty Meal"] == {"spent": 1, "maximum": 2}, points
-        assert points["Veteran's Intuition"] == {"spent": 2, "maximum": 2}, points
+        points = {n.get("label"): n["talent_points"] for n in detail["ui"]["nodes"] if "talent_points" in n}
+        assert points["Hearty Meal"] == {"spent": 1, "max": 2}, points
+        assert points["Veteran's Intuition"] == {"spent": 2, "max": 2}, points
         write_json(profile / "ranking-talent-frame.json", detail)
         report.update(verified=True, original_death=True, native_rankings_window=True,
                       no_hero_projection=True, displayed_points=points)
-        execute(client, "ui.back")
-        execute(client, "ui.back")
+        execute(client, "back")
+        execute(client, "back")
         stop(client)
     finally:
         write_json(profile / "ranking-talent-result.json", report)

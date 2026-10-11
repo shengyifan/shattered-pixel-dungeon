@@ -30,12 +30,12 @@ class NativeHudAppearanceTest {
             try {
                 Image image=Icons.INFO.get();image.x=image.y=10;image.camera=new Camera(0,0,100,100,1);
                 IconButton button=visual(allocate(IconButton.class));set(button,IconButton.class,"icon",image);image.parent=button;
-                Map<?,?> icon=(Map<?,?>)button.renderedStatus().get("icon");
+                Map<?,?> icon=(Map<?,?>)button.gameplayStatus().get("icon");
                 assertEquals("info",icon.get("symbol"));assertFalse(icon.containsKey("atlas"));
-                Map<String,Object> intent=button.intentStatus();image.alpha(.5f);assertEquals(intent,button.intentStatus());
-                image.frame(new RectF(0,0,.05f,.1f));assertEquals("unmapped_indicator",((Map<?,?>)button.renderedStatus().get("icon")).get("symbol"));
-                assertTrue(((Map<?,?>)button.renderedStatus().get("icon")).containsKey("presentation"));
-                assertFalse(((Map<?,?>)button.renderedStatus().get("icon")).containsKey("frame_pixels"));
+                Map<String,Object> intent=button.gameplayIntentStatus();image.alpha(.5f);assertEquals(intent,button.gameplayIntentStatus());
+                image.frame(new RectF(0,0,.05f,.1f));assertEquals("unmapped_indicator",((Map<?,?>)button.gameplayStatus().get("icon")).get("symbol"));
+                assertTrue(((Map<?,?>)button.gameplayStatus().get("icon")).containsKey("presentation"));
+                assertFalse(((Map<?,?>)button.gameplayStatus().get("icon")).containsKey("frame_pixels"));
             } finally {if(previous==null)fixture.cache.remove(Assets.Interfaces.ICONS);else fixture.cache.put(Assets.Interfaces.ICONS,previous);}
         }
     }
@@ -48,14 +48,14 @@ class NativeHudAppearanceTest {
             set(swap,Toolbar.SlotSwapTool.class,"icons",new Image[]{change,first,null,last});
             set(swap,Toolbar.SlotSwapTool.class,"previewPlaceholders",new boolean[]{false,false,false,true});
             assertNull(SnapshotFields.read(swap,"items"),"The appearance does not inspect backing quickslot items");
-            List<?> previews=(List<?>)swap.renderedStatus().get("preview_icons");assertEquals(4,previews.size());assertNull(previews.get(2));
+            List<?> previews=(List<?>)swap.gameplayStatus().get("preview_icons");assertEquals(4,previews.size());assertNull(previews.get(2));
             assertEquals(true,((Map<?,?>)previews.get(3)).get("placeholder"));
             assertFalse(((Map<?,?>)previews.get(3)).containsKey("alpha"));assertNotEquals(previews.get(0),previews.get(1));
-            Map<String,Object> intent=swap.intentStatus();first.tint(0xCC00FF,.3f);assertEquals(intent,swap.intentStatus());
-            last.alpha(1f);assertEquals(intent,swap.intentStatus());
+            Map<String,Object> intent=swap.gameplayIntentStatus();first.tint(0xCC00FF,.3f);assertEquals(intent,swap.gameplayIntentStatus());
+            last.alpha(1f);assertEquals(intent,swap.gameplayIntentStatus());
             set(swap,Toolbar.SlotSwapTool.class,"previewPlaceholders",new boolean[]{false,false,false,false});
-            assertNotEquals(intent,swap.intentStatus());last.visible=false;
-            assertNull(((List<?>)swap.renderedStatus().get("preview_icons")).get(3));
+            assertNotEquals(intent,swap.gameplayIntentStatus());last.visible=false;
+            assertNull(((List<?>)swap.gameplayStatus().get("preview_icons")).get(3));
         }
     }
 
@@ -70,16 +70,16 @@ class NativeHudAppearanceTest {
             Game.observer=new RuntimeObserver(){@Override public void onBanner(String run,String kind,Map<String,Object> appearance){observed.add(kind);}};
             Banner banner=new Banner(fixture.image()).observationKind("boss_slain");banner.camera=new Camera(0,0,100,100,1);banner.x=banner.y=30;scene.add(banner);
             Method record=Banner.class.getDeclaredMethod("recordDisplayedBanner");record.setAccessible(true);
-            assertTrue(banner.renderedStatus().isEmpty());record.invoke(banner);assertTrue(observed.isEmpty(),"Transparent first frame is not an announcement");
+            assertTrue(banner.gameplayStatus().isEmpty());record.invoke(banner);assertTrue(observed.isEmpty(),"Transparent first frame is not an announcement");
             banner.alpha(1);
             Visual cover=new Visual(25,25,20,20);cover.camera=banner.camera;scene.add(cover);
             record.invoke(banner);assertTrue(observed.isEmpty(),"An overlapping UI/fader blocks the announcement");
             cover.visible=false;record.invoke(banner);record.invoke(banner);assertEquals(Collections.singletonList("boss_slain"),observed);
-            assertEquals("boss_slain",banner.renderedStatus().get("banner_kind"));
-            banner.alpha(.5f);record.invoke(banner);assertEquals(1,observed.size());assertTrue(banner.intentStatus().isEmpty());
-            cover.visible=true;assertTrue(banner.renderedStatus().isEmpty());cover.visible=false;
+            assertEquals("boss_slain",banner.gameplayStatus().get("banner_kind"));
+            banner.alpha(.5f);record.invoke(banner);assertEquals(1,observed.size());assertTrue(banner.gameplayIntentStatus().isEmpty());
+            cover.visible=true;assertTrue(banner.gameplayStatus().isEmpty());cover.visible=false;
             banner.show(0xFFFFFF,.3f,5f);record.invoke(banner);assertEquals(2,observed.size(),"A newly shown native instance is a new occurrence");
-            banner.frame(new RectF(.5f,0,1f,.5f));assertTrue(banner.renderedStatus().isEmpty(),"Changed pixels cannot keep their old semantic kind");
+            banner.frame(new RectF(.5f,0,1f,.5f));assertTrue(banner.gameplayStatus().isEmpty(),"Changed pixels cannot keep their old semantic kind");
         } finally {Game.instance=previousGame;Game.observer=previousObserver;Dungeon.runId=previousRun;Camera.main=previousCamera;}
     }
 
@@ -87,20 +87,20 @@ class NativeHudAppearanceTest {
         try(Textures fixture=new Textures()) {
             WndClericSpells.SpellButton spell=visual(allocate(WndClericSpells.SpellButton.class));
             Image icon=fixture.image();icon.parent=spell;set(spell,IconButton.class,"icon",icon);
-            Map<String,Object> before=spell.renderedStatus();icon.brightness(3f);
-            assertEquals(before,spell.renderedStatus(),"Decorative brightness does not invent free casting");
+            Map<String,Object> before=spell.gameplayStatus();icon.brightness(3f);
+            assertEquals(before,spell.gameplayStatus(),"Decorative brightness does not invent free casting");
             set(spell,WndClericSpells.SpellButton.class,"displayedFreeCast",true);
-            assertEquals(true,spell.renderedStatus().get("free_cast"));
-            assertNotEquals(before,spell.renderedStatus());
-            Map<?,?> highlighted=(Map<?,?>)spell.renderedStatus().get("spell_icon");
+            assertEquals(true,spell.gameplayStatus().get("free_cast"));
+            assertNotEquals(before,spell.gameplayStatus());
+            Map<?,?> highlighted=(Map<?,?>)spell.gameplayStatus().get("spell_icon");
             assertEquals("hero_berserker",highlighted.get("symbol"));assertFalse(highlighted.containsKey("tint"));
             assertNull(SnapshotFields.read(spell,"spell"));assertNull(SnapshotFields.read(spell,"tome"));
             AttackIndicator attack=visual(allocate(AttackIndicator.class));
             CharSprite portrait=fixture.sprite();portrait.parent=attack;set(attack,AttackIndicator.class,"sprite",portrait);
-            assertTrue(attack.renderedStatus().containsKey("target_icon"));
-            assertFalse(attack.renderedStatus().containsKey("cell"));
+            assertTrue(attack.gameplayStatus().containsKey("target_icon"));
+            assertFalse(attack.gameplayStatus().containsKey("cell"));
             assertNull(SnapshotFields.read(attack,"lastTarget"));
-            portrait.visible=false;assertTrue(attack.renderedStatus().isEmpty());
+            portrait.visible=false;assertTrue(attack.gameplayStatus().isEmpty());
         }
     }
 
@@ -109,16 +109,16 @@ class NativeHudAppearanceTest {
             ActionIndicator action=visual(allocate(ActionIndicator.class));Image primary=fixture.image(),secondary=fixture.image();
             primary.parent=secondary.parent=action;secondary.frame(new RectF(.5f,0,1f,.5f));secondary.brightness(.6f);
             set(action,ActionIndicator.class,"primaryVis",primary);set(action,ActionIndicator.class,"secondVis",secondary);
-            Map<String,Object> pair=action.renderedStatus();assertTrue(pair.containsKey("primary_icon"));assertTrue(pair.containsKey("secondary_icon"));
+            Map<String,Object> pair=action.gameplayStatus();assertTrue(pair.containsKey("primary_icon"));assertTrue(pair.containsKey("secondary_icon"));
             assertNotEquals(pair.get("primary_icon"),pair.get("secondary_icon"));
             BossHealthBar boss=visual(allocate(BossHealthBar.class));Image skull=fixture.image();skull.parent=boss;set(boss,BossHealthBar.class,"skull",skull);
-            Map<String,Object> ordinary=boss.renderedStatus();skull.tint(0xCC0000,.6f);
-            assertEquals(ordinary,boss.renderedStatus(),"A random tint is not a native boss warning");
-            set(boss,BossHealthBar.class,"displayedWarning",true);assertNotEquals(ordinary,boss.renderedStatus());
-            assertEquals(true,((Map<?,?>)boss.renderedStatus().get("shown")).get("boss_warning"));
+            Map<String,Object> ordinary=boss.gameplayStatus();skull.tint(0xCC0000,.6f);
+            assertEquals(ordinary,boss.gameplayStatus(),"A random tint is not a native boss warning");
+            set(boss,BossHealthBar.class,"displayedWarning",true);assertNotEquals(ordinary,boss.gameplayStatus());
+            assertEquals(true,((Map<?,?>)boss.gameplayStatus().get("shown")).get("boss_warning"));
             assertNull(SnapshotFields.read(boss,"blood"));
-            assertFalse(boss.renderedStatus().containsKey("phase"));
-            skull.x=99;assertTrue(boss.renderedStatus().isEmpty(),"A partially clipped portrait is not a full appearance");
+            assertFalse(boss.gameplayStatus().containsKey("phase"));
+            skull.x=99;assertTrue(boss.gameplayStatus().isEmpty(),"A partially clipped portrait is not a full appearance");
         }
     }
 
@@ -128,34 +128,34 @@ class NativeHudAppearanceTest {
             StatusPane status=visual(allocate(StatusPane.class));set(status,Group.class,"members",new ArrayList<Gizmo>());
             CircleArc arc=visual(allocate(CircleArc.class));arc.x=20;arc.y=20;arc.parent=status;
             set(arc,CircleArc.class,"rad",3f);set(arc,CircleArc.class,"sweep",.25f);set(status,StatusPane.class,"counter",arc);
-            assertEquals(.25f,((Map<?,?>)status.renderedStatus().get("turn_progress")).get("sweep"));
+            assertEquals(.25f,((Map<?,?>)status.gameplayStatus().get("turn_progress")).get("sweep"));
             Scene scene=new Scene();scene.add(status);UiBridge bridge=new UiBridge(()->scene);
             Map<?,?> ui=UiDrawFixture.capture(bridge).describeUi();
             assertTrue(((List<?>)ui.get("controls")).stream().anyMatch(node->((Map<?,?>)node).containsKey("turn_progress")));
             String before=bridge.intentSignature();arc.setSweep(.5f);assertNotEquals(before,bridge.intentSignature());
             assertNull(Dungeon.hero,"No hero or actor-clock read is needed to capture the displayed arc");
-            arc.x=99;assertFalse(status.renderedStatus().containsKey("turn_progress"));
+            arc.x=99;assertFalse(status.gameplayStatus().containsKey("turn_progress"));
         } finally {Dungeon.hero=previousHero;}
     }
 
     @Test void decorativeAnimationDoesNotChangeIntentButMeaningfulHighlightAndSelectionDo() throws Exception {
         try(Textures fixture=new Textures()) {
             BossHealthBar boss=visual(allocate(BossHealthBar.class));Image skull=fixture.image();skull.parent=boss;set(boss,BossHealthBar.class,"skull",skull);
-            Map<String,Object> bossIntent=boss.intentStatus(),bossPixels=boss.renderedStatus();
+            Map<String,Object> bossIntent=boss.gameplayIntentStatus(),bossPixels=boss.gameplayStatus();
             skull.frame(new RectF(.5f,0,1f,.5f));
-            assertEquals(bossPixels,boss.renderedStatus());assertEquals(bossIntent,boss.intentStatus());
-            skull.tint(0xCC0000,.6f);assertEquals(bossIntent,boss.intentStatus());
-            set(boss,BossHealthBar.class,"displayedWarning",true);assertNotEquals(bossIntent,boss.intentStatus());
+            assertEquals(bossPixels,boss.gameplayStatus());assertEquals(bossIntent,boss.gameplayIntentStatus());
+            skull.tint(0xCC0000,.6f);assertEquals(bossIntent,boss.gameplayIntentStatus());
+            set(boss,BossHealthBar.class,"displayedWarning",true);assertNotEquals(bossIntent,boss.gameplayIntentStatus());
             StatusPane status=visual(allocate(StatusPane.class));Image avatar=fixture.image();avatar.parent=status;set(status,StatusPane.class,"avatar",avatar);
-            Map<String,Object> statusIntent=status.intentStatus(),statusPixels=status.renderedStatus();avatar.tint(0xFF0000,.5f);
-            assertEquals(statusPixels,status.renderedStatus());assertEquals(statusIntent,status.intentStatus());
+            Map<String,Object> statusIntent=status.gameplayIntentStatus(),statusPixels=status.gameplayStatus();avatar.tint(0xFF0000,.5f);
+            assertEquals(statusPixels,status.gameplayStatus());assertEquals(statusIntent,status.gameplayIntentStatus());
             QuickSlotButton quick=visual(allocate(QuickSlotButton.class));Image marker=fixture.image();marker.parent=quick;set(quick,QuickSlotButton.class,"crossB",marker);
-            Map<String,Object> selection=quick.intentStatus(),pixels=quick.renderedStatus();marker.alpha(.5f);
-            assertEquals(pixels,quick.renderedStatus());assertEquals(selection,quick.intentStatus());
-            marker.visible=false;assertNotEquals(selection,quick.intentStatus());
+            Map<String,Object> selection=quick.gameplayIntentStatus(),pixels=quick.gameplayStatus();marker.alpha(.5f);
+            assertEquals(pixels,quick.gameplayStatus());assertEquals(selection,quick.gameplayIntentStatus());
+            marker.visible=false;assertNotEquals(selection,quick.gameplayIntentStatus());
             WndClericSpells.SpellButton spell=visual(allocate(WndClericSpells.SpellButton.class));Image icon=fixture.image();icon.parent=spell;set(spell,IconButton.class,"icon",icon);
-            Map<String,Object> ordinary=spell.intentStatus();icon.brightness(3);assertEquals(ordinary,spell.intentStatus());
-            set(spell,WndClericSpells.SpellButton.class,"displayedFreeCast",true);assertNotEquals(ordinary,spell.intentStatus());
+            Map<String,Object> ordinary=spell.gameplayIntentStatus();icon.brightness(3);assertEquals(ordinary,spell.gameplayIntentStatus());
+            set(spell,WndClericSpells.SpellButton.class,"displayedFreeCast",true);assertNotEquals(ordinary,spell.gameplayIntentStatus());
         }
     }
 
@@ -164,7 +164,7 @@ class NativeHudAppearanceTest {
         try(Textures fixture=new Textures()) {
             QuickSlotButton button=visual(allocate(QuickSlotButton.class));Image cross=fixture.image();cross.parent=button;
             set(button,QuickSlotButton.class,"crossB",cross);set(button,QuickSlotButton.class,"slotNum",2);
-            assertEquals(3,button.renderedStatus().get("quickslot"));cross.visible=false;assertTrue(button.renderedStatus().isEmpty());
+            assertEquals(3,button.gameplayStatus().get("quickslot"));cross.visible=false;assertTrue(button.gameplayStatus().isEmpty());
             CharSprite sprite=fixture.sprite();sprite.width=16;sprite.height=16;sprite.scale.set(2f,2f);
             // Native worldToCamera for cell 22, including its six-pixel perspective raise.
             sprite.x=40-16;sprite.y=48-32-6;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Protocol 5 provenance matrix on disposable test profiles; no direct save reads."""
+"""Protocol 9 provenance matrix on disposable test profiles; no direct save reads."""
 import argparse
 import json
 import os
@@ -14,9 +14,9 @@ import uuid
 from fixture_smoke import FixtureClient, freeze_runtime
 from tutorial_boundary_smoke import start_warrior
 
-PROSE = {"name", "class_name", "subclass_name", "text", "label", "description", "title",
-         "prompt", "cell_prompt", "item_prompt", "message", "disabled_reason", "options"}
-OPAQUE = {"text_sources", "text_diagnostics", "response", "raw_request", "raw_bytes", "node"}
+PROSE = {"name", "class_name", 'sub_name', "text", "label", 'desc', "title",
+         "prompt", "item_prompt", "message", "disabled_reason", "options"}
+OPAQUE = {"text_sources", "text_diagnostics", "pres", "text_origins", "reply", "raw", "raw_request", "raw_bytes", "node"}
 
 
 def validate(value, path="$", failures=None):
@@ -28,15 +28,18 @@ def validate(value, path="$", failures=None):
                     return isinstance(source.get("key"), str) and source.get("args") == []
                 return any(safe_reference(child) for child in source.values())
             return isinstance(source, list) and any(safe_reference(child) for child in source)
-        for field, code in value.get("text_diagnostics", {}).items():
+        diagnostics = value.get("pres", {}).get("diag", [])
+        diagnostic_fields = {entry["field"] for entry in diagnostics}
+        for entry in diagnostics:
+            field, code = entry["field"], entry["code"]
             declared_visibility = code in {"argument_not_displayed", "format_precision_not_displayed"} and safe_reference(value.get("text_sources", {}).get(field))
             if code != "clipped_text" and not declared_visibility:
                 failures.append({"field": path + "." + field, "code": code,
-                                 "control": value.get("id"), "role": value.get("role")})
+                                 'ctl': value.get("id"), "role": value.get("role")})
         for field, item in value.items():
             if field in OPAQUE:
                 continue
-            if field in PROSE and isinstance(item, str) and item and field not in value.get("text_diagnostics", {}):
+            if field in PROSE and isinstance(item, str) and item and field not in diagnostic_fields:
                 if field not in value.get("text_sources", {}):
                     failures.append({"field": path + "." + field, "code": "missing_wire_source", "text": item})
             validate(item, path + "." + field, failures)
@@ -49,24 +52,24 @@ def validate(value, path="$", failures=None):
 class MatrixClient(FixtureClient):
     def act(self, action, **args):
         response = super().act(action, **args)
-        if response.ok and action != "app.quit":
+        if response.ok and action != 'quit':
             observed = self.state(source=True)
-            assert observed["state_version"] == response.observation["state_version"], "Source detail must describe the same settled state"
+            assert observed['rev'] == response.observation['rev'], "Source detail must describe the same settled state"
         return response
 
     def request(self, op, args=None, **kwargs):
-        if op == "state.get":
+        if op == 'state':
             args = {**(args or {}), "src": True}
         response = super().request(op, args, **kwargs)
-        if response.get("ok") and op == "state.get":
-            failures = validate(response["result"])
+        if ("err" not in response) and op == 'state':
+            failures = validate(response["data"])
             assert not failures, {"source_failures": failures[:30], "op": op}
         return response
 
 
 def exercise(root, classpath, code, fixture="class:WARRIOR"):
     os.environ["SPDCTL_TEST_LANGUAGE"] = code
-    profile = root / "desktop-control/build/fixtures" / ("cli4-language-" + code + "-" + uuid.uuid4().hex)
+    profile = root / "desktop-control/build/fixtures" / ("cli9-language-" + code + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
@@ -75,18 +78,18 @@ def exercise(root, classpath, code, fixture="class:WARRIOR"):
     report = {"language": code, "profile": str(profile.relative_to(root)), "fixture": fixture,
               "test_fixture": True, "counts_as_win": False}
     try:
-        hello = client.request("protocol.info")
-        assert hello["protocol_version"] == 9, hello
-        report["build_id"] = hello["result"]["build_id"]
+        hello = client.request('info')
+        assert hello["v"] == 9, hello
+        report["build_id"] = hello["data"]["build_id"]
         state = start_warrior(client)
-        assert state["observation"]["ui"]["display"]["language"] == code
+        assert state["ui"]["display"]["language"] == code
         # Native cached inventory and item windows exercise resource composition and knowledge gates.
-        item = next(item for item in state["observation"]["inventory"] if item.get("equipped") and "shortsword" in item["name"])
-        response = client.act("inventory.open", locator=item["locator"])
+        item = next(item for item in state['inv'] if item.get("equipped") and "shortsword" in item["name"])
+        response = client.act('item', loc=item['loc'])
         assert response.ok, response
-        response = client.act("ui.back")
+        response = client.act('back')
         assert response.ok, response
-        saved = client.act("game.save")
+        saved = client.act('save')
         assert saved.ok, saved
         client.state()
         report["ok"] = True

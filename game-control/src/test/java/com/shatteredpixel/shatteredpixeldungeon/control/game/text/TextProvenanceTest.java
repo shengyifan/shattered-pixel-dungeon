@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TextProvenanceTest {
-    private static String resource(TextProvenance texts, String rendered, String key, Object... args) {
-        return texts.onTextResource(rendered, key, "zh", args);
+    private static String resource(TextProvenance texts, String template, String key) {
+        return texts.onTextResource(template, key, "zh", new Object[0], template);
     }
     private static Map<String, Object> rendered(TextProvenance texts, String text) { return texts.render(texts.capture(null, text, false)); }
 
@@ -35,7 +35,8 @@ class TextProvenanceTest {
         TextProvenance texts = new TextProvenance(key -> "Blocking");
         Map<String, Object> reference = texts.capture(null, resource(texts, "防御", "window.blocking"), false);
         for (String language : List.of("fr", "ja", "ru", "en")) {
-            String value = texts.onTextResource("Different GUI text " + language, "window.blocking", language, new Object[0]);
+            String template = "Different GUI text " + language;
+            String value = texts.onTextResource(template, "window.blocking", language, new Object[0], template);
             assertEquals(reference, texts.capture(null, value, false));
         }
     }
@@ -44,7 +45,7 @@ class TextProvenanceTest {
         Map<String, String> resources = new HashMap<>(); resources.put("test.remaining", "%d items remain.");
         TextProvenance texts = new TextProvenance(resources::get);
         Object[] arguments = {3};
-        String value = texts.onTextResource("剩余三个", "test.remaining", "zh", arguments);
+        String value = texts.onTextResource("剩余3个", "test.remaining", "zh", arguments, "剩余%d个");
         Map<String, Object> token = texts.capture(null, value, false);
         arguments[0] = 99; resources.put("test.remaining", "Changed resource"); texts.clear();
         Map<String, Object> history = JsonCodec.decode(JsonCodec.encode(token));
@@ -59,7 +60,8 @@ class TextProvenanceTest {
         AtomicInteger calls = new AtomicInteger();
         Object unsafe = new Object() { @Override public String toString() { calls.incrementAndGet(); return "private-object"; } };
         String sibling = texts.onTextOperation("user", "private-sibling", "private-sibling");
-        String value = resource(texts, "private-original", "secret.actual_type", unsafe, sibling);
+        String value = texts.onTextResource("private-object private-sibling", "secret.actual_type", "zh",
+                new Object[]{unsafe, sibling}, "%s %s");
         Map<String, Object> token = texts.capture(null, value, false);
         String serialized = JsonCodec.encode(token);
         for (String hidden : List.of("private", "secret", "template", "sibling")) assertFalse(serialized.contains(hidden), serialized);
@@ -104,7 +106,8 @@ class TextProvenanceTest {
 
     @Test void missingEnglishTemplateKeepsOnlySafeKeyFallback() {
         TextProvenance texts = new TextProvenance(key -> null);
-        String value = resource(texts, "Do not expose source language", "test.missing", 4);
+        String value = texts.onTextResource("Do not expose source language 4", "test.missing", "zh",
+                new Object[]{4}, "Do not expose source language %d");
         Map<String, Object> result = rendered(texts, value);
         assertEquals("[key: test.missing]", result.get("text"));
         assertEquals("english_template_missing", result.get("diagnostic"));
@@ -126,7 +129,7 @@ class TextProvenanceTest {
         TextProvenance texts = new TextProvenance(Map.of("test.item", "scroll of upgrade", "test.count", "%s: %d")::get);
         String item = resource(texts, "升级卷轴", "test.item");
         String title = texts.onTextOperation("title_case", "升级卷轴", item);
-        String count = resource(texts, "升级卷轴：3", "test.count", title, 3);
+        String count = texts.onTextResource("升级卷轴：3", "test.count", "zh", new Object[]{title, 3}, "%s：%d");
         assertEquals("Scroll of Upgrade: 3", rendered(texts, count).get("text"));
         String decimal = texts.onTextOperation("decimal_format", "1,25x", "#.##x", 1.25d);
         assertEquals("1.25x", texts.render(JsonCodec.decode(JsonCodec.encode(texts.capture(null, decimal, false)))).get("text"));
@@ -137,7 +140,8 @@ class TextProvenanceTest {
 
     @Test void primitiveTypesAndNegativeZeroSurviveJsonReplay() {
         TextProvenance texts = new TextProvenance(key -> "%s / %.1f");
-        String value = resource(texts, "source", "test.numbers", 1e-4f, -0d);
+        String value = texts.onTextResource("1.0E-4 / -0.0", "test.numbers", "en",
+                new Object[]{1e-4f, -0d}, "%s / %.1f");
         Map<String, Object> token = texts.capture(null, value, false);
         assertEquals(texts.render(token), texts.render(JsonCodec.decode(JsonCodec.encode(token))));
         assertEquals("1.0E-4 / -0.0", texts.render(token).get("text"));
@@ -185,7 +189,7 @@ class TextProvenanceTest {
         TextProvenance texts = new TextProvenance(key -> "Resource");
         String value = new String("unchanged");
         assertSame(value, texts.withoutTracking(() -> resource(texts, value, "test.resource")));
-        assertSame(value, RuntimeObserver.NONE.onTextResource(value, "test.resource", "zh", new Object[0]));
+        assertSame(value, RuntimeObserver.NONE.onTextResource(value, "test.resource", "zh", new Object[0], value));
         assertSame(value, RuntimeObserver.NONE.onTextOperation("literal", value, value));
         assertEquals("partial", rendered(texts, value).get("translation_status"));
     }

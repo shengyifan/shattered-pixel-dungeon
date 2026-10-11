@@ -10,32 +10,32 @@ from protocol9 import pages
 
 
 def events(client):
-    return [event for page in pages(client, "events.read") for event in page if event["kind"] == "game.screen_visual"]
+    return [event for page in pages(client, "events") for event in page if event["kind"] == "game.screen_visual"]
 
 
 def test_case(client, name):
     initial = client.last_state
-    observation = initial["observation"]
+    observation = initial
     assert observation["hero"]["cell"] >= 0 and observation["map"]["cells"]
-    assert initial["actions"], "The fixture must still advertise real gameplay operations"
+    assert initial["acts"], "The fixture must still advertise real gameplay operations"
     if name in {"screen-flash-below-modal", "screen-flash-above-modal"}:
         assert observation["ui"]["modal"], observation["ui"]
         assert any("Screen-effect occlusion fixture" in str(node.get("text", ""))
-                   for node in observation["ui"]["controls"]), observation["ui"]
+                   for node in observation["ui"]["nodes"]), observation["ui"]
     before = events(client)
     assert before == [], "Decorative flash/shake event output is retired"
-    assert "screen_effects" not in observation["visual_cues"]
-    assert "metrics" not in observation["visual_cues"]
+    assert "screen_effects" not in observation["cues"]
+    assert "metrics" not in observation["cues"]
     time.sleep(1.25)
     final = client.state()
-    assert final["state_version"] == initial["state_version"], "Decorative lifetime changed action binding"
-    assert final["observation"]["hero"]["cell"] == observation["hero"]["cell"]
-    assert final["observation"]["hero"]["hp"] == observation["hero"]["hp"]
+    assert final["rev"] == initial["rev"], "Decorative lifetime changed action binding"
+    assert final["hero"]["cell"] == observation["hero"]["cell"]
+    assert final["hero"]["hp"] == observation["hero"]["hp"]
     assert not events(client), "Decorative animation leaked into protocol events"
-    assert "screen_effects" not in final["observation"]["visual_cues"]
+    assert "screen_effects" not in final["cues"]
     return {"native_scene": name, "gameplay_frame_complete": True,
             "decorative_screen_output_absent": True,
-            "action_binding_stable": True, "initial_revision": initial["state_version"]}
+            "action_binding_stable": True, "initial_revision": initial["rev"]}
 
 
 def main():

@@ -25,29 +25,29 @@ def test_visible(client):
     assert {cue["kind"] for cue in shown} == KINDS, visual(waiting)
     assert len({cue["cell"] for cue in shown}) == 4
     assert all({"kind", "cell"} <= set(cue) <= {"kind", "cell", "appearance"} for cue in shown)
-    menu = next(node for node in waiting["observation"]["ui"]["controls"]
-                if str(node.get("shortcut_action", "")).lower() == "back")
-    covered = act(client, "ui.activate", control=menu["id"])
-    assert covered["observation"]["ui"]["modal"] and {cue["kind"] for cue in cues(covered)} == KINDS
-    restored = act(client, "ui.back")
+    menu = next(node for node in waiting["ui"]["nodes"]
+                if str(node.get("shortcut", "")).lower() == "back")
+    covered = act(client, "click", ctl=menu["id"])
+    assert covered["ui"]["modal"] and {cue["kind"] for cue in cues(covered)} == KINDS
+    restored = act(client, "back")
     assert {cue["kind"] for cue in cues(restored)} == KINDS
-    old_entities = {e.get("name") for e in before["observation"]["visible_entities"]}
+    old_entities = {e.get("name") for e in before["entities"]}
     # Three remaining original Buff turns are sufficient even if setup was observed
     # before its first scheduled tick. Each next action follows its real response.
     spawned = restored
     for _ in range(3):
         spawned = act(client, "wait")
-        entities = {e.get("name") for e in spawned["observation"]["visible_entities"]}
+        entities = {e.get("name") for e in spawned["entities"]}
         if MINION_NAMES <= entities - old_entities:
             break
-    assert MINION_NAMES <= entities - old_entities, spawned["observation"]["visible_entities"]
+    assert MINION_NAMES <= entities - old_entities, spawned["entities"]
     tail = cues(spawned)
     time.sleep(2.5)  # Render time only; do not advance the original summoning timers.
     cleared = client.state()
     assert not cues(cleared), visual(cleared)
     historical = read_visual_events(client)
     assert KINDS <= {cue["kind"] for event in historical for cue in event["data"]["cues"]}
-    assert cleared["observation"]["hero"] == spawned["observation"]["hero"]
+    assert cleared["hero"] == spawned["hero"]
     return {"all_four_semantic_warnings_in_final_wait": shown,
             "modal_keeps_known_warnings_and_original_back": True,
             "four_original_minions_spawned": sorted(entities - old_entities),
@@ -76,11 +76,11 @@ def run_case(root, classpath, runtime_id, name):
     report = {"test_fixture": True, "counts_as_win": False, "fixture": name,
               "profile": str(profile.relative_to(root)), "runtime_id": runtime_id}
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"], hello
-        report["build_id"] = hello["result"]["build_id"]
+        hello = client.request("info")
+        assert "err" not in hello, hello
+        report["build_id"] = hello["data"]["build_id"]
         started = reach_game(client, "WARRIOR")
-        assert started["observation"]["hero"]["class_name"] == "warrior"
+        assert started["hero"]["class_name"] == "warrior"
         report["gui_environment"] = assert_gui_environment(profile, started)
         report["cli_language"] = "en"
         setup = json.loads((profile / "test_fixture.json").read_text())

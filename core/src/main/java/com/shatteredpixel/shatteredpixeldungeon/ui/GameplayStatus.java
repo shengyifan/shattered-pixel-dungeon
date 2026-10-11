@@ -3,7 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.ui;
 import java.util.Map;
 
 /** Public gameplay meaning already selected by a native display branch. Capture is read-only. */
-public interface GameplayStatus extends RenderedStatus {
+public interface GameplayStatus {
     Map<String,Object> gameplayStatus();
 
     /** Feedback lifetimes may be excluded from input freshness without losing their occurrences. */
@@ -31,7 +31,4 @@ public interface GameplayStatus extends RenderedStatus {
 
     /** An 8-bit display-channel sample, not the renderer's higher-precision parameter. */
     static float displayedChannel(float value) { return Math.round(value*255f)/255f; }
-
-    @Override default Map<String,Object> renderedStatus() { return gameplayStatus(); }
-    @Override default Map<String,Object> intentStatus() { return gameplayIntentStatus(); }
 }

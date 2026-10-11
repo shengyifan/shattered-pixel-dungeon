@@ -41,11 +41,12 @@
 [炼金优先级](nine-challenges-warrior-4.0.2/15-alchemy-planning.md)和[CLI信息准确性审计](nine-challenges-warrior-4.0.2/16-cli-information-audit.md)。
 本轮以通关机会优先于全探索；审计的原始问题和复现证据保留。随后已按用户授权实现
 [CLI.9.0.4修复与验证](../docs/cli-9.0.4-player-info-validation.md)，覆盖魔晶解码、图标/配方、仪式标记、节点校验和警报事件。
-正式实战前核当前实际包版本；既有游戏进程不会随源码/包更新而热更新。
+当前维护入口见[CLI.9.0.6清理与验证](../docs/cli-9.0.6-cleanup-validation.md)。正式实战前核当前实际包版本；既有游戏进程不会随源码/包更新而热更新。
 
 以下脚本从本局用过的临时辅助脚本迁入，入口和依赖都在项目内。只读取显式提供的完整公开
 JSON响应文件或stdin，不启动游戏、不发送意图、不读取存档／audit，也不自动刷新输入文件。
-支持单个wire回复、控制器wrapper，以及旧中继的 `{seq,response}` 公开记录；`seq`仅保留为历史元数据。
+输入必须是单个协议9 wire回复或当前控制器wrapper。旧中继的 `{seq,response}` 封套不再接受；
+复核此类历史归档时，先显式提取需要核对的完整公开wire回复，并独立保留原归档及其序号。
 代码仍调用正式[Python客户端](../desktop-control/client/spdctl_client.py)独立解码。
 
 在项目根目录运行（`/path/to/public-response.json`由调用者提供）：

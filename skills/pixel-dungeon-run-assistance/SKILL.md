@@ -6,7 +6,7 @@ description: Plan and operate a Shattered Pixel Dungeon Warrior run through the 
 # Pixel Dungeon run assistance
 
 Use for an authorized playthrough, current-floor tactics, shop/alchemy planning,
-or a review of recorded play. This project adaptation targets CLI.9.0.5,
+or a review of recorded play. This project adaptation targets CLI.9.0.6,
 protocol 9, audit schema 12, and game 4.0.2. Verify the actual connection's
 versions and advertised capabilities; historical notes never establish live state.
 
@@ -31,8 +31,10 @@ versions and advertised capabilities; historical notes never establish live stat
 - For analysis of one complete public JSON response, use [map.py](scripts/map.py)
   for the known map, [cells.py](scripts/cells.py) for exact cells, or
   [ray.py](scripts/ray.py) for conditional collision geometry. Each requires an
-  explicit `--response PATH` or `--response -` for stdin; it does not connect to
-  or operate the game. A file is a snapshot, not proof of current connection state.
+  explicit `--response PATH` or `--response -` for stdin, containing one current
+  wire reply or controller wrapper; historical relay envelopes must be explicitly
+  unpacked before use. It does not connect to or operate the game. A file is a
+  snapshot, not proof of current connection state.
   `ray.py` supports `projectile`, `magicbolt`, and `solidbeam`; it does not model
   Yog's `WONT_STOP`, all item overrides, or area damage. Verify the exact native
   mechanic before applying its result to a spending or movement decision.
@@ -69,7 +71,8 @@ routine `state` query. Inspect actual hero position, depth, prompts, and resourc
 
 Expose `in_progress` immediately. Use controller `settle` for the original action
 and keep its outcome/save receipts separate from `observation` and late responses.
-Soft budget exhaustion is ordinary pending. For `response_pending`, finish the
+Soft budget exhaustion is ordinary pending; its wrapper must include an explicit
+`pending_reason` and `stage`. For `response_pending`, finish the
 same outstanding query through `settle`; never resend it or substitute `state` to
 clear controller bookkeeping. Cancellation uses the advertised activity `rev/rid`.
 Follow the manual for exact receipt/discovery/observation and quit behavior.

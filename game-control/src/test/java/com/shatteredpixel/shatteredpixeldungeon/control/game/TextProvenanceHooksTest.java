@@ -32,7 +32,6 @@ class TextProvenanceHooksTest {
     @BeforeEach void setup() {
         previous = Game.observer; texts = new TextProvenance(); Messages.setup(Languages.CHI_SMPL);
         Game.observer = new RuntimeObserver() {
-            @Override public String onTextResource(String value, String key, String language, Object[] args) { return texts.onTextResource(value, key, language, args); }
             @Override public String onTextResource(String value, String key, String language, Object[] args, String guiTemplate) { return texts.onTextResource(value, key, language, args, guiTemplate); }
             @Override public String onTextOperation(String op, String value, Object... args) { return texts.onTextOperation(op, value, args); }
             @Override public void onTextBound(Object owner, String value) { texts.onTextBound(owner, value); }
@@ -74,8 +73,8 @@ class TextProvenanceHooksTest {
     }
 
     @Test void bitmapConstructorAndEqualTextReplacementKeepTheLatestSource() {
-        String first = texts.onTextResource("关闭", "windows.wndsupportprompt.close", "zh", new Object[0]);
-        String second = texts.onTextResource("关闭", "windows.wndsettings$displaytab.off", "zh", new Object[0]);
+        String first = texts.onTextResource("关闭", "windows.wndsupportprompt.close", "zh", new Object[0], "关闭");
+        String second = texts.onTextResource("关闭", "windows.wndsettings$displaytab.off", "zh", new Object[0], "关闭");
         BitmapText widget = new BitmapText(first, null);
         assertEquals("Close", render(widget, widget.text()).get("text"));
         widget.text(second);

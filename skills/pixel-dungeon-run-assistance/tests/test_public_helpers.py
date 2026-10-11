@@ -123,16 +123,26 @@ class PublicHelperTest(unittest.TestCase):
         self.assertFalse(cell["known"])
         self.assertIsNone(cell["public_cell"])
 
-    def test_sequenced_record_does_not_confuse_controller_response_with_wire(self):
+    def test_controller_response_keeps_current_wire_and_late_response_separate(self):
         late = observation()
         late.update(id="t7.0", rev="r2")
         wrapper = {"controller": "response", "response": observation(),
                    "late_responses": [{"request": {"id": "t7.0"}, "response": late}]}
-        code, output, _ = self.run_helper("map.py", {"seq": 12, "response": wrapper}, "--json")
+        code, output, _ = self.run_helper("map.py", wrapper, "--json")
         self.assertEqual(0, code, output)
         report = json.loads(output)
-        self.assertEqual((12, "response", "r11"), (report["record_seq"], report["controller"], report["rev"]))
+        self.assertEqual(("response", "r11"), (report["controller"], report["rev"]))
         self.assertEqual("r2", report["late_responses"][0]["response"]["rev"])
+
+    def test_sequenced_recorder_envelope_is_rejected_with_original_evidence(self):
+        source = {"seq": 12, "response": observation()}
+        code, output, raw = self.run_helper("map.py", source, "--json", file_input=True)
+        self.assertEqual(2, code, output)
+        report = json.loads(output)
+        self.assertEqual("DECODE_ERROR", report["error"]["code"])
+        self.assertEqual(source, report["raw_response"])
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), report["source_sha256"])
+        self.assertNotIn("frame", report)
 
     def test_no_frame_errors_preserve_original_outcome_and_raw_wrapper(self):
         wrapper = {"controller": "settle", "st": "completed", "rid": "t7.1", "outcome": receipt()}

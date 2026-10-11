@@ -13,8 +13,8 @@ import upgrade_preview_smoke as upgrade
 
 class TextSensitiveAssertionsTest(unittest.TestCase):
     def test_ui_checkpoint_uses_actual_language_code_without_guessing_an_enum_name(self):
-        state = {"scope_id": "run:test", "state_version": "v1", "observation": {"ui": {
-            "display": {"language": "en", "fullscreen": False}}}}
+        state = {"s": "run:test", "rev": "v1", "ui": {
+            "display": {"language": "en", "fullscreen": False}}}
         row = {"scope_id": "run:test", "state_version": "v1", "language": "ENUM_NAME_IS_OPAQUE",
                "language_code": "en", "fullscreen": False, "window_classes": ["ExpectedWindow"]}
         with tempfile.TemporaryDirectory() as directory:
@@ -24,8 +24,8 @@ class TextSensitiveAssertionsTest(unittest.TestCase):
                 self.assertEqual(row, ending.ui_assertion(profile, state, "ExpectedWindow"))
 
     def test_ui_checkpoint_keeps_scope_language_window_and_fullscreen_postconditions(self):
-        state = {"scope_id": "run:test", "state_version": "v1", "observation": {"ui": {
-            "display": {"language": "en", "fullscreen": False}}}}
+        state = {"s": "run:test", "rev": "v1", "ui": {
+            "display": {"language": "en", "fullscreen": False}}}
         base = {"scope_id": "run:test", "state_version": "v1", "language": "ENGLISH", "language_code": "en",
                 "fullscreen": False, "window_classes": ["ExpectedWindow"]}
         with tempfile.TemporaryDirectory() as directory, patch.dict(ending.os.environ, {"SPDCTL_TEST_LANGUAGE": "en"}):
@@ -43,8 +43,8 @@ class TextSensitiveAssertionsTest(unittest.TestCase):
         source = {"kind": "displayed", "markup": True, "value": {"kind": "resource",
                   "key": "items.weapon.melee.spear." + ("ability_desc" if known else "typical_ability_desc"),
                   "args": [{"kind": "scalar", "value": 11}, {"kind": "scalar", "value": 29}]}}
-        return {"observation": {"ui": {"inspected_item": {"control": "window", "level_known": known},
-                "controls": [{"id": "window", "role": "window", "text": text, "text_sources": {"text": source}}]}}}
+        return {"ui": {"item_info": {"ctl": "window", "level_known": known},
+                "nodes": [{"id": "window", "role": "window", "text": text, "text_sources": {"text": source}}]}}
 
     def test_inspection_uses_drawn_text_and_source_numbers_for_both_knowledge_branches(self):
         for known in (False, True):
@@ -54,19 +54,19 @@ class TextSensitiveAssertionsTest(unittest.TestCase):
             self.assertIs(known, knowledge["level_known"])
             self.assertIn("11-29 damage", text)
             self.assertEqual(before, state)
-            state["observation"]["inventory"] = [{"locator": "equipment.weapon", "level_known": True}]
+            state["inv"] = [{"loc": "equipment.weapon", "level": 0}]
             self.assertEqual((knowledge, text), inspection.inspected(state, known))
 
     def test_inspection_still_rejects_wrong_stats_wrong_resource_and_regenerated_body(self):
         for mutate in ("number", "key", "knowledge"):
             state = self.state(False)
-            owner = state["observation"]["ui"]["controls"][0]
+            owner = state["ui"]["nodes"][0]
             if mutate == "number":
                 owner["text"] = owner["text"].replace("11-29", "12-29")
             elif mutate == "key":
                 owner["text_sources"]["text"]["value"]["key"] = "items.weapon.melee.spear.ability_desc"
             else:
-                state["observation"]["ui"]["inspected_item"]["level_known"] = True
+                state["ui"]["item_info"]["level_known"] = True
             with self.subTest(mutate=mutate), self.assertRaises(AssertionError):
                 inspection.inspected(state, False)
 
@@ -86,20 +86,20 @@ class TextSensitiveAssertionsTest(unittest.TestCase):
                 if delimiter == "~":
                     source = {"kind": "replace", "value": source, "old": "-", "new": "~"}
             nodes.append({"role": "text", "text": value, "text_sources": {"text": source}})
-        return {"observation": {"ui": {"display": {"language": language}, "controls": nodes}}}
+        return {"ui": {"display": {"language": language}, "nodes": nodes}}
 
     def test_upgrade_range_punctuation_follows_actual_gui_language_and_keeps_frozen_values(self):
         for language in ("en", "zh", "zh-hant", "ja", "ko", "ru", "fr", "de", "tr"):
             state = self.preview(language)
             self.assertEqual("~" if language in {"zh", "zh-hant"} else "-", upgrade.assert_preview_fields(state))
-            state["observation"]["ui"]["controls"][2]["text_sources"]["text"] = {"kind": "scalar", "value": 42}
+            state["ui"]["nodes"][2]["text_sources"]["text"] = {"kind": "scalar", "value": 42}
             with self.subTest(language=language), self.assertRaises(AssertionError):
                 upgrade.assert_preview_fields(state)
 
     def test_upgrade_chinese_materialized_numeric_sources_do_not_require_removed_scalars(self):
         # Matches the final privacy-safe sources in the actual zh upgrade preview.
         state = self.preview("zh")
-        numeric_nodes = [node for node in state["observation"]["ui"]["controls"] if node.get("text") in {"0~2", "1~3", "10", "9"}]
+        numeric_nodes = [node for node in state["ui"]["nodes"] if node.get("text") in {"0~2", "1~3", "10", "9"}]
         for node in numeric_nodes:
             node["text_sources"]["text"] = {"kind": "displayed", "value": {
                 "kind": "literal", "origin": "symbol", "value": node["text"]}, "markup": True}
@@ -111,7 +111,7 @@ class TextSensitiveAssertionsTest(unittest.TestCase):
                     {"kind": "literal", "origin": "user", "value": "0~2"},
                     {"kind": "formatted_fragment", "specifier": "%s", "text": "hidden0~2"}, None):
             state = copy.deepcopy(original)
-            state["observation"]["ui"]["controls"][2]["text_sources"]["text"] = bad
+            state["ui"]["nodes"][2]["text_sources"]["text"] = bad
             with self.subTest(source=bad), self.assertRaises(AssertionError):
                 upgrade.assert_preview_fields(state)
 

@@ -12,6 +12,7 @@ from fixture_smoke import FixtureClient, freeze_runtime
 from low_frequency_smoke import act
 from menu_scenario_smoke import choose, ui
 from test_ui import configure_test_ui
+from fixture_support import initialize_current_profile
 
 
 def initial_preferences(profile, version):
@@ -26,37 +27,39 @@ def initial_preferences(profile, version):
 
 
 def text(state):
-    return "\n".join(n.get("text","") for n in ui(state)["controls"])
+    return "\n".join(n.get("text","") for n in ui(state)["nodes"])
 
 
 def run_one(root,classpath,runtime_id,name,version):
     profile=root/"desktop-control/build/fixtures"/("welcome-"+name+"-"+uuid.uuid4().hex)
-    profile.mkdir(parents=True);initial_preferences(profile,version)
+    profile.mkdir(parents=True)
+    command=["java","-XstartOnFirstThread","--enable-native-access=ALL-UNNAMED","--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED","-cp",classpath,
+             "com.shatteredpixel.shatteredpixeldungeon.control.desktop.SpdctlLauncher"]
+    initialize_current_profile(command, profile)
+    initial_preferences(profile,version)
     if name=="interrupted":
         (profile/"game1").mkdir()
         (profile/"game1/game.dat.spdtmp").write_bytes(b"invalid isolated temporary save")
-    command=["java","-XstartOnFirstThread","--enable-native-access=ALL-UNNAMED","--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED","-cp",classpath,
-             "com.shatteredpixel.shatteredpixeldungeon.control.desktop.SpdctlLauncher"]
     client=FixtureClient(command,profile)
     result={"test_fixture":True,"counts_as_win":False,"fixture":"welcome."+name,"profile":str(profile.relative_to(root)),
             "runtime_id":runtime_id,"cli_language":"en","gui_language":"zh","initial_saved_version":version}
     try:
-        hello=client.request("protocol.info");assert hello["ok"],hello
-        result["build_id"]=hello["result"]["build_id"]
+        hello=client.request("info");assert ("err" not in hello),hello
+        result["build_id"]=hello["data"]["build_id"]
         state=client.state()
         assert ui(state)["scene"]=="WelcomeScene"
         assert ui(state)["display"]=={"language":"zh","fullscreen":False}
         if name=="interrupted":
             assert "while saving" in text(state) or "save" in text(state).lower(),text(state)
             assert ui(state)["modal"]
-            early=[n for n in ui(state)["controls"] if n.get("role")=="button" and "Continue" in n.get("text","")]
+            early=[n for n in ui(state)["nodes"] if n.get("role")=="button" and "Continue" in n.get("text","")]
             assert early and not early[0]["enabled"]
-            after_back=act(client,"ui.back")
+            after_back=act(client,"back")
             assert ui(after_back)["modal"]
             deadline=time.monotonic()+8
             while time.monotonic()<deadline:
                 state=client.state()
-                if any(a.get("label")=="Continue" for a in state["actions"]):break
+                if any(a.get("label")=="Continue" for a in state["acts"]):break
                 time.sleep(0.2)
             else:raise AssertionError("Original notification countdown did not enable Continue")
             choose(client,"Continue")

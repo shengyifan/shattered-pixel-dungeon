@@ -8,6 +8,7 @@ import argparse
 from fixture_identity import fixture_context_matches
 import copy
 import json
+from protocol9 import response as decode_response
 import os
 from pathlib import Path
 import time
@@ -20,11 +21,11 @@ from tutorial_boundary_smoke import start_warrior
 
 
 LANGUAGES = ("en", "zh", "zh-hant", "ja", "ko", "ru", "fr", "de", "tr")
-PRESENTATION_FIELDS = {"text_sources", "text_diagnostics", "translation_status", "presentation"}
+PRESENTATION_FIELDS = {"text_sources", "text_diagnostics", "pres"}
 
 
 def ui(state):
-    return state["observation"]["ui"]
+    return state["ui"]
 
 
 def semantic(value):
@@ -36,9 +37,9 @@ def semantic(value):
 
 
 def hero_inventory(state):
-    observation = state["observation"]
-    return {"scope_id": state["scope_id"], "hero": semantic(observation["hero"]),
-            "inventory": semantic(observation["inventory"])}
+    observation = state
+    return {'s': state['s'], "hero": semantic(observation["hero"]),
+            'inv': semantic(observation['inv'])}
 
 
 def language_codes(source):
@@ -54,8 +55,8 @@ def language_codes(source):
 
 def language_actions(state):
     result = []
-    for action in state["actions"]:
-        if action["action"] == "ui.activate":
+    for action in state['acts']:
+        if action['op'] == 'click':
             codes = set(language_codes(action.get("text_sources", {}).get("label")))
             if len(codes) == 1:
                 result.append((action, next(iter(codes))))
@@ -75,24 +76,24 @@ class SwitchClient(MatrixClient):
 
     def request(self, op, args=None, **kwargs):
         response = super().request(op, args, **kwargs)
-        assert response.get("protocol_version") == 9, response
-        if response.get("ok") and op == "state.get":
-            failures = validate(response.get("result"))
+        assert response.get("v") == 9, response
+        if ("err" not in response) and op == 'state':
+            failures = validate(response.get("data"))
             assert not failures, {"op": op, "source_failures": failures[:30]}
             self.source_checks += 1
         return response
 
 
 def execute(client, state, action, baseline, **args):
-    advertised = [entry for entry in state["actions"] if entry["action"] == action
-                  and ("control" not in args or entry.get("control") == args["control"])]
+    advertised = [entry for entry in state['acts'] if entry['op'] == action
+                  and ('ctl' not in args or entry.get('ctl') == args['ctl'])]
     assert advertised, {"unadvertised_action": action, "args": args}
-    assert client.scope == state["scope_id"] and client.version == state["state_version"], "Use the latest returned context"
+    assert client.scope == state['s'] and client.version == state['rev'], "Use the latest returned context"
     response = client.act(action, **args)
     assert response.ok and response.status in ("completed", "awaiting_input"), response
     after = client.state(source=True)
-    assert after["state_version"] == response.observation["state_version"], "Source inspection changed the settled action state"
-    assert hero_inventory(after) == baseline, {"pure_view_changed_hero_or_inventory": semantic(after["observation"])}
+    assert after['rev'] == response.observation['rev'], "Source inspection changed the settled action state"
+    assert hero_inventory(after) == baseline, {"pure_view_changed_hero_or_inventory": semantic(after)}
     return after, response.initial_response
 
 
@@ -102,20 +103,20 @@ def open_language_panel(client, baseline):
         assert hero_inventory(state) == baseline
         if language_actions(state):
             return state
-        options = [action for action in state["actions"] if action["action"] == "ui.activate"]
+        options = [action for action in state['acts'] if action['op'] == 'click']
         if not ui(state)["modal"]:
             menu = [action for action in options if action.get("label", "").casefold() in ("menu", "game menu")]
             assert menu, {"no_game_menu": options}
-            state, _ = execute(client, state, "ui.activate", baseline, control=menu[0]["control"])
+            state, _ = execute(client, state, 'click', baseline, ctl=menu[0]['ctl'])
             continue
         settings = [action for action in options if action.get("label") == "Settings"]
         if settings:
             assert len(settings) == 1, settings
-            state, _ = execute(client, state, "ui.activate", baseline, control=settings[0]["control"])
+            state, _ = execute(client, state, 'click', baseline, ctl=settings[0]['ctl'])
             continue
         tabs = [action for action in options if not action.get("label")]
-        assert len(tabs) == 6, {"expected_six_original_settings_tabs": tabs, "actions": options}
-        state, _ = execute(client, state, "ui.activate", baseline, control=tabs[-1]["control"])
+        assert len(tabs) == 6, {"expected_six_original_settings_tabs": tabs, 'acts': options}
+        state, _ = execute(client, state, 'click', baseline, ctl=tabs[-1]['ctl'])
     raise AssertionError("The original language tab did not become available")
 
 
@@ -129,32 +130,32 @@ def assert_gui_checkpoint(profile, state, code):
                 row = json.loads(line)
                 if fixture_context_matches(profile, row, state):
                     assert row["language_code"] == code and row["fullscreen"] is False, row
-                    return {"state_version": state["state_version"], "language_code": row["language_code"],
+                    return {'rev': state['rev'], "language_code": row["language_code"],
                             "language_enum": row["language"], "fullscreen": row["fullscreen"]}
         time.sleep(0.02)
     raise AssertionError("Missing same-version actual GUI-language checkpoint")
 
 
 def reject_stale(client, before, old_control, current, code, baseline):
-    assert before["state_version"] != current["state_version"], "A native scene reset must invalidate the old context"
-    rejected = client.request("action.execute", {"action": "ui.activate", "control": old_control},
-                              scope=before["scope_id"], version=before["state_version"])
-    assert not rejected.get("ok") and rejected["error"]["code"] == "STALE_STATE", rejected
-    history = client.request("request.get", {"target_id": rejected["id"], "get": ["before", "after"]}, scope=before["scope_id"])
-    assert history.get("ok") and history["result"]["status"] == "REJECTED", history
-    assert history["result"]["before_snapshot"] == history["result"]["after_snapshot"], history
+    assert before['rev'] != current['rev'], "A native scene reset must invalidate the old context"
+    rejected = client.request_action({'op': 'click', 'ctl': old_control},
+                              scope=before['s'], version=before['rev'])
+    assert ("err" in rejected) and rejected["err"] == "STALE_STATE", rejected
+    history = client.request('req', {'rid': rejected["id"], "get": ["before", "after"]}, scope=before['s'])
+    assert ("err" not in history) and history["data"]["st"] == "REJECTED", history
+    assert history["data"]['before'] == history["data"]['after'], history
     observed = client.state()
-    assert observed["state_version"] == current["state_version"]
+    assert observed['rev'] == current['rev']
     assert ui(observed)["display"] == {"language": code, "fullscreen": False}
     assert hero_inventory(observed) == baseline
-    return {"request_id": rejected["id"], "error": "STALE_STATE", "old_state_version": before["state_version"],
-            "current_state_version": observed["state_version"], "rejected_before_action": True}
+    return {"request_id": rejected["id"], "error": "STALE_STATE", "old_state_version": before['rev'],
+            "current_state_version": observed['rev'], "rejected_before_action": True}
 
 
 def assert_recorded_response(client, original):
-    record = client.request("request.get", {"target_id": original["id"], "get": ["reply"]}, scope=original["scope_id"])
-    assert record.get("ok"), record
-    assert record["result"]["response"] == original, {"historical_response_rewritten": original["id"]}
+    record = client.request('req', {'rid': original["id"], "get": ["reply"]}, scope=original['s'])
+    assert ("err" not in record), record
+    assert decode_response(record["data"]["reply"]) == original, {"historical_response_rewritten": original["id"]}
     # The default original response intentionally omitted source trees. Fetching
     # history must preserve that exact compact reply, rather than enrich it later.
     return original["id"]
@@ -181,10 +182,10 @@ def run(root, classpath, runtime_id, languages):
               "profile": str(profile.relative_to(root)), "initial_gui_language": "zh", "languages": languages,
               "single_game_jvm": True, "automatic_stale_retries": 0, "switches": []}
     try:
-        hello = client.request("protocol.info")
-        assert hello.get("ok"), hello
-        metadata = hello["result"]
-        assert hello["protocol_version"] == 9 and metadata["audit_schema_version"] == 12 and metadata["text_language"] == "en", metadata
+        hello = client.request('info')
+        assert ("err" not in hello), hello
+        metadata = hello["data"]
+        assert hello["v"] == 9 and metadata["audit_schema_version"] == 12 and metadata["text_language"] == "en", metadata
         report.update(build_id=metadata["build_id"], cli_version=metadata["cli_version"], session_id=metadata["session_id"])
         initial = start_warrior(client)
         assert_gui_checkpoint(profile, initial, "zh")
@@ -193,10 +194,10 @@ def run(root, classpath, runtime_id, languages):
         for code in languages:
             before = open_language_panel(client, baseline)
             selected = language_action(before, code)
-            after, response = execute(client, before, "ui.activate", baseline, control=selected["control"])
+            after, response = execute(client, before, 'click', baseline, ctl=selected['ctl'])
             proof = assert_gui_checkpoint(profile, after, code)
             original_responses.append(copy.deepcopy(response))
-            stale = reject_stale(client, before, selected["control"], after, code, baseline)
+            stale = reject_stale(client, before, selected['ctl'], after, code, baseline)
             report["switches"].append({"from": ui(before)["display"]["language"], "to": code,
                                       "request_id": response["id"], "gui": proof, "stale_guard": stale,
                                       "hero_inventory_unchanged": True})
@@ -206,14 +207,14 @@ def run(root, classpath, runtime_id, languages):
             assert hero_inventory(state) == baseline
             if not ui(state)["modal"]:
                 break
-            state, _ = execute(client, state, "ui.back", baseline)
+            state, _ = execute(client, state, 'back', baseline)
         assert not ui(state)["modal"] and state["phase"] == "player_ready", state
         report["final_gui"] = assert_gui_checkpoint(profile, state, languages[-1])
-        final_hello = client.request("protocol.info")
-        assert final_hello.get("ok"), final_hello
-        assert final_hello["protocol_version"] == hello["protocol_version"], "Runtime protocol changed"
+        final_hello = client.request('info')
+        assert "err" not in final_hello, final_hello
+        assert final_hello["v"] == hello["v"], "Runtime protocol changed"
         for key in ("session_id", "build_id", "cli_version", "audit_schema_version"):
-            assert final_hello["result"][key] == metadata[key], {"runtime_changed": key}
+            assert final_hello["data"][key] == metadata[key], {"runtime_changed": key}
         report["ok"] = True
     except Exception as error:
         report.update(ok=False, error_type=type(error).__name__, error=str(error)[:5000], traceback=traceback.format_exc())

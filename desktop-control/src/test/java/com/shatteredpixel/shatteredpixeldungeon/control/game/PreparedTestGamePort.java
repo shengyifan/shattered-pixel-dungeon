@@ -2,6 +2,8 @@ package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.shatteredpixel.shatteredpixeldungeon.control.desktop.MachineSession;
 import java.util.Map;
+import java.util.List;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -10,6 +12,18 @@ import java.util.concurrent.CompletableFuture;
  * while its existing action/save/cancel behavior runs only after the session commits audit. */
 interface PreparedTestGamePort extends MachineSession.GamePort {
     void prepareRun(String id);
+
+    default GameController.Execution start(String version,Map<String,Object> args,String requestId) {
+        CompletableFuture<GameController.State> completion=execute(version,args);
+        return new GameController.Execution(completion,completion);
+    }
+    @Override default List<GameController.DisplayEvent> peekDisplayEvents(int limit) { return Collections.emptyList(); }
+    @Override default void acknowledgeDisplayEvents(List<GameController.DisplayEvent> events) {
+        if(!events.isEmpty())throw new AssertionError("Fixture has no display event queue");
+    }
+    @Override default boolean hasDisplayEvents() { return false; }
+    @Override default void setDisplaySignal(Runnable signal) { }
+    @Override default void freezeDisplayEvents() { }
 
     @Override default GameController.ActionPreparation prepareAction(String scope,String version,
             Map<String,Object> args,String requestId,String plannedRun) {

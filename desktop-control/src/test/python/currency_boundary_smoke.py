@@ -12,12 +12,13 @@ import traceback
 import uuid
 
 from fixture_smoke import FixtureClient, freeze_runtime
+from protocol9 import frame_data
 from tutorial_boundary_smoke import act, adjacent_cells, direction_to, preferences, start_warrior
 
 
 def currency_text(state):
-    nodes = state["observation"]["ui"]["controls"]
-    inventory_ids = {node["id"] for node in nodes if node.get("shortcut_action") == "inventory"}
+    nodes = state["ui"]["nodes"]
+    inventory_ids = {node["id"] for node in nodes if node.get("shortcut") == "inventory"}
     return [node for node in nodes if node.get("role") == "text"
             and node.get("parent") in inventory_ids and node.get("text", "").isdigit()]
 
@@ -27,51 +28,51 @@ def visible_currency(client, state, value):
     # first public projection, never refresh/retry an action rejected as stale.
     deadline = time.monotonic() + 2
     while not any(node.get("text") == str(value) for node in currency_text(state)):
-        assert time.monotonic() < deadline, {"currency_never_projected": value, "ui": state["observation"]["ui"]}
+        assert time.monotonic() < deadline, {"currency_never_projected": value, "ui": state["ui"]}
         state = client.state()
     return state
 
 
 def safe_step(state):
-    occupied = {entity["cell"] for entity in state["observation"]["visible_entities"]}
+    occupied = {entity["cell"] for entity in state["entities"]}
     return next(cell["cell"] for cell in adjacent_cells(state) if cell["cell"] not in occupied)
 
 
 def assert_rejected_without_movement(client, response, expected_cell):
-    assert response.get("error", {}).get("code") == "STALE_STATE", response
-    receipt = client.request("request.get", {"target_id": response["id"], "get": ["before", "after"]})
-    assert receipt.get("ok") and receipt["result"]["status"] == "REJECTED", receipt
-    assert receipt["result"]["before_snapshot"] == receipt["result"]["after_snapshot"], receipt
+    assert response.get("err") == "STALE_STATE", response
+    receipt = client.request("req", {"rid": response["id"], "get": ["before", "after"]})
+    assert "err" not in receipt and receipt["data"]["st"] == "REJECTED", receipt
+    assert receipt["data"]["before"] == receipt["data"]["after"], receipt
     state = client.state()
-    assert state["observation"]["hero"]["cell"] == expected_cell
+    assert state["hero"]["cell"] == expected_cell
     return state
 
 
 def reject_previous_revision(client, previous, current):
     destination = safe_step(current)
-    response = client.request("action.execute", {"action": "move.step", "direction": direction_to(current, destination)},
-                              version=previous["state_version"])
-    assert_rejected_without_movement(client, response, current["observation"]["hero"]["cell"])
+    response = client.request("move", {"dir": direction_to(current, destination)},
+                              version=previous["rev"])
+    assert_rejected_without_movement(client, response, current["hero"]["cell"])
 
 
 def item_entity(state, name):
-    return next(entity for entity in state["observation"]["visible_entities"]
+    return next(entity for entity in state["entities"]
                 if entity.get("item", {}).get("name", "").lower() == name)
 
 
 def pick_currency(client, name, field, amount):
     before = client.state()
     cell = item_entity(before, name)["cell"]
-    old = before["observation"]["hero"][field]
-    after = act(client, "cell.select", cell=cell, mode="act")
-    if after["observation"]["hero"][field] == old:
+    old = before["hero"][field]
+    after = act(client, "cell", cell=cell, mode="act")
+    if after["hero"][field] == old:
         # Native travel may stop on arrival before pickup. A second choice is only
         # valid after confirming both the arrival and the same publicly visible heap.
-        assert after["observation"]["hero"]["cell"] == cell
+        assert after["hero"]["cell"] == cell
         assert item_entity(after, name)["cell"] == cell
-        after = act(client, "cell.select", cell=cell, mode="act")
-    assert after["observation"]["hero"][field] == old + amount, after["observation"]["hero"]
-    assert after["state_version"] != before["state_version"]
+        after = act(client, "cell", cell=cell, mode="act")
+    assert after["hero"][field] == old + amount, after["hero"]
+    assert after["rev"] != before["rev"]
     reject_previous_revision(client, before, after)
     return {"counter": field, "before": old, "after": old + amount,
             "real_change_advanced_revision": True, "old_revision_rejected_without_movement": True}
@@ -80,16 +81,16 @@ def pick_currency(client, name, field, amount):
 def buy_ankh(client):
     before = client.state()
     target = item_entity(before, "ankh")["cell"]
-    opened = act(client, "cell.select", cell=target, mode="act")
-    choices = [action for action in opened["actions"] if action.get("action") == "ui.activate"
+    opened = act(client, "cell", cell=target, mode="act")
+    choices = [action for action in opened["acts"] if action.get("op") == "click"
                and action.get("label", "").startswith("Buy for ")]
-    assert len(choices) == 1, opened["observation"]["ui"]
+    assert len(choices) == 1, opened["ui"]
     choice = choices[0]
     price = int(choice["label"].removeprefix("Buy for ").removesuffix("g"))
-    before_gold = opened["observation"]["hero"]["gold"]
-    purchased = act(client, "ui.activate", control=choice["control"])
-    assert purchased["observation"]["hero"]["gold"] == before_gold - price
-    assert any(item["name"].lower() == "ankh" for item in purchased["observation"]["inventory"])
+    before_gold = opened["hero"]["gold"]
+    purchased = act(client, "click", ctl=choice["ctl"])
+    assert purchased["hero"]["gold"] == before_gold - price
+    assert any(item["name"].lower() == "ankh" for item in purchased["inv"])
     reject_previous_revision(client, opened, purchased)
     return {"counter": "gold", "before": before_gold, "after": before_gold - price,
             "purchase_advanced_revision": True, "old_revision_rejected_without_movement": True}
@@ -108,9 +109,9 @@ def run_one(root, classpath, runtime_id, interface_size, name, expect_regression
               "runtime_id": runtime_id, "interface_size": interface_size,
               "expect_regression": expect_regression, "profile": str(profile.relative_to(root))}
     try:
-        hello = client.request("protocol.info")
-        assert hello.get("ok"), hello
-        result.update(build_id=hello["result"]["build_id"], cli_version=hello["result"]["cli_version"])
+        hello = client.request("info")
+        assert "err" not in hello, hello
+        result.update(build_id=hello["data"]["build_id"], cli_version=hello["data"]["cli_version"])
         initial = start_warrior(client)
         value = 3 if name == "entry-energy" else 806
         boundary = visible_currency(client, initial, value)
@@ -119,13 +120,13 @@ def run_one(root, classpath, runtime_id, interface_size, name, expect_regression
             time.sleep(2.3)
             ready = client.state()
             target = item_entity(ready, "ankh")["cell"]
-            assert target == ready["observation"]["hero"]["cell"]
-            opened = act(client, "cell.select", cell=target, mode="act")
-            assert any(action.get("label", "").startswith("Buy for ") for action in opened["actions"])
-            boundary = act(client, "ui.back")
-            assert boundary["observation"]["hero"]["cell"] == target
+            assert target == ready["hero"]["cell"]
+            opened = act(client, "cell", cell=target, mode="act")
+            assert any(action.get("label", "").startswith("Buy for ") for action in opened["acts"])
+            boundary = act(client, "back")
+            assert boundary["hero"]["cell"] == target
         assert boundary["phase"] == "player_ready", boundary["phase"]
-        assert boundary["observation"]["ui"]["display"] == {"language": "zh", "fullscreen": False}
+        assert boundary["ui"]["display"] == {"language": "zh", "fullscreen": False}
         shown = currency_text(boundary)
         assert any(node.get("text") == str(value) for node in shown), shown
         destination = safe_step(boundary)
@@ -134,22 +135,22 @@ def run_one(root, classpath, runtime_id, interface_size, name, expect_regression
         # Keeping the original revision is deliberate; a refresh cannot mask the bug.
         time.sleep(2.3)
         later = client.state()
-        assert later["observation"]["hero"] == boundary["observation"]["hero"]
+        assert later["hero"] == boundary["hero"]
         assert not currency_text(later), currency_text(later)
-        response = client.request("action.execute", {"action": "move.step", "direction": direction},
-                                  version=boundary["state_version"])
-        result["evidence"] = {"boundary_version": boundary["state_version"], "later_version": later["state_version"],
+        response = client.request("move", {"dir": direction},
+                                  version=boundary["rev"])
+        result["evidence"] = {"boundary_version": boundary["rev"], "later_version": later["rev"],
                               "public_currency_text_at_boundary": shown, "currency_text_disappeared": True,
-                              "hero_unchanged_during_fade": True, "original_version_accepted": bool(response.get("ok")),
+                              "hero_unchanged_during_fade": True, "original_version_accepted": "err" not in response,
                               "action_retries": 0}
         if expect_regression:
-            assert later["state_version"] != boundary["state_version"]
-            assert_rejected_without_movement(client, response, boundary["observation"]["hero"]["cell"])
+            assert later["rev"] != boundary["rev"]
+            assert_rejected_without_movement(client, response, boundary["hero"]["cell"])
         else:
-            assert later["state_version"] == boundary["state_version"]
-            assert response.get("ok") and response.get("status") == "completed", response
-            moved = response["result"]
-            assert moved["observation"]["hero"]["cell"] == destination
+            assert later["rev"] == boundary["rev"]
+            assert "err" not in response and response.get("st") == "completed", response
+            moved = frame_data(response)
+            assert moved["hero"]["cell"] == destination
             reject_previous_revision(client, boundary, moved)
             result["evidence"]["real_move_invalidated_old_revision"] = True
             changes = [pick_currency(client, "gold", "gold", 17),

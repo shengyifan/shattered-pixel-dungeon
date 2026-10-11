@@ -13,7 +13,7 @@ import uuid
 import protocol9
 from fixture_smoke import FixtureClient, freeze_runtime, reach_game as fixture_start
 from machine_smoke import reach_game
-from legacy_save_smoke import launch_command, metadata, safe_profile, stop, write_json
+from fixture_support import copy_audited_profile, launch_command, metadata, safe_profile, stop, write_json
 
 STAGES = ["before-register", "after-register", "before-intent", "after-intent", "before-callback",
           "after-callback", "after-settlement-before-result", "after-result-before-output",
@@ -24,22 +24,22 @@ def new_game_button(client):
     selected=False
     for _ in range(35):
         state=client.state()
-        ui=state["observation"]["ui"]
-        options=[a for a in state["actions"] if a["action"]=="ui.activate" and a.get("label")]
-        if state["observation"]["scene"]=="hero_select":
+        ui=state["ui"]
+        options=[a for a in state["acts"] if a["op"]=="click" and a.get("label")]
+        if state["scene"]=="hero_select":
             if ui.get("modal"):
-                client.act("ui.back");continue
+                client.act("back");continue
             if not selected:
                 warrior=next(a for a in options if a["label"].lower()=="warrior")
-                client.act("ui.activate",control=warrior["control"]);selected=True;continue
+                client.act("click",ctl=warrior["ctl"]);selected=True;continue
             start=next(a for a in options if a["label"].lower() in {"start","开始"})
-            return state,{"action":"ui.activate","control":start["control"]}
+            return state,{"op":"click","ctl":start["ctl"]}
         choice=None
         for term in ["enter","continue","play","new game","start"]:
             choice=next((a for a in options if term in a["label"].lower()),None)
             if choice:break
-        if choice:client.act("ui.activate",control=choice["control"])
-        elif any(a["action"]=="ui.reveal" for a in state["actions"]):client.act("ui.reveal")
+        if choice:client.act("click",ctl=choice["ctl"])
+        elif any(a["op"]=="reveal" for a in state["acts"]):client.act("reveal")
         else:raise AssertionError(state)
     raise AssertionError("No new game start control")
 
@@ -60,35 +60,33 @@ def database_record(profile, scope, request_id):
 def run_case(root,classpath,agent,template,runtime_id,stage):
     profile=safe_profile(root,"engine-crash-"+stage)
     if stage!="before-new-run-init":
-        for entry in template.iterdir():
-            if entry.name=="settings.xml" or entry.name.startswith("game"):
-                if entry.is_dir():shutil.copytree(entry,profile/entry.name)
-                else:shutil.copy2(entry,profile/entry.name)
+        copy_audited_profile(template, profile)
     metadata(profile,"engine-crash:"+stage,runtime_id,barrier=stage)
     command=launch_command(classpath)
     command.insert(1,"-javaagent:"+str(agent)+"="+stage+";"+str(profile))
     client=FixtureClient(command,profile)
     try:
-        assert client.request("protocol.info")["ok"]
+        assert "err" not in client.request("info")
         if stage=="before-new-run-init":
             state,action=new_game_button(client)
         else:
             reach_game(client,resume=True)
             state=client.state()
-            action={"action":"game.save" if stage=="between-save-files" else "wait"}
-            assert any(a["action"]==action["action"] for a in state["actions"]),state["actions"]
+            action={"op":"save" if stage=="between-save-files" else "wait"}
+            assert any(a["op"]==action["op"] for a in state["acts"]),state["acts"]
             if stage=="between-save-files":
                 client.act("wait")
                 state=client.state()
         scope=client.scope
         request_id="crash-"+uuid.uuid4().hex
         before_files={str(p.relative_to(profile)):p.read_bytes() for p in profile.glob("game*/*.dat")}
-        request=protocol9.request("action.execute", action, request_id, scope, state["state_version"])
+        arguments={key:value for key,value in action.items() if key!="op"}
+        request=protocol9.request(action["op"], arguments, request_id, scope, state["rev"])
         write_json(profile/"target-request.json",request)
         (profile/"barrier.armed").write_text(request_id)
         target_result={}
         def send():
-            try:target_result["response"]=client.request("action.execute",action,request_id=request_id,version=state["state_version"])
+            try:target_result["response"]=client.request(action["op"],arguments,request_id=request_id,version=state["rev"])
             except Exception as error:target_result["pipe_error"]=type(error).__name__
         worker=threading.Thread(target=send,daemon=True);worker.start()
         deadline=time.monotonic()+40
@@ -114,24 +112,24 @@ def run_case(root,classpath,agent,template,runtime_id,stage):
             assert all(name.endswith("/game.dat") for name in changed),changed
         restarted=FixtureClient(launch_command(classpath),profile)
         try:
-            assert restarted.request("protocol.info")["ok"]
-            history=restarted.request("request.get",{"target_id":request_id, "get": ["reply"]},scope=scope)
+            assert "err" not in restarted.request("info")
+            history=restarted.request("req",{"rid":request_id, "get": ["reply"]},scope=scope)
             if absent:
-                assert not history["ok"] and history["error"]["code"]=="REQUEST_NOT_FOUND",history
+                assert history["err"]=="REQUEST_NOT_FOUND",history
             else:
-                assert history["ok"],history
+                assert ("err" not in history),history
                 terminal="NOT_EXECUTED" if received else "COMPLETED" if completed else "UNKNOWN"
-                assert history["result"]["status"]==terminal,history
-                duplicate=restarted.request("request.get",{"target_id":request_id, "get": ["reply"]},request_id=request_id,scope=scope)
-                assert duplicate["error"]["code"]=="DUPLICATE_REQUEST_ID",duplicate
-                if completed:assert history["result"]["response"]["ok"]
+                assert history["data"]["st"]==terminal,history
+                duplicate=restarted.request("req",{"rid":request_id, "get": ["reply"]},request_id=request_id,scope=scope)
+                assert duplicate["err"]=="DUPLICATE_REQUEST_ID",duplicate
+                if completed:assert "err" not in history["data"]["reply"]
             if stage=="before-new-run-init":
                 assert not list(profile.glob("game*/game.dat")),"An interrupted planned run must not be auto-created"
                 with sqlite3.connect(profile/"audit/public.sqlite3") as db:
                     assert db.execute("SELECT kind FROM scopes WHERE scope_id=?",(raw[4],)).fetchone()==("planned",)
         finally:stop(restarted)
         result={"stage":stage,"result":"passed","test_fixture":True,"counts_as_win":False,
-                "profile":str(profile.relative_to(root)),"runtime_id":runtime_id,"scope_id":scope,"request_id":request_id,
+                "profile":str(profile.relative_to(root)),"runtime_id":runtime_id,"s":scope,"request_id":request_id,
                 "raw_status":expected,"recovered_status":None if absent else terminal,"received_response":False,
                 "changed_game_files":changed,"barrier_stack":marker.read_text().splitlines()}
         write_json(profile/"engine-crash-result.json",result)
@@ -153,9 +151,9 @@ def main():
     metadata(template,"class:WARRIOR",runtime_id)
     client=FixtureClient(launch_command(classpath,fixture=True),template)
     try:
-        assert client.request("protocol.info")["ok"]
+        assert "err" not in client.request("info")
         fixture_start(client,"WARRIOR")
-        client.act("game.save")
+        client.act("save")
     finally:stop(client)
     results=[]
     for stage in args.stages.split(","):

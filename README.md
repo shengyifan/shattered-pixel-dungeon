@@ -1,14 +1,14 @@
 # Shattered Pixel Dungeon
 
 This branch develops the `spdctl` machine-control interface. The current contract
-is **CLI.9.0.4 / protocol 9 / audit schema 12**, with base game **4.0.2**.
+is **CLI.9.0.6 / protocol 9 / audit schema 12**, with base game **4.0.2**.
 Start with the [CLI interface](docs/cli.md) and bundled [English help](docs/cli-help.md).
 The [current architecture](docs/cli-architecture.md) describes source ownership,
 observation boundaries and verification entrypoints; [semantic combat observations](docs/cli-combat-visuals.md)
 define the public gameplay facts and source-scoped public world cues.
-The [CLI.9.0.4 validation report](docs/cli-9.0.4-player-info-validation.md) records this
-batch's evidence, and the [8.0.1 recovery report](docs/cli-8.0.1-recovery-validation.md)
-retains the preceding controller and warning fixes. Earlier implementation,
+The [CLI.9.0.6 validation report](docs/cli-9.0.6-cleanup-validation.md) records this
+batch's cleanup scope and verification status. The [CLI.9.0.5 revision report](docs/cli-9.0.5-revision-validation.md)
+retains the preceding presentation and action-preparation evidence. Earlier implementation,
 rebuild and acceptance reports remain available in Git history.
 
 For AI-controlled playthroughs, read the [project-local memory](memory/README.md)

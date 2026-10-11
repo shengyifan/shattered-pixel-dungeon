@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Production CLI 5: fresh defaults, passive viewers, exact transport and saved restart.
+"""Current production CLI: fresh defaults, passive viewers, exact transport and saved restart.
 
 All game input uses the packaged public protocol. Test metadata and captures live
 outside the profile, so an absent/empty profile stays fresh until Java opens it.
@@ -20,7 +20,8 @@ from english_protocol_smoke import (assert_english, checked_state, english_inven
 from language_matrix_smoke import validate as validate_sources
 from machine_smoke import Client
 import protocol9
-from package_english_smoke import display, environment, loaded_jvm, verify_bundle, write_json
+from package_english_smoke import (action_save_receipts, display, environment,
+                                   loaded_jvm, verify_bundle, write_json)
 
 
 def wait_for(check, description, timeout=10):
@@ -92,10 +93,10 @@ class CapturedClient(Client):
 
     def request(self, op, args=None, request_id=None, scope=None, version=None):
         self.counter += 1
-        if op == "state.get":
+        if op == "state":
             args = {**(args or {}), "src": True}
-        request = protocol9.request(op, args, request_id or f"{self.prefix}-{self.counter:d}",
-                                    scope or self.scope, version or self.version)
+        request = protocol9.request(op, args, request_id or f"{self.prefix}.{self.counter:d}",
+                                    self.scope if scope is None else scope, self.version if version is None else version)
         wire = protocol9.wire_bytes(request)
         self.last_wire_request, self.last_send_bytes = request, wire
         assert self.process.stdin.write(wire) == len(wire)
@@ -123,18 +124,20 @@ class CapturedClient(Client):
         assert self.last_wire_response.get("id") == request["id"], (request, self.last_wire_response)
         response = protocol9.response(self.last_wire_response, op)
         assert_english(response)
-        if response.get("ok") and op == "state.get":
-            failures = validate_sources(response.get("result"))
+        if ("err" not in response) and op == "state":
+            failures = validate_sources(response.get("data"))
             assert not failures, {"op": op, "source_failures": failures[:20]}
             self.source_checks += 1
-        if response.get("error", {}).get("code") in {"EXECUTION_UNKNOWN", "EXECUTION_UNCERTAIN"}:
+        if response.get("err") in {"EXECUTION_UNKNOWN", "EXECUTION_UNCERTAIN"}:
             self.uncertain = True
-        state = response.get("result", {})
-        if isinstance(state, dict) and response.get("ok"):
+        state = protocol9.frame_data(response)
+        if isinstance(state, dict) and ("err" not in response):
+            if op == "info":
+                self.prefix = state["request_prefix"]
             if protocol9.is_live_operation(op):
-                self.scope = state.get("scope_id", self.scope)
-                self.version = state.get("state_version") or self.version
-            if protocol9.is_live_operation(op) and "observation" in state:
+                self.scope = response.get("s", self.scope)
+                self.version = response.get("rev")
+            if protocol9.is_live_operation(op) and "scene" in state:
                 self.last_state = state
                 display(state)
         self.trace.write(json.dumps({"request": request, "response": self.last_wire_response}, ensure_ascii=False) + "\n")
@@ -156,10 +159,10 @@ class CapturedClient(Client):
 
 
 def hero_inventory(state):
-    hero = state["observation"]["hero"]
+    hero = state["hero"]
     return {"hero": {key: hero[key] for key in ("class", "cell", "depth", "hp", "level", "gold")},
-            "inventory": [(item["locator"], item["name"], item["quantity"], item["equipped"])
-                          for item in state["observation"]["inventory"]]}
+            "inv": [(item["loc"], item["name"], item["qty"], item["equipped"])
+                          for item in state["inv"]]}
 
 
 def viewer_roundtrip(cli, client, env):
@@ -175,8 +178,8 @@ def viewer_roundtrip(cli, client, env):
                 previous_id = client.responses[0][1]["id"].encode()
                 wait_for(lambda: previous_id in target.read_bytes(), "viewer replays previous raw records")
                 current_id = "passive-viewer-" + str(number)
-                state = client.request("state.get", request_id=current_id)
-                assert state["ok"] and hero_inventory(state["result"]) == before
+                state = client.request("state", request_id=current_id)
+                assert ("err" not in state) and hero_inventory(state["data"]) == before
                 wait_for(lambda: current_id.encode() in target.read_bytes(), "viewer follows new raw records")
                 assert viewer.poll() is None, "An active trace viewer must keep following"
             finally:
@@ -199,27 +202,28 @@ def fresh_case(cli, bundle, output, env, initial_kind, expected_build, expected_
     client = CapturedClient(cli, profile, output / (initial_kind + "-first"), env)
     result = {"initial_profile": initial_kind, "profile": str(profile)}
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"] and hello["result"]["build_id"] == expected_build
-        assert hello["result"]["cli_version"] == expected_cli
+        hello = client.request("info")
+        assert ("err" not in hello) and hello["data"]["build_id"] == expected_build
+        assert hello["data"]["cli_version"] == expected_cli
         title = checked_state(client)
-        assert title["observation"]["ui"]["scene"] == "TitleScene", title["observation"]["ui"]
+        assert title["ui"]["scene"] == "TitleScene", title["ui"]
         result.update(default_display=display(title), initial_scene="TitleScene", jvm=loaded_jvm(client.process, bundle))
         game, scenes = start_or_continue(client)
         assert "WelcomeScene" not in scenes, scenes
-        assert game["observation"]["hero"]["class"] == "warrior"
+        assert game["hero"]["class"] == "warrior"
         english_inventory(game)
-        assert any(action["action"] == "inventory.open" for action in game["actions"]), \
+        assert any(action["op"] == "item" for action in game["acts"]), \
             "A fresh Warrior must have inventory available before any tutorial/game action"
-        execute(client, "inventory.open", locator="equipment.armor")
-        execute(client, "ui.back")
+        execute(client, "item", loc="equipment.armor")
+        execute(client, "back")
         result.update(menu_scenes=scenes, tutorial_completion_actions=0, initial_inventory_available=True)
         if initial_kind == "missing":
             result["passive_viewers"] = viewer_roundtrip(cli, client, env)
-        saved = execute(client, "game.save").initial_response
-        assert any(receipt["success"] for receipt in saved["result"]["persistence"]["saves_during_request"])
-        scope = saved["result"]["scope_id"]
-        before = hero_inventory(saved["result"])
+        saved_action = execute(client, "save")
+        saved = saved_action.initial_response
+        assert any(receipt["success"] for receipt in action_save_receipts(saved_action))
+        scope = saved_action.observation["s"]
+        before = hero_inventory(saved_action.observation)
         stop(client)
         result["first_transport"] = client.final_trace()
     finally:
@@ -227,11 +231,11 @@ def fresh_case(cli, bundle, output, env, initial_kind, expected_build, expected_
             stop(client, failure_cleanup=True)
     resumed = CapturedClient(cli, profile, output / (initial_kind + "-restart"), env)
     try:
-        assert resumed.request("protocol.info")["result"]["build_id"] == expected_build
+        assert resumed.request("info")["data"]["build_id"] == expected_build
         after, scenes = start_or_continue(resumed, resume=True)
-        assert after["scope_id"] == scope and hero_inventory(after) == before
-        history = resumed.request("request.get", {"target_id": saved["id"], "get": ["reply"]}, scope=scope)
-        assert history["ok"] and history["result"]["response"] == saved
+        assert after["s"] == scope and hero_inventory(after) == before
+        history = resumed.request("req", {"rid": saved["id"], "get": ["reply"]}, scope=scope)
+        assert "err" not in history and protocol9.response(history["data"]["reply"]) == saved
         result.update(restarted_jvm=loaded_jvm(resumed.process, bundle), saved_scope_id=scope,
                       save_request_id=saved["id"], same_run_and_history=True)
         stop(resumed)
@@ -269,7 +273,7 @@ def self_test():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path)
-    parser.add_argument("--expected-cli", default="CLI.9.0.5")
+    parser.add_argument("--expected-cli", default="CLI.9.0.6")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:

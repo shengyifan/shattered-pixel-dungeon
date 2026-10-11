@@ -251,7 +251,7 @@ public class Cli9ContractTest {
         public void exitNow(){}
         GameController.State snapshot(String rev,String label){
             TextProvenance provenance=new TextProvenance(key->label);
-            Object text=provenance.capture(null,provenance.onTextResource(label,"fixture.label","en",new Object[0]),false);
+            Object text=provenance.capture(null,provenance.onTextResource(label,"fixture.label","en",new Object[0],label),false);
             return new GameController.State(scope,rev,"player_ready",map("scene","game","hero",map("class","warrior","hp",20,"cell",10),
                     "inventory",List.of(map("locator","backpack.0","name",text,"description",text,"quantity",1,
                             "equipped",false,"available",true,"type_known",true,"level_known",false,"level",null,"curse_known",null,"cursed",null)),

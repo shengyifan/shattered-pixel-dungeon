@@ -14,6 +14,7 @@ import time
 import uuid
 
 from fixture_smoke import FixtureClient, act, freeze_runtime, reach_game
+from test_ui import configure_test_ui
 
 
 def describe(values):
@@ -33,6 +34,7 @@ def main():
     directory = root / "desktop-control/build/fixtures"
     profile = directory / ("performance-" + options.scenario + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
+    configure_test_ui(profile)
     classpath, runtime_id = freeze_runtime(root, (root / "desktop-control/build/test-runtime-classpath.txt").read_text().strip())
     java = str(Path(os.environ["JAVA_HOME"]) / "bin/java") if os.environ.get("JAVA_HOME") else "java"
     vm = [java, "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
@@ -45,24 +47,24 @@ def main():
               "game_inputs": "public NDJSON only; no screenshots, native keys, mouse, or computer use",
               "latency_scope": "Python request encode/write through matching complete NDJSON response decode; includes scheduling, all audit transactions and pipe I/O"}
     try:
-        assert client.request("protocol.info")["ok"]
+        assert "err" not in client.request("info")
         if options.scenario == "menu":
             for _ in range(10):
                 state = client.state()
-                if state["observation"].get("scene") == "title":
+                if state.get("scene") == "title":
                     break
-                if state["observation"].get("scene") in {"hero_select", "start"}:
-                    act(client, "ui.back")
+                if state.get("scene") in {"hero_select", "start"}:
+                    act(client, "back")
                     continue
-                candidates = [a for a in state["actions"] if a.get("action") == "ui.activate" and
+                candidates = [a for a in state["acts"] if a.get("op") == "click" and
                               any(word in a.get("label", "").lower() for word in ["enter", "continue", "进入", "继续"])]
                 assert candidates, state
-                act(client, "ui.activate", control=candidates[0]["control"])
+                act(client, "click", ctl=candidates[0]["ctl"])
             else:
                 raise AssertionError("Did not reach title menu")
         else:
             state = reach_game(client, "WARRIOR")
-        report["scene"] = state["observation"]["scene"]
+        report["scene"] = state["scene"]
         for _ in range(5):
             client.state()
         latency, versions = [], []
@@ -70,21 +72,21 @@ def main():
             start = time.perf_counter_ns()
             state = client.state()
             latency.append((time.perf_counter_ns()-start)/1e6)
-            versions.append(state["state_version"])
+            versions.append(state["rev"])
         report["state_get_roundtrip_ms"] = latency
         report["state_get_roundtrip_summary_ms"] = describe(latency)
         report["observed_state_version_count"] = len(set(versions))
-        last_query_id = client.prefix + "-" + str(client.counter)
+        last_query_id = client.last_wire_request["id"]
         history, get_request = [], []
         for _ in range(options.requests):
             start = time.perf_counter_ns()
-            result = client.request("history.list", {"after": 0, "limit": 100})
-            assert result["ok"], result
+            result = client.request("history", {"after": 0, "limit": 100})
+            assert "err" not in result, result
             history.append((time.perf_counter_ns()-start)/1e6)
         for _ in range(options.requests):
             start = time.perf_counter_ns()
-            result = client.request("request.get", {"target_id": last_query_id})
-            assert result["ok"], result
+            result = client.request("req", {"rid": last_query_id})
+            assert "err" not in result, result
             get_request.append((time.perf_counter_ns()-start)/1e6)
         report["history_list_roundtrip_ms"] = history
         report["request_get_roundtrip_ms"] = get_request
@@ -92,14 +94,14 @@ def main():
             inventory_latency = []
             for _ in range(10):
                 ready = client.state()
-                item = ready["observation"]["inventory"][0]
+                item = ready["inv"][0]
                 start = time.perf_counter_ns()
-                opened = client.request("action.execute", {"action": "inventory.open", "locator": item["locator"]})
-                assert opened.get("ok") and opened["result"]["phase"] == "awaiting_input", opened
+                opened = client.request("item", {"loc": item["loc"]})
+                assert "err" not in opened and opened["data"]["phase"] == "awaiting_input", opened
                 inventory_latency.append((time.perf_counter_ns()-start)/1e6)
-                act(client, "ui.back")
+                act(client, "back")
             report["inventory_open_roundtrip_ms"] = inventory_latency
-            report["action_latency_scope"] = "10 actual inventory.open operations, each with complete before/after audit; ui.back between samples; no consumed game turns"
+            report["action_latency_scope"] = "10 actual item operations, each with complete before/after audit; back between samples; no consumed game turns"
         report["actual_public_requests_before_probe"] = client.counter
         (profile / "benchmark.arm").write_text("test-only read probe\n")
         deadline = time.monotonic() + 90

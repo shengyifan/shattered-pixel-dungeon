@@ -84,13 +84,7 @@ def load_snapshot(source):
     if not isinstance(record, dict):
         snapshot.response = record
         snapshot.fail("read", "INVALID_INPUT", "Expected one JSON object")
-    # Controller response wrappers own their nested response. Only the old,
-    # explicitly sequenced public-record envelope is unwrapped here.
-    if "seq" in record and "response" in record and not ({"v", "controller"} & record.keys()):
-        metadata["record_seq"] = record["seq"]
-        snapshot.response = record["response"]
-    else:
-        snapshot.response = record
+    snapshot.response = record
     try:
         snapshot.decoded = decode_client_response(snapshot.response)
         snapshot.frame = snapshot.decoded.require_current_frame()

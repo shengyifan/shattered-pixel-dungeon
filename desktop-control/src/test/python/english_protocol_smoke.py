@@ -8,16 +8,17 @@ CLI 9 uses fresh schema-12 profiles; old protocol/audit migration is unsupported
 import argparse
 from fixture_identity import fixture_identity_matches
 import json
+from protocol9 import response as decode_response
 from pathlib import Path
 import re
 import time
 import unicodedata
 import uuid
-from protocol9 import pages
+from protocol9 import pages, frame_data
 from client_result import settle_action
 
 from fixture_smoke import FixtureClient, freeze_runtime, GAME_PROSE_FIELDS, RAW_FIELDS, game_prose_values
-from legacy_save_smoke import launch_command, metadata, safe_profile, write_json
+from fixture_support import launch_command, metadata, safe_profile, write_json
 
 
 CJK = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
@@ -44,7 +45,7 @@ class EnglishClient(FixtureClient):
 
     def request(self, op, args=None, **kwargs):
         response = super().request(op, args, **kwargs)
-        if response.get("error", {}).get("code") in {"EXECUTION_UNKNOWN", "EXECUTION_UNCERTAIN"}:
+        if response.get("err") in {"EXECUTION_UNKNOWN", "EXECUTION_UNCERTAIN"}:
             self.uncertain = True
         assert_english(response)
         self.responses.append((op, response))
@@ -52,18 +53,18 @@ class EnglishClient(FixtureClient):
 
 
 def checked_state(client):
-    response = client.request("state.get")
-    if response.get("error", {}).get("code") == "SCOPE_MISMATCH":
-        assert client.request("protocol.info")["ok"]
-        response = client.request("state.get")
-    assert response["ok"], response
-    return response["result"]
+    response = client.request('state')
+    if response.get("err") == "SCOPE_MISMATCH":
+        assert ("err" not in client.request('info'))
+        response = client.request('state')
+    assert ("err" not in response), response
+    return frame_data(response)
 
 
 def execute(client, action, request_id=None, **args):
     for _ in range(6):
-        response = client.request("action.execute", {"action": action, **args}, request_id=request_id)
-        if response.get("error", {}).get("code") == "STALE_STATE":
+        response = client.request_action({'op': action, **args}, request_id=request_id)
+        if response.get("err") == "STALE_STATE":
             checked_state(client)
             request_id = None
             continue
@@ -76,15 +77,15 @@ def activate(client, *labels):
     desired = {label.casefold() for label in labels}
     state = client.last_state or checked_state(client)
     for _ in range(6):
-        candidates = [a for a in state["actions"] if a["action"] == "ui.activate"
+        candidates = [a for a in state['acts'] if a['op'] == 'click'
                       and a.get("label", "").casefold() in desired]
         assert len(candidates) == 1, {"expected_english_labels": labels,
-                                      "observed": [a.get("label") for a in state["actions"]]}
-        response = client.request("action.execute", {"action": "ui.activate", "control": candidates[0]["control"]})
-        if response.get("error", {}).get("code") == "STALE_STATE":
+                                      "observed": [a.get("label") for a in state['acts']]}
+        response = client.request_action({'op': 'click', 'ctl': candidates[0]['ctl']})
+        if response.get("err") == "STALE_STATE":
             state = checked_state(client)
             continue
-        return settle_action(client, response, "ui.activate").require_success()
+        return settle_action(client, response, 'click').require_success()
     raise AssertionError("English control repeatedly changed before dispatch")
 
 
@@ -92,18 +93,18 @@ def start_or_continue(client, resume=False):
     seen = []
     for _ in range(30):
         state = checked_state(client)
-        ui = state["observation"]["ui"]
+        ui = state["ui"]
         seen.append(ui["scene"])
-        if state["observation"].get("scene") == "game":
+        if state.get("scene") == "game":
             return state, seen
         if not resume and "TitleScene" not in seen and ui["scene"] in {"HeroSelectScene", "StartScene"}:
             # Welcome's original Enter control goes straight to hero selection. Reach
             # Title explicitly through original Back controls instead of inventing a route.
-            execute(client, "ui.back")
+            execute(client, 'back')
             continue
-        actions = [a for a in state["actions"] if a["action"] == "ui.activate"]
+        actions = [a for a in state['acts'] if a['op'] == 'click']
         if ui.get("modal") and ui["scene"] == "HeroSelectScene":
-            execute(client, "ui.back")
+            execute(client, 'back')
             continue
         choice = None
         if resume and ui["scene"] == "StartScene":
@@ -120,15 +121,15 @@ def start_or_continue(client, resume=False):
             choice = next((a for a in actions if a.get("label", "").split("\n")[0].casefold() == "warrior"), None)
         if choice is None:
             choice = next((a for a in actions if a.get("label", "").casefold() == "warrior"), None)
-        if choice is None and any(a["action"] == "ui.reveal" for a in state["actions"]):
-            execute(client, "ui.reveal")
+        if choice is None and any(a['op'] == 'reveal' for a in state['acts']):
+            execute(client, 'reveal')
             continue
-        assert choice, {"no_english_start_control": ui["scene"], "actions": actions}
-        response = client.request("action.execute", {"action": "ui.activate", "control": choice["control"]})
-        if response.get("error", {}).get("code") == "STALE_STATE":
+        assert choice, {"no_english_start_control": ui["scene"], 'acts': actions}
+        response = client.request_action({'op': 'click', 'ctl': choice['ctl']})
+        if response.get("err") == "STALE_STATE":
             continue
-        assert response["ok"] and response.get("status") != "in_progress", response
-        observed = response.get("result", {}).get("observation", {}).get("ui", {}).get("scene")
+        assert ("err" not in response) and response.get("st") != "in_progress", response
+        observed = response.get("data", {}).get("ui", {}).get("scene")
         if observed:
             seen.append(observed)
     raise AssertionError("Original English controls did not reach a game")
@@ -141,8 +142,8 @@ def gui_assertions(profile, required_scenes, required_version=None):
         rows = [json.loads(line) for line in file.read_text().splitlines()] if file.exists() else []
         seen = {row["scene"].split(".")[-1] for row in rows if row.get("scene")}
         if required_scenes <= seen and (required_version is None or any(fixture_identity_matches(profile,
-                "activity" if str(row["state_version"]).startswith("activity:") else "revision",
-                row["state_version"],required_version) for row in rows)):
+                "activity" if str(row['state_version']).startswith("activity:") else "revision",
+                row['state_version'],required_version) for row in rows)):
             assert rows and all(row["language"] == "CHI_SMPL" and row["fullscreen"] is False for row in rows)
             return {"language": "CHI_SMPL", "fullscreen": False, "scenes": sorted(seen), "checkpoints": len(rows)}
         time.sleep(.03)
@@ -150,18 +151,18 @@ def gui_assertions(profile, required_scenes, required_version=None):
 
 
 def english_inventory(state):
-    hero = state["observation"]["hero"]
+    hero = state["hero"]
     assert hero["class_name"].casefold() == "warrior", hero["class_name"]
-    items = state["observation"]["inventory"]
+    items = state['inv']
     for locator, expected in [("equipment.weapon", "worn shortsword"), ("equipment.armor", "cloth armor")]:
-        item = next(item for item in items if item["locator"] == locator)
+        item = next(item for item in items if item['loc'] == locator)
         assert item["name"].casefold() == expected, item
     return items
 
 
 def public_events(client, scope):
     found = []
-    for rows in pages(client, "events.read", scope=scope):
+    for rows in pages(client, 'events', scope=scope):
         found.extend(rows)
     return found
 
@@ -173,7 +174,7 @@ def stop(client, failure_cleanup=False):
                 client.process.stdin.close()
                 client.process.wait(timeout=35)
             else:
-                execute(client, "app.quit")
+                execute(client, 'quit')
                 client.process.wait(timeout=25)
                 assert client.process.returncode == 0
     finally:
@@ -195,29 +196,30 @@ def live_case(root, classpath, runtime_id):
     client = EnglishClient(command, profile)
     checks = []
     try:
-        hello = client.request("protocol.info")
-        assert hello["ok"]
+        hello = client.request('info')
+        assert ("err" not in hello)
         state, seen = start_or_continue(client)
         assert {"WelcomeScene", "TitleScene", "HeroSelectScene", "GameScene"} <= set(seen), seen
         items = english_inventory(state)
         checks.append("welcome_title_hero_game_english")
-        scope = state["scope_id"]
-        sword = execute(client, "inventory.open", locator="equipment.weapon")
+        scope = state['s']
+        sword = execute(client, 'item', loc="equipment.weapon")
         text = " ".join(value for _, value in prose_values(sword.observation))
         assert "worn shortsword" in text.casefold() and "quite short sword" in text.casefold(), text
         checks.append("original_sword_description_english")
-        execute(client, "ui.back")
+        execute(client, 'back')
         stone = next(item for item in items if item["name"].casefold() == "throwing stone")
-        execute(client, "inventory.open", locator=stone["locator"])
+        execute(client, 'item', loc=stone['loc'])
         aiming = activate(client, "THROW").observation
-        assert any(a["action"] == "cell.cancel" for a in aiming["actions"])
-        cancelled = execute(client, "cell.cancel").observation
-        unchanged = next(item for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "throwing stone")
-        assert unchanged["quantity"] == stone["quantity"], "Cancelling must not consume the item"
+        assert any(a['op'] == 'untarget' for a in aiming['acts'])
+        cancelled = execute(client, 'untarget').observation
+        unchanged = next(item for item in cancelled['inv'] if item["name"].casefold() == "throwing stone")
+        assert unchanged['qty'] == stone['qty'], "Cancelling must not consume the item"
         checks.append("original_throw_cancel_preserves_quantity")
-        food = next(item for item in cancelled["observation"]["inventory"] if item["name"].casefold() == "ration of food")
-        execute(client, "inventory.open", locator=food["locator"])
-        eaten = activate(client, "EAT").initial_response
+        food = next(item for item in cancelled['inv'] if item["name"].casefold() == "ration of food")
+        execute(client, 'item', loc=food['loc'])
+        eating = activate(client, "EAT")
+        eaten = eating.initial_response
         food_id = eaten["id"]
         # Only a native displayed message proves event-language projection; no test text injection.
         deadline = time.monotonic() + 10
@@ -232,33 +234,41 @@ def live_case(root, classpath, runtime_id):
         else:
             raise AssertionError("No original food message in English drawn game.log snapshots")
         checks.append("native_drawn_food_message_english")
-        actions = client.request("actions.list")
-        assert actions["ok"] and any(a.get("label", "").casefold() == "wait" for a in actions["result"]["actions"])
-        history = client.request("history.list", {"after": 0, "limit": 100}, scope=scope)
-        assert history["ok"] and any(row["id"] == food_id for row in history["result"])
-        record = client.request("request.get", {"target_id": food_id, "get": ["reply"]}, scope=scope)
-        assert record["ok"] and record["result"]["response"] == eaten
-        checks.append("actions_history_and_original_request_response_english")
+        actions = client.request('actions')
+        assert ("err" not in actions) and any(a.get("label", "").casefold() == "wait" for a in actions["data"]['acts'])
+        history = client.request('history', {"after": 0, "limit": 100}, scope=scope)
+        assert ("err" not in history) and any(row["id"] == food_id for row in history["data"]["items"])
+        record = client.request('req', {'rid': food_id, "get": ["reply"]}, scope=scope)
+        assert "err" not in record, record
+        stored_reply = record["data"]["reply"]
+        final_reply = decode_response(stored_reply)
+        assert final_reply["id"] == food_id and "err" not in final_reply
+        assert final_reply["st"] == eating.status, (final_reply, eating)
+        assert_english(final_reply)
+        if eaten["st"] != "in_progress":
+            assert final_reply == eaten
+        checks.append("actions_history_and_final_request_response_english")
         gui = gui_assertions(profile, {"WelcomeScene", "TitleScene", "HeroSelectScene", "GameScene"})
         assert any(row["window_classes"] and any(name.endswith(".WndUseItem") for name in row["window_classes"])
                    for row in map(json.loads, (profile / "ui-assertions.jsonl").read_text().splitlines()))
         checks.append("actual_chinese_windowed_gui_and_item_window")
-        execute(client, "game.save")
+        execute(client, 'save')
         stop(client)
         checks.append("normal_save_and_exit")
         restarted = EnglishClient(command, profile)
         try:
-            assert restarted.request("protocol.info")["ok"]
+            assert ("err" not in restarted.request('info'))
             resumed, _ = start_or_continue(restarted, resume=True)
-            assert resumed["scope_id"] == scope
+            assert resumed['s'] == scope
             checks.append("same_scope_resume")
             english_inventory(resumed)
-            historical = restarted.request("request.get", {"target_id": food_id, "get": ["reply"]}, scope=scope)
-            assert historical["ok"] and historical["result"]["response"] == eaten
+            historical = restarted.request('req', {'rid': food_id, "get": ["reply"]}, scope=scope)
+            assert "err" not in historical and historical["data"]["reply"] == stored_reply
+            assert decode_response(historical["data"]["reply"]) == final_reply
             old_events = public_events(restarted, scope)
             assert any("That food tasted delicious!" in entry["text"] for event in old_events if event["kind"] == "game.log"
                        for entry in event["data"]["entries"])
-            gui_assertions(profile, {"GameScene"}, resumed["state_version"])
+            gui_assertions(profile, {"GameScene"}, resumed['rev'])
             checks.append("old_response_and_events_english_after_restart_with_chinese_gui")
             stop(restarted)
         finally:
@@ -266,7 +276,7 @@ def live_case(root, classpath, runtime_id):
                 stop(restarted, failure_cleanup=True)
         report = {"case_id": "language.english_protocol_chinese_gui", "verified": True, "test_fixture": True,
                   "counts_as_win": False, "profile": str(profile.relative_to(root)), "runtime_id": runtime_id,
-                  "build_id": hello["result"]["build_id"], "gui": gui, "scope_id": scope,
+                  "build_id": hello["data"]["build_id"], "gui": gui, "scope_id": scope,
                   "strict_english_item_names_and_description": True, "throw_cancel_preserves_quantity": True,
                   "native_drawn_food_log_english": True, "original_response_and_events_english_after_restart": True,
                   "passed_checks": checks}

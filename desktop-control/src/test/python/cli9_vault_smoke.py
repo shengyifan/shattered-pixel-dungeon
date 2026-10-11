@@ -43,7 +43,7 @@ class VaultClient(FixtureClient):
 
 
 def inventory(state):
-    return state["observation"]["inventory"]
+    return state['inv']
 
 
 def item(state, phrase):
@@ -55,37 +55,37 @@ def item(state, phrase):
 
 
 def inventory_signature(state):
-    return [{key: entry[key] for key in ("name", "locator", "quantity", "level", "equipped", "available") if key in entry}
+    return [{key: entry[key] for key in ("name", 'loc', 'qty', "level", "equipped", "available") if key in entry}
             for entry in inventory(state)]
 
 
 def choices(state):
-    return [action for action in state["actions"] if action["action"] == "ui.activate"]
+    return [action for action in state['acts'] if action['op'] == 'click']
 
 
 def choose(client, state, label):
     matches = [action for action in choices(state) if action.get("label", "").casefold() == label.casefold()]
     assert len(matches) == 1, {"label": label, "choices": choices(state)}
-    return act(client, "ui.activate", control=matches[0]["control"])
+    return act(client, 'click', ctl=matches[0]['ctl'])
 
 
 def choose_item(client, state, phrase):
     matches = [action for action in choices(state) if phrase in action.get("label", "").lower()]
     assert len(matches) == 1, {"item_choice": phrase, "choices": choices(state)}
-    return act(client, "ui.activate", control=matches[0]["control"])
+    return act(client, 'click', ctl=matches[0]['ctl'])
 
 
 def use(client, state, phrase, operation):
-    state = act(client, "inventory.open", locator=item(state, phrase)["locator"])
+    state = act(client, 'item', loc=item(state, phrase)['loc'])
     return choose(client, state, operation)
 
 
 def text(state):
-    return "\n".join(node.get("text", "") for node in state["observation"]["ui"]["controls"])
+    return "\n".join(node.get("text", "") for node in state["ui"]['nodes'])
 
 
 def visible_entity(state, phrase):
-    matches = [entity for entity in state["observation"]["visible_entities"]
+    matches = [entity for entity in state['entities']
                if phrase in entity.get("name", "").lower()]
     assert len(matches) == 1, {"entity": phrase, "matches": matches}
     return matches[0]
@@ -95,7 +95,7 @@ def start(client, hero_class):
     selected = False
     state = client.state()
     for _ in range(40):
-        observation = state["observation"]
+        observation = state
         ui = observation.get("ui", {})
         if observation.get("scene") == "game":
             assert observation["hero"]["class"] == hero_class.lower()
@@ -104,7 +104,7 @@ def start(client, hero_class):
                 assert time.monotonic() < deadline, "Native vault source was not observed"
                 time.sleep(0.05)
                 state = client.state()
-                observation = state["observation"]
+                observation = state
                 if observation.get("scene") != "game":
                     continue
             return state
@@ -113,60 +113,60 @@ def start(client, hero_class):
             choice = next(action for action in options if action.get("label", "").lower() == hero_class.lower())
             selected = True
         elif ui.get("scene") == "HeroSelectScene" and ui.get("modal"):
-            state = act(client, "ui.back")
+            state = act(client, 'back')
             continue
         else:
             choice = next((action for label in ("Continue", "Enter the Dungeon", "Play", "New Game", "Start")
                            for action in options if action.get("label") == label), None)
-            if choice is None and any(action["action"] == "ui.reveal" for action in state["actions"]):
-                state = act(client, "ui.reveal")
+            if choice is None and any(action['op'] == 'reveal' for action in state['acts']):
+                state = act(client, 'reveal')
                 continue
-            assert choice, {"cannot_start": ui, "actions": state["actions"]}
-        state = act(client, "ui.activate", control=choice["control"])
+            assert choice, {"cannot_start": ui, 'acts': state['acts']}
+        state = act(client, 'click', ctl=choice['ctl'])
     raise AssertionError("Native menu did not reach the vault fixture")
 
 
 def assert_modal_blocks_map(client, state):
-    assert state["observation"]["ui"]["modal"], state["observation"]["ui"]
-    assert not any(action["action"] in ("move.step", "cell.select", "inventory.open") for action in state["actions"])
-    response = client.request("action.execute", {"action": "move.step", "direction": "north"})
-    assert not response.get("ok"), response
-    receipt = client.request("request.get", {"target_id": response["id"]})
-    assert receipt.get("ok") and receipt["result"]["status"] == "REJECTED", receipt
+    assert state["ui"]["modal"], state["ui"]
+    assert not any(action['op'] in ('move', 'cell', 'item') for action in state['acts'])
+    response = client.request_action({'op': 'move', 'dir': 'N'})
+    assert ("err" in response), response
+    receipt = client.request('req', {'rid': response["id"]})
+    assert "err" not in receipt and receipt["data"]["st"] == "REJECTED", receipt
     current = client.state()
-    assert current["observation"]["hero"]["cell"] == state["observation"]["hero"]["cell"]
-    assert current["observation"]["ui"]["modal"]
+    assert current["hero"]["cell"] == state["hero"]["cell"]
+    assert current["ui"]["modal"]
     return current
 
 
 def enter(client, state):
-    original = [(entry["name"], entry["quantity"]) for entry in inventory(state)]
-    entrance = state["observation"]["hero"]["cell"]
+    original = [(entry["name"], entry['qty']) for entry in inventory(state)]
+    entrance = state["hero"]["cell"]
     imp = visible_entity(state, "ambitious imp")
-    state = act(client, "cell.select", cell=imp["cell"], mode="act")
+    state = act(client, 'cell', cell=imp["cell"], mode="act")
     assert "collector" in text(state).lower(), text(state)
     state = assert_modal_blocks_map(client, state)
-    state = act(client, "ui.back")
+    state = act(client, 'back')
     assert "can't teleport your gear" in text(state).lower(), text(state)
-    state = act(client, "ui.back")
-    state = act(client, "cell.select", cell=entrance, mode="act")
-    if not state["observation"]["ui"]["modal"]:
-        assert state["observation"]["hero"]["cell"] == entrance
-        state = act(client, "cell.select", cell=entrance, mode="act")
+    state = act(client, 'back')
+    state = act(client, 'cell', cell=entrance, mode="act")
+    if not state["ui"]["modal"]:
+        assert state["hero"]["cell"] == entrance
+        state = act(client, 'cell', cell=entrance, mode="act")
     state = choose(client, state, "Stay here")
-    assert [(entry["name"], entry["quantity"]) for entry in inventory(state)] == original
-    state = act(client, "cell.select", cell=entrance, mode="act")
+    assert [(entry["name"], entry['qty']) for entry in inventory(state)] == original
+    state = act(client, 'cell', cell=entrance, mode="act")
     before = state
     state = choose(client, state, "Descend into the vault")
-    assert state["observation"]["hero"]["depth"] == 19
-    assert state["observation"]["hero"]["gold"] == 0 and state["observation"]["hero"]["energy"] == 0
+    assert state["hero"]["depth"] == 19
+    assert state["hero"]["gold"] == 0 and state["hero"]["energy"] == 0
     assert item(state, "escape crystal")
     assert not any("round shield" in entry["name"].lower() for entry in inventory(state))
     assert len(inventory(state)) == 2, inventory(state)
-    response = client.request("action.execute", {"action": "ui.back"}, version=before["state_version"])
-    assert response.get("error", {}).get("code") == "STALE_STATE", response
-    receipt = client.request("request.get", {"target_id": response["id"]})
-    assert receipt.get("ok") and receipt["result"]["status"] == "REJECTED"
+    response = client.request_action({'op': 'back'}, version=before['rev'])
+    assert response.get("err") == "STALE_STATE", response
+    receipt = client.request('req', {'rid': response["id"]})
+    assert "err" not in receipt and receipt["data"]["st"] == "REJECTED"
     return {"two_dialogue_intro": True, "cancel_preserved_inventory": True,
             "same_depth_branch_replaced_inventory": True, "old_revision_rejected": True}
 
@@ -174,20 +174,20 @@ def enter(client, state):
 def token_door(client, state, count):
     door = visible_entity(state, "strange door")
     assert door["kind"] == "object", door
-    state = act(client, "cell.select", cell=door["cell"], mode="act")
+    state = act(client, 'cell', cell=door["cell"], mode="act")
     if count < 10:
         assert not any(action.get("label") == "Open the Door" for action in choices(state))
         assert ("don't have enough" if count else "find in the vault") in text(state).lower(), text(state)
-        state = act(client, "ui.back")
+        state = act(client, 'back')
         assert visible_entity(state, "strange door")
     else:
         state = choose(client, state, "Not Yet")
-        assert item(state, "dwarf token")["quantity"] == 10
-        state = act(client, "cell.select", cell=door["cell"], mode="act")
+        assert item(state, "dwarf token")['qty'] == 10
+        state = act(client, 'cell', cell=door["cell"], mode="act")
         state = choose(client, state, "Open the Door")
-        assert not any("strange door" in entity.get("name", "").lower() for entity in state["observation"]["visible_entities"])
+        assert not any("strange door" in entity.get("name", "").lower() for entity in state['entities'])
         assert not any("dwarf token" in entry["name"].lower() for entry in inventory(state))
-        cell = next(cell for cell in state["observation"]["map"]["cells"] if cell["cell"] == door["cell"])
+        cell = next(cell for cell in state["map"]["cells"] if cell["cell"] == door["cell"])
         assert "door" in cell["name"].lower() and "locked" not in cell["name"].lower(), cell
     return {"tokens": count, "native_interact_gate": True, "native_cancel_and_open": count == 10}
 
@@ -195,41 +195,41 @@ def token_door(client, state, count):
 def mirror(client, state, hero_class):
     target = visible_entity(state, "strange mirror")
     assert target["kind"] == "object", target
-    state = act(client, "cell.select", cell=target["cell"], mode="act")
+    state = act(client, 'cell', cell=target["cell"], mode="act")
     initial = inventory_signature(state)
-    state = act(client, "ui.back")
+    state = act(client, 'back')
     assert inventory_signature(state) == initial
-    state = act(client, "cell.select", cell=target["cell"], mode="act")
+    state = act(client, 'cell', cell=target["cell"], mode="act")
     state = choose(client, state, "Take the Item")
     reward = {"WARRIOR": "broken seal", "MAGE": "staff", "ROGUE": "cloak of shadows",
               "HUNTRESS": "spirit bow", "DUELIST": "greatsword", "CLERIC": "holy tome"}[hero_class]
     assert item(state, reward)
-    state = act(client, "ui.back")
-    state = act(client, "cell.select", cell=target["cell"], mode="act")
+    state = act(client, 'back')
+    state = act(client, 'cell', cell=target["cell"], mode="act")
     assert not any(action.get("label") == "Take the Item" for action in choices(state))
-    state = act(client, "ui.back")
-    token = next(entity for entity in state["observation"]["visible_entities"]
+    state = act(client, 'back')
+    token = next(entity for entity in state['entities']
                  if "dwarf token" in entity.get("item", {}).get("name", "").lower())
-    state = act(client, "cell.select", cell=token["cell"], mode="act")
+    state = act(client, 'cell', cell=token["cell"], mode="act")
     assert not any("dwarf token" in entry["name"].lower() for entry in inventory(state))
     assert not any("dwarf token" in entity.get("item", {}).get("name", "").lower()
-                   for entity in state["observation"]["visible_entities"])
+                   for entity in state['entities'])
     return {"class": hero_class, "class_reward": reward, "one_time_grant": True, "later_tokens_discarded": True}
 
 
 def assert_item_enabled(state, phrase, enabled):
-    locator = item(state, phrase)["locator"]
-    nodes = [node for node in state["observation"]["ui"]["controls"]
-             if node.get("subject") == {"kind": "item", "locator": locator}]
-    assert nodes, {"missing_selector_item": phrase, "ui": state["observation"]["ui"]}
+    locator = item(state, phrase)['loc']
+    nodes = [node for node in state["ui"]['nodes']
+             if node.get("subject") == {"kind": "item", 'loc': locator}]
+    assert nodes, {"missing_selector_item": phrase, "ui": state["ui"]}
     assert any(bool(node.get("enabled")) == enabled for node in nodes), nodes
     node_ids = {node["id"] for node in nodes}
-    selectable = any(action.get("control") in node_ids for action in choices(state))
+    selectable = any(action.get('ctl') in node_ids for action in choices(state))
     assert selectable == enabled, {"item": phrase, "selectable": selectable, "expected": enabled}
 
 
 def leave(client, state, name):
-    state = act(client, "inventory.open", locator=item(state, "escape crystal")["locator"])
+    state = act(client, 'item', loc=item(state, "escape crystal")['loc'])
     assert {action.get("label", "").lower() for action in choices(state)}.isdisjoint({"drop", "throw"})
     state = choose(client, state, "USE")
     state = assert_modal_blocks_map(client, state)
@@ -246,7 +246,7 @@ def leave(client, state, name):
         assert_item_enabled(state, "mace", name in ("exit-victory", "exit-staff", "exit-seal", "exit-full"))
         reward = {"exit-consumable": "potion of healing", "exit-equipment": "sword", "exit-partial": "spear",
                   "exit-victory": "mace", "exit-staff": "staff", "exit-seal": "leather armor", "exit-full": "mace"}[name]
-        state = act(client, "ui.back")
+        state = act(client, 'back')
         assert item(state, "escape crystal"), "Cancelling the native item picker must retain the vault"
         state = use(client, state, "escape crystal", "USE")
         state = choose(client, state, "Leave the Vault")
@@ -260,17 +260,17 @@ def leave(client, state, name):
         state = choose(client, state, "Leave the Vault")
         state = choose_item(client, state, reward)
         state = choose(client, state, "Leave the Vault")
-    assert state["observation"]["hero"]["depth"] == 19
-    assert state["observation"]["hero"]["gold"] == 47 and state["observation"]["hero"]["energy"] == 13
+    assert state["hero"]["depth"] == 19
+    assert state["hero"]["gold"] == 47 and state["hero"]["energy"] == 13
     original = item(state, "round shield")
-    assert any(node.get("shortcut_action") == "quickslot_1"
-               and node.get("subject") == {"kind": "item", "locator": original["locator"]}
-               for node in state["observation"]["ui"]["controls"]), "Native return must restore the original quickslot binding"
+    assert any(node.get('shortcut') == "quickslot_1"
+               and node.get("subject") == {"kind": "item", 'loc': original['loc']}
+               for node in state["ui"]['nodes']), "Native return must restore the original quickslot binding"
     assert not any("escape crystal" in entry["name"].lower() for entry in inventory(state))
     if name == "exit-full":
         assert not any(entry["name"].lower() == "mace" for entry in inventory(state))
         for _ in range(3):
-            reward_heap = [entity for entity in state["observation"]["visible_entities"]
+            reward_heap = [entity for entity in state['entities']
                            if entity.get("item", {}).get("name", "").lower() == "mace"]
             if reward_heap:
                 break
@@ -281,9 +281,9 @@ def leave(client, state, name):
         assert preserved["level"] == 2, preserved
     elif reward:
         preserved = item(state, reward)
-        assert preserved["quantity"] == 1, preserved
+        assert preserved['qty'] == 1, preserved
         if name == "exit-seal":
-            state = act(client, "inventory.open", locator=preserved["locator"])
+            state = act(client, 'item', loc=preserved['loc'])
             assert not any(action.get("label", "").lower() == "detach" for action in choices(state))
     return {"native_reward_gate": name, "reward": reward, "cancel_paths_preserved_vault": True,
             "same_depth_return_restored_inventory_currency": True, "original_quickslot_restored": True,
@@ -292,21 +292,21 @@ def leave(client, state, name):
 
 def extra(client, state, name):
     if name == "beacon":
-        start_cell = state["observation"]["hero"]["cell"]
+        start_cell = state["hero"]["cell"]
         state = use(client, state, "vault beacon", "CAST")
-        assert item(state, "vault beacon")["quantity"] == 1
-        assert state["observation"]["hero"]["cell"] != start_cell
+        assert item(state, "vault beacon")['qty'] == 1
+        assert state["hero"]["cell"] != start_cell
         assert item(state, "escape crystal")
         return {"native_return_beacon_consumed_one": True, "remains_inside_vault": True}
     if name == "injury":
-        if not state["observation"]["ui"]["modal"]:
+        if not state["ui"]["modal"]:
             state = act(client, "wait")
         assert "pretty injured" in text(state).lower(), text(state)
         state = assert_modal_blocks_map(client, state)
-        state = act(client, "ui.back")
+        state = act(client, 'back')
         assert "pretty injured" in text(state).lower(), "Native injury modal must refuse back"
         state = choose(client, state, "Okay")
-        assert not state["observation"]["ui"]["modal"]
+        assert not state["ui"]["modal"]
         return {"native_forced_injury_modal": True, "back_refused": True, "explicit_okay_closed": True}
     if name == "staff-imbue":
         state = use(client, state, "staff", "IMBUE")
@@ -324,13 +324,13 @@ def extra(client, state, name):
         state = use(client, state, "stone of augmentation", "USE")
         state = choose_item(client, state, "sword")
         state = choose(client, state, "Never mind")
-        assert item(state, "stone of augmentation")["quantity"] == 2
+        assert item(state, "stone of augmentation")['qty'] == 2
         state = choose_item(client, state, "sword")
-        state = act(client, "ui.back")
-        assert item(state, "stone of augmentation")["quantity"] == 2
+        state = act(client, 'back')
+        assert item(state, "stone of augmentation")['qty'] == 2
         state = choose_item(client, state, "sword")
         state = choose(client, state, "+Speed -Damage")
-        assert item(state, "stone of augmentation")["quantity"] == 1
+        assert item(state, "stone of augmentation")['qty'] == 1
         return {"cancel_reopened_selector": True, "back_reopened_selector": True, "native_augmentation_consumed_one": True}
     raise AssertionError(name)
 
@@ -349,9 +349,9 @@ def run_one(root, classpath, runtime_id, execution, interface_size, name):
               "execution": execution, "interface_size": interface_size, "profile": str(profile.relative_to(root)),
               "action_retries": 0, "private_checkpoint_reads": 0}
     try:
-        info = client.request("protocol.info")
-        assert info.get("ok"), info
-        result["build_id"] = info["result"]["build_id"]
+        info = client.request('info')
+        assert ("err" not in info), info
+        result["build_id"] = info["data"]["build_id"]
         state = start(client, hero_class)
         if name.startswith("entry-"):
             result["evidence"] = enter(client, state)

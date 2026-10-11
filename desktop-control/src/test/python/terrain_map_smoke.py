@@ -27,11 +27,11 @@ from spdctl_client import decode_wire_response  # noqa: E402
 
 
 def cells(state):
-    return state["observation"]["map"]["cells"]
+    return state["map"]["cells"]
 
 
 def descriptor(cell):
-    return {key: cell[key] for key in ("terrain", "name", "description") if key in cell}
+    return {key: cell[key] for key in ("terrain", "name", "desc") if key in cell}
 
 
 def normalized(value):
@@ -47,12 +47,12 @@ def same_descriptors(state, expected):
 def check_scenario(client, profile):
     state = start_warrior(client)
     deadline = time.monotonic() + 25
-    while state["observation"].get("hero", {}).get("depth") != 12:
+    while state.get("hero", {}).get("depth") != 12:
         assert time.monotonic() < deadline, "Native smithy fixture was not observed"
         time.sleep(0.05)
         state = client.state()
     state = client.state(view="play")
-    assert not state["observation"]["ui"]["modal"], "Default map must not need an inspection window"
+    assert not state["ui"]["modal"], "Default map must not need an inspection window"
     initial_wire = copy.deepcopy(client.last_wire_response)
     (profile / "default-map-response.json").write_text(json.dumps(initial_wire, ensure_ascii=False) + "\n")
     model = source_model()
@@ -61,7 +61,7 @@ def check_scenario(client, profile):
     waters = [cell for cell in cells(state) if cell.get("terrain") == terrain["WATER"]]
     assert len(decorations) == 1 and len(waters) == 1, {"decorations": decorations, "waters": waters}
     decoration, water = decorations[0], waters[0]
-    assert decoration.get("description") and normalized(decoration["name"]) != normalized(water["name"]), decoration
+    assert decoration.get("desc") and normalized(decoration["name"]) != normalized(water["name"]), decoration
     expected = {cell["cell"]: descriptor(cell) for cell in (decoration, water)}
     frame = decode_wire_response(initial_wire).frame
     predictions = {name: predict(frame, cell["cell"], "projectile", model)
@@ -76,19 +76,19 @@ def check_scenario(client, profile):
         same_descriptors(state, expected)
     inspection = {}
     for name, cell in (("decoration", decoration), ("water", water)):
-        state = act(client, "cell.select", cell=cell["cell"], mode="examine")
-        assert state["observation"]["ui"]["modal"], "Native cell examination did not open a window"
-        text = "\n".join(node.get("text", "") for node in state["observation"]["ui"]["controls"])
+        state = act(client, "cell", cell=cell["cell"], mode="examine")
+        assert state["ui"]["modal"], "Native cell examination did not open a window"
+        text = "\n".join(node.get("text", "") for node in state["ui"]["nodes"])
         assert normalized(cell["name"]) in normalized(text), {"cell": cell, "native_window": text}
-        if cell.get("description"):
-            assert normalized(cell["description"]) in normalized(text), {"cell": cell, "native_window": text}
+        if cell.get("desc"):
+            assert normalized(cell["desc"]) in normalized(text), {"cell": cell, "native_window": text}
         same_descriptors(state, expected)
         inspection[name] = {"cell": cell["cell"], "native_window_text": text}
-        state = act(client, "ui.back")
+        state = act(client, "back")
         same_descriptors(state, expected)
-    state = act(client, "view.pan", x=5000, y=5000)
+    state = act(client, "pan", x=5000, y=5000)
     same_descriptors(state, expected)
-    state = act(client, "view.pan", x=-5000, y=-5000)
+    state = act(client, "pan", x=-5000, y=-5000)
     same_descriptors(state, expected)
 
     # No fixture checkpoint was read to select a target, item or control above.
@@ -119,11 +119,11 @@ def run_one(classpath, runtime_id, execution, interface_size):
               "profile": str(profile.relative_to(ROOT)), "action_retries": 0,
               "private_checkpoint_reads_for_decisions": 0}
     try:
-        info = client.request("protocol.info")
-        assert info.get("ok"), info
-        result["build_id"] = info["result"]["build_id"]
+        info = client.request("info")
+        assert ("err" not in info), info
+        result["build_id"] = info["data"]["build_id"]
         result["evidence"] = check_scenario(client, profile)
-        quit_result = client.act("app.quit")
+        quit_result = client.act("quit")
         assert quit_result.ok and quit_result.status == "completed", quit_result
         client.process.wait(timeout=25)
         assert client.process.returncode == 0, client.process.returncode

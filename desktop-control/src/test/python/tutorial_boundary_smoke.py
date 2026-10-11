@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 
 from fixture_smoke import FixtureClient, freeze_runtime
 from test_ui import configure_test_ui
+from fixture_support import initialize_current_profile
+from protocol9 import frame_data
 
 
 def act(client, action, **args):
@@ -25,31 +27,31 @@ def start_warrior(client):
     selected = False
     state = client.state()
     for _ in range(25):
-        observation = state["observation"]
+        observation = state
         ui = observation.get("ui", {})
         if observation.get("scene") == "game":
             assert observation["hero"]["class"] == "warrior", observation["hero"]
             return state
-        options = [a for a in state["actions"] if a.get("action") == "ui.activate"]
+        options = [a for a in state["acts"] if a.get("op") == "click"]
         if ui.get("scene") == "HeroSelectScene" and not selected:
             choice = next(a for a in options if a.get("label", "").lower() == "warrior")
             selected = True
         elif ui.get("scene") == "HeroSelectScene" and ui.get("modal"):
-            state = act(client, "ui.back")
+            state = act(client, "back")
             continue
         else:
             choice = next((a for label in ("Continue", "Enter the Dungeon", "Play", "New Game", "Start")
                            for a in options if a.get("label") == label), None)
-            assert choice, {"cannot_start": ui, "actions": state["actions"]}
-        state = act(client, "ui.activate", control=choice["control"])
+            assert choice, {"cannot_start": ui, "acts": state["acts"]}
+        state = act(client, "click", ctl=choice["ctl"])
     raise AssertionError("The original warrior menu flow did not reach the tutorial")
 
 
 def adjacent_cells(state):
-    observation = state["observation"]
+    observation = state
     position = observation["hero"]["cell"]
-    width = observation["map"]["width"]
-    occupied = {e["cell"] for e in observation["visible_entities"] if e["kind"] == "character"}
+    width = observation["map"]["w"]
+    occupied = {e["cell"] for e in observation["entities"] if e["kind"] == "character"}
     return [cell for cell in observation["map"]["cells"]
             if cell.get("visibility") == "visible" and cell["cell"] != position and cell["cell"] not in occupied
             and max(abs(cell["x"] - position % width), abs(cell["y"] - position // width)) == 1
@@ -61,24 +63,24 @@ def adjacent_cells(state):
 def open_intro(client, state):
     visits = {}
     for _ in range(80):
-        assert not any(a["action"] == "inventory.open" for a in state["actions"]), "The fresh tutorial must still hide inventory"
-        observation = state["observation"]
-        book = next((e for e in observation["visible_entities"]
+        assert not any(a["op"] == "item" for a in state["acts"]), "The fresh tutorial must still hide inventory"
+        observation = state
+        book = next((e for e in observation["entities"]
                      if any(word in e.get("item", {}).get("name", "").lower()
                             for word in ("tome of dungeon mastery", "guidebook"))), None)
         if book:
-            state = act(client, "cell.select", cell=book["cell"], mode="act")
-            journal = next(node for node in state["observation"]["ui"]["controls"]
-                           if node.get("shortcut_action") == "journal" and node.get("enabled"))
-            state = act(client, "ui.activate", control=journal["id"])
-            assert state["observation"]["ui"]["modal"], state
+            state = act(client, "cell", cell=book["cell"], mode="act")
+            journal = next(node for node in state["ui"]["nodes"]
+                           if node.get("shortcut") == "journal" and node.get("enabled"))
+            state = act(client, "click", ctl=journal["id"])
+            assert state["ui"]["modal"], state
             return state
         position = observation["hero"]["cell"]
         visits[position] = visits.get(position, 0) + 1
         choices = adjacent_cells(state)
         assert choices, "The public tutorial observation has no safe exploration step"
         target = min(choices, key=lambda cell: (visits.get(cell["cell"], 0), cell["cell"]))
-        state = act(client, "cell.select", cell=target["cell"], mode="act")
+        state = act(client, "cell", cell=target["cell"], mode="act")
     raise AssertionError("The tutorial guide was not found through public observations")
 
 
@@ -96,36 +98,37 @@ def preferences(profile, interface_size):
 
 
 def direction_to(state, destination):
-    position = state["observation"]["hero"]["cell"]
-    width = state["observation"]["map"]["width"]
+    position = state["hero"]["cell"]
+    width = state["map"]["w"]
     offset = (destination % width - position % width, destination // width - position // width)
-    return {(-1, -1): "northwest", (0, -1): "north", (1, -1): "northeast",
-            (-1, 0): "west", (1, 0): "east", (-1, 1): "southwest", (0, 1): "south", (1, 1): "southeast"}[offset]
+    return {(-1, -1): "NW", (0, -1): "N", (1, -1): "NE",
+            (-1, 0): "W", (1, 0): "E", (-1, 1): "SW", (0, 1): "S", (1, 1): "SE"}[offset]
 
 
 def run_one(root, classpath, runtime_id, interface_size):
     profile = root / "desktop-control/build/fixtures" / ("tutorial-boundary-" + str(interface_size) + "-" + uuid.uuid4().hex)
     profile.mkdir(parents=True)
-    preferences(profile, interface_size)
     command = ["java", "-XstartOnFirstThread", "--enable-native-access=ALL-UNNAMED",
                "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED", "-cp", classpath,
                "com.shatteredpixel.shatteredpixeldungeon.control.desktop.SpdctlLauncher"]
+    initialize_current_profile(command, profile)
+    preferences(profile, interface_size)
     client = FixtureClient(command, profile)
     result = {"test_fixture": True, "counts_as_win": False, "fixture": "tutorial-boundary",
               "runtime_id": runtime_id, "interface_size": interface_size, "profile": str(profile.relative_to(root))}
     try:
-        hello = client.request("protocol.info")
-        assert hello.get("ok"), hello
-        result["build_id"] = hello["result"]["build_id"]
+        hello = client.request("info")
+        assert ("err" not in hello), hello
+        result["build_id"] = hello["data"]["build_id"]
         state = open_intro(client, start_warrior(client))
         started = time.monotonic()
-        boundary = act(client, "ui.back")
+        boundary = act(client, "back")
         elapsed = time.monotonic() - started
         assert boundary["phase"] == "player_ready", boundary
-        assert boundary["observation"]["ui"]["display"] == {"language": "zh", "fullscreen": False}
-        assert any(a["action"] == "inventory.open" for a in boundary["actions"]), "ui.back returned before revealing inventory"
-        assert any(a["action"] == "wait" for a in boundary["actions"]), "ui.back returned before revealing the toolbar"
-        controls = boundary["observation"]["ui"]["controls"]
+        assert boundary["ui"]["display"] == {"language": "zh", "fullscreen": False}
+        assert any(a["op"] == "item" for a in boundary["acts"]), "ui.back returned before revealing inventory"
+        assert any(a["op"] == "wait" for a in boundary["acts"]), "ui.back returned before revealing the toolbar"
+        controls = boundary["ui"]["nodes"]
         choices = adjacent_cells(boundary)
         assert choices, "A public adjacent movement target is required"
         destination = choices[0]["cell"]
@@ -134,21 +137,21 @@ def run_one(root, classpath, runtime_id, interface_size):
         # The assertions above happen immediately; waiting cannot repair an early response.
         time.sleep(2.2)
         later = client.state()
-        assert later["state_version"] == boundary["state_version"], (boundary["state_version"], later["state_version"])
-        assert later["observation"]["ui"]["controls"] == controls, "Controls appeared after the returned boundary"
-        response = client.request("action.execute", {"action": "move.step", "direction": direction}, version=boundary["state_version"])
-        assert response.get("ok") and response.get("status") == "completed", response
-        moved = response["result"]
-        assert moved["observation"]["hero"]["cell"] == destination, moved["observation"]["hero"]
-        assert moved["state_version"] != boundary["state_version"]
-        rejected = client.request("action.execute", {"action": "move.step", "direction": direction}, version=boundary["state_version"])
-        assert not rejected.get("ok") and rejected["error"]["code"] == "STALE_STATE", rejected
-        record = client.request("request.get", {"target_id": rejected["id"]})
-        assert record.get("ok") and record["result"]["status"] == "REJECTED", record
+        assert later["rev"] == boundary["rev"], (boundary["rev"], later["rev"])
+        assert later["ui"]["nodes"] == controls, "Controls appeared after the returned boundary"
+        response = client.request_action({"op": "move", "dir": direction}, version=boundary["rev"])
+        assert ("err" not in response) and response.get("st") == "completed", response
+        moved = frame_data(response)
+        assert moved["hero"]["cell"] == destination, moved["hero"]
+        assert moved["rev"] != boundary["rev"]
+        rejected = client.request_action({"op": "move", "dir": direction}, version=boundary["rev"])
+        assert "err" in rejected and rejected["err"] == "STALE_STATE", rejected
+        record = client.request("req", {"rid": rejected["id"]})
+        assert ("err" not in record) and record["data"]["st"] == "REJECTED", record
         after_rejection = client.state()
-        assert after_rejection["observation"]["hero"]["cell"] == destination
+        assert after_rejection["hero"]["cell"] == destination
         result.update(ok=True, evidence={"ui_back_elapsed_seconds": elapsed, "controls_at_completion": len(controls),
-                      "completion_version": boundary["state_version"], "version_unchanged_after_reveal_window": True,
+                      "completion_version": boundary["rev"], "version_unchanged_after_reveal_window": True,
                       "next_move_accepted_without_retry": True, "real_stale_version_rejected_without_movement": True})
     except Exception as error:
         result.update(ok=False, error=repr(error), traceback=traceback.format_exc())

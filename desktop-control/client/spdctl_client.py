@@ -1263,7 +1263,7 @@ class ClientResponse:
 
 def _validate_settle_pending(source: Mapping[str, Any]) -> None:
     fields = {"pending_reason", "stage", "pending_request"} & set(source)
-    if not fields:
+    if not fields and source.get("st") != "pending":
         return
     if source.get("st") != "pending":
         raise DecodeError("settle pending fields require st pending")

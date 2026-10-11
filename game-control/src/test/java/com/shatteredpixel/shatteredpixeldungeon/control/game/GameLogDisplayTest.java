@@ -43,7 +43,6 @@ class GameLogDisplayTest {
         GLog.update=new Signal<>();Dungeon.runId="a";scene=new Scene();new TestGame(scene);
         TextProvenance.INSTANCE.clear();Messages.setup(Languages.ENGLISH);
         Game.observer=new RuntimeObserver(){
-            @Override public String onTextResource(String text,String key,String language,Object[] args){return TextProvenance.INSTANCE.onTextResource(text,key,language,args);}
             @Override public String onTextResource(String text,String key,String language,Object[] args,String guiTemplate){return TextProvenance.INSTANCE.onTextResource(text,key,language,args,guiTemplate);}
             @Override public String onTextOperation(String operation,String text,Object...operands){return TextProvenance.INSTANCE.onTextOperation(operation,text,operands);}
             @Override public void onTextBound(Object owner,String text){TextProvenance.INSTANCE.onTextBound(owner,text);}
