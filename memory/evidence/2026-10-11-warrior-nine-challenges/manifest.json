@@ -1,0 +1,132 @@
+{
+  "review_date": "2026-10-11",
+  "source_commit": "ad16c87787e70cef47c59f5e7b7d659f06a69d6b",
+  "trace_directory_basename": "session-1791715836516202000-38011-E7ktO5",
+  "scope": "Complete public child wire transport and controller wrappers; native persistence summary authorized only after this run ended. No private audit database.",
+  "files": {
+    "send.raw": {
+      "bytes": 40637,
+      "sha256": "f8317d35d1081dff41b9de271877ea5837c870bd4866d9673733b49c5cbb51e9",
+      "archive": "send.raw.gz",
+      "archive_sha256": "773d3ede26a80b8f077c1e2bf8fca61ff4435369a0b0f81e47a7f5bba33e002a",
+      "lines": 678
+    },
+    "recv.raw": {
+      "bytes": 5002930,
+      "sha256": "180801a43af6539bfb47322ecf626a0c012d7f5bcfdf83a2ab5e4d74f7cb0160",
+      "archive": "recv.raw.gz",
+      "archive_sha256": "ffce29f1cea2b51d6be8e15688a3b88eacea57a2be7561f145f252a45de89ee9",
+      "lines": 678
+    },
+    "events.tsv": {
+      "bytes": 93073,
+      "sha256": "76501c5fcc2d113abb49d0c4a12fd646fc2a399da44b76de1cd50d47906df6fe",
+      "archive": "events.tsv.gz",
+      "archive_sha256": "2130797c2d1aca59fd2696146eef674e90dde8dc4c6a0d925a6a62586af0a94c",
+      "lines": 2086
+    },
+    "controller-responses.ndjson": {
+      "bytes": 4999213,
+      "sha256": "ab68c6bc89734341cd2f663867aeee6adb3456c23457fb418da217696ef7e5e0",
+      "archive": "controller-responses.ndjson.gz",
+      "archive_sha256": "eeda441ab44dead46c487570ed0892c1dc48ecc775230086a05b0e3d78c8443e",
+      "lines": 552
+    }
+  },
+  "wire": {
+    "pairs": 678,
+    "last_id": "t1.677",
+    "hero_frames": 518,
+    "server_errors": [
+      {
+        "id": "t1.39",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.352",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.385",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.396",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.400",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.500",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.626",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.639",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      },
+      {
+        "id": "t1.659",
+        "problems": [
+          {
+            "stage": "response",
+            "code": "STALE_STATE"
+          }
+        ]
+      }
+    ],
+    "identity": {
+      "cli_version": "CLI.9.0.4",
+      "game_version": "4.0.2",
+      "game_version_code": 922,
+      "build_id": "b0c78afe63b226c7611aea525a3a88d7e0f34cb5624a3cca486b889089eb0627",
+      "session_id": "t1",
+      "audit_schema_version": 12
+    }
+  }
+}

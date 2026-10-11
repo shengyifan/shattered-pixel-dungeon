@@ -1,0 +1,92 @@
+{
+  "provenance": "Read-only postmortem extraction explicitly authorized by the user after death; not observed during play. Only the matching native rankings record is summarized. No seed, hidden floor map, label mapping or private audit is copied.",
+  "files": {
+    "game1/game.dat": {
+      "bytes": 1,
+      "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+    },
+    "rankings.dat": {
+      "bytes": 1477,
+      "sha256": "97ad5c548bece5ce40a3029e0629d472a37a1826541fce609b00f88f07d786fc"
+    }
+  },
+  "game_file_marker_hex": "01",
+  "remaining_depth_files": [],
+  "matching_criteria": [
+    "one rankings record",
+    "date 2026-10-11",
+    "game version 922",
+    "WARRIOR",
+    "challenge mask 511",
+    "depth 4",
+    "hero level 4",
+    "Swarm death",
+    "HP 0/35",
+    "STR 11",
+    "goldCollected 558",
+    "matching equipment and talents"
+  ],
+  "record": {
+    "date": "2026-10-11",
+    "version": "v4.0.2",
+    "level": 4,
+    "depth": 4,
+    "cause": "class com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Swarm",
+    "win": false,
+    "class": "WARRIOR",
+    "score": 13767,
+    "daily": false,
+    "custom_seed": ""
+  },
+  "game_data": {
+    "game_version": 922,
+    "challenges": 511,
+    "hero": {
+      "HP": 0,
+      "HT": 35,
+      "STR": 11,
+      "lvl": 4,
+      "exp": 7,
+      "pos": 356,
+      "class": "WARRIOR",
+      "subClass": "NONE",
+      "talents_tier_1": {
+        "IRON_WILL": 1,
+        "HEARTY_MEAL": 2
+      },
+      "talents_tier_2": {}
+    },
+    "equipment": {
+      "weapon_class": "com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword",
+      "weapon_level": 0,
+      "armor_class": "com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor",
+      "armor_level": 1,
+      "seal_level": 1
+    },
+    "statistics": {
+      "duration": 620,
+      "score": 558,
+      "total_score": 13767,
+      "maxDepth": 4,
+      "enemiesSlain": 30,
+      "foodEaten": 5,
+      "upgradesUsed": 1,
+      "potionsCooked": 0,
+      "sneakAttacks": 10,
+      "thrownAssists": 7,
+      "won": false,
+      "ascended": false,
+      "amuletObtained": false,
+      "flr_expl_1": 1,
+      "flr_expl_2": 0,
+      "flr_expl_3": 0,
+      "flr_expl_4": 0
+    }
+  },
+  "limitations": [
+    "Rankings.saveGameData removes most backpack items and all ordinary buffs before serialization. Missing inventory/buffs do not prove they were absent immediately before death.",
+    "Statistics.duration stores integer time already normalized by Actor.fixTime, not necessarily final exact elapsed actor time.",
+    "Statistics.score is the serialized key for goldCollected; record.score and statistics.total_score are the run score.",
+    "Native death processing identifies items and reveals terrain. Post-death knowledge is not evidence that the player knew it earlier."
+  ]
+}

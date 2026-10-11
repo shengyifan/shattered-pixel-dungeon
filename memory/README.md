@@ -15,12 +15,15 @@
 和 [实战决策速查](nine-challenges-warrior-4.0.2/00-run-plan.md)。这是基于 `8405ae82f` 的当前源码研究，
 涵盖九项挑战、战士全部天赋与构筑、五区敌人与首领、物品鉴定炼金、弹道和正常退菜单重载；
 附原生弹道与内存序列化的隔离验证。研究尚不等于九挑战通关经验，正文区分源码事实、验证范围和战术推导。
-下一局还须读 [2026-10-10 九挑战失败复盘](2026-10-10-warrior-nine-challenges-retrospective.md)：
-它记录第4层饥饿死亡的公开证据，以及食物、火把、诡术师与未知药剂的止损规则；不是通关证明。
+下一局优先读 [2026-10-11 九挑战失败复盘](2026-10-11-warrior-nine-challenges-retrospective.md)：
+CLI.9.0.4下第4层蝇群死亡；重点是控制后追加支线、已见出口后的钥匙绕路、主动引战、
+进食净收益及单出口房。另读 [2026-10-10复盘](2026-10-10-warrior-nine-challenges-retrospective.md)
+的饥饿、长休息和火把止损。两局死因不同，均不是通关证明。
 
 | 资料 | 何时读取 |
 | --- | --- |
 | [4.0.2 战士九挑战研究库](nine-challenges-warrior-4.0.2/README.md) | 九挑战开局/区域/首领规划、当前战士机制、装备与鉴定、弹道和重载技巧；优先于旧版数值笔记 |
+| [2026-10-11 九挑战失败复盘](2026-10-11-warrior-nine-challenges-retrospective.md) | 整场遭遇预算、两次进食各净+1、寒冷冻结长段推进、蝇群队列及单出口房；附完整公开记录和授权事后存档摘要 |
 | [2026-10-10 九挑战失败复盘](2026-10-10-warrior-nine-challenges-retrospective.md) | 下一局资源与止损规划；核查四餐、三支火把、连续休息、诡术师伏击及未知饮药的实际代价 |
 | [项目全局记忆摘录](references/project-knowledge.md) | 需要控制边界、恢复原则和已有证据习惯时 |
 | [战士天赋与构筑笔记](references/warrior-talents-v3.3.8.md) | 分配天赋、选子职业／护甲能力时；历史数值须对当前源码与装备核实 |
@@ -70,6 +73,10 @@ python3 skills/pixel-dungeon-run-assistance/scripts/ray.py --response /path/to/p
 
 ## 已保存复盘
 
+- [2026-10-11：战士全九挑战，第4层蝇群死亡](2026-10-11-warrior-nine-challenges-retrospective.md)
+  — 4.0.2 / CLI.9.0.4；678对完整公开收发、源码与用户明确授权的事后原生存档核查。
+  无rest、无公开饥荒、临死仍有照明；不套用上一局死因。
+  [冻结证据与离线校验](evidence/2026-10-11-warrior-nine-challenges/README.md)可脱离旧临时路径复核。
 - [2026-10-10：战士全九挑战，第4层饥饿死亡](2026-10-10-warrior-nine-challenges-retrospective.md)
   — 4.0.2 / CLI.9.0.3；以公开响应与源码区分资源透支、有效伏击、最后饮药风险和事后鉴定。
   可执行止损入口见[决策速查3.1](nine-challenges-warrior-4.0.2/00-run-plan.md#31-资源与遭遇的止损规则)。

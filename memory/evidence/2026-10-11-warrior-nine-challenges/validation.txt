@@ -1,0 +1,4 @@
+PASS: exact-byte hashes; 678 request/response pairs; 518 hero frames; 552 controller records.
+PASS: 9 expected STALE_STATE responses; no observation decoding failures.
+PASS: selected-field index, five meals, floor timing, public death and native summary consistency.
+Scope: frozen evidence only; no game requests, profile reads, replay or counterfactual victory test.
