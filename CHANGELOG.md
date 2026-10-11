@@ -6,6 +6,7 @@
 
 ## CLI.9.0.4
 
+- Records the [2026-10-11 clean rebuild](docs/cli-9.0.4-player-info-validation.md#clean-rebuild-2026-10-11), removal of previous generated outputs, fresh ARM64 package verification and the requested branch delivery. Runtime source and release identities are unchanged by the rebuild.
 - Accepts source-selected Crystal glow stages throughout the public Python decoder, including nested icons, and validates direct UI health/turn facts with the same strict rules as hero/entity facts. Native partial diagnostics, raw frames and action outcomes remain distinct.
 - Preserves source-bound journal/category and grid icons, selected/catalog state and native QuickRecipe material-sufficiency indications without recomputing recipes or exposing unidentified identities. Selectable grid entries retain their original operations.
 - Adds the displayed RitualMarker name/description to the known map without replacing its base terrain or reading private ritual state.

@@ -6,6 +6,74 @@ protocol 9 / audit schema 12 / game 4.0.2 / code 922 / trace format 1**. The
 profile directory remains `Shattered Pixel Dungeon CLI v9`; no migration or
 gameplay, map-generation or save-rule change is introduced.
 
+## Clean rebuild 2026-10-11
+
+After the implementation below, the user requested removal of all previous
+project build products, a fresh macOS CLI build and Git push. Runtime source
+remains `2e6f9aaf49dedc6a63b21e4db087ecf1ceea109a`; CLI, protocol, audit schema,
+game and profile identities are unchanged.
+
+Preflight confirmed no running game/controller or Gradle process used the old
+outputs. Cleanup removed **14 generated directories and `ios/robovm.properties`**:
+**8,809 regular files / 970,119,182 logical bytes**. Every root was project-contained,
+ignored, untracked and not symlinked; 36 nested JRE legal symlinks were removed
+without following them. This includes old package/runtime/fixture outputs,
+project-local Gradle state and Python bytecode caches. Tracked wrapper/launcher
+inputs, committed research evidence, personal profiles, external logs and global
+dependencies were preserved. Gradle regenerated the iOS properties file during
+configuration; no mobile build was run.
+
+The fresh offline gate used `--no-build-cache --rerun-tasks --no-daemon` and
+executed all **39 tasks**. **935 Java tests** passed (20 protocol, 665 game-control,
+250 desktop-control), with zero failures/errors/skips. After runtime/test classpath
+generation, sequential Python suites passed **386 desktop / 8 source / 35 public
+helper** tests. Existing SQLite ResourceWarning diagnostics were non-failing.
+Combat/visual, native UI route and text-source gates also passed.
+
+The standard ARM64 bundle reports `CLI.9.0.4 (protocol 9, game 4.0.2)`.
+Freshly calculated production JAR, launcher, help, catalog and build-ID hashes
+match the implementation package below. All **3,475 catalog entries** match their
+current inputs, with **3,470 corresponding packaged entries** checked byte-for-byte
+and five native/build source inputs verified separately. Both snapshot manifest
+resources match. All **507 compiled test classes and 20 agent classes** are absent
+from the production JAR. All **35 Mach-O files** are ARM64-only; plist validation
+and strict deep ad-hoc signature verification passed. Only the new standard app
+image remains in the generated package outputs.
+
+New ordinary controller acceptance passed two bundled-controller/JVM sessions,
+**29 + 7 requests and four save receipts**, old-revision rejection, save/reopen
+matching, and exact raw/viewer checks. The separately instrumented expression
+probe passed all five cases: ritual, journal, recipes, Crystal and actual native
+audio. It exercised nine alchemy pages, four catalog categories, four recipe
+modes, all three Crystal stages and alarm/disabled/zero-volume/alarm event counts
+**1 / 0 / 0 / 1**. Its controller exited normally and both recorded controller/game
+PIDs were confirmed absent. The original feature-coverage limits below still
+apply; these isolated fixtures are not a real playthrough.
+
+The separate slow-quit package fixture also passed: initial `in_progress` was
+exposed while the native callback was held, bounded settle returned ordinary
+`action_pending`, and the original request reached `COMPLETED` before process
+exit code zero. No unsolicited reply or post-quit state query occurred. A final
+process check found no remaining game/controller or Gradle processes, and the
+production JAR hash remained unchanged after all three package probes.
+
+Current generated evidence is under
+`desktop-control/build/clean-rebuild-20261011/`: `cleanup.json`, `full-gate.log`,
+`java-test-totals.json`, `test-summary.json`, `python-desktop.log`,
+`python-source.log`, `python-helpers.log`, `package-identity.json`,
+`controller-package.log`, `expression-package.log`, `expression-summary.json`,
+`slow-quit-package.log` and `final-process-and-quit-check.json`.
+New runtime artifacts are `desktop-control/build/fixtures/cli9-controller-0772e9fad7b14662923f7cbde4fce07d`
+and `desktop-control/build/fixtures/cli904-expression-9018571c82034b6fbb3478f7c1252fc4`,
+plus `desktop-control/build/fixtures/slow-quit-package-639ae360183d4510b2c05cbb0ba70c87`.
+Earlier fixture and validation directories cited in the implementation record
+below were deleted by this requested cleanup and are historical references;
+the standard package path now holds the fresh image. The maintained tests, source
+review and committed acceptance report preserve the preceding results' meaning.
+
+The authorized delivery target is `origin/feature/mac-cli`; tags and remote
+release publication are outside this rebuild request.
+
 ## Implemented behavior
 
 - The Python decoder accepts source-selected Crystal stages in every glow
