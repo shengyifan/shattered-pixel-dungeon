@@ -1,4 +1,4 @@
-# CLI.9.0.3 continuous actions and cancellation
+# CLI.9.0.4 continuous actions and cancellation
 
 Protocol 9 exposes native extended rest and path travel as interruptible activity.
 A directional `move` remains one original directional input; a remote `cell` may

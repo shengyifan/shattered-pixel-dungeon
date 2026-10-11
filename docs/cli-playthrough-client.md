@@ -1,6 +1,6 @@
 # Public CLI clients and per-frame decoding
 
-## Reusable CLI.9.0.3 reference helper
+## Reusable CLI.9.0.4 reference helper
 
 `desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
 module for consumers of the packaged controller. It does not launch the game,
@@ -39,7 +39,7 @@ against complete current hero/item/entity/buff facts. Ambiguous or missing subje
 are decoding errors. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
-CLI.9.0.3 validates static parameters for every action, query and local `settle`,
+CLI.9.0.4 validates static parameters for every action, query and local `settle`,
 including required/extra fields and JSON integer versus boolean/float distinctions.
 An omitted settle rid resumes the owner of an outstanding query first, otherwise
 the latest pending action; an explicit invalid rid is never treated as omitted.
@@ -187,7 +187,7 @@ python3 desktop-control/src/test/python/autoplay.py --self-test
 
 Source/test organization and explicit offline token-study entrypoints are in the
 [current architecture](cli-architecture.md). Executed checks belong in the
-[current validation report](cli-9.0.3-unlock-validation.md), separately from
+[current validation report](cli-9.0.4-player-info-validation.md), separately from
 actual playthrough evidence in the [project memory](../memory/README.md).
 Display each complete response using that same parsed object; do not filter by
 fixed English labels, crop the map without marking it, remove descriptions, omit
@@ -208,6 +208,27 @@ does not prove that every unreported blocker is absent.
 Tabs carry a boolean `selected` (false is retained), and source icon semantics.
 Talent nodes carry `talent_points:{spent,max}` even outside the current game.
 The decoder retains and validates these direct node fields in all views.
+
+CLI.9.0.4 additionally validates source-selected Crystal glow stages consistently
+in items, UI nodes, nested semantic icons and world cues, including standalone
+actions and frozen snapshots. UI nodes carrying health bars or turn progress
+use the same displayed-value validation as hero/entity facts. Failed validation
+preserves the raw frame and its identity; it never proves the originating game
+action failed and does not authorize replay.
+
+Journal/catalog entries can carry source-bound `icon`, `secondary_icon`,
+`selected` and `shown.catalog_state`. QuickRecipe nodes can carry
+`shown.ingredient_sufficient` or `shown.ingredients_sufficient`; both are strict
+booleans when present and remain absent when no native material check exists.
+They do not replace `enabled` or current `ops`. An undiscovered catalog entry
+does not expose its hidden type. Details and clipping still follow the native UI.
+
+The `native_audio_events` capability supplies `game.audio` occurrences through
+the normal `events` query. `basis:"native_playback"` means the native audio source
+was verified playing with positive gain, not that physical audibility is known.
+Each alarm is an occurrence, without a location, hidden source or live action
+binding. It does not independently change `rev`; keep its event cursor separate
+from the current observation and from the originating action outcome.
 
 Map effects may carry source-reviewed partial `collision` boolean overrides.
 The ray helper applies them before the native previous-cell, solid, character

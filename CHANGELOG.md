@@ -4,6 +4,14 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
 
+## CLI.9.0.4
+
+- Accepts source-selected Crystal glow stages throughout the public Python decoder, including nested icons, and validates direct UI health/turn facts with the same strict rules as hero/entity facts. Native partial diagnostics, raw frames and action outcomes remain distinct.
+- Preserves source-bound journal/category and grid icons, selected/catalog state and native QuickRecipe material-sufficiency indications without recomputing recipes or exposing unidentified identities. Selectable grid entries retain their original operations.
+- Adds the displayed RitualMarker name/description to the known map without replacing its base terrain or reading private ritual state.
+- Records verified native ALERT playback as location-free `game.audio` occurrences through the existing paired event FIFO. Muted, unloaded, failed or unverifiable playback produces no success event; alarms do not independently change revisions.
+- Keeps protocol 9, schema 12, game 4.0.2/code 922, profile directory and trace format 1. See [player-information implementation and validation](docs/cli-9.0.4-player-info-validation.md).
+
 ## CLI.9.0.3
 
 - Records the [2026-10-10 clean rebuild](docs/cli-9.0.3-unlock-validation.md#clean-rebuild-2026-10-10): removes prior generated outputs, rebuilds and verifies the byte-identical ARM64 CLI package, and prepares the user's requested branch push. Runtime source and release identities are unchanged.

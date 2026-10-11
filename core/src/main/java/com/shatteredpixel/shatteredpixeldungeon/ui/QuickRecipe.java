@@ -125,8 +125,11 @@ public class QuickRecipe extends Component {
 						quantity += sim.quantity();
 				}
 				if (quantity < in.quantity()) {
+					curr.recordIngredientSufficient(false);
 					curr.sprite.alpha(0.3f);
 					hasInputs = false;
+				} else {
+					curr.recordIngredientSufficient(true);
 				}
 			} else {
 				hasInputs = false;
@@ -152,6 +155,7 @@ public class QuickRecipe extends Component {
 			arrow.icon.color(0, 0, 0);
 			arrow.enable(false);
 		}
+		if(Dungeon.hero!=null)arrow.recordIngredientsSufficient(hasInputs);
 		add(arrow);
 		
 		anonymize(output);
@@ -164,6 +168,7 @@ public class QuickRecipe extends Component {
 		if (Dungeon.hero != null && !hasInputs){
 			this.output.sprite.alpha(0.3f);
 		}
+		if(Dungeon.hero!=null)this.output.recordIngredientsSufficient(hasInputs);
 		this.output.showExtraInfo(false);
 		add(this.output);
 		
@@ -204,6 +209,20 @@ public class QuickRecipe extends Component {
 	public class arrow extends IconButton {
 		
 		BitmapText text;
+		private Boolean ingredientsSufficient;
+		private GameplayIcons.ImageBinding availabilityIcon;
+
+		private void recordIngredientsSufficient(boolean sufficient) {
+			ingredientsSufficient=sufficient;
+			availabilityIcon=GameplayIcons.copySource(icon).bindCopy(icon);
+		}
+
+		@Override public java.util.Map<String,Object> gameplayStatus() {
+			java.util.Map<String,Object> result=new java.util.LinkedHashMap<>(super.gameplayStatus());
+			if(ingredientsSufficient!=null&&availabilityIcon!=null&&availabilityIcon.displayed(icon,this))
+				result.put("shown",java.util.Collections.singletonMap("ingredients_sufficient",ingredientsSufficient));
+			return result;
+		}
 		
 		public arrow(){
 			super();

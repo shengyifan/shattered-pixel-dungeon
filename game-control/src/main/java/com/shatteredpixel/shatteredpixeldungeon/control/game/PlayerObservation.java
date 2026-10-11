@@ -295,7 +295,7 @@ public final class PlayerObservation {
                     "environment", visibleEnvironment(level, cell));
             CustomTilemap.PublicTerrain custom = publicCustomTerrain(level, cell);
             if (custom != null) {
-                observed.put("terrain", custom.terrain);
+                if (custom.terrain != null) observed.put("terrain", custom.terrain);
                 observed.put("name", custom.name);
                 observed.put("description", custom.description);
             }

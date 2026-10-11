@@ -59,6 +59,61 @@ public final class GameplayIcons {
         return source == null ? Collections.emptyMap() : imageSymbol(source);
     }
 
+    /** Capture only an already selected image, before native copy/cropping erases its source identity. */
+    public static ImageSource copySource(Image source) { return new ImageSource(source); }
+
+    public static final class ImageSource {
+        private final Object texture;
+        private final RectF frame;
+        private final Map<String,Object> meaning;
+        private ImageSource(Image source) {
+            texture=source==null?null:source.texture;
+            frame=copyFrame(source==null?null:source.frame());
+            Map<String,Object> selected=copiedImage(source);
+            meaning=selected.isEmpty()?unmapped():selected;
+        }
+        /** Native layout may crop the selected source before copying it into its final control. */
+        public ImageBinding bindCopy(Image copy) {
+            boolean valid=copy!=null&&copy.texture==texture&&inside(copy.frame(),frame);
+            return new ImageBinding(copy,valid?meaning:partial(unmapped(),"symbol","stale_indicator_binding"));
+        }
+    }
+
+    /** The final display binding is exact: later texture/frame replacement cannot reuse old meaning. */
+    public static final class ImageBinding {
+        private final Image image;
+        private final Object texture;
+        private final RectF frame;
+        private final Map<String,Object> meaning;
+        private ImageBinding(Image image,Map<String,Object> meaning) {
+            this.image=image;texture=image==null?null:image.texture;
+            frame=copyFrame(image==null?null:image.frame());this.meaning=meaning;
+        }
+        public boolean current(Image candidate,Gizmo owner) {
+            return candidate!=null&&candidate==image&&candidate.parent==owner&&candidate.texture==texture
+                    &&sameFrame(candidate.frame(),frame);
+        }
+        public boolean displayed(Image candidate,Gizmo owner) {
+            return current(candidate,owner)&&GameplayIcons.displayed(candidate,false);
+        }
+        public Map<String,Object> status(Image candidate,Gizmo owner) {
+            if(candidate==null||candidate.parent!=owner||!GameplayIcons.displayed(candidate,false))return Collections.emptyMap();
+            return current(candidate,owner)?meaning:partial(unmapped(),"symbol","stale_indicator_binding");
+        }
+    }
+
+    private static RectF copyFrame(RectF frame) {
+        return frame==null?null:new RectF(frame.left,frame.top,frame.right,frame.bottom);
+    }
+    private static boolean sameFrame(RectF a,RectF b) {
+        return a!=null&&b!=null&&a.left==b.left&&a.top==b.top&&a.right==b.right&&a.bottom==b.bottom;
+    }
+    private static boolean inside(RectF a,RectF b) {
+        return a!=null&&b!=null&&Float.isFinite(a.left+a.top+a.right+a.bottom)
+                &&a.left>=b.left&&a.top>=b.top&&a.right<=b.right&&a.bottom<=b.bottom
+                &&a.left<a.right&&a.top<a.bottom;
+    }
+
     private static Map<String,Object> imageSymbol(Image image) {
         if (image.texture == null || image.frame() == null) return Collections.emptyMap();
         String symbol = Icons.displayedSymbol(image);
@@ -86,6 +141,19 @@ public final class GameplayIcons {
             return result;
         }
         if (Assets.Effects.TEXT_ICONS.equals(asset)) return floating(gridIndex(image, 7, 8));
+        if (Assets.Environment.TERRAIN_FEATURES.equals(asset)) {
+            // The existing journal images select these native 16x16 public terrain-feature cells.
+            // Trap symbols name only the displayed color/shape, never a backing Trap class.
+            int index=gridIndex(image,16,16),row=index/16,column=index%16;
+            String[] colors={"red","orange","yellow","green","teal","violet","white","grey","black"};
+            String[] shapes={"dots","waves","grill","stars","diamond","crosshair","large_dot"};
+            if(index>=0&&row<shapes.length&&column<colors.length)
+                return symbol("trap_"+colors[column]+"_"+shapes[row]);
+            String[] plants={"rotberry","firebloom","swiftthistle","sungrass","icecap","stormvine",
+                    "sorrowmoss","mageroyal","earthroot","starflower","fadeleaf","blindweed","blandfruit_bush"};
+            if(row==7&&column>=0&&column<plants.length)return symbol("plant_"+plants[column]);
+            return unmapped();
+        }
         String portrait = PORTRAITS.get(asset);
         if (portrait != null) {
             // Distinguish the native vault artwork from ordinary sprites sharing an atlas.
@@ -434,7 +502,7 @@ public final class GameplayIcons {
         Set<String> assets = new TreeSet<>(PORTRAITS.keySet());
         assets.addAll(Arrays.asList(Assets.Interfaces.BUFFS_SMALL, Assets.Interfaces.BUFFS_LARGE,
                 Assets.Interfaces.HERO_ICONS, Assets.Sprites.ITEMS, Assets.Sprites.ITEM_ICONS,
-                Assets.Effects.TEXT_ICONS));
+                Assets.Effects.TEXT_ICONS, Assets.Environment.TERRAIN_FEATURES));
         return Collections.unmodifiableSet(assets);
     }
 

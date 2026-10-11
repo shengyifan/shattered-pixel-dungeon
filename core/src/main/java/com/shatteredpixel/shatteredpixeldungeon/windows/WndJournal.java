@@ -48,6 +48,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.ui.GameplayIcons;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Bestiary;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
@@ -380,6 +381,7 @@ public class WndJournal extends WndTabbed {
 			}
 
 			for (int i = 0; i < NUM_BUTTONS; i++) {
+				pageButtons[i].recordSelectedAppearance(i == currentPageIdx);
 				if (i == currentPageIdx) {
 					pageButtons[i].icon().color(TITLE_COLOR);
 				} else {
@@ -635,6 +637,7 @@ public class WndJournal extends WndTabbed {
 			grid.clear();
 			
 			for (int i = 0; i < NUM_BUTTONS; i++){
+				itemButtons[i].recordSelectedAppearance(i == currentItemIdx);
 				if (i == currentItemIdx){
 					itemButtons[i].icon().color(TITLE_COLOR);
 				} else {
@@ -748,6 +751,7 @@ public class WndJournal extends WndTabbed {
 
 			boolean seen = Catalog.isSeen(itemClass);;
 			ItemSprite sprite = null;
+			GameplayIcons.ImageSource iconSource = null;
 			Image secondIcon = null;
 			String title = "";
 			String desc = "";
@@ -767,6 +771,7 @@ public class WndJournal extends WndTabbed {
 				}
 
 				sprite = new ItemSprite(item.image, seen ? item.glowing() : null);
+				iconSource = GameplayIcons.copySource(sprite);
 				if (!seen)  {
 					if (item instanceof ExoticPotion){
 						sprite.frame(ItemSpriteSheet.POTION_CRIMSON);
@@ -847,7 +852,8 @@ public class WndJournal extends WndTabbed {
 
 			String finalTitle = title;
 			String finalDesc = desc;
-			ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(sprite) {
+			if(iconSource==null)iconSource=GameplayIcons.copySource(sprite);
+			ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(sprite,iconSource) {
 				@Override
 				public boolean onClick(float x, float y) {
 					if (inside(x, y)) {
@@ -867,6 +873,7 @@ public class WndJournal extends WndTabbed {
 			if (secondIcon != null){
 				gridItem.addSecondIcon(secondIcon);
 			}
+			gridItem.recordCatalogState(seen?"discovered":"undiscovered");
 			if (!seen) {
 				gridItem.hardLightBG(2f, 1f, 2f);
 			}
@@ -880,6 +887,7 @@ public class WndJournal extends WndTabbed {
 			boolean seen = Bestiary.isSeen(entityCls);
 			Mob mob = null;
 			Image icon = null;
+			GameplayIcons.ImageSource iconSource = null;
 			String title = null;
 			String desc = null;
 
@@ -905,6 +913,7 @@ public class WndJournal extends WndTabbed {
 				sprite.idle();
 
 				icon = new Image(sprite);
+				iconSource=GameplayIcons.copySource(icon);
 				if (seen) {
 					title = Messages.titleCase(mob.name());
 					desc = mob.description();
@@ -981,7 +990,8 @@ public class WndJournal extends WndTabbed {
 			Mob finalMob = mob;
 			String finalTitle = title;
 			String finalDesc = desc;
-			ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(icon) {
+			if(iconSource==null)iconSource=GameplayIcons.copySource(icon);
+			ScrollingGridPane.GridItem gridItem = new ScrollingGridPane.GridItem(icon,iconSource) {
 				@Override
 				public boolean onClick(float x, float y) {
 					if (inside(x, y)) {
@@ -1004,6 +1014,7 @@ public class WndJournal extends WndTabbed {
 					}
 				}
 			};
+			gridItem.recordCatalogState(seen?"discovered":"undiscovered");
 			if (!seen) {
 				gridItem.hardLightBG(2f, 1f, 2f);
 			}
@@ -1037,6 +1048,7 @@ public class WndJournal extends WndTabbed {
 
 							doc.readPage(page);
 							hardLightBG(1, 1, 1);
+							recordCatalogState("read");
 						} else {
 							if (ShatteredPixelDungeon.scene() instanceof GameScene){
 								GameScene.show(new WndJournalItem(sprite, "???",
@@ -1054,6 +1066,7 @@ public class WndJournal extends WndTabbed {
 				}
 			};
 
+			gridItem.recordCatalogState(!seen?"undiscovered":read?"read":"unread");
 			if (seen){
 				BitmapText text = new BitmapText(Integer.toString(doc.pageIdx(page)+1), PixelScene.pixelFont);
 				text.measure();

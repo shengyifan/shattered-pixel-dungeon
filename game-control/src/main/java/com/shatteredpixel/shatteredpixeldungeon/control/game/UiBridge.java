@@ -996,6 +996,8 @@ public final class UiBridge {
         if (gizmo instanceof Window) return "window";
         if (gizmo instanceof RightClickMenu) return "context_menu";
         if (gizmo instanceof HealthBar) return "health_bar";
+        // GridItem has native display semantics as well as its existing list selection callback.
+        if (pane != null && gizmo instanceof com.shatteredpixel.shatteredpixeldungeon.ui.ScrollingGridPane.GridItem) return "entry";
         if (gizmo instanceof RenderedStatus) return "status";
         if (gizmo instanceof RenderedTextBlock || gizmo instanceof BitmapText) return "text";
         if (pane != null && gizmo instanceof Component && hasMethod(gizmo.getClass(), "onClick", float.class, float.class)) {

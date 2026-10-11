@@ -52,6 +52,10 @@ public class ItemSlot extends Button implements GameplayStatus {
 
 	@Override public java.util.Map<String,Object> gameplayStatus() {
 		java.util.Map<String,Object> shown=new java.util.LinkedHashMap<>();
+		if(recipeAvailabilityItem==item&&recipeAvailabilityBinding!=null&&recipeAvailabilityBinding.displayed(sprite,this)) {
+			if(ingredientSufficient!=null)shown.put("ingredient_sufficient",ingredientSufficient);
+			if(ingredientsSufficient!=null)shown.put("ingredients_sufficient",ingredientsSufficient);
+		}
 		java.util.List<String> flags=new java.util.ArrayList<>();
 		for(java.util.Map.Entry<String,BitmapText> entry:renderedTextComponents().entrySet()) {
 			BitmapText component=entry.getValue();String value=component.text();
@@ -93,6 +97,26 @@ public class ItemSlot extends Button implements GameplayStatus {
 	private String semanticStatusText,semanticStatusFlag,semanticStatusKind,semanticStrengthText,semanticLevelText,semanticLevelFlag;
 	private Integer semanticStrength;
 	private boolean semanticStrengthEstimated,semanticStrengthInsufficient,semanticStrengthMastered;
+	private Item recipeAvailabilityItem;
+	private GameplayIcons.ImageBinding recipeAvailabilityBinding;
+	private Boolean ingredientSufficient,ingredientsSufficient;
+
+	/** Captures only the already selected native QuickRecipe material-display branch. */
+	public void recordIngredientSufficient(boolean sufficient) {
+		ingredientSufficient=sufficient;
+		recordRecipeAvailabilityBinding();
+	}
+
+	/** Captures the output icon's already selected aggregate material-display branch. */
+	public void recordIngredientsSufficient(boolean sufficient) {
+		ingredientsSufficient=sufficient;
+		recordRecipeAvailabilityBinding();
+	}
+
+	private void recordRecipeAvailabilityBinding() {
+		recipeAvailabilityItem=item;
+		recipeAvailabilityBinding=GameplayIcons.copySource(sprite).bindCopy(sprite);
+	}
 
 	public static final int DEGRADED	= 0xFF4444;
 	public static final int UPGRADED	= 0x44FF44;
@@ -244,6 +268,9 @@ public class ItemSlot extends Button implements GameplayStatus {
 	}
 	
 	public void item( Item item ) {
+		recipeAvailabilityItem=null;
+		recipeAvailabilityBinding=null;
+		ingredientSufficient=ingredientsSufficient=null;
 		if (this.item == item) {
 			if (item != null) {
 				sprite.view( item );

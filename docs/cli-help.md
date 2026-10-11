@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 9)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.9.0.3, protocol 9, and base game 4.0.2.
+`spdctl --version` reports CLI.9.0.4, protocol 9, and base game 4.0.2.
 
 ## 1. Start and keep the connection open
 
@@ -143,7 +143,7 @@ static `schema` of commands, directions, row-map encoding and inspection rules. 
 returned `s`, then query the current state:
 
 Protocol 9 advertises `gameplay_facts`, `semantic_ui`,
-`semantic_feedback_events` and `public_world_cues`. The protocol-7 rendered
+`semantic_feedback_events`, `public_world_cues` and `native_audio_events`. The protocol-7 rendered
 appearance, floating-text, particle-metric and screen-visual capabilities are
 not part of this version.
 
@@ -353,6 +353,10 @@ terrain 39 (solid), with the native Smithy name/description; ordinary water stay
 terrain 29. The other reviewed Smithy pieces use terrain 23. These distinctions
 come from the existing selected public tile, not private collision flags or a
 label guess. They survive play/full/src and independently frozen map dictionaries.
+The reviewed RitualMarker adds its displayed name and candle-placement description
+on its inner nine known cells without replacing the base terrain or collision.
+Its outer border and unknown cells add no marker record. Detached, hidden or
+unreviewed overlays do not expose a marker beneath them.
 Unseen cells stay absent; an unavailable or unreviewed custom source does not
 invent extra knowledge. Other custom details remain available through native
 cell examination. Boss form and each reviewed
@@ -488,6 +492,23 @@ meaning in `icon`; selected false is explicit. Talent buttons expose
 even in ranking windows without a current hero table. These are display facts;
 only current `ops` grants an operation. Missing display facts remain unknown.
 
+Source-bound journal page/category buttons and selectable grid entries retain
+their currently displayed `icon`, optional `secondary_icon`, and applicable
+`selected` state. Grid entries remain selectable through their current `ops`.
+`shown.catalog_state` is `undiscovered`, `discovered`, `unread`, or `read` only
+where the native catalog/document display supplies that meaning. An undiscovered
+entry uses a placeholder, never its hidden identity; unmapped public imagery
+keeps partial diagnostics. Image-based secondary badges and textual counts are
+distinct. Replaced, hidden or invalidated image bindings cannot retain old facts.
+
+QuickRecipe material nodes can report `shown.ingredient_sufficient:true|false`;
+its result and arrow can report `shown.ingredients_sufficient:true|false`.
+These record the native material comparison already made for that displayed
+recipe. They are omitted when no hero/material check exists. They do not imply
+`enabled` or advertise an action: a recipe can have enough materials while its
+fill button is disabled outside the alchemy scene. Observation never recomputes
+recipes or reveals an unidentified ingredient's hidden type.
+
 Only `ops` advertises executable node actions. `{"op":"click"}` means the single
 click gesture; multiple gestures are listed on that operation. Node-level fields do not
 make a node actionable without an actual op. `acts` retains the complete advertised
@@ -546,7 +567,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.9.0.3 reports public gameplay facts rather than renderer internals. An
+CLI.9.0.4 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength
@@ -554,7 +575,10 @@ estimate, flags or a semantic badge. Source-bound item status may include
 `shown.broken_seal:true`, `shown.lit_candle:true`, or a named `shown.glow`
 variant; FOV-visible heap items may expose the corresponding `item_status`
 world cue. Neither glow pulse timing nor hidden durability/resin quantities
-are reported. `shown.status_kind:"quantity"` marks only an exact, source-bound
+are reported. A source-selected Crystal glow can carry `kind:"crystal_condition"`
+and `stage:"intact"|"flawed"|"cracked"`. It has the same meaning in item/UI
+`shown.glow`, nested semantic icons and world `item_glow` cues; it never reports
+private numeric durability. `shown.status_kind:"quantity"` marks only an exact, source-bound
 native item quantity display. Matching numeric text alone cannot turn an
 artifact charge or cooldown into a stack count; special or unknown status text
 is retained. Warrior
@@ -665,6 +689,26 @@ strict per-frame decoding and intent validation without I/O or gameplay policy.
 It separates controller errors, original outcomes, current observations and late
 replies. See `docs/cli-playthrough-client.md` for its API; the packaged controller
 does not require Python to launch or operate.
+
+### Native alarm playback events
+
+The `native_audio_events` capability adds `game.audio` occurrences to ordinary
+`events` queries. Each successfully verified native `ALERT` playback produces
+`{format:"gameplay_audio_occurrence_v1",kind:"alarm",basis:"native_playback",at:"..."}`
+in its event data; scope and sequence use the existing event envelope.
+`at` is the normal wire alias for `occurred_at`. Repeated playback remains separate
+occurrences, including when the sound itself is identical. Delayed sounds are
+recorded at verified playback, not at scheduling.
+
+Disabled/muted/unloaded/failed or unverifiable playback produces no success
+event. Verification checks the desktop native source, playing state and positive
+effective gain, including the distinction between no-device and valid playback
+ID zero. This proves native playback, not that a person's physical speakers were
+audible. No audio asset, playback ID, source class, position, target or hidden
+world state is exposed. An alarm does not identify which source caused it.
+Events are historical occurrences, do not independently change `rev`, and are
+not persistent map warnings or unsolicited NDJSON. Query them through the usual
+bounded event cursor when auditory information matters to the next decision.
 
 ### Text sources and presentation limits
 

@@ -30,11 +30,30 @@ import com.watabou.noosa.NinePatch;
 import com.watabou.noosa.audio.Sample;
 
 //simple button which support a background chrome, text, and an icon.
-public class StyledButton extends Button {
+public class StyledButton extends Button implements GameplayStatus {
 	
 	protected NinePatch bg;
 	protected RenderedTextBlock text;
 	protected Image icon;
+	private Boolean selectedAppearance;
+	private GameplayIcons.ImageBinding selectedIconBinding;
+
+	/** Records the native page-highlight branch without changing its rendering or callback. */
+	public void recordSelectedAppearance(boolean selected) {
+		selectedAppearance=selected;
+		selectedIconBinding=GameplayIcons.copySource(icon).bindCopy(icon);
+	}
+
+	@Override public java.util.Map<String,Object> gameplayStatus() {
+		java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+		if(icon!=null&&icon.parent==this) {
+			java.util.Map<String,Object> meaning=GameplayIcons.image(icon);
+			if(!meaning.isEmpty())result.put("icon",meaning);
+			if(selectedAppearance!=null&&selectedIconBinding!=null&&selectedIconBinding.displayed(icon,this))
+				result.put("selected",selectedAppearance);
+		}
+		return result;
+	}
 	public boolean leftJustify = false;
 
 	public boolean multiline;
@@ -136,6 +155,8 @@ public class StyledButton extends Button {
 	public void animatedTextColor(int value){text.animatedColor(value);}
 	
 	public void icon( Image icon ) {
+		selectedAppearance=null;
+		selectedIconBinding=null;
 		if (this.icon != null) {
 			remove( this.icon );
 		}

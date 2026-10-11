@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.desktop;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.PixmapPacker;
@@ -38,6 +39,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DesktopPlatformSupport extends PlatformSupport {
+
+	@Override
+	public boolean isSoundPlaybackActive(Sound sound, long playbackId) {
+		return DesktopSoundPlayback.isActive(sound, playbackId);
+	}
 
 	//we recall previous window sizes as a workaround to not save maximized size to settings
 	//have to do this as updateDisplaySize is called before maximized is set =S

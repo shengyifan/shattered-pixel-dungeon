@@ -186,6 +186,19 @@ public class RitualSiteRoom extends StandardRoom {
 		}
 
 		@Override
+		public PublicTerrain publicTerrain(int presentationFrame) {
+			switch (presentationFrame) {
+				case 49: case 50: case 51:
+				case 65: case 66: case 67:
+				case 81: case 82: case 83:
+					// Only the selected inner 3x3 marker is inspectable. Its artwork does
+					// not replace the public base terrain or disclose the ritual position.
+					return new PublicTerrain(null, Messages.get(this, "name"), Messages.get(this, "desc"));
+				default: return null;
+			}
+		}
+
+		@Override
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
 

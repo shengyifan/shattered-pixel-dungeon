@@ -1,5 +1,7 @@
 # CLI.9.0.3 英雄、状态、生命与天赋信息审计
 
+> 2026-10-11 后续状态：本页保留CLI.9.0.3的原始审计和修复前证据。确认的魔晶、图标/配方、仪式标记、节点校验问题已在CLI.9.0.4实现修复，并新增经平台验证的警报音事件。当前实现与实际包验收请读[CLI.9.0.4验证记录](../../docs/cli-9.0.4-player-info-validation.md)。未确认候选和全场景覆盖边界仍保留，不把以下历史“尚未修复”叙述当作当前状态。
+
 核查日期：2026-10-11。源码基线：`d04c8f862b2f90418a6375f0b3ffc5c4325d0953`，CLI.9.0.3 / protocol 9 / schema 12 / game 4.0.2 code 922。范围为原生英雄/状态/天赋显示、公开观察投影、协议压缩、正式 Python 解码器；不包括装备全部属性、地图、控制器运输或个人局的现场状态。
 
 本分支只读生产源码，新增本文及 `evidence/cli-hero/` 中纯合成验证文件；没有启动游戏、打开个人 profile、读取个人存档/私有 audit、重打包或提交。本次检查依据当前 [AGENTS](../../AGENTS.md)、[协议手册](../../docs/cli-help.md#L194)、[客户端文档](../../docs/cli-playthrough-client.md#L1) 与 [CLI 维护 skill](../../skills/shattered-pixel-dungeon-cli-release/SKILL.md)。

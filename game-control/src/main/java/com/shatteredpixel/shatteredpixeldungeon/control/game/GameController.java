@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.control.game;
 
 import com.badlogic.gdx.Gdx;
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -161,7 +162,7 @@ public final class GameController implements RuntimeObserver {
         }
         /** New display surfaces use the same persistence path without adding another parallel queue. */
         public DisplayEvent(String scopeId,String kind,Map<String,Object> data,Map<String,Object> original){
-            if(scopeId==null||!scopeId.startsWith("run:")||!Arrays.asList("game.log","game.visual","game.floating_text","game.banner").contains(kind))
+            if(scopeId==null||!scopeId.startsWith("run:")||!Arrays.asList("game.log","game.visual","game.floating_text","game.banner","game.audio").contains(kind))
                 throw new IllegalArgumentException("Display events require a run scope and semantic game event kind");
             this.scopeId=scopeId;this.kind=kind;snapshot=null;
             publicData=freezeLiteral(PublicEnglishProjection.freeze(GameplayEvidence.semantic(data)));
@@ -364,6 +365,15 @@ public final class GameController implements RuntimeObserver {
         if(capturedEntries.equals(lastGameLogByRun.get(runId)))return;
         lastGameLogByRun.put(runId,capturedEntries);
         enqueueDisplayEvent(DisplayEvent.from(snapshot));
+    }
+    @Override public boolean observesSoundPlayback(){return true;}
+    @Override public synchronized void onSoundPlayback(Object asset){
+        // ALERT is shared by several native producers. The audible fact has no public origin cell.
+        if(!Assets.Sounds.ALERT.equals(asset)||Game.instance==null
+                ||!(Game.scene() instanceof GameScene)||Dungeon.runId==null)return;
+        enqueueDisplayEvent(new DisplayEvent("run:"+Dungeon.runId,"game.audio",
+                map("format","gameplay_audio_occurrence_v1","kind","alarm",
+                        "basis","native_playback","occurred_at",Instant.now().toString()),null));
     }
     @Override public boolean observesVisualCues(){return true;}
     @Override public synchronized void onBanner(String runId,String kind,Map<String,Object> appearance){

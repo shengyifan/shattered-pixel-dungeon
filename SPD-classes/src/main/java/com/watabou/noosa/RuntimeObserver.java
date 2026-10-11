@@ -29,6 +29,14 @@ public interface RuntimeObserver {
     default void onTextReleased(Object owner) {}
     /** Snapshot of text that an existing game log control has just drawn, never a raw log signal. */
     default void onGameLog(String contextId, List<LogEntry> entries) {}
+    /** Opt-in sound observation; unsupported platforms never claim that a playback occurred. */
+    default boolean observesSoundPlayback() { return false; }
+    /**
+     * One native sound playback verified by the platform, after releasing the Sample monitor.
+     * The asset is an in-process identity only, not permission to expose its callers or locations.
+     * Native playback does not establish that a physical listener heard it.
+     */
+    default void onSoundPlayback(Object asset) {}
     default boolean observesVisualCues() { return false; }
     /** One actually displayed floating-text occurrence; appearance contains only gated draw evidence. */
     default void onFloatingText(String runId, Object levelIdentity, int depth,

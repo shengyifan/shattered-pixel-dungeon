@@ -183,11 +183,16 @@ public abstract class CustomTilemap implements Bundlable {
 	}
 
 	public static final class PublicTerrain {
-		public final int terrain;
+		/** Null preserves the cell's already public base terrain and collision meaning. */
+		public final Integer terrain;
 		public final String name;
 		public final String description;
 
 		public PublicTerrain(int terrain, String name, String description) {
+			this(Integer.valueOf(terrain), name, description);
+		}
+
+		public PublicTerrain(Integer terrain, String name, String description) {
 			this.terrain = terrain;
 			this.name = name;
 			this.description = description;

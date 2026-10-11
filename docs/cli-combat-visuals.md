@@ -1,4 +1,4 @@
-# CLI.9.0.2 semantic combat observations
+# CLI.9.0.4 semantic combat observations
 
 Protocol 9 and audit schema 12 publish player-facing combat facts from existing
 game state and presentation sources. The observation is a complete public snapshot
@@ -23,7 +23,8 @@ include `strength:{value,estimated,insufficient?,mastered?}`, `flags`, or a
 semantic `badge`. Source-bound item status can include `shown.broken_seal:true`
 or `shown.lit_candle:true`; an `item_status` world cue can carry the same
 FOV-visible heap flag. `shown.glow` contains only reviewed named variants,
-including `explosive_heat` stage or `resin_fortified` hint, never glow pulse
+including `explosive_heat` stage, `crystal_condition` stage (`intact`, `flawed`,
+`cracked`) or `resin_fortified` hint, never glow pulse
 timing, hidden durability or resin count. Preserve unknown or partial information as such: a displayed
 estimate is not an exact hidden quantity, and an absent field does not authorize
 an inferred value. Hero and entity `health_estimate.samples` contain distinct
@@ -60,6 +61,20 @@ remain. Native node gestures are omitted only when complete advertised `ops`
 already express them.
 
 ## World cues and feedback events
+
+Verified native alarm playback is a separate `game.audio` occurrence queried
+through the ordinary event cursor. The `native_audio_events` capability reports
+only an `alarm` with `basis:"native_playback"`; it adds no location, source class,
+asset, hidden target or ongoing map warning. Muted/failed/unverifiable playback
+does not emit a success, and audio occurrences do not independently change the
+decision revision. See the [help audio contract](cli-help.md#native-alarm-playback-events).
+
+Journal image owners preserve their selected public icon/state, and QuickRecipe
+preserves its original material-sufficiency decision independently of input
+availability. These are source-bound semantic facts, not general color/alpha
+export. Unknown catalog identities remain placeholders. The reviewed static
+RitualMarker adds its name/description on known inner cells without changing the
+underlying public terrain; observation never reads the hidden ritual center.
 
 `data.cues.cues` describes public world cues. `data.cues.status` is
 `last_observed` or `not_observed`. After an ordinary draw, the game observes its

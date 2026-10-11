@@ -6,7 +6,7 @@ description: Plan and operate a Shattered Pixel Dungeon Warrior run through the 
 # Pixel Dungeon run assistance
 
 Use for an authorized playthrough, current-floor tactics, shop/alchemy planning,
-or a review of recorded play. This project adaptation targets CLI.9.0.3,
+or a review of recorded play. This project adaptation targets CLI.9.0.4,
 protocol 9, audit schema 12, and game 4.0.2. Verify the actual connection's
 versions and advertised capabilities; historical notes never establish live state.
 
@@ -52,6 +52,14 @@ kinds, item descriptions, public cues, and semantic facts. The protocol manual
 defines template expansion, missing/null/zero meanings, textless controls with
 useful operation labels, and current bindings. Do not infer hidden item identities,
 enemy HP, AI targets, or future rolls from source knowledge.
+
+When `native_audio_events` is advertised and auditory information matters, read
+the normal bounded `events` cursor for `game.audio` alarm occurrences. They are
+verified native playback, not proof of physical audibility or a hidden source
+location; absence is not proof that no alarm source exists. Event history is
+separate from the live observation and does not independently rebind its revision.
+Finish any outstanding response/settle bookkeeping before issuing another query,
+and obey the user's stop policy before reading further events.
 
 Choose only a currently advertised action, with the exact observed `rev` and
 current locators. Read the complete reply before deciding again. A successful

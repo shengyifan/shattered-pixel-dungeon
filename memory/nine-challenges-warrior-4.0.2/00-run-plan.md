@@ -8,7 +8,7 @@
 每次进层用[12逐层表](12-floor-exploration-plan.md)选择搜集/轻探索/下楼条件；
 房间按[13特殊房](13-special-rooms.md)、[14秘密房](14-secret-rooms-and-search.md)的净收益与退出成本取舍；
 每口锅按[15炼金优先级](15-alchemy-planning.md)兑现眼前缺口。
-[16 CLI审计](16-cli-information-audit.md)含已复现但尚未修复的魔晶解码、图标入口和配方状态缺口。
+[16 CLI审计](16-cli-information-audit.md)保留修复前证据；确认问题的CLI.9.0.4修复与实际包结果见[验证记录](../../docs/cli-9.0.4-player-info-validation.md)。实战仍核当前实际版本，旧进程不会被源码或新包热更新。
 
 ### 探索与炼金的一页执行卡
 

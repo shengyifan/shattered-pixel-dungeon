@@ -34,8 +34,9 @@
 2026-10-11进一步补入[1–26层探索与离层计划](nine-challenges-warrior-4.0.2/12-floor-exploration-plan.md)、
 [特殊房](nine-challenges-warrior-4.0.2/13-special-rooms.md)、[秘密房与有限搜索](nine-challenges-warrior-4.0.2/14-secret-rooms-and-search.md)、
 [炼金优先级](nine-challenges-warrior-4.0.2/15-alchemy-planning.md)和[CLI信息准确性审计](nine-challenges-warrior-4.0.2/16-cli-information-audit.md)。
-本轮以通关机会优先于全探索；审计发现合法魔晶光效被Python客户端拒绝等问题，已保存可复现证据，尚未修改CLI行为。
-后续正式实战前应先核查这些确认问题的修复状态，不能把旧测试通过当成已解决。
+本轮以通关机会优先于全探索；审计的原始问题和复现证据保留。随后已按用户授权实现
+[CLI.9.0.4修复与验证](../docs/cli-9.0.4-player-info-validation.md)，覆盖魔晶解码、图标/配方、仪式标记、节点校验和警报事件。
+正式实战前核当前实际包版本；既有游戏进程不会随源码/包更新而热更新。
 
 以下脚本从本局用过的临时辅助脚本迁入，入口和依赖都在项目内。只读取显式提供的完整公开
 JSON响应文件或stdin，不启动游戏、不发送意图、不读取存档／audit，也不自动刷新输入文件。

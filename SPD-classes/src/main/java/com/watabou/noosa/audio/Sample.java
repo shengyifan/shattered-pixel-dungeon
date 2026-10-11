@@ -24,10 +24,14 @@ package com.watabou.noosa.audio;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.RuntimeObserver;
+import com.watabou.utils.PlatformSupport;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
 public enum Sample {
 
@@ -105,13 +109,57 @@ public enum Sample {
 		return play( id, volume, volume, pitch );
 	}
 	
-	public synchronized long play( Object id, float leftVolume, float rightVolume, float pitch ) {
-		float volume = Math.max(leftVolume, rightVolume);
-		float pan = rightVolume - leftVolume;
-		if (enabled && ids.containsKey( id )) {
-			return ids.get(id).play( globalVolume*volume, pitch, pan );
-		} else {
-			return -1;
+	public long play( Object id, float leftVolume, float rightVolume, float pitch ) {
+		return play(id, leftVolume, rightVolume, pitch, null);
+	}
+
+	private long play(Object id, float leftVolume, float rightVolume, float pitch,
+			List<PlaybackObservation> deferredObservations) {
+		final Sound sound;
+		final long playbackId;
+		final float effectiveGain;
+		final RuntimeObserver observer;
+		final PlatformSupport platform;
+		synchronized (this) {
+			float volume = Math.max(leftVolume, rightVolume);
+			float pan = rightVolume - leftVolume;
+			if (!enabled || !ids.containsKey(id)) return -1;
+			sound = ids.get(id);
+			effectiveGain = globalVolume * volume;
+			// Preserve the native call, arguments, result and exception behavior exactly.
+			playbackId = sound.play(effectiveGain, pitch, pan);
+			observer = Game.observer;
+			platform = Game.platform;
+		}
+		if (playbackId >= 0 && Float.isFinite(effectiveGain) && effectiveGain > 0) {
+			PlaybackObservation observation = new PlaybackObservation(id, sound, playbackId, observer, platform);
+			if (deferredObservations == null) observation.publish();
+			else deferredObservations.add(observation);
+		}
+		return playbackId;
+	}
+
+	/** A local playback occurrence, never retained beyond its play/update call. */
+	private static final class PlaybackObservation {
+		private final Object asset;
+		private final Sound sound;
+		private final long playbackId;
+		private final RuntimeObserver observer;
+		private final PlatformSupport platform;
+		PlaybackObservation(Object asset, Sound sound, long playbackId, RuntimeObserver observer, PlatformSupport platform) {
+			this.asset=asset; this.sound=sound; this.playbackId=playbackId; this.observer=observer; this.platform=platform;
+		}
+		void publish() {
+			// No Sample or delayedSFX monitor is held during verification or observer callbacks.
+			// Observation failure must not change the native return value or exception behavior.
+			try {
+				if (observer != null && observer == Game.observer && observer.observesSoundPlayback()
+						&& platform != null && platform.isSoundPlaybackActive(sound, playbackId)) {
+					observer.onSoundPlayback(asset);
+				}
+			} catch (Throwable ignored) {
+				// Do not log through the game or re-enter audio from an observation failure.
+			}
 		}
 	}
 
@@ -161,15 +209,22 @@ public enum Sample {
 			}
 		}
 
-		synchronized (delayedSFX) {
-			if (delayedSFX.isEmpty()) return;
-			for (DelayedSoundEffect sfx : delayedSFX.toArray(new DelayedSoundEffect[0])) {
-				sfx.delay -= Game.elapsed;
-				if (sfx.delay <= 0) {
-					delayedSFX.remove(sfx);
-					play(sfx.id, sfx.leftVol, sfx.rightVol, sfx.pitch);
+		List<PlaybackObservation> observations = new ArrayList<>();
+		try {
+			synchronized (delayedSFX) {
+				if (delayedSFX.isEmpty()) return;
+				for (DelayedSoundEffect sfx : delayedSFX.toArray(new DelayedSoundEffect[0])) {
+					sfx.delay -= Game.elapsed;
+					if (sfx.delay <= 0) {
+						delayedSFX.remove(sfx);
+						// Keep native playback in its original order and lock scope; only observation waits.
+						play(sfx.id, sfx.leftVol, sfx.rightVol, sfx.pitch, observations);
+					}
 				}
 			}
+		} finally {
+			// Successful earlier sounds remain observable even if a later native play throws.
+			for (PlaybackObservation observation : observations) observation.publish();
 		}
 	}
 

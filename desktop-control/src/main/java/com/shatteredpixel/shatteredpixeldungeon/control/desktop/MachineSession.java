@@ -229,7 +229,7 @@ public final class MachineSession implements AutoCloseable {
                             "scope_id",state==null?store.menuScope():state.scopeId,"menu_scope_id",store.menuScope(),
                             "state_version",busy||executionUncertain||state==null?null:state.version,
                             "capabilities",Arrays.asList("serial","request_ids","duplicate_rejection","player_observation","paired_audit","source_text","partial_presentation","persistent_handles",
-                                    "gameplay_facts","semantic_ui","semantic_feedback_events","public_world_cues","strict_intents","quit_receipt_exit"),
+                                    "gameplay_facts","semantic_ui","semantic_feedback_events","public_world_cues","native_audio_events","strict_intents","quit_receipt_exit"),
                             "schema",CompactProtocol.info());break;
                 case "state.get":result=publicStateResult(state);break;
                 case "actions.list":result=pending!=null||cancelling!=null||executionUncertain?publicStateResult(state):actionState(state);break;

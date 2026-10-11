@@ -23,6 +23,7 @@ package com.watabou.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.PixmapPacker;
@@ -33,6 +34,11 @@ import com.watabou.noosa.Game;
 import java.util.HashMap;
 
 public abstract class PlatformSupport {
+
+	/** Read-only verification of an existing native playback; never starts or changes audio. */
+	public boolean isSoundPlaybackActive(Sound sound, long playbackId) {
+		return false;
+	}
 	
 	public abstract void updateDisplaySize();
 

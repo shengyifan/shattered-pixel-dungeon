@@ -165,15 +165,21 @@ public class ScrollingGridPane extends ScrollPane {
 		super.layout();
 	}
 
-	public static class GridItem extends Component {
+	public static class GridItem extends Component implements GameplayStatus {
 
 		protected Image icon;
 
 		protected Visual secondIcon;
 
 		protected ColorBlock bg;
+		private GameplayIcons.ImageBinding iconBinding, secondIconBinding;
+		private String catalogState;
 
 		public GridItem( Image icon ) {
+			this(icon,GameplayIcons.copySource(icon));
+		}
+
+		public GridItem(Image icon,GameplayIcons.ImageSource source) {
 			super();
 
 			if (icon instanceof ItemSprite){
@@ -183,9 +189,39 @@ public class ScrollingGridPane extends ScrollPane {
 			}
 			this.icon.copy(icon);
 			add(this.icon);
+			iconBinding=source.bindCopy(this.icon);
+		}
+
+		/** Called by the same native branch that selects the catalogue silhouette/background. */
+		public void recordCatalogState(String state) {
+			if(!java.util.Arrays.asList("undiscovered","discovered","unread","read").contains(state))
+				throw new IllegalArgumentException("Unsupported catalog display state");
+			catalogState=state;
+		}
+
+		@Override public java.util.Map<String,Object> gameplayStatus() {
+			java.util.Map<String,Object> result=new java.util.LinkedHashMap<>();
+			if(iconBinding==null)return result;
+			java.util.Map<String,Object> meaning=iconBinding.status(icon,this);
+			boolean current=iconBinding.displayed(icon,this);
+			if(!meaning.isEmpty()) {
+				if("undiscovered".equals(catalogState)&&current) {
+					meaning=new java.util.LinkedHashMap<>();
+					meaning.put("symbol","catalog_undiscovered");meaning.put("placeholder",true);
+				}
+				result.put("icon",meaning);
+			}
+			if(catalogState!=null&&current&&bg!=null&&bg.parent==this&&GameplayIcons.displayed(bg,false))
+				result.put("shown",java.util.Collections.singletonMap("catalog_state",catalogState));
+			if(!"undiscovered".equals(catalogState)&&secondIcon instanceof Image&&secondIconBinding!=null) {
+				java.util.Map<String,Object> second=secondIconBinding.status((Image)secondIcon,this);
+				if(!second.isEmpty())result.put("secondary_icon",second);
+			}
+			return result;
 		}
 
 		public void addSecondIcon( Visual icon ){
+			secondIconBinding=icon instanceof Image?GameplayIcons.copySource((Image)icon).bindCopy((Image)icon):null;
 			secondIcon = icon;
 			add(secondIcon);
 			layout();

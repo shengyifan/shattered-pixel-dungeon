@@ -1,12 +1,12 @@
-# CLI.9.0.3 architecture and verification
+# CLI.9.0.4 architecture and verification
 
-The maintained contract is **CLI.9.0.3 / protocol 9 / audit schema 12**, with game
+The maintained contract is **CLI.9.0.4 / protocol 9 / audit schema 12**, with game
 **4.0.2** and trace format **1**. The [English help](cli-help.md) defines public
 commands and schemas. [Semantic observations](cli-combat-visuals.md),
 [client guidance](cli-playthrough-client.md) and [cancellation](cli-runtime-cancellation.md)
 explain the relevant boundaries. This document maps those contracts to source and
 verification entrypoints; test counts and package identity belong in the
-[current validation report](cli-9.0.3-unlock-validation.md).
+[current validation report](cli-9.0.4-player-info-validation.md).
 
 New desktop profiles persist `unlock_start_options=true` and skip introduction/tutorial.
 The GUI and CLI share startup initialization before consuming display settings;
@@ -26,6 +26,7 @@ changing in-run progression. Existing profiles are never migrated to the new def
 | World cues | [VisualCueCollector](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java) accepts reviewed public sources under map/FOV rules. [TargetedCell](../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/TargetedCell.java) retains already revealed pending warnings until native completion or cancellation. |
 | Public English text | [TextProvenance](../game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/text/TextProvenance.java) and [EnglishTextRenderer](../game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/text/EnglishTextRenderer.java) retain source-bound public text independently of the GUI language. Unknown sources remain diagnostic; labels do not identify hidden objects. |
 | Optional external decoder | [spdctl_client.py](../desktop-control/client/spdctl_client.py) validates complete v9 replies, wrappers and proposed intents without transport or gameplay policy. |
+| Native alarm events | The no-op runtime sound observer is called outside the Sample monitor after desktop playback verification. Only native ALERT maps to an immutable `game.audio` alarm occurrence in the existing ordered display-event FIFO; paired persistence and event queries preserve it without a new table or unsolicited output. |
 | Packaging and trace transport | [desktop-control/build.gradle](../desktop-control/build.gradle) creates the catalog and ARM64 app. [Native bootstrap](../desktop-control/src/main/native/spdctl-bootstrap.c) preserves child wire bytes and keeps diagnostics separate. |
 
 ## Observations, revisions and outcomes

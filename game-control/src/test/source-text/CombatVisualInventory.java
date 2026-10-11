@@ -48,6 +48,8 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayObservation",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayEvidence",
             "com.shatteredpixel.shatteredpixeldungeon.control.game.PublicEnglishProjection",
+            "com.watabou.noosa.audio.Sample",
+            "com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopSoundPlayback",
             "com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.Fader",
             "com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.PixelCamera",
             "com.watabou.noosa.VisualCue", "com.watabou.noosa.RuntimeObserver",
@@ -94,7 +96,17 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal.WarriorShield",
             "com.shatteredpixel.shatteredpixeldungeon.items.Item",
             "com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon",
-            "com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot"));
+            "com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.ScrollingGridPane.GridItem",
+            "com.shatteredpixel.shatteredpixeldungeon.ui.QuickRecipe"));
+    // The native playback gate is outside the visual module. Review only these
+    // two desktop source files, not unrelated desktop UI or launcher producers.
+    private static final Set<String> AUDIO_PLATFORM_TYPES=new HashSet<>(Arrays.asList(
+            "com.watabou.utils.PlatformSupport",
+            "com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopPlatformSupport"));
+    private static final String DESKTOP_SOUND_PLAYBACK=
+            "com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopSoundPlayback";
     private static final Set<String> STATE_FIELDS=new HashSet<>(Arrays.asList(
             "visible","on","scale","angle","curAnim","flipHorizontal","flipVertical",
             "rm","gm","bm","am","ra","ga","ba","aa","frame","x","y","width","height"));
@@ -192,8 +204,10 @@ public final class CombatVisualInventory {
             for(String tree:Arrays.asList("core","SPD-classes","game-control"))try(Stream<Path> stream=Files.walk(root.resolve(tree+"/src/main/java"))){
                 paths.addAll(stream.filter(p->p.toString().endsWith(".java")).sorted().collect(Collectors.toList()));
             }
+            for(String name:Arrays.asList("DesktopSoundPlayback","DesktopPlatformSupport"))
+                paths.add(root.resolve("desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/"+name+".java"));
             for(int i=2;i<args.length;i++)paths.add(Paths.get(args[i]));
-            String sourcepath=Stream.of("core","SPD-classes","services","game-control").map(p->root.resolve(p+"/src/main/java").toString()).collect(Collectors.joining(java.io.File.pathSeparator));
+            String sourcepath=Stream.of("core","SPD-classes","services","game-control","desktop").map(p->root.resolve(p+"/src/main/java").toString()).collect(Collectors.joining(java.io.File.pathSeparator));
             List<String> options=Arrays.asList("-proc:none","-implicit:none","-encoding","UTF-8","-Xlint:none","-Xprefer:source","-classpath",args[1],"-sourcepath",sourcepath);
             List<JavaFileObject> snapshots=new ArrayList<>(paths.size());
             for(Path path:paths)snapshots.add(new SnapshotSourceFile(path));
@@ -210,7 +224,10 @@ public final class CombatVisualInventory {
                         Element symbol=trees.getElement(getCurrentPath());
                         if(symbol!=null&&SEMANTIC_CATALOGS.contains(symbol.toString()))
                             record(getCurrentPath(),"semantic_catalog",symbol.toString());
-                        if(symbol!=null&&SEMANTIC_BOUNDARIES.contains(symbol.toString()))
+                        if(symbol!=null&&(SEMANTIC_BOUNDARIES.contains(symbol.toString())
+                                ||AUDIO_PLATFORM_TYPES.contains(symbol.toString())
+                                ||symbol.toString().equals(DESKTOP_SOUND_PLAYBACK)
+                                ||symbol.toString().equals("com.watabou.noosa.audio.Sample")))
                             record(getCurrentPath(),"source_boundary",symbol.toString());
                         return super.visitClass(node,ignored);
                     }
@@ -224,9 +241,14 @@ public final class CombatVisualInventory {
                         if(symbol!=null){
                             String owner=symbol.getEnclosingElement().toString();
                             String method=node.getName().toString();
+                            // The newly included desktop platform file is attributed in full,
+                            // but only its sound-verification method is in this added scope.
+                            if(owner.equals("com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopPlatformSupport")
+                                    &&!method.equals("isSoundPlaybackActive"))return null;
                             boolean displayAccessor=visual(symbol.getEnclosingElement().asType())
                                     &&(method.startsWith("rendered")||method.startsWith("displayed")||method.equals("intentStatus"));
                             if(displayAccessor||OBSERVATION_TYPES.stream().anyMatch(type->owner.equals(type)||owner.startsWith(type+"."))
+                                    ||AUDIO_PLATFORM_TYPES.contains(owner)&&method.equals("isSoundPlaybackActive")
                                     ||method.equals("onUpdateCellFlags")&&PUBLIC_COLLISION_PRODUCERS.contains(owner)
                                     ||owner.equals("com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell")
                                             &&(method.equals("beginWarningPresentation")||method.equals("rememberObservedWarnings")

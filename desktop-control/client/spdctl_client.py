@@ -50,6 +50,10 @@ GLOBAL_OPERATIONS = {
 QUERY_OPERATIONS = {"info", "state", "actions", "req", "history", "events", "settle"}
 DIRECTION_ORDER = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 DIRECTIONS = set(DIRECTION_ORDER)
+_GLOW_STAGES_BY_KIND = {
+    "explosive_heat": {"cool", "warm", "hot"},
+    "crystal_condition": {"intact", "flawed", "cracked"},
+}
 
 # These values are evidence or nested historical payloads, not another live
 # compact frame to merge into the containing response.
@@ -222,6 +226,13 @@ def _shown(value: Any, path: str) -> None:
     if "status_kind" in shown and (not isinstance(shown["status_kind"], str)
                                    or shown["status_kind"] != "quantity"):
         raise DecodeError(f"{path}.status_kind must be quantity")
+    if "catalog_state" in shown and (not isinstance(shown["catalog_state"], str)
+                                      or shown["catalog_state"] not in {
+                                          "undiscovered", "discovered", "unread", "read"}):
+        raise DecodeError(f"{path}.catalog_state must be undiscovered, discovered, unread, or read")
+    for key in ("ingredient_sufficient", "ingredients_sufficient"):
+        if key in shown and type(shown[key]) is not bool:
+            raise DecodeError(f"{path}.{key} must be boolean")
     if "progress" in shown and shown["progress"] is not None:
         progress = _dict(shown["progress"], f"{path}.progress")
         for key in ("covered", "total"):
@@ -289,19 +300,50 @@ def _semantic_icon(value: Any, path: str) -> None:
     for key in ("broken_seal", "lit_candle", "nature_powered"):
         if key in icon and type(icon[key]) is not bool:
             raise DecodeError(f"{path}.{key} must be boolean")
+    if "glow" in icon and icon["glow"] is not None:
+        _glow(icon["glow"], f"{path}.glow")
 
 
 def _glow(value: Any, path: str) -> None:
     glow = _dict(value, path)
     _reject_drawing(glow, path)
+    if "unmapped_indicator" in glow and type(glow["unmapped_indicator"]) is not bool:
+        raise DecodeError(f"{path}.unmapped_indicator must be boolean")
     if not isinstance(glow.get("variant"), str) or not glow["variant"]:
-        raise DecodeError(f"{path}.variant must be a named glow")
+        # GameplayGlow.selected delegates an unreviewed color to the native
+        # unmapped-icon diagnostic. Preserve that explicit partial evidence;
+        # it never excuses a null variant or a supplied kind/stage.
+        if not _unmapped_glow(glow):
+            raise DecodeError(f"{path}.variant must be a named glow or an explicit unmapped partial indicator")
     if "kind" in glow and (not isinstance(glow["kind"], str)
-                           or glow["kind"] not in {"explosive_heat", "resin_fortified"}):
+                           or glow["kind"] not in {
+                               "explosive_heat", "resin_fortified", "crystal_condition"}):
         raise DecodeError(f"{path}.kind is not a reviewed glow meaning")
     if "stage" in glow and (not isinstance(glow["stage"], str)
-                            or glow["stage"] not in {"cool", "warm", "hot"}):
-        raise DecodeError(f"{path}.stage is not a reviewed glow stage")
+                            or glow["stage"] not in _GLOW_STAGES_BY_KIND.get(glow.get("kind"), ())):
+        raise DecodeError(f"{path}.stage must match its reviewed glow kind")
+
+
+def _unmapped_glow(glow: Mapping[str, Any]) -> bool:
+    if glow.get("symbol") != "unmapped_indicator" or any(
+            field in glow for field in ("variant", "kind", "stage")):
+        return False
+    if glow.get("unmapped_indicator", True) is not True:
+        return False
+    # Accept the exact public marker in either native or compact spelling,
+    # without resolving contradictory duplicate presentation objects.
+    keys = [key for key in ("pres", "presentation") if key in glow]
+    if len(keys) != 1:
+        return False
+    key = keys[0]
+    presentation = glow[key]
+    status, diagnostics = ("st", "diag") if key == "pres" else ("status", "diagnostics")
+    if not isinstance(presentation, Mapping) or presentation.get(status) != "partial":
+        return False
+    entries = presentation.get(diagnostics)
+    return isinstance(entries, list) and any(
+        isinstance(entry, Mapping) and entry.get("field") == "symbol"
+        and entry.get("code") == "unmapped_indicator" for entry in entries)
 
 
 def _text_semantics(value: Mapping[str, Any], path: str) -> None:
@@ -832,6 +874,8 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
                     raise DecodeError(f"{appearance_path}.count must be positive")
                 if "symbol" in appearance and (not isinstance(appearance["symbol"], str) or not appearance["symbol"]):
                     raise DecodeError(f"{appearance_path}.symbol must be a non-empty semantic name")
+                if "glow" in appearance and appearance["glow"] is not None:
+                    _glow(appearance["glow"], f"{appearance_path}.glow")
                 if cue.get("kind") == "item_glow":
                     _glow(appearance, appearance_path)
                 if cue.get("kind") == "item_status":
@@ -928,6 +972,10 @@ def _semantic_fields(result: Mapping[str, Any], path: str) -> None:
             node["subject_data"] = _subject_data(node, here)
         if "shown" in node:
             _shown(node["shown"], f"{here}.shown")
+        if "health_estimate" in node:
+            _health_estimate(node["health_estimate"], f"{here}.health_estimate")
+        if "turn_progress" in node:
+            _turn_progress(node["turn_progress"], f"{here}.turn_progress")
         for key in ("free_cast", "targeting_marker", "selected"):
             if key in node and type(node[key]) is not bool:
                 raise DecodeError(f"{here}.{key} must be boolean")
