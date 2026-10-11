@@ -1,4 +1,4 @@
-# CLI.9.0.4 semantic combat observations
+# CLI.9.0.5 semantic combat observations
 
 Protocol 9 and audit schema 12 publish player-facing combat facts from existing
 game state and presentation sources. The observation is a complete public snapshot
@@ -125,6 +125,26 @@ native movement shadow can reveal its displayed location without revealing the
 underlying terrain. Cue
 names identify observable conditions, not a promise that an attack will hit
 or deal a particular amount of damage.
+
+### Semantic presentation readiness
+
+Finite action completion waits for the reviewed public presentation to settle:
+visible character/aura movement, chilled first presentation, finite sentry-particle
+tails and semantic item landing. These checks use existing attached sources and
+their public FOV/footprint evidence, without advancing actors, creating particles,
+reading hidden destinations or substituting actor coordinates for drawn cues.
+An already observed continuous chilled episode retains its semantic cue across
+natural empty particle intervals. A drop readiness record is scoped to its
+observed source lifetime, drop episode and run/level, and is pruned when those
+bindings or its public visibility no longer match. Sources that cannot naturally
+advance do not hold completion indefinitely.
+
+Pending presentation stays in the original `in_progress`/settle lifecycle rather
+than publishing a premature final `player_ready` revision. Meaningful warnings
+and operation-state changes still participate in revision validation; decorative
+feedback, movement-shadow fade and electrical-flow animation do not independently
+invalidate it. Actual checks and package evidence are recorded separately in the
+[CLI.9.0.5 validation report](cli-9.0.5-revision-validation.md).
 
 ### Pending red warnings
 

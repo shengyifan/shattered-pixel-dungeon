@@ -1,12 +1,12 @@
-# CLI.9.0.4 architecture and verification
+# CLI.9.0.5 architecture and verification
 
-The maintained contract is **CLI.9.0.4 / protocol 9 / audit schema 12**, with game
+The maintained contract is **CLI.9.0.5 / protocol 9 / audit schema 12**, with game
 **4.0.2** and trace format **1**. The [English help](cli-help.md) defines public
 commands and schemas. [Semantic observations](cli-combat-visuals.md),
 [client guidance](cli-playthrough-client.md) and [cancellation](cli-runtime-cancellation.md)
 explain the relevant boundaries. This document maps those contracts to source and
 verification entrypoints; test counts and package identity belong in the
-[current validation report](cli-9.0.4-player-info-validation.md).
+[current validation report](cli-9.0.5-revision-validation.md).
 
 New desktop profiles persist `unlock_start_options=true` and skip introduction/tutorial.
 The GUI and CLI share startup initialization before consuming display settings;
@@ -48,6 +48,24 @@ marker does not end the warning. Removing a native shield state ends its semanti
 reference while the GUI can fade naturally. Do not disable warning checks or
 invent a replacement revision to work around a stale decision.
 
+Finite completion also waits for reviewed public presentation: attached visible
+characters finish moving and their auras finish following, chilled effects reach
+their first actual presentation, finite sentry tails finish, and semantic floor
+item effects finish landing. A naturally empty particle interval within the same
+already observed continuous episode does not repeatedly remove its semantic fact.
+Only eligible public sources that can advance contribute to readiness; hidden,
+detached, frozen or out-of-scope sources cannot hold completion indefinitely.
+While this boundary is pending, execution remains `in_progress`; it does not
+publish a premature final `player_ready` binding.
+
+New ordinary and activity revisions use their existing durable per-kind counters
+in decimal (`r10`, `a10`). Other kinds retain base36 spelling. Allocation remains
+one paired transaction with uniqueness, overflow and rollback protection. Existing
+registry mappings and raw/reply bytes are immutable, including historical base36
+revisions. There is no counter conversion, profile migration or older-launcher
+rollback allocator. Clients continue to treat the complete handle as opaque;
+process epochs still invalidate old action bindings.
+
 Public world cues use current FOV and reviewed knowledge scope independently of
 camera/viewport/UI occlusion. Known-map export retains the complete explored floor.
 Current observations and new events report semantic facts, not retired screen
@@ -72,6 +90,33 @@ A successful action or state query does not prove that the original action saved
 Original outcomes, save receipts, late replies and current observations remain
 separate even during recovery. Unknown execution, malformed responses and loss
 must retain the original identity and bytes; never automatically replay them.
+
+## Ordinary action preparation and commit
+
+Ordinary actions use `prepareAction` to bind the request identity, scope, revision,
+arguments and optional new-run identity. At a stable game boundary it validates
+the request and freezes one public/internal `before` snapshot. The session no
+longer performs a separate ordinary-action `observe` and revision check before
+asking the game to prepare. Queries and the separate cancellation lease retain
+their own existing boundaries.
+
+`MachineSession` writes the paired `markExecuting` audit from that exact snapshot
+outside the game scheduler lock. Only successful audit persistence permits
+`commitPreparedAction`. Commit rechecks the shared public decision projection,
+including input generation, controls, scope and meaningful cues, without producing
+another internal audit snapshot. A change rejects the old decision rather than
+rebinding it. The common final validation/dispatch path executes input at most once.
+
+Preparation owns a short Actor hold, not a GUI input lock. Input or scene/scope
+changes invalidate and release it before stable-state checks. `abortPreparedAction`
+can cancel queued or prepared work before commit, so late preparation after a
+timeout cannot strand the hold. Once submitted for execution, the original
+execution futures own its outcome; a wait timeout uses `in_progress`/settle and
+cannot abort, replay or prepare the action again. Failures before input dispatch
+remain definitely not executed; uncertain failures after dispatch remain `UNKNOWN`.
+The optional new-run identity belongs to that preparation and is discarded on
+rejection or abort. Continuous-activity ACK, cancellation, save-receipt ownership
+and quit-receipt delivery keep their existing public contracts.
 
 ## Profile and verification boundaries
 

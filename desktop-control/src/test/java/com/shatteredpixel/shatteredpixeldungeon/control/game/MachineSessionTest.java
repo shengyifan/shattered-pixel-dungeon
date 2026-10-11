@@ -283,7 +283,7 @@ public class MachineSessionTest {
         return new GameController.State(scope, version, phase, map("marker", marker), map("marker", marker, "private", "FULL_INTERNAL"),
                 Collections.singletonList(map("action", "wait")));
     }
-    private static final class FakeGame implements MachineSession.GamePort {
+    private static final class FakeGame implements PreparedTestGamePort {
         volatile GameController.State state = state("run:a", "v1", "player_ready", "before");
         CompletableFuture<GameController.State> next;
         RuntimeException synchronousFailure;

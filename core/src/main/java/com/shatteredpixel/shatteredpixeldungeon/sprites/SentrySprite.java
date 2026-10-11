@@ -81,7 +81,7 @@ public abstract class SentrySprite extends MobSprite {
 		chargeParticles.pour(MagicMissile.MagicParticle.ATTRACTING, 0.05f);
 		if (Game.observer.observesVisualCues()) chargeParticles.observeDraw(
 				CellParticleCue.forCharacter("sentry_charge_particles", this,
-						MagicMissile.MagicParticle.ATTRACTING, MagicMissile.MagicParticle.class));
+						MagicMissile.MagicParticle.ATTRACTING, MagicMissile.MagicParticle.class).awaitRetirement());
 		chargeParticles.on = curAnim == charging;
 
 	}

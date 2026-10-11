@@ -57,7 +57,8 @@ public class Cli9ContractTest {
             assertTrue(JsonCodec.encode(details.get("after")).contains("After"));
             assertTrue(JsonCodec.encode(details.get("before")).contains("Before"));
             assertEquals(moved,JsonCodec.decode((String)((Map<?,?>)details.get("raw")).get("response")));
-            assertEquals(2,h.game.observations);assertEquals(1,h.game.executions);
+            assertEquals("Only the explicit state query observes; prepared actions and history do not",1,h.game.observations);
+            assertEquals(1,h.game.executions);
         }
     }
 
@@ -232,7 +233,7 @@ public class Cli9ContractTest {
         }
         public void close(){session.close();store.close();}
     }
-    private static final class Fake implements MachineSession.GamePort {
+    private static final class Fake implements PreparedTestGamePort {
         int observations,executions;boolean rejectObservation;String scope="run:test";Map<String,Object> lastArgs;
         GameController.State state=snapshot("r1","Before");
         public GameController.State latest(){return state;}

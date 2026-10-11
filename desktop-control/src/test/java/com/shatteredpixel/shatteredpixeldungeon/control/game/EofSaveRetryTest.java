@@ -69,7 +69,7 @@ public class EofSaveRetryTest {
     }
 
     private static List<String> kinds(AuditStore store){List<String> result=new ArrayList<>();for(Map<String,Object> event:store.events("run:a",0,100))result.add((String)event.get("kind"));return result;}
-    private static final class FakeGame implements MachineSession.GamePort{
+    private static final class FakeGame implements PreparedTestGamePort{
         GameController.State state=new GameController.State("run:a","v1","player_ready",map("hero","public"),map("internal",true),Collections.singletonList(map("action","app.quit")));
         final Queue<GameController.SaveResult> saves=new ArrayDeque<>();final List<String> versions=new ArrayList<>();
         Throwable firstFailure;boolean saveBeforeFailure,exiting,exited;int observations;

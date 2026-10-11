@@ -1,12 +1,12 @@
 # spdctl control interface
 
-Current contract: **CLI.9.0.4 / protocol 9 / audit schema 12**, base game **4.0.2**.
+Current contract: **CLI.9.0.5 / protocol 9 / audit schema 12**, base game **4.0.2**.
 The authoritative interface and complete request examples are in [the English CLI help](cli-help.md),
 which is bundled verbatim as `spdctl --help`. Read the [current architecture](cli-architecture.md)
 for implementation and test boundaries, and the [agent working agreements](../AGENTS.md)
 before changing or operating the controller. Protocol 9 keeps complete same-frame
 action sharing and record templates and reports [semantic public facts](cli-combat-visuals.md).
-The [current validation report](cli-9.0.4-player-info-validation.md) records the actual
+The [current validation report](cli-9.0.5-revision-validation.md) records the actual
 checks for this batch; the [8.0.1 recovery record](cli-8.0.1-recovery-validation.md)
 is background for settle budgets, warning lifetimes and safe Python access.
 
@@ -31,6 +31,13 @@ The packaged controller owns one native-recorded game child using the bundled JV
 Generated request counters are decimal: `t1.9` is followed by `t1.10`, not `t1.a`.
 The server-provided prefix remains opaque; failed allocations consume numbers,
 and original IDs in historical records are never renamed.
+
+New ordinary/activity revisions also use decimal suffixes: `r9` is followed by
+`r10`, and `a9` by `a10`. Copy the entire displayed handle without interpreting its
+counter. Other handle kinds keep their existing format; historical mappings and
+raw/reply bytes are unchanged. Finite action completion waits for reviewed public
+semantic presentation to finish, while real decision changes still invalidate rev.
+Pending presentation uses the existing `in_progress`/settle flow.
 
 Normal terminal/PTY launch works without redirecting stdout to a file. Child stderr has a dedicated pipe and a separate byte forwarder, so the native relay cannot change the controller terminal's blocking flags through an inherited descriptor. When consuming NDJSON, keep stdout and stderr separate; deliberately merging them on a terminal may interleave diagnostic text with JSON. The child's raw SEND/RECV/ERROR records remain separate and unchanged. Diagnostic forwarding is best-effort, with a bounded final drain after child exit.
 
@@ -63,7 +70,7 @@ One trace directory retains `send.raw`, `recv.raw`, `stderr.raw`, `events.tsv`, 
 
 Use current v9 tests and the rebuilt executable. Test profiles and generated JSON
 belong in ignored build directories. The [architecture](cli-architecture.md)
-identifies the maintained gates; the [CLI.9.0.4 report](cli-9.0.4-player-info-validation.md)
+identifies the maintained gates; the [CLI.9.0.5 report](cli-9.0.5-revision-validation.md)
 records their executed scope and actual package readback. Historical version results
 are not evidence for a later build. Protocol 9 has no cross-frame dictionaries or
 map/inventory/log deltas; each response remains independently complete. A static

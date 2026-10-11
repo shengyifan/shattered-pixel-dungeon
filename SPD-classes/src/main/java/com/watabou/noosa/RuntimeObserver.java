@@ -18,6 +18,8 @@ public interface RuntimeObserver {
     default void onDispose() {}
     default void onSave(String runId, int slot, Throwable error) {}
     default void onRunEnded(String runId, boolean won) {}
+    /** Optional audit identity owned by the currently executing new-run request. */
+    default String newRunIdentity() { return null; }
     /** Optional immutable text provenance. NONE preserves the original String identity. */
     default String onTextResource(String rendered, String resolvedKey, String language, Object[] arguments) { return rendered; }
     /** The successful source-language template permits masking parameters the GUI did not display. */

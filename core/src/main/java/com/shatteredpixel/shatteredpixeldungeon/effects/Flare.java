@@ -53,7 +53,18 @@ public class Flare extends Visual {
 	private final float visualRadius;
 	private int observedLootTier;
 	private boolean observedCharacterAura;
+	private java.lang.ref.WeakReference<CharSprite> observedCharacter;
+	private long observedCharacterLifetime;
 	public Flare observeCharacterAura() { observedCharacterAura = true; return this; }
+
+	/** A live native aura must have caught up to its existing sprite, never its actor position. */
+	public boolean characterAnchorPending(CharSprite sprite) {
+		if (!observedCharacterAura || observedCharacter == null || observedCharacter.get() != sprite
+				|| observedCharacterLifetime != sprite.observationLifetime() || !exists || !alive || !visible || !active
+				|| parent == null || parent != sprite.parent) return false;
+		PointF center = sprite.center();
+		return Float.isFinite(x+y+center.x+center.y) && (x != center.x || y != center.y);
+	}
 
 	/** Attaches the public branch selected by the loot-flare renderer, never an item or drop counter. */
 	public Flare observeLootTier(int tier) {
@@ -162,6 +173,10 @@ public class Flare extends Visual {
 	
 	public Flare show( Visual visual, float duration ) {
 		if (visual instanceof CharSprite){
+			if (observedCharacterAura) {
+				observedCharacter = new java.lang.ref.WeakReference<>((CharSprite)visual);
+				observedCharacterLifetime = visual.observationLifetime();
+			}
 			point(((CharSprite) visual).destinationCenter());
 		} else {
 			point(visual.center());

@@ -1,7 +1,7 @@
 # spdctl: compact game control (protocol 9)
 
 This manual is printed by `spdctl --help` and bundled with the application.
-`spdctl --version` reports CLI.9.0.4, protocol 9, and base game 4.0.2.
+`spdctl --version` reports CLI.9.0.5, protocol 9, and base game 4.0.2.
 
 ## 1. Start and keep the connection open
 
@@ -177,9 +177,12 @@ resuming a run can change `s`; update from that response. Scope/revision strings
 opaque: do not generate, shorten or reinterpret them. Restarting invalidates all
 old revisions. Historical queries never return a top-level live `rev`.
 
-Protocol 9 allocates durable typed base36 handles in the selected profile: `s` for
+Protocol 9 allocates durable typed handles in the selected profile: `s` for
 scope, `r` for normal revision, `a` for activity revision, `t` for session, `p` for
-save receipt and `m` for map context (for example `s2`, `r7`, `a3`). They represent
+save receipt and `m` for map context (for example `s2`, `r7`, `a3`). CLI.9.0.5
+allocates new `r` and `a` handles with ASCII decimal digits only: `r9`, `r10`,
+`r11` and `a9`, `a10`, `a11`. Other kinds retain base36 suffixes. Historical
+mappings and raw/reply records retain their original spelling. All handles represent
 complete canonical identities, including process epochs, and are never recycled in
 that profile. Different profile directories may use the same short numbers; keep
 the connection bound to the selected profile. UI controls use current `c` handles,
@@ -567,7 +570,7 @@ For example, this standalone fragment needs no inventory table:
 
 ### Semantic combat and UI information
 
-CLI.9.0.4 reports public gameplay facts rather than renderer internals. An
+CLI.9.0.5 reports public gameplay facts rather than renderer internals. An
 inventory item or buff can carry `shown` with already public status, extra,
 level, symbol, variant or counter strings. A buff may contain
 `progress:{covered,total,basis:"displayed"}`; an item may contain a strength
@@ -817,7 +820,12 @@ Any discovery error remains an error. Ordinary `continuous_activity` needs no
 extra discovery query, and neither branch obtains historical reply text.
 
 A synchronous action reply is itself a current observation; it does not require an
-extra state query. After a successful `quit`, await process exit without another
+extra state query. A finite action reaches its final observation only after reviewed
+public semantic presentation is ready, including visible aura follow, chilled onset,
+finite sentry-particle tails and semantic item landing. Until then, use the original
+`in_progress`/settle flow. This does not disable real warning or state checks, and
+does not authorize refreshing an old decision onto a new revision.
+After a successful `quit`, await process exit without another
 state request. During resolving/unknown execution, missing live `rev` and
 `last_stable_state` indicate that no new actionable boundary was certified.
 Never act using the revision inside that old snapshot.

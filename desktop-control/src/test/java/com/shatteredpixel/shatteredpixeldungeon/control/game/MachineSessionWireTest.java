@@ -24,7 +24,7 @@ public class MachineSessionWireTest {
         ByteArrayOutputStream output=new ByteArrayOutputStream();
         try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
             GameController.State state=new GameController.State(store.menuScope(),"test:1","menu_ready",map("scene","menu"),map("test_only",true),Collections.emptyList());
-            MachineSession.GamePort game=new MachineSession.GamePort(){
+            MachineSession.GamePort game=new PreparedTestGamePort(){
                 public GameController.State latest(){return state;}
                 public CompletableFuture<GameController.State> observe(){return CompletableFuture.completedFuture(state);}
                 public CompletableFuture<GameController.State> execute(String version,Map<String,Object> args){throw new AssertionError("No gameplay is needed for wire parsing");}

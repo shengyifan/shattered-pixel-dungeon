@@ -132,7 +132,7 @@ public class GameLogEventsTest {
     private static String literal(String text){return com.shatteredpixel.shatteredpixeldungeon.control.game.text.TextProvenance.INSTANCE.onTextOperation("literal",text,text);}
     private static GameController.GameLogSnapshot snapshot(String scope,String text){return new GameController.GameLogSnapshot(scope,"2026-09-09T01:00:00Z",List.of(new RuntimeObserver.LogEntry(text,0xffffff)));}
     private static Map<String,Object> last(ByteArrayOutputStream wire)throws Exception{String[] rows=wire.toString("UTF-8").strip().split("\\R");return JsonCodec.decode(rows[rows.length-1]);}
-    private static final class FakeGame implements MachineSession.GamePort{
+    private static final class FakeGame implements PreparedTestGamePort{
         int exits;
         final Queue<GameController.GameLogSnapshot> logs=new ArrayDeque<>();
         final Queue<GameController.VisualSnapshot> visuals=new ArrayDeque<>();

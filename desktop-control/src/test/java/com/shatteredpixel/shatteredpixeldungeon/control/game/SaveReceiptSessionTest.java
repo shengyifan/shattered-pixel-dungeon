@@ -327,7 +327,7 @@ public class SaveReceiptSessionTest {
         try (Statement statement = connection.createStatement(); ResultSet rows = statement.executeQuery(sql)) { return rows.next() ? rows.getString(1) : null; }
     }
 
-    private static final class FakeGame implements MachineSession.GamePort {
+    private static final class FakeGame implements PreparedTestGamePort {
         GameController.State state = state(SCOPE, "v1", "player_ready");
         final ConcurrentLinkedQueue<GameController.SaveResult> saves = new ConcurrentLinkedQueue<>();
         Consumer<String> onStart = ignored -> {};

@@ -1,4 +1,4 @@
-# CLI.9.0.4 continuous actions and cancellation
+# CLI.9.0.5 continuous actions and cancellation
 
 Protocol 9 exposes native extended rest and path travel as interruptible activity.
 A directional `move` remains one original directional input; a remote `cell` may
@@ -14,6 +14,9 @@ with the activity revision and the original action's `rid`. Read that actual
 binding. It is valid for cancellation of that activity, not for arbitrary inputs
 based on an old HP/map snapshot. Other game actions remain `BUSY` while the
 activity is pending. Stopped activities invalidate their old cancellation binding.
+New activity revisions use `a` plus ASCII decimal digits, such as `a10`; copy the
+whole displayed handle without predicting its counter. Historical bindings remain
+immutable and never become current cancellation bindings after a process restart.
 
 With `spdctl control --machine`, these are illustrative **controller intents**:
 
@@ -42,7 +45,7 @@ bytes rather than treating a successful later query as proof of action success.
 A direct client keeps its one connection and sends a fresh protocol-9 request:
 
 ```json
-{"v":8,"id":"<FRESH_ID>","s":"<CURRENT_SCOPE>","rev":"<ACTIVITY_REV>","op":"cancel","rid":"<ORIGINAL_ID>"}
+{"v":9,"id":"<FRESH_ID>","s":"<CURRENT_SCOPE>","rev":"<ACTIVITY_REV>","op":"cancel","rid":"<ORIGINAL_ID>"}
 ```
 
 Use the handshake's opaque request prefix plus a newly allocated decimal counter.
@@ -62,6 +65,14 @@ that succeeds does `cancelPrepared` invoke native `GameScene.cancel()`. On failu
 normal ready boundary, the original request becomes `INTERRUPTED`, while the
 cancellation request completes separately. Request IDs, original response bytes,
 before/after snapshots and save receipts keep their own identities.
+
+CLI.9.0.5 also uses prepare/audit/commit for ordinary actions, without changing the
+separate cancellation lease or continuous-activity acknowledgement contract.
+Finite completion waits for reviewed public semantic presentation to become
+ready. A final `player_ready` observation therefore waits for visible aura follow,
+chilled onset, finite sentry tails and semantic item landing; pending presentation
+continues through the original `in_progress`/settle lifecycle. Real changes to the
+operation's meaning still invalidate its old revision.
 
 There is no second unsolicited response on the original action's pipe request.
 The controller finishes both pending lifecycles through local `settle`; manually
@@ -95,4 +106,4 @@ python3 desktop-control/src/test/python/cancellation_smoke.py --mode travel-audi
 The failure mode injects a persistence failure only into its labeled test profile;
 never use a personal profile. Fixtures are marked `counts_as_win=false`. Current
 source organization and gate boundaries are in the [architecture](cli-architecture.md);
-executed results belong in the [validation report](cli-8.0.2-cleanup-validation.md).
+executed results belong in the [current validation report](cli-9.0.5-revision-validation.md).

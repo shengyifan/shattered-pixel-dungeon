@@ -15,7 +15,7 @@ The [import record](../../memory/IMPORTS.md) identifies the original material.
 ## Establish the boundary
 
 - Inspect the checkout, branch, worktree and actual launcher version. The present
-  baseline is CLI.9.0.4 / protocol 9 / schema 12 / game 4.0.2; verify it rather than
+  baseline is CLI.9.0.5 / protocol 9 / schema 12 / game 4.0.2; verify it rather than
   treating this line or historical test totals as current package evidence.
 - Preserve the existing game/controller and personal profiles. Never inspect
   personal saves or private audit databases to diagnose gameplay decisions. Use
@@ -58,6 +58,9 @@ resumed through `settle`, not resent or implicitly drained by `state/cancel`.
 
 Useful local evidence routes:
 
+- [CLI.9.0.5 revision validation](../../docs/cli-9.0.5-revision-validation.md)
+  for semantic completion readiness, prepare/audit/commit boundaries and decimal
+  normal/activity revisions. Read its validation status before claiming coverage.
 - [CLI.9.0.4 player-information validation](../../docs/cli-9.0.4-player-info-validation.md)
   for crystal decoding, journal/recipe semantics, ritual markings and native alarm events.
 

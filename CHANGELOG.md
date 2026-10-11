@@ -4,6 +4,13 @@
 
 以下验证结论仅代表各版本当时的范围，测试夹具不计正式通关。当前说明见 [CLI 文档](docs/cli.md)与[架构说明](docs/cli-architecture.md)。工作树已清除过时历史报告；下方旧报告链接固定到清理前的 Git 提交，原有结果仍只代表当时的版本。
 
+## CLI.9.0.5
+
+- Aligns finite action completion with reviewed public semantic presentation: visible character/aura follow, chilled onset, finite sentry tails and semantic item landing. Genuine warning and operation-state changes remain part of revision validation; decorative feedback remains outside it.
+- Unifies ordinary action preparation, the frozen before snapshot, paired audit persistence and final commit validation. Audit completes outside the scheduler lock before input dispatch; preparation can be withdrawn before submission, while submitted or uncertain execution keeps its original outcome and is never replayed.
+- Allocates new normal/activity revisions as `r`/`a` plus decimal digits from their existing durable counters. Other kinds, historical mappings and raw/reply bytes retain their spelling; no migration or older-launcher rollback allocator is added.
+- Keeps protocol 9, audit schema 12, game 4.0.2/code 922, the v9 profile and trace format 1. Implementation and executed-check status are recorded in [revision validation](docs/cli-9.0.5-revision-validation.md); fixtures are separate from real gameplay.
+
 ## CLI.9.0.4
 
 - Records the [2026-10-11 clean rebuild](docs/cli-9.0.4-player-info-validation.md#clean-rebuild-2026-10-11), removal of previous generated outputs, fresh ARM64 package verification and the requested branch delivery. Runtime source and release identities are unchanged by the rebuild.

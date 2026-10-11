@@ -38,14 +38,8 @@ public final class GameSnapshotter {
 
     public Capture capture() {
         Object currentScene = Game.instance == null ? null : SnapshotFields.read(Game.instance, "scene");
-        String scene = "uninitialized";
-        if (currentScene != null) {
-            scene = sceneName(currentScene.getClass().getSimpleName());
-        }
-        // Dungeon retains the previous run while non-game scenes are open.
-        boolean playing = "game".equals(scene);
-        Map<String, Object> publicState = PlayerObservation.capture(
-                playing ? Dungeon.hero : null, playing ? Dungeon.level : null, scene);
+        boolean playing = currentScene != null && "game".equals(sceneName(currentScene.getClass().getSimpleName()));
+        Map<String, Object> publicState = capturePublic(currentScene);
         Map<String, Object> roots = playing ? map("active_hero", Dungeon.hero, "active_level", Dungeon.level) : map();
         if (Game.instance != null) {
             roots.put("current_scene", currentScene);
@@ -60,6 +54,18 @@ public final class GameSnapshotter {
         internalState.put("random", randomState());
         internalState.put("build", BuildCatalog.current());
         return new Capture(publicState, internalState);
+    }
+
+    /** Public decision facts only: no audit graph, profile IO, RNG export or build capture. */
+    public Map<String, Object> capturePublic() {
+        return capturePublic(Game.instance == null ? null : Game.scene());
+    }
+
+    private Map<String, Object> capturePublic(Object currentScene) {
+        String scene = currentScene == null ? "uninitialized" : sceneName(currentScene.getClass().getSimpleName());
+        // Dungeon retains the previous run while non-game scenes are open.
+        boolean playing = "game".equals(scene);
+        return PlayerObservation.capture(playing ? Dungeon.hero : null, playing ? Dungeon.level : null, scene);
     }
 
     /** Pure observation over isolated fixture objects; never scans the user's profile. */

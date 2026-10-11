@@ -168,7 +168,6 @@ com.shatteredpixel.shatteredpixeldungeon.Dungeon#initialVersion
 com.shatteredpixel.shatteredpixeldungeon.Dungeon#lastPlayed
 com.shatteredpixel.shatteredpixeldungeon.Dungeon#level
 com.shatteredpixel.shatteredpixeldungeon.Dungeon#mobsToChampion
-com.shatteredpixel.shatteredpixeldungeon.Dungeon#nextRunId
 com.shatteredpixel.shatteredpixeldungeon.Dungeon#passable
 com.shatteredpixel.shatteredpixeldungeon.Dungeon#quickslot
 com.shatteredpixel.shatteredpixeldungeon.Dungeon#runId

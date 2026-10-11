@@ -187,9 +187,7 @@ public class Dungeon {
 
 	/** Persistent identity of a run, independent of slot, seed and process lifetime. */
 	public static String runId;
-	private static String nextRunId;
 	public static boolean runIdentityNeedsSave;
-	public static void prepareRunIdentity(String id) { nextRunId = id; }
 
 	public static QuickSlot quickslot = new QuickSlot();
 	
@@ -238,8 +236,8 @@ public class Dungeon {
 	
 	public static void init() {
 		com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear();
-		runId = nextRunId == null ? java.util.UUID.randomUUID().toString() : nextRunId;
-		nextRunId = null;
+		String requestedRunId = Game.observer.newRunIdentity();
+		runId = requestedRunId == null ? java.util.UUID.randomUUID().toString() : requestedRunId;
 		runIdentityNeedsSave = false;
 
 		initialVersion = version = Game.versionCode;

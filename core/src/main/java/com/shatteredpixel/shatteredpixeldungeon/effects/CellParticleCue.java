@@ -20,7 +20,7 @@ public class CellParticleCue implements Emitter.DrawObserver {
     private Object episode;
     private Emitter observedSource;
     private long lifetime;
-    private boolean finiteSignal, measuredCount;
+    private boolean finiteSignal, measuredCount, awaitRetirement, awaitFirstKnownPresentation;
     private Emitter boundSource;
     private Object boundEpisode;
     private long boundLifetime;
@@ -70,6 +70,13 @@ public class CellParticleCue implements Emitter.DrawObserver {
     }
     boolean measuredCount() { return measuredCount; }
     boolean retainActiveEpisode() { return !finiteSignal; }
+
+    /** Opt in only for native finite tails whose eventual removal changes an intent. */
+    public CellParticleCue awaitRetirement() { awaitRetirement = true; return this; }
+    boolean waitsForRetirement() { return awaitRetirement; }
+    /** A public native source whose initial particles can begin above its known anchor. */
+    public CellParticleCue awaitFirstKnownPresentation() { awaitFirstKnownPresentation = true; return this; }
+    boolean waitsForFirstKnownPresentation() { return awaitFirstKnownPresentation; }
 
     public boolean emitting(Emitter source) { return source.isEmitting(factory); }
     public boolean matches(Gizmo child) {

@@ -131,7 +131,7 @@ public class DisplayPersistenceSessionTest {
         while(port.hasDisplayEvents()&&System.nanoTime()<end)Thread.sleep(5);
         assertFalse("Display worker did not drain the finite producer",port.hasDisplayEvents());
     }
-    private static final class Port implements MachineSession.GamePort {
+    private static final class Port implements PreparedTestGamePort {
         final GameController events=new GameController(null,"menu:display",error->{throw new AssertionError(error);});
         final GameController.State state=new GameController.State(SCOPE,"v1","player_ready",map("fixture",true),map("private_fixture",true),List.of(map("action","wait")));
         final AtomicInteger acknowledgements=new AtomicInteger(),produced=new AtomicInteger(),exits=new AtomicInteger();

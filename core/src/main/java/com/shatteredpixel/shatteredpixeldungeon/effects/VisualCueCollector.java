@@ -3,6 +3,8 @@ package com.shatteredpixel.shatteredpixeldungeon.effects;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.watabou.noosa.*;
 import com.watabou.noosa.particles.Emitter;
@@ -15,7 +17,7 @@ public final class VisualCueCollector {
     private Level level;
     private String runId;
     private int depth;
-    private boolean collecting, frameEligible;
+    private boolean collecting, frameEligible, sourcePresentationsReady = true;
     private RuntimeObserver frameObserver;
     private final Map<CueIdentity,VisualCue> offered = new LinkedHashMap<>();
     private Gizmo observingSource;
@@ -44,6 +46,19 @@ public final class VisualCueCollector {
     private Map<Visual,MotionSample> previousMotion = new IdentityHashMap<>();
     private Level previousMotionLevel;
     private List<VisualCue> lastPublished = Collections.emptyList();
+    private final Map<ItemSprite,DropObservation> observedDrops = new WeakHashMap<>();
+
+    private static final class DropObservation {
+        final java.lang.ref.WeakReference<Level> level; final String runId; final long lifetime; final Object episode; final List<Integer> cells;
+        DropObservation(Level level,String runId,ItemSprite source,List<Integer> cells){
+            this.level=new java.lang.ref.WeakReference<>(level);this.runId=runId;
+            this.lifetime=source.observationLifetime();this.episode=source.gameplayDropEpisode();this.cells=cells;
+        }
+        boolean matches(Level level,String runId,ItemSprite source){
+            return this.level.get()==level&&Objects.equals(this.runId,runId)
+                    &&lifetime==source.observationLifetime()&&episode==source.gameplayDropEpisode();
+        }
+    }
 
     private static final class MotionSample {
         final long lifetime; final float x,y;
@@ -66,8 +81,10 @@ public final class VisualCueCollector {
         drawnTexts.clear(); offered.clear(); particleObservations.clear(); movingObservations.clear(); densities.clear();
         level=Dungeon.level;runId=Dungeon.runId;depth=Dungeon.depth;frameObserver=Game.observer;
         collecting=false;
+        sourcePresentationsReady=true;
         frameEligible=Game.scene()==scene&&level!=null&&runId!=null&&frameObserver.observesVisualCues();
-        if(!frameEligible)previousMotion=Collections.emptyMap();
+        if(!frameEligible){previousMotion=Collections.emptyMap();observedDrops.clear();}
+        else pruneObservedDrops();
     }
 
     /** Called after the ordinary draw. Never manufactures a draw, emission, update, or actor turn. */
@@ -82,7 +99,7 @@ public final class VisualCueCollector {
             try { collectSources(scene); } finally { collecting=false; }
             finishPendingWarnings();
             finishMovingDraws();
-            boolean ready=finishParticleDraws();
+            boolean ready=finishParticleDraws()&&sourcePresentationsReady;
             for(Map.Entry<String,Set<Visual>> entry:densities.entrySet()){
                 int cell=Integer.parseInt(entry.getKey());
                 add(scene,new VisualCue("sacrificial_flames",cell,null,null,null,null,
@@ -110,10 +127,42 @@ public final class VisualCueCollector {
         // Traversal of a UI group does not authorize ordinary UI producers or reveal its labels.
         boolean eligible=source instanceof FloatingText?floatingAttached((FloatingText)source):attached(source);
         if(eligible){
+            // Read only native renderer continuations in the same public world scope as the
+            // cues. Unseen actors, camera clipping, and private game clocks never gate input.
+            if(source instanceof Visual&&canUpdate(source)&&drawable((Visual)source)){
+                if(source instanceof CharSprite&&hasKnownFootprint((Visual)source)
+                        &&((CharSprite)source).hasPendingGameplayPresentation())sourcePresentationsReady=false;
+                if(source instanceof ItemSprite&&knownDropPending((ItemSprite)source))sourcePresentationsReady=false;
+            }
             Gizmo previous=observingSource;observingSource=source;
             try{source.observeGameplayVisuals();}finally{observingSource=previous;}
         }
         if(source instanceof Group)for(Gizmo child:((Group)source).childrenSnapshot())collectSources(child);
+    }
+    private boolean knownDropPending(ItemSprite source){
+        if(!source.hasPendingGameplayPresentation()){observedDrops.remove(source);return false;}
+        DropObservation prior=observedDrops.get(source);
+        if(prior!=null&&!prior.matches(level,runId,source)){observedDrops.remove(source);prior=null;}
+        List<Integer> cells=new ArrayList<>();
+        for(int cell:VisualCueProjection.worldFootprint(source,level.width(),level.length(),DungeonTilemap.SIZE))if(known(cell))cells.add(cell);
+        if(!cells.isEmpty()){
+            if(prior==null)observedDrops.put(source,new DropObservation(level,runId,source,Collections.unmodifiableList(cells)));
+            return true;
+        }
+        // An observed drop may briefly rise above the FOV edge. Retain only its own
+        // previously public footprint, not the heap's model position or a future destination.
+        if(prior!=null)for(int cell:prior.cells)if(known(cell))return true;
+        observedDrops.remove(source);return false;
+    }
+    private void pruneObservedDrops(){
+        Iterator<Map.Entry<ItemSprite,DropObservation>> entries=observedDrops.entrySet().iterator();
+        while(entries.hasNext()){
+            Map.Entry<ItemSprite,DropObservation> entry=entries.next();ItemSprite source=entry.getKey();DropObservation prior=entry.getValue();
+            boolean retained=source!=null&&prior.matches(level,runId,source)&&canUpdate(source)&&drawable(source)
+                    &&source.hasPendingGameplayPresentation();
+            boolean visibleAnchor=false;if(retained)for(int cell:prior.cells)if(known(cell)){visibleAnchor=true;break;}
+            if(!retained||!visibleAnchor)entries.remove();
+        }
     }
     private boolean known(int cell){return level!=null&&VisualCueProjection.knownCell(cell,level.length(),level.heroFOV);}
     private boolean knownTerrain(int cell){
@@ -246,8 +295,11 @@ public final class VisualCueCollector {
                 add(value.source,new VisualCue(value.observation.kind,value.cell,null,null,null,null,
                         value.observation.stage==null?null:Collections.singletonMap("stage",value.observation.stage)));
             boolean eligible=anchor&&value.observation.emitting(value.source)
-                    &&(value.contributors.isEmpty()||contributes);
-            ready&=value.observation.recordVisibleFrame(eligible,contributes)||!value.source.canProgress();
+                    &&(value.observation.waitsForFirstKnownPresentation()||value.contributors.isEmpty()||contributes);
+            boolean retiring=false;
+            if(value.observation.waitsForRetirement()&&anchor&&!value.observation.emitting(value.source))
+                for(Visual child:visible)if(canUpdate(child)){retiring=true;break;}
+            ready&=(!retiring&&value.observation.recordVisibleFrame(eligible,contributes))||!value.source.canProgress();
         }
         return ready;
     }
@@ -295,6 +347,10 @@ public final class VisualCueCollector {
     private boolean hasKnownFootprint(Visual source){
         for(int cell:VisualCueProjection.worldFootprint(source,level.width(),level.length(),DungeonTilemap.SIZE))if(known(cell))return true;
         return false;
+    }
+    private static boolean canUpdate(Gizmo source){
+        for(Gizmo value=source;value!=null;value=value.parent)if(!value.exists||!value.alive||!value.active)return false;
+        return true;
     }
     private boolean drawable(Visual source){
         return attached(source)&&Float.isFinite(source.am+source.aa)&&source.am+source.aa>0

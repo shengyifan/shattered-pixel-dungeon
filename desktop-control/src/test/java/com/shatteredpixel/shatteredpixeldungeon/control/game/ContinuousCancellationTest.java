@@ -163,7 +163,7 @@ public class ContinuousCancellationTest {
                 map("scene", "game", "phase", phase), map("fixture", "complete-internal-state"), actions);
     }
 
-    private static final class FakeGame implements MachineSession.GamePort {
+    private static final class FakeGame implements PreparedTestGamePort {
         final AuditStore store;
         final CompletableFuture<GameController.State> completion = new CompletableFuture<>();
         GameController.State latest = state("ordinary:1", "player_ready");

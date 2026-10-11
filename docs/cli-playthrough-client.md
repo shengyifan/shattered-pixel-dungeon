@@ -1,6 +1,6 @@
 # Public CLI clients and per-frame decoding
 
-## Reusable CLI.9.0.4 reference helper
+## Reusable CLI.9.0.5 reference helper
 
 `desktop-control/client/spdctl_client.py` is an optional, dependency-free Python
 module for consumers of the packaged controller. It does not launch the game,
@@ -39,7 +39,7 @@ against complete current hero/item/entity/buff facts. Ambiguous or missing subje
 are decoding errors. All views use this representation. Null, false, zero,
 unknown fields, protected metadata and literal labels remain distinct.
 
-CLI.9.0.4 validates static parameters for every action, query and local `settle`,
+The current helper validates static parameters for every action, query and local `settle`,
 including required/extra fields and JSON integer versus boolean/float distinctions.
 An omitted settle rid resumes the owner of an outstanding query first, otherwise
 the latest pending action; an explicit invalid rid is never treated as omitted.
@@ -157,6 +157,20 @@ the stable electrical hazard. Its animation alone is not a new decision binding.
 Use the response's actual `rev` and reobserve after a definite stale rejection;
 never infer a replacement revision from cue or event differences.
 
+New normal and activity revisions contain only ASCII decimal digits after `r`
+or `a`, for example `r10` and `a10`. They remain opaque exact-match bindings:
+neither the helper nor a caller should parse, increment or regenerate them.
+Historical registry mappings and raw/reply bytes keep their original spelling;
+other handle kinds keep their existing format. A historical revision is never a
+current binding, even when its numeric suffix resembles a live one.
+
+Finite action completion waits for reviewed public semantic presentation, including
+visible aura follow, chilled onset, finite sentry tails and semantic item landing.
+While that presentation is pending, retain the original `in_progress` and finish it
+through `settle`. A final synchronous action reply already supplies the resulting
+observation; no extra state query or revision refresh is required. Real changes to
+the operation's meaning still invalidate the old revision.
+
 ## Development gameplay driver
 
 The packaged `spdctl control --machine` is the normal model-control entrypoint.
@@ -187,7 +201,7 @@ python3 desktop-control/src/test/python/autoplay.py --self-test
 
 Source/test organization and explicit offline token-study entrypoints are in the
 [current architecture](cli-architecture.md). Executed checks belong in the
-[current validation report](cli-9.0.4-player-info-validation.md), separately from
+[current validation report](cli-9.0.5-revision-validation.md), separately from
 actual playthrough evidence in the [project memory](../memory/README.md).
 Display each complete response using that same parsed object; do not filter by
 fixed English labels, crop the map without marking it, remove descriptions, omit
@@ -209,7 +223,7 @@ Tabs carry a boolean `selected` (false is retained), and source icon semantics.
 Talent nodes carry `talent_points:{spent,max}` even outside the current game.
 The decoder retains and validates these direct node fields in all views.
 
-CLI.9.0.4 additionally validates source-selected Crystal glow stages consistently
+The helper also validates source-selected Crystal glow stages consistently
 in items, UI nodes, nested semantic icons and world cues, including standalone
 actions and frozen snapshots. UI nodes carrying health bars or turn progress
 use the same displayed-value validation as hero/entity facts. Failed validation

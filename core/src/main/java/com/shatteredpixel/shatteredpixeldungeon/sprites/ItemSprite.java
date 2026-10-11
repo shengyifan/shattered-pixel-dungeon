@@ -65,6 +65,7 @@ public class ItemSprite extends MovieClip {
 	private boolean glowUp;
 	
 	private float dropInterval;
+	private Object gameplayDropEpisode;
 
 	//the amount the sprite is raised from flat when viewed in a raised perspective
 	protected float perspectiveRaise    = 5 / 16f; //5 pixels
@@ -119,6 +120,7 @@ public class ItemSprite extends MovieClip {
 		speed.set( 0 );
 		acc.set( 0 );
 		dropInterval = 0;
+		gameplayDropEpisode = null;
 		
 		heap = null;
 		gameplayGlowBound=false;
@@ -174,6 +176,7 @@ public class ItemSprite extends MovieClip {
 		}
 			
 		dropInterval = DROP_INTERVAL;
+		gameplayDropEpisode = Game.observer.observesVisualCues() ? new Object() : null;
 		
 		speed.set( 0, -100 );
 		acc.set(0, -speed.y / DROP_INTERVAL * 2);
@@ -292,6 +295,15 @@ public class ItemSprite extends MovieClip {
 		return new com.watabou.noosa.VisualCue("item_glow",cell,null,null,null,null,meaning);
 	}
 
+	/** A selected public item meaning is withheld only until its native drop has landed. */
+	public boolean hasPendingGameplayPresentation() {
+		return heap != null && dropInterval > 0
+				&& (!gameplayGlow().isEmpty() || !gameplayItemStatus().isEmpty());
+	}
+
+	/** Private source identity only; never a public item identity, position or timer. */
+	public Object gameplayDropEpisode() { return gameplayDropEpisode; }
+
 	public com.watabou.noosa.VisualCue gameplayItemStatusCue() {
 		int cell=gameplayHeapCell();if(cell<0)return null;
 		java.util.Map<String,Object> meaning=gameplayItemStatus();if(meaning.isEmpty())return null;
@@ -312,6 +324,7 @@ public class ItemSprite extends MovieClip {
 	@Override
 	public void kill() {
 		gameplayGlowBound=false;
+		gameplayDropEpisode=null;
 		super.kill();
 		if (emitter != null) {
 			emitter.on = false;

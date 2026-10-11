@@ -26,6 +26,7 @@ public class ActorHandoffTest {
         com.watabou.utils.PlatformSupport previousPlatform=Game.platform;
         Hero previousHero=Dungeon.hero;
         Set<Actor> previousActors=Actor.all();
+        java.lang.reflect.Field currentField=currentField();Object previousCurrent=currentField.get(null);
         boolean previousKeepAlive=Actor.keepActorThreadAlive;
         AtomicInteger steps=new AtomicInteger();
         Char actor=new Char(){@Override protected boolean act(){steps.incrementAndGet();return false;}};
@@ -60,6 +61,7 @@ public class ActorHandoffTest {
             synchronized(thread){thread.notifyAll();}thread.join(2000);
             assertFalse(thread.isAlive());
             Actor.clear();for(Actor previous:previousActors)Actor.add(previous);
+            currentField.set(null,previousCurrent);
             Actor.keepActorThreadAlive=previousKeepAlive;Dungeon.hero=previousHero;
             Game.instance=previousGame;Game.platform=previousPlatform;
         }
@@ -70,6 +72,7 @@ public class ActorHandoffTest {
         com.watabou.utils.PlatformSupport previousPlatform = Game.platform;
         Hero previousHero = Dungeon.hero;
         Set<Actor> previousActors = Actor.all();
+        java.lang.reflect.Field currentField=currentField();Object previousCurrent=currentField.get(null);
         boolean previousKeepAlive = Actor.keepActorThreadAlive;
         AtomicInteger steps = new AtomicInteger();
         AtomicReference<Throwable> failure = new AtomicReference<>();
@@ -100,11 +103,16 @@ public class ActorHandoffTest {
             assertFalse("Test actor must exit without interrupting a game thread", thread.isAlive());
             Actor.clear();
             for (Actor previous : previousActors) Actor.add(previous);
+            currentField.set(null,previousCurrent);
             Actor.keepActorThreadAlive = previousKeepAlive;
             Dungeon.hero = previousHero;
             Game.instance = previousGame;
             Game.platform = previousPlatform;
         }
+    }
+
+    private static java.lang.reflect.Field currentField() throws Exception {
+        java.lang.reflect.Field field=Actor.class.getDeclaredField("current");field.setAccessible(true);return field;
     }
 
     private void awaitYield(Thread thread, AtomicInteger steps, int count) throws Exception {

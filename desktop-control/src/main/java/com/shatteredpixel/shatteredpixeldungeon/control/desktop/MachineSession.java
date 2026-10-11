@@ -28,6 +28,10 @@ public final class MachineSession implements AutoCloseable {
             CompletableFuture<GameController.State> completion=execute(version,args);
             return new GameController.Execution(completion,completion);
         }
+        GameController.ActionPreparation prepareAction(String scope,String version,Map<String,Object> args,
+                                                       String requestId,String plannedRun);
+        GameController.Execution commitPreparedAction(GameController.ActionPreparation preparation);
+        void abortPreparedAction(GameController.ActionPreparation preparation);
         default CompletableFuture<GameController.State> prepareCancellation(String version,String target){
             return CompletableFuture.failedFuture(new ProtocolException("CANCEL_UNAVAILABLE","Runtime does not support cancellation"));
         }
@@ -35,7 +39,6 @@ public final class MachineSession implements AutoCloseable {
             return CompletableFuture.failedFuture(new ProtocolException("CANCEL_UNAVAILABLE","Runtime does not support cancellation"));
         }
         default void abortCancellation(String version){}
-        void prepareRun(String id);
         GameController.SaveResult pollSave();
         default GameController.RunOutcome pollRunOutcome(){return null;}
         default GameController.GameLogSnapshot pollGameLog(){return null;}
@@ -119,10 +122,12 @@ public final class MachineSession implements AutoCloseable {
             public CompletableFuture<GameController.State> observe(){return game.observe();}
             public CompletableFuture<GameController.State> execute(String v,Map<String,Object> a){return game.execute(v,a);}
             public GameController.Execution start(String v,Map<String,Object> a,String id){return game.start(v,a,id);}
+            public GameController.ActionPreparation prepareAction(String s,String v,Map<String,Object> a,String id,String run){return game.prepareAction(s,v,a,id,run);}
+            public GameController.Execution commitPreparedAction(GameController.ActionPreparation p){return game.commitPreparedAction(p);}
+            public void abortPreparedAction(GameController.ActionPreparation p){game.abortPreparedAction(p);}
             public CompletableFuture<GameController.State> prepareCancellation(String v,String target){return game.prepareCancellation(v,target);}
             public CompletableFuture<GameController.State> cancelPrepared(String v,String target){return game.cancelPrepared(v,target);}
             public void abortCancellation(String v){game.abortCancellation(v);}
-            public void prepareRun(String id){game.prepareRun(id);}
             public GameController.SaveResult pollSave(){return game.pollSave();}
             public GameController.RunOutcome pollRunOutcome(){return game.pollRunOutcome();}
             public GameController.GameLogSnapshot pollGameLog(){return game.pollGameLog();}
@@ -181,6 +186,7 @@ public final class MachineSession implements AutoCloseable {
         GameController.State state=game.latest();
         boolean currentCertified=false,dispatchAttempted=false,cancelRequest=false,deliversQuitReceipt=false;
         String preparedLease=null;
+        GameController.ActionPreparation preparedAction=null;
         try{
             if(frame.error!=null)throw frame.error;
             Map<String,Object> envelope=JsonCodec.decode(raw);
@@ -199,6 +205,7 @@ public final class MachineSession implements AutoCloseable {
             settleReady();
             refreshActivity();
             cancelRequest="action.execute".equals(op)&&"action.cancel".equals(request.args.get("action"));
+            boolean ordinaryAction="action.execute".equals(op)&&!cancelRequest;
             boolean busy=pending!=null||cancelling!=null;
             if("action.execute".equals(op)&&!cancelRequest&&(busy||executionUncertain))
                 throw new ProtocolException(executionUncertain?"EXECUTION_UNCERTAIN":"BUSY","No new action can be dispatched");
@@ -212,11 +219,11 @@ public final class MachineSession implements AutoCloseable {
                 settleReady();
             }
             // History is independent of the live engine's observation and presentation health.
-            if(!busy&&!executionUncertain&&!"protocol.info".equals(op)&&!HISTORY.contains(op)){
+            if(!busy&&!executionUncertain&&!ordinaryAction&&!"protocol.info".equals(op)&&!HISTORY.contains(op)){
                 state=game.observe().get(timeoutMillis,TimeUnit.MILLISECONDS);currentCertified=true;
             }
             if(state!=null&&state.scopeId.startsWith("run:"))store.ensureScope(state.scopeId,"run",state.scopeId.substring(4));
-            if(!"protocol.info".equals(op)&&!HISTORY.contains(op)&&(state==null||!scope.equals(state.scopeId)))
+            if(!ordinaryAction&&!"protocol.info".equals(op)&&!HISTORY.contains(op)&&(state==null||!scope.equals(state.scopeId)))
                 throw new ProtocolException("SCOPE_MISMATCH","Request scope is not active");
             Object result;String status="completed";
             switch(op){
@@ -278,17 +285,18 @@ public final class MachineSession implements AutoCloseable {
                         settleReady();
                         result=state.result();break;
                     }
-                    if(!version.equals(state.version))throw new ProtocolException("STALE_STATE","Observe before acting");
                     requiredString(request.args,"action");String planned=null;
-                    if(scope.equals(store.menuScope())){
-                        planned=UUID.randomUUID().toString();store.ensureScope("run:"+planned,"planned",planned);store.linkTarget(attempt,"run:"+planned);
-                    }
+                    if(scope.equals(store.menuScope()))planned=UUID.randomUUID().toString();
+                    preparedAction=game.prepareAction(scope,version,request.args,id,planned);
+                    state=preparedAction.preparedBefore.get(timeoutMillis,TimeUnit.MILLISECONDS);
+                    currentCertified=true;
+                    if(!scope.equals(state.scopeId))throw new ProtocolException("SCOPE_MISMATCH","Prepared action scope is not active");
+                    if(planned!=null){store.ensureScope("run:"+planned,"planned",planned);store.linkTarget(attempt,"run:"+planned);}
                     store.markExecuting(attempt,state.version,state.publicState,state.internalState);
                     if("app.quit".equals(request.args.get("action")))quit=new QuitLifecycle(attempt);
                     // A synchronous throw after entering runtime code can also mean a partial operation.
                     dispatchAttempted=true;pending=new Pending(attempt,state);
-                    if(planned!=null)game.prepareRun(planned);
-                    pending.execution=game.start(version,request.args,id);
+                    pending.execution=game.commitPreparedAction(preparedAction);
                     pending.future=pending.execution.completion;
                     try{
                         state=pending.execution.firstResponse.get(timeoutMillis,TimeUnit.MILLISECONDS);
@@ -360,6 +368,7 @@ public final class MachineSession implements AutoCloseable {
                 fatal(auditFailure);
             }
         }finally{
+            if(preparedAction!=null)game.abortPreparedAction(preparedAction);
             if(preparedLease!=null)game.abortCancellation(preparedLease);
             try{drainSaves();}catch(Throwable error){fatal(error);}
         }

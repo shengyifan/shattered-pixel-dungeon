@@ -51,7 +51,7 @@ public class StartupFailureSessionTest {
         }
     }
 
-    private static final class WaitingGame implements MachineSession.GamePort{
+    private static final class WaitingGame implements PreparedTestGamePort{
         final CompletableFuture<Void> observed=new CompletableFuture<>();
         final CompletableFuture<GameController.State> observation=new CompletableFuture<>();
         boolean disposed;int executions;

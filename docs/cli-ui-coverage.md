@@ -1,4 +1,4 @@
-# CLI.9.0.4 UI 覆盖清单
+# CLI.9.0.5 UI 覆盖清单
 
 清单通过 `./gradlew :game-control:generateUiCoverage` 用 javac AST 解析当前 `core/src/main/java` 与 `SPD-classes/src/main/java`。它扫描命名类、匿名类、嵌套窗口、继承关系、输入回调、物品 actions/execute、职业动作、护甲能力与法术；不加载、初始化或构造任何游戏类。
 
@@ -17,28 +17,35 @@
 
 ## v4.0.2 合入后的静态审查
 
-CLI.9.0.4 / protocol 9 的当前清单解析 **2,880 个类型、1,917 条记录**，其中
+CLI.9.0.5 / protocol 9 的当前清单解析 **2,881 个类型、1,917 条记录**，其中
 **858 条输入方法、160 个窗口、258 个按钮、33 个物品选择器、372 个物品类型**；
 `unmapped_inputs=0`。职业、子职业、护甲能力、法术和武僧招式的类型范围保持下文所列口径。
 
 CLI.9.0.1 新增的一个解析类型是只读 `PublicTerrain`，没有新增或修改输入路由。
-CLI.9.0.3 新增无状态的 `StartOptions` 资格策略；本批 4 条既有输入方法更新开局资格条件，19 条仅更新行号，没有新增或删除输入路由。
+CLI.9.0.3 新增无状态的 `StartOptions` 资格策略；该批 4 条既有输入方法更新开局资格条件，19 条仅更新行号，没有新增或删除输入路由。
 CLI.9.0.4 adds source-bound journal/category/grid icons and catalog state, plus
 native QuickRecipe material-sufficiency facts. Grid entries retain `entry/select`;
-adding a status interface must not remove the original action route. The current
+adding a status interface must not remove the original action route. That batch's
 inventory has one changed document-click body (recording its displayed read
 state), 49 line-only updates, and no added/removed input route. Runtime coverage
 belongs to the [CLI.9.0.4 validation report](cli-9.0.4-player-info-validation.md),
 not this static inventory.
+
+CLI.9.0.5 的类型数新增 1，来自只保存作用域与展示就绪元数据的私有嵌套类
+`VisualCueCollector.DropObservation`。全部 **1,917 条既有记录未变**：新增、删除、
+方法体、行号与输入路线变化均为 0，`unmapped_inputs=0`。静态审查产物为
+`game-control/build/ui-coverage-cli905-review.json`；它不证明实际运行覆盖。
+本批实际测试和安装包验证见 [CLI.9.0.5 验证记录](cli-9.0.5-revision-validation.md)。
+
 下列变更统计属于前一批 CLI.9.0.0 的 v4.0.2 合入：与 `ff05ece42` 的 CLI.8.0.2 基线比较，记录新增 25 条、删除 18 条、方法体或其他
 语义字段改变 28 条；另有 233 条仅清单中的源码行号变化。变动涉及 65 个文件，
 其中 31 个文件含新增、删除或非行号变化，已经按实际原生入口逐项审查。
 “仅行号变化”仅说明该条记录的保留字段和方法体摘要相同，不表示该文件中的其他构造器或游戏逻辑未改变。
 
-本次直接运行已编译的 `UiCoverageInventory` 主类生成清单，仍使用同一 javac 源码解析器；
+上述 v4.0.2 合入审查直接运行已编译的 `UiCoverageInventory` 主类生成清单，仍使用同一 javac 源码解析器；
 没有放宽分类器，也没有通过新建游戏对象来补足清单。生成与审查产物位于忽略目录
 `desktop-control/build/cli9-review/ui-review.json`，包含所有变动记录的前后值、源码指纹和逐文件判定。
-这些是静态证据；本批实际执行的测试和安装包专项以[验证记录](cli-9.0.3-unlock-validation.md)为准。
+这些是静态证据；CLI.9.0.3 的后续开局资格测试和安装包专项见其[历史验证记录](cli-9.0.3-unlock-validation.md)。
 
 | 已审查原生入口 | CLI 9 的访问与约束 |
 |---|---|
@@ -111,4 +118,4 @@ not this static inventory.
 - 测试夹具只能存在于 test source-set，允许内部布置可复现场景；之后操作必须走同一个 UiBridge 和实际原生窗口。夹具初始化与诊断信息不能出现在公开游戏操作协议。
 - 每个专项证据记录 fixture ID、构建版本、角色/能力、命令、公开前后观察、预期/实际结果；不得将只检查 enum 个数的测试命名成能力可用或通关测试。
 
-当前测试入口见[架构与验证](cli-architecture.md)，本批实际执行范围见[CLI.9.0.4 验证记录](cli-9.0.4-player-info-validation.md)。以上是审查维度，不宣称全部组合已执行。
+当前测试入口见[架构与验证](cli-architecture.md)，本批实际执行范围见[CLI.9.0.5 验证记录](cli-9.0.5-revision-validation.md)。以上是审查维度，不宣称全部组合已执行。

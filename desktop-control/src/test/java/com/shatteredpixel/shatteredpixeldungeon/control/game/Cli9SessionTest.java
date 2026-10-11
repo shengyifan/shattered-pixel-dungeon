@@ -61,7 +61,7 @@ public class Cli9SessionTest {
                 assertFalse(last(wire).containsKey("err"));
                 Map<?,?> hello = (Map<?,?>) last(wire).get("data");
                 assertEquals(9L, last(wire).get("v")); assertEquals(12L, hello.get("audit_schema_version"));
-                assertEquals("CLI.9.0.4", hello.get("cli_version"));
+                assertEquals("CLI.9.0.5", hello.get("cli_version"));
                 assertEquals("4.0.2", hello.get("game_version"));
                 assertEquals(922L, hello.get("game_version_code"));
             }
@@ -227,7 +227,7 @@ public class Cli9SessionTest {
         String[] lines = wire.toString(StandardCharsets.UTF_8).trim().split("\n");
         return JsonCodec.decode(lines[lines.length - 1]);
     }
-    private static final class FakeGame implements MachineSession.GamePort {
+    private static final class FakeGame implements PreparedTestGamePort {
         int observations, executions, exits; boolean failObservation,failExecution;
         GameController.State state = state("v1", false);
         Queue<GameController.SaveResult> saves = new ArrayDeque<>();

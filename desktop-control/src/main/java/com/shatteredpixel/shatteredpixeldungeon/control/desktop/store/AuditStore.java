@@ -330,7 +330,9 @@ public final class AuditStore implements AutoCloseable {
                 String kind=entry.getKey();long next=nextHandleNumber("main",kind);
                 if(next!=nextHandleNumber("internal",kind))throw new SQLException("Paired public identity counter mismatch");
                 if(next==Long.MAX_VALUE)throw new SQLException("Public identity counter exhausted");
-                String handle=handlePrefix(kind)+Long.toString(next,36);
+                // New revision tokens use decimal suffixes. Existing registry mappings remain immutable.
+                int radix="revision".equals(kind)||"activity".equals(kind)?10:36;
+                String handle=handlePrefix(kind)+Long.toString(next,radix);
                 for(String schema:schemas()){
                     try(PreparedStatement insert=writer.prepareStatement("INSERT INTO "+schema+".public_handles(kind,canonical,handle) VALUES(?,?,?)")){
                         insert.setString(1,kind);insert.setString(2,canonical);insert.setString(3,handle);insert.executeUpdate();

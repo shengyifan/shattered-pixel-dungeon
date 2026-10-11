@@ -269,7 +269,7 @@ def self_test():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", type=Path)
-    parser.add_argument("--expected-cli", default="CLI.9.0.4")
+    parser.add_argument("--expected-cli", default="CLI.9.0.5")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:

@@ -91,6 +91,7 @@ public final class CombatVisualInventory {
             "com.shatteredpixel.shatteredpixeldungeon.windows.WndTabbed.IconTab",
             "com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock",
             "com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText",
+            "com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite",
             "com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite",
             "com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff",
             "com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal.WarriorShield",

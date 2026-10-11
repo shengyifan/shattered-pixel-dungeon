@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.DarkBlock;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue;
 import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
@@ -159,6 +160,16 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	@Override
 	public synchronized boolean hasPendingCallback() {
 		return animCallback != null || (jumpCallback != null && jumpTweener != null && jumpTweener.exists);
+	}
+
+	/** Native visual continuations only; the collector supplies attachment, FOV and update gates. */
+	public boolean hasPendingGameplayPresentation() {
+		if (isObservedMovementShadow()) return false;
+		if (isMoving && motion != null && motion.exists && motion.active && parent != null && motion.parent == parent) return true;
+		synchronized (State.class) {
+			if (!stateAdditions.isEmpty() || !stateRemovals.isEmpty()) return true;
+		}
+		return aura != null && aura.characterAnchorPending(this);
 	}
 	
 	@Override
@@ -462,6 +473,9 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 				if (chilled != null) chilled.on = false;
 				chilled = emitter();
 				chilled.pour(SnowParticle.FACTORY, 0.1f);
+				if (Game.observer.observesVisualCues()) chilled.observeDraw(
+						CellParticleCue.forCharacter("character_chilled", this,
+								SnowParticle.FACTORY, SnowParticle.class).awaitFirstKnownPresentation().awaitRetirement());
 				break;
 			case DARKENED:
 				if (darkBlock != null) darkBlock.killAndErase();
@@ -868,7 +882,6 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 			if (appearance != null) GameScene.observeCellVisualDraw(this, appearance);
 			GameScene.observeCharacterVisual(burning, "character_burning", cell);
 			GameScene.observeCharacterVisual(levitation, "character_levitating", cell);
-			GameScene.observeCharacterVisual(chilled, "character_chilled", cell);
 			GameScene.observeCharacterVisual(marked, "character_marked", cell);
 			GameScene.observeCharacterVisual(healing, "character_healing", cell);
 			GameScene.observeCharacterVisual(hearts, "character_hearts", cell);

@@ -47,4 +47,29 @@ public class PublicHandlesTest {
             assertSame(hint,UiProjectionHints.get(out.get("ui")).nodes.get("c1"));
         }
     }
+
+    @Test public void decimalRevisionAndCancelBindingsPreserveOpaqueLegacyHistory()throws Exception{
+        try(AuditStore store=new AuditStore(temporary.newFolder().toPath())){
+            for(int number=1;number<=9;number++){
+                store.publicHandle("revision","epoch:"+number);
+                store.publicHandle("activity","activity:epoch:"+number);
+            }
+            PublicHandles handles=new PublicHandles(store);
+            Map<String,Object> raw=map("rev","ra","data",map("activity",map("rev","aa")));
+            Map<String,Object> reply=map("rev","rz","data",map("acts",Collections.singletonList(map("op","cancel","rev","az"))));
+            String requestJson="{\"op\":\"cancel\",\"rev\":\"aa\"}";
+            Map<String,Object> canonical=map("state_version","epoch:10",
+                    "continuous_activity",map("state_version","activity:epoch:10","target_id","t1.10"),
+                    "actions",Collections.singletonList(map("action","action.cancel","state_version","activity:epoch:10","target_id","t1.10")),
+                    "raw",raw,"reply",reply,"request_json",requestJson);
+            Map<?,?> out=(Map<?,?>)handles.encode(canonical);
+            assertEquals("r10",out.get("state_version"));
+            assertEquals("a10",((Map<?,?>)out.get("continuous_activity")).get("state_version"));
+            assertEquals("a10",((Map<?,?>)((List<?>)out.get("actions")).get(0)).get("state_version"));
+            assertEquals("epoch:10",handles.resolveVersion("r10"));
+            assertEquals("activity:epoch:10",handles.resolveVersion("a10"));
+            assertSame(raw,out.get("raw"));assertSame(reply,out.get("reply"));
+            assertEquals(requestJson,out.get("request_json"));
+        }
+    }
 }

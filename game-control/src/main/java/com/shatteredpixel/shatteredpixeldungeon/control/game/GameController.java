@@ -43,7 +43,7 @@ public final class GameController implements RuntimeObserver {
         State(String scopeId,String version,String phase,Map<String,Object> publicState,
               Map<String,Object> internalState,List<Map<String,Object>> actions,Map<String,Object> runOutcome){
             this.scopeId=scopeId; this.version=version; this.phase=phase;
-            this.publicState=PublicEnglishProjection.freeze(publicState); this.internalState=internalState; this.actions=PublicEnglishProjection.freeze(actions);
+            this.publicState=PublicEnglishProjection.freeze(publicState); this.internalState=DisplayEvent.freezeLiteral(internalState); this.actions=PublicEnglishProjection.freeze(actions);
             this.runOutcome=runOutcome;
         }
         public Map<String,Object> result() {
@@ -207,10 +207,36 @@ public final class GameController implements RuntimeObserver {
         public void acknowledge(){acknowledged=true;}
         public boolean acknowledged(){return acknowledged;}
     }
+    /** Immutable request ownership; only this controller can transition its preparation lifecycle. */
+    public static final class ActionPreparation {
+        public final String scopeId,version,requestId,plannedRun;
+        public final Map<String,Object> args;
+        public final CompletableFuture<State> preparedBefore;
+        public final Execution execution;
+        private volatile PreparationStage stage=PreparationStage.QUEUED;
+        private GameController owner;
+        private Work work;
+        private State before;
+        private String decisionSignature;
+        private Object scene,level;
+        private String run;
+        private int depth;
+        private long input;
+        /** Explicit futures also permit transport fixtures without starting a game. */
+        public ActionPreparation(String scopeId,String version,Map<String,Object> args,String requestId,String plannedRun,
+                CompletableFuture<State> preparedBefore,Execution execution){
+            this.scopeId=scopeId;this.version=version;this.args=DisplayEvent.freezeLiteral(args);
+            this.requestId=requestId;this.plannedRun=plannedRun;
+            this.preparedBefore=Objects.requireNonNull(preparedBefore);this.execution=Objects.requireNonNull(execution);
+        }
+    }
+    private enum PreparationStage { QUEUED, PREPARED, COMMIT_QUEUED, EXECUTING, TERMINAL, ABORTED }
     private static final class Work {
         final String version; final Map<String,Object> args;
         final String requestId;
         String originScopeId;
+        ActionPreparation preparation;
+        boolean plannedRunConsumed;
         final Execution execution=new Execution(new CompletableFuture<>(),new CompletableFuture<>());
         final CompletableFuture<State> result=execution.completion;
         String activityVersion;
@@ -219,7 +245,7 @@ public final class GameController implements RuntimeObserver {
         boolean startedInRun;
         boolean movementObserved;
         Work(String version,Map<String,Object> args,String requestId){
-            this.version=version;this.args=args;this.requestId=requestId;
+            this.version=version;this.args=DisplayEvent.freezeLiteral(args);this.requestId=requestId;
             result.whenComplete((state,error)->{if(error==null)execution.firstResponse.complete(state);else execution.firstResponse.completeExceptionally(error);});
         }
     }
@@ -232,6 +258,7 @@ public final class GameController implements RuntimeObserver {
     private final GameSnapshotter snapshotter;
     private final UiBridge ui=new UiBridge();
     private final ConcurrentLinkedQueue<Work> queue=new ConcurrentLinkedQueue<>();
+    private final Set<ActionPreparation> preparations=java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final ConcurrentLinkedQueue<SaveResult> saves=new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<RunOutcome> outcomes=new ConcurrentLinkedQueue<>();
     private final ArrayDeque<DisplayEvent> displayEvents=new ArrayDeque<>();
@@ -249,7 +276,7 @@ public final class GameController implements RuntimeObserver {
     private static final long QUANTITY_SAMPLE_NANOS=250_000_000L;
     private volatile boolean disposed, exiting;
     private volatile Throwable closureReason;
-    private volatile String plannedRun;
+    private volatile ActionPreparation actionLease;
     private volatile Map<String,Object> runOutcome;
     // Published before perform: native saves can complete synchronously or on the Interlevel worker.
     private volatile Work executing;
@@ -278,9 +305,48 @@ public final class GameController implements RuntimeObserver {
     public Execution start(String version,Map<String,Object> args,String requestId){
         Work work=new Work(version,args,requestId);enqueue(work);return work.execution;
     }
+    public ActionPreparation prepareAction(String scopeId,String version,Map<String,Object> args,String requestId,String plannedRun){
+        Work work=new Work(version,args,requestId);
+        ActionPreparation preparation=new ActionPreparation(scopeId,version,work.args,requestId,plannedRun,
+                new CompletableFuture<>(),work.execution);
+        preparation.owner=this;preparation.work=work;work.preparation=preparation;
+        enqueue(work);return preparation;
+    }
+    public Execution commitPreparedAction(ActionPreparation preparation){
+        requireOwner(preparation);
+        synchronized(preparation){
+            if(preparation.stage==PreparationStage.PREPARED)preparation.stage=PreparationStage.COMMIT_QUEUED;
+            else if(preparation.stage==PreparationStage.QUEUED)
+                throw new IllegalStateException("Action preparation has not completed");
+            // Repeated commit observes the one owned execution, including a prior invalidation.
+            return preparation.execution;
+        }
+    }
+    public void abortPreparedAction(ActionPreparation preparation){
+        requireOwner(preparation);
+        synchronized(preparation){
+            if(preparation.stage!=PreparationStage.QUEUED&&preparation.stage!=PreparationStage.PREPARED)return;
+            preparation.stage=PreparationStage.ABORTED;
+            NotExecuted failure=new NotExecuted("ACTION_ABORTED",null);
+            preparation.preparedBefore.completeExceptionally(failure);
+            preparation.execution.completion.completeExceptionally(failure);
+        }
+    }
+    private void requireOwner(ActionPreparation preparation){
+        if(preparation==null||preparation.owner!=this)throw new IllegalArgumentException("Action preparation belongs to another controller");
+    }
     private synchronized void enqueue(Work work) {
-        if(disposed)work.result.completeExceptionally(work.args==null?closureReason:new NotExecuted("ENGINE_ERROR",closureReason));
-        else queue.add(work);
+        if(disposed){
+            Throwable error=work.args==null?closureReason:new NotExecuted("ENGINE_ERROR",closureReason);
+            if(work.preparation!=null)failPreparation(work.preparation,error,false);
+            else work.result.completeExceptionally(error);
+        }else {
+            if(work.preparation!=null){
+                preparations.add(work.preparation);
+                work.result.whenComplete((state,error)->preparations.remove(work.preparation));
+            }
+            queue.add(work);
+        }
     }
     private synchronized void enqueue(CancelControl control) {
         if(disposed)control.result.completeExceptionally("commit".equals(control.kind)?new NotExecuted("ENGINE_ERROR",closureReason):closureReason);
@@ -339,9 +405,16 @@ public final class GameController implements RuntimeObserver {
     }
     /** Session teardown freezes a finite final cut; already captured events remain queued until committed. */
     public synchronized void freezeDisplayEvents(){displayCaptureClosed=true;displaySignal=()->{};}
-    public void prepareRun(String id){plannedRun=id;}
     public void exitNow(){if(Gdx.app!=null) Gdx.app.postRunnable(()->Gdx.app.exit());}
 
+    @Override public String newRunIdentity(){
+        Work work=executing;
+        if(work==null||work.preparation==null)return null;
+        synchronized(work){
+            if(work.plannedRunConsumed)return null;
+            work.plannedRunConsumed=true;return work.preparation.plannedRun;
+        }
+    }
     @Override public boolean exitRequested(){exiting=true;return false;}
     @Override public void onException(Throwable error){errors.accept(error);}
     @Override public void onSave(String runId,int slot,Throwable error){
@@ -467,8 +540,15 @@ public final class GameController implements RuntimeObserver {
         disposed=true;
         TextProvenance.INSTANCE.clear();
         if(executing!=null)executing.result.completeExceptionally(error);
+        actionLease=null;
+        for(ActionPreparation preparation:preparations)
+            if(preparation.stage!=PreparationStage.EXECUTING)failPreparation(preparation,new NotExecuted("ENGINE_ERROR",error),false);
         Work work;
-        while((work=queue.poll())!=null)work.result.completeExceptionally(work.args==null?error:new NotExecuted("ENGINE_ERROR",error));
+        while((work=queue.poll())!=null){
+            Throwable failure=work.args==null?error:new NotExecuted("ENGINE_ERROR",error);
+            if(work.preparation!=null)failPreparation(work.preparation,failure,false);
+            else work.result.completeExceptionally(failure);
+        }
         CancelControl control;
         while((control=cancellations.poll())!=null)control.result.completeExceptionally("commit".equals(control.kind)?new NotExecuted("ENGINE_ERROR",error):error);
         if(cancellationCompletion!=null)cancellationCompletion.completeExceptionally(error);
@@ -509,7 +589,8 @@ public final class GameController implements RuntimeObserver {
         return Actor.isMotionHandoff()||(Actor.yieldedBy(hero)&&(hero.sprite==null||!hero.sprite.isMoving));
     }
     @Override public boolean beforeActorResume(){
-        if(failedExecutionHold||cancellationLease!=null)return false;
+        invalidatePreparation();
+        if(failedExecutionHold||cancellationLease!=null||holdsPreparedBoundary())return false;
         if(executing!=null&&executing.activityVersion!=null&&!executing.execution.acknowledged())return false;
         if(continuousHandoff()){
             if(executing.activityVersion==null)return false;
@@ -522,8 +603,9 @@ public final class GameController implements RuntimeObserver {
         if(Game.scene() instanceof GameScene)GameScene.atActorHandoff(this::refreshMotionLease);
     }
     private void refreshMotionLease(){
+        invalidatePreparation();
         if(!Actor.isMotionHandoff())return;
-        boolean hold=failedExecutionHold||cancellationLease!=null
+        boolean hold=failedExecutionHold||cancellationLease!=null||holdsPreparedBoundary()
                 ||(executing!=null&&executing.activityVersion!=null&&!executing.execution.acknowledged());
         if(continuousHandoff()){
             hold|=executing.activityVersion==null;
@@ -546,7 +628,10 @@ public final class GameController implements RuntimeObserver {
         }
     }
     private void atBoundary(){
+        if(disposed)return;
         try {
+            // Native input and scene changes must release the lease before stable() can wait on Actor.
+            invalidatePreparation();
             processCancellation();
             if(Game.instance==null||Game.scene()==null||Game.switchingScene()||Game.hasPendingCallbacks()||hasPendingEffects(Game.scene())){resetRenderedBoundary();return;}
             if(continuousHandoff()){
@@ -566,44 +651,121 @@ public final class GameController implements RuntimeObserver {
             }
             if(!stable()){resetRenderedBoundary();return;}
             if(!renderedBoundaryReady())return;
-            if((executing!=null||!queue.isEmpty())&&!ui.drawnIntentReady())return;
+            if((executing!=null||actionLease!=null||!queue.isEmpty())&&!ui.drawnIntentReady())return;
             if(runActive() && Dungeon.runIdentityNeedsSave) Dungeon.saveAll();
             if(executing!=null && frame>executedFrame){
-                State state=capture(true); Work done=executing;executing=null;deliver(done.result,state);
+                State state=capture(true); Work done=executing;executing=null;
+                if(done.preparation!=null)done.preparation.stage=PreparationStage.TERMINAL;
+                deliver(done.result,state);
                 if(cancellationCompletion!=null){deliver(cancellationCompletion,state);cancellationCompletion=null;}
             }
             if(executing!=null)return;
+            ActionPreparation lease=actionLease;
+            if(lease!=null){
+                if(lease.stage==PreparationStage.COMMIT_QUEUED)commitAtBoundary(lease);
+                return;
+            }
             Work work=queue.poll();
             if(work==null)return;
-            boolean enteredGame=false;
+            ActionPreparation preparation=work.preparation;
+            if(preparation!=null&&preparation.stage!=PreparationStage.QUEUED)return;
             try {
                 State before=capture(false);
                 if(work.args==null){deliver(work.result,before);return;}
+                if(preparation!=null&&!Objects.equals(preparation.scopeId,before.scopeId))
+                    throw new ProtocolException("SCOPE_MISMATCH","Observe the current scope before acting");
                 if(!Objects.equals(work.version,before.version))
                     throw new ProtocolException("STALE_STATE","Observe the current state before acting");
                 if(!auditReady(before.internalState))
                     throw new ProtocolException("SNAPSHOT_INCOMPLETE","Required audit snapshot is unavailable");
                 validateAction(work.args);
-                work.startedInRun=runActive();
-                work.startCell=Dungeon.hero==null?-1:Dungeon.hero.pos;
-                work.originScopeId=before.scopeId;
-                executing=work;executedFrame=frame;
-                resetRenderedBoundary();
-                enteredGame=true;
-                perform(work.args);
+                if(preparation==null){dispatch(work,before.scopeId);return;}
+                synchronized(preparation){
+                    if(preparation.stage!=PreparationStage.QUEUED)return;
+                    preparation.before=before;preparation.decisionSignature=signature;
+                    preparation.scene=Game.scene();preparation.level=Dungeon.level;preparation.run=Dungeon.runId;
+                    preparation.depth=Dungeon.depth;preparation.input=inputGeneration();
+                    preparation.stage=PreparationStage.PREPARED;actionLease=preparation;
+                    deliver(preparation.preparedBefore,before);
+                }
             }catch(Throwable error){
-                reportAfterHandoff(error);
-                if(enteredGame && Dungeon.hero!=null&&Dungeon.hero.resting)failedExecutionHold=true;
-                if(executing==work)executing=null;
-                reject(work.result,!enteredGame && work.args!=null
-                        ?new NotExecuted(error instanceof ProtocolException?((ProtocolException)error).code:"INVALID_ARGUMENT",error):error);
+                rejectBeforeExecution(work,error);
             }
         }catch(Throwable error){
             reportAfterHandoff(error);
             if(executing!=null){failedExecutionHold=true;reject(executing.result,error);executing=null;}
             if(cancellationCompletion!=null){reject(cancellationCompletion,error);cancellationCompletion=null;}
             cancellationLease=null;
-            Work work=queue.poll();if(work!=null)reject(work.result,error);
+            ActionPreparation lease=actionLease;actionLease=null;
+            if(lease!=null)failPreparation(lease,new NotExecuted("ENGINE_ERROR",error),true);
+            Work work=queue.poll();if(work!=null)rejectBeforeExecution(work,error);
+        }
+    }
+    private static long inputGeneration(){return Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();}
+    private boolean holdsPreparedBoundary(){
+        ActionPreparation lease=actionLease;
+        return lease!=null&&(lease.stage==PreparationStage.PREPARED||lease.stage==PreparationStage.COMMIT_QUEUED);
+    }
+    private void invalidatePreparation(){
+        ActionPreparation lease=actionLease;
+        if(lease==null)return;
+        if(lease.stage==PreparationStage.ABORTED){actionLease=null;return;}
+        if(Game.instance==null||Game.scene()!=lease.scene||Game.switchingScene()
+                ||Dungeon.level!=lease.level||!Objects.equals(Dungeon.runId,lease.run)||Dungeon.depth!=lease.depth
+                ||inputGeneration()!=lease.input){
+            actionLease=null;
+            failPreparation(lease,new NotExecuted("STALE_STATE",null),true);
+        }
+    }
+    private void commitAtBoundary(ActionPreparation preparation){
+        try{
+            PublicDecision current=publicDecision(snapshotter.capturePublic());
+            if(!Objects.equals(preparation.decisionSignature,current.signature))
+                throw new ProtocolException("STALE_STATE","Prepared action no longer matches the current state");
+            validateAction(preparation.args);
+            dispatch(preparation.work,preparation.before.scopeId);
+        }catch(Throwable error){actionLease=null;rejectBeforeExecution(preparation.work,error);}
+    }
+    /** The final call site is shared by prepared transport actions and immediate in-process callers. */
+    private void dispatch(Work work,String originScope){
+        boolean enteredGame=false;
+        try{
+            synchronized(this){
+                if(disposed)throw new NotExecuted("ENGINE_ERROR",closureReason);
+                if(work.preparation!=null)synchronized(work.preparation){
+                    if(work.preparation.stage!=PreparationStage.COMMIT_QUEUED)return;
+                    work.preparation.stage=PreparationStage.EXECUTING;actionLease=null;
+                }
+                work.startedInRun=runActive();work.startCell=Dungeon.hero==null?-1:Dungeon.hero.pos;
+                work.originScopeId=originScope;executing=work;executedFrame=frame;resetRenderedBoundary();
+                // Closure now treats this owner as possibly entered; perform must stay outside the monitor.
+                enteredGame=true;
+            }
+            perform(work.args);
+        }catch(Throwable error){
+            reportAfterHandoff(error);
+            if(enteredGame&&Dungeon.hero!=null&&Dungeon.hero.resting)failedExecutionHold=true;
+            if(executing==work)executing=null;
+            if(work.preparation!=null)work.preparation.stage=PreparationStage.TERMINAL;
+            reject(work.result,enteredGame?error:notExecuted(error));
+        }
+    }
+    private static NotExecuted notExecuted(Throwable error){
+        return error instanceof NotExecuted?(NotExecuted)error:
+                new NotExecuted(error instanceof ProtocolException?((ProtocolException)error).code:"INVALID_ARGUMENT",error);
+    }
+    private void rejectBeforeExecution(Work work,Throwable error){
+        reportAfterHandoff(error);
+        Throwable failure=work.args==null?error:notExecuted(error);
+        if(work.preparation!=null)failPreparation(work.preparation,failure,true);
+        else reject(work.result,failure);
+    }
+    private void failPreparation(ActionPreparation preparation,Throwable failure,boolean deferred){
+        synchronized(preparation){
+            if(preparation.stage==PreparationStage.ABORTED||preparation.stage==PreparationStage.TERMINAL)return;
+            preparation.stage=PreparationStage.TERMINAL;
+            if(deferred){reject(preparation.preparedBefore,failure);reject(preparation.execution.completion,failure);}
+            else {preparation.preparedBefore.completeExceptionally(failure);preparation.execution.completion.completeExceptionally(failure);}
         }
     }
     private void processCancellation(){
@@ -713,20 +875,40 @@ public final class GameController implements RuntimeObserver {
     }
     private State capture(boolean forceNewVersion){
         GameSnapshotter.Capture captured=snapshotter.capture();
-        Map<String,Object> pub=new LinkedHashMap<>(captured.publicState);
-        boolean active=runActive();
-        // Dungeon retains the old Level in menus. A true menu scope ends observer-only warning
-        // knowledge; same-level GameScene rebuilds and in-run alchemy/transition scenes do not.
-        if(!active&&!(Game.scene() instanceof GameScene))
+        // True menu boundaries end observer-only warning knowledge; in-run rebuilds do not.
+        if(!runActive()&&!(Game.scene() instanceof GameScene))
             com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear();
-        Map<String,Object> uiState=ui.frozenUi(active?captured.publicState:Collections.emptyMap());
+        PublicDecision decision=publicDecision(captured.publicState);
+        if(forceNewVersion||!decision.signature.equals(signature)){revision++;signature=decision.signature;}
+        Map<String,Object> internal=new LinkedHashMap<>(captured.internalState);
+        internal.put("interaction",decision.uiState);
+        if(decision.outcome!=null)internal.put("run_outcome",decision.outcome);
+        runOutcome=decision.outcome;
+        latest=new State(decision.scope,epoch+":"+revision,decision.phase,decision.publicState,internal,decision.actions,decision.outcome);
+        return latest;
+    }
+    private static final class PublicDecision {
+        final String scope,phase,signature;
+        final Map<String,Object> publicState,uiState,outcome;
+        final List<Map<String,Object>> actions;
+        PublicDecision(String scope,String phase,String signature,Map<String,Object> publicState,Map<String,Object> uiState,
+                List<Map<String,Object>> actions,Map<String,Object> outcome){
+            this.scope=scope;this.phase=phase;this.signature=signature;this.publicState=publicState;this.uiState=uiState;
+            this.actions=actions;this.outcome=outcome;
+        }
+    }
+    /** One public projection defines both observation revisions and the final prepared-action guard. */
+    private PublicDecision publicDecision(Map<String,Object> publicState){
+        Map<String,Object> pub=new LinkedHashMap<>(publicState);
+        boolean active=runActive();
+        Map<String,Object> uiState=ui.frozenUi(active?publicState:Collections.emptyMap());
         pub.put("ui",uiState);
         if(Game.scene() instanceof GameScene)pub.put("visual_cues",visualState());
         pub=GameplayObservation.merge(pub);
         if(!active){pub.remove("hero");pub.remove("map");pub.remove("inventory");pub.remove("visible_entities");}
         String scope=active && Dungeon.runId!=null?"run:"+Dungeon.runId:menuScope;
         Map<String,Object> outcome=runOutcome;
-        if(active&&outcome!=null&&!scope.equals(outcome.get("scope_id"))){runOutcome=null;outcome=null;}
+        if(active&&outcome!=null&&!scope.equals(outcome.get("scope_id"))){outcome=null;}
         if(outcome!=null)pub.put("run_outcome",outcome);
         List<Map<String,Object>> actions=new ArrayList<>(ui.frozenActions());
         if(Game.scene() instanceof GameScene && Dungeon.hero!=null && Dungeon.hero.ready
@@ -755,15 +937,8 @@ public final class GameController implements RuntimeObserver {
                 if(raw instanceof Map&&com.shatteredpixel.shatteredpixeldungeon.effects.GameplayVisualKinds.affectsIntent(String.valueOf(((Map<?,?>)raw).get("kind"))))warnings.add(raw);
             decisionState.put("visual_cues",map("map_context",visual.get("map_context"),"cues",warnings));
         }
-        long inputGeneration=Game.inputHandler==null?0:Game.inputHandler.interactionGeneration();
-        String nextSignature=scope+"|"+phase+"|"+ui.intentSignature()+"|"+inputGeneration+"|"+JsonCodec.encode(PublicEnglishProjection.semantics(decisionState));
-        if(forceNewVersion||!nextSignature.equals(signature)){revision++;signature=nextSignature;}
-        String version=epoch+":"+revision;
-        Map<String,Object> internal=new LinkedHashMap<>(captured.internalState);
-        internal.put("interaction",uiState);
-        if(outcome!=null)internal.put("run_outcome",outcome);
-        latest=new State(scope,version,phase,pub,internal,actions,outcome);
-        return latest;
+        String nextSignature=scope+"|"+phase+"|"+ui.intentSignature()+"|"+inputGeneration()+"|"+JsonCodec.encode(PublicEnglishProjection.semantics(decisionState));
+        return new PublicDecision(scope,phase,nextSignature,pub,uiState,actions,outcome);
     }
     private void requireHero(){
         if(!(Game.scene() instanceof GameScene)||Dungeon.hero==null||!Dungeon.hero.ready
@@ -828,7 +1003,6 @@ public final class GameController implements RuntimeObserver {
         return item;
     }
     private void perform(Map<String,Object> args)throws Exception{
-        if(plannedRun!=null){Dungeon.prepareRunIdentity(plannedRun);plannedRun=null;}
         Object name=args.get("action");
         if(!(name instanceof String))throw new ProtocolException("INVALID_ARGUMENT","action is required");
         String action=(String)name;

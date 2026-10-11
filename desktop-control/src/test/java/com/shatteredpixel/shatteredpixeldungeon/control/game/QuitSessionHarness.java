@@ -60,7 +60,7 @@ public final class QuitSessionHarness implements AutoCloseable {
             }else current.write(value);
         }
     }
-    public static final class Game implements MachineSession.GamePort {
+    public static final class Game implements PreparedTestGamePort {
         public volatile GameController.State state=state("v1","player_ready");
         public final CompletableFuture<GameController.State> completion=new CompletableFuture<>();
         public final CompletableFuture<Void> exited=new CompletableFuture<>();

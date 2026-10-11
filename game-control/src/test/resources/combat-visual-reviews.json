@@ -1,6 +1,6 @@
 {
   "format": "combat_visual_reviews_v3",
-  "source_baseline": "CLI.9.0.4 / game 4.0.2 public UI, ritual terrain and verified alarm playback review, 2026-10-11. Baseline commit bbae9a3a6725785bc47543d97b7dee230a08f75c. Exact additions, removals, changed bodies and four alarm-call promotions are recorded in docs/cli-9.0.4-source-review.json. Static attribution never certifies runtime execution.",
+  "source_baseline": "CLI.9.0.5 / game 4.0.2 semantic presentation readiness and prepared-action public decision review, 2026-10-12. Baseline commit c393b58fa6510f40f6bef3b5708ab60feabb7787. Exact changed producer bodies preserve public facts and native gameplay; new pure readiness gates are source-fingerprinted. Static attribution never certifies runtime execution.",
   "runtime_verified_by_inventory": false,
   "scope_policy": "Decision-relevant semantic world cues use current map/FOV independent of camera, viewport or UI occlusion. Native UI symbols, text, bars and feedback use their own current visibility/ownership gates. Dynamic source types, same-frame replacements and decorative exclusions are explicit per group; this static inventory never certifies producer runtime execution. Native red_target episodes retain only previously source/FOV-disclosed cells until native termination, intersected with current FOV; marker fade is cosmetic. Explicit temporary-owner handoffs preserve already disclosed episodes; actual holder loss/permanent replacement ends them. Fresh public unowned/restored warning sources carry appearance.lifecycle:unknown and conservatively persist until true scope end; their owner or geometry is never reconstructed from saved/private state.",
   "groups": [
@@ -30046,13 +30046,14 @@
     },
     {
       "classification": "not_player_visible",
-      "reason": "QuickSlotButton.reset clears cached targeting state during initialization/loading; it draws no pixels itself. Newly constructed quickslot controls publish their current state separately. CLI.8.0.1 bounded source review: init/loadGame clear process knowledge without restoring private targets; newLevel/loadLevel synchronize immediately after clearing Dungeon.level; resetLevel clears before regenerating the same Level instance; switchLevel compares run/Level/depth/branch; fail/win clear only at the existing true run-end notification, not HP == 0 or scene teardown. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification.",
+      "reason": "QuickSlotButton.reset clears cached targeting state during initialization/loading; it draws no pixels itself. Newly constructed quickslot controls publish their current state separately. CLI.8.0.1 bounded source review: init/loadGame clear process knowledge without restoring private targets; newLevel/loadLevel synchronize immediately after clearing Dungeon.level; resetLevel clears before regenerating the same Level instance; switchLevel compares run/Level/depth/branch; fail/win clear only at the existing true run-end notification, not HP == 0 or scene teardown. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification. CLI.9.0.5 review: replace mutable nextRunId with the observer hook for the executing request audit identity. Warning clearing, native initialization, random seed and progression rules remain unchanged.",
       "visible_evidence": "No displayed evidence at reset. Source operations: QuickSlotButton.reset()",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
       "route": {"semantic_contract": "reviewed-nonvisual-site"},
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest"
       ],
       "id": "producer-158d90ff3b94ec855531129f",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Dungeon.java:init (com.shatteredpixel.shatteredpixeldungeon.Dungeon); exact producer sites below.",
@@ -30060,7 +30061,7 @@
       "sites": [
         {
           "id": "1303484482dc80bd731f164bdc4cf178a5f9454f5e649a08269328b64c534c93:1",
-          "body_digest": "10d80d0ef703bcf0290fcb7e1a807ff44bc23b89ce8ba1620f96ac9f265310a1"
+          "body_digest": "17b5cb20f01f188c5b90d6bb2ec6151f47384aec068dd89b9e45f39950eccc40"
         }
       ]
     },
@@ -46855,14 +46856,15 @@
     },
     {
       "classification": "covered_inspection",
-      "reason": "ItemSprite.revive clears prior glow/status episodes so pooled item cue cannot inherit old semantic meaning. CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:revive; Current native semantic branch reviewed: selected text/icon/status/glow/subject or its pool lifecycle is cached at the original producer, then same-capture UI/feedback projects only bounded named meaning. No hidden getter, atlas/frame/RGB or animation phase is substituted.",
+      "reason": "ItemSprite.revive clears prior glow/status episodes so pooled item cue cannot inherit old semantic meaning. CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:revive; Current native semantic branch reviewed: selected text/icon/status/glow/subject or its pool lifecycle is cached at the original producer, then same-capture UI/feedback projects only bounded named meaning. No hidden getter, atlas/frame/RGB or animation phase is substituted. CLI.9.0.5 FOV correction: each native drop has a private identity-only episode token when observation is enabled, cleared by revive/kill. No RNG, emitted public payload, drop timing, trajectory, native audio or item rule changes.",
       "visible_evidence": "Item and heap identity/count/knowledge and original inspection text remain available; actual inventory/window image appearance and projectile image frames have dedicated routes. Drop/bob/glow animation alone is not used to infer hidden curse/level.",
       "visibility_gate": "Current run/scene/level and actual attached source, known FOV cell or explicitly partial known-cell fragments; camera, viewport, HUD occlusion and hidden target are not consulted.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
       "route": {"semantic_contract": "world-cue-meaning"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "world-cue-meaning"}
+        {"kind": "semantic_contract", "id": "world-cue-meaning"},
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:revive",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
@@ -46870,15 +46872,15 @@
       "sites": [
         {
           "id": "11261f814d5a005edc46dd0c21e9cfbce7655c3cff7c93dcde9db8caea691ce7:1",
-          "body_digest": "ff0f7fc66d264c35a948eddd5d9b94c58e277a2cdb7b32d3a0e9363ecee380a4"
+          "body_digest": "ba8d2f2c3520ad410e6fdedc3697b8f17e5f921e659eebcbf9977ffecd581150"
         },
         {
           "id": "c2fa563224792f7d649a1d236965a409179ced568816702bd51a60b6b53b03a3:1",
-          "body_digest": "ff0f7fc66d264c35a948eddd5d9b94c58e277a2cdb7b32d3a0e9363ecee380a4"
+          "body_digest": "ba8d2f2c3520ad410e6fdedc3697b8f17e5f921e659eebcbf9977ffecd581150"
         },
         {
           "id": "48a359f3013331d448bd3f703116107db9045fbef7d2f5c3c21e93df7ccc5273:1",
-          "body_digest": "ff0f7fc66d264c35a948eddd5d9b94c58e277a2cdb7b32d3a0e9363ecee380a4"
+          "body_digest": "ba8d2f2c3520ad410e6fdedc3697b8f17e5f921e659eebcbf9977ffecd581150"
         }
       ]
     },
@@ -52141,19 +52143,37 @@
       "visibility_gate": "Current run/scene/level and actual attached source, known FOV cell or explicitly partial known-cell fragments; camera, viewport, HUD occlusion and hidden target are not consulted.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "world-cue-meaning"}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        {
+          "kind": "semantic_contract",
+          "id": "world-cue-meaning"
+        },
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "PresentationReadinessTest#nativeItemDropKeepsGlowAbsentUntilLandingAndNeverGatesHiddenOrReusedSources",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates",
+        "CellParticleContributorTest#retirementWaitRequiresTheNativeSourceOptIn",
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
-      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:beginDraw; Current world semantic source reviewed: exact installed effect/selected frame/emitter episode or known FOV footprint produces a named cue and later disappearance; collector does not use camera, viewport or hidden future target.",
+      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:beginDraw; Current world semantic source reviewed: exact installed effect/selected frame/emitter episode or known FOV footprint produces a named cue and later disappearance; collector does not use camera, viewport or hidden future target. CLI.9.0.5 review: combine source presentation readiness with particle readiness. Only attached public FOV-known progressing native sprite/item continuations can hold completion; source-opted finite tails wait only while actual visible contributors can update. Existing cues and warning gates remain intact, and observation advances neither actor nor rendering. CLI.9.0.5 readiness cache cleanup: prune drop metadata at every eligible beginDraw before traversal can skip a hidden, detached, inactive, completed or out-of-FOV source; clear it on an ineligible scene. Match run ID as well as weak Level, sprite lifetime and drop episode. A weak Level value prevents the level-to-heap-to-sprite ownership chain from retaining a weak map key. Losing eligibility cannot later restore an anchor while the drop footprint is still unknown.",
       "visible_evidence": "Full-frame collector boundary now verifies actual committed camera transforms, semantic anchors and actual particle footprints independently, counts only fully visible contributors, and clears ineligible motion samples. Raw velocity, future targets, requested particle counts and hidden failure reasons are never published.",
-      "route": {"semantic_contract": "world-cue-meaning"},
+      "route": {
+        "semantic_contract": "world-cue-meaning"
+      },
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:beginDraw",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
       "id": "render-48d9643f339e5e5249da",
       "sites": [
         {
           "id": "9478c975f2fcd7781715e5cc167d1726675bbd5a2c44b0b611b4bfcac275d822:1",
-          "body_digest": "a4338de08f21920c9d0ab1fcd23a9d3bb828d777b3d223d645aaad85bdaff475"
+          "body_digest": "37d9c2f7a4fc37bd20243ed1f2012b2713878b549e20a1259a523a56a9583d76"
         }
       ]
     },
@@ -54670,13 +54690,14 @@
     },
     {
       "classification": "not_player_visible",
-      "reason": "This site invokes an audio sink, not a GUI visual. The other visual sites in the same method are separately reviewed.",
+      "reason": "This site invokes an audio sink, not a GUI visual. The other visual sites in the same method are separately reviewed. CLI.9.0.5 FOV correction: each native drop has a private identity-only episode token when observation is enabled, cleared by revive/kill. No RNG, emitted public payload, drop timing, trajectory, native audio or item rule changes.",
       "visible_evidence": "This site invokes an audio sink, not a GUI visual. The other visual sites in the same method are separately reviewed.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
       "route": {"semantic_contract": "reviewed-nonvisual-site"},
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:drop",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
@@ -54684,7 +54705,7 @@
       "sites": [
         {
           "id": "f0dbf75a189b59998d9c930a9eac80d084ac5b9417355bf76580824982656a5c:1",
-          "body_digest": "88479b7bda32250764c6652a9d3c634c85977865cede1a6393889a267fdee447"
+          "body_digest": "c4cc8fd8110a140e50020cb0114f1c1ef0a041cf095e99105611eaa6ac9c073f"
         }
       ]
     },
@@ -56203,13 +56224,14 @@
     },
     {
       "classification": "covered_inspection",
-      "reason": "Item and heap identity/count/knowledge and original inspection text remain available; actual inventory/window image appearance and projectile image frames have dedicated routes. Drop/bob/glow animation alone is not used to infer hidden curse/level.",
+      "reason": "Item and heap identity/count/knowledge and original inspection text remain available; actual inventory/window image appearance and projectile image frames have dedicated routes. Drop/bob/glow animation alone is not used to infer hidden curse/level. CLI.9.0.5 FOV correction: each native drop has a private identity-only episode token when observation is enabled, cleared by revive/kill. No RNG, emitted public payload, drop timing, trajectory, native audio or item rule changes.",
       "visible_evidence": "Item and heap identity/count/knowledge and original inspection text remain available; actual inventory/window image appearance and projectile image frames have dedicated routes. Drop/bob/glow animation alone is not used to infer hidden curse/level.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
       "route": {"semantic_contract": "item-sprite-drop-decoration"},
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:drop",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
@@ -56217,11 +56239,11 @@
       "sites": [
         {
           "id": "012f347b8e6c360f47bb0ad1211276e63c8529be8b0d8834489d301d896bc600:1",
-          "body_digest": "88479b7bda32250764c6652a9d3c634c85977865cede1a6393889a267fdee447"
+          "body_digest": "c4cc8fd8110a140e50020cb0114f1c1ef0a041cf095e99105611eaa6ac9c073f"
         },
         {
           "id": "0c73ac556cfaa920e39e460ce0b966c8a16d3b40525055d7aef9f3bac6ac4a89:1",
-          "body_digest": "88479b7bda32250764c6652a9d3c634c85977865cede1a6393889a267fdee447"
+          "body_digest": "c4cc8fd8110a140e50020cb0114f1c1ef0a041cf095e99105611eaa6ac9c073f"
         }
       ]
     },
@@ -56427,14 +56449,15 @@
     },
     {
       "classification": "covered_inspection",
-      "reason": "ItemSprite.kill clears item status/glow source lifetime; disappearance is current cue state rather than a retained object. CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:kill; Current native semantic branch reviewed: selected text/icon/status/glow/subject or its pool lifecycle is cached at the original producer, then same-capture UI/feedback projects only bounded named meaning. No hidden getter, atlas/frame/RGB or animation phase is substituted.",
+      "reason": "ItemSprite.kill clears item status/glow source lifetime; disappearance is current cue state rather than a retained object. CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:kill; Current native semantic branch reviewed: selected text/icon/status/glow/subject or its pool lifecycle is cached at the original producer, then same-capture UI/feedback projects only bounded named meaning. No hidden getter, atlas/frame/RGB or animation phase is substituted. CLI.9.0.5 FOV correction: each native drop has a private identity-only episode token when observation is enabled, cleared by revive/kill. No RNG, emitted public payload, drop timing, trajectory, native audio or item rule changes.",
       "visible_evidence": "Item and heap identity/count/knowledge and original inspection text remain available; actual inventory/window image appearance and projectile image frames have dedicated routes. Drop/bob/glow animation alone is not used to infer hidden curse/level.",
       "visibility_gate": "Current run/scene/level and actual attached source, known FOV cell or explicitly partial known-cell fragments; camera, viewport, HUD occlusion and hidden target are not consulted.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
       "route": {"semantic_contract": "world-cue-meaning"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "world-cue-meaning"}
+        {"kind": "semantic_contract", "id": "world-cue-meaning"},
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:kill",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
@@ -56442,15 +56465,15 @@
       "sites": [
         {
           "id": "386d41a24bd5cb99f07de69939743ee1b84628cd4a8c5ce3c9d1da932196a56e:1",
-          "body_digest": "52a957e9e6a8e2438fd34bf7395d42227d8e1ccb6cae4c39fa4f25132bbefb6c"
+          "body_digest": "a23c596f6db720e0898caaeaf280bc7ea500a1240a14936b30087088645f9ae1"
         },
         {
           "id": "3420e2ca936db3d2a11b236de8aa069078f714aa53f9cf10816ed953ef008345:1",
-          "body_digest": "52a957e9e6a8e2438fd34bf7395d42227d8e1ccb6cae4c39fa4f25132bbefb6c"
+          "body_digest": "a23c596f6db720e0898caaeaf280bc7ea500a1240a14936b30087088645f9ae1"
         },
         {
           "id": "82d93f9efd62a3bc8ae6915c831e943d523aa25902a0138a67af466b0601b459:1",
-          "body_digest": "52a957e9e6a8e2438fd34bf7395d42227d8e1ccb6cae4c39fa4f25132bbefb6c"
+          "body_digest": "a23c596f6db720e0898caaeaf280bc7ea500a1240a14936b30087088645f9ae1"
         }
       ]
     },
@@ -57077,14 +57100,28 @@
     },
     {
       "classification": "covered_current",
-      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/CharSprite.java:processStateAddition; Current world semantic source reviewed: exact installed effect/selected frame/emitter episode or known FOV footprint produces a named cue and later disappearance; collector does not use camera, viewport or hidden future target.",
+      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/CharSprite.java:processStateAddition; Current world semantic source reviewed: exact installed effect/selected frame/emitter episode or known FOV footprint produces a named cue and later disappearance; collector does not use camera, viewport or hidden future target. CLI.9.0.5 review: CHILLED keeps its original native emission and now installs an explicit same-sprite particle episode observer with finite retirement gating. Remove the duplicate direct cue route; existing movement-shadow and all other character visual facts remain unchanged. Readiness uses only existing native renderer continuation state. CLI.9.0.5 FOV correction: only the native CHILLED source explicitly opts into waiting for its first actually known contributor, including a snow particle initially above the known character anchor. Generic emitter policies and native emission remain unchanged.",
       "visible_evidence": "actual current sprite_state_appearance shader parameters and renderer pause flag",
       "visibility_gate": "Current run/scene/level and actual attached source, known FOV cell or explicitly partial known-cell fragments; camera, viewport, HUD occlusion and hidden target are not consulted.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
-      "route": {"semantic_contract": "world-cue-meaning"},
+      "route": {
+        "semantic_contract": "world-cue-meaning"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "world-cue-meaning"}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        {
+          "kind": "semantic_contract",
+          "id": "world-cue-meaning"
+        },
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "CellParticleContributorTest#chilledFirstKnownPresentationWaitIsSourceOptInAndResetsOnReuse"
       ],
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/CharSprite.java:processStateAddition",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
@@ -57092,143 +57129,143 @@
       "sites": [
         {
           "id": "0d8d8898db737a41162ff87849eb709e4da6409af694d48938be44c247a4f81a:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "13c22b46577bcdbc9eaeac0ea808c9b7331a3c63ede6ae3916e4a645451a8121:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "2cae5a2fd7f8a4e53d20b41dff70109b74d2025f46cdc275a241d7868af119b5:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "0bf40cd3d639092e795e5e88f9f632ac9f2dda33ed6a51b03084672a54410dde:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "13c22b46577bcdbc9eaeac0ea808c9b7331a3c63ede6ae3916e4a645451a8121:2",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "45e714e41643cbbc466e7f308863aaf104575b9b2ea720a4f3cb54c2c34de344:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "b4cd23ab4c18527442445785ace7d802beb8f7c4d61e41087dc0cd35cd5d2f45:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "7ca706fa2708cb66444a6a546eff7f68c5ae2d0f6cbe70d9799a12226f11f3a9:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "f327799ee95d0d711319302cf7ff68d2adc5cafe0b3856588edb5c50c8a72844:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "efe83215e0869ccecabff37d7760d15172823ad2574fb27e374fb830d1343016:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "e74bf901a83f9c72b982d4131dfebb4539ce4bfed7939f56f8087199097884f1:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "9eab87d240ff3c207c63166f8c479d27411095349dd1be2aaa647d6aa8f60a1f:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "3770ef1ed6de7fb169a1c45c04b01279a1242738068949533c0d96c00b697c2a:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "d046d060298ca6360cc6fc9d316419cb84d15c851f9a1498b86f7b5b2af6ecf4:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "13c22b46577bcdbc9eaeac0ea808c9b7331a3c63ede6ae3916e4a645451a8121:3",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "b5dceda8a4a1d71d3450e325fc56c9bfb3496b4a8c3d68272d92fb1c054dd027:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "1f7af99339d2ce75daaebf78b7ac2b0d3162fc955175163195a72aa16bec6733:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "bf12f733cf108ae13b9dc82344e0a33a9489211aeae2bfa77a2b235cb7a42a7a:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "13c22b46577bcdbc9eaeac0ea808c9b7331a3c63ede6ae3916e4a645451a8121:4",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "99eeee643c1bcad283bd567a30b7a7b295f0df6454eaf8752c99a5be78fb00e7:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "154c9597602a850f609d43e0b28981a288fd776072ef958b9cb740c70f20c03d:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "13c22b46577bcdbc9eaeac0ea808c9b7331a3c63ede6ae3916e4a645451a8121:5",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "d8c6bde1b0659af1de9783100568337fbe0428bd2b943c5428fe4974b0fd587c:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "345ac3004ce1af245bf3b13677c3151d3c6afd325ab070b3d887899cd916fdf8:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "cf8ab9e0f7b258ab5c27e5724770b27ea4f662c2d5ffb206897d7508cc7c63a3:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "874a07dbb9d537063abe44bfcce517e1930065c1794c5c27e3b8d64aaf2ee2a8:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "4faa5421140e3465f02ff5117ec3aca97a24a7540b9546417fb933372968b556:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "13c22b46577bcdbc9eaeac0ea808c9b7331a3c63ede6ae3916e4a645451a8121:6",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "86126c50f81ceffff52f65604a70d67d89658066cfe4227ba0b6cb964521525d:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "78db58c7fcf02d8d05a73b6c490e1727fcdbfdffad6218420c55732413227f21:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "c47a31592b91c351542b450f7a9d7674955b5bbbe5e98843ad8ff8bcf91103bd:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "ad6795ee3d7a8ef9d6bb778be1101baade6292ef91b3e76713aa2dae4d1f1ed7:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "894c7589dd38b8a231c8478da40e6a74fb9c7bafe66b8a529453f459de2efd3f:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "052e0281dbc9520ef0afcd9729383c495f3a5bb5fad9262241f13c51bda1e9b9:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         },
         {
           "id": "9cffe22eec40577e7176a8c27502103a674aa42b0ea63d6d58bbd5663f43f9ad:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         }
       ]
     },
@@ -63996,14 +64033,15 @@
     },
     {
       "classification": "covered_history",
-      "reason": "A named source supplies an independent current world warning, stage, position, or effect under the FOV gate; generic pixel measurements do not qualify.",
+      "reason": "A named source supplies an independent current world warning, stage, position, or effect under the FOV gate; generic pixel measurements do not qualify. CLI.9.0.5 review: weak sprite ownership and observation lifetime bind aura readiness to its current native renderer. Only an attached active aura sharing the sprite parent can await actual center alignment; no actor coordinate is consulted or substituted. Existing flare appearance and show order remain unchanged.",
       "visible_evidence": "actual radial flare color and ray count including RingOfWealth rarity colors. Setup/update/geometry calls in this exact method belong to that native draw lifetime; no hidden gameplay outcome is inferred.",
       "visibility_gate": "Current run/scene/level and actual attached source, known FOV cell or explicitly partial known-cell fragments; camera, viewport, HUD occlusion and hidden target are not consulted.",
       "lifecycle": "Public world meaning is scoped to the current run and map. Current FOV and actual source eligibility control observation; already disclosed red warnings persist through their native attack lifecycle. Reviewed count-only history is sampled, while discrete onset and termination remain immediate. No generic rendering history is produced.",
       "route": {"semantic_contract": "world-cue-meaning"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "world-cue-meaning"}
+        {"kind": "semantic_contract", "id": "world-cue-meaning"},
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition"
       ],
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/Flare.java:show",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
@@ -64011,19 +64049,19 @@
       "sites": [
         {
           "id": "13c786ea034eaec908cb18cd970998ddfb3db4a49b0330cae1fb07984d506b7e:1",
-          "body_digest": "62c380805b483af7bde4607206bd24f791bec9358f4568b01b6ba0e7ac5b228a"
+          "body_digest": "3c2095381f6e204f1ca86c1cf3d2d812c3ac3dc441753be06db12ed49e38d663"
         },
         {
           "id": "3a94a55e89ad0356263ba8777c0bf3fc9d3726ebfc673d9f4ae178d51bb76c09:1",
-          "body_digest": "62c380805b483af7bde4607206bd24f791bec9358f4568b01b6ba0e7ac5b228a"
+          "body_digest": "3c2095381f6e204f1ca86c1cf3d2d812c3ac3dc441753be06db12ed49e38d663"
         },
         {
           "id": "888ebff467670a848cd18fd8bc417e328d8bfb5479650badb1cc31f30e8988e4:1",
-          "body_digest": "62c380805b483af7bde4607206bd24f791bec9358f4568b01b6ba0e7ac5b228a"
+          "body_digest": "3c2095381f6e204f1ca86c1cf3d2d812c3ac3dc441753be06db12ed49e38d663"
         },
         {
           "id": "054efaeba9ab7e588626d6abf26e14cbb1534ac2c3cca71fcb8ada75f31b80f3:1",
-          "body_digest": "62c380805b483af7bde4607206bd24f791bec9358f4568b01b6ba0e7ac5b228a"
+          "body_digest": "3c2095381f6e204f1ca86c1cf3d2d812c3ac3dc441753be06db12ed49e38d663"
         }
       ]
     },
@@ -64970,13 +65008,15 @@
     },
     {
       "classification": "not_player_visible",
-      "reason": "This site invokes an audio sink, not a GUI visual. The other visual sites in the same method are separately reviewed.",
+      "reason": "This site invokes an audio sink, not a GUI visual. The other visual sites in the same method are separately reviewed. CLI.9.0.5 review: CHILLED keeps its original native emission and now installs an explicit same-sprite particle episode observer with finite retirement gating. Remove the duplicate direct cue route; existing movement-shadow and all other character visual facts remain unchanged. Readiness uses only existing native renderer continuation state. CLI.9.0.5 FOV correction: only the native CHILLED source explicitly opts into waiting for its first actually known contributor, including a snow particle initially above the known character anchor. Generic emitter policies and native emission remain unchanged.",
       "visible_evidence": "This site invokes an audio sink, not a GUI visual. The other visual sites in the same method are separately reviewed.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
       "route": {"semantic_contract": "reviewed-nonvisual-site"},
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary"
       ],
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/CharSprite.java:processStateAddition",
       "execution_evidence": "Source attribution and listed shared-test/fixture definitions are distinct from runtime execution; native and package results are reported by the integration task.",
@@ -64984,7 +65024,7 @@
       "sites": [
         {
           "id": "79b14e26e11c44cfb1eeacb987f0b7099c63dcd877b4f61d2eecdc21db60bb26:1",
-          "body_digest": "d525afb96031dce9dab51adf7f4042d940d89d1d675db1961e0ba532b3f63699"
+          "body_digest": "d8e9adfd468cec7c31b35d63c55bccd2610e7afaec0af60830c7d3541d2ce999"
         }
       ]
     },
@@ -65730,9 +65770,15 @@
         "PendingWarningTest#onlyObservedCurrentFovCellsSurviveAndCompletedMarkersCannotReturn",
         "PendingWarningTest#independentEpisodesKeepMultiplicityAndOwnerRemovalRespectsCommittedCallbacks",
         "PendingWarningTest#scopeAndRunBoundariesClearKnowledgeButSameLevelSceneRebuildDoesNot",
-        "PendingWarningTest#menuScopeClearsWarningsWhileAlchemyAndSameLevelSceneKeepThem"
+        "PendingWarningTest#menuScopeClearsWarningsWhileAlchemyAndSameLevelSceneKeepThem",
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "PresentationReadinessTest#nativeItemDropKeepsGlowAbsentUntilLandingAndNeverGatesHiddenOrReusedSources",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates",
+        "CellParticleContributorTest#retirementWaitRequiresTheNativeSourceOptIn"
       ],
-      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:finishDraw; Current world semantic source reviewed: exact installed effect/selected frame/emitter episode or known FOV footprint produces a named cue and later disappearance; collector does not use camera, viewport or hidden future target. Collector.finishDraw now handles anchored floating text through its dedicated read-only native text eligibility after world source traversal, keeping current FOV anchor and separate UI text lifetime.",
+      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:finishDraw; Current world semantic source reviewed: exact installed effect/selected frame/emitter episode or known FOV footprint produces a named cue and later disappearance; collector does not use camera, viewport or hidden future target. Collector.finishDraw now handles anchored floating text through its dedicated read-only native text eligibility after world source traversal, keeping current FOV anchor and separate UI text lifetime. CLI.9.0.5 review: combine source presentation readiness with particle readiness. Only attached public FOV-known progressing native sprite/item continuations can hold completion; source-opted finite tails wait only while actual visible contributors can update. Existing cues and warning gates remain intact, and observation advances neither actor nor rendering.",
       "visible_evidence": "Complete current semantic source frame plus current-FOV cells of pending native warning episodes; no renderer transforms, colors, hidden targets or timers.",
       "route": {"semantic_contract": "world-cue-meaning"},
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:finishDraw",
@@ -65741,7 +65787,7 @@
       "sites": [
         {
           "id": "495e61d9bd48bc78ed3fa57f5699a7872af04dc05edc0e2e70dc16773d1abb50:1",
-          "body_digest": "4f5572ecb2b69f395e9db173c4519a080b2d169933925e21df10963e67a93e0d"
+          "body_digest": "86426bdfbdeae8dc09fe71828699344e49ec15dec0a29f003a8fc67d15c13a18"
         }
       ]
     },
@@ -114147,7 +114193,7 @@
     {
       "id": "cli8-source:VisualCueCollector:world-cue-meaning:01",
       "classification": "covered_current",
-      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:finishParticleDraws. Collector now measures only exact opted-in current known contributors and preserves independent same-cell source multiplicity; current world status remains complete and camera independent. Private SourceOccurrence combines source object, observation lifetime and emitter episode; offered cue body remains public but identity does not.",
+      "reason": "CLI8 source review core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:finishParticleDraws. Collector now measures only exact opted-in current known contributors and preserves independent same-cell source multiplicity; current world status remains complete and camera independent. Private SourceOccurrence combines source object, observation lifetime and emitter episode; offered cue body remains public but identity does not. CLI.9.0.5 review: combine source presentation readiness with particle readiness. Only attached public FOV-known progressing native sprite/item continuations can hold completion; source-opted finite tails wait only while actual visible contributors can update. Existing cues and warning gates remain intact, and observation advances neither actor nor rendering. CLI.9.0.5 FOV correction: WeakHashMap readiness metadata retains only a same-level, same-lifetime, same-drop-episode previously observed FOV footprint while a native small item briefly rises out of that footprint. The anchor must remain in current FOV; losing it clears the record. Unobserved drops cannot borrow another episode or derive heap position. First-known particle eligibility is separately source-opted; actual cue publication still requires observed contributors.",
       "trigger": "Current source methods in core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java: CueIdentity.hashCode, CueIdentity.equals, VisualCueCollector.collectSources, VisualCueCollector.known, VisualCueCollector.add, VisualCueCollector.semantic, VisualCueCollector.linkedFragments, VisualCueCollector.characterVisualDrawn, VisualCueCollector.finishMovingDraws, VisualCueCollector.finishParticleDraws, VisualCueCollector.countdownKind, VisualCueCollector.hasKnownFootprint.",
       "visible_evidence": "Retained exact baseline source identities and enclosing bodies; changed or retired sites are separately classified. int hashCode | boolean equalsObject value | void collectSourcesGizmo source | boolean knownint cell | VisualCue semanticVisualCue cue | void linkedFragmentsList<Visual> parts,VisualCue cue | void characterVisualDrawnGizmo source,String kind,int cell | String countdownKindString text | boolean hasKnownFootprintVisual source | Object occurrenceKey | int hashCode | boolean equalsObject value",
       "visibility_gate": "Current run/scene/level and actual attached source, known FOV cell or explicitly partial known-cell fragments; camera, viewport, HUD occlusion and hidden target are not consulted.",
@@ -114165,7 +114211,14 @@
         "WardStatueSemanticTest#statueArmorFollowsTheActualNativeFrameAndDeathRemovesTheArmorAppearance",
         "WardStatueSemanticTest#worldCueUsesFovAndAttachmentInsteadOfCameraViewport",
         "NativeSpriteGameplayTest#mimicMotionRequiresTwoEligibleFramesAndNeverLabelsAStaticDisguise",
-        "NativeSpriteGameplayTest#gnollArmorUsesTheOwnedEmitterEpisodeWithoutLookingAtItsActor"
+        "NativeSpriteGameplayTest#gnollArmorUsesTheOwnedEmitterEpisodeWithoutLookingAtItsActor",
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "PresentationReadinessTest#nativeItemDropKeepsGlowAbsentUntilLandingAndNeverGatesHiddenOrReusedSources",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates",
+        "CellParticleContributorTest#retirementWaitRequiresTheNativeSourceOptIn",
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
       "sites": [
         {
@@ -114178,7 +114231,7 @@
         },
         {
           "id": "e5a4a3c26a7cb1e79ad13f206261f5869206528e7fc8bd7a572a674fbe12ad03:1",
-          "body_digest": "63c4f2ea6aede837bab57bf0c8dfa53a7178554fbbf97fa1b59ceb5102faaf3a"
+          "body_digest": "d864e58910d3713a7fd48b2accf7ca3d32c5802bb472a98cbca272ba10e8d826"
         },
         {
           "id": "c49707f76ff3080f09e303fb424e8484f1e8153bbbc48b70296490dae34934a0:1",
@@ -116108,7 +116161,7 @@
     {
       "id": "cli8-source:GameController:controller-control-only:01",
       "classification": "not_player_visible",
-      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: NotExecuted.<init>, SaveResult.<init>, RunOutcome.<init>, RunOutcome.data, Execution.<init>, Execution.acknowledge, Execution.acknowledged, Work.<init>, CancelControl.<init>, GameController.<init>, GameController.execute.",
+      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: NotExecuted.<init>, SaveResult.<init>, RunOutcome.<init>, RunOutcome.data, Execution.<init>, Execution.acknowledge, Execution.acknowledged, Work.<init>, CancelControl.<init>, GameController.<init>, GameController.execute. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: NotExecuted.<init>, SaveResult.<init>, RunOutcome.<init>, RunOutcome.data, Execution.<init>, Execution.acknowledge, Execution.acknowledged, Work.<init>, CancelControl.<init>, GameController.<init>, GameController.execute.",
       "visible_evidence": "31 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.NotExecuted.<init>: null <init>String code,Throwable cause | 58 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.SaveResult.<init>: null <init>String runId,int slot,Throwable error | 61 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.SaveResult.<init>: null <init>String receiptId,String runId,int slot,Throwable error,String occurredAt,String originScopeId,String originRequestId | 69 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.RunOutcome.<init>: null <init>String runId,boolean won | 70 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.RunOutcome.data: Map<String, Object> data | 202 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.Execution.<init>: null <init>CompletableFuture<State> firstResponse,CompletableFuture<State> completion | 205 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.Execution.acknowledge: void acknowledge | 206 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.Execution.acknowledged: boolean acknowledged | 219 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.Work.<init>: null <init>String version,Map<String, Object> args,String requestId | 227 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.CancelControl.<init>: null <init>String kind,String version,String target | 266 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.<init>: null <init>Path profile,String menuScope,Consumer<Throwable> errors | 272 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.execute: CompletableFuture<State> executeString version,Map<String, Object> args",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -116116,7 +116169,12 @@
       "route": {"semantic_contract": "controller-control-only"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation"
+        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
@@ -116153,7 +116211,7 @@
         },
         {
           "id": "36d8c82e481b5ff2f6d75dcabfe2d8ba5a3641c626317c805b677a54a15d90ef:1",
-          "body_digest": "cd15d3251ca982bb25b892933ad1d4236469d4c8aa7a9038720c89e3281851d5"
+          "body_digest": "6ab409890927cc57f26d46e426038274f3d102f158a9a447f6df6778c3934b51"
         },
         {
           "id": "59aa019ad7348e2c1d0c4d47ab242afc46d453de0cbe9eb3896dba565db5f462:1",
@@ -116173,15 +116231,20 @@
     {
       "id": "cli8-source:GameController:controller-control-only:02",
       "classification": "not_player_visible",
-      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: GameController.execute, GameController.start, GameController.enqueue, GameController.prepareCancellation, GameController.cancelPrepared, GameController.abortCancellation, GameController.exiting, GameController.disposed, GameController.pollSave, GameController.pollRunOutcome, GameController.prepareRun.",
-      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.execute, GameController.start, GameController.enqueue, GameController.prepareCancellation, GameController.cancelPrepared, GameController.abortCancellation, GameController.exiting, GameController.disposed, GameController.pollSave, GameController.pollRunOutcome, GameController.prepareRun.",
-      "visible_evidence": "273 call com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.start: start(version,args,null) | 275 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.start: Execution startString version,Map<String, Object> args,String requestId | 278 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.enqueue: void enqueueWork work | 282 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.enqueue: void enqueueCancelControl control | 286 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.prepareCancellation: CompletableFuture<State> prepareCancellationString version,String target | 289 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.cancelPrepared: CompletableFuture<State> cancelPreparedString version,String target | 292 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.abortCancellation: void abortCancellationString version | 294 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.exiting: boolean exiting | 295 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.disposed: boolean disposed | 296 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollSave: SaveResult pollSave | 297 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollRunOutcome: RunOutcome pollRunOutcome | 339 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.prepareRun: void prepareRunString id",
+      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: GameController.execute, GameController.start, GameController.enqueue, GameController.prepareCancellation, GameController.cancelPrepared, GameController.abortCancellation, GameController.exiting, GameController.disposed, GameController.pollSave, GameController.pollRunOutcome. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity. The retired global prepareRun method is replaced by request-owned identity consumption.",
+      "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.execute, GameController.start, GameController.enqueue, GameController.prepareCancellation, GameController.cancelPrepared, GameController.abortCancellation, GameController.exiting, GameController.disposed, GameController.pollSave, GameController.pollRunOutcome.",
+      "visible_evidence": "273 call com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.start: start(version,args,null) | 275 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.start: Execution startString version,Map<String, Object> args,String requestId | 278 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.enqueue: void enqueueWork work | 282 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.enqueue: void enqueueCancelControl control | 286 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.prepareCancellation: CompletableFuture<State> prepareCancellationString version,String target | 289 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.cancelPrepared: CompletableFuture<State> cancelPreparedString version,String target | 292 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.abortCancellation: void abortCancellationString version | 294 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.exiting: boolean exiting | 295 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.disposed: boolean disposed | 296 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollSave: SaveResult pollSave | 297 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.pollRunOutcome: RunOutcome pollRunOutcome",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "The native source can construct, animate or remove its presentation as usual; this disposition creates no independent public combat occurrence or retained rendering sample.",
       "route": {"semantic_contract": "controller-control-only"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation"
+        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
@@ -116194,7 +116257,7 @@
         },
         {
           "id": "dbdfcc3f23aeab245204f2466a72a73837d38fb0e353cecd66968022ba7c0b37:1",
-          "body_digest": "b4d4b3278dfc8dd88dc59f89e039c511e51e53c817ac249665f04987f9a10226"
+          "body_digest": "918cb8c853a918eb105ae45578dfb2e4e3e3fd34d54ea296c0efd6e7043fcc49"
         },
         {
           "id": "277d6a6419f814f306be412106ea4a3971b7cc166c224727eb211a82a5bfe12c:1",
@@ -116227,10 +116290,6 @@
         {
           "id": "cae1f971a48849999701458aff2bc358fedc7177c3de655bf2127a5611ab7436:1",
           "body_digest": "be6d4e22c7b83c2f100ddde021bcef4ef8134d9095cb889b20db39bb5c939e73"
-        },
-        {
-          "id": "478f71bd8205efe452224d256040776682754ab550a12cf70e684274f772c088:1",
-          "body_digest": "6912ceafd36fd26bc4393eb604d798782df62021c7fd642c1677d1027ace6f4e"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -116238,7 +116297,7 @@
     {
       "id": "cli8-source:GameController:controller-control-only:03",
       "classification": "not_player_visible",
-      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: GameController.exitNow, GameController.exitRequested, GameController.onException, GameController.onSave, GameController.onRunEnded, GameController.runtimeFailed, GameController.onDispose, GameController.closeWith, GameController.runActive, GameController.activityStillRunning, GameController.continuousHandoff, GameController.refreshMotionLease.",
+      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: GameController.exitNow, GameController.exitRequested, GameController.onException, GameController.onSave, GameController.onRunEnded, GameController.runtimeFailed, GameController.onDispose, GameController.closeWith, GameController.runActive, GameController.activityStillRunning, GameController.continuousHandoff, GameController.refreshMotionLease. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.exitNow, GameController.exitRequested, GameController.onException, GameController.onSave, GameController.onRunEnded, GameController.runtimeFailed, GameController.onDispose, GameController.closeWith, GameController.runActive, GameController.activityStillRunning, GameController.continuousHandoff, GameController.refreshMotionLease.",
       "visible_evidence": "340 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.exitNow: void exitNow | 342 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.exitRequested: boolean exitRequested | 343 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onException: void onExceptionThrowable error | 344 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onSave: void onSaveString runId,int slot,Throwable error | 350 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onRunEnded: void onRunEndedString runId,boolean won | 434 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.runtimeFailed: void runtimeFailedThrowable error | 435 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onDispose: void onDispose | 436 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.closeWith: void closeWithThrowable error | 449 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.runActive: boolean runActive | 467 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.activityStillRunning: boolean activityStillRunning | 476 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.continuousHandoff: boolean continuousHandoff | 496 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.refreshMotionLease: void refreshMotionLease",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -116246,7 +116305,12 @@
       "route": {"semantic_contract": "controller-control-only"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation"
+        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
@@ -116279,7 +116343,7 @@
         },
         {
           "id": "7ecd105504437557c9035d32ab975c1a0ddaa98cbca2be044038b601fa43bce7:1",
-          "body_digest": "1cb53309eab19a94c80b7ac313e46efc746344cce75916b166f40ef652534a94"
+          "body_digest": "95743be0998d093eee8b5da9937309698b9da67066b4ccb4d94031b757f7e9e4"
         },
         {
           "id": "b929ab676dca38ad4e1d64be3a526edee3e229e92f242a625663a6faad825465:1",
@@ -116295,7 +116359,7 @@
         },
         {
           "id": "47cbece341ad081b48b3c315ebb361357c026ca0f93518fc7161a68b24da93bf:1",
-          "body_digest": "7495a47acc50d624bcadf74bd6c53d5b5e08295fec211ab1b070694c211e14ad"
+          "body_digest": "9f69cfae0e267c0bb1aab2acb7813fca2421d1f0dc29ae200bb72600369fe5e2"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -116368,7 +116432,7 @@
     {
       "id": "cli8-source:GameController:controller-control-only:05",
       "classification": "not_player_visible",
-      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: GameController.perform.",
+      "reason": "These methods manage requests and execution lifecycle. They do not independently create a visible combat indicator; their resulting current observation is captured by separate reviewed display/public source methods. Bounded producer methods: GameController.perform. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.perform.",
       "visible_evidence": "798 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.perform: void performMap<String, Object> args | 814 call com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.show: GameScene.show(new com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem(null,item)) | 814 construct com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem: new com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem(null,item)",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -116376,20 +116440,25 @@
       "route": {"semantic_contract": "controller-control-only"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation"
+        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
           "id": "872e1e72e35aecf65d99fea6ba42780a185d2f296f170c8caa47ef1085f47e7e:1",
-          "body_digest": "02421e8dd655d949763a1e78d129d8695a882e785661d1bfd8010f04bdab3dab"
+          "body_digest": "01182e6ccdea4a920d892faa90baa08cf57f4fc3df87111488d14510ee21e8d8"
         },
         {
           "id": "b4c46cfb98d7bf45fff898c1d1991fe51d28da65a54f7900fa150620914d0537:1",
-          "body_digest": "02421e8dd655d949763a1e78d129d8695a882e785661d1bfd8010f04bdab3dab"
+          "body_digest": "01182e6ccdea4a920d892faa90baa08cf57f4fc3df87111488d14510ee21e8d8"
         },
         {
           "id": "cbe773c30000300f63fd5311f017d5154f4b00f348e7f9e5a17e183160ddbe45:1",
-          "body_digest": "02421e8dd655d949763a1e78d129d8695a882e785661d1bfd8010f04bdab3dab"
+          "body_digest": "01182e6ccdea4a920d892faa90baa08cf57f4fc3df87111488d14510ee21e8d8"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -116397,7 +116466,7 @@
     {
       "id": "cli8-source:GameController:controller-display-handoff:01",
       "classification": "covered_current",
-      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: State.<init>, State.result, GameLogSnapshot.<init>, GameLogSnapshot.data, GameLogSnapshot.originalData, BannerSnapshot.<init>, BannerSnapshot.data, FloatingSnapshot.<init>, FloatingSnapshot.data, FloatingSnapshot.originalData.",
+      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: State.<init>, State.result, GameLogSnapshot.<init>, GameLogSnapshot.data, GameLogSnapshot.originalData, BannerSnapshot.<init>, BannerSnapshot.data, FloatingSnapshot.<init>, FloatingSnapshot.data, FloatingSnapshot.originalData. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: State.<init>, State.result, GameLogSnapshot.<init>, GameLogSnapshot.data, GameLogSnapshot.originalData, BannerSnapshot.<init>, BannerSnapshot.data, FloatingSnapshot.<init>, FloatingSnapshot.data, FloatingSnapshot.originalData.",
       "visible_evidence": "38 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.State.<init>: null <init>String scopeId,String version,String phase,Map<String, Object> publicState,Map<String, Object> internalState,List<Map<String, Object>> acti | 42 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.State.<init>: null <init>String scopeId,String version,String phase,Map<String, Object> publicState,Map<String, Object> internalState,List<Map<String, Object>> acti | 48 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.State.result: Map<String, Object> result | 76 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.GameLogSnapshot.<init>: null <init>String scopeId,String occurredAt,List<RuntimeObserver.LogEntry> entries | 79 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.GameLogSnapshot.<init>: null <init>String scopeId,String occurredAt,List<RuntimeObserver.LogEntry> entries,String guiLanguage | 88 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.GameLogSnapshot.data: Map<String, Object> data | 89 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.GameLogSnapshot.originalData: Map<String, Object> originalData | 98 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.BannerSnapshot.<init>: null <init>String runId,String kind,Map<String, Object> appearance | 103 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.BannerSnapshot.data: Map<String, Object> data | 108 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.FloatingSnapshot.<init>: null <init>String runId,int depth,String mapContext,String text,boolean clipped,Map<String, Object> appearance | 116 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.FloatingSnapshot.data: Map<String, Object> data | 117 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.FloatingSnapshot.originalData: Map<String, Object> originalData",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
@@ -116408,7 +116477,12 @@
         {"kind": "semantic_contract", "id": "controller-display-handoff"},
         "DisplayEventQueueTest#mixedKindsShareOneBoundedNondestructiveFifo",
         "DisplayEventQueueTest#publicAndOriginalPayloadsAreDeeplyFrozenAtConstruction",
-        "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw"
+        "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
@@ -116417,7 +116491,7 @@
         },
         {
           "id": "5321a8d36327122797e040cbd11986a4d4d2ecba9562a293df5467cc87ce68bc:1",
-          "body_digest": "0e1f70a987942bdb9f6c4f8081a6adbf3c67d2615c4cd3f96b4afdcf0a9063e8"
+          "body_digest": "fe3e3b29d6f1ac476fa68aaef5a3983e9e9fbd02c2ec7870c00bfca0f8fc938f"
         },
         {
           "id": "eacda011bb197790add66f1e6f1301ee2da79977df3240b5f3a7d13720ef722a:1",
@@ -116678,7 +116752,7 @@
     {
       "id": "cli8-source:GameController:controller-display-handoff:05",
       "classification": "covered_current",
-      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: GameController.recordVisualCues, GameController.visualEventMeaning, GameController.onTextResource, GameController.onTextOperation, GameController.onTextBound, GameController.onTextReleased, GameController.stable, GameController.beforeActorResume, GameController.beforeSceneUpdate, GameController.afterDraw. CLI8 bounded source review: private occurrence identity changes event onset without a wire field.",
+      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: GameController.recordVisualCues, GameController.visualEventMeaning, GameController.onTextResource, GameController.onTextOperation, GameController.onTextBound, GameController.onTextReleased, GameController.stable, GameController.beforeActorResume, GameController.beforeSceneUpdate, GameController.afterDraw. CLI8 bounded source review: private occurrence identity changes event onset without a wire field. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.recordVisualCues, GameController.visualEventMeaning, GameController.onTextResource, GameController.onTextOperation, GameController.onTextBound, GameController.onTextReleased, GameController.stable, GameController.beforeActorResume, GameController.beforeSceneUpdate, GameController.afterDraw.",
       "visible_evidence": "380 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.recordVisualCues: void recordVisualCuesString runId,Object levelIdentity,int depth,List<VisualCue> cues,boolean presentationReady,long now | 404 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.visualEventMeaning: List<Map<String, Object>> visualEventMeaningList<VisualCue> cues | 409 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.visualEventMeaning: List<Map<String, Object>> visualEventMeaningList<VisualCue> cues,boolean includeQuantities | 422 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextResource: String onTextResourceString text,String key,String language,Object[] arguments | 425 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextResource: String onTextResourceString text,String key,String language,Object[] arguments,String guiTemplate | 428 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextOperation: String onTextOperationString operation,String text,Object... operands | 431 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextBound: void onTextBoundObject owner,String text | 432 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.onTextReleased: void onTextReleasedObject owner | 455 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.stable: boolean stable | 483 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.beforeActorResume: boolean beforeActorResume | 493 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.beforeSceneUpdate: void beforeSceneUpdate | 507 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.afterDraw: void afterDraw",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
@@ -116689,7 +116763,12 @@
         {"kind": "semantic_contract", "id": "controller-display-handoff"},
         "DisplayEventQueueTest#mixedKindsShareOneBoundedNondestructiveFifo",
         "DisplayEventQueueTest#publicAndOriginalPayloadsAreDeeplyFrozenAtConstruction",
-        "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw"
+        "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
@@ -116730,7 +116809,7 @@
         },
         {
           "id": "ec940f7105aea75143a1a51616012b9c1393be89d2d5fbb21f8001fa18d09446:1",
-          "body_digest": "ffd7b06c860ae03c4cbe65bc2175d323bd4021d94be457a85f3f31cf68d34e62"
+          "body_digest": "2a43c5b6dcccaeb0ad0c12c86a28b304dc2fff7257cb74c2a586dc68d576c00a"
         },
         {
           "id": "c69cb1ca472ecbd9cfbd8685bcfacb0cc1e2b7249b0ac7f69fa5992a81df028a:1",
@@ -116754,7 +116833,7 @@
     {
       "id": "cli8-source:GameController:controller-display-handoff:06",
       "classification": "covered_current",
-      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: GameController.afterFrame, GameController.atBoundary, GameController.resetRenderedBoundary, GameController.renderedBoundaryReady, GameController.matchesCurrentVisual, GameController.visualState, GameController.captureContinuous, GameController.hasPendingEffects, GameController.capture. CLI.8.0.1 bounded source review: capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification.",
+      "reason": "Current semantic cues/feedback and events are frozen at their matching run/depth/after-draw generation; visual event history samples sacrificial_flames density at the reviewed finite interval while current state remains complete. Bounded producer methods: GameController.afterFrame, GameController.atBoundary, GameController.resetRenderedBoundary, GameController.renderedBoundaryReady, GameController.matchesCurrentVisual, GameController.visualState, GameController.captureContinuous, GameController.hasPendingEffects, GameController.capture. CLI.8.0.1 bounded source review: capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java: GameController.afterFrame, GameController.atBoundary, GameController.resetRenderedBoundary, GameController.renderedBoundaryReady, GameController.matchesCurrentVisual, GameController.visualState, GameController.captureContinuous, GameController.hasPendingEffects, GameController.capture.",
       "visible_evidence": "508 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.afterFrame: void afterFrame | 520 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.atBoundary: void atBoundary | 634 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.resetRenderedBoundary: void resetRenderedBoundary | 636 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.renderedBoundaryReady: boolean renderedBoundaryReady | 660 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.matchesCurrentVisual: boolean matchesCurrentVisualVisualSnapshot rendered | 663 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.visualState: Map<String, Object> visualState | 668 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.captureContinuous: State captureContinuous | 678 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.hasPendingEffects: boolean hasPendingEffectscom.watabou.noosa.Gizmo node | 686 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.capture: State captureboolean forceNewVersion",
       "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
@@ -116765,7 +116844,12 @@
         {"kind": "semantic_contract", "id": "controller-display-handoff"},
         "DisplayEventQueueTest#mixedKindsShareOneBoundedNondestructiveFifo",
         "DisplayEventQueueTest#publicAndOriginalPayloadsAreDeeplyFrozenAtConstruction",
-        "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw"
+        "GameLogDisplayTest#onlyPostCullMergedEntriesAreNotifiedAndOnlyAfterDraw",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
@@ -116774,7 +116858,7 @@
         },
         {
           "id": "894b93f623c3e81658f99b9ef7c84c5716ce311a8392b04097f2e4c6581b3eb2:1",
-          "body_digest": "e194c8cf29d40ff7df585c84a4b0800af17da8ba45de6e94e7b9dd6da75658a3"
+          "body_digest": "fcc8b6bd61ad6c44327668fbd7d22f15bf7a9fd23a12ce305a0301d4abffdfbc"
         },
         {
           "id": "3acbcfb6b11d88bcc3100f06341aa8746737ff0f57ab6ae9f9785975d138d364:1",
@@ -116802,7 +116886,7 @@
         },
         {
           "id": "fa15d0e2b84f6687419bc6b754b834d9f31f5629260523ec34ba657344a02310:1",
-          "body_digest": "304fcdf80cf3da418cfdb14f0e2e3e5c55c8b9badacc98afe230ade3e8c83e30"
+          "body_digest": "48c6c4b3bf5b32b03c34985ee726c822e7165f051b69eb309714f61fc9479783"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -116859,7 +116943,7 @@
     {
       "id": "cli8-source:GameSnapshotter:public-observation-source:01",
       "classification": "covered_current",
-      "reason": "The current hero/item/map/entity projection applies the ordinary knowledge and FOV gates before CompactProtocol encodes this observation; source-only helpers preserve public values and locators. Bounded producer methods: GameSnapshotter.capture, GameSnapshotter.resolveItem.",
+      "reason": "The current hero/item/map/entity projection applies the ordinary knowledge and FOV gates before CompactProtocol encodes this observation; source-only helpers preserve public values and locators. Bounded producer methods: GameSnapshotter.capture, GameSnapshotter.resolveItem. CLI.9.0.5 review: capturePublic extracts the unchanged PlayerObservation path without profile IO, RNG export or internal graph capture. Full audit capture still owns the original internal snapshot; no hidden facts enter the public final guard.",
       "trigger": "Current source methods in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameSnapshotter.java: GameSnapshotter.capture, GameSnapshotter.resolveItem.",
       "visible_evidence": "39 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter.capture: Capture capture | 66 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter.capture: Capture captureHero hero,Level level,String scene | 71 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter.resolveItem: Item resolveItemString locator | 77 observation_boundary com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter.resolveItem: Item resolveItemHero hero,String locator",
       "visibility_gate": "Current hero/run and level. Map rows include only FOV, visited or mapped cells; reviewed current native custom-tile descriptors retain their terrain/name/description in the map, while unreviewed or unavailable presentations contribute only public base appearance. Live characters require public FOV and an eligible native sprite; remembered disguised Mimics retain only their native disguise. Explicit non-disguised OBJECT appearances can also remain on visited/mapped cells when their current native sprite is visible and visibleOutOfFFOV. Such object rows contain no creature health, buffs or emotion; projectile_collision:character records only their public Ballistica STOP_CHARS occupancy, never a firing-source capability. Environment descriptions on known cells use native FOV or blob.alwaysVisible, without blob amount or timer. Unknown map cells are never synthesized. Inventory knowledge remains source-bound; no private audit state or save data supplies these public facts.",
@@ -116869,12 +116953,13 @@
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
         {"kind": "semantic_contract", "id": "public-observation-source"},
         "GameSnapshotterTest#hiddenWorldChangesDoNotChangePublicObservation",
-        "GameSnapshotterTest#unknownConsumableIdentityNeverEscapesNameDescriptionOrShape"
+        "GameSnapshotterTest#unknownConsumableIdentityNeverEscapesNameDescriptionOrShape",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain"
       ],
       "sites": [
         {
           "id": "78d12bb5a9973aa1eda4f624ee4b05ca0da46d9625d083ff339a216722dcdee6:1",
-          "body_digest": "d0ff99752afb2387e9dcbe45b260c16a4c4cba5806ce814f499a2225ece4f0ef"
+          "body_digest": "d22714142a580c433638be8e809f3e7b60990b92f87f06a4eb15304c5b56cb4d"
         },
         {
           "id": "f550a0603b55b64e54616694960bd77ebed61c19ffef600dd12d067cf17f1681:1",
@@ -119040,7 +119125,7 @@
     {
       "id": "cli8-boundary:GameController",
       "classification": "not_player_visible",
-      "reason": "Whole-class source fingerprint for com.shatteredpixel.shatteredpixeldungeon.control.game.GameController includes static/instance field initializers and semantic method bodies; concrete methods remain independently reviewed. CLI8 bounded source review: private occurrence identity changes event onset without a wire field. CLI.8.0.1 bounded source review: capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification.",
+      "reason": "Whole-class source fingerprint for com.shatteredpixel.shatteredpixeldungeon.control.game.GameController includes static/instance field initializers and semantic method bodies; concrete methods remain independently reviewed. CLI8 bounded source review: private occurrence identity changes event onset without a wire field. CLI.8.0.1 bounded source review: capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged. This exact existing sink and its original parameters/order are unchanged; inventory attribution alone is not runtime verification. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Attributed class declaration com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.control.game.GameController with exact current class-body digest; no separate visual occurrence.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -119057,12 +119142,17 @@
         "DesktopSoundPlaybackTest#sourceAndListenerMustBothHaveFinitePositiveGain",
         "AudioOccurrenceTest#onlyExactAlarmInActualGameRunBecomesAnEvent",
         "AudioOccurrenceTest#alarmPayloadHasNoLocationSourceOrHiddenFactsAndScopeIsFrozen",
-        "AudioOccurrenceTest#audioHistoryNeverChangesCurrentStateOrIntentRevision"
+        "AudioOccurrenceTest#audioHistoryNeverChangesCurrentStateOrIntentRevision",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "sites": [
         {
           "id": "540b9a131a94d25667ba768c1b14796880c17829ef251cb206b780389d1e81b5:1",
-          "body_digest": "aaf2d6b58db8bd9bbe8e8bfda78aa44d2f441e693570d9a1d638643c58127f88"
+          "body_digest": "4d2f4f3fc64dbe0bb09c60a502de0177429f8126232e6089007e4748230bcb11"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -119070,7 +119160,7 @@
     {
       "id": "cli8-boundary:GameSnapshotter",
       "classification": "not_player_visible",
-      "reason": "Whole-class source fingerprint for com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter includes static/instance field initializers and semantic method bodies; concrete methods remain independently reviewed.",
+      "reason": "Whole-class source fingerprint for com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter includes static/instance field initializers and semantic method bodies; concrete methods remain independently reviewed. CLI.9.0.5 review: capturePublic extracts the unchanged PlayerObservation path without profile IO, RNG export or internal graph capture. Full audit capture still owns the original internal snapshot; no hidden facts enter the public final guard.",
       "trigger": "Attributed class declaration com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter with exact current class-body digest; no separate visual occurrence.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -119078,12 +119168,13 @@
       "route": {"semantic_contract": "source-class-fingerprint"},
       "tests": [
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation"
+        "CombatSourceAttributionTest#test_new_visual_camera_and_vector_sites_are_discovered_without_class_generation",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain"
       ],
       "sites": [
         {
           "id": "863afae46eac1fc484bb1ed7b9f77307acb9cecf3ac7e18fedb41368740977a9:1",
-          "body_digest": "4e1d6edeb7bd7250de603df6f956b201ef4d96ff9faf18b0c5c0e5d9926a5dd8"
+          "body_digest": "318c4411c5f4232f59690ff5f155b114869432b0a319971a065d6f5eee461dd6"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -120295,7 +120386,7 @@
     {
       "id": "cli8-boundary4:RuntimeObserver",
       "classification": "not_player_visible",
-      "reason": "Whole-class exact source fingerprint for RuntimeObserver.java protects branch guards and field initializers; concrete semantic display methods are reviewed separately. CLI.8.0.2 source review: only three uncalled default rendering callbacks are removed. Current semantic VisualCue and feedback overloads and action/save boundaries are unchanged.",
+      "reason": "Whole-class exact source fingerprint for RuntimeObserver.java protects branch guards and field initializers; concrete semantic display methods are reviewed separately. CLI.8.0.2 source review: only three uncalled default rendering callbacks are removed. Current semantic VisualCue and feedback overloads and action/save boundaries are unchanged. CLI.9.0.5 review: optional newRunIdentity defaults to null and carries only the executing control request audit identity. Native gameplay and GUI new-run behavior remain unchanged.",
       "trigger": "Class declaration RuntimeObserver.java.",
       "visible_evidence": "No pixels or public fact are emitted by a fingerprint.",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -120311,12 +120402,13 @@
         "DesktopSoundPlaybackTest#sourceAndListenerMustBothHaveFinitePositiveGain",
         "AudioOccurrenceTest#onlyExactAlarmInActualGameRunBecomesAnEvent",
         "AudioOccurrenceTest#alarmPayloadHasNoLocationSourceOrHiddenFactsAndScopeIsFrozen",
-        "AudioOccurrenceTest#audioHistoryNeverChangesCurrentStateOrIntentRevision"
+        "AudioOccurrenceTest#audioHistoryNeverChangesCurrentStateOrIntentRevision",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest"
       ],
       "sites": [
         {
           "id": "6ed3886fd5de61feca2ecf9580a0ad6e270e213f6c0e965ac5b9135b7b9dfa99:1",
-          "body_digest": "30e1e4b7762976b042df9b1bce626eba64fd87d93d47362e2856f123b38e2914"
+          "body_digest": "da21151f178c57af6c7b70d4bae55aac34e2bb55603dd309fb8ae655866736d7"
         }
       ],
       "runtime_verified_by_inventory": false
@@ -120718,7 +120810,7 @@
     {
       "id": "cli8-pending:Dungeon:native-lifecycle",
       "classification": "covered_current",
-      "reason": "init/loadGame clear process knowledge without restoring private targets; newLevel/loadLevel synchronize immediately after clearing Dungeon.level; resetLevel clears before regenerating the same Level instance; switchLevel compares run/Level/depth/branch; fail/win clear only at the existing true run-end notification, not HP == 0 or scene teardown.",
+      "reason": "init/loadGame clear process knowledge without restoring private targets; newLevel/loadLevel synchronize immediately after clearing Dungeon.level; resetLevel clears before regenerating the same Level instance; switchLevel compares run/Level/depth/branch; fail/win clear only at the existing true run-end notification, not HP == 0 or scene teardown. CLI.9.0.5 review: replace mutable nextRunId with the observer hook for the executing request audit identity. Warning clearing, native initialization, random seed and progression rules remain unchanged.",
       "trigger": "Exact native lifecycle and observation sites in core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/Dungeon.java; methods: fail, init, loadGame, loadLevel, newLevel, resetLevel, switchLevel, win.",
       "visible_evidence": "Retained exact baseline source identities and enclosing bodies; changed or retired sites are separately classified. com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.synchronizeScope() | com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.endRun() | com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.synchronizeScope() | com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.endRun() | com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear() | com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear() | com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell.PendingWarning.clear()",
       "visibility_gate": "The first cell admission requires the actual native TargetedCell to pass existing current observer, source attachment/contribution and current heroFOV gates. Thereafter only the intersection of that episode's previously admitted cells and current heroFOV is emitted. Camera, viewport and UI occlusion do not narrow public FOV; a hidden never-observed marker that has faded cannot add cells later.",
@@ -120731,7 +120823,8 @@
         "PendingWarningTest#onlyObservedCurrentFovCellsSurviveAndCompletedMarkersCannotReturn",
         "PendingWarningTest#independentEpisodesKeepMultiplicityAndOwnerRemovalRespectsCommittedCallbacks",
         "PendingWarningTest#scopeAndRunBoundariesClearKnowledgeButSameLevelSceneRebuildDoesNot",
-        "PendingWarningTest#menuScopeClearsWarningsWhileAlchemyAndSameLevelSceneKeepThem"
+        "PendingWarningTest#menuScopeClearsWarningsWhileAlchemyAndSameLevelSceneKeepThem",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest"
       ],
       "runtime_verified_by_inventory": false,
       "sites": [
@@ -120753,7 +120846,7 @@
         },
         {
           "id": "c8c86d03ea9a0167628f39e9c25c40ad7874314dc1e7cd3eb7691a825d705849:1",
-          "body_digest": "10d80d0ef703bcf0290fcb7e1a807ff44bc23b89ce8ba1620f96ac9f265310a1"
+          "body_digest": "17b5cb20f01f188c5b90d6bb2ec6151f47384aec068dd89b9e45f39950eccc40"
         },
         {
           "id": "e1898b5861be3cd08fc142f9d3e3ccdc47db30ec093ed591a8af0fb94c3985ea:1",
@@ -120889,7 +120982,7 @@
     {
       "id": "cli8-pending:GameController:native-lifecycle",
       "classification": "covered_current",
-      "reason": "capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged.",
+      "reason": "capture clears observer-only warning knowledge only when runActive is false and the current scene is not GameScene; retained Dungeon.level in true menus cannot carry old warnings into a later run. Active alchemy/transition scenes and same-Level GameScene reconstruction preserve the existing run warning ledger. Existing revision/signature computation is unchanged. CLI.9.0.5 review: immutable request-owned preparation freezes one before snapshot, invalidates native input/scene changes before holding Actor, and performs one public-only final guard before one dispatch. Audit persistence is outside the scheduler. Full capture and final guard share the same decision projection; meaningful warnings remain revision inputs. The planned run identity is supplied only by the executing owner, and failure/closure cannot leave a global next-run identity.",
       "trigger": "Exact native lifecycle and observation sites in game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java; methods: capture.",
       "visible_evidence": "The already disclosed red_target cell remains pending until native termination.",
       "visibility_gate": "The first cell admission requires the actual native TargetedCell to pass existing current observer, source attachment/contribution and current heroFOV gates. Thereafter only the intersection of that episode's previously admitted cells and current heroFOV is emitted. Camera, viewport and UI occlusion do not narrow public FOV; a hidden never-observed marker that has faded cannot add cells later.",
@@ -120902,13 +120995,18 @@
         "PendingWarningTest#onlyObservedCurrentFovCellsSurviveAndCompletedMarkersCannotReturn",
         "PendingWarningTest#independentEpisodesKeepMultiplicityAndOwnerRemovalRespectsCommittedCallbacks",
         "PendingWarningTest#scopeAndRunBoundariesClearKnowledgeButSameLevelSceneRebuildDoesNot",
-        "PendingWarningTest#menuScopeClearsWarningsWhileAlchemyAndSameLevelSceneKeepThem"
+        "PendingWarningTest#menuScopeClearsWarningsWhileAlchemyAndSameLevelSceneKeepThem",
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
       ],
       "runtime_verified_by_inventory": false,
       "sites": [
         {
           "id": "3c3be6e58f43938b532d9fce5c58e0d784076f7d3e96c6e30e53dd85667b7e5c:1",
-          "body_digest": "304fcdf80cf3da418cfdb14f0e2e3e5c55c8b9badacc98afe230ade3e8c83e30"
+          "body_digest": "48c6c4b3bf5b32b03c34985ee726c822e7165f051b69eb309714f61fc9479783"
         }
       ]
     },
@@ -129422,20 +129520,33 @@
     {
       "id": "cli9:CellParticleCue:initializer:fc8c90b10a2a1366",
       "classification": "not_player_visible",
-      "reason": "The new optional stage is attached only by reviewed Vault door-energy source branches and propagates through actual emitter episode/contributor capture. Stage never reads a boss actor or private elemental phase; hidden boss does not suppress a separately visible native door emitter.",
+      "reason": "The new optional stage is attached only by reviewed Vault door-energy source branches and propagates through actual emitter episode/contributor capture. Stage never reads a boss actor or private elemental phase; hidden boss does not suppress a separately visible native door emitter. CLI.9.0.5 review: explicit awaitRetirement metadata permits only reviewed producers to delay completion through visible finite particle tails. Existing episode/lifetime reset, first-contributor latch, stage and quantity meaning remain unchanged. CLI.9.0.5 FOV correction: a separate source-owned awaitFirstKnownPresentation opt-in keeps first-particle readiness pending for an emitting known anchor until an actual contributor is known. The opt-in creates no cue or particle, consults no hidden model, and leaves unmarked sources unchanged.",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/CellParticleCue.java:<initializer>; exact attributed sites below.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "Only the current native source and its documented same-frame knowledge, attachment and lifetime gates supply evidence. This static review never invokes gameplay callbacks or certifies a runtime scenario.",
-      "route": {"semantic_contract": "source-class-fingerprint"},
+      "route": {
+        "semantic_contract": "source-class-fingerprint"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        "Cli9RenderingSourcesTest#doorEnergyComesFromItsActualEmitterWithoutRequiringAVisibleBoss"
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        "Cli9RenderingSourcesTest#doorEnergyComesFromItsActualEmitterWithoutRequiringAVisibleBoss",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates",
+        "CellParticleContributorTest#retirementWaitRequiresTheNativeSourceOptIn",
+        "CellParticleContributorTest#chilledFirstKnownPresentationWaitIsSourceOptInAndResetsOnReuse"
       ],
       "sites": [
         {
           "id": "24596d67923d1bab3f52048c754ba70b8a105802131128512cb5e76da6b9eb39:1",
-          "body_digest": "d3992900b2778f02b8fee169a71f14e4021ab1faf6166ba64df1ab2657118470"
+          "body_digest": "09091855254793857f3b950d2d77e323603b59a6f9e3c95b4e7577957dc48e18"
         }
       ],
       "source_evidence": [
@@ -129663,19 +129774,20 @@
     {
       "id": "cli9:Flare:initializer:4573644661549a06",
       "classification": "not_player_visible",
-      "reason": "new explicit Eldritch source selects five red rays; no generic flares acquire an observation tag.",
+      "reason": "new explicit Eldritch source selects five red rays; no generic flares acquire an observation tag. CLI.9.0.5 review: weak sprite ownership and observation lifetime bind aura readiness to its current native renderer. Only an attached active aura sharing the sprite parent can await actual center alignment; no actor coordinate is consulted or substituted. Existing flare appearance and show order remain unchanged.",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/Flare.java:<initializer>; exact attributed sites below.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.effects.Flare",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
       "lifecycle": "Only the current native source and its documented same-frame knowledge, attachment and lifetime gates supply evidence. This static review never invokes gameplay callbacks or certifies a runtime scenario.",
       "route": {"semantic_contract": "source-class-fingerprint"},
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition"
       ],
       "sites": [
         {
           "id": "b276e1d1cad6e3c217ab04df791e9789b887c1194a778f75e28dc5028651b98f:1",
-          "body_digest": "72509d52e8639f962bd5c79b52029b4988d8ab09e48ccd2480fd9adeae66adcf"
+          "body_digest": "3fe7115e1140cc162bec62d8ad20a9f21e2201e270810cff60e0d2f6496138c3"
         }
       ],
       "source_evidence": [
@@ -130977,21 +131089,40 @@
     {
       "id": "cli9:VisualCueCollector:finishParticleDraws:c6ca41f91786d4fd",
       "classification": "covered_current",
-      "reason": "Keep the reviewed immutable particle-source stage on both contributed frames and already-observed active episodes; ordinary FOV/attachment/contributor gates apply before publishing.",
+      "reason": "Keep the reviewed immutable particle-source stage on both contributed frames and already-observed active episodes; ordinary FOV/attachment/contributor gates apply before publishing. CLI.9.0.5 review: combine source presentation readiness with particle readiness. Only attached public FOV-known progressing native sprite/item continuations can hold completion; source-opted finite tails wait only while actual visible contributors can update. Existing cues and warning gates remain intact, and observation advances neither actor nor rendering. CLI.9.0.5 FOV correction: WeakHashMap readiness metadata retains only a same-level, same-lifetime, same-drop-episode previously observed FOV footprint while a native small item briefly rises out of that footprint. The anchor must remain in current FOV; losing it clears the record. Unobserved drops cannot borrow another episode or derive heap position. First-known particle eligibility is separately source-opted; actual cue publication still requires observed contributors.",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:finishParticleDraws; exact attributed sites below.",
       "visible_evidence": "boolean finishParticleDraws",
       "visibility_gate": "Current scene-bound emitter, current native emitting episode, current FOV-known door anchor and contributing known particle. An already observed active episode may retain stage between emissions; hidden/unstarted/unobserved emitters cannot manufacture energy. No dependency on boss entity visibility.",
       "lifecycle": "Only the current native source and its documented same-frame knowledge, attachment and lifetime gates supply evidence. This static review never invokes gameplay callbacks or certifies a runtime scenario.",
-      "route": {"semantic_contract": "cli9-vault-door-energy"},
+      "route": {
+        "semantic_contract": "cli9-vault-door-energy"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
-        {"kind": "semantic_contract", "id": "cli9-vault-door-energy"},
-        "Cli9RenderingSourcesTest#doorEnergyComesFromItsActualEmitterWithoutRequiringAVisibleBoss"
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        {
+          "kind": "semantic_contract",
+          "id": "cli9-vault-door-energy"
+        },
+        "Cli9RenderingSourcesTest#doorEnergyComesFromItsActualEmitterWithoutRequiringAVisibleBoss",
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "PresentationReadinessTest#nativeItemDropKeepsGlowAbsentUntilLandingAndNeverGatesHiddenOrReusedSources",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates",
+        "CellParticleContributorTest#retirementWaitRequiresTheNativeSourceOptIn",
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap",
+        "CellParticleContributorTest#chilledFirstKnownPresentationWaitIsSourceOptInAndResetsOnReuse"
       ],
       "sites": [
         {
           "id": "5fe88ac4ca1f2223bc2393660ae13543c81fc7f6c40f43e1fa8f6bddbf0044a0:1",
-          "body_digest": "5570500a33714e8e0a59eb8dda7e0540ddb32fb120e74283e9811059d15b1d65"
+          "body_digest": "310ade7e24da29ba4f51a123b6cba1f911b0ff0c80b0518f0ffcf0664a9bdca6"
         }
       ],
       "source_evidence": [
@@ -139181,7 +139312,7 @@
     {
       "id": "cli9:CharSprite:observeGameplayVisuals:c6ce4e0eb2075d6a",
       "classification": "covered_current",
-      "reason": "Native shadow tag chooses a dedicated public artwork/motion cue before generic character status inspection; ordinary bound characters retain existing state and effect observers.",
+      "reason": "Native shadow tag chooses a dedicated public artwork/motion cue before generic character status inspection; ordinary bound characters retain existing state and effect observers. CLI.9.0.5 review: CHILLED keeps its original native emission and now installs an explicit same-sprite particle episode observer with finite retirement gating. Remove the duplicate direct cue route; existing movement-shadow and all other character visual facts remain unchanged. Readiness uses only existing native renderer continuation state.",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/CharSprite.java:observeGameplayVisuals; exact attributed sites below.",
       "visible_evidence": "void observeGameplayVisuals | GameScene.observeCellVisualDraw(this, new com.watabou.noosa.VisualCue(cue, cell)) | GameScene.observeCellVisualDraw(this, appearance)",
       "visibility_gate": "Native branch must have instantiated and tagged this exact unbound sprite lifetime. Current scene attachment, existence/alive/visibility/positive alpha and valid displayed geometry remain required. FOV/visited is deliberately not required for this explicit native sense; untagged, pooled or detached sources cannot use it.",
@@ -139191,20 +139322,22 @@
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
         {"kind": "semantic_contract", "id": "cli9-native-movement-shadow"},
         "Cli9RenderingShadowTest#nativeShadowPublishesOnlyObservedArtworkAndMotionThroughUnknownFog",
-        "Cli9RenderingShadowTest#ordinaryHiddenSpritesAndReusedOrDetachedShadowsDoNotGainTheHearingException"
+        "Cli9RenderingShadowTest#ordinaryHiddenSpritesAndReusedOrDetachedShadowsDoNotGainTheHearingException",
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary"
       ],
       "sites": [
         {
           "id": "0b2284f957b16f3a9eaa1c0d3a764f40bc156f9a3ce6bd2f637b4b51b0c3d82f:1",
-          "body_digest": "fb75e55c9bd01525203198fbbd9bdf0f1383d6122da19c0ee289acb9688e6f3f"
+          "body_digest": "23617799c8d7eff0521f19460a49f9e1bbbcad86c5482be8e491a787b3baaf35"
         },
         {
           "id": "6acc7ec18f660cf8a4f9510018b9042ab432871431f345f52c3ee011faeef2cd:1",
-          "body_digest": "fb75e55c9bd01525203198fbbd9bdf0f1383d6122da19c0ee289acb9688e6f3f"
+          "body_digest": "23617799c8d7eff0521f19460a49f9e1bbbcad86c5482be8e491a787b3baaf35"
         },
         {
           "id": "fec94fd30cdb78e0d3777a680068b51a56afb8b6e62975c04c8fedf04192149d:1",
-          "body_digest": "fb75e55c9bd01525203198fbbd9bdf0f1383d6122da19c0ee289acb9688e6f3f"
+          "body_digest": "23617799c8d7eff0521f19460a49f9e1bbbcad86c5482be8e491a787b3baaf35"
         }
       ],
       "source_evidence": [
@@ -139977,7 +140110,7 @@
     {
       "id": "cli9:ItemSprite:initializer:f50e3e0665fbc13c",
       "classification": "not_player_visible",
-      "reason": "new allowed Crystal stage hints supplement the selected native Glowing; capture never rereads an enchantment. Upstream heap visibility alpha is retained.",
+      "reason": "new allowed Crystal stage hints supplement the selected native Glowing; capture never rereads an enchantment. Upstream heap visibility alpha is retained. CLI.9.0.5 review: the pure helper holds completion only for native dropInterval while this existing item sprite has a selected public glow/status meaning. It creates no images, reads no hidden item identity, and leaves cue anchor/landing and native update rules unchanged. CLI.9.0.5 FOV correction: each native drop has a private identity-only episode token when observation is enabled, cleared by revive/kill. No RNG, emitted public payload, drop timing, trajectory, native audio or item rule changes.",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java:<initializer>; exact attributed sites below.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite",
       "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
@@ -139987,12 +140120,14 @@
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
         "Cli9ItemObservationTest#crystalGlowReportsOnlyTheNativeSelectedStageAndKeepsItUntilReselected",
         "Cli9ItemObservationTest#crystalSelectionThresholdsDoNotExposeRawDurabilityOrPulseState",
-        "Cli9ItemObservationTest#newGlowPaletteComesFromSelectedNativeSpritesWithoutIdentifyingTheEnchantment"
+        "Cli9ItemObservationTest#newGlowPaletteComesFromSelectedNativeSpritesWithoutIdentifyingTheEnchantment",
+        "PresentationReadinessTest#nativeItemDropKeepsGlowAbsentUntilLandingAndNeverGatesHiddenOrReusedSources",
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
       "sites": [
         {
           "id": "5d0069d3836794f5df7d4b1ce075596cd9cc181f8d3fa6b4bc1e2eb503a6d312:1",
-          "body_digest": "ef4706a8d468728387f98c2a7becd943732dd88140c712b6b6773d6415a75398"
+          "body_digest": "2e94e26c5a8268f1a61c72f3b882fbc0a2504f625427c97e30a2413a41228fd0"
         }
       ],
       "source_evidence": [
@@ -140389,7 +140524,7 @@
     {
       "id": "cli9:SentrySprite:link:82231b728a684337",
       "classification": "covered_current",
-      "reason": "Generic sentry native charging animation controls its existing charge emitter. CellParticleCue.forCharacter records source-contributing charging particles using the sprite anchor and current FOV.",
+      "reason": "Generic sentry native charging animation controls its existing charge emitter. CellParticleCue.forCharacter records source-contributing charging particles using the sprite anchor and current FOV. CLI.9.0.5 review: opt the existing source-bound sentry charging emitter into finite visible tail retirement. Native factory, emission interval, on/off animation branch and public cue are unchanged.",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/SentrySprite.java:link; exact attributed sites below.",
       "visible_evidence": "void linkChar ch | centerEmitter() | chargeParticles.pour(MagicMissile.MagicParticle.ATTRACTING, 0.05f) | chargeParticles.on = curAnim == charging",
       "visibility_gate": "Current run/scene/level and actual attached source, known FOV cell or explicitly partial known-cell fragments; camera, viewport, HUD occlusion and hidden target are not consulted.",
@@ -140399,24 +140534,26 @@
         {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]},
         {"kind": "semantic_contract", "id": "world-cue-meaning"},
         "CombatVisualCueTest#onlyAttachedNontransparentKnownSourcesEnterTheCollector",
-        "CombatVisualCueTest#motionRequiresConsecutiveEligibleDrawsAndCannotCrossPoolLifetimes"
+        "CombatVisualCueTest#motionRequiresConsecutiveEligibleDrawsAndCannotCrossPoolLifetimes",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates"
       ],
       "sites": [
         {
           "id": "ae057706e834a2eef78e33d102f868607e953f58d8c0a3f9c4ce8065202965c0:1",
-          "body_digest": "e3dceefd90614e4125b83281b9b2b0bfb2984c8e1d064c8ad295da09763a0938"
+          "body_digest": "3d32c77368601dad9e11fd02f2d431607fbbaa7d46dce727a2c59c997b248507"
         },
         {
           "id": "abcf2b43f4ee9e27b50c3ead28e469eaa62b7fff21e6f939182956f851819644:1",
-          "body_digest": "e3dceefd90614e4125b83281b9b2b0bfb2984c8e1d064c8ad295da09763a0938"
+          "body_digest": "3d32c77368601dad9e11fd02f2d431607fbbaa7d46dce727a2c59c997b248507"
         },
         {
           "id": "a36271eb2bd45c496663357ce37e063735939a148d9567573f1c2c67f935f0ef:1",
-          "body_digest": "e3dceefd90614e4125b83281b9b2b0bfb2984c8e1d064c8ad295da09763a0938"
+          "body_digest": "3d32c77368601dad9e11fd02f2d431607fbbaa7d46dce727a2c59c997b248507"
         },
         {
           "id": "3df59dda7ea0164fca9f12850e6f1fd319344c28a04b7c503885b7541f4c5c0b:1",
-          "body_digest": "e3dceefd90614e4125b83281b9b2b0bfb2984c8e1d064c8ad295da09763a0938"
+          "body_digest": "3d32c77368601dad9e11fd02f2d431607fbbaa7d46dce727a2c59c997b248507"
         }
       ],
       "source_evidence": [
@@ -163542,19 +163679,34 @@
     {
       "id": "cli902:VisualCueCollector:initializer:a53438354087",
       "classification": "not_player_visible",
-      "reason": "Replace ephemeral unowned target fallback with source/FOV-admitted uncertain episodes and cell-union emission; other visual collection is unchanged.",
+      "reason": "Replace ephemeral unowned target fallback with source/FOV-admitted uncertain episodes and cell-union emission; other visual collection is unchanged. CLI.9.0.5 review: combine source presentation readiness with particle readiness. Only attached public FOV-known progressing native sprite/item continuations can hold completion; source-opted finite tails wait only while actual visible contributors can update. Existing cues and warning gates remain intact, and observation advances neither actor nor rendering. CLI.9.0.5 FOV correction: WeakHashMap readiness metadata retains only a same-level, same-lifetime, same-drop-episode previously observed FOV footprint while a native small item briefly rises out of that footprint. The anchor must remain in current FOV; losing it clears the record. Unobserved drops cannot borrow another episode or derive heap position. First-known particle eligibility is separately source-opted; actual cue publication still requires observed contributors. CLI.9.0.5 readiness cache cleanup: prune drop metadata at every eligible beginDraw before traversal can skip a hidden, detached, inactive, completed or out-of-FOV source; clear it on an ineligible scene. Match run ID as well as weak Level, sprite lifetime and drop episode. A weak Level value prevents the level-to-heap-to-sprite ownership chain from retaining a weak map key. Losing eligibility cannot later restore an anchor while the drop footprint is still unknown.",
       "trigger": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java:<initializer>; exact attributed source sites below.",
       "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
       "visibility_gate": "Exact class fingerprint only; the concrete producer methods retain their own public visibility and lifetime contracts.",
       "lifecycle": "Current native same-frame display only; missing display does not inherit cached public facts. The source inventory does not execute this source.",
-      "route": {"semantic_contract": "source-class-fingerprint"},
+      "route": {
+        "semantic_contract": "source-class-fingerprint"
+      },
       "tests": [
-        {"kind": "source_review", "checks": ["site_identity", "enclosing_body_digest"]}
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "PresentationReadinessTest#nativeItemDropKeepsGlowAbsentUntilLandingAndNeverGatesHiddenOrReusedSources",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates",
+        "CellParticleContributorTest#retirementWaitRequiresTheNativeSourceOptIn",
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap"
       ],
       "sites": [
         {
           "id": "a534383540873a341cdc71d62d7f5dd7e65ed092a789f9bd057caad360f10ce8:1",
-          "body_digest": "a755a8424e53c33597df3094669f4cf5e81a5990309d1580064b5c7f958fd63b"
+          "body_digest": "9fb38a63e803887e12ed5a9ecd16fc71386a16a89194f49946630cb56d52ef4f"
         }
       ],
       "source_evidence": [
@@ -166177,6 +166329,526 @@
           "body_digest": "502c643eef4bf5e792a9c75d5b95c1900934800c8ea5f4c1c4464e6c180fcd18"
         }
       ]
+    },
+    {
+      "id": "cli905:action-preparation",
+      "classification": "not_player_visible",
+      "reason": "Exact new preparation ownership, immutable literal arguments, lifecycle transitions, cancellation-before-commit, input/scope invalidation and one-shot final dispatch. Paired audit IO stays outside these scheduler methods; new-run identity belongs only to the executing owner. Shared public projection is checked before dispatch, with no revision rebinding, audit graph recapture or action replay.",
+      "trigger": "Current exact attributed source methods: ActionPreparation.<init>, GameController.abortPreparedAction, GameController.commitAtBoundary, GameController.commitPreparedAction, GameController.dispatch, GameController.failPreparation, GameController.holdsPreparedBoundary, GameController.inputGeneration, GameController.invalidatePreparation, GameController.newRunIdentity, GameController.notExecuted, GameController.prepareAction, GameController.rejectBeforeExecution, GameController.requireOwner, PreparationStage.<init>, PublicDecision.<init>, RuntimeObserver.newRunIdentity.",
+      "visible_evidence": "void rejectBeforeExecutionWork work,Throwable error | void abortPreparedActionActionPreparation preparation | void failPreparationActionPreparation preparation,Throwable failure,boolean deferred | NotExecuted notExecutedThrowable error | void dispatchWork work,String originScope | Execution commitPreparedActionActionPreparation preparation | null <init> | void invalidatePreparation | boolean holdsPreparedBoundary | long inputGeneration | String newRunIdentity | String newRunIdentity | null <init>String scopeId,String version,Map<String, Object> args,String requestId,String plannedRun,CompletableFuture<State> preparedBefore,Execution execution | ActionPreparation prepareActionString scopeId,String version,Map<String, Object> args,String requestId,String plannedRun | void commitAtBoundaryActionPreparation preparation | void requireOwnerActionPreparation preparation | null <init>String scope,String phase,String signature,Map<String, Object> publicState,Map<String, Object> uiState,List<Map<String, Object>> actions,Map<String, Object> outcome",
+      "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
+      "lifecycle": "Only this reviewed source body and its matching request/source lifetime apply. Source attribution checks exact identities and bodies; runtime fixture results are reported separately.",
+      "route": {
+        "semantic_contract": "controller-control-only"
+      },
+      "tests": [
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
+      ],
+      "sites": [
+        {
+          "id": "0c84937c8a841fef03ac17a4238087a35f1ac2eb01e586fe4071a65c3c5f80db:1",
+          "body_digest": "6679a2915f45fe09e15007d90a495d9f23a7c32f3b8eed1cabe364e60514ef1b"
+        },
+        {
+          "id": "1e1019f3d2e6c87fa40f3166a313ec1190f6903777fdba4235c4f6b11ebd95d0:1",
+          "body_digest": "db53f934f6ed94d58b2b865c89dae9b66d1b3251d2442a45505323cf212e38ba"
+        },
+        {
+          "id": "20cc9187ae600fa31ca7e13dd3e692f0a72c924b94ffd806c04cd96e76bdeb20:1",
+          "body_digest": "254ab691c6d52c7c278bbb26b9be518b38257c141f4b82b3443db4ca296b7e84"
+        },
+        {
+          "id": "48d82c9c529f938f2dcfa53a0e15a41e25b770fc965beed79dba574281154851:1",
+          "body_digest": "3019e361c03ccc9e0d8eac6c3f2d6874ccf24479d885fbef04dcb6e973143408"
+        },
+        {
+          "id": "4a01045706eeaa4625da348062f9abcfa60ad031fcc27da56a711907410e4b24:1",
+          "body_digest": "10abc76ac3210c2cee0989439addd1b91afd20dd9650825bec25d63ec5026a84"
+        },
+        {
+          "id": "4e8b8247c09c0eb338469fb7e1ba2b541dffa63708ba81cf28c32ec7a69d7e80:1",
+          "body_digest": "1cccd5f65d3c7bc57492c37582988f0ca2bb65d9a49d383d6b567bced3905e93"
+        },
+        {
+          "id": "58d9874cb2413955b38abcce10fa20513abef068a6e314ec4679ea011b2cbbee:1",
+          "body_digest": "67b2b793f82805c55994de36ba26957d89be534d656df43048f1d1b024432106"
+        },
+        {
+          "id": "69702bd3ae59c8f3c118d6b0aa0863b2fa36fe0b7624711a78df5c72f23d25c2:1",
+          "body_digest": "45091fda55fa9821cfdab4a67288f540ee4726dcf8070a8e4010a43405105ab0"
+        },
+        {
+          "id": "9954234b37bd320f3b4cd607597c6c116359a87ad23e74beff7c7c7355e46b3d:1",
+          "body_digest": "258c2453713826389f83490ee0d1f41aae4b88cbd04c5d7d71ef5cf0963f1d3c"
+        },
+        {
+          "id": "9d727d329961262798e3ccd4d081dafc17700b6af0c5aa5919eb5053a224020e:1",
+          "body_digest": "3311b96b23e7a80edac116c37d2b16f61febfb3c9df9813015df60ae2d389e7c"
+        },
+        {
+          "id": "a498087b0000da5fab8246535453c5fb88425de7d40a8ecfb6e5cc73141448ec:1",
+          "body_digest": "e7eb49ac0c16565dff4444cd547c509b95d274891a2de720e73599d35d4c64f2"
+        },
+        {
+          "id": "a4c0670c97bd665cb369bdbab65263a3e61060514b6f5380314e4473ff1bd687:1",
+          "body_digest": "ae19c1f4c86978540410a2fae971071e14f4298eb2c68a935b60dbece838bbf9"
+        },
+        {
+          "id": "aabcefcf9d0cff2253cc50c14a0cd4655cae99ee9d4098dd24321ae899cfeb67:1",
+          "body_digest": "5289fe82fd1267f9a10a46ad3b552743a7a3bc33b17536f0ce160fa8b2205b98"
+        },
+        {
+          "id": "b23582a3b687251d41745e8f50d41edc7bfcb0ae70922c1189e86e5a4f20d281:1",
+          "body_digest": "948b7a5036523440a57864cb4b296fcda0950b113bcb513e4bbe9f53ae07abf0"
+        },
+        {
+          "id": "cee90782a015e198ce97cc17e201949650cc629c4b3e3460763cf256ed69953d:1",
+          "body_digest": "469f38a081d9553355d7dde9b1d4d4e52e259a25acd035731643a7cdb00c8f53"
+        },
+        {
+          "id": "d6acbdbad138be04c031700d85c70ebe407f4e4d3e04331f71ac1526e1e7825e:1",
+          "body_digest": "abb85bc45c6800f47e32426acb67b03082606370214a80d2584b09f459f2fe04"
+        },
+        {
+          "id": "fccca6a978bdf054efc5d45ddd5e41c217ed52ddf2650790a6916e81f0a78f78:1",
+          "body_digest": "035a5024f39a87026fda2870271131d7afd8945e75cb8d5b5bd81cff4a69ce39"
+        }
+      ],
+      "source_evidence": [
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 757,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "rejectBeforeExecution",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.rejectBeforeExecution",
+          "expression": "void rejectBeforeExecutionWork work,Throwable error"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 325,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "abortPreparedAction",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.abortPreparedAction",
+          "expression": "void abortPreparedActionActionPreparation preparation"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 763,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "failPreparation",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.failPreparation",
+          "expression": "void failPreparationActionPreparation preparation,Throwable failure,boolean deferred"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 753,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "notExecuted",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.notExecuted",
+          "expression": "NotExecuted notExecutedThrowable error"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 730,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "dispatch",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.dispatch",
+          "expression": "void dispatchWork work,String originScope"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 315,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "commitPreparedAction",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.commitPreparedAction",
+          "expression": "Execution commitPreparedActionActionPreparation preparation"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 233,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PreparationStage",
+          "method": "<init>",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PreparationStage.<init>",
+          "expression": "null <init>"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 709,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "invalidatePreparation",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.invalidatePreparation",
+          "expression": "void invalidatePreparation"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 705,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "holdsPreparedBoundary",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.holdsPreparedBoundary",
+          "expression": "boolean holdsPreparedBoundary"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 704,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "inputGeneration",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.inputGeneration",
+          "expression": "long inputGeneration"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 410,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "newRunIdentity",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.newRunIdentity",
+          "expression": "String newRunIdentity"
+        },
+        {
+          "file": "SPD-classes/src/main/java/com/watabou/noosa/RuntimeObserver.java",
+          "line": 22,
+          "owner": "com.watabou.noosa.RuntimeObserver",
+          "method": "newRunIdentity",
+          "sink": "com.watabou.noosa.RuntimeObserver.newRunIdentity",
+          "expression": "String newRunIdentity"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 226,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.ActionPreparation",
+          "method": "<init>",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.ActionPreparation.<init>",
+          "expression": "null <init>String scopeId,String version,Map<String, Object> args,String requestId,String plannedRun,CompletableFuture<State> preparedBefore,Execution execution"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 308,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "prepareAction",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.prepareAction",
+          "expression": "ActionPreparation prepareActionString scopeId,String version,Map<String, Object> args,String requestId,String plannedRun"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 720,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "commitAtBoundary",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.commitAtBoundary",
+          "expression": "void commitAtBoundaryActionPreparation preparation"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 335,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "requireOwner",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.requireOwner",
+          "expression": "void requireOwnerActionPreparation preparation"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 894,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PublicDecision",
+          "method": "<init>",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.PublicDecision.<init>",
+          "expression": "null <init>String scope,String phase,String signature,Map<String, Object> publicState,Map<String, Object> uiState,List<Map<String, Object>> actions,Map<String, Object> outcome"
+        }
+      ],
+      "runtime_verified_by_inventory": false
+    },
+    {
+      "id": "cli905:public-decision",
+      "classification": "covered_current",
+      "reason": "The same public decision projection now serves both observed revision signatures and the prepared action final guard. It preserves source/FOV knowledge, UI intent, input generation and meaningful warning filters, never captures the private audit graph, and does not publish a new state from the final guard.",
+      "trigger": "Current exact attributed source methods: GameController.publicDecision.",
+      "visible_evidence": "PublicDecision publicDecisionMap<String, Object> publicState",
+      "visibility_gate": "Matching current run/level/depth and completed display handoff; world cells pass current FOV source gates, UI feedback retains its own native eligibility; historical events never become current action bindings.",
+      "lifecycle": "Only this reviewed source body and its matching request/source lifetime apply. Source attribution checks exact identities and bodies; runtime fixture results are reported separately.",
+      "route": {
+        "semantic_contract": "controller-display-handoff"
+      },
+      "tests": [
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        {
+          "kind": "semantic_contract",
+          "id": "controller-display-handoff"
+        },
+        "ActionPreparationTest#preparationFreezesBeforeWithoutInvokingAndCommitDispatchesExactlyOnce",
+        "ActionPreparationTest#nativeInputInvalidatesBeforeTheNextStableCheckAndCannotDeadlockActor",
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain",
+        "ActionPreparationTest#newRunIdentityBelongsOnlyToTheCurrentlyExecutingRequest",
+        "ActionPreparationTest#requestTextIsLiteralAndDeeplyImmutable"
+      ],
+      "sites": [
+        {
+          "id": "97502d91832ec973081693279c359e24a4ae7f3e18771b2049069a4b51571050:1",
+          "body_digest": "b38be91f0ecfb24067cd2986a50d4d02a70eaa539de68ba42403a2ee15c01e4c"
+        }
+      ],
+      "source_evidence": [
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+          "line": 901,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController",
+          "method": "publicDecision",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameController.publicDecision",
+          "expression": "PublicDecision publicDecisionMap<String, Object> publicState"
+        }
+      ],
+      "runtime_verified_by_inventory": false
+    },
+    {
+      "id": "cli905:public-snapshot",
+      "classification": "covered_current",
+      "reason": "The extracted capturePublic path delegates to the identical PlayerObservation public knowledge gates. Final validation avoids profile IO, RNG export, build capture and the private audit graph; full before snapshots still capture their separate internal audit.",
+      "trigger": "Current exact attributed source methods: GameSnapshotter.capturePublic.",
+      "visible_evidence": "Map<String, Object> capturePublicObject currentScene | Map<String, Object> capturePublic",
+      "visibility_gate": "Current hero/run and level. Map rows include only FOV, visited or mapped cells; reviewed current native custom-tile descriptors retain their terrain/name/description in the map, while unreviewed or unavailable presentations contribute only public base appearance. Live characters require public FOV and an eligible native sprite; remembered disguised Mimics retain only their native disguise. Explicit non-disguised OBJECT appearances can also remain on visited/mapped cells when their current native sprite is visible and visibleOutOfFFOV. Such object rows contain no creature health, buffs or emotion; projectile_collision:character records only their public Ballistica STOP_CHARS occupancy, never a firing-source capability. Environment descriptions on known cells use native FOV or blob.alwaysVisible, without blob amount or timer. Unknown map cells are never synthesized. Inventory knowledge remains source-bound; no private audit state or save data supplies these public facts.",
+      "lifecycle": "Only this reviewed source body and its matching request/source lifetime apply. Source attribution checks exact identities and bodies; runtime fixture results are reported separately.",
+      "route": {
+        "semantic_contract": "public-observation-source"
+      },
+      "tests": [
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        {
+          "kind": "semantic_contract",
+          "id": "public-observation-source"
+        },
+        "ActionPreparationTest#finalGuardNeverCapturesInternalProfileAgain"
+      ],
+      "sites": [
+        {
+          "id": "ae4b735fb0bd26f4f12493fbfc142c753427e63c270e884aa2a3a78505b0806e:1",
+          "body_digest": "dce12e60bd23fbfa91f9902c5a95dbca5d43d690abec81819b357c084f4b6b34"
+        },
+        {
+          "id": "d77e211d6288cd4e23467dc22425e0fc61077cc6b2d17ed0460c2ccc8ce92615:1",
+          "body_digest": "a52e991ed866f4843b225e68b70b8f8ed17ace4f94178ebb3cde32bda357a362"
+        }
+      ],
+      "source_evidence": [
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameSnapshotter.java",
+          "line": 64,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter",
+          "method": "capturePublic",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter.capturePublic",
+          "expression": "Map<String, Object> capturePublicObject currentScene"
+        },
+        {
+          "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameSnapshotter.java",
+          "line": 60,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter",
+          "method": "capturePublic",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotter.capturePublic",
+          "expression": "Map<String, Object> capturePublic"
+        }
+      ],
+      "runtime_verified_by_inventory": false
+    },
+    {
+      "id": "cli905:presentation-readiness",
+      "classification": "not_player_visible",
+      "reason": "These read-only gates certify finite public presentation readiness. They add no public payload, advance no renderer or actor, and read no private actor position, buff, AI or timer. Already visible actual cues remain under their existing semantic contracts; hidden, detached, inactive or frozen sources cannot hold completion. CLI.9.0.5 FOV correction: WeakHashMap readiness metadata retains only a same-level, same-lifetime, same-drop-episode previously observed FOV footprint while a native small item briefly rises out of that footprint. The anchor must remain in current FOV; losing it clears the record. Unobserved drops cannot borrow another episode or derive heap position. First-known particle eligibility is separately source-opted; actual cue publication still requires observed contributors. CLI.9.0.5 FOV correction: a separate source-owned awaitFirstKnownPresentation opt-in keeps first-particle readiness pending for an emitting known anchor until an actual contributor is known. The opt-in creates no cue or particle, consults no hidden model, and leaves unmarked sources unchanged. CLI.9.0.5 readiness cache cleanup: prune drop metadata at every eligible beginDraw before traversal can skip a hidden, detached, inactive, completed or out-of-FOV source; clear it on an ineligible scene. Match run ID as well as weak Level, sprite lifetime and drop episode. A weak Level value prevents the level-to-heap-to-sprite ownership chain from retaining a weak map key. Losing eligibility cannot later restore an anchor while the drop footprint is still unknown.",
+      "trigger": "Current exact attributed readiness gates: CellParticleCue.awaitRetirement/waitsForRetirement/awaitFirstKnownPresentation/waitsForFirstKnownPresentation, VisualCueCollector.canUpdate/knownDropPending/pruneObservedDrops and DropObservation constructor/matches with current run ID.",
+      "visible_evidence": "boolean canUpdateGizmo source | CellParticleCue awaitRetirement | boolean waitsForRetirement | boolean waitsForFirstKnownPresentation | CellParticleCue awaitFirstKnownPresentation | boolean knownDropPendingItemSprite source | void pruneObservedDrops | boolean matchesLevel level,String runId,ItemSprite source | null <init>Level level,String runId,ItemSprite source,List<Integer> cells",
+      "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
+      "lifecycle": "Only this reviewed source body and its matching request/source lifetime apply. Source attribution checks exact identities and bodies; runtime fixture results are reported separately.",
+      "route": {
+        "semantic_contract": "cli905-presentation-readiness"
+      },
+      "tests": [
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "PresentationReadinessTest#nativeItemDropKeepsGlowAbsentUntilLandingAndNeverGatesHiddenOrReusedSources",
+        "CellParticleContributorTest#stoppedSentryTailMustFinishBeforeTheWarningBoundaryIsReady",
+        "CellParticleContributorTest#stoppedSentryTailCannotWaitForFrozenOrInactiveNativeUpdates",
+        "CellParticleContributorTest#retirementWaitRequiresTheNativeSourceOptIn",
+        "PresentationReadinessTest#knownNativeDropKeepsItsObservedAnchorAcrossAnUpwardFovGap",
+        "CellParticleContributorTest#chilledFirstKnownPresentationWaitIsSourceOptInAndResetsOnReuse"
+      ],
+      "sites": [
+        {
+          "id": "056ef4f08005691d6fbf707cdcd6df161560066bd9822d5c9485166228171f14:1",
+          "body_digest": "40c5728c91fa4bb3c8ded2e41beb6091ead6fea5c028089df45e7fcc0b3f74f2"
+        },
+        {
+          "id": "dd9966a1f8fc7a843ce841856d316e909565cda8566fbb955476b959228b86d8:1",
+          "body_digest": "f90e9eb4a86d3d5a4e334bbe68a43500548f66a17e5aa678a1f0eccf1e07f803"
+        },
+        {
+          "id": "dec38292eb8662f6af8a304ecfe45cd899855c6ab1165217959f089ecfb35538:1",
+          "body_digest": "c603d56ba35b72ae6a722645b1c28bdd1b1de7fa1864a70f18afa5f864a35836"
+        },
+        {
+          "id": "3ca4fa6ea9ae6cc473bf8e35465cb82abd6274747a372c2cb2d4020bf4b5dd03:1",
+          "body_digest": "c39da8bf7910122e2f2995723520b1ad34a6316544fa50bd2229931499dbec07"
+        },
+        {
+          "id": "9c61984d552304703a01097d8f9d0d10cc438281f512a164900f4c21e0c43dac:1",
+          "body_digest": "5b56a38eba22c1fe333b2d94bfbcb2acb2f38200da34556d73162dad5f865a41"
+        },
+        {
+          "id": "ba1c5da77426b1e0419e8c933092ec6edf0ecc0c88029cafee059fa08aa85f73:1",
+          "body_digest": "155c33429105b85fe97f7e7046fe1c20174ed10900c33f05e470588d87de1f94"
+        },
+        {
+          "id": "0c0f733df01e2dd8e1e1e160ea55829daa42c812ed2abe306c5df1cc9f4e3d6d:1",
+          "body_digest": "5c004ea8a02e0a01ee0749830c14c3c3f2568bd78f9b5b80900600af1f5a5a52"
+        },
+        {
+          "id": "acedb51bde664c2e8040fe61b1b0b8c90fc052a3182437d14ea8f7f51eba5d3a:1",
+          "body_digest": "a15767a6f29ca84df0cf42013ba7174a0ebbbebcccc7dfd08c0da6a43b438758"
+        },
+        {
+          "id": "c90789746e13f7aef1ba7256d9b8b9ed16def4a39a064db9186af16aad97568a:1",
+          "body_digest": "a98dc322184dad611f97b0a3d6b4b6fd15e8b1e2412bcca32b984b7d38856cc4"
+        }
+      ],
+      "source_evidence": [
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+          "line": 351,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
+          "method": "canUpdate",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector.canUpdate",
+          "expression": "boolean canUpdateGizmo source"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/CellParticleCue.java",
+          "line": 75,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
+          "method": "awaitRetirement",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue.awaitRetirement",
+          "expression": "CellParticleCue awaitRetirement"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/CellParticleCue.java",
+          "line": 76,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
+          "method": "waitsForRetirement",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue.waitsForRetirement",
+          "expression": "boolean waitsForRetirement"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/CellParticleCue.java",
+          "line": 79,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
+          "method": "waitsForFirstKnownPresentation",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue.waitsForFirstKnownPresentation",
+          "expression": "boolean waitsForFirstKnownPresentation"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/CellParticleCue.java",
+          "line": 78,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue",
+          "method": "awaitFirstKnownPresentation",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.CellParticleCue.awaitFirstKnownPresentation",
+          "expression": "CellParticleCue awaitFirstKnownPresentation"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+          "line": 142,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
+          "method": "knownDropPending",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector.knownDropPending",
+          "expression": "boolean knownDropPendingItemSprite source"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+          "line": 157,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector",
+          "method": "pruneObservedDrops",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector.pruneObservedDrops",
+          "expression": "void pruneObservedDrops"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+          "line": 57,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector.DropObservation",
+          "method": "matches",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector.DropObservation.matches",
+          "expression": "boolean matchesLevel level,String runId,ItemSprite source"
+        },
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+          "line": 53,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector.DropObservation",
+          "method": "<init>",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.effects.VisualCueCollector.DropObservation.<init>",
+          "expression": "null <init>Level level,String runId,ItemSprite source,List<Integer> cells"
+        }
+      ],
+      "runtime_verified_by_inventory": false
+    },
+    {
+      "id": "cli905:character-source-boundary",
+      "classification": "not_player_visible",
+      "reason": "The exact whole CharSprite source fingerprint now protects a pure readiness helper that creates no visual sink. It reads only existing motion attachment/progression, queued native visual additions/removals and the actual bound aura renderer anchor. CHILLED attaches the reviewed particle observer without changing the original emission call or native state lifecycle. CLI.9.0.5 FOV correction: only the native CHILLED source explicitly opts into waiting for its first actually known contributor, including a snow particle initially above the known character anchor. Generic emitter policies and native emission remain unchanged.",
+      "trigger": "Current exact attributed source methods: CharSprite.<initializer>.",
+      "visible_evidence": "CLASS com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite",
+      "visibility_gate": "This exact source-only, decorative or noncombat disposition creates no independent public combat value; its source-specific reason and current contracts delimit the observation.",
+      "lifecycle": "Only this reviewed source body and its matching request/source lifetime apply. Source attribution checks exact identities and bodies; runtime fixture results are reported separately.",
+      "route": {
+        "semantic_contract": "source-class-fingerprint"
+      },
+      "tests": [
+        {
+          "kind": "source_review",
+          "checks": [
+            "site_identity",
+            "enclosing_body_digest"
+          ]
+        },
+        "PresentationReadinessTest#nativeMotionAndAuraFollowMustFinishWithoutSubstitutingAnActorPosition",
+        "PresentationReadinessTest#queuedChillUsesTheNativeFirstParticleAndFiniteTailBoundary",
+        "CellParticleContributorTest#chilledFirstKnownPresentationWaitIsSourceOptInAndResetsOnReuse"
+      ],
+      "sites": [
+        {
+          "id": "294f4c04c25a481c65cb9ab48c717b8a6d2ca1f64d43504e99c8b568c0d3a0eb:1",
+          "body_digest": "23d280d82f87a8266f73ff89ced45aff93ac0579ccfca4c1c8c998b1fea368b6"
+        }
+      ],
+      "source_evidence": [
+        {
+          "file": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/CharSprite.java",
+          "line": 67,
+          "owner": "com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite",
+          "method": "<initializer>",
+          "sink": "com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite",
+          "expression": "CLASS com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite"
+        }
+      ],
+      "runtime_verified_by_inventory": false
     }
   ],
   "semantic_policy": "Every group has one exact semantic assignment. A source-site digest change or an unresolved semantic classification blocks acceptance. Shared contracts describe bounded source producers; group trigger/reason/evidence retain site-specific review. Runtime verification is never inferred from this inventory.",
@@ -169102,6 +169774,12 @@
         "NativeJournalRecipeSemanticsTest#nativeQuickRecipePreservesPerIngredientFailuresAndIdentificationGateWithoutRecomputing",
         "NativeJournalRecipeSemanticsTest#recipeSemanticFieldsSurviveMergeAllViewsAndFrozenStructureExpansion"
       ]
+    },
+    {
+      "id": "cli905-presentation-readiness",
+      "classification": "nonvisual",
+      "source_producer": "VisualCueCollector.canUpdate and explicitly opted-in CellParticleCue.awaitRetirement/waitsForRetirement; CharSprite and ItemSprite readiness helpers are protected by exact whole-class source fingerprints. Additional reviewed gates: CellParticleCue.awaitFirstKnownPresentation/waitsForFirstKnownPresentation and VisualCueCollector.knownDropPending with identity-only DropObservation metadata. VisualCueCollector.pruneObservedDrops retires eligibility before source traversal, with weak Level and matching current run identity.",
+      "reason": "These read-only gates certify finite public presentation readiness. They add no public payload, advance no renderer or actor, and read no private actor position, buff, AI or timer. Already visible actual cues remain under their existing semantic contracts; hidden, detached, inactive or frozen sources cannot hold completion."
     }
   ],
   "semantic_reviews": [
@@ -176666,6 +177344,41 @@
       "contract": "public-custom-terrain-descriptor",
       "groups": [
         "cli904:RitualSiteRoom:publicTerrain:7406045a2ccf72"
+      ]
+    },
+    {
+      "classification": "nonvisual",
+      "contract": "controller-control-only",
+      "groups": [
+        "cli905:action-preparation"
+      ]
+    },
+    {
+      "classification": "semantic_required",
+      "contract": "controller-display-handoff",
+      "groups": [
+        "cli905:public-decision"
+      ]
+    },
+    {
+      "classification": "semantic_required",
+      "contract": "public-observation-source",
+      "groups": [
+        "cli905:public-snapshot"
+      ]
+    },
+    {
+      "classification": "nonvisual",
+      "contract": "cli905-presentation-readiness",
+      "groups": [
+        "cli905:presentation-readiness"
+      ]
+    },
+    {
+      "classification": "nonvisual",
+      "contract": "source-class-fingerprint",
+      "groups": [
+        "cli905:character-source-boundary"
       ]
     }
   ],
@@ -189919,6 +190632,13 @@
       "method": "addGridDocuments",
       "old_body_digest": "9e9455a630903ab213b45ac200f6e5e12cf5956d512a5e7520ba887f97e485a0",
       "reason": "CLI.9.0.4: The original native grid-entry constructor is replaced by the reviewed source-binding overload or native document read-state hook; its existing action route and UI texts remain."
+    },
+    {
+      "id": "478f71bd8205efe452224d256040776682754ab550a12cf70e684274f772c088:1",
+      "old_group": "cli8-source:GameController:controller-control-only:02",
+      "file": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "method": "prepareRun",
+      "reason": "CLI.9.0.5 removes the unowned next-run identity handoff. The executing ActionPreparation now supplies its own planned run ID through RuntimeObserver.newRunIdentity, consumed once by Dungeon.init."
     }
   ],
   "evidence_policy": {

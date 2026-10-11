@@ -106,7 +106,7 @@ public class AudioEventsSessionTest {
         return rows;
     }
 
-    private static final class FakeGame implements MachineSession.GamePort {
+    private static final class FakeGame implements PreparedTestGamePort {
         final ArrayDeque<GameController.DisplayEvent> events = new ArrayDeque<>();
         final GameController.State state = new GameController.State("run:audio", "fixture:v1", "player_ready",
                 map("visible", true), map("private", true), Collections.emptyList());

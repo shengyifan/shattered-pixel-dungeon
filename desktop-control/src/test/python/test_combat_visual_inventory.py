@@ -218,3 +218,10 @@ class UninitializedVisualCanary extends Visual {
                             <= {entry["kind"] for entry in entries}, entries)
             self.assertTrue(any(entry["sink"].endswith("Camera.shake") for entry in entries))
             self.assertFalse(source.with_suffix(".class").exists())
+            # Readiness helpers need not draw or mutate anything, so visual-sink discovery
+            # alone cannot protect the source gate that certifies a completed action.
+            char_sprite = [entry for entry in result["entries"]
+                           if entry["kind"] == "source_boundary"
+                           and entry["owner"] == "com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite"]
+            self.assertEqual(len(char_sprite), 1)
+            self.assertRegex(char_sprite[0]["body_digest"], r"^[0-9a-f]{64}$")
