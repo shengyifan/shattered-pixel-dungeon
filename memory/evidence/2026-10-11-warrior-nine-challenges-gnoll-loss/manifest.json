@@ -1,0 +1,622 @@
+{
+  "review_date": "2026-10-11",
+  "source_commit": "cb4ee28e09b9319b08a80ba5098fa17af653d171",
+  "trace_directory_basename": "session-1791724066412418000-55118-il0mRU",
+  "scope": "Complete public child wire transport, including startup and final loss; partial controller-response capture beginning at t2.5. No native saves, personal profiles, rankings, or private audit databases were read or copied. All records are historical evidence, never current action bindings.",
+  "files": {
+    "send.raw": {
+      "bytes": 29398,
+      "lines": 488,
+      "sha256": "b63be837852c8ce450192e2d993e467e632d1a7189485fc1246338a5aba235fe",
+      "archive": "send.raw.gz",
+      "archive_bytes": 3253,
+      "archive_sha256": "c3eea1d08b930beffd7eb7aafbd22e0d0ba6006d3fdd259d9a7ff259feed880e"
+    },
+    "recv.raw": {
+      "bytes": 3803331,
+      "lines": 488,
+      "sha256": "9d33ab0a9e5a340f1e232408d045e589509b1fefb290ff2683c395c8ba781aa6",
+      "archive": "recv.raw.gz",
+      "archive_bytes": 103010,
+      "archive_sha256": "d3af264d567f6b29c8d515d26460c92e52ce9bfce76a6eedda38826cd3eb5b88"
+    },
+    "events.tsv": {
+      "bytes": 68315,
+      "lines": 1539,
+      "sha256": "0bf05101ba31ee85b9006291016a7080e25b1b026dad703c8b1c78a8c569e931",
+      "archive": "events.tsv.gz",
+      "archive_bytes": 18711,
+      "archive_sha256": "53430741eb004d49c05890f85c8db9ed0d4c6b137ccd2a1ea8d9aabdb780b510"
+    },
+    "controller-responses.ndjson": {
+      "bytes": 3791290,
+      "lines": 414,
+      "sha256": "a990278c0a2f261a8048b7daaa763652bf4e3d7500a19e93f50cd79c10e9a7a8",
+      "archive": "controller-responses.ndjson.gz",
+      "archive_bytes": 99020,
+      "archive_sha256": "55ab05fdd7d67a7f08dc06e4a44198c0f74b320cc5b5c601cec3ba945d2f2f8f"
+    }
+  },
+  "wire": {
+    "pairs": 488,
+    "first_id": "hc924d5e2e1cf436280dc910a1694df57",
+    "last_id": "t2.487",
+    "hero_frames": 385,
+    "current_frames": 393,
+    "protocol": 9,
+    "identity": {
+      "cli_version": "CLI.9.0.4",
+      "game_version": "4.0.2",
+      "game_version_code": 922,
+      "build_id": "b0c78afe63b226c7611aea525a3a88d7e0f34cb5624a3cca486b889089eb0627",
+      "session_id": "t2",
+      "audit_schema_version": 12,
+      "request_prefix": "t2"
+    },
+    "request_operations": {
+      "info": 1,
+      "state": 85,
+      "click": 34,
+      "back": 4,
+      "move": 133,
+      "cell": 116,
+      "req": 83,
+      "wait": 19,
+      "item": 13
+    },
+    "response_statuses": {
+      "completed": 368,
+      "awaiting_input": 37,
+      "in_progress": 72,
+      "STALE_STATE": 11
+    },
+    "server_errors": [
+      {
+        "id": "t2.204",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.205",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.204"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.205",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.204",
+            "op": "move",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.206",
+          "s": "s3",
+          "rev": "rej",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.207",
+          "s": "s3",
+          "op": "move",
+          "rev": "rej",
+          "dir": "N"
+        }
+      },
+      {
+        "id": "t2.214",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.215",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.214"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.215",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.214",
+            "op": "cell",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.216",
+          "s": "s3",
+          "rev": "req",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.217",
+          "s": "s3",
+          "op": "cell",
+          "rev": "req",
+          "cell": 1256
+        }
+      },
+      {
+        "id": "t2.258",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.259",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.258"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.259",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.258",
+            "op": "cell",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.260",
+          "s": "s3",
+          "rev": "rfg",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.261",
+          "s": "s3",
+          "op": "cell",
+          "rev": "rfg",
+          "cell": 647
+        }
+      },
+      {
+        "id": "t2.317",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.318",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.317"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.318",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.317",
+            "op": "move",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.319",
+          "s": "s3",
+          "rev": "rgt",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.320",
+          "s": "s3",
+          "op": "move",
+          "rev": "rgt",
+          "dir": "NW"
+        }
+      },
+      {
+        "id": "t2.432",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.433",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.432"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.433",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.432",
+            "op": "item",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.434",
+          "s": "s3",
+          "rev": "rja",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.435",
+          "s": "s3",
+          "op": "item",
+          "rev": "rja",
+          "loc": "backpack.5"
+        }
+      },
+      {
+        "id": "t2.438",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.439",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.438"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.439",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.438",
+            "op": "move",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.440",
+          "s": "s3",
+          "rev": "rje",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.441",
+          "s": "s3",
+          "op": "move",
+          "rev": "rje",
+          "dir": "W"
+        }
+      },
+      {
+        "id": "t2.444",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.445",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.444"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.445",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.444",
+            "op": "move",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.446",
+          "s": "s3",
+          "rev": "rji",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.447",
+          "s": "s3",
+          "op": "move",
+          "rev": "rji",
+          "dir": "N"
+        }
+      },
+      {
+        "id": "t2.449",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.450",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.449"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.450",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.449",
+            "op": "move",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.451",
+          "s": "s3",
+          "rev": "rjl",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.452",
+          "s": "s3",
+          "op": "move",
+          "rev": "rjl",
+          "dir": "N"
+        }
+      },
+      {
+        "id": "t2.453",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.454",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.453"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.454",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.453",
+            "op": "move",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.455",
+          "s": "s3",
+          "rev": "rjn",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.456",
+          "s": "s3",
+          "op": "move",
+          "rev": "rjn",
+          "dir": "NE"
+        }
+      },
+      {
+        "id": "t2.476",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.477",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.476"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.477",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.476",
+            "op": "cell",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.478",
+          "s": "s3",
+          "rev": "rk6",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.479",
+          "s": "s3",
+          "op": "cell",
+          "rev": "rk6",
+          "cell": 1048
+        }
+      },
+      {
+        "id": "t2.480",
+        "err": "STALE_STATE",
+        "receipt_request": {
+          "v": 9,
+          "id": "t2.481",
+          "s": "s3",
+          "op": "req",
+          "rid": "t2.480"
+        },
+        "receipt_response": {
+          "v": 9,
+          "id": "t2.481",
+          "s": "s3",
+          "st": "completed",
+          "data": {
+            "id": "t2.480",
+            "op": "cell",
+            "st": "REJECTED",
+            "save": [],
+            "has": [
+              "raw",
+              "meta",
+              "reply",
+              "before",
+              "after"
+            ],
+            "err": "STALE_STATE"
+          }
+        },
+        "fresh_observation": {
+          "id": "t2.482",
+          "s": "s3",
+          "rev": "rk8",
+          "st": "completed"
+        },
+        "next_request": {
+          "v": 9,
+          "id": "t2.483",
+          "s": "s3",
+          "op": "cell",
+          "rev": "rk8",
+          "cell": 1094,
+          "mode": "examine"
+        }
+      }
+    ]
+  },
+  "controller_capture": {
+    "records": 414,
+    "kinds": {
+      "wire": 328,
+      "settle": 86
+    },
+    "first_id": "t2.5",
+    "last_id": "t2.487",
+    "coverage": "Begins at t2.5; initial info and t2.1-t2.4 are absent here but present in complete send.raw and recv.raw. This is controller output, not exact child wire transport.",
+    "settle_statuses": {
+      "completed": 72,
+      "error": 11,
+      "pending": 3
+    }
+  },
+  "trace_status": [
+    {
+      "event": 1,
+      "unix_nanoseconds": "1791724066412954000",
+      "status": "STARTED",
+      "time_utc": "2026-10-11T13:07:46.412954+00:00",
+      "time_asia_shanghai": "2026-10-11T21:07:46.412954+08:00"
+    },
+    {
+      "event": 1538,
+      "unix_nanoseconds": "1791733164035853000",
+      "status": "EXITED:0",
+      "time_utc": "2026-10-11T15:39:24.035853+00:00",
+      "time_asia_shanghai": "2026-10-11T23:39:24.035853+08:00"
+    }
+  ],
+  "stop_evidence": {
+    "final_id": "t2.487",
+    "final_scope": "s3",
+    "final_revision": "rkd",
+    "final_phase": "ended",
+    "result": "lost",
+    "requests_after_final_loss": 0,
+    "quit_requests": 0,
+    "trace_exit": "EXITED:0 is recorded after the final loss response. No later game request is recorded; this archive does not establish why the process exited or that a process remains open."
+  },
+  "decoder": {
+    "path": "desktop-control/client/spdctl_client.py",
+    "sha256": "c35f1680b1810869eb9b3b94e5e2154ddc627d5c83245e3367443bddc8f7365e"
+  },
+  "keyframes": {
+    "file": "public-keyframes.json",
+    "frames": 158,
+    "scope": "Selected fields only, never a replacement for the complete wire observations."
+  }
+}

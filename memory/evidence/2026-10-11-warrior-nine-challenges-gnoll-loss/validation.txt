@@ -1,0 +1,6 @@
+PASS: exact-byte hashes and offsets; 488 unique request/response pairs; 385 hero frames.
+PASS: 414 controller records; 72 completed, 11 rejected, and 3 resumed pending settles.
+PASS: 11 STALE_STATE outcomes established before fresh decisions; no observation decoding failures.
+PASS: nine checked challenges, Warrior start, selected-field index, resources, and final loss.
+PASS: no requests after death; no quit request; later trace STATUS EXITED:0 preserved without causal inference.
+Scope: frozen public evidence only; no profile reads, game connection, replay, or counterfactual victory test.
