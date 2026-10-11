@@ -1,0 +1,734 @@
+{
+  "evidence_kind": "isolated_offline_fixture",
+  "scope": "Synthetic public responses only; no game launch, gameplay, save, or private audit access.",
+  "baseline": "d04c8f862b2f90418a6375f0b3ffc5c4325d0953",
+  "sources": {
+    "desktop-control/client/spdctl_client.py": "e23ad1cfed153667ab83c3584f036e673c2049606bf4f51db8fe2fb1bfb50bf3",
+    "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayGlow.java": "813ce097d2d11d61d8c0358ffaceb1182c9b8be07ef400ec18f027b752d49552",
+    "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java": "e5f964b3bec2e29892fcf6040802f004f461c79a122889f8e845e002164ae5d7",
+    "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/Cli9ItemObservationTest.java": "684fea4783c25e842d7b59f38c39c1f5a439d12a1e6e3715d106cdbdc55574a2"
+  },
+  "producer": "GameplayGlow.selected:64-65; ItemSprite.gameplayGlow:268-271",
+  "existing_producer_tests": "Cli9ItemObservationTest:55-101 (read, not rerun by this fixture)",
+  "decoder": "spdctl_client._glow:294-304; _shown:261-262; world item_glow:835-836",
+  "cases": [
+    {
+      "name": "crystal_intact_inventory_shown",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_intact_inventory_shown",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "inv": [
+            {
+              "loc": "backpack.0",
+              "name": "fixture sword",
+              "shown": {
+                "glow": {
+                  "variant": "crystal_blue",
+                  "kind": "crystal_condition",
+                  "stage": "intact"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "intact"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_intact_packed_ui_shown",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_intact_packed_ui_shown",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "ui": {
+            "node_templates": [
+              {
+                "common": {},
+                "fields": [
+                  "id",
+                  "role",
+                  "shown"
+                ]
+              }
+            ],
+            "nodes": [
+              [
+                0,
+                "fixture-control",
+                "item",
+                {
+                  "glow": {
+                    "variant": "crystal_blue",
+                    "kind": "crystal_condition",
+                    "stage": "intact"
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "intact"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.ui.nodes[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_intact_world_item_glow",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_intact_world_item_glow",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "cues": {
+            "status": "last_observed",
+            "cues": [
+              {
+                "kind": "item_glow",
+                "cell": 7,
+                "appearance": {
+                  "variant": "crystal_blue",
+                  "kind": "crystal_condition",
+                  "stage": "intact"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "intact"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.cues.cues[0].appearance.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_intact_nested_item_icon",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_intact_nested_item_icon",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "ui": {
+            "nodes": [
+              {
+                "id": "fixture-control",
+                "role": "item",
+                "item_icon": {
+                  "symbol": "item_sword",
+                  "glow": {
+                    "variant": "crystal_blue",
+                    "kind": "crystal_condition",
+                    "stage": "intact"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "intact"
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "intact"
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_flawed_inventory_shown",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_flawed_inventory_shown",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "inv": [
+            {
+              "loc": "backpack.0",
+              "name": "fixture sword",
+              "shown": {
+                "glow": {
+                  "variant": "crystal_blue",
+                  "kind": "crystal_condition",
+                  "stage": "flawed"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "flawed"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_flawed_packed_ui_shown",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_flawed_packed_ui_shown",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "ui": {
+            "node_templates": [
+              {
+                "common": {},
+                "fields": [
+                  "id",
+                  "role",
+                  "shown"
+                ]
+              }
+            ],
+            "nodes": [
+              [
+                0,
+                "fixture-control",
+                "item",
+                {
+                  "glow": {
+                    "variant": "crystal_blue",
+                    "kind": "crystal_condition",
+                    "stage": "flawed"
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "flawed"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.ui.nodes[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_flawed_world_item_glow",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_flawed_world_item_glow",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "cues": {
+            "status": "last_observed",
+            "cues": [
+              {
+                "kind": "item_glow",
+                "cell": 7,
+                "appearance": {
+                  "variant": "crystal_blue",
+                  "kind": "crystal_condition",
+                  "stage": "flawed"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "flawed"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.cues.cues[0].appearance.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_flawed_nested_item_icon",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_flawed_nested_item_icon",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "ui": {
+            "nodes": [
+              {
+                "id": "fixture-control",
+                "role": "item",
+                "item_icon": {
+                  "symbol": "item_sword",
+                  "glow": {
+                    "variant": "crystal_blue",
+                    "kind": "crystal_condition",
+                    "stage": "flawed"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "flawed"
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "flawed"
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_cracked_inventory_shown",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_cracked_inventory_shown",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "inv": [
+            {
+              "loc": "backpack.0",
+              "name": "fixture sword",
+              "shown": {
+                "glow": {
+                  "variant": "crystal_blue",
+                  "kind": "crystal_condition",
+                  "stage": "cracked"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "cracked"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_cracked_packed_ui_shown",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_cracked_packed_ui_shown",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "ui": {
+            "node_templates": [
+              {
+                "common": {},
+                "fields": [
+                  "id",
+                  "role",
+                  "shown"
+                ]
+              }
+            ],
+            "nodes": [
+              [
+                0,
+                "fixture-control",
+                "item",
+                {
+                  "glow": {
+                    "variant": "crystal_blue",
+                    "kind": "crystal_condition",
+                    "stage": "cracked"
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "cracked"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.ui.nodes[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_cracked_world_item_glow",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_cracked_world_item_glow",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "cues": {
+            "status": "last_observed",
+            "cues": [
+              {
+                "kind": "item_glow",
+                "cell": 7,
+                "appearance": {
+                  "variant": "crystal_blue",
+                  "kind": "crystal_condition",
+                  "stage": "cracked"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "cracked"
+      },
+      "actual": "DecodeError",
+      "error": "$.data.cues.cues[0].appearance.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "crystal_cracked_nested_item_icon",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "crystal_cracked_nested_item_icon",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "ui": {
+            "nodes": [
+              {
+                "id": "fixture-control",
+                "role": "item",
+                "item_icon": {
+                  "symbol": "item_sword",
+                  "glow": {
+                    "variant": "crystal_blue",
+                    "kind": "crystal_condition",
+                    "stage": "cracked"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "cracked"
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "cracked"
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "explosive_cool_inventory_control",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "explosive_cool_inventory_control",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "inv": [
+            {
+              "loc": "backpack.0",
+              "name": "fixture sword",
+              "shown": {
+                "glow": {
+                  "variant": "black",
+                  "kind": "explosive_heat",
+                  "stage": "cool"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected_fact": {
+        "variant": "black",
+        "kind": "explosive_heat",
+        "stage": "cool"
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "variant": "black",
+        "kind": "explosive_heat",
+        "stage": "cool"
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "explosive_warm_inventory_control",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "explosive_warm_inventory_control",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "inv": [
+            {
+              "loc": "backpack.0",
+              "name": "fixture sword",
+              "shown": {
+                "glow": {
+                  "variant": "black",
+                  "kind": "explosive_heat",
+                  "stage": "warm"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected_fact": {
+        "variant": "black",
+        "kind": "explosive_heat",
+        "stage": "warm"
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "variant": "black",
+        "kind": "explosive_heat",
+        "stage": "warm"
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "explosive_hot_inventory_control",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "explosive_hot_inventory_control",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "inv": [
+            {
+              "loc": "backpack.0",
+              "name": "fixture sword",
+              "shown": {
+                "glow": {
+                  "variant": "black",
+                  "kind": "explosive_heat",
+                  "stage": "hot"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected_fact": {
+        "variant": "black",
+        "kind": "explosive_heat",
+        "stage": "hot"
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "variant": "black",
+        "kind": "explosive_heat",
+        "stage": "hot"
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "broken_seal_world_item_status_control",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "broken_seal_world_item_status_control",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "cues": {
+            "status": "last_observed",
+            "cues": [
+              {
+                "kind": "item_status",
+                "cell": 7,
+                "appearance": {
+                  "broken_seal": true
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "broken_seal": true
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "broken_seal": true
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "lit_candle_world_item_status_control",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "lit_candle_world_item_status_control",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "cues": {
+            "status": "last_observed",
+            "cues": [
+              {
+                "kind": "item_status",
+                "cell": 7,
+                "appearance": {
+                  "lit_candle": true
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "lit_candle": true
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "lit_candle": true
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "name": "nature_powered_world_item_status_control",
+      "expected": "accepted_with_fact_preserved",
+      "input": {
+        "v": 9,
+        "id": "nature_powered_world_item_status_control",
+        "s": "isolated_fixture_scope",
+        "rev": "isolated_fixture_revision",
+        "st": "completed",
+        "data": {
+          "cues": {
+            "status": "last_observed",
+            "cues": [
+              {
+                "kind": "item_status",
+                "cell": 7,
+                "appearance": {
+                  "nature_powered": true
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected_fact": {
+        "nature_powered": true
+      },
+      "actual": "accepted",
+      "actual_fact": {
+        "nature_powered": true
+      },
+      "fact_preserved": true,
+      "raw_preserved": true,
+      "input_unchanged": true
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "accepted": 9,
+    "unexpected_rejections": 9,
+    "input_mutations": 0,
+    "raw_preservation_failures": 0
+  }
+}

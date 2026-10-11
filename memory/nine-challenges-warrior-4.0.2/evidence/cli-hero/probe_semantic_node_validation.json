@@ -1,0 +1,141 @@
+{
+  "baseline": "d04c8f862",
+  "evidence_kind": "synthetic_offline_decoder",
+  "cases": [
+    {
+      "case": "hero_missing_incoming_dot",
+      "accepted": false,
+      "error": "$.data.hero.health_estimate.samples[0].incoming_dot must be an integer",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "case": "node_missing_incoming_dot",
+      "accepted": true,
+      "decoded": {
+        "ui": {
+          "nodes": [
+            {
+              "id": "c1",
+              "role": "health_bar",
+              "health_estimate": {
+                "samples": [
+                  {
+                    "total": 16,
+                    "filled": 8,
+                    "with_shield": 8,
+                    "basis": "displayed"
+                  }
+                ]
+              },
+              "enabled": true,
+              "dimmed": false
+            }
+          ],
+          "modal": false,
+          "item_info": null
+        }
+      },
+      "input_unchanged": true
+    },
+    {
+      "case": "hero_invalid_turn_sweep",
+      "accepted": false,
+      "error": "$.data.hero.turn_progress.sweep must be a finite number from 0 to 1",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "case": "node_invalid_turn_sweep",
+      "accepted": true,
+      "decoded": {
+        "ui": {
+          "nodes": [
+            {
+              "id": "c1",
+              "turn_progress": {
+                "sweep": 2
+              },
+              "enabled": true,
+              "dimmed": false
+            }
+          ],
+          "modal": false,
+          "item_info": null
+        }
+      },
+      "input_unchanged": true
+    },
+    {
+      "case": "valid_values_and_unknown_metadata_preserved",
+      "accepted": true,
+      "decoded": {
+        "hero": {
+          "hp": 4,
+          "ht": 20,
+          "shield": 0,
+          "talents": [
+            {
+              "tier": 1,
+              "name": "Hearty Meal",
+              "points": 0
+            }
+          ],
+          "tp": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "buffs": [
+            {
+              "name": "Warrior Shield",
+              "shown": {
+                "counter": "-2",
+                "counter_kind": "cooldown",
+                "future_public_annotation": {
+                  "value": null
+                }
+              }
+            }
+          ],
+          "health_estimate": {
+            "samples": [
+              {
+                "total": 21,
+                "filled": 22,
+                "with_shield": 22,
+                "incoming_dot": 0,
+                "basis": "displayed"
+              }
+            ]
+          },
+          "turn_progress": {
+            "sweep": 0
+          }
+        },
+        "ui": {
+          "nodes": [
+            {
+              "id": "c1",
+              "selected": false,
+              "talent_points": {
+                "spent": 0,
+                "max": 2
+              },
+              "subject": {
+                "kind": "hero_buff",
+                "index": 0
+              },
+              "enabled": true,
+              "dimmed": false
+            }
+          ],
+          "modal": false,
+          "item_info": null
+        }
+      },
+      "input_unchanged": true
+    }
+  ]
+}

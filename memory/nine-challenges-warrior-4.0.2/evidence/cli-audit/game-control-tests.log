@@ -1,0 +1,160 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build
+> Task :services:updates:githubUpdates:processResources NO-SOURCE
+> Task :core:processResources NO-SOURCE
+> Task :desktop-control:processTestResources NO-SOURCE
+> Task :services:news:shatteredNews:processResources NO-SOURCE
+> Task :control-protocol:generateReleaseIdentity
+> Task :game-control:processResources
+> Task :game-control:processTestResources
+> Task :services:compileJava
+> Task :services:processResources NO-SOURCE
+> Task :services:classes
+> Task :services:jar
+> Task :desktop:processResources
+> Task :control-protocol:compileJava
+> Task :control-protocol:processResources NO-SOURCE
+> Task :control-protocol:classes
+> Task :control-protocol:jar
+
+> Task :SPD-classes:compileJava
+Note: $REPO/SPD-classes/src/main/java/com/watabou/noosa/TextInput.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :SPD-classes:processResources NO-SOURCE
+> Task :SPD-classes:classes
+> Task :SPD-classes:jar
+> Task :services:updates:githubUpdates:compileJava
+> Task :services:updates:githubUpdates:classes
+> Task :services:updates:githubUpdates:jar
+> Task :services:news:shatteredNews:compileJava
+> Task :services:news:shatteredNews:classes
+> Task :services:news:shatteredNews:jar
+
+> Task :core:compileJava
+Note: $REPO/core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/messages/Messages.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :core:classes
+> Task :desktop:compileJava
+> Task :desktop:classes
+
+> Task :game-control:compileJava
+Note: $REPO/game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :game-control:classes
+> Task :game-control:jar
+> Task :core:jar
+> Task :desktop:jar
+> Task :desktop-control:compileJava
+> Task :desktop-control:generateBuildCatalog
+> Task :desktop-control:processResources
+> Task :desktop-control:classes
+
+> Task :desktop-control:compileTestJava
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :desktop-control:testClasses
+> Task :desktop-control:writeTestRuntimeClasspath
+
+> Task :game-control:checkCombatVisualSources
+{
+  "format": "combat_visual_review_result_v3",
+  "source_files": 1341,
+  "sites": 13530,
+  "review_groups": 4851,
+  "retired_sites": 1483,
+  "retired_contracts": 1,
+  "runtime_verified_by_inventory": false,
+  "checked": true,
+  "classifications": {
+    "covered_current": 5257,
+    "not_player_visible": 1848,
+    "covered_history": 562,
+    "cosmetic_reviewed": 772,
+    "covered_inspection": 1454,
+    "scope_exclusion": 3637
+  },
+  "semantic_classifications": {
+    "semantic_required": 5616,
+    "nonvisual": 2189,
+    "decorative": 1659,
+    "redundant": 428,
+    "out_of_scope": 3638
+  },
+  "unreviewed_count": 0,
+  "unreviewed_sample": [],
+  "removed_count": 0,
+  "removed_sample": [],
+  "changed_count": 0,
+  "changed_sample": [],
+  "outstanding_count": 0,
+  "outstanding_sample": [],
+  "outstanding_groups_count": 0,
+  "outstanding_groups_sample": []
+}
+
+> Task :game-control:checkTextSources
+{
+  "source": "javac parse and analyze of current core sources",
+  "checked": true,
+  "operations": 206,
+  "kinds": {
+    "PLUS": 148,
+    "METHOD_INVOCATION": 44,
+    "PLUS_ASSIGNMENT": 11,
+    "NEW_CLASS": 3
+  },
+  "classifications": {
+    "Resource key construction, not a displayed value.": 71,
+    "Profile filename or directory construction.": 8,
+    "Save bundle key construction or normalization.": 41,
+    "Protocol rendering-kind identifier for the already selected native Speck drawing branch; not localized display text or a model identity.": 1,
+    "Private engine exception diagnostic, not player display text.": 18,
+    "Tracked source implementation: the enclosing API records its complete original operation or visible fragment.": 25,
+    "Outgoing URL parameter construction.": 6,
+    "External icon metadata parser, not displayed article text.": 2,
+    "Numeric calendar serialization using the original default-locale formatter; no resource input.": 2,
+    "Internal texture cache key.": 3,
+    "Extracts cool/warm/hot from an explicitly selected native explosive glow hint already checked against the fixed allowed variants; an English semantic enum, not displayed prose.": 1,
+    "Stable English crystal stage extracted only after an exact allowlist check of the native-selected crystal_intact, crystal_flawed or crystal_cracked hint; no user or localized text.": 1,
+    "Stable English gameplay symbol built only from reviewed native enum constants, selected frame tables or fixed English arrays; not localized prose, user input or a model identity.": 14,
+    "Stable English icon symbol from the native enum and exact displayed atlas frame; not a translated display string.": 1,
+    "Tracked visible-fragment composition shared by ordinary UI and already-certified FOV floating anchors; preserves original text/source segments and explicit partial provenance without creating hidden arguments.": 4,
+    "Pure candidate seed selection; no display is produced here.": 1,
+    "Seed code encoder or parser; no resource text is accepted by this operation.": 4,
+    "The following explicit fixed character format records every generated seed character before display.": 1,
+    "Seed input normalization; display consumers use explicit user or generated-code boundaries.": 1,
+    "Stores the selected replay seed in settings; this expression does not display text.": 1
+  },
+  "unreviewed": [],
+  "changed_or_removed_exclusions": [],
+  "source_files": 1239,
+  "verified_catalog_constructors": 789
+}
+
+> Task :game-control:compileTestJava
+Note: $REPO/game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/ResourceTextFixture.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :game-control:testClasses
+> Task :game-control:test
+
+[Incubating] Problems report is available at: file://$REPO/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 20s
+29 actionable tasks: 29 executed

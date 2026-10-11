@@ -10,8 +10,20 @@
       "sha256": "aad11e08504d0b9bae1ece0f65ee20d0b7e09865b7e1c6b74c9329ab4381aa27"
     },
     {
+      "path": "SPD-classes/src/main/java/com/watabou/noosa/RuntimeObserver.java",
+      "sha256": "c14c79200e9ae0e40891fd6fa40152fcce09fe96d731a1ba98dd97e34106551a"
+    },
+    {
+      "path": "SPD-classes/src/main/java/com/watabou/noosa/audio/Sample.java",
+      "sha256": "d1da2af17acd2e7d9cb12e22c86cf6787ec89cc12412d0389c02a2bb5b703f99"
+    },
+    {
       "path": "SPD-classes/src/main/java/com/watabou/utils/Random.java",
       "sha256": "4cd7ead03a8a1d0aff7e35ddbaafb12c480dd31ec42c67a56a4f798144ff34a3"
+    },
+    {
+      "path": "control-protocol/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/protocol/WireNames.java",
+      "sha256": "f4692a5007c9414ab7b45e7799510ec53ab7eef9c2c31bc16e7a936d5d19900b"
     },
     {
       "path": "core/src/main/assets/messages/actors/actors.properties",
@@ -58,8 +70,20 @@
       "sha256": "ce740e73aad4b5e0acd7b20c07c89920eeb929d2911e4120e05cedd26f9e086e"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/Fire.java",
+      "sha256": "0747cf36078868e2d5b7c23dad71a1acc34ef03039854d9e4c9e7b4e46e402c8"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/Foliage.java",
+      "sha256": "4ebf128b38c44fcacf157e074df90c5c24225019a6741446ea47be0339f239ac"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/Freezing.java",
       "sha256": "6ea93bd5e3bbf464841d0853d2e92f506435cfc8bd78573f749fa30763ec5c42"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/SacrificialFire.java",
+      "sha256": "37802dd84149970aeff162b7f3f264e74852d53863433369563377bbb15ab392"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/StenchGas.java",
@@ -70,8 +94,16 @@
       "sha256": "c8c2a34dcda76c21d763016fbbbf0feebcce141bf9ac8dbb6c257563a8eb980c"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/ToxicGas.java",
+      "sha256": "60a85bfc009031e3bde83ec181f50f005c0040e7785b748d7c569bd87caf80d1"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/VaultFlameTraps.java",
       "sha256": "8613439e999077bcd43de2645266253353d8008414d3bd9c7c66211cbe5344a8"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/WaterOfAwareness.java",
+      "sha256": "b6232f270bd131cef8b70208a250caf0d66443aa647a59afac45ed42689f6c12"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/WaterOfHealth.java",
@@ -80,6 +112,10 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/Web.java",
       "sha256": "d8caf2292dd699e2414974cce8b3e3e1184f587fd5c0df9a53b2493ca9938714"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/blobs/WellWater.java",
+      "sha256": "b58b47222550fc2e925809de42743ff15e2ff692d73e08b9fc8fbfa7cec76c32"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/AllyBuff.java",
@@ -92,6 +128,10 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/AscensionChallenge.java",
       "sha256": "c64141980d093ef9936cbfe029b86508a7e878912dd5578bc98d100b5be560c4"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Awareness.java",
+      "sha256": "452f98bace4c34cb3ac15c831a33b324facd689e0ee6675802b0133cb99566dc"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Barkskin.java",
@@ -162,12 +202,20 @@
       "sha256": "abe1b7cdfb8ef45ba70b48e37ad18e1ee638eb06d6fe1cd2f5bb8f3017ff1d3a"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/FlavourBuff.java",
+      "sha256": "7a5fc4c261468123ddba5b95901e45349232137b2ab8450a3a57e7497033cde6"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Foresight.java",
       "sha256": "16613a9e6bc18e950aaa1cdcea930600749afb8ebd65403b4b1faccd573329d8"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/FrostImbue.java",
       "sha256": "42c82e717aae74e66d6d0e0c27139affe8e6bd1e0b9eb71e0ab36d73a489d667"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Haste.java",
+      "sha256": "8f11b118b7dd6dd031f208e254d010013341f10a9ab61099b9cfe349a5a4e89c"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Healing.java",
@@ -210,6 +258,10 @@
       "sha256": "8a16d306100b9512ab471e9866db9bd055586dea3949a5b3c669d78e0b3d2d73"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/MindVision.java",
+      "sha256": "3b7ed75b895d848d53946bc1c95e64d6445fa7c25f6a16cc03706364fed9da14"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Ooze.java",
       "sha256": "cde2796edc4b17ecac4a7f7c7a7c25307903e09c148672914a03cf586325fe42"
     },
@@ -230,6 +282,10 @@
       "sha256": "57d13979dec9ff7499ff55d645096ba5e50c037052db24dfccdb3d1febddcb05"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Shadows.java",
+      "sha256": "ce5c3f963980b63a0eb31a5cf0180c28a116f5f3838ffb4dba8730e3c43471f5"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/ShieldBuff.java",
       "sha256": "99292dfbc253a24b8e1941429155eca8482b281ed716835f2fd535e36a3dfd83"
     },
@@ -240,6 +296,10 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/WellFed.java",
       "sha256": "c74d73eedb19a2d7185a0b49abbb134997ccce39c9c4a908ade24afc7ad0685c"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Belongings.java",
+      "sha256": "1756c1c4ca16b6ccc897c527ac6fb5fbd747a9c075936b8fc1f9922bffa6e1c5"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Hero.java",
@@ -578,6 +638,10 @@
       "sha256": "d70c337871951904582d37fe89d710f7dc3db5fa0b518f9fc030d4d34247ad3c"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/npcs/Shopkeeper.java",
+      "sha256": "30eb710f79dd81ba6ea2b9376cbfc4488e85b6da4e659605429217755c13090d"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/npcs/VaultLaser.java",
       "sha256": "3361a7cc7561dc4d970af89be60a056716ea6c1392aec6dfbdf928df167cffef"
     },
@@ -634,6 +698,18 @@
       "sha256": "573096571d996d5071790b54274d438f4bb4aa113f1cd7131d2150708208027f"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/ItemStatusEmitter.java",
+      "sha256": "8f02b8cc5cccc85bd321d77e5603d9b8eedd9f6e8dfe259d155ee8051bb1e1f9"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/TerrainVisualCue.java",
+      "sha256": "e5905ba7c2798505d22fc07e9a7a9e097a01c008808acb241d6aef692ba09c89"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/effects/VisualCueCollector.java",
+      "sha256": "b85756bdc5fba2d99825b2ea326a5c9ab0e3d9b7e2baa48de51bf1cd0912a74c"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Amulet.java",
       "sha256": "72e3e6c9d9e7d694c73cb32b401e134bb0186084b1acc602cdebea1c2f9c4e9a"
     },
@@ -656,6 +732,14 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Generator.java",
       "sha256": "f57a7737cef8fe0e598011c420c2012bc05eafc415cf5d43dc6061f56c901edc"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Heap.java",
+      "sha256": "e876349cb65f6706d037aeaec16dbeb166132d949d3ba57bdc2a0d965a69d01f"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Honeypot.java",
+      "sha256": "2a50ba9353f37693d2c7184fedb6995493925a86f777d75f28bfd4ad20563f15"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/Item.java",
@@ -858,6 +942,10 @@
       "sha256": "65281dc0b4ca91cd70e60598f9f907eedd513a38307920653fcbaad4f5ecbba8"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/bombs/Noisemaker.java",
+      "sha256": "9c13f5d91ff81e04fb7dec0e37d9d7cc76411d5007a3249b4ff6627729f6ad40"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/bombs/RegrowthBomb.java",
       "sha256": "43225ea3a88bc24c8c01472ea358970d808414a54a7720521caa59ef0e25ef17"
     },
@@ -880,6 +968,14 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/food/PhantomMeat.java",
       "sha256": "5735062954f8a0dc41d93d2d8e1df7aba9e523e95be3053efbf6c57c1e5239ad"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/food/StewedMeat.java",
+      "sha256": "c7243e0780902f9dd9983b7f8d6e7edfe348e487e260f29307e8086d0d0b3e22"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/keys/Key.java",
+      "sha256": "f0c0840e37f8cd2ad68d85dff33b126a43a3232b7c01f815d9c4576629d1c358"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/potions/Potion.java",
@@ -1172,6 +1268,10 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/scrolls/exotic/ScrollOfEnchantment.java",
       "sha256": "f07d9638425925ce9f5265fc91c0dd4f2d626b25de96d4f0ce8847ea46c08be8"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/scrolls/exotic/ScrollOfForesight.java",
+      "sha256": "9b8a749c438805714f1d75c4a378a9adb90ed1b10e4f3994359ef5e2f190891a"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/scrolls/exotic/ScrollOfMetamorphosis.java",
@@ -1806,8 +1906,20 @@
       "sha256": "4941e39a5b2ca63831c15f4e94dc2063ad811e30d581711b7939246e8c552e73"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Document.java",
+      "sha256": "7e0b6d0ae861a8630e678bc3d99478bb66c5d89249901a9f59aef8724bf883bc"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/journal/Notes.java",
+      "sha256": "b22d6061c9b9ce9e5cb58c55d89f90cd258f02d9ec3626652b5b031811118403"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/CavesBossLevel.java",
       "sha256": "95bc93d27b9a09066540509eaaa878220f8874c83d9956d0cb23afb3cb592dd2"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/CavesLevel.java",
+      "sha256": "65bf20aa7927d7ca511f18e77b2c547092fa69d550d366791c8e08e0567a0333"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/CityBossLevel.java",
@@ -1826,6 +1938,10 @@
       "sha256": "3913b456d32b407327b278f166eea097a21fa0ead193c72d5f2bd525e136275a"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/LastLevel.java",
+      "sha256": "617d5521638d415f52620cd1bf1c3713f12b13a3ef3518c65035a0f88476b34b"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/Level.java",
       "sha256": "5fcd2a4db06a66c54cf159f27149d501a45efc0ebea4103827bc6b962b34bc98"
     },
@@ -1838,12 +1954,20 @@
       "sha256": "1d796f404529c1828ae4861964878000a7547ddcf7644998be0a5a44ca162ab3"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/PrisonLevel.java",
+      "sha256": "5b6873f3b05dee0c472aa728fe08730e817a12c6be4532cbec6a909d0ce4da06"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/RegularLevel.java",
       "sha256": "e37179d63ea99b74313b63acfe7071b4809d0558902f0e3abf648d923b116129"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/SewerBossLevel.java",
       "sha256": "13ac5d31228bbbd64397eb9539201a29e1d9f7a9d419c404822852a50e93154d"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/SewerLevel.java",
+      "sha256": "0263c7981f61680ab328628d61297b944cc64053fecb450268806700ea3c10f3"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/Terrain.java",
@@ -1854,16 +1978,40 @@
       "sha256": "ba3c3a166a85a67bdc34e56600b87249bcca0f63e159531e6aa27a159c7f9a4f"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/builders/RegularBuilder.java",
+      "sha256": "05c60a1fe0a4e244ac674a9f92748f0b7aff51e6c0b075a401fa8943dbbd9d71"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/Chasm.java",
       "sha256": "761d817282225871ba0ab8988b0d722760d0d6fe04a5a0ad1283e45fab961c14"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/Door.java",
+      "sha256": "451c940dc3a36150289f4a65dc5e41e82a611fb53879bff0f0675db823e4d8e6"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/HighGrass.java",
       "sha256": "ed5f1752c144f2151d5a36f0a8101a0cddc36555c86fcd7ab77ed814e097edec"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/LevelTransition.java",
+      "sha256": "a90b3d384e5f7e986c0d43112bbb3b0b8e710ad4149fdd67e2f8dd6879410ede"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/painters/RegularPainter.java",
       "sha256": "142de76284736b5e2b2d4eaab76a5d85a0b392818496306a8f22fbf7465a4557"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/Room.java",
+      "sha256": "0783ec402cf62faf71d5886c370e58b615580e9554042166e896a2386dfe0e0a"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/connection/MazeConnectionRoom.java",
+      "sha256": "718af71445e2e72bb24bfce8c3c46c3e19ed91cd165367d1d6a44c03e4c8371d"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/quest/BlacksmithRoom.java",
+      "sha256": "45be7ebcabe3e17f3ee18e5b2256f7bd043b62aaccade400a6915b4333e0f46c"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/quest/MassGraveRoom.java",
@@ -1878,6 +2026,14 @@
       "sha256": "e111f2d6265691747095d7f649a271e8a9bbe74b6c2abf529106933326cb6577"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/quest/MineSecretRoom.java",
+      "sha256": "b23f5a2e04ef694a29bf6ddb9603295d7c29164aa65f5eb2897cbc6946640061"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/quest/RitualSiteRoom.java",
+      "sha256": "21f80a7891d28fc8b411052e73d309902fd25325c52cf74280c9835eccd141aa"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/quest/RotGardenRoom.java",
       "sha256": "1dcc10887831d06c110df5cb19a2c6ac029b775813b952d9ece8c339f0a46e35"
     },
@@ -1890,24 +2046,124 @@
       "sha256": "8223daeaa6c68d240b38b28fde9b7bf6f327c9ee1870aec918bca3f2e9f0534a"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/RatKingRoom.java",
+      "sha256": "8117d68b3238f980173c52535ed3358529f2cb8f8a12b477943fa5dd76795a46"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretArtilleryRoom.java",
+      "sha256": "c130a84dc117953d12d46f03d84a4fb2d3f7168571b094fc3c0b0fab9c844908"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretChestChasmRoom.java",
       "sha256": "fd8f82107ecce5f52aa2dcd5395a4f6c33f631af12373faa2ec32dd63e70c368"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretGardenRoom.java",
+      "sha256": "b305e73828c41a67a09524cce448e69250822f10527a26b60804ca0698a22b34"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretHoardRoom.java",
+      "sha256": "f7720fa89bcbf9a0c01e1f6e90fda966e7de9908af6e1b75ff1f59670705ffc9"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretHoneypotRoom.java",
+      "sha256": "db61c2b1e864857f24028bb9f7ffb4613a0534dd8ceb227b966093ee2e2f6c39"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretLaboratoryRoom.java",
+      "sha256": "d968d5ad9e1bc203c5562d65cf764ab8eeb1aadd556b2e3baec6d64ce141ff1a"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretLarderRoom.java",
+      "sha256": "5371d4145347ca5494ce978e2691dc8b20fb4e5ce87aa58037f1ff9365b488c3"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretLibraryRoom.java",
+      "sha256": "5e8e54f36d1655db3045e2f64f6df4784369a5977e561c940971ffe6b1ea187c"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretMazeRoom.java",
+      "sha256": "905dc1f8a9088a7123fa46b6dcc8ff0cab95cbb888cdbfe0f068adb1a4f36556"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretRoom.java",
+      "sha256": "0b517e62c10dc60d4e57cde27356dc4fde3ce150ee958e486752579dea298397"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretRunestoneRoom.java",
       "sha256": "7f6d066f32a8cfbfca5f0d251b7aab20834d19cb0089cc3cc28dd80ec8d0bdf6"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretSummoningRoom.java",
+      "sha256": "9d6e7597572621535674d319a90b8e1ecb57c3ec8f2b5e442be3c4ec753b8165"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/secret/SecretWellRoom.java",
+      "sha256": "c26687eca65fc91daeefe05fcdaa6add571df2bd5378b97ad3f209d495ef61b9"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/sewerboss/SewerBossExitRoom.java",
+      "sha256": "a8dd97c4ccd79aee8c023d50413cda8c922efcdbc4bd238593d8ba242a176c90"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/ArmoryRoom.java",
+      "sha256": "5007005ed77cc7c157f68b763bffe088cbc4857983f3edaebb0110f331711ccb"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/CryptRoom.java",
+      "sha256": "143a12394375654cf9fa0e7cc098f6a3e909658837cf92ec045e6653e00146f8"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/CrystalChoiceRoom.java",
+      "sha256": "9ac6dd4c00372df59a558b6a97b2f1f4fffcd2c0c1f2f0e401bc36fdf7d14ac4"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/CrystalPathRoom.java",
+      "sha256": "bccc25cc7abde394521595910ae8058387741b3a124f52e13575fcd92507546a"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/CrystalVaultRoom.java",
+      "sha256": "516661809e378021efb51717fbfe955ed4d11c2ec2eedd7891e0e3d2551908af"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/DemonSpawnerRoom.java",
       "sha256": "7893b0b7ce7af686a3e37e0a243b0dcc27862d46b90aa9e601828817b859a467"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/GardenRoom.java",
+      "sha256": "1c3f7bde826737198374bb0a6a8c6c84ca9a5575c1b56f98b66025c74d39482e"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/LaboratoryRoom.java",
+      "sha256": "964d638497f7184df6c0c68df4123d1e64072d4107acd2846bf8f14deeb0819f"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/LibraryRoom.java",
+      "sha256": "0852d5d22f59d3fbdf39d4b552f2e488ac5f24c3b67bee7c218011cd045c8102"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/MagicWellRoom.java",
+      "sha256": "7e1c07bfdc3f4743142eea2777d4bf19d8504cb84299ea92a69fe4534ca2ae94"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/MagicalFireRoom.java",
       "sha256": "4289647f59ebb0d438fcb9fd206638621f68341582b557be32a0fd51aeb6e44a"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/PitRoom.java",
+      "sha256": "8a04e3d30b05f2dc3c867b097ca1e687afe478ceda30f830d7ab702114acf0bb"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/PoolRoom.java",
       "sha256": "d0c2a0ad98514f24fcbd5162effa46ccc79c9b1f0319ed872fe69828adf616b1"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/RunestoneRoom.java",
+      "sha256": "ffc96a80badccd40a318a12be687983b3bf2f0a06b457a6db97f773239fd0263"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/SacrificeRoom.java",
+      "sha256": "923e12a5d6ea2262774f40d7176d545a5083d027900370d16f76e654836d02f5"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/SentryRoom.java",
@@ -1916,6 +2172,14 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/ShopRoom.java",
       "sha256": "9cd87b2765e6ac4f3689cad906b9d7887f8d976f8d38d5c356e922d7e9133d5b"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/SpecialRoom.java",
+      "sha256": "3c4460359b923a407d8976a42cf592d2292dcc932624cb5fdc538961d7c10280"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/StatueRoom.java",
+      "sha256": "df6715231a33f0153f50a98c8aad4e8cb81b00d9af5d0503fd144eddefc294e4"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/StorageRoom.java",
@@ -1928,6 +2192,66 @@
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/TrapsRoom.java",
       "sha256": "f428f3a12e8c2db2191ded1a0a7cbf1ce259edbfa5a5c5349835fe01020aaf68"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/TreasuryRoom.java",
+      "sha256": "e2e74098582d12ed0eeacb317b226f4dcedb742f2575a1711e0e1042cc9eb388"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/WeakFloorRoom.java",
+      "sha256": "e0401ac4fc3d0c4ca1ec4a0990a5f47757df4d66dd02f3e9d3fd3e7ff463b51d"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/AquariumRoom.java",
+      "sha256": "844b81553cde9935552520710ceb5e25f17927f67c79abf9a5525faf151c73f3"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/BurnedRoom.java",
+      "sha256": "d209f8db9c8d4127e8356db40c9876c8b9ce93db5f338259d6ae0f614c473cb7"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/FissureRoom.java",
+      "sha256": "3eaf83c5a686b3e542a2132ee1032f19859518122870d5ce0ea89c281d03a0d1"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/GrassyGraveRoom.java",
+      "sha256": "61a4de2f88fbde5d8cfcf81364479d6120b122e9e0c011f369be55d05be1ee17"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/MinefieldRoom.java",
+      "sha256": "6e3b954c796d052d5f408d9c62c0587cbeb9c5fa7043d49a765aa40b0f64ce5a"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/PlantsRoom.java",
+      "sha256": "c25d6fdfb2d8936927cb1657ced413c86c2906f2b52b0f6215574ddf542fcff7"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/PlatformRoom.java",
+      "sha256": "9f1c978629865dc9b6e6c42678151f0fd280f01205b2ec1e15b744f2cd050b61"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/StandardRoom.java",
+      "sha256": "0d8abbf66b652b99355bcc4110bcaa6b6a6c56bce7ef05fee56c8a4810e8901b"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/StripedRoom.java",
+      "sha256": "f03f515c5395737937025fcd714ee64e9bc14e0c721694d245ff2f5ad7c7db83"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/StudyRoom.java",
+      "sha256": "49064f4a021601c67c300e86fe108ec1de2545ec1c6f0bd3f9a48f225579fb6d"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/SuspiciousChestRoom.java",
+      "sha256": "8ff1774b537db332932828966a928a1e5b117c040222b1bc72848ff68c5afb4f"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/standard/entrance/EntranceRoom.java",
+      "sha256": "23b6db1f4c0317c975d6ed95d7b15b704eaf9e58c8053aa733dac77db0f98302"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/traps/AlarmTrap.java",
+      "sha256": "6449b100f2be156eff8e96023959b4fa4587bf5367789bac386f005dd87cc0d6"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/traps/DisintegrationTrap.java",
@@ -1946,8 +2270,20 @@
       "sha256": "32ced0802d414e5d1dd14eb15eb939e97926a4e9f86b652772780d631bbabb24"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/traps/GuardianTrap.java",
+      "sha256": "8b482087a0e238c41e94c40ed18308bfc3c327f44547eaa7327d7860f23c5b45"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/traps/PoisonDartTrap.java",
       "sha256": "42798a8ff7c5032ea8dd4b35d54a6f12c5d4db6d3ebc0c42397c53d560816333"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/traps/RockfallTrap.java",
+      "sha256": "a85f9a57250ac7366be61179e7a42856991ab6f1beba93b3decdf42c197dd8ad"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/traps/SummoningTrap.java",
+      "sha256": "3c4d4aab500bf2062fe534047da11e43581280fbd716e584e966038ac1abbb05"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/traps/TenguDartTrap.java",
@@ -1986,6 +2322,10 @@
       "sha256": "174f38d3159b3e03d84f2d1c3fcd1aabcac8cdc43bedc2d6dc24b5d580b38c7d"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/AlchemyScene.java",
+      "sha256": "75ad503e6abed1dd94d5bea055af0ecfec9fc1ce10ffd5feaa7a5b2213b7de71"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/scenes/AmuletScene.java",
       "sha256": "2c0e5c4cf4c855f5e6f5130e30d3b19cd756b69c826e3ea55f8c9fa51f17251a"
     },
@@ -1998,8 +2338,88 @@
       "sha256": "6c47e0a9d9bece9642cda113e2b85a3aaeec2212696af665cd912882ed10e804"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/EyeSprite.java",
+      "sha256": "b4c1b77ab7b2cbcfcf93dfa28fc52f61937d2a462c3a31e44123859b9101036c"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/GooSprite.java",
+      "sha256": "0daa7521b7096b009d606eedc89530943db2b57d482f794f51063b63bf38f154"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/ItemSprite.java",
       "sha256": "e5f964b3bec2e29892fcf6040802f004f461c79a122889f8e845e002164ae5d7"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/MimicSprite.java",
+      "sha256": "ab90a33002c9b73865ea0909023c30f9bb3cf11a9820b9a5563fe13e5056211a"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/sprites/SentrySprite.java",
+      "sha256": "56d5bcd00230f46668d30c389bac13eb7fc09f40ec92e5077ff45191f0bab2c9"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/tiles/CustomTilemap.java",
+      "sha256": "4369fc68be2c0cc5db59e0714592c86bcc528c047c7bbccbd7b18f95cea9dde5"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/BuffIcon.java",
+      "sha256": "90350f0409cf12861dffb8d5e1b08f5c338be2bb8503c07c50143cf5030636e5"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/BuffIndicator.java",
+      "sha256": "6da971fb36ecc4dc70c36b18a0f426f9dbfd2c4ea7b8f22eaf5effc2d5bb47ad"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameLog.java",
+      "sha256": "68cec56cbffba075f3f60bc7cf5e24fde4125347331960e244bdc36bf5374925"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayGlow.java",
+      "sha256": "813ce097d2d11d61d8c0358ffaceb1182c9b8be07ef400ec18f027b752d49552"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/GameplayIcons.java",
+      "sha256": "a9229e1a7643b7593f53e47965c45c93c24d8572b23cf92514de2266280c5f09"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/HealthBar.java",
+      "sha256": "9f5a6ac5bea3e4c379bda50fe5334bad4880257e08c37428e7aee7eaaba27d45"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/InventorySlot.java",
+      "sha256": "0d4630b2412a73abc5d4c9e5fb10cc54521e18a8e12da587c7438aabd3b6a187"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/ItemButton.java",
+      "sha256": "9be79145c56b777ac91c0decc2ba193dc7b96c5198af5225b5ce30d6ec7d2fff"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/ItemSlot.java",
+      "sha256": "45ca4e8092da90ef59ed2da3de7f50ebeb125697f058be425299efa5c5fcfcef"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/QuickRecipe.java",
+      "sha256": "c660e88e1373c054442db5cef2db8610bb14d848a1ac47fe2922b71eaf578f0d"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/ScrollingGridPane.java",
+      "sha256": "3b2ec032bb4b35290bde6a932448f0902345cbeebbba8a326c34ea46f94dbc5f"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/StatusPane.java",
+      "sha256": "a1b1d939c1f2c564e5640540518f82b9473e2383ac6133e1b2e515c74b964fd8"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/StyledButton.java",
+      "sha256": "58db6879f764ab3b4578fd92e3b64a54a283bb6670622f768c3a1d72747c43c9"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/TalentButton.java",
+      "sha256": "bf4f3012200e546f1273b4d9a6c7b3f9fac5fa3b8a7bc59e4e3422b673b0781b"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndBag.java",
+      "sha256": "49aff2e1690d9a80f3376b80a8d42f64698f3cfbefd9dfe90f5caea43afa5fd3"
     },
     {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndBlacksmith.java",
@@ -2018,20 +2438,184 @@
       "sha256": "5549ebe1fc239e282168d328d488ba90ca2bab3ccafa58770633147bbca3b6d4"
     },
     {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndHero.java",
+      "sha256": "3177bffb038ce4b8e24a14683965dacf1a691dcfd3c854d81354fbec3eb9a7a5"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoBuff.java",
+      "sha256": "c9e695f2e622ea68697de416028f084d790695f9c3c7b02bee5b564466d1aef1"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoCell.java",
+      "sha256": "f82603318a2d894b4409bbd1b54b4224bc4db584aad9e6ad2cce4d0eab48bab8"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoItem.java",
+      "sha256": "dba4048b22ae34298ca7444e629e49d467b33c848f0857e8d8358bc8af54b4d5"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoMob.java",
+      "sha256": "3560aed4c9ba9a67f308a4e47a87cfaad70b1a0c6f013f6a65e53e43b2a85b7b"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndInfoTrap.java",
+      "sha256": "79bd68da09ade5bdef6cf5c729900ae28d1559cff696a482391c7e23a4e2d3d2"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndJournal.java",
+      "sha256": "7b63ce6f658e34ba3cef5942ffa4862da282f6000da2bf3183bb5a6b72cf4cd0"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndJournalItem.java",
+      "sha256": "51efda388fdaff99d1bcef7a5b94113a1d298d5ea30450ea3f29fdefadd76a97"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndQuest.java",
+      "sha256": "fbd9af4f1da080f3c03ec32551bb1093da4524a18e066fab8fb7555b17cf7947"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndSadGhost.java",
+      "sha256": "9ac00a5d3846f255e7e5cc8c9d2eb5778fa37fe684a6c7b10f14094a0c29d79c"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndTabbed.java",
+      "sha256": "3c5a031a591f91717fa7340be72c369eed65062bc0f59d10cc3c3261366ac4a3"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndTitledMessage.java",
+      "sha256": "91d0fbf05f7584949eb4cb7c31fa626662a0d6fed2ba69b04c3bae6460a3a345"
+    },
+    {
       "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndTradeItem.java",
       "sha256": "5466ef549869816872404037c334adc0270bddfd57270d91d9fce17df960c257"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndUpgrade.java",
+      "sha256": "f0502b09ff12306bec99b3a26a60e77cbd45e613ac7b6651903fc1c302d28424"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndWandmaker.java",
+      "sha256": "8251aa900034a497893fb93a6292e9060a7b4745766ace6bd55ff7b71a2e909a"
+    },
+    {
+      "path": "desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/DesktopProfileDefaults.java",
+      "sha256": "263de13086d40b1b4b473c60a854920b667fdb246bd010240ae6527b870ecb12"
+    },
+    {
+      "path": "desktop-control/client/spdctl_client.py",
+      "sha256": "e23ad1cfed153667ab83c3584f036e673c2049606bf4f51db8fe2fb1bfb50bf3"
+    },
+    {
+      "path": "desktop-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/desktop/MachineSession.java",
+      "sha256": "5a5e22b4f4d891f7456fb9728918c8e9fa60ca84dc00c0748a75eb8b49a349e4"
+    },
+    {
+      "path": "desktop-control/src/test/python/test_actions_subject_data.py",
+      "sha256": "23f722b1e14fc8842c57773ba746386c057bccbc1e407d539d9d06c41d3fc669"
+    },
+    {
+      "path": "desktop-control/src/test/python/test_health_estimate_rounding.py",
+      "sha256": "10f6f05d1296283f932c51701db3388b45adfe79e7a2f01f14ef4896f06dad75"
+    },
+    {
+      "path": "desktop-control/src/test/python/test_protocol9_facts.py",
+      "sha256": "ee247a7485e5385adaeb3be2be6026e508cbb930e9ae3c167a96c2367ce1e52f"
     },
     {
       "path": "docs/cli-help.md",
       "sha256": "69db6cb373eaa060077fffb83ffffe78ea411889fba4756c27917bfaa5545b39"
     },
     {
+      "path": "docs/cli-playthrough-client.md",
+      "sha256": "9f4cf6d6033422ea098597d0c7b2de6bb7ef85063b2de7b7a880abcaaa29bc72"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/CompactProtocol.java",
+      "sha256": "8661e8bc67b2fec407f314ef61d0074eff8a46026abe5a5dc703a1df125ec7f5"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/CompactStructures.java",
+      "sha256": "c88fd8124add139b8c7ed3291eb10f4c3e988ea6638f2fead883aec3cd05dfbd"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameController.java",
+      "sha256": "cd463860c85bbb99f673f4968010e286f67b2526a9c1c4ab629238c228d0c387"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameSnapshotter.java",
+      "sha256": "fec53359035e3168ca5709512aceb0fce93f0aa55388f477061d34ce1ed0c39b"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameplayObservation.java",
+      "sha256": "9add47a70e2c2d4b6bc4dc7941da5ea67d7054ff69270ddce7b673aabfd42ce0"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/PlayerObservation.java",
+      "sha256": "fc386ef26a7233287ee3dc25ab8fe4bde86cb70da900952407e87fd9577e1790"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/PublicEnglishProjection.java",
+      "sha256": "ce5892b1de0e0efaa458cfda7f30d68774318af0297111914690e6024b0247da"
+    },
+    {
+      "path": "game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java",
+      "sha256": "29ea5d11683237a26215b91b9618b3452a034e1e0458f2e2283bb2f296b31cb1"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/Cli9ItemObservationTest.java",
+      "sha256": "684fea4783c25e842d7b59f38c39c1f5a439d12a1e6e3715d106cdbdc55574a2"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameSnapshotterTest.java",
+      "sha256": "fbde114223e2413ca0b2fc52f5a65bb3af56197718b23307619240a3c99fdf52"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameplayObservationTest.java",
+      "sha256": "e74545084272b6dfa08166e76a3020a4c1ca525b67f4098cb07b1f0bec4adf7d"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/GameplayStatusTest.java",
+      "sha256": "039e1953a34b49955efa47295fa92bdf22c6590cc4ee8d11ad623d911ce125a0"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/HealthBarClientContractTest.java",
+      "sha256": "5d643b6ff696d92e23a426a560ca1bfbf3bc47abfa8f48a3396060999c2016c0"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/ItemStatusMeaningTest.java",
+      "sha256": "6ad0113f89ae89cc0ae984e1901026e16d8e453c34c50ec4625c276ff40f36a2"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/NativeTabTalentObservationTest.java",
+      "sha256": "2d70850c9f5bfeefed1c92ff9982671eecc6356ec21819d4031498462bfeaf34"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/PlayerTalentObservationTest.java",
+      "sha256": "3d3995be1b92d480b01a08c84521920fe96bbc40b071a5cc8c944b92b7b2333b"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiDrawStatusEvidenceTest.java",
+      "sha256": "c71ac79a311ea1885ce3a3a81cd3b456422de012462096d143b4238025751276"
+    },
+    {
+      "path": "game-control/src/test/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiProjectionHintsTest.java",
+      "sha256": "e31ce001e835cab7b5e1eefea45dade48114317f91e41f91fb30d6dc42f480af"
+    },
+    {
+      "path": "game-control/src/test/resources/combat-visual-reviews.json",
+      "sha256": "440a74e9c11df0177fdf5a9a854cfcb853e982f53a13338ddf9e5c0cd1394db9"
+    },
+    {
       "path": "skills/pixel-dungeon-run-assistance/SKILL.md",
-      "sha256": "0d95f00148f8bc69571f80ab0b5120401c3fc82d4df96d8f854ef66311be8d5e"
+      "sha256": "acf9315dff7841cf575a61d8c0f8a24c9f0961de2bec25bf4db5db1efa33216d"
     },
     {
       "path": "skills/pixel-dungeon-run-assistance/scripts/ray.py",
       "sha256": "f668ef948418d86619febc59db66453a3b40cf7a33fb6f9bec18ac6349da6ba1"
+    },
+    {
+      "path": "skills/shattered-pixel-dungeon-cli-release/SKILL.md",
+      "sha256": "da9ffce4eba9fcba047283f27713e0b950c5ab73bfa51dc29b0258550d7df348"
     }
   ]
 }

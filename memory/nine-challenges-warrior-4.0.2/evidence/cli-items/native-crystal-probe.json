@@ -1,0 +1,654 @@
+{
+  "evidence_kind": "isolated_native_producer_fixture",
+  "scope": "Synthetic textures and fixture item objects; no game launch, profile, save, or audit access.",
+  "class_locations": {
+    "ItemSprite": "file:/Users/shengyifan/Workspace/shattered-pixel-dungeon/core/build/classes/java/main/",
+    "ItemSlot": "file:/Users/shengyifan/Workspace/shattered-pixel-dungeon/core/build/classes/java/main/",
+    "GameplayObservation": "file:/Users/shengyifan/Workspace/shattered-pixel-dungeon/game-control/build/classes/java/main/",
+    "CompactProtocol": "file:/Users/shengyifan/Workspace/shattered-pixel-dungeon/game-control/build/classes/java/main/",
+    "PlayerObservation": "file:/Users/shengyifan/Workspace/shattered-pixel-dungeon/game-control/build/classes/java/main/"
+  },
+  "cases": [
+    {
+      "stage": "intact",
+      "fixture_durability": 100.0,
+      "native_glow": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "intact"
+      },
+      "native_slot_status": {
+        "shown": {
+          "glow": {
+            "variant": "crystal_blue",
+            "kind": "crystal_condition",
+            "stage": "intact"
+          }
+        }
+      },
+      "merged": {
+        "inventory": [
+          {
+            "locator": "backpack.0",
+            "name": "crystal sword",
+            "quantity": 1,
+            "equipped": false,
+            "type_known": true,
+            "level_known": false,
+            "curse_known": false,
+            "level": null,
+            "cursed": null,
+            "details_via": "ui.activate",
+            "shown": {
+              "glow": {
+                "variant": "crystal_blue",
+                "kind": "crystal_condition",
+                "stage": "intact"
+              }
+            }
+          }
+        ],
+        "ui": {
+          "controls": [
+            {
+              "id": "native-fixture-slot",
+              "role": "button",
+              "subject": {
+                "kind": "item",
+                "loc": "backpack.0"
+              }
+            }
+          ]
+        }
+      },
+      "responses": [
+        {
+          "view": "play",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-intact-play",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "level": null,
+                  "cursed": null,
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "intact"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "view": "full",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-intact-full",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "qty": 1,
+                  "equipped": false,
+                  "type_known": true,
+                  "level": null,
+                  "cursed": null,
+                  "via": "click",
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "intact"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "view": "src",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-intact-src",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "qty": 1,
+                  "equipped": false,
+                  "type_known": true,
+                  "level": null,
+                  "cursed": null,
+                  "via": "click",
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "intact"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "stage": "flawed",
+      "fixture_durability": 50.0,
+      "native_glow": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "flawed"
+      },
+      "native_slot_status": {
+        "shown": {
+          "glow": {
+            "variant": "crystal_blue",
+            "kind": "crystal_condition",
+            "stage": "flawed"
+          }
+        }
+      },
+      "merged": {
+        "inventory": [
+          {
+            "locator": "backpack.0",
+            "name": "crystal sword",
+            "quantity": 1,
+            "equipped": false,
+            "type_known": true,
+            "level_known": false,
+            "curse_known": false,
+            "level": null,
+            "cursed": null,
+            "details_via": "ui.activate",
+            "shown": {
+              "glow": {
+                "variant": "crystal_blue",
+                "kind": "crystal_condition",
+                "stage": "flawed"
+              }
+            }
+          }
+        ],
+        "ui": {
+          "controls": [
+            {
+              "id": "native-fixture-slot",
+              "role": "button",
+              "subject": {
+                "kind": "item",
+                "loc": "backpack.0"
+              }
+            }
+          ]
+        }
+      },
+      "responses": [
+        {
+          "view": "play",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-flawed-play",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "level": null,
+                  "cursed": null,
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "flawed"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "view": "full",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-flawed-full",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "qty": 1,
+                  "equipped": false,
+                  "type_known": true,
+                  "level": null,
+                  "cursed": null,
+                  "via": "click",
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "flawed"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "view": "src",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-flawed-src",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "qty": 1,
+                  "equipped": false,
+                  "type_known": true,
+                  "level": null,
+                  "cursed": null,
+                  "via": "click",
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "flawed"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "stage": "cracked",
+      "fixture_durability": 10.0,
+      "native_glow": {
+        "variant": "crystal_blue",
+        "kind": "crystal_condition",
+        "stage": "cracked"
+      },
+      "native_slot_status": {
+        "shown": {
+          "glow": {
+            "variant": "crystal_blue",
+            "kind": "crystal_condition",
+            "stage": "cracked"
+          }
+        }
+      },
+      "merged": {
+        "inventory": [
+          {
+            "locator": "backpack.0",
+            "name": "crystal sword",
+            "quantity": 1,
+            "equipped": false,
+            "type_known": true,
+            "level_known": false,
+            "curse_known": false,
+            "level": null,
+            "cursed": null,
+            "details_via": "ui.activate",
+            "shown": {
+              "glow": {
+                "variant": "crystal_blue",
+                "kind": "crystal_condition",
+                "stage": "cracked"
+              }
+            }
+          }
+        ],
+        "ui": {
+          "controls": [
+            {
+              "id": "native-fixture-slot",
+              "role": "button",
+              "subject": {
+                "kind": "item",
+                "loc": "backpack.0"
+              }
+            }
+          ]
+        }
+      },
+      "responses": [
+        {
+          "view": "play",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-cracked-play",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "level": null,
+                  "cursed": null,
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "cracked"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "view": "full",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-cracked-full",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "qty": 1,
+                  "equipped": false,
+                  "type_known": true,
+                  "level": null,
+                  "cursed": null,
+                  "via": "click",
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "cracked"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "view": "src",
+          "wire": {
+            "v": 9,
+            "id": "native-crystal-cracked-src",
+            "s": "isolated_fixture_scope",
+            "rev": "isolated_fixture_revision",
+            "st": "completed",
+            "data": {
+              "inv": [
+                {
+                  "loc": "backpack.0",
+                  "name": "crystal sword",
+                  "qty": 1,
+                  "equipped": false,
+                  "type_known": true,
+                  "level": null,
+                  "cursed": null,
+                  "via": "click",
+                  "shown": {
+                    "glow": {
+                      "variant": "crystal_blue",
+                      "kind": "crystal_condition",
+                      "stage": "cracked"
+                    }
+                  }
+                }
+              ],
+              "ui": {
+                "nodes": [
+                  {
+                    "id": "native-fixture-slot",
+                    "role": "button",
+                    "subject": {
+                      "kind": "item",
+                      "loc": "backpack.0"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "baseline": "d04c8f862b2f90418a6375f0b3ffc5c4325d0953",
+  "fixture_sha256": "3d2c21bd0b7b08c25adf06551cce66be7911de02464c0c5a4696cb1e31d81970",
+  "decoder_results": [
+    {
+      "stage": "intact",
+      "view": "play",
+      "wire_id": "native-crystal-intact-play",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "intact",
+      "view": "full",
+      "wire_id": "native-crystal-intact-full",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "intact",
+      "view": "src",
+      "wire_id": "native-crystal-intact-src",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "flawed",
+      "view": "play",
+      "wire_id": "native-crystal-flawed-play",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "flawed",
+      "view": "full",
+      "wire_id": "native-crystal-flawed-full",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "flawed",
+      "view": "src",
+      "wire_id": "native-crystal-flawed-src",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "cracked",
+      "view": "play",
+      "wire_id": "native-crystal-cracked-play",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "cracked",
+      "view": "full",
+      "wire_id": "native-crystal-cracked-full",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    },
+    {
+      "stage": "cracked",
+      "view": "src",
+      "wire_id": "native-crystal-cracked-src",
+      "expected": "accepted_with_native_crystal_glow_preserved",
+      "actual": "DecodeError",
+      "error": "$.data.inv[0].shown.glow.kind is not a reviewed glow meaning",
+      "raw_preserved": true,
+      "input_unchanged": true
+    }
+  ],
+  "summary": {
+    "native_stages": 3,
+    "wire_responses": 9,
+    "unexpected_rejections": 9,
+    "input_mutations": 0,
+    "raw_preservation_failures": 0
+  }
+}

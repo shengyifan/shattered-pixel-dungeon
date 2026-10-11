@@ -1,0 +1,68 @@
+{
+  "fixture_kind": "existing isolated unit tests; no game process or profile",
+  "baseline": "d04c8f862b2f90418a6375f0b3ffc5c4325d0953",
+  "suites": [
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.Cli9ItemObservationTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.CompactProtocolMapAndKnowledgeTest",
+      "tests": "13",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameSnapshotterTest",
+      "tests": "7",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayObservationTest",
+      "tests": "17",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.GameplayStatusTest",
+      "tests": "5",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.InventoryAvailabilityTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.ItemStatusMeaningTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.shatteredpixel.shatteredpixeldungeon.control.game.UiProjectionHintsTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0"
+    }
+  ],
+  "totals": {
+    "tests": 58,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0
+  }
+}

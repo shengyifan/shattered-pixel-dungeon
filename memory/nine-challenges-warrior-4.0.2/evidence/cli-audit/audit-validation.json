@@ -1,0 +1,147 @@
+{
+  "date": "2026-10-11",
+  "source_head": "d04c8f862b2f90418a6375f0b3ffc5c4325d0953",
+  "scope": "Offline source review, headless unit/contract fixtures and existing package identity; no personal profile, live game or full GUI audit.",
+  "package": {
+    "version": "CLI.9.0.3 (protocol 9, game 4.0.2)",
+    "help_matches_source": true,
+    "launcher_sha256": "1916b38ff7d7c083a68dd471bd38169b97793358b135fe5abbecebbca1ae3bb2",
+    "jar_sha256": "099755c9028a48931048781273ad28e75998115968d96449c884b008c164ddc4"
+  },
+  "game_control_test": {
+    "command": "./gradlew :game-control:test :desktop-control:writeTestRuntimeClasspath --no-build-cache --rerun-tasks --offline --no-daemon --console=plain",
+    "suites": 106,
+    "tests": 636,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "count_evidence": "Root parsed XML immediately after the full test run; a subsequent separately logged focused fixture run replaced the Gradle XML directory."
+  },
+  "python_observation_test": {
+    "modules": [
+      "test_spdctl_client",
+      "test_protocol9",
+      "test_protocol9_base",
+      "test_protocol9_facts",
+      "test_health_estimate_rounding",
+      "test_actions_subject_data",
+      "test_client_result",
+      "test_combat_visual_wire",
+      "test_intent_validation",
+      "test_notes_structural_choice",
+      "test_ui"
+    ],
+    "tests": 121,
+    "result": "OK"
+  },
+  "inventories": {
+    "ui": {
+      "parsed_types": 2877,
+      "records": 1917,
+      "unmapped_inputs": 0,
+      "categories": {
+        "action_area": 3,
+        "armor_ability": 20,
+        "button": 258,
+        "cell_selector": 23,
+        "cleric_spell": 30,
+        "component": 67,
+        "context_menu": 4,
+        "hero_class_catalog": 1,
+        "hero_subclass_catalog": 1,
+        "indicator_action": 9,
+        "input_method": 858,
+        "item_button": 16,
+        "item_selector": 33,
+        "item_type": 372,
+        "monk_ability": 6,
+        "option_slider": 12,
+        "pointer_area": 16,
+        "scene": 17,
+        "scroll_pane": 9,
+        "text_input": 2,
+        "window": 160
+      },
+      "runtime_verified_by_inventory": false,
+      "file_sha256": "2cbdab251f0e17e2b8efbaed7bf91d164858ce4fd9f300a1b3b152f16a44a013"
+    },
+    "text": {
+      "source": "javac parse and analyze of current core sources",
+      "checked": true,
+      "operations": 206,
+      "source_files": 1239,
+      "verified_catalog_constructors": 789,
+      "file_sha256": "7176139efe1d28966121df3fc76ac189b6af5c8d3a5d87e717387bf94b308940"
+    },
+    "visual": {
+      "format": "combat_visual_review_result_v3",
+      "source_files": 1341,
+      "sites": 13530,
+      "review_groups": 4851,
+      "retired_sites": 1483,
+      "retired_contracts": 1,
+      "runtime_verified_by_inventory": false,
+      "checked": true,
+      "file_sha256": "b3750562939996415c376a3943836e4628e98407e8de6302a10f476719679ce9"
+    }
+  },
+  "package_class_comparison": {
+    "control-protocol": {
+      "classes": 11,
+      "missing": [],
+      "different": []
+    },
+    "game-control": {
+      "classes": 44,
+      "missing": [],
+      "different": []
+    },
+    "core": {
+      "classes": 2786,
+      "missing": [],
+      "different": []
+    }
+  },
+  "root_independent_reruns": {
+    "native_crystal": {
+      "responses": 9,
+      "unexpected_rejections": 9,
+      "input_mutations": 0,
+      "raw_preservation_failures": 0
+    },
+    "native_ui": {
+      "assertions_passed": 13
+    },
+    "native_world": {
+      "checks_passed": 5
+    },
+    "node_semantic_validation": {
+      "cases": 5,
+      "accepted": [
+        false,
+        true,
+        false,
+        true,
+        true
+      ]
+    },
+    "upgrade_slot_formula": {
+      "region_retained": [
+        2,
+        1,
+        2,
+        1,
+        2
+      ],
+      "total": 8,
+      "scope": "Fraction arithmetic under normal sequential generation; not map generation or playthrough"
+    }
+  },
+  "research_document_validation": {
+    "markdown_files": 27,
+    "local_links": 1991,
+    "line_anchors": 1851,
+    "referenced_source_files": 653,
+    "errors": 0
+  }
+}

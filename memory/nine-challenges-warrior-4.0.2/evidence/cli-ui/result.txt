@@ -1,0 +1,27 @@
+SOURCE_HEAD=d04c8f862b2f90418a6375f0b3ffc5c4325d0953
+SCOPE=isolated existing native widget capture with synthetic source-selected states; no GL draw or live game
+SHA256 7b63ce6f658e34ba3cef5942ffa4862da282f6000da2bf3183bb5a6b72cf4cd0 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndJournal.java
+SHA256 58db6879f764ab3b4578fd92e3b64a54a283bb6670622f768c3a1d72747c43c9 core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/StyledButton.java
+SHA256 3b2ec032bb4b35290bde6a932448f0902345cbeebbba8a326c34ea46f94dbc5f core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/ScrollingGridPane.java
+SHA256 c660e88e1373c054442db5cef2db8610bb14d848a1ac47fe2922b71eaf578f0d core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/QuickRecipe.java
+SHA256 45ca4e8092da90ef59ed2da3de7f50ebeb125697f058be425299efa5c5fcfcef core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/ItemSlot.java
+SHA256 29ea5d11683237a26215b91b9618b3452a034e1e0458f2e2283bb2f296b31cb1 game-control/src/main/java/com/shatteredpixel/shatteredpixeldungeon/control/game/UiBridge.java
+SHA256 365bb35fa4344d3570ddb221113b99424880295f76f6e28741acf925fee22e86 game-control/build/libs/game-control-4.0.2.jar
+SHA256 7297d9b0a0006fdea8ba7539262c8cf1616c7ed5046f8d9b055c1624f41633c1 core/build/libs/core-4.0.2.jar
+PASS Source icon SEED is independently recognized
+PASS Changed source icon POTION is independently recognized
+PASS CONFIRMED: native AlchemyTab RedButton icon change is absent from UiBridge
+PASS CONFIRMED: icon change absent in play
+PASS CONFIRMED: icon change absent even in full+src
+PASS CONFIRMED: native selected-page highlight absent
+PASS Positive control: active native page has activate operation
+PASS Positive control: disabling that same native page removes activate operation
+ALCHEMY_PAGE_NODE={"scene":"Scene","modal":false,"controls":[{"id":"c1","role":"button","enabled":true,"gestures":["click"]}],"inspected_item":null}
+PASS CONFIRMED: native journal GridItem icon difference is absent
+PASS Journal entry remains selectable
+JOURNAL_ENTRY_NODE={"scene":"Scene","modal":false,"controls":[{"id":"c2","role":"scroll","enabled":true,"scroll_x":0.0,"scroll_y":0.0,"content_width":0.0,"content_height":0.0,"viewport_width":0.0,"viewport_height":0.0},{"id":"c3","role":"entry","enabled":true,"parent":"c2"}],"inspected_item":null}
+PASS CONFIRMED: QuickRecipe ingredient shortage alpha does not change ItemSlot semantic observation
+RECIPE_INGREDIENT_NODE={"scene":"Scene","modal":false,"controls":[{"id":"c4","role":"button","enabled":true,"label":"Ration of Food","gestures":[],"text_sources":{"label":{"kind":"case","operation":"title_case","value":{"kind":"resource","key":"items.food.food.name","args":[]}}}},{"id":"c5","role":"text","enabled":true,"parent":"c4"},{"id":"c6","role":"text","enabled":true,"parent":"c4"},{"id":"c7","role":"text","enabled":true,"parent":"c4"}],"inspected_item":null}
+PASS Positive control: actual IconButton retains icon symbol
+PASS Positive control: displayed price text survives play
+PASS TOTAL=13; native widget capture/compact projection, not live UI gameplay

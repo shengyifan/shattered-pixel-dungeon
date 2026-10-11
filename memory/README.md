@@ -31,6 +31,12 @@
 
 ## 只读公开观察工具
 
+2026-10-11进一步补入[1–26层探索与离层计划](nine-challenges-warrior-4.0.2/12-floor-exploration-plan.md)、
+[特殊房](nine-challenges-warrior-4.0.2/13-special-rooms.md)、[秘密房与有限搜索](nine-challenges-warrior-4.0.2/14-secret-rooms-and-search.md)、
+[炼金优先级](nine-challenges-warrior-4.0.2/15-alchemy-planning.md)和[CLI信息准确性审计](nine-challenges-warrior-4.0.2/16-cli-information-audit.md)。
+本轮以通关机会优先于全探索；审计发现合法魔晶光效被Python客户端拒绝等问题，已保存可复现证据，尚未修改CLI行为。
+后续正式实战前应先核查这些确认问题的修复状态，不能把旧测试通过当成已解决。
+
 以下脚本从本局用过的临时辅助脚本迁入，入口和依赖都在项目内。只读取显式提供的完整公开
 JSON响应文件或stdin，不启动游戏、不发送意图、不读取存档／audit，也不自动刷新输入文件。
 支持单个wire回复、控制器wrapper，以及旧中继的 `{seq,response}` 公开记录；`seq`仅保留为历史元数据。
