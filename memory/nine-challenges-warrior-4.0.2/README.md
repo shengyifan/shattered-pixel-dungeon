@@ -30,7 +30,7 @@ CLI.9.0.4；初始战力缺口、持续追击、自造寒区与出口攻击预�
 实战优先读[12逐层计划](12-floor-exploration-plan.md)和[15炼金计划](15-alchemy-planning.md)；
 正式长局前先看[16 CLI审计结论](16-cli-information-audit.md)顶部的当前修复状态与验证链接。
 
-1. 实战前先读 [00 决策速查](00-run-plan.md)、[最新豺狼人死亡复盘](../2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)、[同日蝇群死亡复盘](../2026-10-11-warrior-nine-challenges-retrospective.md)、[此前饥饿死亡复盘](../2026-10-10-warrior-nine-challenges-retrospective.md)、[01 九挑战与续航](01-challenges-and-survival.md)、[02 战士构筑](02-warrior-build.md)。
+1. 实战前先读 [00 决策速查](00-run-plan.md)、[最新咕噜死亡复盘](../2026-10-15-warrior-nine-challenges-goo-retrospective.md)、[豺狼人死亡复盘](../2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)、[同日蝇群死亡复盘](../2026-10-11-warrior-nine-challenges-retrospective.md)、[此前饥饿死亡复盘](../2026-10-10-warrior-nine-challenges-retrospective.md)、[01 九挑战与续航](01-challenges-and-survival.md)、[02 战士构筑](02-warrior-build.md)。
 2. 新到一个区域，读该区敌人页；接首领前读其专节，按当前背包列出阶段预算。
 3. 花稀缺物品前查物品页；有墙/门/草/雕像/友军挡线时查08，先算实际碰撞。
 4. 考虑退回主菜单再继续前，查09的“会保留/会改变/已验证/仅候选”分类。
@@ -42,6 +42,7 @@ CLI.9.0.4；初始战力缺口、持续追击、自造寒区与出口攻击预�
 | 文档 | 覆盖内容 |
 | --- | --- |
 | [00 决策速查](00-run-plan.md) | 九挑战叠加后的目标、食物/照明/休息/诡术师/未知药剂止损、五区行前检查、应急顺序 |
+| [2026-10-15 第5层咕噜复盘](../2026-10-15-warrior-nine-challenges-goo-retrospective.md) | 满血入5层、主动资源实效、1HP收尾中断、恢复负债、两步退出与普通反击；1214对公开收发，无存档读取 |
 | [2026-10-11 第3层豺狼人复盘](../2026-10-11-warrior-nine-challenges-gnoll-retrospective.md) | 可兑现战力、持续追击、再入预算、自造寒区封路及最后退出攻击；公开证据与离线验证，无存档读取 |
 | [2026-10-11 第4层蝇群复盘](../2026-10-11-warrior-nine-challenges-retrospective.md) | 控制窗口未兑现、钥匙支线、引战增援、五餐净收益、冻结与单出口蝇群队列；完整公开归档和授权事后存档摘要 |
 | [2026-10-10 失败复盘](../2026-10-10-warrior-nine-challenges-retrospective.md) | 四餐、三支火把、连续休息及诡术师的公开成本；末次麻痹气体与饥饿死亡的证据边界 |
@@ -85,7 +86,7 @@ CLI.9.0.4；初始战力缺口、持续追击、自造寒区与出口攻击预�
 - **隔离验证**：用合成对象/地图或内存序列化验证的有限结论。弹道夹具和保存夹具有各自范围，均不证明完整游戏中战术可重复或最优。
 - **战术推导**：从规则导出的有条件建议，例如使用格挡武器弥补护甲削弱、以走位减少集群召集。
 - **待实测**：存在代码入口，但行动窗口、UI操作、实际收益或复杂状态组合还未完整验证；不要把它作为必需生存环节。
-- **本版实战**：[2026-10-10失败复盘](../2026-10-10-warrior-nine-challenges-retrospective.md)与[2026-10-11失败复盘](../2026-10-11-warrior-nine-challenges-retrospective.md)以及[同日第3层豺狼人复盘](../2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)保存4.0.2的三局失败结果。
+- **本版实战**：[2026-10-15咕噜复盘](../2026-10-15-warrior-nine-challenges-goo-retrospective.md)、[2026-10-10失败复盘](../2026-10-10-warrior-nine-challenges-retrospective.md)、[2026-10-11失败复盘](../2026-10-11-warrior-nine-challenges-retrospective.md)以及[同日第3层豺狼人复盘](../2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)保存4.0.2的四局失败结果。
   3–5次等待等止损预算是保守策略建议，不是原生参数、最优证明或通关保证。
 - **历史经验**：[2026-10-08复盘](../2026-10-08-warrior-playthrough-retrospective.md)来自旧游戏3.3.8，
   可沿用证据纪律与失误类型，不直接搬运数值、天赋或当时库存。本目录重新核查4.0.2规则。

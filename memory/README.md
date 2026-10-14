@@ -25,16 +25,20 @@
 [21法杖主动使用](nine-challenges-warrior-4.0.2/21-active-wand-play.md)。
 这些是主动行动的准备方法，不能把旧复盘中的止损规则用成长期囤积或一律跳过奖励；
 也不把未鉴定物品当作已经可靠的应急能力。该次调研期间游戏保持暂停，调研不授权恢复游玩。
-下一局优先读 [2026-10-11 第3层豺狼人复盘](2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)：
+下一局优先读 [2026-10-15 第5层咕噜复盘](2026-10-15-warrior-nine-challenges-goo-retrospective.md)：
+满血入首领层、偏点冲击与电击回充、1HP收尾中断、锁层恢复负债，以及躲过蓄力后仍致死的普通反击。
+新增执行门槛见[决策卡3.5](nine-challenges-warrior-4.0.2/00-run-plan.md#35-首领收尾恢复负债与两步退出2026-10-15咕噜复盘)。
+此前 [2026-10-11 第3层豺狼人复盘](2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)关注：
 初始战力未兑现、持续追兵、恢复后的重新进入成本、自造寒区堵退路，以及清掉挡路怪后仍需承担的退出攻击。
 同日另有 [第4层蝇群复盘](2026-10-11-warrior-nine-challenges-retrospective.md)，关注控制后追加支线、
 进食净收益和单出口房；[2026-10-10复盘](2026-10-10-warrior-nine-challenges-retrospective.md)关注饥饿、
-长休息和火把止损。三局均不是通关证明，不能把各局死因或事后存档授权混用。
+长休息和火把止损。四局均不是通关证明，不能把各局死因或事后存档授权混用。
 
 | 资料 | 何时读取 |
 | --- | --- |
 | [4.0.2 战士九挑战研究库](nine-challenges-warrior-4.0.2/README.md) | 九挑战开局/区域/首领规划、当前战士机制、装备与鉴定、弹道和重载技巧；优先于旧版数值笔记 |
 | [2026-10-14 主动资源利用证据](nine-challenges-warrior-4.0.2/evidence/fieldcraft-20261014/README.md) | 17–21专题的源码基线、核验边界、链接检查、来源指纹及跳坑预算计算；不代表新实战结果 |
+| [2026-10-15 第5层咕噜复盘](2026-10-15-warrior-nine-challenges-goo-retrospective.md) | 即战力兑现、首领收尾与重新接敌、LockedFloor负债、普通反击及污泥预算；完整公开归档，无存档读取 |
 | [2026-10-11 第3层豺狼人复盘](2026-10-11-warrior-nine-challenges-gnoll-retrospective.md) | 2级/力量10的战力缺口、持续追击、有限恢复与再入、冰霜加工退路、最后7HP突围；仅公开记录，无存档读取 |
 | [2026-10-11 第4层蝇群复盘](2026-10-11-warrior-nine-challenges-retrospective.md) | 整场遭遇预算、两次进食各净+1、寒冷冻结长段推进、蝇群队列及单出口房；附完整公开记录和授权事后存档摘要 |
 | [2026-10-10 九挑战失败复盘](2026-10-10-warrior-nine-challenges-retrospective.md) | 下一局资源与止损规划；核查四餐、三支火把、连续休息、诡术师伏击及未知饮药的实际代价 |
@@ -87,6 +91,10 @@ python3 skills/pixel-dungeon-run-assistance/scripts/ray.py --response /path/to/p
 
 ## 已保存复盘
 
+- [2026-10-15：战士全九挑战，第5层咕噜／腐蚀死亡](2026-10-15-warrior-nine-challenges-goo-retrospective.md)
+  — 4.0.2 / CLI.9.0.6；1214对完整公开收发、990条控制器记录和[离线验证](evidence/2026-10-15-warrior-nine-challenges-goo-loss/README.md)。
+  短剑+2、STR12、40/40HP入5层，Goo曾降至1HP；最终普通反击11加污泥1致死。
+  保留主动资源利用的进步，补上锁层负预算、重新接战成本和两步退出检查；不读取存档或私有audit。
 - [2026-10-11：战士全九挑战，第3层成长豺狼人死亡](2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)
   — 4.0.2 / CLI.9.0.4；488对完整公开收发、414条控制器记录、源码和[离线验证](evidence/2026-10-11-warrior-nine-challenges-gnoll-loss/README.md)。
   死亡前仍有一餐和170照明，无rest、无公开饥荒；未读取个人存档或私有audit。
@@ -125,6 +133,9 @@ python3 skills/pixel-dungeon-run-assistance/scripts/ray.py --response /path/to/p
 10. **结束条件以游戏确认为准。** 击败 Yog、拿到护符和选择正常结束是三个不同节点。
     2026-10-08复盘以 `run_outcome.result = won` 确认胜利；2026-10-10九挑战以
     `result = lost` 和 `phase = ended` 确认失败。按用户停止政策停止输入和查询，保留打开的进程。
+11. **锁层负债与首领收尾单独预算。** Goo水疗可将恢复额度扣至负数；后续伤害只是偿债，
+    不能保证立即恢复回血／充能。隔离后还要支付重开与再接敌成本，离视野残留血条不作实时HP。
+    转角需验证下一步普通反击和Ooze，不能只证明第一步能躲蓄力。
 
 ## 协作与证据纪律
 

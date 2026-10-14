@@ -116,7 +116,12 @@
 2. **蓄力范围不是相邻。** 只要距离≤2，且Goo→英雄、英雄→Goo两条`STOP_TARGET|STOP_SOLID|IGNORE_SOFT_SOLID`都通即可攻击；这是少见的双向校验。相邻直退一格仍可能被打，高草这类软阻挡也不可靠。退到距离>2或绕硬墙切断弹道才有几何依据。进入移动追近/后退分支会清蓄力，离开HUNTING也清；预警图像淡出本身不等于任何分支已执行。[Goo.canAttack](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java#L142)、[Goo.getCloser/getFurther](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java#L243)。
 3. **水疗升级。** Goo非飞行、站水且不满血时每act回血，挑战连续为1→2→3→3；离水或没有满足回血条件时重置1。它可因此从狂暴血段回到上半。英雄宜有洗污泥的水格，同时让Goo留干地；不能站水里低伤磨它。[Goo.act](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java#L102)。
 4. **污泥。** 成功攻击1/3附Ooze，5层每回合1伤。水能洗，但第一次作用时可能先扣1再脱离，不能许诺水中零伤。[Goo.attackProc](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java#L155)、[Ooze.act](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Ooze.java#L91)。
-5. **不能无限等盾。** 挑战锁层被动恢复预算初始20、封顶50；每点对Goo有效伤害加1，每点Goo水疗扣1。预算耗尽使`regenOn()`关闭；战士纹章护盾恢复也依赖对应恢复条件。“让Goo水疗，我原地等盾”不能作为无限循环资源。[LockedFloor](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/LockedFloor.java#L31)、[Goo.damage](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java#L275)、[BrokenSeal.WarriorShield](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/BrokenSeal.java#L324)。
+5. **不能无限等盾，且水疗会造成恢复负债。** 挑战锁层预算初始20、封顶50；`Goo.damage`的合格传入伤害加回，每点水疗扣1。
+   `removeTime`没有下界，`addTime`不先归零；低于1时自然时间既不继续减也不增加，必须先偿还负余额才能使`regenOn()`重开。
+   因而打出伤害不保证马上回血／充电，不能把停住的纹章冷却当作“再等一会就好”。普通自然再生、杖／钥匙自然回充、
+   纹章正冷却受此门槛；已有盾、就绪盾的合格触发、丰盛直接治疗与Shock即时补杖电不一概关闭。
+   [2026-10-15实战复核](../2026-10-15-warrior-nine-challenges-goo-retrospective.md#5-恢复额度会负债不是等得不够久)记录这一误判，未读取本局隐藏余额。
+   “让Goo水疗，我原地等盾”不能作为循环资源。[LockedFloor](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/LockedFloor.java#L31)、[Goo.damage](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java#L262)、[BrokenSeal.WarriorShield](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/BrokenSeal.java#L324)。
 
 **战术推论：** 开战前看清硬墙绕行回路、干地和水格，留出每个蓄力时至少一个安全动作，检查移动是否受超重/残废拖慢。九挑战攻击力往往不足以抢杀，尽量让普通攻击、投掷或法杖落在“下次出现蓄力仍能退出”的位置。前半血尚可评估交换，半血后蓄力概率翻高且普通伤上限提高，预留控制/远程资源给后段。为了打最后一刀赌36伤不应是默认选项。实际已知盾、HP、法杖电量和目标可达性决定方案，不能仅靠模板HP估算剩几刀。
 

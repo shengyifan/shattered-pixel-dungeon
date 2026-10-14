@@ -1,0 +1,225 @@
+{
+  "record_date": "2026-10-15",
+  "timezone": "Asia/Shanghai",
+  "source_baseline": "9be0088fec8a452155e500688f7c31f466acd960",
+  "scope": "Frozen public transport and controller records only; no saves, private audits, new game queries, or replay.",
+  "decoder": {
+    "path": "desktop-control/client/spdctl_client.py",
+    "sha256": "86e2f02ddce82ed985fe5733e80074d5ef9add8f04d9c81bac77c6ac94698006"
+  },
+  "files": {
+    "send.raw": {
+      "archive": "send.raw.gz",
+      "bytes": 77503,
+      "lines": 1214,
+      "sha256": "57f18fd6d7f027666714ee643ef752af18cefc3d7b26520947cb253ec2c0a68c",
+      "archive_bytes": 8315,
+      "archive_sha256": "62a9e33193cbfa0a4a2752fee6483209996cabe7ed29c596cb29c75bb9c6582b"
+    },
+    "recv.raw": {
+      "archive": "recv.raw.gz",
+      "bytes": 9913785,
+      "lines": 1214,
+      "sha256": "3a75f9d8c3ea9038f0d1ee040d6d32a480d2b16841a4d47aa4845a8d2adadfa6",
+      "archive_bytes": 267066,
+      "archive_sha256": "52d37ae22b66abfc16ea418ae3d3d0c4e3b330bdcb6608267d177682ae247e6f"
+    },
+    "events.tsv": {
+      "archive": "events.tsv.gz",
+      "bytes": 168426,
+      "lines": 3736,
+      "sha256": "d630ff1e5280ec85c400f6ad7ad20f50f751e766184d99b5ad78495b825ac648",
+      "archive_bytes": 45280,
+      "archive_sha256": "81cef125c24c4d5bd5b5540066a46210222ddb0c30b4f51c6850fdc6e7ae117e"
+    },
+    "controller-responses.ndjson": {
+      "archive": "controller-responses.ndjson.gz",
+      "bytes": 9920072,
+      "lines": 990,
+      "sha256": "1b7d44e9d5c943ea84dd25ec154fe606adc0114947d296c032d58eba88babc53",
+      "archive_bytes": 265783,
+      "archive_sha256": "c3b5487f891c13f208a32ab6ea53ed8d1a0561feb314ce7038f5abd8b28e06d6"
+    },
+    "controller-intents.ndjson": {
+      "archive": "controller-intents.ndjson.gz",
+      "bytes": 37943,
+      "lines": 990,
+      "sha256": "4c256d20b175382620f794ed5ec24dd4712b7be85e3efd39b2075a1796f3d682",
+      "archive_bytes": 4330,
+      "archive_sha256": "ee55c420d5cdfd3093aacd7bae7d1b5173a964b23df28d4d9a964cf88c819295"
+    }
+  },
+  "wire": {
+    "pairs": 1214,
+    "first_id": "hf8bdf0fc149c4a5ab8af753cb6bc99e0",
+    "last_id": "t2.1213",
+    "protocol": 9,
+    "identity": {
+      "cli_version": "CLI.9.0.6",
+      "game_version": "4.0.2",
+      "game_version_code": 922,
+      "audit_schema_version": 12,
+      "build_id": "9ed2e5ad09942072eaec7cb6e2cb255178a9860e61776d0fe3ba96a6e33c0dbb",
+      "request_prefix": "t2"
+    },
+    "request_operations": {
+      "info": 1,
+      "state": 230,
+      "click": 124,
+      "back": 20,
+      "cell": 369,
+      "req": 224,
+      "move": 179,
+      "wait": 20,
+      "item": 44,
+      "search": 2,
+      "rest": 1
+    },
+    "response_statuses": {
+      "completed": 847,
+      "awaiting_input": 143,
+      "in_progress": 222,
+      "STALE_STATE": 2
+    },
+    "frames": 987,
+    "hero_frames": 961,
+    "server_problems": [
+      {
+        "id": "t2.1048",
+        "stage": "response",
+        "code": "STALE_STATE"
+      },
+      {
+        "id": "t2.1053",
+        "stage": "response",
+        "code": "STALE_STATE"
+      }
+    ]
+  },
+  "controller": {
+    "records": 990,
+    "first_id": "t2.2",
+    "last_id": "t2.1213",
+    "kinds": {
+      "wire": 766,
+      "settle": 224
+    },
+    "settle_statuses": {
+      "completed": 222,
+      "error": 2
+    },
+    "intent_operations": {
+      "state": 7,
+      "click": 124,
+      "back": 20,
+      "cell": 369,
+      "settle": 224,
+      "move": 179,
+      "wait": 20,
+      "item": 44,
+      "search": 2,
+      "rest": 1
+    },
+    "problems": {
+      "response/STALE_STATE": 2,
+      "initial_error/STALE_STATE": 2,
+      "settle/ACTION_REJECTED": 2
+    }
+  },
+  "final_response_sha256": "3027ced4731c2f71c0b76f75965a881ace2c611b5c6f57fd4f400668f23bd464",
+  "keyframes_sha256": "a95cfad2af7c8cc70b9096cd5095178e730a4dd6fe2d6aceecf3fa381aa2e2b5",
+  "reviewed_sources": [
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Goo.java",
+      "sha256": "a0aa49e6b09d31f5a0333157789614f46115aee57baea5dad2132dc5842b5a46"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/LockedFloor.java",
+      "sha256": "fd4fe1adf940b3df20e19232b17f407f167363b34d4f85e34acee44fcc50a46a"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Regeneration.java",
+      "sha256": "57d13979dec9ff7499ff55d645096ba5e50c037052db24dfccdb3d1febddcb05"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Mob.java",
+      "sha256": "6b005f0e39b98b305e49b5c388fe73a27c2418f90fb01d9cd15a4b96d99429cf"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java",
+      "sha256": "b50ab23f2f6df590ce8c547af038cf427eac517074c2c4dc7e6bdb52c9f56949"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java",
+      "sha256": "aaf94dce5c9f4381bc09672fe74e11e91fcc442c36319cb5beb1adb7d30038a3"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Hunger.java",
+      "sha256": "f7c30e49f930c9efea86fb6a5ed85aa334e77642e2a09b4494dd54ea118554cd"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Paralysis.java",
+      "sha256": "0009030d3090a0cb372485dbab4f755226c4c510b9f275d61dc7e192408efc72"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Ooze.java",
+      "sha256": "cde2796edc4b17ecac4a7f7c7a7c25307903e09c148672914a03cf586325fe42"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/food/Food.java",
+      "sha256": "9e2c66ac7a5aeabca2c33bb8ffd524e9f54c6d52ee1879ba629fbaa640842e42"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/BrokenSeal.java",
+      "sha256": "0a0cc03b8f3fcef2d19a300aba18c39a354fcf2e0d8876d35109d27fc5a548f9"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/SkeletonKey.java",
+      "sha256": "3f11d71c92c661591b70c3590aaf94809698ca0701f69514c5cc9f3f764c6d15"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/artifacts/ChaliceOfBlood.java",
+      "sha256": "f1bf11b67072f5052bd4ba5d51973692a700287199487bc6f4eb78bac387f486"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/wands/Wand.java",
+      "sha256": "f5dbff043955b8769e0f8a93e4fc7e94f495755579ee0d7027ae28857ee3014f"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/wands/WandOfBlastWave.java",
+      "sha256": "e8215a2fe512a8e9919c21dcc23f7e0667bcfce1b14098a0807050050921b398"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/mechanics/Ballistica.java",
+      "sha256": "3cce12645f1bf662481887df0fca19f0d68130741ff58a66557995ba3a359427"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/stones/StoneOfShock.java",
+      "sha256": "cd4b0b4cb13308795ac94733fa143d5bdc058c1f55dc4e500c0bdbf7267dc046"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/Kunai.java",
+      "sha256": "ad69941b7a38659aef51cfbef3b5b3aeecbdebd8ed91c25e2c33057bdc16ee77"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/MissileWeapon.java",
+      "sha256": "9cf17ec2c2aece5ae44cb2eefc4a27b1bfe510c53821716a6e84aa425e8c9ff3"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/Weapon.java",
+      "sha256": "24d34977e9cee42c0f65508e221f7909c9dcaedd4df9390bd0c6e9c1b4099b27"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/plants/Plant.java",
+      "sha256": "f14164918f45aea0827703f516908730d0e2fd348b73fb95e81cd23b921784c1"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/armor/glyphs/AntiMagic.java",
+      "sha256": "d22f4145b475c99bb2386e2f5a381a6a0dcf7aeca596c7e871091f650282edf2"
+    },
+    {
+      "path": "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/ui/BossHealthBar.java",
+      "sha256": "0d121791a480394fd54b02ad383605c5e799377861b3a4b2fb4ff74d35067d56"
+    }
+  ]
+}

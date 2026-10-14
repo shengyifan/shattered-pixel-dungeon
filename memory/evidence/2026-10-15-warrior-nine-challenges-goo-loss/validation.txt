@@ -1,0 +1,10 @@
+PASS: exact-byte hashes/offsets; 1214 unique wire pairs; 987 frames, including 961 hero frames.
+PASS: 990 controller records and validated intents; 222 completed and 2 rejected settles.
+PASS: both STALE_STATE outcomes established before fresh decisions; no observation decoding failures.
+PASS: all nine challenges, Warrior start, full-health floor 5 entry, resource and ending claims.
+PASS: 19 melee attempts and 187 witnessed boss damage; six announced charges followed by unharmed escapes.
+PASS: boss HP requires a same-frame entity subject; unbound retained boss text is not current HP.
+PASS: no requests after death, no quit/save request; later EXITED:0 recorded without causal inference.
+Scope: frozen public evidence and source fingerprints; no profile reads, game connection, or counterfactual test.
+PASS: six changed/new Markdown documents: 272 local links and 113 anchors resolved.
+BASELINE: historical research fingerprint check has 46 pre-existing differences; HEAD comparison confirms 0 added and 0 removed by this change.
