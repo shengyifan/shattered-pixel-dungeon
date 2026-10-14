@@ -2,6 +2,8 @@
 
 核对日期：2026-10-10；源码基线 `8405ae82f206e965d14b4a3b9d4fb282f2230e47`，游戏 4.0.2 / code 922，CLI.9.0.3。本篇是静态源码研究，不代表已完成九挑战实战或验证当前背包。只读仓库源码；没有启动游戏、读取个人存档或私有审计。附魔、刻印和两类诅咒的完整清单见 [06b](06b-enchantments-glyphs.md)。
 
+2026-10-14对当前 `bb0c91fb7` 重新核对：战士初始投武是投石，修正下表旧误记；投武升级会直接补默认数量，因此不要求为升级冒险回收旧散件。手里剑20时间瞬发冷却结论仍成立。主动使用与回收决策见 [20](20-resource-conversion-fieldcraft.md)。这次是局部源码复核，不代表本篇其余旧链接已全部按新行号更新。
+
 ## 1. 首先改变装备评价标准
 
 九挑战中，「信念护体」直接削弱的是护甲 DR 公式，不是所有减伤。圆盾、巨型方盾、铁头棍、武士刀的**武器防御仍然独立掷骰**；长鞭/长矛/关刀的距离优势、门口伏击、投掷物软控和法杖控制往往比护甲面板更能减少生命损失。但武器盾只能抵挡走 `drRoll` 的攻击，不能自动挡毒、火、饥饿或各类绕甲魔法。
@@ -89,15 +91,15 @@
 
 投掷不需先装备，战士同样能用。默认临近目标命中 ×0.5，非临近目标 ×1.5，再乘力量与武器倍率；Point Blank 是其他职业天赋，不能默认给战士。伏击可使敌人闪避为 0；力量不足仍然取消伏击。多数成功命中后扎在存活敌人身上，待回收；miss 通常落地且不扣耐久，成功命中才消耗，不能把“投出去”次数等于“消耗次数”。
 
-默认一组 3 件，共用该组的耐久消耗逻辑；一次消耗到断裂会移除一件，再以余下件继续，具体剩余要看原生说明。默认每件 `N=baseUses×1.5^u×其他耐久倍率` 次；装备魔法枪套 ×1.2；速度增幅令可用次数 ×1.5，伤害增幅 ×0.6；达到 **100 次**阈值才无限耐久，阈值判断在取整前。水晶附魔另把次数减半并封顶 30。真实每次扣 `100/round(N)+.001`。升级恢复耐久与默认数量，记录组 ID；留在敌人/地面的旧等级同组武器拾取时可能化尘，**升级前先安全回收整组**。
+默认一组 3 件，共用该组的耐久消耗逻辑；一次消耗到断裂会移除一件，再以余下件继续，具体剩余要看原生说明。默认每件 `N=baseUses×1.5^u×其他耐久倍率` 次；装备魔法枪套 ×1.2；速度增幅令可用次数 ×1.5，伤害增幅 ×0.6；达到 **100 次**阈值才无限耐久，阈值判断在取整前。水晶附魔另把次数减半并封顶 30。真实每次扣 `100/round(N)+.001`。升级恢复满耐久与默认数量并登记组 ID 的新等级门槛；留在敌人/地面的旧等级同组武器，之后拾取会化尘。**已有该组剩余件、已决定升级时，不必为旧件冒险回收，升级本身补齐默认数量。** 安全顺路回收可以；不同掉落组不能靠同名共享强化。附魔保留和投武诅咒限制仍见第7节，补数量不改变这些限制。
 
 源码：[投掷伤害/力量](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/MissileWeapon.java#L100)、[距离命中](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/MissileWeapon.java#L217)、[落地/耐久](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/MissileWeapon.java#L411)、[升级组](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/MissileWeapon.java#L149)、[旧件拾取](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/MissileWeapon.java#L650)。
 
 | 阶/力量 | 名称与源文件 | 伤害 | 基础次数、特性与九挑战应用 |
 |---|---|---|---|
-| 1/9 | [投石 ThrowingStone](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/ThrowingStone.java#L27) | `2+l..5+l` | 5；不扎敌，普通拾取；卖价减半。安全先手、拉怪，不值得为了回收冲进火线。 |
+| 1/9 | [投石 ThrowingStone](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/ThrowingStone.java#L27) | `2+l..5+l` | 5；当前战士初始一组3件，见 [HeroClass.initWarrior](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroClass.java#L174)；不扎敌，普通拾取；卖价减半。主动用于远程先手、削血、收尾，安全顺路回收，允许为避免受伤而消耗或损毁。 |
 | 1/9 | [飞刀 ThrowingKnife](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/ThrowingKnife.java#L32) | `2+l..6+2l` | 5；伏击下限 `min+round(.75(max−min))`，善用未察觉目标。 |
-| 1/9 | [飞刺 ThrowingSpike](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/ThrowingSpike.java#L27) | `2+l..5+l` | 12；战士开局远程资源，耐用先手。 |
+| 1/9 | [飞刺 ThrowingSpike](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/ThrowingSpike.java#L27) | `2+l..5+l` | 12；耐用先手，但不是当前战士初始投武。 |
 | 2/11 | [捕鱼矛 FishingSpear](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/FishingSpear.java#L29) | `4+l..10+2l` | 8；对食人鱼 `damage=max(当前伤害,鱼当前HP/2)`，在攻击 proc 节点执行；不是固定“两击杀鱼”。 |
 | 2/11 | [飞槌 ThrowingClub](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/ThrowingClub.java#L27) | `4+l..8+2l` | 12；不扎敌，拾取零耗时，便于安全循环。 |
 | 2/11 | [手里剑 Shuriken](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/missiles/Shuriken.java#L31) | `4+l..8+2l` | 5；没有瞬发冷却时本次投掷零耗时，随后添加 `ShurikenInstantTracker`（时长20，内部添加19补偿本次零耗时）。**4.0.2 不是走一步就重新瞬发的旧机制**；之后投掷走正常耗时。 |

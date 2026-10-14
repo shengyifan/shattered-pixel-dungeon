@@ -1,0 +1,8 @@
+{
+  "check": "source_formula_recomputation",
+  "finite_horizon_cases": 7,
+  "seal_cases": 3,
+  "matches_saved_result": true,
+  "scope": "Pure arithmetic and source hashes; no engine, randomness, profile or game requests",
+  "errors": []
+}

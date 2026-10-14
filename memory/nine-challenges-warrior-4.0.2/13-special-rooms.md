@@ -188,6 +188,10 @@ CrystalVault第二箱基础10%可能换水晶拟态，受鼠颅/拟态牙修正�
 
 ## 7. 薄弱地板与下层坑底：跨层取宝不是无伤井跳
 
+2026-10-14重新核查并扩展为[19跳坑与房间收益](19-pitfalls-and-room-payoffs.md)：
+按用户要求积极考虑安全取宝，增加直接伤害/流血/盾的预算、先探下层再回跳的方案及羽落边界；
+不能把本节的成本说明用成一律跳过奖励房。
+
 WeakFloorRoom实际铺CHASM与伸出的EMPTY_SP实地条，装饰井仍是CHASM并仅附可见地标；不是整片普通地板都会自动塌。**从该房实际坠落格掉下**即标记fallIntoPit，下一层选Pit可走无怪落点，不必只跳装饰井那个格；当前实际地形必须观察确认。[WeakFloor](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/WeakFloorRoom.java#L39)、[Chasm](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/Chasm.java#L99)、[落点](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/RegularLevel.java#L768)
 
 PitRoom外门水晶锁，中间遗骨含**本层水晶钥匙**，主奖励为戒指/神器/装备组三路均等；装备组近战2、投掷1、护甲2权重。另有1–2件药/卷/食物/金币。没有必升/必无咒保证；诅咒物会使遗骨haunted。落点井是EMPTY_WELL干井，**不会跳下后回血**。房内不生成草/陷阱，但怨灵与开遗骨后的处境另算。[PitRoom](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/rooms/special/PitRoom.java#L46)
@@ -200,7 +204,7 @@ PitRoom外门水晶锁，中间遗骨含**本层水晶钥匙**，主奖励为戒
 
 1. 跳前完成上层仍值得且可安全取的关键物资，记录未取项目和原因；预算下层新探索、异常落点与返楼梯成本，不能假定楼梯就在门外。
 2. 明确羽落/落地损伤处理和粮光余量，再选择实际坠落动作；不得用保存读取隐藏下层图规划。
-3. 落地先看HP、出血、周围堆与怪，从旁开遗骨，给怨灵生成与自己撤退留格；占住遗骨令haunted生成失败可能扣当前HP/2，不能当“堵刷怪”。
+3. 落地先看HP、出血、周围堆与怪，从旁开遗骨，给怨灵生成与自己撤退留格。骨堆格被占时，`Wraith.spawnAt`会尝试8邻格；只有无法在原格或允许邻格生成才会返回失败，进而可能扣当前HP/2。站骨堆既不是必定扣半血，也不是可靠的“堵刷怪”。[怨灵邻格回退](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/mobs/Wraith.java#L120)
 4. 拿当前层水晶钥匙开门，探明正常上楼梯；若计划继续下行则不为“上层还有随机箱”无条件回头。
 5. 上下层物品/控制句柄、scope/rev各自更新，不沿用落前操作绑定；没有本局完成证据前不把理论掉落写成已获奖励。
 

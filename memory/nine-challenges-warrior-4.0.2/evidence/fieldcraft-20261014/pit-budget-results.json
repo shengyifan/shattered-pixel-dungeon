@@ -1,0 +1,136 @@
+{
+  "research_date": "2026-10-14",
+  "reviewed_git_head": "bb0c91fb7c6fa8e33819c554427f81b6cf93f2f9",
+  "scope": "Synthetic source-formula arithmetic only; no RNG, engine, actor scheduling, inventory, or live state.",
+  "assumptions": [
+    "No feather fall, pre-existing bleed, other damage, healing, resistance, damage multiplier, or immunity.",
+    "Three ticks means three Bleeding.act executions, not three arbitrary player actions.",
+    "Bleeding has no fixed documented maximum number of ticks; this does not bound total lifetime damage.",
+    "Seal examples assume its buff exists, is ready, has the stated maximum, and has not decayed."
+  ],
+  "source_sha256": {
+    "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/levels/features/Chasm.java": "761d817282225871ba0ab8988b0d722760d0d6fe04a5a0ad1283e45fab961c14",
+    "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Bleeding.java": "31e1078bf6e1ecb37ffb325904c1b5b01cb9533fe0b937914a55b6d8c0a70a24",
+    "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java": "b50ab23f2f6df590ce8c547af038cf427eac517074c2c4dc7e6bdb52c9f56949",
+    "core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/BrokenSeal.java": "0a0cc03b8f3fcef2d19a300aba18c39a354fcf2e0d8876d35109d27fc5a548f9",
+    "SPD-classes/src/main/java/com/watabou/utils/Random.java": "4cd7ead03a8a1d0aff7e35ddbaafb12c480dd31ec42c67a56a4f798144ff34a3"
+  },
+  "finite_horizon_rows": [
+    {
+      "hp": 20,
+      "ht": 20,
+      "direct_damage_range": [
+        10,
+        10
+      ],
+      "bleed_input_before_random_pre_decay": 2,
+      "hp_after_direct_min_without_shields_or_modifiers": 10,
+      "hp_lower_bound_after_three_bleed_ticks_without_shields_or_modifiers": 4,
+      "interpretation": "Negative bounds mean the budget cannot certify survival; positive bounds cover only this finite damage model."
+    },
+    {
+      "hp": 25,
+      "ht": 25,
+      "direct_damage_range": [
+        12,
+        12
+      ],
+      "bleed_input_before_random_pre_decay": 2,
+      "hp_after_direct_min_without_shields_or_modifiers": 13,
+      "hp_lower_bound_after_three_bleed_ticks_without_shields_or_modifiers": 7,
+      "interpretation": "Negative bounds mean the budget cannot certify survival; positive bounds cover only this finite damage model."
+    },
+    {
+      "hp": 17,
+      "ht": 25,
+      "direct_damage_range": [
+        8,
+        8
+      ],
+      "bleed_input_before_random_pre_decay": 2,
+      "hp_after_direct_min_without_shields_or_modifiers": 9,
+      "hp_lower_bound_after_three_bleed_ticks_without_shields_or_modifiers": 3,
+      "interpretation": "Negative bounds mean the budget cannot certify survival; positive bounds cover only this finite damage model."
+    },
+    {
+      "hp": 12,
+      "ht": 25,
+      "direct_damage_range": [
+        6,
+        6
+      ],
+      "bleed_input_before_random_pre_decay": 3,
+      "hp_after_direct_min_without_shields_or_modifiers": 6,
+      "hp_lower_bound_after_three_bleed_ticks_without_shields_or_modifiers": -3,
+      "interpretation": "Negative bounds mean the budget cannot certify survival; positive bounds cover only this finite damage model."
+    },
+    {
+      "hp": 6,
+      "ht": 25,
+      "direct_damage_range": [
+        3,
+        6
+      ],
+      "bleed_input_before_random_pre_decay": 3,
+      "hp_after_direct_min_without_shields_or_modifiers": 0,
+      "hp_lower_bound_after_three_bleed_ticks_without_shields_or_modifiers": -9,
+      "interpretation": "Negative bounds mean the budget cannot certify survival; positive bounds cover only this finite damage model."
+    },
+    {
+      "hp": 50,
+      "ht": 50,
+      "direct_damage_range": [
+        25,
+        25
+      ],
+      "bleed_input_before_random_pre_decay": 4,
+      "hp_after_direct_min_without_shields_or_modifiers": 25,
+      "hp_lower_bound_after_three_bleed_ticks_without_shields_or_modifiers": 13,
+      "interpretation": "Negative bounds mean the budget cannot certify survival; positive bounds cover only this finite damage model."
+    },
+    {
+      "hp": 33,
+      "ht": 50,
+      "direct_damage_range": [
+        16,
+        16
+      ],
+      "bleed_input_before_random_pre_decay": 5,
+      "hp_after_direct_min_without_shields_or_modifiers": 17,
+      "hp_lower_bound_after_three_bleed_ticks_without_shields_or_modifiers": 2,
+      "interpretation": "Negative bounds mean the budget cannot certify survival; positive bounds cover only this finite damage model."
+    }
+  ],
+  "seal_first_hit_examples": [
+    {
+      "hp": 20,
+      "ht": 20,
+      "existing_shield": 0,
+      "ready_seal_amount": 5,
+      "direct_damage_upper_bound": 10,
+      "seal_activates_on_this_hit": true,
+      "hp_after_this_hit": 15,
+      "shield_after_this_hit": 0
+    },
+    {
+      "hp": 25,
+      "ht": 25,
+      "existing_shield": 0,
+      "ready_seal_amount": 5,
+      "direct_damage_upper_bound": 12,
+      "seal_activates_on_this_hit": false,
+      "hp_after_this_hit": 13,
+      "shield_after_this_hit": 0
+    },
+    {
+      "hp": 12,
+      "ht": 25,
+      "existing_shield": 0,
+      "ready_seal_amount": 5,
+      "direct_damage_upper_bound": 6,
+      "seal_activates_on_this_hit": true,
+      "hp_after_this_hit": 11,
+      "shield_after_this_hit": 0
+    }
+  ]
+}

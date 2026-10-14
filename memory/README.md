@@ -15,6 +15,16 @@
 和 [实战决策速查](nine-challenges-warrior-4.0.2/00-run-plan.md)。这是基于 `8405ae82f` 的当前源码研究，
 涵盖九项挑战、战士全部天赋与构筑、五区敌人与首领、物品鉴定炼金、弹道和正常退菜单重载；
 附原生弹道与内存序列化的隔离验证。研究尚不等于九挑战通关经验，正文区分源码事实、验证范围和战术推导。
+**2026-10-14主动资源利用增补**以 `bb0c91fb7` 的4.0.2源码重新核验：
+用户明确要求积极获取和使用神器、法杖与投掷武器，在合适窗口主动试用未知药卷，
+安全时考虑跳楼取宝。先读[更新后的决策卡](nine-challenges-warrior-4.0.2/00-run-plan.md#34-主动获取辨识与使用2026-10-14用户要求)，
+再按需查[17神器](nine-challenges-warrior-4.0.2/17-artifact-acquisition-and-use.md)、
+[18主动鉴定](nine-challenges-warrior-4.0.2/18-proactive-identification.md)、
+[19跳坑与房间收益](nine-challenges-warrior-4.0.2/19-pitfalls-and-room-payoffs.md)、
+[20投武与资源转化](nine-challenges-warrior-4.0.2/20-resource-conversion-fieldcraft.md)、
+[21法杖主动使用](nine-challenges-warrior-4.0.2/21-active-wand-play.md)。
+这些是主动行动的准备方法，不能把旧复盘中的止损规则用成长期囤积或一律跳过奖励；
+也不把未鉴定物品当作已经可靠的应急能力。该次调研期间游戏保持暂停，调研不授权恢复游玩。
 下一局优先读 [2026-10-11 第3层豺狼人复盘](2026-10-11-warrior-nine-challenges-gnoll-retrospective.md)：
 初始战力未兑现、持续追兵、恢复后的重新进入成本、自造寒区堵退路，以及清掉挡路怪后仍需承担的退出攻击。
 同日另有 [第4层蝇群复盘](2026-10-11-warrior-nine-challenges-retrospective.md)，关注控制后追加支线、
@@ -24,6 +34,7 @@
 | 资料 | 何时读取 |
 | --- | --- |
 | [4.0.2 战士九挑战研究库](nine-challenges-warrior-4.0.2/README.md) | 九挑战开局/区域/首领规划、当前战士机制、装备与鉴定、弹道和重载技巧；优先于旧版数值笔记 |
+| [2026-10-14 主动资源利用证据](nine-challenges-warrior-4.0.2/evidence/fieldcraft-20261014/README.md) | 17–21专题的源码基线、核验边界、链接检查、来源指纹及跳坑预算计算；不代表新实战结果 |
 | [2026-10-11 第3层豺狼人复盘](2026-10-11-warrior-nine-challenges-gnoll-retrospective.md) | 2级/力量10的战力缺口、持续追击、有限恢复与再入、冰霜加工退路、最后7HP突围；仅公开记录，无存档读取 |
 | [2026-10-11 第4层蝇群复盘](2026-10-11-warrior-nine-challenges-retrospective.md) | 整场遭遇预算、两次进食各净+1、寒冷冻结长段推进、蝇群队列及单出口房；附完整公开记录和授权事后存档摘要 |
 | [2026-10-10 九挑战失败复盘](2026-10-10-warrior-nine-challenges-retrospective.md) | 下一局资源与止损规划；核查四餐、三支火把、连续休息、诡术师伏击及未知饮药的实际代价 |

@@ -6,11 +6,15 @@
 
 ## 先记住这些高价值结论
 
+2026-10-14补充：主动试用的准备条件、战士初始已知池和逐类试用表见
+[18主动辨识](18-proactive-identification.md)。本章的风险说明不能替代安全窗口下的主动获取信息，
+也不能把通用“未知池”直接当成每个职业、每局当前的未知池。
+
 - **治疗瓶不能喝，异种护盾瓶也不能喝。** `PotionOfHealing.apply` 先清部分负面，再经 `heal` 在药物恐惧下施加毒；`PotionOfShielding.apply` 也直接调用同一药恐惩罚。毒参数是 `4 + lvl/2`，不能把“约 40% 最大生命”的源码注释当精确结算公式。[治疗实现](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/potions/PotionOfHealing.java#L52)、[护盾实现](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/potions/exotic/PotionOfShielding.java#L41)
 - **全面净化合剂（Cleansing）是九挑战的重要食物与解控资源。** 普通净化药剂 Purity 变成异种 Cleansing，耗 4 能量。Cleansing 驱散多数 NEGATIVE buff，例外是 AllyBuff / LostInventory；直接 `Hunger.satisfy(450)`，并给 5 回合拒绝多数新负面 buff 的 Cleanse。`Hunger` 本身没有饱腹值除三，节食的除三发生在 `Food.satisfy`，所以此路径能把正常封顶 450 的饥饿清零。不能因此宣称它消除地面的气体、火或所有直接伤害。[cleanse](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/potions/exotic/PotionOfCleansing.java#L71)、[Hunger](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/buffs/Hunger.java#L133)、[Food](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/food/Food.java#L114)、[新负面拒绝](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/Char.java#L1221)
 - **治疗瓶仍是原料。** 可以分解为 6 能量；也可与任一种子、1 能量合成不稳定合剂。后者饮用时在药恐下显式排除治疗，且重抽所有应投掷的危险药，结果是随机有益普通药效果；不会揭示被模拟药的颜色。不要因此把“随机有益”当作指定的隐身/极速急救。[UnstableBrew](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/potions/brews/UnstableBrew.java#L67)
 - **炼金分解可以安全鉴定颜色/符文，但消耗这一份。** 能量先按当前未知价值计算，再鉴定；未知力量/经验/升级/嬗变不会先给已知后的 10 能量。不要拿稀少的升级或力量候选随意做“实验”。[WndEnergizeItem](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/windows/WndEnergizeItem.java#L152)
-- **盲读卷轴不等于安全。** 狂怒招全层敌人；报复让自己虚弱失明；催眠让自己也昏睡；传送可能把自己送到未探索处。盲喝在九挑战下尤其不合算：未知治疗也是毒，未知火焰/麻痹气体会在脚下生效。[Potion.apply](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/potions/Potion.java#L332)、[Rage](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/scrolls/ScrollOfRage.java#L45)
+- **主动试用要按当前候选池准备。** 火焰/麻痹气体可能在脚下生效；卷轴可能造成虚弱失明、自身睡眠或传送，需有承担不利效果的余量。正常战士开局已知治疗药、狂怒卷，所有职业初始已知鉴定卷，所以这三类不应继续当作正常战士未知普通药卷的候选；**升级卷并非战士初始已知**。安全试用有机会及时兑现升级、机动和控制，不能一直拖到濒死。泛化到其他知识状态时，才重新考虑未知治疗/狂怒等分支。[职业初始化](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroClass.java#L117)、[战士已知种类](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/HeroClass.java#L186)、[Potion.apply](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/potions/Potion.java#L332)
 - **不要用旧版“护甲/武器都靠走路鉴定”“一石一次猜”等记忆。** 当前鉴定有经验补充的使用配额；感知符石每两次确认猜测消耗一颗，无论猜对猜错。战士的 Veteran's Intuition +2 可穿上即鉴定护甲，未鉴定物的诅咒风险仍需先处理。[Weapon](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/weapon/Weapon.java#L123)、[Intuition](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/items/stones/StoneOfIntuition.java#L113)、[Talent](../../core/src/main/java/com/shatteredpixel/shatteredpixeldungeon/actors/hero/Talent.java#L683)
 
 ## 鉴定：证据层级和实际决策
